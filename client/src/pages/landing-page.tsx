@@ -39,12 +39,26 @@ export default function LandingPage() {
     setAuthModalOpen(true);
   };
 
-  // If user is already authenticated, redirect to dashboard
+  // If user is already authenticated, redirect to the appropriate dashboard based on role
   useEffect(() => {
     if (user) {
-      navigate("/");
+      const dashboardPath = getDashboardPathByRole(user.role);
+      navigate(dashboardPath);
     }
   }, [user, navigate]);
+  
+  // Helper function to get the dashboard path based on user role
+  const getDashboardPathByRole = (role: string): string => {
+    switch (role) {
+      case 'Admin':
+        return '/user-management';
+      case 'Agent':
+        return '/lost-found';
+      case 'Subscriber':
+      default:
+        return '/dashboard';
+    }
+  };
 
   // Animation variants
   const containerVariants = {

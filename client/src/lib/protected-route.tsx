@@ -35,8 +35,8 @@ export function ProtectedRoute({
     </div>
   );
 
-  // Redirect to login if not authenticated
-  const RedirectToLoginComponent = () => <Redirect to="/auth" />;
+  // Redirect to landing page if not authenticated (modal login will be shown)
+  const RedirectToLandingComponent = () => <Redirect to="/" />;
 
   // Function to check if the user has the required role
   const hasRequiredRole = (user: Omit<User, "password">, requiredRole: RoleRequirement): boolean => {
@@ -62,7 +62,7 @@ export function ProtectedRoute({
   }
 
   if (!user) {
-    return <Route path={path} component={RedirectToLoginComponent} />;
+    return <Route path={path} component={RedirectToLandingComponent} />;
   }
 
   // Check if the path is / and redirect to appropriate dashboard by role
