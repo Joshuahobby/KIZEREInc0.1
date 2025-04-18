@@ -748,13 +748,13 @@ export default function LandingPage() {
               viewport={{ once: true }}
             >
               <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                User Success Stories
+                {t('landing.testimonials.sectionTitle')}
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                What Our Users Say
+                {t('landing.testimonials.mainTitle')}
               </h2>
               <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
-                Hear from people who have successfully recovered their lost items with KIZERE.
+                {t('landing.testimonials.subtitle')}
               </p>
             </motion.div>
           </div>
@@ -783,12 +783,12 @@ export default function LandingPage() {
                   </motion.div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-foreground text-lg">James Mutembei</h4>
-                  <p className="text-sm text-muted-foreground">Nairobi, Kenya</p>
+                  <h4 className="font-medium text-foreground text-lg">{t('landing.testimonials.testimonial1.name')}</h4>
+                  <p className="text-sm text-muted-foreground">{t('landing.testimonials.testimonial1.location')}</p>
                 </div>
               </div>
               <p className="text-muted-foreground">
-                "I lost my laptop at the airport and thought it was gone forever. Thanks to KIZERE, someone found it and contacted me within hours!"
+                {t('landing.testimonials.testimonial1.quote')}
               </p>
               <div className="mt-6 flex items-center text-primary">
                 <div className="flex">
@@ -819,12 +819,12 @@ export default function LandingPage() {
                   </motion.div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-foreground text-lg">Florence Nkatha</h4>
-                  <p className="text-sm text-muted-foreground">Mombasa, Kenya</p>
+                  <h4 className="font-medium text-foreground text-lg">{t('landing.testimonials.testimonial2.name')}</h4>
+                  <p className="text-sm text-muted-foreground">{t('landing.testimonials.testimonial2.location')}</p>
                 </div>
               </div>
               <p className="text-muted-foreground">
-                "The registration process was so simple! I've cataloged all my electronics and jewelry. Now I feel much more secure about my valuables."
+                {t('landing.testimonials.testimonial2.quote')}
               </p>
               <div className="mt-6 flex items-center text-primary">
                 <div className="flex">
@@ -855,12 +855,12 @@ export default function LandingPage() {
                   </motion.div>
                 </div>
                 <div>
-                  <h4 className="font-medium text-foreground text-lg">Robert Kabugi</h4>
-                  <p className="text-sm text-muted-foreground">Nakuru, Kenya</p>
+                  <h4 className="font-medium text-foreground text-lg">{t('landing.testimonials.testimonial3.name')}</h4>
+                  <p className="text-sm text-muted-foreground">{t('landing.testimonials.testimonial3.location')}</p>
                 </div>
               </div>
               <p className="text-muted-foreground">
-                "I found someone's wallet and used KIZERE to locate the owner. The platform made it easy to connect and return the wallet safely."
+                {t('landing.testimonials.testimonial3.quote')}
               </p>
               <div className="mt-6 flex items-center text-primary">
                 <div className="flex">
@@ -881,7 +881,7 @@ export default function LandingPage() {
               size="lg"
               className="border-primary/30 hover:border-primary"
             >
-              View More Testimonials
+              {t('landing.testimonials.viewMore')}
             </Button>
           </div>
         </div>

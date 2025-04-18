@@ -101,6 +101,27 @@
       "step4Title": "Recovery & Reunification",
       "step4Desc": "Connect with the finder or owner through our secure messaging system and coordinate the return of lost items safely.",
       "communityDesc": "Community-powered item recovery network spanning across cities and regions"
+    },
+    "testimonials": {
+      "sectionTitle": "User Success Stories",
+      "mainTitle": "What Our Users Say",
+      "subtitle": "Hear from people who have successfully recovered their lost items with KIZERE.",
+      "viewMore": "View More Testimonials",
+      "testimonial1": {
+        "name": "James Mutembei",
+        "location": "Nairobi, Kenya",
+        "quote": "I lost my laptop at the airport and thought it was gone forever. Thanks to KIZERE, someone found it and contacted me within hours!"
+      },
+      "testimonial2": {
+        "name": "Florence Nkatha",
+        "location": "Mombasa, Kenya",
+        "quote": "The registration process was so simple! I've cataloged all my electronics and jewelry. Now I feel much more secure about my valuables."
+      },
+      "testimonial3": {
+        "name": "Robert Kabugi",
+        "location": "Nakuru, Kenya",
+        "quote": "I found someone's wallet and used KIZERE to locate the owner. The platform made it easy to connect and return the wallet safely."
+      }
     }
   },
   "dashboard": {
