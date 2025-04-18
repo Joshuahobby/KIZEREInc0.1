@@ -24,7 +24,7 @@ function requireAdmin(req: Request, res: Response, next: Function) {
     return res.status(401).json({ message: "Authentication required" });
   }
   
-  if (req.user.role !== 'Admin') {
+  if (req.user && req.user.role !== 'Admin') {
     return res.status(403).json({ message: "Admin access required" });
   }
   
@@ -205,11 +205,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/search", requireAuth, async (req, res) => {
     try {
       const query = req.query.q as string || '';
-      const filters = {
-        category: req.query.category as string,
-        status: req.query.status as string,
-        location: req.query.location as string,
-      };
+      const filters: { category?: string; status?: string; location?: string } = {};
+      
+      if (req.query.category) {
+        filters.category = req.query.category as string;
+      }
+      
+      if (req.query.status) {
+        filters.status = req.query.status as string;
+      }
+      
+      if (req.query.location) {
+        filters.location = req.query.location as string;
+      }
       
       const results = await storage.searchItems(query, filters);
       res.json(results);
