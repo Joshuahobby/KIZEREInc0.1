@@ -106,7 +106,6 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       username: "",
       password: "",
       confirmPassword: "",
-      role: undefined,
     },
   });
 
