@@ -14,27 +14,29 @@ import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
 function App() {
   return (
-    <TooltipProvider>
-      <Switch>
-        {/* Public routes - using modal authentication on landing page */}
-        <Route path="/" component={LandingPage} />
-        
-        {/* Auth callback route for handling OAuth redirects */}
-        <Route path="/auth-callback" component={AuthCallback} />
-        
-        {/* Protected routes with role-based access */}
-        
-        {/* Role-restricted routes */}
-        <ProtectedRoute path="/dashboard" component={Dashboard} requiredRole="Subscriber" />
-        <ProtectedRoute path="/register" component={RegisterItem} requiredRole="any" />
-        <ProtectedRoute path="/search" component={Search} requiredRole="any" />
-        <ProtectedRoute path="/lost-found" component={LostFound} requiredRole="any" />
-        <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
-        
-        {/* 404 route */}
-        <Route component={NotFound} />
-      </Switch>
-    </TooltipProvider>
+    <LanguageProvider defaultLanguage="rw">
+      <TooltipProvider>
+        <Switch>
+          {/* Public routes - using modal authentication on landing page */}
+          <Route path="/" component={LandingPage} />
+          
+          {/* Auth callback route for handling OAuth redirects */}
+          <Route path="/auth-callback" component={AuthCallback} />
+          
+          {/* Protected routes with role-based access */}
+          
+          {/* Role-restricted routes */}
+          <ProtectedRoute path="/dashboard" component={Dashboard} requiredRole="Subscriber" />
+          <ProtectedRoute path="/register" component={RegisterItem} requiredRole="any" />
+          <ProtectedRoute path="/search" component={Search} requiredRole="any" />
+          <ProtectedRoute path="/lost-found" component={LostFound} requiredRole="any" />
+          <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
+          
+          {/* 404 route */}
+          <Route component={NotFound} />
+        </Switch>
+      </TooltipProvider>
+    </LanguageProvider>
   );
 }
 

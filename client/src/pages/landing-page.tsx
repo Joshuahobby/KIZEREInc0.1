@@ -3,6 +3,8 @@ import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import { AuthModal } from "@/components/ui/auth-modal";
 import pedestrianCrowdImage from "../assets/pedestrian_crowd.png";

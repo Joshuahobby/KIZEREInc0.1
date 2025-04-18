@@ -11,11 +11,14 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Menu, X } from "lucide-react";
+import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function Header() {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useLanguage();
 
   const isAdmin = user?.role === "Admin";
 
@@ -75,7 +78,11 @@ export function Header() {
             </nav>
           </div>
 
-          <div className="ml-6 flex items-center">
+          <div className="ml-6 flex items-center gap-2">
+            {/* Language Switcher */}
+            <LanguageSwitcher variant="minimal" />
+            
+            {/* User Profile Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="p-0">
@@ -85,17 +92,17 @@ export function Header() {
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
                   <Link href="/profile">
-                    <a className="cursor-pointer w-full">Your Profile</a>
+                    <a className="cursor-pointer w-full">{t('profile.title')}</a>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings">
-                    <a className="cursor-pointer w-full">Settings</a>
+                    <a className="cursor-pointer w-full">{t('settings.title')}</a>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                  Sign out
+                  {t('auth.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
