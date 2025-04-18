@@ -101,6 +101,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       // We will handle this in the backend via a new endpoint
       // For now, let the user know this feature is coming soon
       console.log("Google sign-in successful", result);
+      
+      // Show toast message to user that this is a mock implementation
+      // This would typically use the useToast hook but we're keeping it simple
+      alert("Gmail login is coming soon! This is currently a mock implementation.");
     } catch (error) {
       console.error("Google sign-in error:", error);
     }

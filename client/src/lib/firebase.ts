@@ -1,59 +1,58 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, AuthProvider, signOut, UserCredential } from "firebase/auth";
-
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-};
-
-// Initialize Firebase
-try {
-  initializeApp(firebaseConfig);
-} catch (error) {
-  console.error("Firebase initialization error:", error);
+// This is a temporary mock implementation until Firebase is properly installed
+// Firebase types (mock)
+export interface UserCredential {
+  user: {
+    uid: string;
+    displayName: string | null;
+    email: string | null;
+    photoURL: string | null;
+  };
 }
 
-// Auth instance
-const auth = getAuth();
-const googleProvider = new GoogleAuthProvider();
-
 /**
- * Sign in with Google using popup
- * @returns Promise with user credential
+ * Sign in with Google using popup (mock implementation)
+ * @returns Promise with mock user credential
  */
 export const signInWithGoogle = (): Promise<UserCredential> => {
-  return signInWithPopup(auth, googleProvider);
+  console.log("Mock Google sign-in called (Firebase not yet installed)");
+  
+  // Return a mock successful auth
+  return Promise.resolve({
+    user: {
+      uid: "mock-uid-123",
+      displayName: "Mock User",
+      email: "mockuser@example.com",
+      photoURL: null
+    }
+  });
 };
 
 /**
- * Sign out from Firebase
+ * Sign out from Firebase (mock implementation)
  * @returns Promise<void>
  */
 export const firebaseSignOut = (): Promise<void> => {
-  return signOut(auth);
+  console.log("Mock sign out called (Firebase not yet installed)");
+  return Promise.resolve();
 };
 
 /**
- * Extract user information from Firebase user credential
- * @param result Firebase UserCredential
+ * Extract user information (mock implementation)
+ * @param result Mock UserCredential
  * @returns User information object
  */
 export const extractUserInfo = (result: UserCredential) => {
   const user = result.user;
-  const credential = GoogleAuthProvider.credentialFromResult(result);
-  const token = credential?.accessToken;
   
   return {
     uid: user.uid,
     displayName: user.displayName || "",
     email: user.email || "",
     photoURL: user.photoURL,
-    token
+    token: "mock-token"
   };
 };
 
-export { auth, googleProvider };
+// Mock auth and provider
+export const auth = { currentUser: null };
+export const googleProvider = {};
