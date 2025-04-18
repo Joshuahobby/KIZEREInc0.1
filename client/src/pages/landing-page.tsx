@@ -64,12 +64,15 @@ export default function LandingPage() {
               <div className="text-2xl font-display font-bold text-primary">KIZERE</div>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/auth">
-                <a className="font-medium text-gray-600 hover:text-primary">Login</a>
-              </Link>
-              <Link href="/auth">
-                <Button>Get Started</Button>
-              </Link>
+              <button 
+                onClick={() => navigate("/auth")} 
+                className="font-medium text-gray-600 hover:text-primary"
+              >
+                Login
+              </button>
+              <Button onClick={() => navigate("/auth")}>
+                Get Started
+              </Button>
             </div>
           </div>
         </div>
@@ -95,12 +98,17 @@ export default function LandingPage() {
               </p>
               
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <Link href="/auth">
-                  <button className="yellow-button">
-                    Register Now
-                  </button>
-                </Link>
-                <Button variant="outline" size="lg">
+                <button 
+                  onClick={() => navigate("/auth")}
+                  className="yellow-button"
+                >
+                  Register Now
+                </button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                >
                   Learn More
                 </Button>
               </div>
@@ -156,7 +164,7 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-white">
+      <section id="features" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
@@ -244,11 +252,12 @@ export default function LandingPage() {
           <p className="text-xl max-w-3xl mx-auto mb-8 text-primary-100">
             Join thousands of users who trust KIZERE to keep track of their important possessions.
           </p>
-          <Link href="/auth">
-            <button className="yellow-button text-lg px-8 py-4">
-              Create Free Account
-            </button>
-          </Link>
+          <button 
+            onClick={() => navigate("/auth")}
+            className="yellow-button text-lg px-8 py-4"
+          >
+            Create Free Account
+          </button>
           <p className="mt-4 text-primary-200">No credit card required. Get started in minutes.</p>
         </div>
       </section>
