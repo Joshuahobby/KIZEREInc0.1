@@ -23,9 +23,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { AuthModel } from "@/models/auth.model";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
-import { signInWithGoogle } from "@/lib/firebase";
+import { signInWithGoogle, extractUserInfo } from "@/lib/firebase";
+import { queryClient } from "@/lib/queryClient";
 import { Loader2, User, Mail, Phone, KeyRound, Eye, EyeOff } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
 
@@ -43,8 +45,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string } | null>(null);
   const { loginMutation, registerMutation } = useAuth();
+  const { toast } = useToast();
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -139,11 +143,11 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       
       // Close the modal
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google sign-in error:", error);
       toast({
         title: "Sign in failed",
-        description: error.message,
+        description: error.message || "Failed to authenticate with Google",
         variant: "destructive",
       });
     } finally {
@@ -272,9 +276,19 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                   variant="outline" 
                   className="w-full" 
                   onClick={handleGoogleSignIn}
+                  disabled={googleLoading}
                 >
-                  <SiGoogle className="mr-2 h-4 w-4" />
-                  Sign in with Google
+                  {googleLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in with Google...
+                    </>
+                  ) : (
+                    <>
+                      <SiGoogle className="mr-2 h-4 w-4" />
+                      Sign in with Google
+                    </>
+                  )}
                 </Button>
               </form>
             </Form>
@@ -431,9 +445,19 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                   variant="outline" 
                   className="w-full" 
                   onClick={handleGoogleSignIn}
+                  disabled={googleLoading}
                 >
-                  <SiGoogle className="mr-2 h-4 w-4" />
-                  Sign up with Google
+                  {googleLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in with Google...
+                    </>
+                  ) : (
+                    <>
+                      <SiGoogle className="mr-2 h-4 w-4" />
+                      Sign up with Google
+                    </>
+                  )}
                 </Button>
               </form>
             </Form>
