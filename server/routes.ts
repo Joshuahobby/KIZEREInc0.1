@@ -24,7 +24,7 @@ function requireAdmin(req: Request, res: Response, next: Function) {
     return res.status(401).json({ message: "Authentication required" });
   }
   
-  if (req.user && req.user.role !== 'Admin') {
+  if (req.user && req.user!.role !== 'Admin') {
     return res.status(403).json({ message: "Admin access required" });
   }
   
@@ -38,7 +38,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Items API
   app.get("/api/items", requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      // After requireAuth middleware, req.user is guaranteed to exist
+      const userId = req.user!.id;
       const items = await storage.getUserItems(userId);
       res.json(items);
     } catch (error) {
@@ -59,7 +60,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Only allow access to own items unless Admin or Agent
-      if (item.userId !== req.user.id && !['Admin', 'Agent'].includes(req.user.role)) {
+      if (item.userId !== req.user!.id && !['Admin', 'Agent'].includes(req.user!.role)) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -73,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertItemSchema.parse({
         ...req.body,
-        userId: req.user.id
+        userId: req.user!.id
       });
       
       const newItem = await storage.createItem(validatedData);
@@ -102,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Only allow updating own items unless Admin
-      if (item.userId !== req.user.id && req.user.role !== 'Admin') {
+      if (item.userId !== req.user!.id && req.user!.role !== 'Admin') {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -126,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Only allow deleting own items unless Admin
-      if (item.userId !== req.user.id && req.user.role !== 'Admin') {
+      if (item.userId !== req.user!.id && req.user!.role !== 'Admin') {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -157,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Ensure user is the current owner of the item
-      if (item.userId !== req.user.id) {
+      if (item.userId !== req.user!.id) {
         return res.status(403).json({ message: "You do not own this item" });
       }
       
@@ -168,7 +169,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Prevent self-transfer
-      if (recipientUser.id === req.user.id) {
+      if (recipientUser.id === req.user!.id) {
         return res.status(400).json({ message: "Cannot transfer item to yourself" });
       }
       
@@ -182,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createNotification({
         userId: recipientUser.id,
         title: `New Item: ${item.name}`,
-        message: `${req.user.fullName || req.user.username} has transferred ownership of ${item.name} to you.`,
+        message: `${req.user!.fullName || req.user!.username} has transferred ownership of ${item.name} to you.`,
         type: 'ownership_transfer',
         isRead: false,
         relatedItemId: itemId,
@@ -238,7 +239,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         reports = await storage.getFoundReports();
       } else {
         // Get user's reports by default
-        reports = await storage.getUserReports(req.user.id);
+        reports = await storage.getUserReports(req.user!.id);
       }
       
       res.json(reports);
@@ -251,7 +252,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertReportSchema.parse({
         ...req.body,
-        userId: req.user.id
+        userId: req.user!.id
       });
       
       const newReport = await storage.createReport(validatedData);
@@ -287,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Notifications API
   app.get("/api/notifications", requireAuth, async (req, res) => {
     try {
-      const notifications = await storage.getUserNotifications(req.user.id);
+      const notifications = await storage.getUserNotifications(req.user!.id);
       res.json(notifications);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch notifications" });
@@ -307,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Ensure users can only mark their own notifications as read
-      if (notification.userId !== req.user.id) {
+      if (notification.userId !== req.user!.id) {
         return res.status(403).json({ message: "Access denied" });
       }
       
@@ -321,19 +322,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User Management API (Admin only)
   app.get("/api/users", requireAdmin, async (req, res) => {
     try {
-      // In a real database implementation, this would query all users
-      // For in-memory storage, we'd need to expose a getAllUsers method
-      // Mocking this for now
-      const users = Array.from(new Array(10)).map((_, i) => ({
-        id: i + 1,
-        username: `user${i + 1}`,
-        email: `user${i + 1}@example.com`,
-        role: userRoles[i % userRoles.length],
-        fullName: `User ${i + 1}`,
-        createdAt: new Date()
-      }));
+      const users = await storage.getAllUsers();
       
-      res.json(users);
+      // Strip passwords before sending to client
+      const usersWithoutPasswords = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json(usersWithoutPasswords);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
     }
@@ -358,9 +355,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updatedUser = await storage.updateUser(userId, { role });
       
-      // Strip password from response
-      const { password, ...userWithoutPassword } = updatedUser;
-      res.json(userWithoutPassword);
+      if (updatedUser) {
+        // Strip password from response
+        const { password, ...userWithoutPassword } = updatedUser;
+        res.json(userWithoutPassword);
+      } else {
+        res.status(500).json({ message: "Failed to update user role" });
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to update user role" });
     }
@@ -369,7 +370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard statistics
   app.get("/api/stats", requireAuth, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = req.user!.id;
       
       // Get user items
       const items = await storage.getUserItems(userId);
