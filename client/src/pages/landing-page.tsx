@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { motion } from "framer-motion";
 import { 
   Shield, 
@@ -57,16 +58,17 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-background border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
               <div className="text-2xl font-display font-bold text-primary">KIZERE</div>
             </div>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <button 
                 onClick={() => navigate("/auth")} 
-                className="font-medium text-gray-600 hover:text-primary"
+                className="font-medium text-foreground/80 hover:text-primary"
               >
                 Login
               </button>
