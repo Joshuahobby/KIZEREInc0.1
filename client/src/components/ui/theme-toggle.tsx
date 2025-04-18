@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
@@ -13,68 +13,51 @@ export function ThemeToggle() {
     setMounted(true);
   }, []);
 
+  const toggleTheme = () => {
+    if (theme === 'dark') {
+      setTheme('light');
+    } else {
+      setTheme('dark');
+    }
+  };
+
   if (!mounted) {
     return <div className="w-9 h-9"></div>; // Placeholder to avoid layout shift
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setTheme("light")}
-        className={theme === "light" ? "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300" : ""}
-        aria-label="Light Mode"
-      >
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggleTheme}
+      className="relative flex items-center justify-center w-10 h-10 rounded-full overflow-hidden"
+      aria-label="Toggle Theme"
+    >
+      <div className="relative h-5 w-5">
         <motion.div
-          initial={{ scale: 0.8, opacity: 0.8 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ 
-            scale: theme === "light" ? 1 : 0.8, 
-            opacity: theme === "light" ? 1 : 0.6 
+            opacity: theme === 'light' ? 1 : 0,
+            y: theme === 'light' ? 0 : -10
           }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: 0.2 }}
+          className="absolute inset-0 flex items-center justify-center"
         >
-          <Sun className="h-[1.2rem] w-[1.2rem]" />
+          <Sun className="h-5 w-5 text-amber-500" />
         </motion.div>
-      </Button>
-      
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setTheme("dark")}
-        className={theme === "dark" ? "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300" : ""}
-        aria-label="Dark Mode"
-      >
+        
         <motion.div
-          initial={{ scale: 0.8, opacity: 0.8 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ 
-            scale: theme === "dark" ? 1 : 0.8, 
-            opacity: theme === "dark" ? 1 : 0.6 
+            opacity: theme === 'dark' ? 1 : 0,
+            y: theme === 'dark' ? 0 : 10
           }}
-          transition={{ duration: 0.15 }}
+          transition={{ duration: 0.2 }}
+          className="absolute inset-0 flex items-center justify-center"
         >
-          <Moon className="h-[1.2rem] w-[1.2rem]" />
+          <Moon className="h-5 w-5 text-blue-400" />
         </motion.div>
-      </Button>
-      
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setTheme("system")}
-        className={theme === "system" ? "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300" : ""}
-        aria-label="System Theme"
-      >
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0.8 }}
-          animate={{ 
-            scale: theme === "system" ? 1 : 0.8, 
-            opacity: theme === "system" ? 1 : 0.6 
-          }}
-          transition={{ duration: 0.15 }}
-        >
-          <Monitor className="h-[1.2rem] w-[1.2rem]" />
-        </motion.div>
-      </Button>
-    </div>
+      </div>
+    </Button>
   );
 }

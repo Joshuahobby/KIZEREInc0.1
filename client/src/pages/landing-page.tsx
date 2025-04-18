@@ -430,20 +430,20 @@ export default function LandingPage() {
               >
                 <Button 
                   onClick={() => navigate("/auth")}
-                  className="yellow-button text-lg px-8 py-6 rounded-xl shadow-lg shadow-primary-900/30 group relative overflow-hidden"
+                  size="lg"
+                  className="bg-[#FFDE59] hover:bg-[#FFD60A] text-[#333333] font-bold text-lg px-8 py-6 rounded-xl shadow-lg shadow-primary-900/30 group relative overflow-hidden"
                 >
-                  <span className="relative z-10 flex items-center gap-2 font-semibold">
+                  <span className="relative z-10 flex items-center gap-2">
                     Create Free Account
                     <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </span>
-                  <span className="absolute inset-0 bg-[var(--yellow-accent)] group-hover:bg-[var(--yellow-hover)] transition-colors duration-300"></span>
                 </Button>
               </motion.div>
               
-              <p className="mt-6 text-white/70 flex items-center justify-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-white/80" />
+              <div className="mt-6 flex items-center justify-center gap-2 text-white">
+                <CheckCircle2 className="h-5 w-5 text-white" />
                 <span>No credit card required. Get started in minutes.</span>
-              </p>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -513,6 +513,124 @@ export default function LandingPage() {
               <p className="text-muted-foreground text-lg">Satisfaction Rate</p>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-24 bg-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                Simple Process
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                How KIZERE Works
+              </h2>
+              <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
+                Our platform makes it easy to register, track, and recover your valuables in just a few simple steps.
+              </p>
+            </motion.div>
+          </div>
+          
+          <div className="flex flex-col md:flex-row md:items-start gap-12 md:gap-16">
+            <div className="relative md:w-1/2">
+              <div className="rounded-2xl overflow-hidden shadow-xl border border-border">
+                <img 
+                  src="https://images.unsplash.com/photo-1560769629-975ec94e6a86?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80" 
+                  alt="Person using the KIZERE app on a smartphone" 
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            </div>
+            
+            <div className="md:w-1/2">
+              <div className="space-y-10">
+                <motion.div 
+                  className="flex gap-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground mb-2">Register Your Items</h3>
+                    <p className="text-muted-foreground">
+                      Create an account and add your valuables to your digital inventory with photos, 
+                      descriptions, and unique identifiers.
+                    </p>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  className="flex gap-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                    2
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground mb-2">Get Digital Certificates</h3>
+                    <p className="text-muted-foreground">
+                      Each item receives a secure digital certificate proving ownership that can be
+                      transferred if the item changes hands.
+                    </p>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  className="flex gap-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                    3
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground mb-2">Report If Lost or Found</h3>
+                    <p className="text-muted-foreground">
+                      Easily report items that are lost or found. Our system automatically matches 
+                      reports and notifies the appropriate parties.
+                    </p>
+                  </div>
+                </motion.div>
+                
+                <motion.div 
+                  className="flex gap-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                  viewport={{ once: true }}
+                >
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                    4
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-foreground mb-2">Recovery & Reunification</h3>
+                    <p className="text-muted-foreground">
+                      Connect with the finder or owner through our secure messaging system and 
+                      coordinate the return of lost items safely.
+                    </p>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -664,6 +782,97 @@ export default function LandingPage() {
             >
               View More Testimonials
             </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Mobile App Section */}
+      <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-gray-50 dark:from-gray-900 to-transparent"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
+            <div className="md:w-1/2 order-2 md:order-1">
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                  Mobile Access
+                </span>
+                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+                  Take KIZERE With You Everywhere
+                </h2>
+                <p className="text-lg text-muted-foreground mb-8">
+                  Our mobile application gives you instant access to your digital inventory, allowing you to
+                  report lost items or scan found items on the go. Available for iOS and Android devices.
+                </p>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-foreground">Scan QR codes on found items to quickly identify owners</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-foreground">Receive instant notifications about your items</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-foreground">Securely transfer ownership with just a few taps</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
+                    <p className="text-foreground">Take photos and document your valuables anywhere</p>
+                  </div>
+                </div>
+                
+                <div className="mt-8 flex gap-4">
+                  <button className="bg-black text-white flex items-center gap-2 px-5 py-3 rounded-lg transition-transform hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                      <path d="M17.566 11.996c-.036-2.033 1.351-3.231 1.414-3.279-1.047-1.497-2.708-1.596-3.242-1.596-1.854-.036-3.279 1.036-4.134 1.036-.893 0-2.135-1.013-3.514-1.013-1.8 0-3.455 1.05-4.379 2.674-1.879 3.279-.507 8.086 1.326 10.754.905 1.292 1.963 2.674 3.361 2.634 1.351-.036 1.879-.854 3.514-.854 1.634 0 2.101.854 3.528.828 1.465-.036 2.386-1.301 3.27-2.634 1.048-1.481 1.465-2.925 1.48-3.003-.036-.012-2.844-1.06-2.864-4.236-.021-1.327 1.097-2.634 2.24-3.311z"/>
+                      <path d="M14.918 3.636c.727-.893 1.23-2.135 1.096-3.384-1.065.071-2.386.727-3.137 1.597-.69.785-1.301 2.061-1.145 3.264 1.193.089 2.404-.604 3.186-1.477z"/>
+                    </svg>
+                    <div className="text-left">
+                      <div className="text-xs">Download on the</div>
+                      <div className="text-lg font-semibold leading-tight">App Store</div>
+                    </div>
+                  </button>
+                  
+                  <button className="bg-black text-white flex items-center gap-2 px-5 py-3 rounded-lg transition-transform hover:scale-105">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+                      <path d="M3.609 1.814 13.792 12 3.609 22.186c-.181.181-.29.423-.29.684V1.13c0 .261.109.503.29.684zm1.505-.648v21.667l11-10.833-11-10.834zm3.29 4.728 5.5 5.388 1.634-1.604L6.825 2.066l1.579 3.828zm0 12.389 1.579 3.828 9.209-9.039-1.634-1.604-9.154 6.815z"/>
+                    </svg>
+                    <div className="text-left">
+                      <div className="text-xs">GET IT ON</div>
+                      <div className="text-lg font-semibold leading-tight">Google Play</div>
+                    </div>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+            
+            <div className="md:w-1/2 order-1 md:order-2 flex justify-center">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+                className="relative"
+              >
+                <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/30 rounded-full filter blur-3xl opacity-30"></div>
+                <div className="relative z-10">
+                  <img 
+                    src="https://i.ibb.co/QdQDwVC/mobile-mockup.png" 
+                    alt="KIZERE Mobile App" 
+                    className="max-w-full h-auto drop-shadow-2xl"
+                  />
+                </div>
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
