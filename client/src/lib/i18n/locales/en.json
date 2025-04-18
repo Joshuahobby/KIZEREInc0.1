@@ -79,9 +79,29 @@
     "feature4Desc": "Maintain digital proof of ownership for all your valuables",
     "statsTitle": "Trusted by Thousands",
     "statItems": "Items Registered",
-    "statUsers": "Active Users",
+    "statUsers": "Happy Users",
     "statRecoveries": "Items Recovered",
-    "learnMoreAction": "Learn more"
+    "statSatisfaction": "Satisfaction Rate",
+    "learnMoreAction": "Learn more",
+    "startToday": "Start Today",
+    "readyToSecure": "Ready to Secure Your Valuables?",
+    "joinThousands": "Join thousands of users who trust KIZERE to keep track of their important possessions.",
+    "createFreeAccount": "Create Free Account",
+    "noCardRequired": "No credit card required. Get started in minutes.",
+    "howItWorks": {
+      "sectionTitle": "How KIZERE Works",
+      "simpleProcess": "Simple Process",
+      "description": "Our platform makes it easy to register, track, and recover your valuables in just a few simple steps.",
+      "step1Title": "Register Your Items",
+      "step1Desc": "Create an account and add your valuables to your digital inventory with photos, descriptions, and unique identifiers.",
+      "step2Title": "Get Digital Certificates",
+      "step2Desc": "Each item receives a secure digital certificate proving ownership that can be transferred if the item changes hands.",
+      "step3Title": "Report If Lost or Found",
+      "step3Desc": "Easily report items that are lost or found. Our system automatically matches reports and notifies the appropriate parties.",
+      "step4Title": "Recovery & Reunification",
+      "step4Desc": "Connect with the finder or owner through our secure messaging system and coordinate the return of lost items safely.",
+      "communityDesc": "Community-powered item recovery network spanning across cities and regions"
+    }
   },
   "dashboard": {
     "welcomeMessage": "Welcome to your dashboard",

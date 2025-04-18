@@ -440,12 +440,12 @@ export default function LandingPage() {
               <div className="h-16 w-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-6 group-hover:bg-purple-500/20 transition-colors">
                 <Smartphone className="h-8 w-8 text-purple-500" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-purple-500 transition-colors">Mobile Access</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-purple-500 transition-colors">{t('landing.feature4Title')}</h3>
               <p className="text-muted-foreground">
-                Access your digital inventory anytime, anywhere from any device with our responsive platform.
+                {t('landing.feature4Desc')}
               </p>
               <div className="mt-4 flex items-center text-purple-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Learn more</span>
+                <span>{t('landing.learnMoreAction')}</span>
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
@@ -507,13 +507,13 @@ export default function LandingPage() {
               viewport={{ once: true }}
             >
               <span className="inline-block mb-3 px-4 py-1 rounded-full bg-white/10 text-white font-semibold text-sm">
-                Start Today
+                {t('landing.startToday')}
               </span>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-                Ready to Secure Your Valuables?
+                {t('landing.readyToSecure')}
               </h2>
               <p className="text-xl max-w-3xl mx-auto mb-8 text-white/80">
-                Join thousands of users who trust KIZERE to keep track of their important possessions.
+                {t('landing.joinThousands')}
               </p>
               
               <motion.div
@@ -527,7 +527,7 @@ export default function LandingPage() {
                   className="bg-[#FFDE59] hover:bg-[#FFD60A] text-[#333333] font-bold text-lg px-8 py-6 rounded-xl shadow-lg shadow-primary-900/30 group relative overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center gap-2">
-                    Create Free Account
+                    {t('landing.createFreeAccount')}
                     <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                   </span>
                 </Button>
@@ -535,7 +535,7 @@ export default function LandingPage() {
               
               <div className="mt-6 flex items-center justify-center gap-2 text-white">
                 <CheckCircle2 className="h-5 w-5 text-white" />
-                <span>No credit card required. Get started in minutes.</span>
+                <span>{t('landing.noCardRequired')}</span>
               </div>
             </motion.div>
           </div>
@@ -564,7 +564,7 @@ export default function LandingPage() {
               >
                 15,000+
               </motion.div>
-              <p className="text-muted-foreground text-lg">Items Registered</p>
+              <p className="text-muted-foreground text-lg">{t('landing.statItems')}</p>
             </div>
             
             <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
@@ -577,7 +577,7 @@ export default function LandingPage() {
               >
                 1,230+
               </motion.div>
-              <p className="text-muted-foreground text-lg">Items Recovered</p>
+              <p className="text-muted-foreground text-lg">{t('landing.statRecoveries')}</p>
             </div>
             
             <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
@@ -590,7 +590,7 @@ export default function LandingPage() {
               >
                 8,500+
               </motion.div>
-              <p className="text-muted-foreground text-lg">Happy Users</p>
+              <p className="text-muted-foreground text-lg">{t('landing.statUsers')}</p>
             </div>
             
             <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
@@ -603,7 +603,7 @@ export default function LandingPage() {
               >
                 98%
               </motion.div>
-              <p className="text-muted-foreground text-lg">Satisfaction Rate</p>
+              <p className="text-muted-foreground text-lg">{t('landing.statSatisfaction')}</p>
             </div>
           </motion.div>
         </div>
@@ -622,13 +622,13 @@ export default function LandingPage() {
               viewport={{ once: true }}
             >
               <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                Simple Process
+                {t('landing.howItWorks.simpleProcess')}
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                How KIZERE Works
+                {t('landing.howItWorks.sectionTitle')}
               </h2>
               <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
-                Our platform makes it easy to register, track, and recover your valuables in just a few simple steps.
+                {t('landing.howItWorks.description')}
               </p>
             </motion.div>
           </div>
@@ -651,7 +651,7 @@ export default function LandingPage() {
                   viewport={{ once: true }}
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
-                  <p className="text-white text-sm md:text-base font-medium">Community-powered item recovery network spanning across cities and regions</p>
+                  <p className="text-white text-sm md:text-base font-medium">{t('landing.howItWorks.communityDesc')}</p>
                 </div>
               </motion.div>
             </div>
@@ -669,10 +669,9 @@ export default function LandingPage() {
                     1
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">Register Your Items</h3>
+                    <h3 className="text-xl font-bold text-foreground mb-2">{t('landing.howItWorks.step1Title')}</h3>
                     <p className="text-muted-foreground">
-                      Create an account and add your valuables to your digital inventory with photos, 
-                      descriptions, and unique identifiers.
+                      {t('landing.howItWorks.step1Desc')}
                     </p>
                   </div>
                 </motion.div>
@@ -688,10 +687,9 @@ export default function LandingPage() {
                     2
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">Get Digital Certificates</h3>
+                    <h3 className="text-xl font-bold text-foreground mb-2">{t('landing.howItWorks.step2Title')}</h3>
                     <p className="text-muted-foreground">
-                      Each item receives a secure digital certificate proving ownership that can be
-                      transferred if the item changes hands.
+                      {t('landing.howItWorks.step2Desc')}
                     </p>
                   </div>
                 </motion.div>
@@ -707,10 +705,9 @@ export default function LandingPage() {
                     3
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">Report If Lost or Found</h3>
+                    <h3 className="text-xl font-bold text-foreground mb-2">{t('landing.howItWorks.step3Title')}</h3>
                     <p className="text-muted-foreground">
-                      Easily report items that are lost or found. Our system automatically matches 
-                      reports and notifies the appropriate parties.
+                      {t('landing.howItWorks.step3Desc')}
                     </p>
                   </div>
                 </motion.div>
@@ -726,10 +723,9 @@ export default function LandingPage() {
                     4
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">Recovery & Reunification</h3>
+                    <h3 className="text-xl font-bold text-foreground mb-2">{t('landing.howItWorks.step4Title')}</h3>
                     <p className="text-muted-foreground">
-                      Connect with the finder or owner through our secure messaging system and 
-                      coordinate the return of lost items safely.
+                      {t('landing.howItWorks.step4Desc')}
                     </p>
                   </div>
                 </motion.div>
