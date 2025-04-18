@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useLocation } from "wouter";
+import { useEffect, useState } from "react";
+import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -63,24 +63,82 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-background border-b border-border">
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border transition-all duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
-              <div className="text-2xl font-display font-bold text-primary">KIZERE</div>
+              <motion.div 
+                className="text-2xl font-display font-bold flex items-center gap-2"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Shield className="h-8 w-8 text-primary" />
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">KIZERE</span>
+              </motion.div>
             </div>
-            <div className="flex items-center gap-4">
+            
+            <div className="hidden md:flex items-center gap-8">
+              <motion.nav 
+                className="flex items-center gap-6 font-medium"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <a 
+                  href="#features" 
+                  className="text-foreground/70 hover:text-primary transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  Features
+                </a>
+                <a 
+                  href="#how-it-works" 
+                  className="text-foreground/70 hover:text-primary transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  How It Works
+                </a>
+                <a 
+                  href="#testimonials" 
+                  className="text-foreground/70 hover:text-primary transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  Testimonials
+                </a>
+              </motion.nav>
+            </div>
+            
+            <motion.div 
+              className="flex items-center gap-4"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
               <ThemeToggle />
               <button 
                 onClick={() => navigate("/auth")} 
-                className="font-medium text-foreground/80 hover:text-primary"
+                className="font-medium text-foreground/80 hover:text-primary transition-colors"
               >
                 Login
               </button>
-              <Button onClick={() => navigate("/auth")}>
+              <Button 
+                onClick={() => navigate("/auth")}
+                className="shadow-md hover:shadow-lg transition-shadow"
+                size="sm"
+              >
                 Get Started
               </Button>
-            </div>
+            </motion.div>
           </div>
         </div>
       </header>
@@ -518,7 +576,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 bg-background relative overflow-hidden">
+      <section id="how-it-works" className="py-24 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -548,18 +606,18 @@ export default function LandingPage() {
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent mix-blend-overlay z-10 dark:mix-blend-soft-light"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/30 to-black/50 mix-blend-overlay z-10 dark:mix-blend-soft-light"></div>
                 <motion.img 
                   src={pedestrianCrowdImage} 
-                  alt="Pedestrian crowd crossing a city street" 
+                  alt="Busy pedestrian crossing with people from diverse backgrounds" 
                   className="w-full h-auto object-cover"
                   initial={{ scale: 1.1, filter: "blur(5px)" }}
                   whileInView={{ scale: 1, filter: "blur(0px)" }}
                   transition={{ duration: 0.8 }}
                   viewport={{ once: true }}
                 />
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
-                  <p className="text-white text-sm font-medium">Secure community-based item recovery system</p>
+                <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                  <p className="text-white text-sm md:text-base font-medium">Community-powered item recovery network spanning across cities and regions</p>
                 </div>
               </motion.div>
             </div>
