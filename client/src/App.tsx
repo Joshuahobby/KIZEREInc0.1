@@ -10,6 +10,7 @@ import UserManagement from "@/pages/user-management";
 import LandingPage from "@/pages/landing-page";
 import AuthCallback from "@/pages/auth-callback";
 import { useAuth } from "@/hooks/use-auth";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 
 function App() {
   return (
