@@ -8,6 +8,7 @@ import Search from "@/pages/search";
 import LostFound from "@/pages/lost-found";
 import UserManagement from "@/pages/user-management";
 import LandingPage from "@/pages/landing-page";
+import AuthCallback from "@/pages/auth-callback";
 import { useAuth } from "@/hooks/use-auth";
 
 function App() {
@@ -16,6 +17,9 @@ function App() {
       <Switch>
         {/* Public routes - using modal authentication on landing page */}
         <Route path="/" component={LandingPage} />
+        
+        {/* Auth callback route for handling OAuth redirects */}
+        <Route path="/auth-callback" component={AuthCallback} />
         
         {/* Protected routes with role-based access */}
         
