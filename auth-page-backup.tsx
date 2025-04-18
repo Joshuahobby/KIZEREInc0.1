@@ -425,6 +425,7 @@ export default function AuthPage() {
                                   </div>
                                 </FormControl>
                                 <FormMessage />
+                                <PasswordStrengthIndicator passwordStrength={passwordStrength} />
                               </FormItem>
                             )}
                           />
