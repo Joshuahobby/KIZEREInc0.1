@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,33 +12,34 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { userRoles } from "@shared/schema";
-import { Loader2 } from "lucide-react";
+import { 
+  Loader2,
+  KeyRound, 
+  User, 
+  Mail, 
+  Phone, 
+  Lock, 
+  Eye, 
+  EyeOff, 
+  Shield, 
+  Tag, 
+  Search, 
+  MapPin,
+  Database,
+  AlertCircle,
+  CheckCircle2
+} from "lucide-react";
+import { AuthModel } from "@/models/auth.model";
 
-// Login form schema
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
-
-// Registration form schema
-const registerSchema = z.object({
-  fullName: z.string().min(3, "Full name must be at least 3 characters"),
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  email: z.string().email("Invalid email address"),
-  phoneNumber: z.string().optional(),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(6, "Confirm password is required"),
-  role: z.string().optional(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
+// Use types from our authentication model
+type LoginFormValues = z.infer<typeof AuthModel.loginSchema>;
+type RegisterFormValues = z.infer<typeof AuthModel.registerSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
+  const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string } | null>(null);
   const { user, loginMutation, registerMutation } = useAuth();
   const [location, navigate] = useLocation();
 
@@ -50,7 +52,7 @@ export default function AuthPage() {
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(AuthModel.loginSchema),
     defaultValues: {
       username: "",
       password: "",
@@ -59,7 +61,7 @@ export default function AuthPage() {
 
   // Registration form
   const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(AuthModel.registerSchema),
     defaultValues: {
       fullName: "",
       username: "",
@@ -72,71 +74,161 @@ export default function AuthPage() {
   });
 
   const onLoginSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
+    const loginData = AuthModel.prepareLoginData(data);
+    loginMutation.mutate(loginData);
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    const { confirmPassword, ...registerData } = data;
+    const registerData = AuthModel.prepareRegisterData(data);
     registerMutation.mutate(registerData);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl w-full flex flex-col lg:flex-row gap-8">
-          {/* Hero Section */}
-          <div className="lg:w-1/2 flex flex-col justify-center">
-            <h1 className="text-3xl md:text-4xl font-display font-bold text-neutral-900 mb-6">
-              KIZERE: Your Digital Item Management Solution
-            </h1>
-            <p className="text-lg text-neutral-600 mb-8">
-              The ONLY #1 Modern one-to-go Digital Solution platform to register, track, and secure your valuable possessions. 
-              Never worry about lost items again.
-            </p>
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 h-6 w-6 text-primary-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="ml-3 text-neutral-600">Register your valuable items securely in our database</p>
-              </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 h-6 w-6 text-primary-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="ml-3 text-neutral-600">Report lost items and get notified when they're found</p>
-              </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 h-6 w-6 text-primary-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="ml-3 text-neutral-600">Search through our comprehensive database of lost and found items</p>
-              </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 h-6 w-6 text-primary-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="ml-3 text-neutral-600">Manage ownership and track your valuable possessions easily</p>
-              </div>
-            </div>
-          </div>
+  const fadeIn = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.6 }
+    }
+  };
 
-          {/* Auth Forms */}
-          <div className="lg:w-1/2 mt-8 lg:mt-0">
-            <Card className="w-full max-w-md mx-auto">
+  const stagger = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const featureItem = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { 
+      opacity: 1, 
+      x: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex flex-col">
+      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl w-full flex flex-col lg:flex-row gap-12 items-center">
+          {/* Hero Section with 3D-like UI */}
+          <motion.div 
+            className="lg:w-1/2 flex flex-col justify-center"
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+          >
+            <div className="relative mb-8">
+              <motion.div 
+                className="absolute -top-12 -left-12 w-24 h-24 rounded-full bg-primary/10 z-0"
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 10, 0],
+                }}
+                transition={{ 
+                  duration: 8, 
+                  repeat: Infinity, 
+                  repeatType: "reverse" 
+                }}
+              />
+              <motion.div 
+                className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-secondary/10 z-0"
+                animate={{ 
+                  scale: [1, 1.3, 1],
+                  rotate: [0, -15, 0],
+                }}
+                transition={{ 
+                  duration: 10, 
+                  repeat: Infinity, 
+                  repeatType: "reverse",
+                  delay: 1 
+                }}
+              />
+              <motion.h1 
+                className="text-4xl md:text-5xl font-bold text-foreground mb-4 relative z-10"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">KIZERE</span>
+                <span className="block text-2xl md:text-3xl mt-2 text-foreground/90">Smart Item Management</span>
+              </motion.h1>
+            </div>
+            
+            <motion.p 
+              className="text-lg text-muted-foreground mb-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              The modern digital solution to register, protect, track, and recover your valuable possessions with advanced technology.
+            </motion.p>
+            
+            <motion.div 
+              className="space-y-5"
+              variants={stagger}
+              initial="hidden"
+              animate="visible"
+            >
+              <motion.div className="flex items-start" variants={featureItem}>
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Database className="h-5 w-5" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-base font-medium text-foreground">Secure Registration</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Register your valuable items in our encrypted database</p>
+                </div>
+              </motion.div>
+              
+              <motion.div className="flex items-start" variants={featureItem}>
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <AlertCircle className="h-5 w-5" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-base font-medium text-foreground">Lost & Found</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Report lost items and get notified when they're found</p>
+                </div>
+              </motion.div>
+              
+              <motion.div className="flex items-start" variants={featureItem}>
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Search className="h-5 w-5" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-base font-medium text-foreground">Smart Search</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Find items with our AI-powered search system</p>
+                </div>
+              </motion.div>
+              
+              <motion.div className="flex items-start" variants={featureItem}>
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                  <Tag className="h-5 w-5" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-base font-medium text-foreground">Ownership Management</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">Transfer and verify ownership with digital certificates</p>
+                </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+
+          {/* Auth Forms with Glass Morphism */}
+          <motion.div 
+            className="lg:w-1/2 mt-8 lg:mt-0 w-full max-w-md"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Card className="backdrop-blur-sm bg-card/80 border border-border/40 shadow-xl">
               <CardContent className="pt-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-8">
-                    <TabsTrigger value="login">Login</TabsTrigger>
-                    <TabsTrigger value="register">Register</TabsTrigger>
+                    <TabsTrigger value="login" className="text-sm">Sign In</TabsTrigger>
+                    <TabsTrigger value="register" className="text-sm">Create Account</TabsTrigger>
                   </TabsList>
                   
                   {/* Login Form */}
@@ -148,9 +240,12 @@ export default function AuthPage() {
                           name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Username</FormLabel>
+                              <FormLabel className="text-foreground/80">Username</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter your username" {...field} />
+                                <div className="relative">
+                                  <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                  <Input className="pl-10" placeholder="Enter your username" {...field} />
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -162,27 +257,59 @@ export default function AuthPage() {
                           name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Password</FormLabel>
+                              <FormLabel className="text-foreground/80">Password</FormLabel>
                               <FormControl>
-                                <Input type="password" placeholder="Enter your password" {...field} />
+                                <div className="relative">
+                                  <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                  <Input 
+                                    className="pl-10 pr-10" 
+                                    type={showPassword ? "text" : "password"} 
+                                    placeholder="Enter your password" 
+                                    {...field} 
+                                  />
+                                  <button 
+                                    type="button"
+                                    className="absolute right-3 top-2.5 text-muted-foreground"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                  >
+                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                  </button>
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                         
+                        <div className="flex justify-between items-center mt-2 mb-1">
+                          <div className="flex items-center space-x-2">
+                            <input 
+                              type="checkbox" 
+                              id="remember" 
+                              className="rounded border-input h-4 w-4 text-primary focus:ring-primary"
+                            />
+                            <label htmlFor="remember" className="text-sm text-muted-foreground">
+                              Remember me
+                            </label>
+                          </div>
+                          <a href="#" className="text-sm text-primary hover:underline">
+                            Forgot password?
+                          </a>
+                        </div>
+                        
                         <Button 
                           type="submit" 
-                          className="w-full" 
+                          className="w-full mt-4" 
                           disabled={loginMutation.isPending}
+                          size="lg"
                         >
                           {loginMutation.isPending ? (
                             <>
                               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Logging in...
+                              Signing in...
                             </>
                           ) : (
-                            "Login"
+                            "Sign In"
                           )}
                         </Button>
                       </form>
@@ -198,9 +325,12 @@ export default function AuthPage() {
                           name="fullName"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Full Name</FormLabel>
+                              <FormLabel className="text-foreground/80">Full Name</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter your full name" {...field} />
+                                <div className="relative">
+                                  <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                  <Input className="pl-10" placeholder="Enter your full name" {...field} />
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -213,9 +343,12 @@ export default function AuthPage() {
                             name="username"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Username</FormLabel>
+                                <FormLabel className="text-foreground/80">Username</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Choose a username" {...field} />
+                                  <div className="relative">
+                                    <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                    <Input className="pl-10" placeholder="Choose a username" {...field} />
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -227,9 +360,12 @@ export default function AuthPage() {
                             name="email"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Email</FormLabel>
+                                <FormLabel className="text-foreground/80">Email</FormLabel>
                                 <FormControl>
-                                  <Input placeholder="Enter your email" type="email" {...field} />
+                                  <div className="relative">
+                                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                    <Input className="pl-10" placeholder="Enter your email" type="email" {...field} />
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -242,9 +378,12 @@ export default function AuthPage() {
                           name="phoneNumber"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Phone Number (Optional)</FormLabel>
+                              <FormLabel className="text-foreground/80">Phone Number (Optional)</FormLabel>
                               <FormControl>
-                                <Input placeholder="Enter your phone number" {...field} />
+                                <div className="relative">
+                                  <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                  <Input className="pl-10" placeholder="Enter your phone number" {...field} />
+                                </div>
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -257,9 +396,24 @@ export default function AuthPage() {
                             name="password"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Password</FormLabel>
+                                <FormLabel className="text-foreground/80">Password</FormLabel>
                                 <FormControl>
-                                  <Input type="password" placeholder="Create a password" {...field} />
+                                  <div className="relative">
+                                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                    <Input 
+                                      className="pl-10 pr-10" 
+                                      type={showPassword ? "text" : "password"} 
+                                      placeholder="Create a password" 
+                                      {...field} 
+                                    />
+                                    <button 
+                                      type="button"
+                                      className="absolute right-3 top-2.5 text-muted-foreground"
+                                      onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    </button>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -271,9 +425,24 @@ export default function AuthPage() {
                             name="confirmPassword"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Confirm Password</FormLabel>
+                                <FormLabel className="text-foreground/80">Confirm Password</FormLabel>
                                 <FormControl>
-                                  <Input type="password" placeholder="Confirm your password" {...field} />
+                                  <div className="relative">
+                                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                    <Input 
+                                      className="pl-10 pr-10" 
+                                      type={showConfirmPassword ? "text" : "password"} 
+                                      placeholder="Confirm your password" 
+                                      {...field} 
+                                    />
+                                    <button 
+                                      type="button"
+                                      className="absolute right-3 top-2.5 text-muted-foreground"
+                                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    >
+                                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                    </button>
+                                  </div>
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -286,30 +455,50 @@ export default function AuthPage() {
                           name="role"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Account Type</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select account type" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {userRoles.map((role) => (
-                                    <SelectItem key={role} value={role}>
-                                      {role}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <FormLabel className="text-foreground/80">Account Type</FormLabel>
+                              <div className="relative">
+                                <Shield className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground z-10" />
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="pl-10">
+                                      <SelectValue placeholder="Select account type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {userRoles.map((role) => (
+                                      <SelectItem key={role} value={role}>
+                                        <div className="flex items-center">
+                                          {role === "Admin" && <Shield className="mr-2 h-4 w-4" />}
+                                          {role === "Agent" && <CheckCircle2 className="mr-2 h-4 w-4" />}
+                                          {role === "Subscriber" && <User className="mr-2 h-4 w-4" />}
+                                          {role}
+                                        </div>
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                         
+                        <div className="flex items-center space-x-2 mt-2">
+                          <input 
+                            type="checkbox" 
+                            id="terms" 
+                            className="rounded border-input h-4 w-4 text-primary focus:ring-primary"
+                          />
+                          <label htmlFor="terms" className="text-sm text-muted-foreground">
+                            I agree to the <a href="#" className="text-primary hover:underline">Terms of Service</a> and <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+                          </label>
+                        </div>
+                        
                         <Button 
                           type="submit" 
-                          className="w-full"
+                          className="w-full mt-4"
                           disabled={registerMutation.isPending}
+                          size="lg"
                         >
                           {registerMutation.isPending ? (
                             <>
@@ -326,7 +515,7 @@ export default function AuthPage() {
                 </Tabs>
               </CardContent>
             </Card>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
