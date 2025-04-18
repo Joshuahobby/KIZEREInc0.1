@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { motion } from "framer-motion";
+import pedestrianCrowdImage from "../assets/pedestrian_crowd.png";
 import { 
   Shield, 
   Search, 
@@ -542,13 +543,25 @@ export default function LandingPage() {
           
           <div className="flex flex-col md:flex-row md:items-start gap-12 md:gap-16">
             <div className="relative md:w-1/2">
-              <div className="rounded-2xl overflow-hidden shadow-xl border border-border">
-                <img 
-                  src="https://images.unsplash.com/photo-1560769629-975ec94e6a86?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1000&q=80" 
-                  alt="Person using the KIZERE app on a smartphone" 
+              <motion.div 
+                className="rounded-2xl overflow-hidden shadow-xl border border-border relative"
+                whileHover={{ scale: 1.02 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent mix-blend-overlay z-10 dark:mix-blend-soft-light"></div>
+                <motion.img 
+                  src={pedestrianCrowdImage} 
+                  alt="Pedestrian crowd crossing a city street" 
                   className="w-full h-auto object-cover"
+                  initial={{ scale: 1.1, filter: "blur(5px)" }}
+                  whileInView={{ scale: 1, filter: "blur(0px)" }}
+                  transition={{ duration: 0.8 }}
+                  viewport={{ once: true }}
                 />
-              </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
+                  <p className="text-white text-sm font-medium">Secure community-based item recovery system</p>
+                </div>
+              </motion.div>
             </div>
             
             <div className="md:w-1/2">
