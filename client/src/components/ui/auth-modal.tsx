@@ -28,8 +28,28 @@ import { AuthModel } from "@/models/auth.model";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
 import { signInWithGoogle, extractUserInfo } from "@/lib/firebase";
 import { queryClient } from "@/lib/queryClient";
+import { useLocation } from "wouter";
 import { Loader2, User, Mail, Phone, KeyRound, Eye, EyeOff } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
+
+// Function to redirect to appropriate dashboard based on user role
+function redirectToDashboardByRole(role: string): void {
+  const dashboardPath = getDashboardPathByRole(role);
+  window.location.href = dashboardPath;
+}
+
+// Helper function to get the dashboard path based on user role
+function getDashboardPathByRole(role: string): string {
+  switch (role) {
+    case 'Admin':
+      return '/user-management';
+    case 'Agent':
+      return '/lost-found';
+    case 'Subscriber':
+    default:
+      return '/dashboard';
+  }
+}
 
 // Types from AuthModel
 type LoginFormValues = z.infer<typeof AuthModel.loginSchema>;
@@ -91,12 +111,22 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
   const onLoginSubmit = (data: LoginFormValues) => {
     const loginData = AuthModel.prepareLoginData(data);
-    loginMutation.mutate(loginData);
+    loginMutation.mutate(loginData, {
+      onSuccess: (userData) => {
+        // Redirect to the appropriate dashboard based on user role
+        redirectToDashboardByRole(userData.role);
+      }
+    });
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
     const registerData = AuthModel.prepareRegisterData(data);
-    registerMutation.mutate(registerData);
+    registerMutation.mutate(registerData, {
+      onSuccess: (userData) => {
+        // Redirect to the appropriate dashboard based on user role
+        redirectToDashboardByRole(userData.role);
+      }
+    });
   };
 
   const handleGoogleSignIn = async () => {
@@ -143,6 +173,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       
       // Close the modal
       onClose();
+      
+      // Redirect to the appropriate dashboard based on user role
+      redirectToDashboardByRole(userData.role);
     } catch (error: any) {
       console.error("Google sign-in error:", error);
       toast({

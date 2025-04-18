@@ -35,6 +35,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
+  // Google Authentication
+  app.post("/api/auth/google", async (req, res) => {
+    try {
+      const { email, name, uid } = req.body;
+      
+      if (!email || !name || !uid) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Check if user exists
+      let user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Create a new user if not found
+        user = await storage.createUser({
+          fullName: name,
+          username: email,
+          email: email,
+          password: `google_${uid}`, // We don't use this password for login
+          role: 'Subscriber' // Default role for new users
+        });
+        console.log(`Created new user from Google auth: ${user.id}`);
+      }
+      
+      // Log in the user
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Authentication failed" });
+        }
+        
+        // Return user data without password
+        const { password, ...userData } = user;
+        return res.status(200).json(userData);
+      });
+    } catch (error) {
+      console.error("Google auth error:", error);
+      res.status(500).json({ message: "Authentication failed" });
+    }
+  });
+
   // Items API
   app.get("/api/items", requireAuth, async (req, res) => {
     try {
