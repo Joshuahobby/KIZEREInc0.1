@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -7,6 +7,7 @@ import {
 import { insertUserSchema, User, InsertUser, UserLogin } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { auth, firebaseSignOut } from "@/lib/firebase";
 
 type AuthContextType = {
   user: Omit<User, "password"> | null;
@@ -29,6 +30,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
+  
+  // Listen for Firebase auth state changes
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        console.log("Firebase user authenticated:", firebaseUser);
+        // User is signed in with Firebase
+        // You might want to sync this with your backend
+      } else {
+        console.log("No Firebase user authenticated");
+        // User is signed out of Firebase
+      }
+    });
+    
+    // Cleanup on unmount
+    return () => unsubscribe();
+  }, []);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: UserLogin) => {
@@ -74,7 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      // Sign out from backend session
       await apiRequest("POST", "/api/logout");
+      
+      // Also sign out from Firebase
+      await firebaseSignOut();
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);

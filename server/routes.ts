@@ -38,11 +38,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Google Authentication
   app.post("/api/auth/google", async (req, res) => {
     try {
-      const { email, name, uid } = req.body;
+      const { email, name, uid, token, photoURL } = req.body;
       
       if (!email || !name || !uid) {
         return res.status(400).json({ message: "Missing required fields" });
       }
+      
+      console.log("Processing Google authentication for:", email);
       
       // Check if user exists
       let user = await storage.getUserByEmail(email);

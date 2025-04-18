@@ -135,7 +135,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       setGoogleLoading(true);
       const result = await signInWithGoogle();
       
-      // Extract user information
+      // Extract user information from Firebase result
       const userInfo = extractUserInfo(result);
       console.log("Google sign-in successful", userInfo);
       

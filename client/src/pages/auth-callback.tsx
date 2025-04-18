@@ -14,7 +14,8 @@ import { Loader2 } from "lucide-react";
  * performs the necessary API calls to sign in the user
  */
 export default function AuthCallback() {
-  const [, navigate] = useLocation();
+  // In wouter, we use useLocation which returns a tuple of [location, setLocation]
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { isLoading } = useAuth();
   
@@ -76,7 +77,7 @@ export default function AuthCallback() {
         localStorage.removeItem("firebase_auth_nonce");
         
         // Redirect based on user role
-        navigate(getUserRedirectPath(userData.role));
+        setLocation(getUserRedirectPath(userData.role));
       } catch (error: any) {
         console.error("Authentication error:", error);
         toast({
@@ -86,7 +87,7 @@ export default function AuthCallback() {
         });
         
         // Redirect to home page on error
-        navigate("/");
+        setLocation("/");
       }
     };
     
@@ -94,7 +95,7 @@ export default function AuthCallback() {
     if (!isLoading) {
       processAuth();
     }
-  }, [isLoading, navigate, toast]);
+  }, [isLoading, setLocation, toast]);
 
   // Helper function to determine redirect path based on role
   const getUserRedirectPath = (role: string): string => {
