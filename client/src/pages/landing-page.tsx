@@ -193,7 +193,7 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
-                Trusted by 15,000+ users worldwide
+                {t('landing.trustedUsers')}
               </motion.span>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
@@ -203,7 +203,7 @@ export default function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1, duration: 0.6 }}
                 >
-                  Secure Your
+                  {t('landing.heroTitle1')}
                 </motion.span>
                 <motion.span 
                   className="text-gradient block"
@@ -211,7 +211,7 @@ export default function LandingPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.6 }}
                 >
-                  Valuables Digitally
+                  {t('landing.heroTitle2')}
                 </motion.span>
               </h1>
               
@@ -221,7 +221,7 @@ export default function LandingPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
               >
-                KIZERE is your modern platform for registering, tracking, and recovering your valuable belongings with advanced technology and a supportive community.
+                {t('landing.heroSubtitle')}
               </motion.p>
               
               <motion.div 
@@ -236,7 +236,7 @@ export default function LandingPage() {
                   size="lg"
                 >
                   <span className="relative z-10 flex items-center gap-2">
-                    Register Now
+                    {t('landing.registerNow')}
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </span>
                   <span className="absolute inset-0 bg-[var(--yellow-accent)] group-hover:bg-[var(--yellow-hover)] transition-colors duration-300"></span>
@@ -248,7 +248,7 @@ export default function LandingPage() {
                   className="border-primary/30 hover:border-primary"
                   onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  Learn More
+                  {t('landing.learnMore')}
                 </Button>
               </motion.div>
               
@@ -360,13 +360,13 @@ export default function LandingPage() {
               viewport={{ once: true }}
             >
               <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                Powerful Features
+                {t('landing.powerfulFeatures')}
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                The Complete Solution for <span className="text-gradient">Item Management</span>
+                {t('landing.completeSolution')} <span className="text-gradient">{t('landing.itemManagement')}</span>
               </h2>
               <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
-                KIZERE provides all the tools you need to register, protect, and recover your valuable possessions.
+                {t('landing.kizereProvides')}
               </p>
             </motion.div>
           </div>
@@ -386,12 +386,12 @@ export default function LandingPage() {
               <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
                 <Shield className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">Secure Registration</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">{t('landing.feature1Title')}</h3>
               <p className="text-muted-foreground">
-                Register your items securely with detailed information, photos, and unique digital certificates.
+                {t('landing.feature1Desc')}
               </p>
               <div className="mt-4 flex items-center text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Learn more</span>
+                <span>{t('landing.learnMoreAction')}</span>
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
@@ -404,12 +404,12 @@ export default function LandingPage() {
               <div className="h-16 w-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6 group-hover:bg-red-500/20 transition-colors">
                 <AlertTriangle className="h-8 w-8 text-red-500" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-red-500 transition-colors">Lost Item Reporting</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-red-500 transition-colors">{t('landing.feature2Title')}</h3>
               <p className="text-muted-foreground">
-                Quickly report lost items and get real-time notifications when they're found by community members.
+                {t('landing.feature2Desc')}
               </p>
               <div className="mt-4 flex items-center text-red-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Learn more</span>
+                <span>{t('landing.learnMoreAction')}</span>
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
@@ -422,12 +422,12 @@ export default function LandingPage() {
               <div className="h-16 w-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 group-hover:bg-blue-500/20 transition-colors">
                 <Search className="h-8 w-8 text-blue-500" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-blue-500 transition-colors">Advanced Search</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-blue-500 transition-colors">{t('landing.feature3Title')}</h3>
               <p className="text-muted-foreground">
-                Search through our comprehensive database to find lost items using advanced filtering options.
+                {t('landing.feature3Desc')}
               </p>
               <div className="mt-4 flex items-center text-blue-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Learn more</span>
+                <span>{t('landing.learnMoreAction')}</span>
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
