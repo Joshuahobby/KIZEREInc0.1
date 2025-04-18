@@ -97,16 +97,57 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
   const handleGoogleSignIn = async () => {
     try {
+      // Start Google sign-in process
+      setGoogleLoading(true);
       const result = await signInWithGoogle();
-      // We will handle this in the backend via a new endpoint
-      // For now, let the user know this feature is coming soon
-      console.log("Google sign-in successful", result);
       
-      // Show toast message to user that this is a mock implementation
-      // This would typically use the useToast hook but we're keeping it simple
-      alert("Gmail login is coming soon! This is currently a mock implementation.");
+      // Extract user information
+      const userInfo = extractUserInfo(result);
+      console.log("Google sign-in successful", userInfo);
+      
+      // Send the Google auth data to our backend
+      const response = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userInfo.email,
+          name: userInfo.displayName,
+          uid: userInfo.uid,
+          token: userInfo.token,
+          photoURL: userInfo.photoURL
+        }),
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to authenticate with Google");
+      }
+      
+      // Process the user data returned from our backend
+      const userData = await response.json();
+      
+      // Update auth context
+      queryClient.setQueryData(["/api/user"], userData);
+      
+      // Show success message
+      toast({
+        title: "Sign in successful",
+        description: `Welcome, ${userData.fullName || userData.username}!`,
+      });
+      
+      // Close the modal
+      onClose();
     } catch (error) {
       console.error("Google sign-in error:", error);
+      toast({
+        title: "Sign in failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setGoogleLoading(false);
     }
   };
 
