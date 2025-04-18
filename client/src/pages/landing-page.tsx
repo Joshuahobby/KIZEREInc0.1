@@ -12,7 +12,11 @@ import {
   Smartphone, 
   Users, 
   BarChart, 
-  Calendar
+  Calendar,
+  Lock,
+  BarChart2,
+  MessageCircle,
+  ArrowRight
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -86,79 +90,164 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row gap-12 items-center">
             <motion.div 
               className="lg:w-1/2"
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
-                <span className="text-gradient">Secure Your</span><br />
-                <span className="text-gradient">Valuables Digitally</span>
-              </h1>
-              <p className="mt-6 text-lg text-gray-700">
-                KIZERE is the ultimate platform for registering, tracking, and recovering your precious belongings.
-                Never worry about lost items again.
-              </p>
+              <motion.span 
+                className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-semibold text-sm"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                Trusted by 15,000+ users worldwide
+              </motion.span>
               
-              <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <button 
-                  onClick={() => navigate("/auth")}
-                  className="yellow-button"
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+                <motion.span 
+                  className="text-gradient block"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.6 }}
                 >
-                  Register Now
-                </button>
+                  Secure Your
+                </motion.span>
+                <motion.span 
+                  className="text-gradient block"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.6 }}
+                >
+                  Valuables Digitally
+                </motion.span>
+              </h1>
+              
+              <motion.p 
+                className="mt-6 text-lg text-gray-700 dark:text-gray-300 max-w-lg"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6 }}
+              >
+                KIZERE is your modern platform for registering, tracking, and recovering your valuable belongings with advanced technology and a supportive community.
+              </motion.p>
+              
+              <motion.div 
+                className="mt-8 flex flex-col sm:flex-row gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+              >
+                <Button 
+                  onClick={() => navigate("/auth")}
+                  className="yellow-button group relative overflow-hidden h-12"
+                  size="lg"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    Register Now
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <span className="absolute inset-0 bg-[var(--yellow-accent)] group-hover:bg-[var(--yellow-hover)] transition-colors duration-300"></span>
+                </Button>
+                
                 <Button 
                   variant="outline" 
                   size="lg"
+                  className="border-primary/30 hover:border-primary"
                   onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                 >
                   Learn More
                 </Button>
-              </div>
+              </motion.div>
               
-              <p className="mt-4 text-sm text-gray-500">
-                Today is {formattedDate}
-              </p>
+              <motion.div
+                className="mt-8 flex items-center gap-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.8 }}
+              >
+                <div className="flex items-center">
+                  <Lock className="h-5 w-5 text-primary mr-2" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Secure & Encrypted</span>
+                </div>
+                <div className="flex items-center">
+                  <Shield className="h-5 w-5 text-primary mr-2" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Digital Certificates</span>
+                </div>
+              </motion.div>
             </motion.div>
             
             <motion.div 
               className="lg:w-1/2"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
             >
               <div className="relative">
-                <div className="absolute -left-6 -top-6 w-64 h-64 bg-primary-100 rounded-full opacity-50 filter blur-3xl"></div>
-                <div className="absolute -right-6 -bottom-6 w-64 h-64 bg-[var(--yellow-light)] rounded-full opacity-50 filter blur-3xl"></div>
+                <div className="absolute -left-10 -top-10 w-64 h-64 bg-primary/20 rounded-full opacity-60 filter blur-3xl"></div>
+                <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-[var(--yellow-light)] rounded-full opacity-60 filter blur-3xl"></div>
                 
-                <div className="relative bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+                <motion.div 
+                  className="relative bg-card backdrop-blur-sm bg-opacity-95 p-8 rounded-2xl shadow-xl border border-border overflow-hidden"
+                  whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full"></div>
+                  
                   <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-xl font-semibold text-gray-800">Item Registration</h3>
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">Registered</span>
+                    <h3 className="text-xl font-semibold text-foreground">Item Registration</h3>
+                    <motion.span 
+                      className="px-3 py-1 bg-green-100 dark:bg-green-900/60 text-green-800 dark:text-green-200 rounded-full text-sm font-medium"
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 1, repeat: Infinity, repeatDelay: 3 }}
+                    >
+                      Registered
+                    </motion.span>
                   </div>
                   
                   <div className="space-y-6">
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                        <Smartphone className="w-6 h-6 text-primary-600" />
-                      </div>
+                      <motion.div 
+                        className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0"
+                        whileHover={{ rotate: [0, -5, 5, -5, 0] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Smartphone className="w-7 h-7 text-primary" />
+                      </motion.div>
                       <div>
-                        <h4 className="font-medium text-gray-900">iPhone 14 Pro</h4>
-                        <p className="text-sm text-gray-500 mt-1">Serial: IMEI493049302939</p>
-                        <p className="text-sm text-gray-500">Registered on April 10, 2025</p>
+                        <h4 className="font-medium text-foreground">iPhone 14 Pro</h4>
+                        <p className="text-sm text-muted-foreground mt-1">Serial: IMEI493049302939</p>
+                        <p className="text-sm text-muted-foreground">Registered on April 10, 2025</p>
                       </div>
                     </div>
                     
-                    <div className="border-t border-gray-100 pt-4">
+                    <div className="border-t border-border pt-4">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
-                          <Shield className="w-5 h-5 text-primary-600 mr-2" />
-                          <span className="text-sm font-medium text-gray-700">Secure Digital Certificate</span>
+                          <Shield className="w-5 h-5 text-primary mr-2" />
+                          <span className="text-sm font-medium text-foreground">Secure Digital Certificate</span>
                         </div>
-                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                        <motion.div
+                          animate={{ rotate: [0, 360] }}
+                          transition={{ duration: 1, delay: 1 }}
+                        >
+                          <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        </motion.div>
                       </div>
                     </div>
+                    
+                    <div className="flex items-center justify-between gap-3 mt-6">
+                      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-primary rounded-full" 
+                          initial={{ width: 0 }}
+                          animate={{ width: "100%" }}
+                          transition={{ duration: 1.5, delay: 0.5 }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium text-primary">100%</span>
+                    </div>
                   </div>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           </div>
@@ -166,15 +255,27 @@ export default function LandingPage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-24 bg-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              The Complete Solution for <span className="text-gradient">Item Management</span>
-            </h2>
-            <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-              KIZERE provides all the tools you need to register, protect, and recover your valuable possessions.
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                Powerful Features
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                The Complete Solution for <span className="text-gradient">Item Management</span>
+              </h2>
+              <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
+                KIZERE provides all the tools you need to register, protect, and recover your valuable possessions.
+              </p>
+            </motion.div>
           </div>
           
           <motion.div 
@@ -184,250 +285,510 @@ export default function LandingPage() {
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
           >
-            <motion.div className="feature-card" variants={itemVariants}>
-              <div className="h-12 w-12 rounded-lg bg-primary-100 flex items-center justify-center mb-6">
-                <Shield className="h-6 w-6 text-primary-600" />
+            <motion.div 
+              className="feature-card group" 
+              variants={itemVariants}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
+            >
+              <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
+                <Shield className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Secure Registration</h3>
-              <p className="text-gray-600">
-                Register your items securely with detailed information, photos, and unique identifiers.
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors">Secure Registration</h3>
+              <p className="text-muted-foreground">
+                Register your items securely with detailed information, photos, and unique digital certificates.
               </p>
+              <div className="mt-4 flex items-center text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                <span>Learn more</span>
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
             </motion.div>
             
-            <motion.div className="feature-card" variants={itemVariants}>
-              <div className="h-12 w-12 rounded-lg bg-primary-100 flex items-center justify-center mb-6">
-                <AlertTriangle className="h-6 w-6 text-primary-600" />
+            <motion.div 
+              className="feature-card group" 
+              variants={itemVariants}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
+            >
+              <div className="h-16 w-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6 group-hover:bg-red-500/20 transition-colors">
+                <AlertTriangle className="h-8 w-8 text-red-500" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Lost Item Reporting</h3>
-              <p className="text-gray-600">
-                Quickly report lost items and get notified when they're found by someone in the community.
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-red-500 transition-colors">Lost Item Reporting</h3>
+              <p className="text-muted-foreground">
+                Quickly report lost items and get real-time notifications when they're found by community members.
               </p>
+              <div className="mt-4 flex items-center text-red-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                <span>Learn more</span>
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
             </motion.div>
             
-            <motion.div className="feature-card" variants={itemVariants}>
-              <div className="h-12 w-12 rounded-lg bg-primary-100 flex items-center justify-center mb-6">
-                <Search className="h-6 w-6 text-primary-600" />
+            <motion.div 
+              className="feature-card group" 
+              variants={itemVariants}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
+            >
+              <div className="h-16 w-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 group-hover:bg-blue-500/20 transition-colors">
+                <Search className="h-8 w-8 text-blue-500" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Advanced Search</h3>
-              <p className="text-gray-600">
-                Search through our comprehensive database to find lost items or check if found items have been reported.
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-blue-500 transition-colors">Advanced Search</h3>
+              <p className="text-muted-foreground">
+                Search through our comprehensive database to find lost items using advanced filtering options.
               </p>
+              <div className="mt-4 flex items-center text-blue-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                <span>Learn more</span>
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
             </motion.div>
             
-            <motion.div className="feature-card" variants={itemVariants}>
-              <div className="h-12 w-12 rounded-lg bg-primary-100 flex items-center justify-center mb-6">
-                <Smartphone className="h-6 w-6 text-primary-600" />
+            <motion.div 
+              className="feature-card group" 
+              variants={itemVariants}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
+            >
+              <div className="h-16 w-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-6 group-hover:bg-purple-500/20 transition-colors">
+                <Smartphone className="h-8 w-8 text-purple-500" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Mobile Access</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-purple-500 transition-colors">Mobile Access</h3>
+              <p className="text-muted-foreground">
                 Access your digital inventory anytime, anywhere from any device with our responsive platform.
               </p>
+              <div className="mt-4 flex items-center text-purple-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                <span>Learn more</span>
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
             </motion.div>
             
-            <motion.div className="feature-card" variants={itemVariants}>
-              <div className="h-12 w-12 rounded-lg bg-primary-100 flex items-center justify-center mb-6">
-                <Users className="h-6 w-6 text-primary-600" />
+            <motion.div 
+              className="feature-card group" 
+              variants={itemVariants}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
+            >
+              <div className="h-16 w-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6 group-hover:bg-emerald-500/20 transition-colors">
+                <Users className="h-8 w-8 text-emerald-500" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Community Network</h3>
-              <p className="text-gray-600">
-                Connect with a community committed to helping each other recover lost possessions.
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-emerald-500 transition-colors">Community Network</h3>
+              <p className="text-muted-foreground">
+                Connect with a community committed to helping each other recover lost possessions quickly.
               </p>
+              <div className="mt-4 flex items-center text-emerald-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                <span>Learn more</span>
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
             </motion.div>
             
-            <motion.div className="feature-card" variants={itemVariants}>
-              <div className="h-12 w-12 rounded-lg bg-primary-100 flex items-center justify-center mb-6">
-                <BarChart className="h-6 w-6 text-primary-600" />
+            <motion.div 
+              className="feature-card group" 
+              variants={itemVariants}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
+            >
+              <div className="h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6 group-hover:bg-amber-500/20 transition-colors">
+                <BarChart2 className="h-8 w-8 text-amber-500" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Intuitive Dashboard</h3>
-              <p className="text-gray-600">
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-amber-500 transition-colors">Intuitive Dashboard</h3>
+              <p className="text-muted-foreground">
                 Track your registered items, lost reports, and recovery progress through a user-friendly dashboard.
               </p>
+              <div className="mt-4 flex items-center text-amber-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                <span>Learn more</span>
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </div>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-20 bg-gradient-to-r from-primary-600 to-primary-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Secure Your Valuables?</h2>
-          <p className="text-xl max-w-3xl mx-auto mb-8 text-primary-100">
-            Join thousands of users who trust KIZERE to keep track of their important possessions.
-          </p>
-          <button 
-            onClick={() => navigate("/auth")}
-            className="yellow-button text-lg px-8 py-4"
-          >
-            Create Free Account
-          </button>
-          <p className="mt-4 text-primary-200">No credit card required. Get started in minutes.</p>
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-700 to-primary-900"></div>
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-grid-pattern opacity-25"></div>
+          <div className="h-full w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary-400/20 via-transparent to-transparent"></div>
         </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              What Our Users Say
-            </h2>
-            <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-              Hear from people who have successfully recovered their lost items with KIZERE.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-100">
-              <div className="flex items-center mb-6">
-                <div className="mr-4">
-                  <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                    <span className="text-primary-700 font-bold text-lg">JM</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">James Mutembei</h4>
-                  <p className="text-sm text-gray-500">Nairobi, Kenya</p>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">
-                "I lost my laptop at the airport and thought it was gone forever. Thanks to KIZERE, someone found it and contacted me within hours!"
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center">
+            <motion.div 
+              className="text-center"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <span className="inline-block mb-3 px-4 py-1 rounded-full bg-white/10 text-white font-semibold text-sm">
+                Start Today
+              </span>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
+                Ready to Secure Your Valuables?
+              </h2>
+              <p className="text-xl max-w-3xl mx-auto mb-8 text-white/80">
+                Join thousands of users who trust KIZERE to keep track of their important possessions.
               </p>
-              <div className="mt-4 flex text-primary-500">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
-                ))}
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-100">
-              <div className="flex items-center mb-6">
-                <div className="mr-4">
-                  <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                    <span className="text-primary-700 font-bold text-lg">FN</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Florence Nkatha</h4>
-                  <p className="text-sm text-gray-500">Mombasa, Kenya</p>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">
-                "The registration process was so simple! I've cataloged all my electronics and jewelry. Now I feel much more secure about my valuables."
+              
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400 }}
+              >
+                <Button 
+                  onClick={() => navigate("/auth")}
+                  className="yellow-button text-lg px-8 py-6 rounded-xl shadow-lg shadow-primary-900/30 group relative overflow-hidden"
+                >
+                  <span className="relative z-10 flex items-center gap-2 font-semibold">
+                    Create Free Account
+                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                  <span className="absolute inset-0 bg-[var(--yellow-accent)] group-hover:bg-[var(--yellow-hover)] transition-colors duration-300"></span>
+                </Button>
+              </motion.div>
+              
+              <p className="mt-6 text-white/70 flex items-center justify-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-white/80" />
+                <span>No credit card required. Get started in minutes.</span>
               </p>
-              <div className="mt-4 flex text-primary-500">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
-                ))}
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-100">
-              <div className="flex items-center mb-6">
-                <div className="mr-4">
-                  <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center">
-                    <span className="text-primary-700 font-bold text-lg">RK</span>
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Robert Kabugi</h4>
-                  <p className="text-sm text-gray-500">Nakuru, Kenya</p>
-                </div>
-              </div>
-              <p className="text-gray-600 italic">
-                "I found someone's wallet and used KIZERE to locate the owner. The platform made it easy to connect and return the wallet safely."
-              </p>
-              <div className="mt-4 flex text-primary-500">
-                {[...Array(5)].map((_, i) => (
-                  <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                  </svg>
-                ))}
-              </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Statistics Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl font-bold text-primary-600 mb-2">15,000+</div>
-              <p className="text-gray-600">Items Registered</p>
+      <section className="py-20 bg-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <motion.div 
+            className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
+              <motion.div 
+                className="text-5xl font-bold text-primary mb-2"
+                initial={{ scale: 0.8 }}
+                whileInView={{ scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                viewport={{ once: true }}
+              >
+                15,000+
+              </motion.div>
+              <p className="text-muted-foreground text-lg">Items Registered</p>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-primary-600 mb-2">1,230+</div>
-              <p className="text-gray-600">Items Recovered</p>
+            
+            <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
+              <motion.div 
+                className="text-5xl font-bold text-primary mb-2"
+                initial={{ scale: 0.8 }}
+                whileInView={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                viewport={{ once: true }}
+              >
+                1,230+
+              </motion.div>
+              <p className="text-muted-foreground text-lg">Items Recovered</p>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-primary-600 mb-2">8,500+</div>
-              <p className="text-gray-600">Happy Users</p>
+            
+            <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
+              <motion.div 
+                className="text-5xl font-bold text-primary mb-2"
+                initial={{ scale: 0.8 }}
+                whileInView={{ scale: 1 }}
+                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                viewport={{ once: true }}
+              >
+                8,500+
+              </motion.div>
+              <p className="text-muted-foreground text-lg">Happy Users</p>
             </div>
-            <div>
-              <div className="text-4xl font-bold text-primary-600 mb-2">98%</div>
-              <p className="text-gray-600">Satisfaction Rate</p>
+            
+            <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
+              <motion.div 
+                className="text-5xl font-bold text-primary mb-2"
+                initial={{ scale: 0.8 }}
+                whileInView={{ scale: 1 }}
+                transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                viewport={{ once: true }}
+              >
+                98%
+              </motion.div>
+              <p className="text-muted-foreground text-lg">Satisfaction Rate</p>
             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-background to-transparent"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                User Success Stories
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                What Our Users Say
+              </h2>
+              <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
+                Hear from people who have successfully recovered their lost items with KIZERE.
+              </p>
+            </motion.div>
+          </div>
+          
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
+            <motion.div 
+              className="bg-card p-8 rounded-xl shadow-md border border-border relative"
+              variants={itemVariants}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
+            >
+              <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-3xl"></div>
+              <div className="flex items-center mb-6">
+                <div className="mr-4">
+                  <motion.div 
+                    className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"
+                    whileHover={{ rotate: [0, -5, 5, -5, 0] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <span className="text-primary font-bold text-xl">JM</span>
+                  </motion.div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-foreground text-lg">James Mutembei</h4>
+                  <p className="text-sm text-muted-foreground">Nairobi, Kenya</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground">
+                "I lost my laptop at the airport and thought it was gone forever. Thanks to KIZERE, someone found it and contacted me within hours!"
+              </p>
+              <div className="mt-6 flex items-center text-primary">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                    </svg>
+                  ))}
+                </div>
+                <span className="ml-2 text-sm text-muted-foreground">5.0</span>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              className="bg-card p-8 rounded-xl shadow-md border border-border relative"
+              variants={itemVariants}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
+            >
+              <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-3xl"></div>
+              <div className="flex items-center mb-6">
+                <div className="mr-4">
+                  <motion.div 
+                    className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"
+                    whileHover={{ rotate: [0, -5, 5, -5, 0] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <span className="text-primary font-bold text-xl">FN</span>
+                  </motion.div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-foreground text-lg">Florence Nkatha</h4>
+                  <p className="text-sm text-muted-foreground">Mombasa, Kenya</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground">
+                "The registration process was so simple! I've cataloged all my electronics and jewelry. Now I feel much more secure about my valuables."
+              </p>
+              <div className="mt-6 flex items-center text-primary">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                    </svg>
+                  ))}
+                </div>
+                <span className="ml-2 text-sm text-muted-foreground">5.0</span>
+              </div>
+            </motion.div>
+            
+            <motion.div 
+              className="bg-card p-8 rounded-xl shadow-md border border-border relative"
+              variants={itemVariants}
+              whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
+            >
+              <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-3xl"></div>
+              <div className="flex items-center mb-6">
+                <div className="mr-4">
+                  <motion.div 
+                    className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"
+                    whileHover={{ rotate: [0, -5, 5, -5, 0] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <span className="text-primary font-bold text-xl">RK</span>
+                  </motion.div>
+                </div>
+                <div>
+                  <h4 className="font-medium text-foreground text-lg">Robert Kabugi</h4>
+                  <p className="text-sm text-muted-foreground">Nakuru, Kenya</p>
+                </div>
+              </div>
+              <p className="text-muted-foreground">
+                "I found someone's wallet and used KIZERE to locate the owner. The platform made it easy to connect and return the wallet safely."
+              </p>
+              <div className="mt-6 flex items-center text-primary">
+                <div className="flex">
+                  {[...Array(5)].map((_, i) => (
+                    <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                    </svg>
+                  ))}
+                </div>
+                <span className="ml-2 text-sm text-muted-foreground">5.0</span>
+              </div>
+            </motion.div>
+          </motion.div>
+          
+          <div className="mt-12 text-center">
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="border-primary/30 hover:border-primary"
+            >
+              View More Testimonials
+            </Button>
           </div>
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-24 bg-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Frequently Asked Questions
-            </h2>
-            <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
-              Get answers to common questions about KIZERE's platform.
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
+                Questions & Answers
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+                Frequently Asked Questions
+              </h2>
+              <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
+                Get answers to common questions about KIZERE's platform.
+              </p>
+            </motion.div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                How secure is my information?
-              </h3>
-              <p className="text-gray-600">
-                We use industry-standard encryption and security protocols to protect your data. 
-                Your information is only visible to you and authorized personnel in case of a recovery scenario.
-              </p>
-            </div>
+          <motion.div 
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.2 }}
+          >
+            <motion.div 
+              className="bg-card p-8 rounded-xl shadow-md border border-border hover:shadow-xl transition-shadow"
+              variants={itemVariants}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Lock className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground mb-3">
+                    How secure is my information?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    We use industry-standard encryption and security protocols to protect your data. 
+                    Your information is only visible to you and authorized personnel in case of a recovery scenario.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                What items can I register?
-              </h3>
-              <p className="text-gray-600">
-                You can register any valuable items including electronics, jewelry, documents, vehicles, 
-                accessories, and more. Any item with a unique identifier or distinguishing characteristics.
-              </p>
-            </div>
+            <motion.div 
+              className="bg-card p-8 rounded-xl shadow-md border border-border hover:shadow-xl transition-shadow"
+              variants={itemVariants}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground mb-3">
+                    What items can I register?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    You can register any valuable items including electronics, jewelry, documents, vehicles, 
+                    accessories, and more. Any item with a unique identifier or distinguishing characteristics.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                How does the lost and found system work?
-              </h3>
-              <p className="text-gray-600">
-                When you report a lost item, it's added to our database. If someone finds an item, they can report it, 
-                and our system will automatically match it with lost reports and notify the owner.
-              </p>
-            </div>
+            <motion.div 
+              className="bg-card p-8 rounded-xl shadow-md border border-border hover:shadow-xl transition-shadow"
+              variants={itemVariants}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground mb-3">
+                    How does the lost and found system work?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    When you report a lost item, it's added to our database. If someone finds an item, they can report it, 
+                    and our system will automatically match it with lost reports and notify the owner.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">
-                Is there a limit to how many items I can register?
-              </h3>
-              <p className="text-gray-600">
-                Basic accounts can register up to 10 items. Premium accounts have unlimited registration capacity 
-                and additional features like priority support and advanced analytics.
-              </p>
-            </div>
+            <motion.div 
+              className="bg-card p-8 rounded-xl shadow-md border border-border hover:shadow-xl transition-shadow"
+              variants={itemVariants}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <BarChart className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground mb-3">
+                    Is there a limit to how many items I can register?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Basic accounts can register up to 10 items. Premium accounts have unlimited registration capacity 
+                    and additional features like priority support and advanced analytics.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+          
+          <div className="mt-12 text-center">
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="border-primary/30 hover:border-primary"
+              onClick={() => navigate("/auth")}
+            >
+              More Questions? Contact Us
+            </Button>
           </div>
         </div>
       </section>
