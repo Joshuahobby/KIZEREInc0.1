@@ -38,6 +38,7 @@ export class AuthModel {
     username: this.usernameValidator,
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm password is required"),
+    role: z.enum(['Admin', 'Agent', 'Subscriber']).optional(),
   }).refine(data => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
@@ -70,7 +71,7 @@ export class AuthModel {
       ...userData,
       email: isEmail ? userData.username : `${userData.username}@kizere.user`, // Generate an email if username is a phone
       phoneNumber: !isEmail ? userData.username : null, // Set phoneNumber if username is a phone
-      role: 'Subscriber'
+      role: userData.role || 'Subscriber' // Use provided role or default to Subscriber
     };
   }
 
