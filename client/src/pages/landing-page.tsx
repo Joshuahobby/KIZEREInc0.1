@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { motion } from "framer-motion";
+import { AuthModal } from "@/components/ui/auth-modal";
 import pedestrianCrowdImage from "../assets/pedestrian_crowd.png";
 import { 
   Shield, 
@@ -23,12 +24,20 @@ import {
 export default function LandingPage() {
   const { user } = useAuth();
   const [_, navigate] = useLocation();
+  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
+  const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
   const currentDate = new Date();
   const formattedDate = new Intl.DateTimeFormat('en-US', { 
     year: 'numeric', 
     month: 'long', 
     day: 'numeric' 
   }).format(currentDate);
+  
+  // Open auth modal with specific tab
+  const openAuthModal = (tab: "login" | "register") => {
+    setAuthModalTab(tab);
+    setAuthModalOpen(true);
+  };
 
   // If user is already authenticated, redirect to dashboard
   useEffect(() => {
@@ -126,13 +135,13 @@ export default function LandingPage() {
             >
               <ThemeToggle />
               <button 
-                onClick={() => navigate("/auth")} 
+                onClick={() => openAuthModal("login")} 
                 className="font-medium text-foreground/80 hover:text-primary transition-colors"
               >
                 Login
               </button>
               <Button 
-                onClick={() => navigate("/auth")}
+                onClick={() => openAuthModal("register")}
                 className="shadow-md hover:shadow-lg transition-shadow"
                 size="sm"
               >
@@ -197,7 +206,7 @@ export default function LandingPage() {
                 transition={{ delay: 0.4, duration: 0.6 }}
               >
                 <Button 
-                  onClick={() => navigate("/auth")}
+                  onClick={() => openAuthModal("register")}
                   className="yellow-button group relative overflow-hidden h-12"
                   size="lg"
                 >

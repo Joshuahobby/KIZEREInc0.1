@@ -1,4 +1,6 @@
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, AlertCircle, XCircle } from "lucide-react";
 
 interface PasswordStrengthIndicatorProps {
   passwordStrength: {
@@ -8,26 +10,41 @@ interface PasswordStrengthIndicatorProps {
 }
 
 export function PasswordStrengthIndicator({ passwordStrength }: PasswordStrengthIndicatorProps) {
-  if (!passwordStrength) return null;
-  
+  const [visible, setVisible] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Show strength indicator when passwordStrength changes
+    if (passwordStrength) {
+      setVisible(true);
+    }
+  }, [passwordStrength]);
+
+  if (!passwordStrength) {
+    return null;
+  }
+
   return (
-    <div className="mt-2">
-      <div className="flex items-center space-x-2">
-        {passwordStrength.isStrong ? (
-          <CheckCircle2 className="h-4 w-4 text-green-500" />
-        ) : (
-          <AlertCircle className="h-4 w-4 text-amber-500" />
-        )}
-        <span className={`text-xs ${passwordStrength.isStrong ? 'text-green-500' : 'text-amber-500'}`}>
-          {passwordStrength.message}
-        </span>
-      </div>
-      <div className="mt-1 h-1 w-full bg-muted rounded-full overflow-hidden">
-        <div 
-          className={`h-full ${passwordStrength.isStrong ? 'bg-green-500' : 'bg-amber-500'}`}
-          style={{ width: passwordStrength.isStrong ? '100%' : '50%' }}
-        />
-      </div>
-    </div>
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          className={`flex items-center text-sm space-x-2 mt-1.5 rounded-md p-1.5 ${
+            passwordStrength.isStrong
+              ? "text-emerald-600 dark:text-emerald-400"
+              : "text-amber-600 dark:text-amber-400"
+          }`}
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          {passwordStrength.isStrong ? (
+            <CheckCircle className="h-4 w-4 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          )}
+          <span>{passwordStrength.message}</span>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
