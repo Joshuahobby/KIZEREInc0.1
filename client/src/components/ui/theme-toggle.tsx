@@ -1,68 +1,80 @@
-import { useEffect, useState } from "react";
-import { Moon, Sun } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
+import { Moon, Sun, Monitor } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-
-  // Check for user's preferred theme
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  
+  // Wait for component to be mounted to avoid hydration mismatch
   useEffect(() => {
-    // Check local storage
-    const savedTheme = localStorage.getItem("kizere-theme") as "light" | "dark" | null;
-    
-    // If saved in local storage, use that
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.classList.toggle("dark", savedTheme === "dark");
-    } 
-    // If user prefers dark mode via OS/browser settings
-    else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
-    }
+    setMounted(true);
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    
-    // Save to localStorage
-    localStorage.setItem("kizere-theme", newTheme);
-    
-    // Toggle class on html element
-    document.documentElement.classList.toggle("dark", newTheme === "dark");
-  };
+  if (!mounted) {
+    return <div className="w-9 h-9"></div>; // Placeholder to avoid layout shift
+  }
 
   return (
-    <Button 
-      variant="outline" 
-      size="icon" 
-      onClick={toggleTheme}
-      className="relative overflow-hidden rounded-full"
-      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
-    >
-      <div className="relative">
+    <div className="flex items-center gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setTheme("light")}
+        className={theme === "light" ? "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300" : ""}
+        aria-label="Light Mode"
+      >
         <motion.div
-          initial={{ rotate: 0 }}
-          animate={{ rotate: theme === "dark" ? 45 : 0 }}
-          transition={{ duration: 0.3 }}
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ opacity: theme === "light" ? 1 : 0 }}
+          initial={{ scale: 0.8, opacity: 0.8 }}
+          animate={{ 
+            scale: theme === "light" ? 1 : 0.8, 
+            opacity: theme === "light" ? 1 : 0.6 
+          }}
+          transition={{ duration: 0.15 }}
         >
-          <Sun className="h-5 w-5" />
+          <Sun className="h-[1.2rem] w-[1.2rem]" />
         </motion.div>
-        
+      </Button>
+      
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setTheme("dark")}
+        className={theme === "dark" ? "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300" : ""}
+        aria-label="Dark Mode"
+      >
         <motion.div
-          initial={{ rotate: -45 }}
-          animate={{ rotate: theme === "dark" ? 0 : -45 }}
-          transition={{ duration: 0.3 }}
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ opacity: theme === "dark" ? 1 : 0 }}
+          initial={{ scale: 0.8, opacity: 0.8 }}
+          animate={{ 
+            scale: theme === "dark" ? 1 : 0.8, 
+            opacity: theme === "dark" ? 1 : 0.6 
+          }}
+          transition={{ duration: 0.15 }}
         >
-          <Moon className="h-5 w-5" />
+          <Moon className="h-[1.2rem] w-[1.2rem]" />
         </motion.div>
-      </div>
-    </Button>
+      </Button>
+      
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setTheme("system")}
+        className={theme === "system" ? "bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300" : ""}
+        aria-label="System Theme"
+      >
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0.8 }}
+          animate={{ 
+            scale: theme === "system" ? 1 : 0.8, 
+            opacity: theme === "system" ? 1 : 0.6 
+          }}
+          transition={{ duration: 0.15 }}
+        >
+          <Monitor className="h-[1.2rem] w-[1.2rem]" />
+        </motion.div>
+      </Button>
+    </div>
   );
 }

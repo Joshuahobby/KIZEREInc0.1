@@ -33,8 +33,8 @@ import { Loader2, Send, Shield, CheckCircle2 } from "lucide-react";
 // Schema for transfer form
 const transferSchema = z.object({
   recipientEmail: z.string().email("Please enter a valid email address"),
-  confirmTransfer: z.literal(true, {
-    errorMap: () => ({ message: "You must confirm the transfer" }),
+  confirmTransfer: z.boolean().refine(val => val === true, {
+    message: "You must confirm the transfer"
   }),
 });
 

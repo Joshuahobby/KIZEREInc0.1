@@ -137,6 +137,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Item Ownership Transfer API
+  app.post("/api/items/:id/transfer", requireAuth, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      if (isNaN(itemId)) {
+        return res.status(400).json({ message: "Invalid item ID" });
+      }
+      
+      const { recipientEmail } = req.body;
+      if (!recipientEmail) {
+        return res.status(400).json({ message: "Recipient email is required" });
+      }
+      
+      // Check if item exists
+      const item = await storage.getItem(itemId);
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      // Ensure user is the current owner of the item
+      if (item.userId !== req.user.id) {
+        return res.status(403).json({ message: "You do not own this item" });
+      }
+      
+      // Find recipient user by email
+      const recipientUser = await storage.getUserByEmail(recipientEmail);
+      if (!recipientUser) {
+        return res.status(404).json({ message: "Recipient user not found" });
+      }
+      
+      // Prevent self-transfer
+      if (recipientUser.id === req.user.id) {
+        return res.status(400).json({ message: "Cannot transfer item to yourself" });
+      }
+      
+      // Transfer ownership by updating the item's userId
+      const updatedItem = await storage.updateItem(itemId, { 
+        userId: recipientUser.id,
+        updatedAt: new Date()
+      });
+      
+      // Create notification for the recipient
+      await storage.createNotification({
+        userId: recipientUser.id,
+        title: `New Item: ${item.name}`,
+        message: `${req.user.fullName || req.user.username} has transferred ownership of ${item.name} to you.`,
+        type: 'ownership_transfer',
+        isRead: false,
+        relatedItemId: itemId,
+        relatedReportId: null
+      });
+      
+      res.status(200).json({
+        success: true,
+        message: `Ownership transferred to ${recipientEmail}`,
+        item: updatedItem
+      });
+      
+    } catch (error) {
+      console.error("Transfer error:", error);
+      res.status(500).json({ message: "Failed to transfer ownership" });
+    }
+  });
+
   // Search API
   app.get("/api/search", requireAuth, async (req, res) => {
     try {
