@@ -365,7 +365,7 @@ export default function AuthPage() {
                                 <FormControl>
                                   <div className="relative">
                                     <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                                    <Input className="pl-10" placeholder="Enter your email" type="email" {...field} />
+                                    <Input className="pl-10" placeholder="Enter your email" {...field} />
                                   </div>
                                 </FormControl>
                                 <FormMessage />
@@ -425,6 +425,7 @@ export default function AuthPage() {
                                   </div>
                                 </FormControl>
                                 <FormMessage />
+                                <PasswordStrengthIndicator passwordStrength={passwordStrength} />
                               </FormItem>
                             )}
                           />
