@@ -25,6 +25,7 @@ import {
 
 export default function LandingPage() {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [_, navigate] = useLocation();
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
@@ -157,18 +158,19 @@ export default function LandingPage() {
               transition={{ duration: 0.5 }}
             >
               <ThemeToggle />
+              <LanguageSwitcher variant="minimal" />
               <button 
                 onClick={() => openAuthModal("login")} 
                 className="font-medium text-foreground/80 hover:text-primary transition-colors"
               >
-                Login
+                {t('auth.login')}
               </button>
               <Button 
                 onClick={() => openAuthModal("register")}
                 className="shadow-md hover:shadow-lg transition-shadow"
                 size="sm"
               >
-                Get Started
+                {t('auth.getStarted')}
               </Button>
             </motion.div>
           </div>
