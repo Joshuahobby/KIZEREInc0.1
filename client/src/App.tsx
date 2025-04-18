@@ -8,12 +8,20 @@ import RegisterItem from "@/pages/register-item";
 import Search from "@/pages/search";
 import LostFound from "@/pages/lost-found";
 import UserManagement from "@/pages/user-management";
+import LandingPage from "@/pages/landing-page";
+import { useAuth } from "@/hooks/use-auth";
 
 function Router() {
+  const { user } = useAuth();
+
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/" component={Dashboard} />
+      {/* Show landing page to non-authenticated users, dashboard to logged in users */}
+      <Route path="/">
+        {() => user ? <Dashboard /> : <LandingPage />}
+      </Route>
+      <ProtectedRoute path="/dashboard" component={Dashboard} />
       <ProtectedRoute path="/register" component={RegisterItem} />
       <ProtectedRoute path="/search" component={Search} />
       <ProtectedRoute path="/lost-found" component={LostFound} />
