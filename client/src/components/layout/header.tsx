@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -21,8 +21,24 @@ export function Header() {
   const { t } = useLanguage();
 
   const isAdmin = user?.role === "Admin";
+  const isAuthenticated = !!user;
 
-  const navigation = [
+  // Define the navigation item type
+  type NavItem = {
+    name: string;
+    href: string;
+    admin?: boolean;
+  };
+
+  // Navigation links that are visible to all users
+  const publicNavigation: NavItem[] = [
+    { name: t('nav.home'), href: "/" },
+    { name: t('nav.search'), href: "/search" },
+    { name: t('nav.lostFound'), href: "/lost-found" },
+  ];
+
+  // Navigation links that are only visible to authenticated users
+  const authNavigation: NavItem[] = [
     { name: t('nav.dashboard'), href: "/" },
     { name: t('nav.registerItems'), href: "/register" },
     { name: t('nav.search'), href: "/search" },
@@ -30,6 +46,9 @@ export function Header() {
     // Admin-only navigation
     { name: t('nav.userManagement'), href: "/user-management", admin: true },
   ];
+
+  // Choose the appropriate navigation based on authentication status
+  const navigation = isAuthenticated ? authNavigation : publicNavigation;
 
   const handleLogout = () => {
     logoutMutation.mutate();
@@ -44,8 +63,6 @@ export function Header() {
     if (path !== "/" && location.startsWith(path)) return true;
     return false;
   };
-
-  if (!user) return null;
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -82,30 +99,40 @@ export function Header() {
             {/* Language Switcher */}
             <LanguageSwitcher variant="minimal" />
             
-            {/* User Profile Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="p-0">
-                  <AvatarWithInitials name={user.fullName} className="h-8 w-8" />
+            {isAuthenticated ? (
+              /* User Profile Menu for authenticated users */
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="p-0">
+                    <AvatarWithInitials name={user?.fullName || ''} className="h-8 w-8" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      <a className="cursor-pointer w-full">{t('profile.title')}</a>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings">
+                      <a className="cursor-pointer w-full">{t('settings.title')}</a>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    {t('auth.logout')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              /* Login/Register button for guests */
+              <Link href="/auth">
+                <Button className="flex items-center gap-1">
+                  <User className="h-4 w-4 mr-1" />
+                  {t('auth.login')}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">
-                    <a className="cursor-pointer w-full">{t('profile.title')}</a>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">
-                    <a className="cursor-pointer w-full">{t('settings.title')}</a>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                  {t('auth.logout')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Link>
+            )}
           </div>
 
           <div className="flex items-center sm:hidden">
