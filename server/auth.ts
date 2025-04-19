@@ -29,20 +29,17 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Ensure a SESSION_SECRET is set in production
-  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
-    console.error('SESSION_SECRET environment variable is required in production!');
-    process.exit(1);
-  }
+  // Import env from our config file which handles validation and defaults
+  const { env } = require('./config');
   
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "kizere-session-secret",
+    secret: env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: env.NODE_ENV === "production",
       sameSite: 'lax' // Provides some CSRF protection
     },
     store: storage.sessionStore,

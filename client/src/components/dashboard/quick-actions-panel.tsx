@@ -1,48 +1,100 @@
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  ClipboardList, AlertTriangle, CheckCircle2, Search, PlusCircle 
-} from "lucide-react";
+import { PlusCircle, Search, Bell, ShieldAlert, UserPlus } from "lucide-react";
+import { UserRole } from "@shared/schema";
+import { Link } from "wouter";
 
-export function QuickActionsPanel() {
+/**
+ * Quick Actions Panel for Dashboard
+ * 
+ * Displays different action buttons based on user role
+ */
+interface QuickActionsPanelProps {
+  userRole: UserRole;
+}
+
+export function QuickActionsPanel({ userRole }: QuickActionsPanelProps) {
+  const { t } = useTranslation();
+  
+  // Get actions based on user role
+  const getActions = () => {
+    const commonActions = [
+      {
+        icon: <PlusCircle className="h-4 w-4 mr-2" />,
+        label: t('dashboard.actions.registerItem'),
+        description: t('dashboard.actions.registerItemDesc'),
+        href: "/register-item",
+      },
+      {
+        icon: <Search className="h-4 w-4 mr-2" />,
+        label: t('dashboard.actions.searchItems'),
+        description: t('dashboard.actions.searchItemsDesc'),
+        href: "/search",
+      },
+    ];
+    
+    // Role-specific actions
+    if (userRole === 'Admin') {
+      return [
+        ...commonActions,
+        {
+          icon: <UserPlus className="h-4 w-4 mr-2" />,
+          label: t('dashboard.actions.manageUsers'),
+          description: t('dashboard.actions.manageUsersDesc'),
+          href: "/admin/users",
+        },
+        {
+          icon: <ShieldAlert className="h-4 w-4 mr-2" />,
+          label: t('dashboard.actions.appSettings'),
+          description: t('dashboard.actions.appSettingsDesc'),
+          href: "/admin/settings",
+        },
+      ];
+    } else if (userRole === 'Agent') {
+      return [
+        ...commonActions,
+        {
+          icon: <Bell className="h-4 w-4 mr-2" />,
+          label: t('dashboard.actions.verifyReports'),
+          description: t('dashboard.actions.verifyReportsDesc'),
+          href: "/agent/verify",
+        },
+      ];
+    } else {
+      // Subscriber actions
+      return commonActions;
+    }
+  };
+  
+  const actions = getActions();
+
   return (
-    <Card className="bg-gradient-to-br from-[#00BFFF]/5 to-[#FFDD00]/5 border-[#00BFFF]/20">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-display flex items-center">
-          <PlusCircle className="h-5 w-5 mr-2 text-[#00BFFF]" />
-          Quick Actions
-        </CardTitle>
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle>{t('dashboard.quickActions')}</CardTitle>
+        <CardDescription>{t('dashboard.quickActionsDesc')}</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Button 
-            className="flex flex-col h-auto py-4 bg-gradient-to-r from-[#00BFFF] to-[#0099CC] hover:from-[#33CCFF] hover:to-[#00BFFF] text-white"
-            onClick={() => window.location.href = '/register-item'}
-          >
-            <ClipboardList className="h-5 w-5 mb-1" />
-            <span>Register Item</span>
-          </Button>
-          <Button 
-            className="flex flex-col h-auto py-4 bg-gradient-to-r from-[#FF4D4D] to-[#CC0000] hover:from-[#FF6666] hover:to-[#FF4D4D] text-white"
-            onClick={() => window.location.href = '/lost-found/report?type=lost'}
-          >
-            <AlertTriangle className="h-5 w-5 mb-1" />
-            <span>Report Lost</span>
-          </Button>
-          <Button 
-            className="flex flex-col h-auto py-4 bg-gradient-to-r from-[#4CAF50] to-[#388E3C] hover:from-[#66BB6A] hover:to-[#4CAF50] text-white"
-            onClick={() => window.location.href = '/lost-found/report?type=found'}
-          >
-            <CheckCircle2 className="h-5 w-5 mb-1" />
-            <span>Report Found</span>
-          </Button>
-          <Button 
-            className="flex flex-col h-auto py-4 bg-gradient-to-r from-[#9C27B0] to-[#7B1FA2] hover:from-[#BA68C8] hover:to-[#9C27B0] text-white"
-            onClick={() => window.location.href = '/search'}
-          >
-            <Search className="h-5 w-5 mb-1" />
-            <span>Search Items</span>
-          </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {actions.map((action, index) => (
+            <Link key={index} href={action.href}>
+              <Button 
+                variant="outline" 
+                className="w-full justify-start h-auto py-3 text-left"
+              >
+                <div className="flex flex-col items-start">
+                  <span className="flex items-center font-medium mb-1">
+                    {action.icon}
+                    {action.label}
+                  </span>
+                  <span className="text-xs text-muted-foreground pl-6">
+                    {action.description}
+                  </span>
+                </div>
+              </Button>
+            </Link>
+          ))}
         </div>
       </CardContent>
     </Card>

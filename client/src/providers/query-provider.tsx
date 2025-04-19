@@ -1,12 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
-import { handleError } from "@/utils/error-handler";
 
 /**
- * QueryProvider component
- * 
- * Sets up TanStack Query v5 with optimized settings
- * Provides a global error handling mechanism for queries and mutations
+ * QueryProvider component with optimized settings for TanStack Query
  */
 interface QueryProviderProps {
   children: ReactNode;
@@ -29,25 +25,6 @@ export function QueryProvider({ children }: QueryProviderProps) {
     },
   }));
   
-  // Set up global error handler by listening to query errors
-  queryClient.getQueryCache().subscribe({
-    onError: (error) => {
-      handleError(error);
-    },
-  });
-  
-  // Set up global error handler for mutations
-  queryClient.getMutationCache().subscribe({
-    onError: (error) => {
-      handleError(error);
-    },
-  });
-
-interface QueryProviderProps {
-  children: ReactNode;
-}
-
-export function QueryProvider({ children }: QueryProviderProps) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}

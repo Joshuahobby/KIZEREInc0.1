@@ -1,7 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Item, Notification, UserRole } from "@shared/schema";
+import { catchErrorHandler } from "@/utils/error-handler";
 
+/**
+ * Dashboard Statistics Data Structure
+ */
 export interface DashboardStats {
   registeredItems: number;
   lostItems: number;
@@ -9,6 +13,9 @@ export interface DashboardStats {
   notifications: number;
 }
 
+/**
+ * Dashboard Data Hook Return Structure
+ */
 export interface DashboardData {
   stats: DashboardStats | undefined;
   isLoadingStats: boolean;
@@ -21,39 +28,54 @@ export interface DashboardData {
   setStatsPeriod: (period: string) => void;
 }
 
+/**
+ * Hook for fetching and managing dashboard data
+ * 
+ * Provides a unified interface for accessing dashboard data
+ * with role-specific endpoints and caching
+ */
 export function useDashboardData(userRole: UserRole): DashboardData {
-  const [statsPeriod, setStatsPeriod] = useState<string>('week');
+  // State for managing time period of stats (today, week, month, year)
+  const [statsPeriod, setStatsPeriod] = useState<string>("week");
   
-  // Fetch stats
-  const { data: stats, isLoading: isLoadingStats } = useQuery<DashboardStats>({
-    queryKey: ["/api/stats", statsPeriod],
-    // In a real implementation, we would pass the period to the API
-    // queryFn: () => fetch(`/api/stats?period=${statsPeriod}`).then(res => res.json())
+  // Fetch dashboard statistics based on role and time period
+  const { 
+    data: stats, 
+    isLoading: isLoadingStats 
+  } = useQuery<DashboardStats>({
+    queryKey: ["/api/dashboard/stats", userRole, statsPeriod],
+    retry: 1,
+    enabled: !!userRole,
   });
   
-  // Fetch user items
-  const { data: items, isLoading: isLoadingItems } = useQuery<Item[]>({
-    queryKey: ["/api/items"],
+  // Fetch previous period statistics for comparison
+  const { 
+    data: previousStats
+  } = useQuery<DashboardStats>({
+    queryKey: ["/api/dashboard/stats/previous", userRole, statsPeriod],
+    retry: 1,
+    enabled: !!userRole && !!stats,
   });
   
-  // Fetch notifications
-  const { data: notifications, isLoading: isLoadingNotifications } = useQuery<Notification[]>({
-    queryKey: ["/api/notifications"],
+  // Fetch user's items
+  const {
+    data: items,
+    isLoading: isLoadingItems,
+  } = useQuery<Item[]>({
+    queryKey: ["/api/dashboard/items", userRole],
+    retry: 1,
+    enabled: !!userRole,
   });
   
-  // Calculate previous stats for trend indicators
-  const previousStats = useMemo(() => {
-    if (!stats) return null;
-    
-    // For demonstration purposes, we're using a simple calculation
-    // In a real app, this would come from actual historical data
-    return {
-      registeredItems: Math.max(0, stats.registeredItems - 2),
-      lostItems: Math.max(0, stats.lostItems - 1),
-      foundItems: Math.max(0, stats.foundItems - 1),
-      notifications: Math.max(0, stats.notifications - 3)
-    };
-  }, [stats]);
+  // Fetch user's notifications
+  const {
+    data: notifications,
+    isLoading: isLoadingNotifications,
+  } = useQuery<Notification[]>({
+    queryKey: ["/api/dashboard/notifications", userRole],
+    retry: 1,
+    enabled: !!userRole,
+  });
   
   return {
     stats,
@@ -62,7 +84,7 @@ export function useDashboardData(userRole: UserRole): DashboardData {
     isLoadingItems,
     notifications,
     isLoadingNotifications,
-    previousStats,
+    previousStats: previousStats || null,
     statsPeriod,
     setStatsPeriod
   };
