@@ -134,10 +134,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 };
 
 // Custom hook to use the language context
-export const useLanguage = (): LanguageContextType => {
+function useLanguage(): LanguageContextType {
   const context = useContext(LanguageContext);
   if (context === undefined) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
   return context;
-};
+}
+
+export { useLanguage };

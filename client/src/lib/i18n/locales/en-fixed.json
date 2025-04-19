@@ -17,9 +17,14 @@
     "home": "Home",
     "dashboard": "Dashboard",
     "registeredItems": "My Items",
+    "registerItems": "My Items",
     "lostFound": "Lost & Found",
     "registerItem": "Register Item",
-    "userManagement": "User Management"
+    "userManagement": "User Management",
+    "search": "Search",
+    "features": "Features",
+    "howItWorks": "How It Works",
+    "testimonials": "Testimonials"
   },
   "auth": {
     "login": "Sign In",
@@ -49,7 +54,9 @@
     "termsAgree": "I agree to the",
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
-    "and": "and"
+    "and": "and",
+    "getStarted": "Get Started",
+    "logout": "Logout"
   },
   "landing": {
     "heroTitle": "Protect What Matters Most",
