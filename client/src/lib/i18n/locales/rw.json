@@ -66,7 +66,46 @@
     "statsTitle": "Yizewe n'Ibihumbi",
     "statItems": "Ibyanditswe",
     "statUsers": "Abakoresha Bahoraho",
-    "statRecoveries": "Ibintu Byagaruwe"
+    "statRecoveries": "Ibintu Byagaruwe",
+    "mobileApp": {
+      "sectionTitle": "Gukoreshwa Kuri Telefoni",
+      "mainTitle": "Jyana KIZERE Aho Ujya Hose",
+      "description": "Porogaramu yacu ya telefoni igira ngo ubona lisiti y'ibintu byawe byanditswe, ukabasha kumenyekanisha ibintu byabuze cyangwa kugenzura ibyabonetse aho waba uri hose. Iboneka kuri iPhones na Android.",
+      "features": {
+        "feature1": "Gusoma kode QR mu bintu byabonetse kugirango habonerwe ba nyirabyo",
+        "feature2": "Kubona amakuru mashya ahita ku bintu byawe",
+        "feature3": "Kwimura nyirubwite byizewe mu buryo bworoshye",
+        "feature4": "Gufata amafoto no kubika ibintu byawe by'agaciro aho uri hose"
+      },
+      "downloadOn": "Kumanura kuri",
+      "appStore": "App Store",
+      "getItOn": "MANURA KURI",
+      "googlePlay": "Google Play"
+    },
+    "faq": {
+      "sectionTitle": "Ibibazo & Ibisubizo",
+      "mainTitle": "Ibibazo Bikunze Kubazwa",
+      "description": "Bona ibisubizo ku bibazo bikunze kubazwa ku bijyanye na porogaramu ya KIZERE.",
+      "questions": {
+        "security": {
+          "question": "Ni gute amakuru yanjye atekanye?",
+          "answer": "Dukoresha uburyo bw'umutekano bwo ku rwego rw'ibanze mu kurinda amakuru yawe. Amakuru yawe abonwa gusa nawe n'abakozi babyemerewe mu gihe cyo kuyagenzura no kugarura ibyangirika."
+        },
+        "items": {
+          "question": "Ni ibihe bintu nashobora kwandikisha?",
+          "answer": "Ushobora kwandikisha ibintu byose bifite agaciro harimo ibikoresho by'ikoranabuhanga, amabuye y'agaciro, impapuro, ibinyabiziga, ibiruhuko, n'ibindi. Ikintu cyose gifite nomero ikiranga cyangwa ibimenyetso byihariye."
+        },
+        "lostFound": {
+          "question": "Gute porogaramu yo kumenya ibyabuze n'ibyabonetse ikora?",
+          "answer": "Iyo umenyekanishije ikintu cyabuze, cyandikwa muri databaze yacu. Iyo umuntu abonye ikintu, arashobora kumenyekanisha, sisitemu yacu ikabasha kuhahuriza raporo y'ibyabuze n'iy'ibyabonetse, ikabimenyesha nyiracyo."
+        },
+        "limits": {
+          "question": "Ese hari igipimo cy'ibintu namenyekanisha?",
+          "answer": "Konti z'ibanze zishobora kwandikisha ibintu kugeza ku 10. Konti za Premium zifite ubushobozi butagira iherezo bwo kwandikisha n'izindi serivisi nk'inkunga y'ibanze n'isesengura rirambuye."
+        }
+      },
+      "contactUs": "Ufite ibindi bibazo? Twandikire"
+    }
   },
   "dashboard": {
     "welcomeMessage": "Murakaza neza ku kibaho cyawe",

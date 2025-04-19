@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLanguage, Language, languages } from '@/lib/i18n/LanguageContext';
+import { useLanguage, Language } from '@/lib/i18n/LanguageContext';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -21,7 +21,7 @@ export function LanguageSwitcher({
   variant = 'default',
   className
 }: LanguageSwitcherProps) {
-  const { language, setLanguage, t } = useLanguage();
+  const { language, setLanguage, t, languages } = useLanguage();
   
   // Get current language display name
   const currentLanguage = languages[language];

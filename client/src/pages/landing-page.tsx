@@ -1092,7 +1092,7 @@ export default function LandingPage() {
               className="border-primary/30 hover:border-primary"
               onClick={() => navigate("/auth")}
             >
-              More Questions? Contact Us
+              {t('landing.faq.contactUs')}
             </Button>
           </div>
         </div>
@@ -1115,7 +1115,7 @@ export default function LandingPage() {
               >
                 <h3 className="text-2xl font-bold mb-6 text-white">KIZERE</h3>
                 <p className="text-gray-400 mb-6 max-w-md">
-                  The ultimate platform for item registration, lost and found management, and ownership protection.
+                  {t('landing.footerDescription')}
                 </p>
                 <div className="flex items-center space-x-4">
                   <a href="#" className="bg-white/10 hover:bg-white/20 rounded-full p-2 transition-colors duration-200">
@@ -1149,12 +1149,12 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               viewport={{ once: true }}
             >
-              <h4 className="text-lg font-semibold mb-6 text-white">Quick Links</h4>
+              <h4 className="text-lg font-semibold mb-6 text-white">{t('landing.footer.quickLinks')}</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Home</a></li>
-                <li><a href="#features" className="text-gray-400 hover:text-white transition-colors duration-200">Features</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Pricing</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">FAQ</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">{t('landing.footer.home')}</a></li>
+                <li><a href="#features" className="text-gray-400 hover:text-white transition-colors duration-200">{t('landing.footer.features')}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">{t('landing.footer.pricing')}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">{t('landing.footer.faq')}</a></li>
               </ul>
             </motion.div>
             
@@ -1165,12 +1165,12 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
             >
-              <h4 className="text-lg font-semibold mb-6 text-white">Resources</h4>
+              <h4 className="text-lg font-semibold mb-6 text-white">{t('landing.footer.resources')}</h4>
               <ul className="space-y-3">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Blog</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Documentation</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Community</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">Tutorials</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">{t('landing.footer.blog')}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">{t('landing.footer.documentation')}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">{t('landing.footer.community')}</a></li>
+                <li><a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">{t('landing.footer.tutorials')}</a></li>
               </ul>
             </motion.div>
             
@@ -1181,7 +1181,7 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               viewport={{ once: true }}
             >
-              <h4 className="text-lg font-semibold mb-6 text-white">Contact</h4>
+              <h4 className="text-lg font-semibold mb-6 text-white">{t('landing.footer.contact')}</h4>
               <ul className="space-y-3">
                 <li className="flex items-center text-gray-400 group">
                   <svg className="h-5 w-5 mr-3 text-primary group-hover:text-white transition-colors duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1200,7 +1200,7 @@ export default function LandingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="group-hover:text-white transition-colors duration-200">Nairobi, Kenya</span>
+                  <span className="group-hover:text-white transition-colors duration-200">{t('landing.footer.location')}</span>
                 </li>
               </ul>
             </motion.div>
@@ -1213,11 +1213,11 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.4 }}
             viewport={{ once: true }}
           >
-            <p className="text-gray-500">© {new Date().getFullYear()} KIZERE. All rights reserved.</p>
+            <p className="text-gray-500">{t('landing.footer.copyright', { year: new Date().getFullYear() })}</p>
             <div className="mt-4 md:mt-0 flex space-x-6">
-              <a href="#" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Privacy Policy</a>
-              <a href="#" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Terms of Service</a>
-              <a href="#" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Cookie Policy</a>
+              <a href="#" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">{t('landing.footer.privacyPolicy')}</a>
+              <a href="#" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">{t('landing.footer.termsOfService')}</a>
+              <a href="#" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">{t('landing.footer.cookiePolicy')}</a>
             </div>
           </motion.div>
         </div>

@@ -9,11 +9,9 @@ import sw from './locales/sw.json';
 // Define the supported languages
 export type Language = 'rw' | 'en' | 'fr' | 'sw';
 
-export const languages = {
-  rw: { name: 'Kinyarwanda', nativeName: 'Kinyarwanda' },
-  en: { name: 'English', nativeName: 'English' },
-  fr: { name: 'French', nativeName: 'Français' },
-  sw: { name: 'Swahili', nativeName: 'Kiswahili' }
+// Define language information type
+export type LanguageInfo = {
+  [key in Language]: { name: string; nativeName: string; }
 };
 
 // Create a translations object with all languages
@@ -33,7 +31,7 @@ interface LanguageContextType {
   setLanguage: (language: Language) => void;
   t: (key: string) => string;
   translations: TranslationsType;
-  languages: typeof languages;
+  languages: LanguageInfo;
 }
 
 // Create the context
@@ -67,6 +65,14 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   children, 
   defaultLanguage = 'rw' // Kinyarwanda is the default language
 }) => {
+  // Define available languages
+  const languagesInfo: LanguageInfo = {
+    rw: { name: 'Kinyarwanda', nativeName: 'Kinyarwanda' },
+    en: { name: 'English', nativeName: 'English' },
+    fr: { name: 'French', nativeName: 'Français' },
+    sw: { name: 'Swahili', nativeName: 'Kiswahili' }
+  };
+  
   // Try to get the saved language from localStorage, fallback to default
   const getInitialLanguage = (): Language => {
     if (typeof window !== 'undefined') {
@@ -99,7 +105,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     setLanguage,
     t,
     translations,
-    languages
+    languages: languagesInfo
   };
 
   return (
