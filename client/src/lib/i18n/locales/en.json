@@ -190,8 +190,20 @@
     "lastSeen": "Last Seen",
     "contactInformation": "Contact Information",
     "reward": "Reward (Optional)",
-    "reportDate": "Report Date",
+    "reportDate": "Report Date", 
     "status": "Status"
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "home": "Home",
+    "features": "Features",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "resources": "Resources",
+    "blog": "Blog",
+    "about": "About Us",
+    "companyDescription": "KIZERE is a digital platform for item registration, tracking, and recovery based in Rwanda. Our mission is to help people protect what matters most.",
+    "copyright": "© {year} KIZERE. All rights reserved."
   },
   "landing": {
     "heroTitle": "Protect What Matters Most",
@@ -323,11 +335,5 @@
       "termsOfService": "Terms of Service",
       "cookiePolicy": "Cookie Policy"
     }
-  },
-  "footer": {
-    "copyright": "© 2025 KIZERE. All rights reserved.",
-    "terms": "Terms",
-    "privacy": "Privacy",
-    "contact": "Contact"
   }
 }
