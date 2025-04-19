@@ -197,10 +197,19 @@ const StatsCard = ({
   );
 };
 
+// Activity type definition
+interface Activity {
+  id: number;
+  type: 'register' | 'status' | 'notification' | string;
+  title: string;
+  timestamp: Date;
+  details: string;
+}
+
 // Recent Activity Timeline component
-const ActivityTimeline = ({ activities = [] }) => {
+const ActivityTimeline = ({ activities = [] }: { activities: Activity[] }) => {
   // Mock activities for demonstration
-  const mockActivities = [
+  const mockActivities: Activity[] = [
     {
       id: 1,
       type: 'register',
@@ -224,7 +233,7 @@ const ActivityTimeline = ({ activities = [] }) => {
     }
   ];
 
-  const getActivityIcon = (type) => {
+  const getActivityIcon = (type: string) => {
     switch (type) {
       case 'register':
         return <ClipboardList className="h-5 w-5 text-[#00BFFF]" />;
@@ -284,7 +293,13 @@ const ActivityTimeline = ({ activities = [] }) => {
 };
 
 // Enhanced items table component
-const ItemsDataTable = ({ items = [], isLoading = false }) => {
+const ItemsDataTable = ({ 
+  items = [], 
+  isLoading = false 
+}: { 
+  items: Item[];
+  isLoading: boolean;
+}) => {
   const [sortBy, setSortBy] = useState('registered');
   const [filterStatus, setFilterStatus] = useState('all');
   
@@ -349,10 +364,11 @@ const ItemsDataTable = ({ items = [], isLoading = false }) => {
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.category}</TableCell>
                     <TableCell>
-                      <Badge variant={
-                        item.status === 'Registered' ? 'default' : 
-                        item.status === 'Lost' ? 'destructive' : 'success'
-                      }>
+                      <Badge 
+                        className={
+                          item.status === 'Registered' ? 'bg-primary/80' : 
+                          item.status === 'Lost' ? 'bg-destructive' : 'bg-green-500'
+                        }>
                         {item.status}
                       </Badge>
                     </TableCell>
@@ -406,11 +422,27 @@ const ItemsDataTable = ({ items = [], isLoading = false }) => {
   );
 };
 
+// Notification type interface
+interface NotificationType {
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  createdAt: Date;
+}
+
 // Enhanced notification center component
-const NotificationCenter = ({ notifications = [], isLoading = false }) => {
+const NotificationCenter = ({ 
+  notifications = [], 
+  isLoading = false 
+}: { 
+  notifications: NotificationType[]; 
+  isLoading: boolean 
+}) => {
   const [filter, setFilter] = useState('all');
 
-  const getNotificationIcon = (type) => {
+  const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'alert':
         return <AlertTriangle className="h-4 w-4 text-red-500" />;
@@ -879,8 +911,25 @@ const UserManagementPanel = () => {
   );
 };
 
+// Dashboard settings interface
+interface DashboardSettings {
+  showQuickActions: boolean;
+  showStats: boolean;
+  showActivity: boolean;
+  compactView: boolean;
+  showTrends: boolean;
+  autoRefresh: boolean;
+  showNotifications: boolean;
+}
+
 // Dashboard customization panel
-const DashboardCustomizationPanel = ({ settings, onSettingsChange }) => {
+const DashboardCustomizationPanel = ({ 
+  settings, 
+  onSettingsChange 
+}: { 
+  settings: DashboardSettings; 
+  onSettingsChange: (settings: DashboardSettings) => void 
+}) => {
   return (
     <motion.div
       initial={{ opacity: 0, height: 0 }}
@@ -1025,11 +1074,19 @@ const DashboardCustomizationPanel = ({ settings, onSettingsChange }) => {
   );
 };
 
+// Define dashboard stats interface
+interface DashboardStats {
+  registeredItems: number;
+  lostItems: number;
+  foundItems: number;
+  notifications: number;
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [statsPeriod, setStatsPeriod] = useState('week');
   const [showCustomizationPanel, setShowCustomizationPanel] = useState(false);
-  const [dashboardSettings, setDashboardSettings] = useState({
+  const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>({
     showQuickActions: true,
     showStats: true,
     showActivity: true,
@@ -1040,7 +1097,7 @@ export default function Dashboard() {
   });
 
   // Fetch stats
-  const { data: stats, isLoading: isLoadingStats } = useQuery({
+  const { data: stats, isLoading: isLoadingStats } = useQuery<DashboardStats>({
     queryKey: ["/api/stats"],
   });
 
@@ -1228,7 +1285,7 @@ export default function Dashboard() {
                     <MatchingSuggestions />
                   </div>
                   <div>
-                    <ActivityTimeline />
+                    <ActivityTimeline activities={[]} />
                   </div>
                   <div className="lg:col-span-3">
                     <ItemsDataTable items={items || []} isLoading={isLoadingItems} />
@@ -1243,7 +1300,7 @@ export default function Dashboard() {
                     <ItemsDataTable items={items || []} isLoading={isLoadingItems} />
                   </div>
                   <div>
-                    <ActivityTimeline />
+                    <ActivityTimeline activities={[]} />
                   </div>
                 </>
               )}
