@@ -23,12 +23,12 @@ export function Header() {
   const isAdmin = user?.role === "Admin";
 
   const navigation = [
-    { name: "Dashboard", href: "/" },
-    { name: "Register Items", href: "/register" },
-    { name: "Search", href: "/search" },
-    { name: "Lost & Found", href: "/lost-found" },
+    { name: t('nav.dashboard'), href: "/" },
+    { name: t('nav.registerItems'), href: "/register" },
+    { name: t('nav.search'), href: "/search" },
+    { name: t('nav.lostFound'), href: "/lost-found" },
     // Admin-only navigation
-    { name: "User Management", href: "/user-management", admin: true },
+    { name: t('nav.userManagement'), href: "/user-management", admin: true },
   ];
 
   const handleLogout = () => {

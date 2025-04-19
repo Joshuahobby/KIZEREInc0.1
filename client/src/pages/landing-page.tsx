@@ -126,7 +126,7 @@ export default function LandingPage() {
                     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
-                  Features
+                  {t('landing.nav.features')}
                 </a>
                 <a 
                   href="#how-it-works" 
@@ -136,7 +136,7 @@ export default function LandingPage() {
                     document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
-                  How It Works
+                  {t('landing.nav.howItWorks')}
                 </a>
                 <a 
                   href="#testimonials" 
@@ -146,7 +146,7 @@ export default function LandingPage() {
                     document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
-                  Testimonials
+                  {t('landing.nav.testimonials')}
                 </a>
               </motion.nav>
             </div>
@@ -260,11 +260,11 @@ export default function LandingPage() {
               >
                 <div className="flex items-center">
                   <Lock className="h-5 w-5 text-primary mr-2" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Secure & Encrypted</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('landing.secure')}</span>
                 </div>
                 <div className="flex items-center">
                   <Shield className="h-5 w-5 text-primary mr-2" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Digital Certificates</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('landing.digitalCertificates')}</span>
                 </div>
               </motion.div>
             </motion.div>
@@ -287,13 +287,13 @@ export default function LandingPage() {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full"></div>
                   
                   <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-xl font-semibold text-foreground">Item Registration</h3>
+                    <h3 className="text-xl font-semibold text-foreground">{t('landing.itemRegistration')}</h3>
                     <motion.span 
                       className="px-3 py-1 bg-green-100 dark:bg-green-900/60 text-green-800 dark:text-green-200 rounded-full text-sm font-medium"
                       animate={{ y: [0, -3, 0] }}
                       transition={{ duration: 1, repeat: Infinity, repeatDelay: 3 }}
                     >
-                      Registered
+                      {t('landing.registered')}
                     </motion.span>
                   </div>
                   
@@ -307,9 +307,9 @@ export default function LandingPage() {
                         <Smartphone className="w-7 h-7 text-primary" />
                       </motion.div>
                       <div>
-                        <h4 className="font-medium text-foreground">iPhone 14 Pro</h4>
-                        <p className="text-sm text-muted-foreground mt-1">Serial: IMEI493049302939</p>
-                        <p className="text-sm text-muted-foreground">Registered on April 10, 2025</p>
+                        <h4 className="font-medium text-foreground">{t('landing.demoItem.name')}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">{t('landing.demoItem.serial')}</p>
+                        <p className="text-sm text-muted-foreground">{t('landing.demoItem.date')}</p>
                       </div>
                     </div>
                     
@@ -317,7 +317,7 @@ export default function LandingPage() {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
                           <Shield className="w-5 h-5 text-primary mr-2" />
-                          <span className="text-sm font-medium text-foreground">Secure Digital Certificate</span>
+                          <span className="text-sm font-medium text-foreground">{t('landing.demoItem.certificate')}</span>
                         </div>
                         <motion.div
                           animate={{ rotate: [0, 360] }}
@@ -458,12 +458,12 @@ export default function LandingPage() {
               <div className="h-16 w-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6 group-hover:bg-emerald-500/20 transition-colors">
                 <Users className="h-8 w-8 text-emerald-500" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-emerald-500 transition-colors">Community Network</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-emerald-500 transition-colors">{t('landing.feature5Title')}</h3>
               <p className="text-muted-foreground">
-                Connect with a community committed to helping each other recover lost possessions quickly.
+                {t('landing.feature5Desc')}
               </p>
               <div className="mt-4 flex items-center text-emerald-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Learn more</span>
+                <span>{t('landing.learnMoreAction')}</span>
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
