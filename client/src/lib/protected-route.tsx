@@ -31,7 +31,7 @@ export function ProtectedRoute({
       <p className="text-muted-foreground mb-4 text-center">
         You don't have the required permissions to access this page.
       </p>
-      <Redirect to="/dashboard" />
+      <Redirect to="/" />
     </div>
   );
 

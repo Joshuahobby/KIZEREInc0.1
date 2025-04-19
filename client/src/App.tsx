@@ -11,32 +11,42 @@ import LandingPage from "@/pages/landing-page";
 import AuthCallback from "@/pages/auth-callback";
 import { useAuth } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 function App() {
+  // Create safe component wrappers to ensure JSX Elements are always returned
+  const DashboardComponent = () => <Dashboard />;
+  const RegisterItemComponent = () => <RegisterItem />;
+  const SearchComponent = () => <Search />;
+  const LostFoundComponent = () => <LostFound />;
+  const UserManagementComponent = () => <UserManagement />;
+  
   return (
-    <LanguageProvider defaultLanguage="rw">
-      <TooltipProvider>
-        <Switch>
-          {/* Public routes - using modal authentication on landing page */}
-          <Route path="/" component={LandingPage} />
-          
-          {/* Auth callback route for handling OAuth redirects */}
-          <Route path="/auth-callback" component={AuthCallback} />
-          
-          {/* Protected routes with role-based access */}
-          
-          {/* Role-restricted routes */}
-          <ProtectedRoute path="/dashboard" component={Dashboard} requiredRole="Subscriber" />
-          <ProtectedRoute path="/register" component={RegisterItem} requiredRole="any" />
-          <ProtectedRoute path="/search" component={Search} requiredRole="any" />
-          <ProtectedRoute path="/lost-found" component={LostFound} requiredRole="any" />
-          <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
-          
-          {/* 404 route */}
-          <Route component={NotFound} />
-        </Switch>
-      </TooltipProvider>
-    </LanguageProvider>
+    <ErrorBoundary>
+      <LanguageProvider defaultLanguage="rw">
+        <TooltipProvider>
+          <Switch>
+            {/* Public routes - using modal authentication on landing page */}
+            <Route path="/" component={LandingPage} />
+            
+            {/* Auth callback route for handling OAuth redirects */}
+            <Route path="/auth-callback" component={AuthCallback} />
+            
+            {/* Protected routes with role-based access */}
+            
+            {/* Role-restricted routes */}
+            <ProtectedRoute path="/dashboard" component={DashboardComponent} requiredRole="any" />
+            <ProtectedRoute path="/register-item" component={RegisterItemComponent} requiredRole="any" />
+            <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
+            <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />
+            <ProtectedRoute path="/user-management" component={UserManagementComponent} requiredRole="Admin" />
+            
+            {/* 404 route */}
+            <Route component={NotFound} />
+          </Switch>
+        </TooltipProvider>
+      </LanguageProvider>
+    </ErrorBoundary>
   );
 }
 
