@@ -293,11 +293,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/reports", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertReportSchema.parse({
+      // First, log debug information
+      console.log("Report submission:", {
+        body: req.body,
+        dateType: typeof req.body.date
+      });
+      
+      // Validate the input data with improved error handling 
+      const result = insertReportSchema.safeParse({
         ...req.body,
         userId: req.user!.id
       });
       
+      if (!result.success) {
+        // Return a detailed validation error
+        return res.status(400).json({
+          message: "Validation error",
+          errors: result.error.errors
+        });
+      }
+      
+      const validatedData = result.data;
       const newReport = await storage.createReport(validatedData);
       
       // Create notification for found items (if the item was registered as lost)

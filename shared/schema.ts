@@ -74,7 +74,17 @@ export const userLoginSchema = z.object({
 export const insertItemSchema = createInsertSchema(items).omit({ id: true, registeredAt: true, updatedAt: true });
 
 // Report schemas
-export const insertReportSchema = createInsertSchema(reports).omit({ id: true, reportedAt: true });
+export const insertReportSchema = createInsertSchema(reports).omit({ id: true, reportedAt: true })
+  .transform((data) => {
+    // Ensure date is parsed as a Date object if it's a string
+    if (typeof data.date === 'string') {
+      return {
+        ...data,
+        date: new Date(data.date),
+      };
+    }
+    return data;
+  });
 
 // Notification schemas
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });

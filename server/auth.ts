@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User, User as SelectUser } from "@shared/schema";
+import { env } from "./config";
 
 const scryptAsync = promisify(scrypt);
 
@@ -29,11 +30,11 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Import env from our config file which handles validation and defaults
-  const { env } = require('./config');
+  // Generate a fallback session secret if needed (for development only)
+  const sessionSecret = env.SESSION_SECRET || randomBytes(32).toString('hex');
   
   const sessionSettings: session.SessionOptions = {
-    secret: env.SESSION_SECRET,
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
