@@ -385,15 +385,12 @@ const ItemsDataTable = ({
                             <Pencil className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <OwnershipTransferDialog 
-                          itemId={item.id} 
-                          itemName={item.name}
-                          triggerButton={
-                            <Button variant="ghost" size="icon">
-                              <Users className="h-4 w-4" />
-                            </Button>
-                          }
-                        />
+                        <Button variant="ghost" size="icon" onClick={() => {
+                          // To be implemented: ownership transfer dialog
+                          console.log(`Transfer ownership for item ${item.id}: ${item.name}`);
+                        }}>
+                          <Users className="h-4 w-4" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
