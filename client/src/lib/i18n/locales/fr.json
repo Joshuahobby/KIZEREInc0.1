@@ -31,6 +31,7 @@
     "signingInWithGoogle": "Connexion avec Google...",
     "signInWithGoogle": "Se connecter avec Google",
     "signUpWithGoogle": "S'inscrire avec Google",
+    "getStarted": "Commencer",
     "loginDescription": "Accès sécurisé à vos objets enregistrés et fonctionnalités de protection",
     "registerDescription": "Créez un compte pour commencer à suivre et protéger vos biens précieux",
     "fullName": "Nom Complet",
@@ -52,6 +53,11 @@
     "and": "et"
   },
   "landing": {
+    "nav": {
+      "features": "Fonctionnalités",
+      "howItWorks": "Comment Ça Marche", 
+      "testimonials": "Témoignages"
+    },
     "heroTitle": "Protégez ce qui Compte le Plus",
     "heroTitle1": "Sécurisez Vos",
     "heroTitle2": "Objets de Valeur Numériquement",

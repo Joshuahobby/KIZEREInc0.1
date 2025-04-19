@@ -31,6 +31,7 @@
     "signingInWithGoogle": "Kwinjira na Google...",
     "signInWithGoogle": "Injira na Google",
     "signUpWithGoogle": "Iyandikishe na Google",
+    "getStarted": "Tangira Ubu",
     "loginDescription": "Kubona ibintu byawe wanditse n'uburyo bwo kubirinda",
     "registerDescription": "Iyandikishe kugira ngo utangire kwandika no kurinda ibintu byawe by'agaciro",
     "fullName": "Amazina Yombi",
@@ -52,6 +53,11 @@
     "and": "na"
   },
   "landing": {
+    "nav": {
+      "features": "Ibiranga",
+      "howItWorks": "Uko Bikora", 
+      "testimonials": "Ubuhamya"
+    },
     "heroTitle": "Kurinda Ibyawe by'Agaciro",
     "heroTitle1": "Kurinda",
     "heroTitle2": "Ibyawe by'Agaciro",
@@ -77,6 +83,18 @@
     "feature3Desc": "Shakisha muri databaze yacu yuzuye kugira ngo ubone ibintu byabuze ukoresheje uburyo bwo gushakisha",
     "feature4Title": "Gihamya y'Ubwenegihugu",
     "feature4Desc": "Bika gihamya y'ikoranabuhanga y'ubwenegihugu bw'ibintu byawe byose by'agaciro",
+    "feature5Title": "Urusobe rw'Abaturanyi",
+    "feature5Desc": "Vugana n'abaturanyi biyemeje gufashanya gufasha kugarura ibintu byabuze vuba",
+    "feature6Title": "Ikibaho Cyoroshye Gukoresha",
+    "feature6Desc": "Kurikiranira ibintu byawe wanditse, raporo z'ibyabuze, ndetse n'aho kugerwaho mu kubigarura binyuze mu rubuga rworoshye gukoresha",
+    "secure": "Byizerwe & Birinzwe",
+    "registered": "Byanditswe",
+    "demoItem": {
+      "name": "iPhone 14 Pro",
+      "serial": "Nomero: IMEI493049302939",
+      "date": "Cyanditswe ku ya 10 Mata 2025",
+      "certificate": "Icyemezo cy'ikoranabuhanga cyizewe"
+    },
     "statsTitle": "Yizewe n'Ibihumbi",
     "statItems": "Ibyanditswe",
     "statUsers": "Abakoresha Bahoraho",

@@ -31,6 +31,7 @@
     "signingInWithGoogle": "Inaingia na Google...",
     "signInWithGoogle": "Ingia na Google",
     "signUpWithGoogle": "Jiandikishe na Google",
+    "getStarted": "Anza Sasa",
     "loginDescription": "Ufikiaji salama kwa vitu vyako vilivyosajiliwa na huduma za ulinzi",
     "registerDescription": "Tengeneza akaunti kuanza kufuatilia na kulinda mali zako za thamani",
     "fullName": "Jina Kamili",
@@ -52,6 +53,11 @@
     "and": "na"
   },
   "landing": {
+    "nav": {
+      "features": "Huduma",
+      "howItWorks": "Jinsi Inavyofanya Kazi", 
+      "testimonials": "Shuhuda"
+    },
     "heroTitle": "Linda Yaliyo Muhimu Zaidi",
     "heroTitle1": "Linda Vitu",
     "heroTitle2": "Vyako vya Thamani Kidijitali",
