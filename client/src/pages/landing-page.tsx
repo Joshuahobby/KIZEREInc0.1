@@ -902,32 +902,31 @@ export default function LandingPage() {
                 viewport={{ once: true }}
               >
                 <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                  Mobile Access
+                  {t('landing.mobileApp.sectionTitle')}
                 </span>
                 <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-                  Take KIZERE With You Everywhere
+                  {t('landing.mobileApp.mainTitle')}
                 </h2>
                 <p className="text-lg text-muted-foreground mb-8">
-                  Our mobile application gives you instant access to your digital inventory, allowing you to
-                  report lost items or scan found items on the go. Available for iOS and Android devices.
+                  {t('landing.mobileApp.description')}
                 </p>
                 
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-foreground">Scan QR codes on found items to quickly identify owners</p>
+                    <p className="text-foreground">{t('landing.mobileApp.features.feature1')}</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-foreground">Receive instant notifications about your items</p>
+                    <p className="text-foreground">{t('landing.mobileApp.features.feature2')}</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-foreground">Securely transfer ownership with just a few taps</p>
+                    <p className="text-foreground">{t('landing.mobileApp.features.feature3')}</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-foreground">Take photos and document your valuables anywhere</p>
+                    <p className="text-foreground">{t('landing.mobileApp.features.feature4')}</p>
                   </div>
                 </div>
                 
@@ -938,8 +937,8 @@ export default function LandingPage() {
                       <path d="M14.918 3.636c.727-.893 1.23-2.135 1.096-3.384-1.065.071-2.386.727-3.137 1.597-.69.785-1.301 2.061-1.145 3.264 1.193.089 2.404-.604 3.186-1.477z"/>
                     </svg>
                     <div className="text-left">
-                      <div className="text-xs">Download on the</div>
-                      <div className="text-lg font-semibold leading-tight">App Store</div>
+                      <div className="text-xs">{t('landing.mobileApp.downloadOn')}</div>
+                      <div className="text-lg font-semibold leading-tight">{t('landing.mobileApp.appStore')}</div>
                     </div>
                   </button>
                   
@@ -948,8 +947,8 @@ export default function LandingPage() {
                       <path d="M3.609 1.814 13.792 12 3.609 22.186c-.181.181-.29.423-.29.684V1.13c0 .261.109.503.29.684zm1.505-.648v21.667l11-10.833-11-10.834zm3.29 4.728 5.5 5.388 1.634-1.604L6.825 2.066l1.579 3.828zm0 12.389 1.579 3.828 9.209-9.039-1.634-1.604-9.154 6.815z"/>
                     </svg>
                     <div className="text-left">
-                      <div className="text-xs">GET IT ON</div>
-                      <div className="text-lg font-semibold leading-tight">Google Play</div>
+                      <div className="text-xs">{t('landing.mobileApp.getItOn')}</div>
+                      <div className="text-lg font-semibold leading-tight">{t('landing.mobileApp.googlePlay')}</div>
                     </div>
                   </button>
                 </div>
@@ -991,13 +990,13 @@ export default function LandingPage() {
               viewport={{ once: true }}
             >
               <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
-                Questions & Answers
+                {t('landing.faq.sectionTitle')}
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-                Frequently Asked Questions
+                {t('landing.faq.mainTitle')}
               </h2>
               <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
-                Get answers to common questions about KIZERE's platform.
+                {t('landing.faq.description')}
               </p>
             </motion.div>
           </div>
@@ -1019,11 +1018,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-foreground mb-3">
-                    How secure is my information?
+                    {t('landing.faq.questions.security.question')}
                   </h3>
                   <p className="text-muted-foreground">
-                    We use industry-standard encryption and security protocols to protect your data. 
-                    Your information is only visible to you and authorized personnel in case of a recovery scenario.
+                    {t('landing.faq.questions.security.answer')}
                   </p>
                 </div>
               </div>
@@ -1039,11 +1037,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-foreground mb-3">
-                    What items can I register?
+                    {t('landing.faq.questions.items.question')}
                   </h3>
                   <p className="text-muted-foreground">
-                    You can register any valuable items including electronics, jewelry, documents, vehicles, 
-                    accessories, and more. Any item with a unique identifier or distinguishing characteristics.
+                    {t('landing.faq.questions.items.answer')}
                   </p>
                 </div>
               </div>
@@ -1059,11 +1056,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-foreground mb-3">
-                    How does the lost and found system work?
+                    {t('landing.faq.questions.lostFound.question')}
                   </h3>
                   <p className="text-muted-foreground">
-                    When you report a lost item, it's added to our database. If someone finds an item, they can report it, 
-                    and our system will automatically match it with lost reports and notify the owner.
+                    {t('landing.faq.questions.lostFound.answer')}
                   </p>
                 </div>
               </div>
@@ -1079,11 +1075,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-foreground mb-3">
-                    Is there a limit to how many items I can register?
+                    {t('landing.faq.questions.limits.question')}
                   </h3>
                   <p className="text-muted-foreground">
-                    Basic accounts can register up to 10 items. Premium accounts have unlimited registration capacity 
-                    and additional features like priority support and advanced analytics.
+                    {t('landing.faq.questions.limits.answer')}
                   </p>
                 </div>
               </div>

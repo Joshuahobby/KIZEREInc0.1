@@ -122,6 +122,45 @@
         "location": "Nakuru, Kenya",
         "quote": "I found someone's wallet and used KIZERE to locate the owner. The platform made it easy to connect and return the wallet safely."
       }
+    },
+    "mobileApp": {
+      "sectionTitle": "Mobile Access",
+      "mainTitle": "Take KIZERE With You Everywhere",
+      "description": "Our mobile application gives you instant access to your digital inventory, allowing you to report lost items or scan found items on the go. Available for iOS and Android devices.",
+      "features": {
+        "feature1": "Scan QR codes on found items to quickly identify owners",
+        "feature2": "Receive instant notifications about your items",
+        "feature3": "Securely transfer ownership with just a few taps",
+        "feature4": "Take photos and document your valuables anywhere"
+      },
+      "downloadOn": "Download on the",
+      "appStore": "App Store",
+      "getItOn": "GET IT ON",
+      "googlePlay": "Google Play"
+    },
+    "faq": {
+      "sectionTitle": "Questions & Answers",
+      "mainTitle": "Frequently Asked Questions",
+      "description": "Get answers to common questions about KIZERE's platform.",
+      "questions": {
+        "security": {
+          "question": "How secure is my information?",
+          "answer": "We use industry-standard encryption and security protocols to protect your data. Your information is only visible to you and authorized personnel in case of a recovery scenario."
+        },
+        "items": {
+          "question": "What items can I register?",
+          "answer": "You can register any valuable items including electronics, jewelry, documents, vehicles, accessories, and more. Any item with a unique identifier or distinguishing characteristics."
+        },
+        "lostFound": {
+          "question": "How does the lost and found system work?",
+          "answer": "When you report a lost item, it's added to our database. If someone finds an item, they can report it, and our system will automatically match it with lost reports and notify the owner."
+        },
+        "limits": {
+          "question": "Is there a limit to how many items I can register?",
+          "answer": "Basic accounts can register up to 10 items. Premium accounts have unlimited registration capacity and additional features like priority support and advanced analytics."
+        }
+      },
+      "contactUs": "More Questions? Contact Us"
     }
   },
   "dashboard": {
