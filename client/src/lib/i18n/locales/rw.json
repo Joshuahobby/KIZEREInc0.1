@@ -102,6 +102,27 @@
       "step4Desc": "Vugana n'uwabibonetse cyangwa nyirabyo ukoresheje sisitemu yacu y'ubutumwa ifite umutekano kandi uhuze kugarura ibintu byabuze mu mutekano.",
       "communityDesc": "Urwego ruhujwe na bagenzi bawe mu kugarura ibintu rukwirakwira mu migi n'uturere"
     },
+    "testimonials": {
+      "sectionTitle": "Ubuhamya bw'Abakoresha",
+      "mainTitle": "Icyo Abakoresha Bacu Bavuga",
+      "subtitle": "Umva ubuhamya bw'abantu batandukanye babonye ibintu byabo byari byabuze binyuze ku rubuga rwa KIZERE.",
+      "viewMore": "Reba Izindi Testimoniyali",
+      "testimonial1": {
+        "name": "James Mutembei",
+        "location": "Nairobi, Kenya",
+        "quote": "Natakaje mudasobwa yanjye ku kibuga cy'indege ntekereza ko yari yabuze burundu. Kubera KIZERE, hari umuntu wayibonye kandi ankubira telefone mu masaha make!"
+      },
+      "testimonial2": {
+        "name": "Florence Nkatha",
+        "location": "Mombasa, Kenya",
+        "quote": "Uburyo bwo kwiyandikisha bwari bworoshye cyane! Nanditse ibikoresho byanjye byose by'ikoranabuhanga n'amabuye y'agaciro. Ubu numva nteyukanye kurushaho ibintu byanjye by'agaciro."
+      },
+      "testimonial3": {
+        "name": "Robert Kabugi",
+        "location": "Nakuru, Kenya",
+        "quote": "Nabonye umupaki w'umuntu kandi nkoresheje KIZERE kugira ngo mbonere nyirawo. Urubuga rwatumye bikorohera guhuza no kugaruraho umukono iicunga mu mutekano."
+      }
+    },
     "mobileApp": {
       "sectionTitle": "Gukoreshwa Kuri Telefoni",
       "mainTitle": "Jyana KIZERE Aho Ujya Hose",

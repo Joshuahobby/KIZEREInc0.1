@@ -102,6 +102,27 @@
       "step4Desc": "Connectez-vous avec le trouveur ou le propriétaire grâce à notre système de messagerie sécurisé et coordonnez le retour des objets perdus en toute sécurité.",
       "communityDesc": "Réseau de récupération d'objets alimenté par la communauté s'étendant à travers les villes et les régions"
     },
+    "testimonials": {
+      "sectionTitle": "Témoignages d'Utilisateurs",
+      "mainTitle": "Ce Que Disent Nos Utilisateurs",
+      "subtitle": "Écoutez les témoignages de personnes qui ont réussi à récupérer leurs objets perdus grâce à KIZERE.",
+      "viewMore": "Voir Plus de Témoignages",
+      "testimonial1": {
+        "name": "James Mutembei",
+        "location": "Nairobi, Kenya",
+        "quote": "J'ai perdu mon ordinateur portable à l'aéroport et je pensais qu'il était perdu pour toujours. Grâce à KIZERE, quelqu'un l'a trouvé et m'a contacté en quelques heures !"
+      },
+      "testimonial2": {
+        "name": "Florence Nkatha",
+        "location": "Mombasa, Kenya",
+        "quote": "Le processus d'enregistrement était si simple ! J'ai catalogué tous mes appareils électroniques et mes bijoux. Maintenant, je me sens beaucoup plus en sécurité concernant mes objets de valeur."
+      },
+      "testimonial3": {
+        "name": "Robert Kabugi",
+        "location": "Nakuru, Kenya",
+        "quote": "J'ai trouvé le portefeuille de quelqu'un et j'ai utilisé KIZERE pour localiser le propriétaire. La plateforme a facilité la connexion et le retour du portefeuille en toute sécurité."
+      }
+    },
     "footerDescription": "La plateforme ultime pour l'enregistrement d'objets, la gestion des objets perdus et trouvés, et la protection de la propriété.",
     "footer": {
       "quickLinks": "Liens Rapides",

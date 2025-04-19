@@ -102,6 +102,27 @@
       "step4Desc": "Ungana na mtafutaji au mmiliki kupitia mfumo wetu salama wa ujumbe na uratibu urejeshaji wa vitu vilivyopotea kwa usalama.",
       "communityDesc": "Mtandao wa urejeshaji wa vipengee unaowezeshwa na jamii unaoenea katika miji na mikoa"
     },
+    "testimonials": {
+      "sectionTitle": "Shuhuda za Watumiaji",
+      "mainTitle": "Watumiaji Wetu Wanasema Nini",
+      "subtitle": "Sikia kutoka kwa watu ambao wamefanikiwa kurudisha vitu vyao vilivyopotea na KIZERE.",
+      "viewMore": "Tazama Shuhuda Zaidi",
+      "testimonial1": {
+        "name": "James Mutembei",
+        "location": "Nairobi, Kenya",
+        "quote": "Nilipoteza kompyuta yangu ya kupakata kwa uwanja wa ndege na nilidhani imepotea milele. Shukrani kwa KIZERE, mtu aliipata na kunipiga simu ndani ya masaa machache!"
+      },
+      "testimonial2": {
+        "name": "Florence Nkatha",
+        "location": "Mombasa, Kenya",
+        "quote": "Mchakato wa usajili ulikuwa rahisi sana! Nimeandika elektroniki zangu zote na vito. Sasa nahisi sina wasiwasi zaidi kuhusu mali zangu za thamani."
+      },
+      "testimonial3": {
+        "name": "Robert Kabugi",
+        "location": "Nakuru, Kenya",
+        "quote": "Nilipata mkoba wa mtu na kutumia KIZERE kutafuta mmiliki. Jukwaa lilifanya iwe rahisi kuunganika na kurudisha mkoba salama."
+      }
+    },
     "footerDescription": "Jukwaa kamili la usajili wa vitu, usimamizi wa vipotea na vipatikana, na ulinzi wa umiliki.",
     "footer": {
       "quickLinks": "Viungo vya Haraka",
