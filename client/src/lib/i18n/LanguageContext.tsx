@@ -29,7 +29,7 @@ export type TranslationsType = { [key: string]: { [key: string]: TranslationValu
 interface LanguageContextType {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   translations: TranslationsType;
   languages: LanguageInfo;
 }
@@ -95,8 +95,17 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   };
 
   // Translation function
-  const t = (key: string): string => {
-    return getNestedTranslation(translations[language], key) || key;
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    let translatedText = getNestedTranslation(translations[language], key) || key;
+    
+    // Replace parameters if provided
+    if (params) {
+      Object.keys(params).forEach(paramKey => {
+        translatedText = translatedText.replace(`{${paramKey}}`, String(params[paramKey]));
+      });
+    }
+    
+    return translatedText;
   };
 
   // Provide the language context
