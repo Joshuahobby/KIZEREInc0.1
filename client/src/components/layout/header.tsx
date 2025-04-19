@@ -74,25 +74,28 @@ export function Header() {
                 <h1 className="text-2xl font-display font-bold text-primary-600 cursor-pointer">KIZERE</h1>
               </Link>
             </div>
-            <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              {navigation.map((item) => {
-                if (item.admin && !isAdmin) return null;
-                
-                return (
-                  <Link key={item.name} href={item.href}>
-                    <a
-                      className={`${
-                        isActive(item.href)
-                          ? "border-primary-500 text-neutral-900"
-                          : "border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700"
-                      } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-                    >
-                      {item.name}
-                    </a>
-                  </Link>
-                );
-              })}
-            </nav>
+            {/* Only show navigation links for non-authenticated users */}
+            {!isAuthenticated && (
+              <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">
+                {navigation.map((item) => {
+                  if (item.admin && !isAdmin) return null;
+                  
+                  return (
+                    <Link key={item.name} href={item.href}>
+                      <a
+                        className={`${
+                          isActive(item.href)
+                            ? "border-primary-500 text-neutral-900"
+                            : "border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700"
+                        } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                      >
+                        {item.name}
+                      </a>
+                    </Link>
+                  );
+                })}
+              </nav>
+            )}
           </div>
 
           <div className="ml-6 flex items-center gap-2">
@@ -135,48 +138,53 @@ export function Header() {
             )}
           </div>
 
-          <div className="flex items-center sm:hidden">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={toggleMobileMenu}
-              aria-controls="mobile-menu"
-              aria-expanded={mobileMenuOpen}
-            >
-              <span className="sr-only">Open main menu</span>
-              {mobileMenuOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
-              )}
-            </Button>
-          </div>
+          {/* Only show mobile menu button for non-authenticated users */}
+          {!isAuthenticated && (
+            <div className="flex items-center sm:hidden">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={toggleMobileMenu}
+                aria-controls="mobile-menu"
+                aria-expanded={mobileMenuOpen}
+              >
+                <span className="sr-only">Open main menu</span>
+                {mobileMenuOpen ? (
+                  <X className="block h-6 w-6" aria-hidden="true" />
+                ) : (
+                  <Menu className="block h-6 w-6" aria-hidden="true" />
+                )}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Mobile menu */}
-      <div className={`${mobileMenuOpen ? "" : "hidden"} sm:hidden`} id="mobile-menu">
-        <div className="pt-2 pb-3 space-y-1">
-          {navigation.map((item) => {
-            if (item.admin && !isAdmin) return null;
-            
-            return (
-              <Link key={item.name} href={item.href}>
-                <a
-                  className={`${
-                    isActive(item.href)
-                      ? "bg-primary-50 border-primary-500 text-primary-700"
-                      : "border-transparent text-neutral-500 hover:bg-gray-50 hover:border-neutral-300 hover:text-neutral-700"
-                  } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.name}
-                </a>
-              </Link>
-            );
-          })}
+      {/* Mobile menu - only shown for non-authenticated users */}
+      {!isAuthenticated && (
+        <div className={`${mobileMenuOpen ? "" : "hidden"} sm:hidden`} id="mobile-menu">
+          <div className="pt-2 pb-3 space-y-1">
+            {navigation.map((item) => {
+              if (item.admin && !isAdmin) return null;
+              
+              return (
+                <Link key={item.name} href={item.href}>
+                  <a
+                    className={`${
+                      isActive(item.href)
+                        ? "bg-primary-50 border-primary-500 text-primary-700"
+                        : "border-transparent text-neutral-500 hover:bg-gray-50 hover:border-neutral-300 hover:text-neutral-700"
+                    } block pl-3 pr-4 py-2 border-l-4 text-base font-medium`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.name}
+                  </a>
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }
