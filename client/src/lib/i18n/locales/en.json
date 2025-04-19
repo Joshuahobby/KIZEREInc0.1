@@ -59,6 +59,11 @@
     "logout": "Logout"
   },
   "landing": {
+    "nav": {
+      "features": "Features",
+      "howItWorks": "How It Works", 
+      "testimonials": "Testimonials"
+    },
     "heroTitle": "Protect What Matters Most",
     "heroTitle1": "Secure Your",
     "heroTitle2": "Valuables Digitally",
