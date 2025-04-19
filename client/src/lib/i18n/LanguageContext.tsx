@@ -49,7 +49,10 @@ const getNestedTranslation = (obj: any, path: string): string => {
     if (result && typeof result === 'object' && key in result) {
       result = result[key];
     } else {
-      return path; // Return the path if translation not found
+      // More descriptive fallback for debugging
+      console.warn(`Translation key not found: ${path}`);
+      // For missing keys, return a more readable text instead of the key path
+      return typeof result === 'string' ? result : key; 
     }
   }
   
@@ -96,7 +99,13 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 
   // Translation function
   const t = (key: string, params?: Record<string, string | number>): string => {
-    let translatedText = getNestedTranslation(translations[language], key) || key;
+    // First try in the current language
+    let translatedText = getNestedTranslation(translations[language], key);
+    
+    // If not found in current language, try English as fallback
+    if (translatedText === key && language !== 'en') {
+      translatedText = getNestedTranslation(translations['en'], key) || key;
+    }
     
     // Replace parameters if provided
     if (params) {

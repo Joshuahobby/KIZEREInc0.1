@@ -1,0 +1,196 @@
+{
+  "common": {
+    "appName": "KIZERE",
+    "slogan": "Register, Track, Protect",
+    "welcome": "Welcome to KIZERE",
+    "welcomeBack": "Welcome Back",
+    "joinKizere": "Join KIZERE",
+    "continueWith": "Or continue with",
+    "search": "Search",
+    "notifications": "Notifications", 
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout",
+    "language": "Language"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "registeredItems": "My Items",
+    "lostFound": "Lost & Found",
+    "registerItem": "Register Item",
+    "userManagement": "User Management"
+  },
+  "auth": {
+    "login": "Sign In",
+    "loginAction": "Sign In",
+    "register": "Register",
+    "registerAction": "Create Account",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "signingInWithGoogle": "Signing in with Google...",
+    "signInWithGoogle": "Sign in with Google",
+    "signUpWithGoogle": "Sign up with Google",
+    "loginDescription": "Secure access to your registered items and protection features",
+    "registerDescription": "Create an account to start tracking and protecting your valuable possessions",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "phoneOrEmail": "Phone Number or Email",
+    "phoneOrEmailPlaceholder": "e.g. +250 xxx xxx xxx or your@email.com",
+    "usernameLabel": "Username / Phone / Email",
+    "usernamePlaceholder": "Enter your username, phone, or email",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "createPassword": "Create a password",
+    "confirmPassword": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "termsAgree": "I agree to the",
+    "termsOfService": "Terms of Service",
+    "privacyPolicy": "Privacy Policy",
+    "and": "and"
+  },
+  "landing": {
+    "heroTitle": "Protect What Matters Most",
+    "heroTitle1": "Secure Your",
+    "heroTitle2": "Valuables Digitally",
+    "heroSubtitle": "Register and track your valuable possessions with Rwanda's premier digital item registry",
+    "getStarted": "Get Started",
+    "learnMore": "Learn More",
+    "registerNow": "Register Now",
+    "trustedUsers": "Trusted by 15,000+ users worldwide",
+    "secureEncrypted": "Secure & Encrypted",
+    "digitalCertificates": "Digital Certificates",
+    "itemRegistration": "Item Registration",
+    "registeredStatus": "Registered",
+    "featuresTitle": "Why Choose KIZERE",
+    "powerfulFeatures": "Powerful Features",
+    "completeSolution": "The Complete Solution for",
+    "itemManagement": "Item Management",
+    "kizereProvides": "KIZERE provides all the tools you need to register, protect, and recover your valuable possessions.",
+    "feature1Title": "Secure Registration",
+    "feature1Desc": "Register your items securely with detailed information, photos, and unique digital certificates",
+    "feature2Title": "Lost Item Reporting",
+    "feature2Desc": "Quickly report lost items and get real-time notifications when they're found by community members",
+    "feature3Title": "Advanced Search",
+    "feature3Desc": "Search through our comprehensive database to find lost items using advanced filtering options",
+    "feature4Title": "Ownership Proof",
+    "feature4Desc": "Maintain digital proof of ownership for all your valuables",
+    "statsTitle": "Trusted by Thousands",
+    "statItems": "Items Registered",
+    "statUsers": "Happy Users",
+    "statRecoveries": "Items Recovered",
+    "statSatisfaction": "Satisfaction Rate",
+    "learnMoreAction": "Learn more",
+    "startToday": "Start Today",
+    "readyToSecure": "Ready to Secure Your Valuables?",
+    "joinThousands": "Join thousands of users who trust KIZERE to keep track of their important possessions.",
+    "createFreeAccount": "Create Free Account",
+    "noCardRequired": "No credit card required. Get started in minutes.",
+    "howItWorks": {
+      "sectionTitle": "How KIZERE Works",
+      "simpleProcess": "Simple Process",
+      "description": "Our platform makes it easy to register, track, and recover your valuables in just a few simple steps.",
+      "step1Title": "Register Your Items",
+      "step1Desc": "Create an account and add your valuables to your digital inventory with photos, descriptions, and unique identifiers.",
+      "step2Title": "Get Digital Certificates",
+      "step2Desc": "Each item receives a secure digital certificate proving ownership that can be transferred if the item changes hands.",
+      "step3Title": "Report If Lost or Found",
+      "step3Desc": "Easily report items that are lost or found. Our system automatically matches reports and notifies the appropriate parties.",
+      "step4Title": "Recovery & Reunification",
+      "step4Desc": "Connect with the finder or owner through our secure messaging system and coordinate the return of lost items safely.",
+      "communityDesc": "Community-powered item recovery network spanning across cities and regions"
+    },
+    "testimonials": {
+      "sectionTitle": "User Success Stories",
+      "mainTitle": "What Our Users Say",
+      "subtitle": "Hear from people who have successfully recovered their lost items with KIZERE.",
+      "viewMore": "View More Testimonials",
+      "testimonial1": {
+        "name": "James Mutembei",
+        "location": "Nairobi, Kenya",
+        "quote": "I lost my laptop at the airport and thought it was gone forever. Thanks to KIZERE, someone found it and contacted me within hours!"
+      },
+      "testimonial2": {
+        "name": "Florence Nkatha",
+        "location": "Mombasa, Kenya",
+        "quote": "The registration process was so simple! I've cataloged all my electronics and jewelry. Now I feel much more secure about my valuables."
+      },
+      "testimonial3": {
+        "name": "Robert Kabugi",
+        "location": "Nakuru, Kenya",
+        "quote": "I found someone's wallet and used KIZERE to locate the owner. The platform made it easy to connect and return the wallet safely."
+      }
+    },
+    "mobileApp": {
+      "sectionTitle": "Mobile Access",
+      "mainTitle": "Take KIZERE With You Everywhere",
+      "description": "Our mobile application gives you instant access to your digital inventory, allowing you to report lost items or scan found items on the go. Available for iOS and Android devices.",
+      "features": {
+        "feature1": "Scan QR codes on found items to quickly identify owners",
+        "feature2": "Receive instant notifications about your items",
+        "feature3": "Securely transfer ownership with just a few taps",
+        "feature4": "Take photos and document your valuables anywhere"
+      },
+      "downloadOn": "Download on the",
+      "appStore": "App Store",
+      "getItOn": "GET IT ON",
+      "googlePlay": "Google Play"
+    },
+    "faq": {
+      "sectionTitle": "Questions & Answers",
+      "mainTitle": "Frequently Asked Questions",
+      "description": "Get answers to common questions about KIZERE's platform.",
+      "questions": {
+        "security": {
+          "question": "How secure is my information?",
+          "answer": "We use industry-standard encryption and security protocols to protect your data. Your information is only visible to you and authorized personnel in case of a recovery scenario."
+        },
+        "items": {
+          "question": "What items can I register?",
+          "answer": "You can register any valuable items including electronics, jewelry, documents, vehicles, accessories, and more. Any item with a unique identifier or distinguishing characteristics."
+        },
+        "lostFound": {
+          "question": "How does the lost and found system work?",
+          "answer": "When you report a lost item, it's added to our database. If someone finds an item, they can report it, and our system will automatically match it with lost reports and notify the owner."
+        },
+        "limits": {
+          "question": "Is there a limit to how many items I can register?",
+          "answer": "Basic accounts can register up to 10 items. Premium accounts have unlimited registration capacity and additional features like priority support and advanced analytics."
+        }
+      },
+      "contactUs": "More Questions? Contact Us"
+    }
+  },
+  "dashboard": {
+    "welcomeMessage": "Welcome to your dashboard",
+    "registeredItems": "Registered Items",
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions",
+    "registerNewItem": "Register New Item",
+    "viewAllItems": "View All Items",
+    "reportLostItem": "Report Lost Item"
+  },
+  "items": {
+    "registerNewItem": "Register New Item",
+    "itemName": "Item Name",
+    "category": "Category",
+    "serialNumber": "Serial Number",
+    "description": "Description",
+    "purchaseDate": "Purchase Date",
+    "purchaseValue": "Purchase Value",
+    "uploadImage": "Upload Image",
+    "additionalDetails": "Additional Details"
+  },
+  "reports": {
+    "reportLostItem": "Report Lost Item",
+    "reportFoundItem": "Report Found Item",
+    "itemDetails": "Item Details",
+    "lastSeen": "Last Seen",
+    "contactInformation": "Contact Information",
+    "reward": "Reward (Optional)",
+    "reportDate": "Report Date",
+    "status": "Status"
+  },
+  "landing": {
