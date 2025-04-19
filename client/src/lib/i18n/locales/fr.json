@@ -83,6 +83,18 @@
     "feature3Desc": "Effectuez des recherches dans notre base de données complète pour trouver des objets perdus à l'aide d'options de filtrage avancées",
     "feature4Title": "Preuve de Propriété",
     "feature4Desc": "Conservez une preuve numérique de propriété pour tous vos objets de valeur",
+    "feature5Title": "Réseau Communautaire",
+    "feature5Desc": "Connectez-vous avec une communauté engagée à s'entraider pour récupérer rapidement les objets perdus",
+    "feature6Title": "Tableau de Bord Intuitif",
+    "feature6Desc": "Suivez vos objets enregistrés, les signalements de pertes et les progrès de récupération via un tableau de bord convivial",
+    "secure": "Sécurisé & Crypté",
+    "registered": "Enregistré",
+    "demoItem": {
+      "name": "iPhone 14 Pro",
+      "serial": "Numéro: IMEI493049302939",
+      "date": "Enregistré le 10 avril 2025",
+      "certificate": "Certificat Numérique Sécurisé"
+    },
     "statsTitle": "Approuvé par des Milliers",
     "statItems": "Objets Enregistrés",
     "statUsers": "Utilisateurs Satisfaits",

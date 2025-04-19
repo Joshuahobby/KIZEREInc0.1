@@ -83,6 +83,18 @@
     "feature3Desc": "Tafuta kwenye hifadhidata yetu kamili kupata vitu vilivyopotea kwa kutumia chaguo za kuchuja za hali ya juu",
     "feature4Title": "Uthibitisho wa Umiliki",
     "feature4Desc": "Hifadhi uthibitisho wa kidijitali wa umiliki wa vitu vyako vyote vya thamani",
+    "feature5Title": "Mtandao wa Jamii",
+    "feature5Desc": "Unganishwa na jamii iliyojitoa kusaidia kila mmoja kurudisha vitu vilivyopotea haraka",
+    "feature6Title": "Dashibodi Rahisi Kutumia",
+    "feature6Desc": "Fuatilia vitu vyako vilivyosajiliwa, ripoti za vitu vilivyopotea, na maendeleo ya urejeshaji kupitia dashibodi rahisi kutumia",
+    "secure": "Salama & Iliyosimbwa",
+    "registered": "Imesajiliwa",
+    "demoItem": {
+      "name": "iPhone 14 Pro",
+      "serial": "Namba: IMEI493049302939",
+      "date": "Imesajiliwa tarehe 10 Aprili 2025",
+      "certificate": "Cheti cha Kidijitali Salama"
+    },
     "statsTitle": "Inaaminiwa na Maelfu",
     "statItems": "Vitu Vilivyosajiliwa",
     "statUsers": "Watumiaji Wenye Furaha",
