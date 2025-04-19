@@ -88,6 +88,20 @@
     "joinThousands": "Jiunge na maelfu ya watumiaji wanaoamini KIZERE kufuatilia mali zao muhimu.",
     "createFreeAccount": "Tengeneza Akaunti ya Bure",
     "noCardRequired": "Hakuna kadi ya mikopo inayohitajika. Anza ndani ya dakika chache.",
+    "howItWorks": {
+      "sectionTitle": "Jinsi KIZERE Inavyofanya Kazi",
+      "simpleProcess": "Mchakato Rahisi",
+      "description": "Jukwaa letu linafanya iwe rahisi kusajili, kufuatilia, na kurudisha mali zako za thamani kwa hatua chache rahisi.",
+      "step1Title": "Sajili Vitu Vyako",
+      "step1Desc": "Tengeneza akaunti na uongeze vitu vyako vya thamani kwenye orodha yako ya kidijitali na picha, maelezo, na vitambulisho vya kipekee.",
+      "step2Title": "Pata Vyeti vya Kidijitali",
+      "step2Desc": "Kila kipengee kinapokea cheti salama cha kidijitali kinachothibitisha umiliki ambao unaweza kuhamishwa ikiwa kipengee kinabadilisha mikono.",
+      "step3Title": "Ripoti Ikiwa Kimepotea au Kupatikana",
+      "step3Desc": "Ripoti kwa urahisi vitu vilivyopotea au kupatikana. Mfumo wetu unafananisha ripoti kiotomatiki na kuwataarifu wahusika wanaofaa.",
+      "step4Title": "Urejeshaji na Kuunganisha Upya",
+      "step4Desc": "Ungana na mtafutaji au mmiliki kupitia mfumo wetu salama wa ujumbe na uratibu urejeshaji wa vitu vilivyopotea kwa usalama.",
+      "communityDesc": "Mtandao wa urejeshaji wa vipengee unaowezeshwa na jamii unaoenea katika miji na mikoa"
+    },
     "footerDescription": "Jukwaa kamili la usajili wa vitu, usimamizi wa vipotea na vipatikana, na ulinzi wa umiliki.",
     "footer": {
       "quickLinks": "Viungo vya Haraka",

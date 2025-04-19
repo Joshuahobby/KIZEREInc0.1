@@ -88,6 +88,20 @@
     "joinThousands": "Ifatanye n'ibihumbi by'abakoresha bizera KIZERE mu gucunga ibyabo by'agaciro.",
     "createFreeAccount": "Fungura Konti ya Ubuntu",
     "noCardRequired": "Nta karita ya banki ikenewe. Tangira mu minota mike.",
+    "howItWorks": {
+      "sectionTitle": "Uko KIZERE Ikora",
+      "simpleProcess": "Uburyo Bworoshye",
+      "description": "Urubuga rwacu ruraha umuntu wese uburyo bworoshye bwo kwandikisha, gukurikirana, no kugarura ibintu bye mu ntambwe nke zoroshye.",
+      "step1Title": "Kwandikisha Ibintu Byawe",
+      "step1Desc": "Fungura konti maze wongeremo ibicuruzwa byawe ku rutonde rwawe rwa dijitali hamwe n'amafoto, ibisobanuro, n'ibimenyetso byihariye.",
+      "step2Title": "Kubona Icyemezo cya Digitali",
+      "step2Desc": "Buri kintu kirimo icyemezo gitekanye cya dijitali kigaragaza nyiracyo gishobora kohererezwa undi mugihe kinaniwe.",
+      "step3Title": "Kumenyekanisha Ibyabuze cyangwa Ibyabonetse",
+      "step3Desc": "Kumenyekanisha ibintu byabuze cyangwa byabonetse byoroshye. Sisitemu yacu ihita ihuza raporo kandi ikamenyesha abantu bireba.",
+      "step4Title": "Kugarura no Guhuza",
+      "step4Desc": "Vugana n'uwabibonetse cyangwa nyirabyo ukoresheje sisitemu yacu y'ubutumwa ifite umutekano kandi uhuze kugarura ibintu byabuze mu mutekano.",
+      "communityDesc": "Urwego ruhujwe na bagenzi bawe mu kugarura ibintu rukwirakwira mu migi n'uturere"
+    },
     "mobileApp": {
       "sectionTitle": "Gukoreshwa Kuri Telefoni",
       "mainTitle": "Jyana KIZERE Aho Ujya Hose",

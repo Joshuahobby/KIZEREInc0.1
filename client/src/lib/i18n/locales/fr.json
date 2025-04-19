@@ -88,6 +88,20 @@
     "joinThousands": "Rejoignez des milliers d'utilisateurs qui font confiance à KIZERE pour garder une trace de leurs biens importants.",
     "createFreeAccount": "Créer un Compte Gratuit",
     "noCardRequired": "Aucune carte de crédit requise. Commencez en quelques minutes.",
+    "howItWorks": {
+      "sectionTitle": "Comment KIZERE Fonctionne",
+      "simpleProcess": "Processus Simple",
+      "description": "Notre plateforme facilite l'enregistrement, le suivi et la récupération de vos objets de valeur en quelques étapes simples.",
+      "step1Title": "Enregistrez Vos Objets",
+      "step1Desc": "Créez un compte et ajoutez vos objets de valeur à votre inventaire numérique avec photos, descriptions et identifiants uniques.",
+      "step2Title": "Obtenez des Certificats Numériques",
+      "step2Desc": "Chaque objet reçoit un certificat numérique sécurisé prouvant la propriété qui peut être transféré si l'objet change de mains.",
+      "step3Title": "Signalez Si Perdu ou Trouvé",
+      "step3Desc": "Signalez facilement les objets perdus ou trouvés. Notre système fait automatiquement correspondre les rapports et informe les parties concernées.",
+      "step4Title": "Récupération & Réunification",
+      "step4Desc": "Connectez-vous avec le trouveur ou le propriétaire grâce à notre système de messagerie sécurisé et coordonnez le retour des objets perdus en toute sécurité.",
+      "communityDesc": "Réseau de récupération d'objets alimenté par la communauté s'étendant à travers les villes et les régions"
+    },
     "footerDescription": "La plateforme ultime pour l'enregistrement d'objets, la gestion des objets perdus et trouvés, et la protection de la propriété.",
     "footer": {
       "quickLinks": "Liens Rapides",
