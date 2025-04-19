@@ -476,12 +476,12 @@ export default function LandingPage() {
               <div className="h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mb-6 group-hover:bg-amber-500/20 transition-colors">
                 <BarChart2 className="h-8 w-8 text-amber-500" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-amber-500 transition-colors">Intuitive Dashboard</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3 group-hover:text-amber-500 transition-colors">{t('landing.feature6Title')}</h3>
               <p className="text-muted-foreground">
-                Track your registered items, lost reports, and recovery progress through a user-friendly dashboard.
+                {t('landing.feature6Desc')}
               </p>
               <div className="mt-4 flex items-center text-amber-500 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                <span>Learn more</span>
+                <span>{t('landing.learnMoreAction')}</span>
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
