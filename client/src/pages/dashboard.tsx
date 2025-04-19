@@ -45,7 +45,7 @@ import {
   Tag, MapPin, PlusCircle, Search, ArrowUpRight, BarChart3, Activity,
   Clock, Users, Settings, ChevronDown, Filter, RefreshCw, X, Eye, Pencil,
   ChevronRight, MessageSquare, LineChart, TrendingUp, TrendingDown, Percent, 
-  User, Shield, PieChart 
+  User, Shield, PieChart, Check
 } from "lucide-react";
 import { Item, Notification, UserRole } from "@shared/schema";
 import { format, subDays } from "date-fns";
@@ -879,9 +879,165 @@ const UserManagementPanel = () => {
   );
 };
 
+// Dashboard customization panel
+const DashboardCustomizationPanel = ({ settings, onSettingsChange }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: 'auto' }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Card className="mb-6 border-[#00BFFF]/30 bg-primary-foreground/50 backdrop-blur-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-display flex items-center">
+            <Settings className="h-5 w-5 mr-2 text-primary" />
+            Dashboard Preferences
+          </CardTitle>
+          <CardDescription>
+            Customize your dashboard to show the information that matters most to you.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <h4 className="text-sm font-medium mb-2">Layout</h4>
+              <div className="flex flex-col space-y-2">
+                <label className="flex items-center space-x-2 text-sm">
+                  <input 
+                    type="checkbox" 
+                    className="rounded text-primary"
+                    checked={settings.showQuickActions}
+                    onChange={(e) => onSettingsChange({
+                      ...settings,
+                      showQuickActions: e.target.checked
+                    })}
+                  />
+                  <span>Show Quick Actions</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm">
+                  <input 
+                    type="checkbox" 
+                    className="rounded text-primary"
+                    checked={settings.showStats}
+                    onChange={(e) => onSettingsChange({
+                      ...settings,
+                      showStats: e.target.checked
+                    })}
+                  />
+                  <span>Show Statistics</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm">
+                  <input 
+                    type="checkbox" 
+                    className="rounded text-primary"
+                    checked={settings.showActivity}
+                    onChange={(e) => onSettingsChange({
+                      ...settings,
+                      showActivity: e.target.checked
+                    })}
+                  />
+                  <span>Show Activity Timeline</span>
+                </label>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium mb-2">Data Display</h4>
+              <div className="flex flex-col space-y-2">
+                <label className="flex items-center space-x-2 text-sm">
+                  <input 
+                    type="checkbox" 
+                    className="rounded text-primary"
+                    checked={settings.compactView}
+                    onChange={(e) => onSettingsChange({
+                      ...settings,
+                      compactView: e.target.checked
+                    })}
+                  />
+                  <span>Use Compact View</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm">
+                  <input 
+                    type="checkbox" 
+                    className="rounded text-primary"
+                    checked={settings.showTrends}
+                    onChange={(e) => onSettingsChange({
+                      ...settings,
+                      showTrends: e.target.checked
+                    })}
+                  />
+                  <span>Show Trend Indicators</span>
+                </label>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium mb-2">Notification Preferences</h4>
+              <div className="flex flex-col space-y-2">
+                <label className="flex items-center space-x-2 text-sm">
+                  <input 
+                    type="checkbox" 
+                    className="rounded text-primary"
+                    checked={settings.autoRefresh}
+                    onChange={(e) => onSettingsChange({
+                      ...settings,
+                      autoRefresh: e.target.checked
+                    })}
+                  />
+                  <span>Auto-refresh Dashboard</span>
+                </label>
+                <label className="flex items-center space-x-2 text-sm">
+                  <input 
+                    type="checkbox" 
+                    className="rounded text-primary"
+                    checked={settings.showNotifications}
+                    onChange={(e) => onSettingsChange({
+                      ...settings,
+                      showNotifications: e.target.checked
+                    })}
+                  />
+                  <span>Show Notifications</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="border-t pt-4 justify-between">
+          <Button variant="outline" size="sm" onClick={() => onSettingsChange({
+            showQuickActions: true,
+            showStats: true,
+            showActivity: true,
+            compactView: false,
+            showTrends: true,
+            autoRefresh: true,
+            showNotifications: true,
+          })}>
+            Reset to Default
+          </Button>
+          <Button size="sm" className="bg-primary">
+            <Check className="h-4 w-4 mr-1" />
+            Save Preferences
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
+  );
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [statsPeriod, setStatsPeriod] = useState('week');
+  const [showCustomizationPanel, setShowCustomizationPanel] = useState(false);
+  const [dashboardSettings, setDashboardSettings] = useState({
+    showQuickActions: true,
+    showStats: true,
+    showActivity: true,
+    compactView: false,
+    showTrends: true,
+    autoRefresh: true,
+    showNotifications: true,
+  });
 
   // Fetch stats
   const { data: stats, isLoading: isLoadingStats } = useQuery({
@@ -945,11 +1101,57 @@ export default function Dashboard() {
                   </SelectContent>
                 </Select>
                 <ThemeToggle />
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  className="border-primary/20 hover:bg-primary/10"
+                  onClick={() => setShowCustomizationPanel(!showCustomizationPanel)}
+                  title="Customize Dashboard"
+                >
+                  <Settings className={`h-4 w-4 ${showCustomizationPanel ? 'text-primary' : 'text-muted-foreground'}`} />
+                </Button>
               </div>
             </div>
             
-            {/* Quick Actions Panel - visible to all users */}
-            <QuickActionsPanel />
+            {/* Customization Panel - toggleable */}
+            <AnimatePresence>
+              {showCustomizationPanel && (
+                <DashboardCustomizationPanel 
+                  settings={dashboardSettings} 
+                  onSettingsChange={setDashboardSettings} 
+                />
+              )}
+            </AnimatePresence>
+            
+            {/* Welcome Banner (today's date and welcome message) */}
+            <Card className="mb-6 bg-gradient-to-r from-primary/10 to-secondary/5 border-0 overflow-hidden">
+              <CardContent className="p-0">
+                <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x">
+                  <div className="p-4 md:p-6 flex items-center">
+                    <Calendar className="h-10 w-10 text-primary mr-4" />
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Today's Date</h3>
+                      <p className="text-lg font-semibold">{format(new Date(), 'MMMM d, yyyy')}</p>
+                    </div>
+                  </div>
+                  <div className="p-4 md:p-6 flex items-center md:col-span-2">
+                    <Activity className="h-10 w-10 text-primary mr-4" />
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Account Status</h3>
+                      <p className="text-lg font-semibold flex items-center">
+                        <Shield className="h-4 w-4 text-green-500 mr-2" />
+                        Your account is active with <span className="text-primary font-bold px-1">{user.role}</span> privileges
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Quick Actions Panel - visible to all users if enabled in settings */}
+            {dashboardSettings.showQuickActions && (
+              <QuickActionsPanel />
+            )}
             
             {/* Statistics Cards */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mt-6">
