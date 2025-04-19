@@ -76,14 +76,23 @@ export const insertItemSchema = createInsertSchema(items).omit({ id: true, regis
 // Report schemas
 export const insertReportSchema = createInsertSchema(reports).omit({ id: true, reportedAt: true })
   .transform((data) => {
-    // Ensure date is parsed as a Date object if it's a string
-    if (typeof data.date === 'string') {
-      return {
-        ...data,
-        date: new Date(data.date),
-      };
+    try {
+      // Ensure date is parsed as a Date object if it's a string
+      if (typeof data.date === 'string') {
+        const parsedDate = new Date(data.date);
+        if (isNaN(parsedDate.getTime())) {
+          throw new Error('Invalid date format');
+        }
+        return {
+          ...data,
+          date: parsedDate,
+        };
+      }
+      return data;
+    } catch (error) {
+      console.error('Date parsing error:', error);
+      return data; // Return original data to let validation fail appropriately
     }
-    return data;
   });
 
 // Notification schemas

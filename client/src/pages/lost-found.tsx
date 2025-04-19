@@ -118,13 +118,9 @@ export default function LostFound() {
   
   // Handle form submission
   const onSubmit = (data: ReportFormValues) => {
-    // Convert date string to ISO format timestamp
-    const submissionData = {
-      ...data,
-      date: new Date(data.date).toISOString()
-    };
-    
-    reportMutation.mutate(submissionData);
+    // We'll let server-side code handle date conversion
+    // Submit the form without modifying the date format
+    reportMutation.mutate(data);
   };
 
   return (
