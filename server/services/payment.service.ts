@@ -11,10 +11,9 @@ import { createLogger } from '../utils/logger';
 import { 
   generateTransactionReference, 
   initializePayment, 
-  verifyTransaction,
-  getPaymentAmount,
-  DEFAULT_CURRENCY
+  verifyTransaction
 } from '../utils/flutterwave';
+import { getPaymentAmount, DEFAULT_CURRENCY } from '../config/payment.config';
 import { getPaymentDescription } from '../config/payment.config';
 import { UserService } from './user.service';
 

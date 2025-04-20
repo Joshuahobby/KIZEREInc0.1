@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User, User as SelectUser } from "@shared/schema";
 import { env } from "./config";
+import { UserService } from "./services/user.service";
 
 const scryptAsync = promisify(scrypt);
 

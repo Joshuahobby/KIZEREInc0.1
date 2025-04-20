@@ -85,41 +85,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { email, name, uid, token, photoURL } = req.body;
       
       if (!email || !name || !uid) {
+        logger.warn('Google auth missing required fields', { email });
         return res.status(400).json({ message: "Missing required fields" });
       }
       
       console.log("Processing Google authentication for:", email);
       
-      // Check if user exists
-      let user = await storage.getUserByEmail(email);
+      // Check if user exists using UserService
+      let user = await UserService.getUserByEmail(email);
       
       if (!user) {
         // Create a new user if not found
-        user = await storage.createUser({
-          fullName: name,
-          username: email,
-          email: email,
-          password: `google_${uid}`, // We don't use this password for login
-          role: 'Subscriber', // Default role for new users
-          avatarUrl: photoURL || null
-        });
-        console.log(`Created new user from Google auth: ${user.id}`);
+        try {
+          user = await UserService.createUser({
+            fullName: name,
+            username: email,
+            email: email,
+            password: `google_${uid}`, // We don't use this password for login
+            role: 'Subscriber', // Default role for new users
+            avatarUrl: photoURL || null
+          });
+          logger.info('Created new user from Google auth', { userId: user.id, email });
+        } catch (createError) {
+          logger.error('Failed to create user from Google auth', { error: createError, email });
+          return res.status(500).json({ message: "Failed to create user account" });
+        }
       }
       
       // Update avatar URL if provided and different from what's stored
       if (photoURL && (!user.avatarUrl || user.avatarUrl !== photoURL)) {
-        user = await storage.updateUser(user.id, { avatarUrl: photoURL });
+        try {
+          user = await UserService.updateUser(user.id, { avatarUrl: photoURL });
+          logger.info('Updated user avatar from Google auth', { userId: user.id });
+        } catch (updateError) {
+          logger.warn('Failed to update user avatar', { userId: user.id, error: updateError });
+          // Non-critical error, continue with login
+        }
       }
       
       // Log in the user
       if (!user) {
-        console.error("User is undefined after creation/lookup");
+        logger.error('User is undefined after creation/lookup', { email });
         return res.status(500).json({ message: "Authentication failed" });
       }
       
       req.login(user, (err) => {
         if (err) {
-          console.error("Login error:", err);
+          logger.error('Login error', { userId: user.id, error: err });
           return res.status(500).json({ message: "Authentication failed" });
         }
         
@@ -128,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).json(userData);
       });
     } catch (error) {
-      console.error("Google auth error:", error);
+      logger.error('Google auth error', { error });
       res.status(500).json({ message: "Authentication failed" });
     }
   });
@@ -444,7 +456,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User Management API (Admin only)
   app.get("/api/users", requireAdmin, async (req, res) => {
     try {
-      const users = await storage.getAllUsers();
+      logger.info('Admin requesting all users');
+      // Use UserService to get all users
+      const users = await UserService.getAllUsers();
       
       // Strip passwords before sending to client
       const usersWithoutPasswords = users.map(user => {
@@ -452,8 +466,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return userWithoutPassword;
       });
       
+      logger.info('Successfully fetched all users for admin', { count: users.length });
       res.json(usersWithoutPasswords);
     } catch (error) {
+      logger.error('Failed to fetch users for admin', { error });
       res.status(500).json({ message: "Failed to fetch users" });
     }
   });
@@ -462,29 +478,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = parseInt(req.params.id);
       if (isNaN(userId)) {
+        logger.warn('Invalid user ID provided for role update', { userId: req.params.id });
         return res.status(400).json({ message: "Invalid user ID" });
       }
       
       const { role } = req.body;
       if (!role || !userRoles.includes(role)) {
+        logger.warn('Invalid role provided for user update', { userId, role });
         return res.status(400).json({ message: "Invalid role" });
       }
       
-      const user = await storage.getUser(userId);
+      // Use UserService to get and update user
+      const user = await UserService.getUserById(userId);
       if (!user) {
+        logger.warn('User not found for role update', { userId });
         return res.status(404).json({ message: "User not found" });
       }
       
-      const updatedUser = await storage.updateUser(userId, { role });
+      logger.info('Updating user role', { userId, oldRole: user.role, newRole: role });
+      const updatedUser = await UserService.updateUser(userId, { role });
       
       if (updatedUser) {
         // Strip password from response
         const { password, ...userWithoutPassword } = updatedUser;
+        logger.info('User role updated successfully', { userId, role });
         res.json(userWithoutPassword);
       } else {
+        logger.error('Failed to update user role - no user returned', { userId, role });
         res.status(500).json({ message: "Failed to update user role" });
       }
     } catch (error) {
+      logger.error('Error updating user role', { error });
       res.status(500).json({ message: "Failed to update user role" });
     }
   });
