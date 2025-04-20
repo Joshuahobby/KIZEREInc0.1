@@ -26,7 +26,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { AuthModel } from "@/models/auth.model";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
-import { signInWithGoogle, extractUserInfo } from "@/lib/firebase";
+import { FirebaseService } from "@/lib/firebase";
 import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { 
@@ -53,12 +53,12 @@ function redirectToDashboardByRole(role: string): void {
 function getDashboardPathByRole(role: string): string {
   switch (role) {
     case 'Admin':
-      return '/admin/dashboard'; // Redirect admin to dashboard instead of user management
+      return '/admin'; // Correct path to admin dashboard 
     case 'Agent':
       return '/lost-found';
     case 'Subscriber':
     default:
-      return '/dashboard';
+      return '/dashboard'; // This redirects to UnifiedDashboardComponent
   }
 }
 
@@ -144,13 +144,13 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     try {
       // Start Google sign-in process
       setGoogleLoading(true);
-      const result = await signInWithGoogle();
+      const result = await FirebaseService.signInWithGooglePopup();
       
       // Extract user information from Firebase result
-      const userInfo = extractUserInfo(result);
-      console.log("Google sign-in successful", userInfo);
+      const user = result.user;
+      console.log("Google sign-in successful", user);
       
-      if (!userInfo.email) {
+      if (!user.email) {
         toast({
           title: "Authentication Failed",
           description: "Could not get email from Google. Please try again.",
@@ -160,6 +160,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
         return;
       }
       
+      // Get the user token
+      const token = await user.getIdToken();
+      
       // Send the Google auth data to our backend
       const response = await fetch("/api/auth/google", {
         method: "POST",
@@ -167,11 +170,11 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: userInfo.email,
-          name: userInfo.displayName || userInfo.email.split('@')[0],
-          uid: userInfo.uid,
-          token: userInfo.token,
-          photoURL: userInfo.photoURL
+          email: user.email,
+          name: user.displayName || user.email.split('@')[0],
+          uid: user.uid,
+          token: token,
+          photoURL: user.photoURL
         }),
         credentials: "include"
       });

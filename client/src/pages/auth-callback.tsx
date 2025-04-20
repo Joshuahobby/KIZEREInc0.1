@@ -101,12 +101,12 @@ export default function AuthCallback() {
   const getUserRedirectPath = (role: string): string => {
     switch (role) {
       case "Admin":
-        return "/user-management";
+        return "/admin"; // Correct path to admin dashboard
       case "Agent":
         return "/lost-found";
       case "Subscriber":
       default:
-        return "/";
+        return "/dashboard"; // Redirect to unified dashboard
     }
   };
   
