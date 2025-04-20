@@ -299,28 +299,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dateType: typeof req.body.date
       });
       
-      // Pre-validate the date to ensure it's a proper date string
-      const formData = req.body;
+      // Convert string dates to Date objects
+      const formData = { ...req.body };
       
-      // Ensure we have a valid date format
       if (typeof formData.date === 'string') {
-        try {
-          // Convert date string to a proper date object
-          const parsedDate = new Date(formData.date);
-          if (isNaN(parsedDate.getTime())) {
-            return res.status(400).json({
-              message: "Validation error",
-              errors: [{ code: "invalid_date", path: ["date"], message: "Invalid date format" }]
-            });
-          }
-          // Update formData with parsed date
-          formData.date = parsedDate;
-        } catch (error) {
-          return res.status(400).json({
-            message: "Validation error",
-            errors: [{ code: "invalid_date", path: ["date"], message: "Invalid date format" }]
-          });
-        }
+        formData.date = new Date(formData.date);
       }
       
       // Validate the input data with improved error handling

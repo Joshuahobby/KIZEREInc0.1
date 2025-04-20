@@ -74,26 +74,7 @@ export const userLoginSchema = z.object({
 export const insertItemSchema = createInsertSchema(items).omit({ id: true, registeredAt: true, updatedAt: true });
 
 // Report schemas
-export const insertReportSchema = createInsertSchema(reports).omit({ id: true, reportedAt: true })
-  .transform((data) => {
-    try {
-      // Ensure date is parsed as a Date object if it's a string
-      if (typeof data.date === 'string') {
-        const parsedDate = new Date(data.date);
-        if (isNaN(parsedDate.getTime())) {
-          throw new Error('Invalid date format');
-        }
-        return {
-          ...data,
-          date: parsedDate,
-        };
-      }
-      return data;
-    } catch (error) {
-      console.error('Date parsing error:', error);
-      return data; // Return original data to let validation fail appropriately
-    }
-  });
+export const insertReportSchema = createInsertSchema(reports).omit({ id: true, reportedAt: true });
 
 // Notification schemas
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
