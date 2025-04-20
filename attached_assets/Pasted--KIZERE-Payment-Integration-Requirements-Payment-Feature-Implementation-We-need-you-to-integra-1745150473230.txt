@@ -1,0 +1,58 @@
+# KIZERE Payment Integration Requirements
+
+## Payment Feature Implementation
+
+We need you to integrate a secure, easy-to-use payment system into the KIZERE platform to handle the following fee structure:
+
+- **Registration Fee:** 500 RWF per item registered by subscribers
+- **Lost Item Reporting Fee:** 500 RWF per item reported as lost
+- **Found Item Reporting:** Free of charge
+
+## Technical Requirements
+
+### Payment Gateway Integration
+- Implement Flutterwave Rwanda as our payment processing solution
+- Use the provided test API keys from the secrets configuration for development
+- Ensure seamless transition to production keys when ready to launch
+
+### User Experience Requirements
+- Create a transparent payment flow that clearly communicates fees before processing
+- Design intuitive payment screens with minimal steps to completion
+- Implement real-time payment status updates
+- Provide clear payment confirmations and receipts
+- Allow users to save payment methods securely for future transactions
+
+### Technical Specifications
+1. **Secure Implementation**
+   - Ensure all payment data is encrypted during transmission
+   - Implement proper tokenization for saved payment methods
+   - Follow PCI DSS compliance guidelines
+   - Add fraud detection measures
+
+2. **Payment Flow**
+   - Integrate payment steps seamlessly within the item registration and lost item reporting processes
+   - Create a modal payment interface that doesn't disrupt the user experience
+   - Implement webhooks to handle payment status updates
+
+3. **Payment Verification**
+   - Implement robust verification of payment completion before finalizing registrations
+   - Create a queue system for failed payments to allow retry attempts
+   - Develop comprehensive error handling with user-friendly messages
+
+4. **Administrative Features**
+   - Create a payment dashboard for administrators
+   - Implement transaction reporting features
+   - Add functionality to issue refunds when necessary
+   - Include payment analytics to track revenue
+
+### Mobile Considerations
+- Ensure payment flows work seamlessly on mobile devices
+- Implement mobile money payment options popular in Rwanda
+- Optimize the payment UI for various screen sizes
+
+### Testing Requirements
+- Implement comprehensive testing using Flutterwave's test environment
+- Create test scenarios for successful payments, failed payments, and edge cases
+- Document testing procedures for QA team
+
+The payment system should feel like a natural part of the KIZERE platform, maintaining our brand colors and design language while providing the security and reliability required for financial transactions.
