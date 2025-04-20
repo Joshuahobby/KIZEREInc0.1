@@ -37,6 +37,7 @@ import {
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
 import { NotificationCenter } from "@/components/dashboard/notification-center";
+import { PaymentHistoryCard } from "@/components/dashboard/payment-history-card";
 import { ItemsTable } from "@/components/dashboard/items-table";
 import { PersonalizationSettings } from "@/components/dashboard/personalization-settings";
 import { QuickActionsPanel } from "@/components/dashboard/quick-actions-panel";
@@ -280,21 +281,29 @@ export default function EnhancedDashboard() {
                 </div>
               )}
               
-              {/* Activity and Notifications Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              {/* Activity, Notifications, and Payments Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 {preferences.showActivity && (
-                  <ActivityTimeline 
-                    activities={mockActivities}
-                    isLoading={false}
-                  />
+                  <div className="lg:col-span-1">
+                    <ActivityTimeline 
+                      activities={mockActivities}
+                      isLoading={false}
+                    />
+                  </div>
                 )}
                 
                 {preferences.showNotifications && (
-                  <NotificationCenter 
-                    notifications={notifications || []}
-                    isLoading={isLoadingNotifications}
-                  />
+                  <div className="lg:col-span-1">
+                    <NotificationCenter 
+                      notifications={notifications || []}
+                      isLoading={isLoadingNotifications}
+                    />
+                  </div>
                 )}
+                
+                <div className="lg:col-span-1">
+                  <PaymentHistoryCard />
+                </div>
               </div>
               
               {/* Items Table */}
@@ -316,16 +325,24 @@ export default function EnhancedDashboard() {
             </TabsContent>
             
             <TabsContent value="activity" className="m-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ActivityTimeline 
-                  activities={mockActivities}
-                  isLoading={false}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                  <ActivityTimeline 
+                    activities={mockActivities}
+                    isLoading={false}
+                  />
+                </div>
                 
-                <NotificationCenter 
-                  notifications={notifications || []}
-                  isLoading={isLoadingNotifications}
-                />
+                <div className="lg:col-span-1">
+                  <NotificationCenter 
+                    notifications={notifications || []}
+                    isLoading={isLoadingNotifications}
+                  />
+                </div>
+                
+                <div className="lg:col-span-1">
+                  <PaymentHistoryCard />
+                </div>
               </div>
             </TabsContent>
           </div>

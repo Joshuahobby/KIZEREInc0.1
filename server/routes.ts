@@ -562,7 +562,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transactionRef,
         amount,
         currency: "RWF",
-        paymentUrl: flutterwavePayment.data ? flutterwavePayment.data.status === 'success' ? flutterwavePayment.data.link : null : null,
+        // Extract payment link from Flutterwave response
+        paymentUrl: flutterwavePayment.data && typeof flutterwavePayment.data === 'object' 
+          ? (flutterwavePayment.data as any).link || null 
+          : null,
         redirectUrl
       });
     } catch (error) {
@@ -696,6 +699,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Always return 200 to Flutterwave to avoid retries
       res.status(200).json({ 
         message: "Webhook processed with errors",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get payment history for the current user
+  app.get("/api/payments/history", requireAuth, async (req, res) => {
+    try {
+      const payments = await storage.getUserPayments(req.user!.id);
+      res.status(200).json(payments);
+    } catch (error) {
+      console.error("Payment history error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch payment history",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get payment status by transaction reference
+  app.get("/api/payments/status/:reference", requireAuth, async (req, res) => {
+    try {
+      const transactionRef = req.params.reference;
+      
+      // Check if payment exists
+      const payment = await storage.getPaymentByTransactionRef(transactionRef);
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      
+      // Only allow users to view their own payments (or admins)
+      if (payment.userId !== req.user!.id && req.user!.role !== 'Admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      res.status(200).json(payment);
+    } catch (error) {
+      console.error("Payment status error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch payment status",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
