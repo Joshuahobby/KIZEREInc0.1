@@ -1,104 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Loader2 } from 'lucide-react';
 
 interface PaymentData {
   name: string;
   value: number;
-  type?: string;
 }
 
-interface PaymentChartProps {
+interface PaymentAnalyticsChartProps {
   paymentData?: PaymentData[];
   isLoading?: boolean;
 }
 
-export function PaymentAnalyticsChart({ paymentData = [], isLoading = false }: PaymentChartProps) {
-  const [chartType, setChartType] = useState<'area' | 'bar' | 'line'>('area');
-  const [defaultData] = useState([
-    { name: 'Jan', value: 0 },
-    { name: 'Feb', value: 0 },
-    { name: 'Mar', value: 0 },
-    { name: 'Apr', value: 0 },
-    { name: 'May', value: 0 },
-    { name: 'Jun', value: 0 },
-    { name: 'Jul', value: 0 },
-    { name: 'Aug', value: 0 },
-    { name: 'Sep', value: 0 },
-    { name: 'Oct', value: 0 },
-    { name: 'Nov', value: 0 },
-    { name: 'Dec', value: 0 },
-  ]);
+export function PaymentAnalyticsChart({ paymentData = [], isLoading = false }: PaymentAnalyticsChartProps) {
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-card p-3 border shadow-sm rounded-md">
+          <p className="font-medium">{label}</p>
+          <p className="text-sm">
+            Revenue: <span className="font-semibold">{payload[0].value.toLocaleString()} RWF</span>
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
-  const data = paymentData.length > 0 ? paymentData : defaultData;
-  
   return (
     <Card className="col-span-4">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base font-medium">Payment Analytics</CardTitle>
-        <Select
-          value={chartType}
-          onValueChange={(value) => setChartType(value as 'area' | 'bar' | 'line')}
-        >
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Chart Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="area">Area Chart</SelectItem>
-            <SelectItem value="bar">Bar Chart</SelectItem>
-            <SelectItem value="line">Line Chart</SelectItem>
-          </SelectContent>
-        </Select>
+      <CardHeader>
+        <CardTitle className="text-base font-medium">Monthly Revenue</CardTitle>
+        <CardDescription>Revenue trends over the past 12 months</CardDescription>
       </CardHeader>
-      <CardContent className="pt-2">
-        <div className="h-[300px]">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          ) : (
+      <CardContent>
+        {isLoading ? (
+          <div className="h-[350px] flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : paymentData.length === 0 ? (
+          <div className="h-[350px] flex flex-col items-center justify-center text-center">
+            <p className="text-muted-foreground">No revenue data available</p>
+          </div>
+        ) : (
+          <div className="h-[350px]">
             <ResponsiveContainer width="100%" height="100%">
-              {chartType === 'area' ? (
-                <AreaChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)', borderRadius: '8px' }}
-                    itemStyle={{ color: 'var(--foreground)' }}
-                    labelStyle={{ color: 'var(--foreground)' }}
-                  />
-                  <Area type="monotone" dataKey="value" stroke="var(--primary)" fill="var(--primary)" fillOpacity={0.2} />
-                </AreaChart>
-              ) : chartType === 'bar' ? (
-                <BarChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)', borderRadius: '8px' }}
-                    itemStyle={{ color: 'var(--foreground)' }}
-                    labelStyle={{ color: 'var(--foreground)' }}
-                  />
-                  <Bar dataKey="value" fill="var(--primary)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              ) : (
-                <LineChart data={data}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--background)', borderColor: 'var(--border)', borderRadius: '8px' }}
-                    itemStyle={{ color: 'var(--foreground)' }}
-                    labelStyle={{ color: 'var(--foreground)' }}
-                  />
-                  <Line type="monotone" dataKey="value" stroke="var(--primary)" strokeWidth={2} dot={{ r: 4 }} />
-                </LineChart>
-              )}
+              <BarChart
+                data={paymentData}
+                margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis 
+                  dataKey="name" 
+                  axisLine={false} 
+                  tickLine={false}
+                  tick={{ fontSize: 12 }}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false}
+                  tick={{ fontSize: 12 }}
+                  tickFormatter={(value) => `${value.toLocaleString()}`}
+                  dx={-10}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar
+                  dataKey="value"
+                  fill="var(--primary)"
+                  radius={[4, 4, 0, 0]}
+                  barSize={30}
+                />
+              </BarChart>
             </ResponsiveContainer>
-          )}
-        </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
