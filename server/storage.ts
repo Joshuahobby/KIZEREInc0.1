@@ -346,9 +346,6 @@ export class DatabaseStorage implements IStorage {
   }): Promise<{ payments: Payment[]; total: number }> {
     const { page, pageSize, search, status, type, dateFilter } = options;
     
-    // Start with a base query
-    let query = db.select().from(payments);
-    
     // Build conditions array
     const conditions: any[] = [];
     
@@ -369,30 +366,25 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    // Apply search to transaction reference or transaction ID
+    // Apply search to transaction reference or ID as string
     if (search) {
       conditions.push(
         or(
-          sql`${payments.transactionRef} ILIKE ${`%${search}%`}`,
-          sql`CAST(${payments.id} AS TEXT) ILIKE ${`%${search}%`}`,
-          sql`CAST(${payments.amount} AS TEXT) ILIKE ${`%${search}%`}`
+          like(payments.transactionRef, `%${search}%`),
+          like(payments.transactionId || '', `%${search}%`)
         )
       );
     }
     
-    // Apply all conditions
+    // Get total count with filters
+    let query = db.select().from(payments);
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
     
-    // Count total (for pagination)
-    const countQuery = db.select({ count: sql<number>`count(*)` }).from(payments);
-    if (conditions.length > 0) {
-      countQuery.where(and(...conditions));
-    }
-    
-    const countResult = await countQuery;
-    const total = countResult[0]?.count || 0;
+    // First, get the total count
+    const allPayments = await query;
+    const total = allPayments.length;
     
     // Apply pagination and ordering
     const paymentsResult = await query

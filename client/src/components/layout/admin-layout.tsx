@@ -25,7 +25,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { useTranslation } from "@/hooks/use-translation";
+// TODO: Use translation hook once fully implemented
+// import { useTranslation } from "@/hooks/use-translation";
+const useTranslation = () => ({ t: (key: string) => key });
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -183,7 +185,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 >
                   <Avatar>
                     <AvatarImage
-                      src={user?.avatarUrl || undefined}
+                      src={undefined}
                       alt={user?.username || "User"}
                     />
                     <AvatarFallback>{getUserInitials()}</AvatarFallback>

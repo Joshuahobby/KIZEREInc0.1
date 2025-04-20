@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   phoneNumber: text("phone_number"),
   role: text("role").notNull().default('Subscriber'),
+  avatarUrl: text("avatar_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
