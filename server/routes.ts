@@ -507,7 +507,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = initiatePaymentSchema.parse(req.body);
       
       // Get payment amount based on type if not explicitly provided
-      const amount = validatedData.amount || getPaymentAmount(validatedData.type);
+      let amount = validatedData.amount;
+      
+      if (!amount) {
+        // If amount not provided, get the default amount for this payment type
+        amount = getPaymentAmount(validatedData.type);
+        
+        // Log for debugging
+        console.log(`Using default amount for ${validatedData.type}: ${amount} ${DEFAULT_CURRENCY}`);
+        
+        // Make sure we have a valid amount
+        if (!amount || amount <= 0) {
+          throw new Error(`Invalid payment amount for ${validatedData.type}`);
+        }
+      }
       
       // Generate a unique transaction reference
       const transactionRef = generateTransactionReference();

@@ -150,7 +150,7 @@ export type PaymentType = typeof paymentTypes[number];
 
 // Payment validation schemas
 export const initiatePaymentSchema = z.object({
-  amount: z.number().positive("Amount must be positive"),
+  amount: z.number().positive("Amount must be positive").optional(),
   type: z.enum(paymentTypes, {
     errorMap: () => ({ message: "Payment type must be either 'registration' or 'lost_report'" })
   }),
