@@ -9,8 +9,8 @@ import { PaymentType } from "@shared/schema";
  * Fee structure for different payment types
  */
 export const PAYMENT_FEES = {
-  REGISTRATION: 2000, // 2,000 RWF for item registration
-  LOST_REPORT: 1000,  // 1,000 RWF for lost item report
+  REGISTRATION: 2000, // 2,000 in local currency for item registration
+  LOST_REPORT: 1000,  // 1,000 in local currency for lost item report
   FOUND_REPORT: 0,    // Free
 };
 
@@ -23,7 +23,7 @@ export const DEFAULT_CURRENCY = "RWF";
  * Get the payment amount based on the payment type
  * 
  * @param type The type of payment ('registration' or 'lost_report')
- * @returns The payment amount in RWF
+ * @returns The payment amount in the default currency
  */
 export function getPaymentAmount(type: PaymentType): number {
   switch (type) {
