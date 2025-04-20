@@ -30,13 +30,15 @@ import { signInWithGoogle, extractUserInfo } from "@/lib/firebase";
 import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { 
+  ArrowDownRight,
   Loader2, 
   User, 
   Mail, 
   Phone, 
   KeyRound, 
   Eye, 
-  EyeOff, 
+  EyeOff,
+  Shield,
   ShieldCheck 
 } from "lucide-react";
 import { SiGoogle } from "react-icons/si";
@@ -235,9 +237,18 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
           {/* Google Sign In Button - VERY Prominent - BEFORE tabs */}
           <div className="px-6 pt-4 pb-6">
+            {/* Visual cue pointing at Google button */}
+            <div className="relative mb-1 ml-1">
+              <div className="absolute -top-1 -left-1 text-primary text-xs font-medium flex items-center">
+                <span className="mr-1">Recommended</span>
+                <ArrowDownRight className="h-4 w-4 text-primary" />
+              </div>
+            </div>
+
+            {/* Google button - using KIZERE brand colors */}
             <Button 
               type="button" 
-              className="w-full h-16 bg-red-500 hover:bg-red-600 text-white transition-all shadow-md hover:shadow-lg rounded-md border-0 flex items-center justify-center"
+              className="w-full h-16 bg-[#00BFFF] hover:bg-[#00A0D6] text-white transition-all shadow-md hover:shadow-lg rounded-md border-0 flex items-center justify-center"
               onClick={handleGoogleSignIn}
               disabled={googleLoading}
             >
@@ -248,14 +259,20 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                 </>
               ) : (
                 <>
-                  <SiGoogle className="mr-3 h-7 w-7" />
+                  <div className="flex items-center justify-center bg-white p-1 rounded-full mr-3">
+                    <SiGoogle className="h-6 w-6 text-gray-700" />
+                  </div>
                   <span className="text-lg font-medium">Continue with Google</span>
                 </>
               )}
             </Button>
-            <p className="text-center text-sm mt-2 text-muted-foreground font-medium">
-              Recommended: Fast, secure login with your Google account
-            </p>
+            
+            <div className="flex items-center mt-2 justify-center">
+              <Shield className="h-4 w-4 text-primary mr-1" />
+              <p className="text-sm text-muted-foreground">
+                Fast, secure login with your Google account
+              </p>
+            </div>
           </div>
           
           <div className="relative mb-4 mx-6">
