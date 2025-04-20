@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
-import { Item, Report, Notification, Payment, UserRole } from "@shared/schema";
+import { apiRequest } from "../lib/queryClient";
+import { useAuth } from "../hooks/use-auth";
+import { Item, Report, Notification, Payment, UserRole } from "../../shared/schema";
 import { useMemo } from "react";
-import { createLogger } from "@/lib/logger";
+import { createLogger } from "../lib/logger";
 
 const logger = createLogger('useDashboardData');
 

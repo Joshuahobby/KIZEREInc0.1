@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import EnhancedDashboard from "@/pages/enhanced-dashboard";
+import UnifiedDashboard from "@/pages/unified-dashboard";
 import RegisterItem from "@/pages/register-item";
 import Search from "@/pages/search";
 import LostFound from "@/pages/lost-found";
@@ -23,6 +24,7 @@ function App() {
   // Create safe component wrappers to ensure JSX Elements are always returned
   const DashboardComponent = () => <Dashboard />;
   const EnhancedDashboardComponent = () => <EnhancedDashboard />;
+  const UnifiedDashboardComponent = () => <UnifiedDashboard />;
   const RegisterItemComponent = () => <RegisterItem />;
   const SearchComponent = () => <Search />;
   const LostFoundComponent = () => <LostFound />;
@@ -48,7 +50,8 @@ function App() {
               {/* Protected routes with role-based access */}
               
               {/* Role-restricted routes */}
-              <ProtectedRoute path="/dashboard" component={DashboardComponent} requiredRole="any" />
+              <ProtectedRoute path="/dashboard" component={UnifiedDashboardComponent} requiredRole="any" />
+              <ProtectedRoute path="/old-dashboard" component={DashboardComponent} requiredRole="any" />
               <ProtectedRoute path="/enhanced-dashboard" component={EnhancedDashboardComponent} requiredRole="any" />
               <ProtectedRoute path="/register-item" component={RegisterItemComponent} requiredRole="any" />
               <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
