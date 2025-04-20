@@ -51,7 +51,7 @@ function redirectToDashboardByRole(role: string): void {
 function getDashboardPathByRole(role: string): string {
   switch (role) {
     case 'Admin':
-      return '/user-management';
+      return '/admin/dashboard'; // Redirect admin to dashboard instead of user management
     case 'Agent':
       return '/lost-found';
     case 'Subscriber':
@@ -253,6 +253,40 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
             {/* Login Form */}
             <TabsContent value="login" className="px-6 pb-6">
+              {/* Google Sign In Button - More Prominent */}
+              <div className="mb-6">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full h-12 border-2 bg-white hover:bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow"
+                  onClick={handleGoogleSignIn}
+                  disabled={googleLoading}
+                >
+                  {googleLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Signing in with Google...
+                    </>
+                  ) : (
+                    <>
+                      <SiGoogle className="mr-2 h-5 w-5 text-blue-500" />
+                      <span className="text-base">Continue with Google</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or sign in with email
+                  </span>
+                </div>
+              </div>
+              
               <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
                   <FormField
@@ -335,43 +369,49 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                       "Sign In"
                     )}
                   </Button>
-
-                  <div className="relative mt-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full" 
-                    onClick={handleGoogleSignIn}
-                    disabled={googleLoading}
-                  >
-                    {googleLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in with Google...
-                      </>
-                    ) : (
-                      <>
-                        <SiGoogle className="mr-2 h-4 w-4" />
-                        Sign in with Google
-                      </>
-                    )}
-                  </Button>
                 </form>
               </Form>
             </TabsContent>
 
             {/* Registration Form */}
             <TabsContent value="register" className="px-6 pb-6">
+              {/* Google Sign Up Button - More Prominent */}
+              <div className="mb-6">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  className="w-full h-12 border-2 bg-white hover:bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow"
+                  onClick={handleGoogleSignIn}
+                  disabled={googleLoading}
+                >
+                  {googleLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Signing up with Google...
+                    </>
+                  ) : (
+                    <>
+                      <SiGoogle className="mr-2 h-5 w-5 text-blue-500" />
+                      <span className="text-base">Continue with Google</span>
+                    </>
+                  )}
+                </Button>
+                <p className="text-xs text-center text-muted-foreground mt-2">
+                  Fast, secure signup with your Google account
+                </p>
+              </div>
+              
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Or register with email
+                  </span>
+                </div>
+              </div>
+            
               <Form {...registerForm}>
                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
                   <FormField
@@ -502,37 +542,6 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                       </>
                     ) : (
                       "Create Account"
-                    )}
-                  </Button>
-
-                  <div className="relative mt-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
-
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full" 
-                    onClick={handleGoogleSignIn}
-                    disabled={googleLoading}
-                  >
-                    {googleLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in with Google...
-                      </>
-                    ) : (
-                      <>
-                        <SiGoogle className="mr-2 h-4 w-4" />
-                        Sign up with Google
-                      </>
                     )}
                   </Button>
                 </form>
