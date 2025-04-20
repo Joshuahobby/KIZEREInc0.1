@@ -18,6 +18,7 @@ import {
   PAYMENT_FEES,
   getPaymentAmount
 } from "./utils/flutterwave";
+import { DEFAULT_CURRENCY } from "./config/payment.config";
 
 // Middleware to check authentication
 function requireAuth(req: Request, res: Response, next: Function) {
@@ -478,10 +479,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/payments/fees", (req, res) => {
     // Return the payment fee structure
     res.json({
-      itemRegistration: PAYMENT_FEES.ITEM_REGISTRATION,
-      lostItemReport: PAYMENT_FEES.LOST_ITEM_REPORT,
-      foundItemReport: PAYMENT_FEES.FOUND_ITEM_REPORT,
-      currency: "RWF"
+      itemRegistration: PAYMENT_FEES.REGISTRATION,
+      lostItemReport: PAYMENT_FEES.LOST_REPORT,
+      foundItemReport: PAYMENT_FEES.FOUND_REPORT,
+      currency: DEFAULT_CURRENCY
     });
   });
 
@@ -518,7 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const payment = await storage.createPayment({
         userId: user.id,
         amount: amount.toString(),
-        currency: "RWF",
+        currency: DEFAULT_CURRENCY,
         type: validatedData.type,
         status: "pending",
         transactionRef,
@@ -539,7 +540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize payment with Flutterwave
       const flutterwavePayment = await initializePayment({
         amount,
-        currency: "RWF",
+        currency: DEFAULT_CURRENCY,
         tx_ref: transactionRef,
         redirect_url: redirectUrl,
         customer: {
@@ -563,7 +564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paymentId: payment.id,
         transactionRef,
         amount,
-        currency: "RWF",
+        currency: DEFAULT_CURRENCY,
         // Extract payment link from Flutterwave response
         paymentUrl: flutterwavePayment.data && typeof flutterwavePayment.data === 'object' 
           ? (flutterwavePayment.data as any).link || null 
@@ -632,7 +633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createNotification({
           userId: payment.userId,
           title: 'Payment Processed',
-          message: `Your payment of ${payment.amount} RWF for ${payment.type === 'registration' ? 'item registration' : 'lost item report'} has been processed successfully.`,
+          message: `Your payment of ${payment.amount} ${DEFAULT_CURRENCY} for ${payment.type === 'registration' ? 'item registration' : 'lost item report'} has been processed successfully.`,
           type: 'payment',
           isRead: false,
           relatedItemId: payment.itemId,
@@ -757,7 +758,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createNotification({
           userId: payment.userId,
           title: 'Payment Processed',
-          message: `Your payment of ${payment.amount} RWF for ${payment.type === 'registration' ? 'item registration' : 'lost item report'} has been ${data.status}.`,
+          message: `Your payment of ${payment.amount} ${DEFAULT_CURRENCY} for ${payment.type === 'registration' ? 'item registration' : 'lost item report'} has been ${data.status}.`,
           type: 'payment',
           isRead: false,
           relatedItemId: payment.itemId,
