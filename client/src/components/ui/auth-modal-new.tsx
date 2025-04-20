@@ -241,24 +241,24 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
             {/* Login Form */}
             <TabsContent value="login" className="px-6 pb-6">
-              {/* Google Sign In Button - More Prominent */}
-              <div className="mb-6">
+              {/* Google Sign In Button - Much More Prominent */}
+              <div className="mb-8 pt-2">
+                <p className="text-center text-sm mb-3 text-muted-foreground">Recommended sign-in method</p>
                 <Button 
                   type="button" 
-                  variant="outline" 
-                  className="w-full h-12 border-2 bg-white hover:bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow"
+                  className="w-full h-14 bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-600 dark:hover:bg-blue-700 transition-all shadow-md hover:shadow-lg rounded-md border-0"
                   onClick={handleGoogleSignIn}
                   disabled={googleLoading}
                 >
                   {googleLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Signing in with Google...
+                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                      <span className="text-base font-medium">Signing in with Google...</span>
                     </>
                   ) : (
                     <>
-                      <SiGoogle className="mr-2 h-5 w-5 text-blue-500" />
-                      <span className="text-base">Continue with Google</span>
+                      <SiGoogle className="mr-3 h-6 w-6" />
+                      <span className="text-base font-medium">Sign in with Google</span>
                     </>
                   )}
                 </Button>
@@ -363,24 +363,24 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
             {/* Registration Form */}
             <TabsContent value="register" className="px-6 pb-6">
-              {/* Google Sign Up Button - More Prominent */}
-              <div className="mb-6">
+              {/* Google Sign Up Button - Much More Prominent */}
+              <div className="mb-8 pt-2">
+                <p className="text-center text-sm mb-3 text-muted-foreground">Recommended sign-up method</p>
                 <Button 
                   type="button" 
-                  variant="outline" 
-                  className="w-full h-12 border-2 bg-white hover:bg-slate-50 text-slate-800 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow"
+                  className="w-full h-14 bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-600 dark:hover:bg-blue-700 transition-all shadow-md hover:shadow-lg rounded-md border-0"
                   onClick={handleGoogleSignIn}
                   disabled={googleLoading}
                 >
                   {googleLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Signing up with Google...
+                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                      <span className="text-base font-medium">Signing up with Google...</span>
                     </>
                   ) : (
                     <>
-                      <SiGoogle className="mr-2 h-5 w-5 text-blue-500" />
-                      <span className="text-base">Continue with Google</span>
+                      <SiGoogle className="mr-3 h-6 w-6" />
+                      <span className="text-base font-medium">Sign up with Google</span>
                     </>
                   )}
                 </Button>
