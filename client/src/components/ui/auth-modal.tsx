@@ -1,66 +1,28 @@
-import { useState, useEffect } from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useState } from "react";
+import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { 
   Dialog, 
   DialogContent, 
+  DialogDescription, 
   DialogHeader, 
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
+  DialogTitle 
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Loader2, KeyRound, User, Phone, Eye, EyeOff } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
+import { AuthModel } from "@/models/auth.model";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { AuthModel } from "@/models/auth.model";
+import { auth, signInWithGoogle } from "@/lib/firebase";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
-import { signInWithGoogle, extractUserInfo } from "@/lib/firebase";
-import { queryClient } from "@/lib/queryClient";
-import { useLocation } from "wouter";
-import { 
-  Loader2, 
-  User, 
-  Mail, 
-  Phone, 
-  KeyRound, 
-  Eye, 
-  EyeOff, 
-  ShieldCheck 
-} from "lucide-react";
-import { SiGoogle } from "react-icons/si";
 
-// Function to redirect to appropriate dashboard based on user role
-function redirectToDashboardByRole(role: string): void {
-  const dashboardPath = getDashboardPathByRole(role);
-  window.location.href = dashboardPath;
-}
-
-// Helper function to get the dashboard path based on user role
-function getDashboardPathByRole(role: string): string {
-  switch (role) {
-    case 'Admin':
-      return '/user-management';
-    case 'Agent':
-      return '/lost-found';
-    case 'Subscriber':
-    default:
-      return '/dashboard';
-  }
-}
-
-// Types from AuthModel
+// Use types from our authentication model
 type LoginFormValues = z.infer<typeof AuthModel.loginSchema>;
 type RegisterFormValues = z.infer<typeof AuthModel.registerSchema>;
 
@@ -71,32 +33,15 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState<string>(defaultTab);
+  const [activeTab, setActiveTab] = useState<"login" | "register">(defaultTab);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string } | null>(null);
+  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+  
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
-
-  // Reset state when modal opens/closes
-  useEffect(() => {
-    if (isOpen) {
-      setActiveTab(defaultTab);
-    } else {
-      // Reset forms when modal closes
-      loginForm.reset();
-      registerForm.reset();
-      setPasswordStrength(null);
-    }
-  }, [isOpen, defaultTab]);
-
-  // Close modal when login/register is successful
-  useEffect(() => {
-    if (loginMutation.isSuccess || registerMutation.isSuccess) {
-      onClose();
-    }
-  }, [loginMutation.isSuccess, registerMutation.isSuccess, onClose]);
+  const [location, navigate] = useLocation();
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -118,75 +63,71 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     },
   });
 
+  function redirectToDashboardByRole(role: string): void {
+    navigate(getDashboardPathByRole(role));
+  }
+
+  function getDashboardPathByRole(role: string): string {
+    switch (role) {
+      case "Admin":
+        return "/admin/dashboard";
+      case "Agent":
+        return "/agent/lost-found";
+      default:
+        return "/dashboard";
+    }
+  }
+
   const onLoginSubmit = (data: LoginFormValues) => {
     const loginData = AuthModel.prepareLoginData(data);
     loginMutation.mutate(loginData, {
-      onSuccess: (userData) => {
-        // Redirect to the appropriate dashboard based on user role
-        redirectToDashboardByRole(userData.role);
-      }
+      onSuccess: (user) => {
+        toast({
+          title: "Welcome back!",
+          description: `You have successfully signed in as ${user.fullName || user.username}`,
+        });
+        onClose();
+        redirectToDashboardByRole(user.role);
+      },
     });
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
     const registerData = AuthModel.prepareRegisterData(data);
     registerMutation.mutate(registerData, {
-      onSuccess: (userData) => {
-        // Redirect to the appropriate dashboard based on user role
-        redirectToDashboardByRole(userData.role);
-      }
+      onSuccess: (user) => {
+        toast({
+          title: "Account created!",
+          description: "You have successfully created an account",
+        });
+        onClose();
+        redirectToDashboardByRole(user.role);
+      },
     });
   };
 
   const handleGoogleSignIn = async () => {
     try {
-      // Start Google sign-in process
       setGoogleLoading(true);
+      
       const result = await signInWithGoogle();
+      const user = result.user;
       
-      // Extract user information from Firebase result
-      const userInfo = extractUserInfo(result);
-      console.log("Google sign-in successful", userInfo);
+      // You'll need to adapt this to your backend authentication flow
+      console.log("Firebase user authenticated:", user);
       
-      // Send the Google auth data to our backend
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: userInfo.email,
-          name: userInfo.displayName,
-          uid: userInfo.uid,
-          token: userInfo.token,
-          photoURL: userInfo.photoURL
-        }),
-        credentials: "include"
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to authenticate with Google");
-      }
-      
-      // Process the user data returned from our backend
-      const userData = await response.json();
-      
-      // Update auth context
-      queryClient.setQueryData(["/api/user"], userData);
-      
-      // Show success message
-      toast({
-        title: "Sign in successful",
-        description: `Welcome, ${userData.fullName || userData.username}!`,
-      });
-      
-      // Close the modal
+      // Close the modal after successful authentication
       onClose();
+      // Redirect based on user role (default to Subscriber)
+      redirectToDashboardByRole("Subscriber");
       
-      // Redirect to the appropriate dashboard based on user role
-      redirectToDashboardByRole(userData.role);
+      toast({
+        title: "Google sign-in successful",
+        description: `Welcome back, ${user.displayName || user.email}!`,
+      });
+      
     } catch (error: any) {
-      console.error("Google sign-in error:", error);
+      console.error("Google sign-in failed:", error);
       toast({
         title: "Sign in failed",
         description: error.message || "Failed to authenticate with Google",
@@ -199,7 +140,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] md:max-w-[550px] overflow-y-auto max-h-[90vh] p-0 rounded-xl">
+      <DialogContent className="sm:max-w-[500px] md:max-w-[700px] overflow-y-auto max-h-[90vh] p-0 rounded-xl">
         <div className="relative">
           {/* Normal background */}
           <div className="absolute inset-0 bg-background z-0"></div>
@@ -218,18 +159,14 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
             </DialogHeader>
           </div>
 
-          {/* Tabs go first */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10 mt-4">
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1 mx-auto max-w-[90%]">
-              <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Sign In</TabsTrigger>
-              <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Register</TabsTrigger>
-            </TabsList>
-
-            {/* Google Button placed above tab content */}
-            <div className="px-6 pt-2 pb-4">
+          {/* Side by side layout */}
+          <div className="flex flex-col md:flex-row p-6 gap-6">
+            {/* Left side: Google Button */}
+            <div className="md:w-1/2 flex flex-col justify-center items-center border-r border-border pr-4">
+              <h3 className="text-lg font-medium mb-4">Quick Access</h3>
               <button 
                 type="button" 
-                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 h-10 px-4 rounded-md border border-gray-300"
+                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 h-12 px-4 rounded-md border border-gray-300 shadow-sm"
                 onClick={handleGoogleSignIn}
                 disabled={googleLoading}
               >
@@ -247,247 +184,242 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
               </button>
             </div>
 
-            <div className="relative mb-4 mx-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-3 text-muted-foreground">
-                  Or use email/password
-                </span>
-              </div>
-            </div>
+            {/* Right side: Email/Password forms */}
+            <div className="md:w-1/2">
+              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "register")} className="w-full relative z-10">
+                <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50 p-1">
+                  <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Sign In</TabsTrigger>
+                  <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Register</TabsTrigger>
+                </TabsList>
 
-            {/* Login Form */}
-            <TabsContent value="login" className="px-6 pb-6 max-h-[65vh] overflow-y-auto">
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
-                  <FormField
-                    control={loginForm.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium">Username / Phone / Email</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                            <Input 
-                              className="pl-10 h-10" 
-                              placeholder="Enter your username, phone, or email" 
-                              {...field} 
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                            <Input 
-                              className="pl-10 h-10" 
-                              type={showPassword ? "text" : "password"} 
-                              placeholder="Enter your password" 
-                              {...field} 
-                            />
-                            <button 
-                              type="button"
-                              className="absolute right-3 top-2.5 text-muted-foreground/80 hover:text-muted-foreground"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex justify-between items-center text-sm mt-3">
-                    <div className="flex items-center bg-muted/10 border border-muted/20 rounded-md px-2 py-1">
-                      <input 
-                        type="checkbox" 
-                        id="remember" 
-                        className="rounded border-input h-4 w-4 text-primary accent-primary"
+                {/* Login Form */}
+                <TabsContent value="login" className="pb-6 max-h-[65vh] overflow-y-auto">
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
+                      <FormField
+                        control={loginForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Username / Phone / Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
+                                <Input 
+                                  className="pl-10 h-10" 
+                                  placeholder="Enter your username, phone, or email" 
+                                  {...field} 
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
-                      <label htmlFor="remember" className="ml-2 text-muted-foreground">
-                        Remember me
-                      </label>
-                    </div>
-                    <a href="#" className="text-primary hover:underline font-medium">
-                      Forgot password?
-                    </a>
-                  </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full h-10 font-medium shadow-sm transition-all hover:shadow-md" 
-                    disabled={loginMutation.isPending}
-                  >
-                    {loginMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in...
-                      </>
-                    ) : (
-                      "Sign In"
-                    )}
-                  </Button>
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
+                                <Input 
+                                  className="pl-10 h-10" 
+                                  type={showPassword ? "text" : "password"} 
+                                  placeholder="Enter your password" 
+                                  {...field} 
+                                />
+                                <button 
+                                  type="button"
+                                  className="absolute right-3 top-2.5 text-muted-foreground/80 hover:text-muted-foreground"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
+                      <div className="flex justify-between items-center text-sm mt-3">
+                        <div className="flex items-center bg-muted/10 border border-muted/20 rounded-md px-2 py-1">
+                          <input 
+                            type="checkbox" 
+                            id="remember" 
+                            className="rounded border-input h-4 w-4 text-primary accent-primary"
+                          />
+                          <label htmlFor="remember" className="ml-2 text-muted-foreground">
+                            Remember me
+                          </label>
+                        </div>
+                        <a href="#" className="text-primary hover:underline font-medium">
+                          Forgot password?
+                        </a>
+                      </div>
 
-                </form>
-              </Form>
-            </TabsContent>
+                      <Button 
+                        type="submit" 
+                        className="w-full h-10 font-medium shadow-sm transition-all hover:shadow-md" 
+                        disabled={loginMutation.isPending}
+                      >
+                        {loginMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Signing in...
+                          </>
+                        ) : (
+                          "Sign In"
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
 
-            {/* Registration Form */}
-            <TabsContent value="register" className="px-6 pb-6 max-h-[65vh] overflow-y-auto">
-              <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-3">
-                  <FormField
-                    control={registerForm.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium">Full Name</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                            <Input className="pl-10 h-10" placeholder="Enter your full name" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {/* Registration Form */}
+                <TabsContent value="register" className="pb-6 max-h-[65vh] overflow-y-auto">
+                  <Form {...registerForm}>
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-3">
+                      <FormField
+                        control={registerForm.control}
+                        name="fullName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Full Name</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
+                                <Input className="pl-10 h-10" placeholder="Enter your full name" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={registerForm.control}
-                    name="username"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium">Phone Number or Email</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                            <Input 
-                              className="pl-10 h-10" 
-                              placeholder="e.g. +250 xxx xxx xxx or your@email.com" 
-                              {...field} 
-                            />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={registerForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Phone Number or Email</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
+                                <Input 
+                                  className="pl-10 h-10" 
+                                  placeholder="e.g. +250 xxx xxx xxx or your@email.com" 
+                                  {...field} 
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={registerForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                            <Input 
-                              className="pl-10 h-10" 
-                              type={showPassword ? "text" : "password"} 
-                              placeholder="Create a password" 
-                              {...field} 
-                              onChange={(e) => {
-                                field.onChange(e);
-                                if (e.target.value) {
-                                  setPasswordStrength(AuthModel.validatePasswordStrength(e.target.value));
-                                } else {
-                                  setPasswordStrength(null);
-                                }
-                              }}
-                            />
-                            <button 
-                              type="button"
-                              className="absolute right-3 top-2.5 text-muted-foreground/80 hover:text-muted-foreground"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                        <PasswordStrengthIndicator passwordStrength={passwordStrength} />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
+                                <Input 
+                                  className="pl-10 h-10" 
+                                  type={showPassword ? "text" : "password"} 
+                                  placeholder="Create a password" 
+                                  {...field} 
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    if (e.target.value) {
+                                      setPasswordStrength(AuthModel.validatePasswordStrength(e.target.value));
+                                    } else {
+                                      setPasswordStrength(null);
+                                    }
+                                  }}
+                                />
+                                <button 
+                                  type="button"
+                                  className="absolute right-3 top-2.5 text-muted-foreground/80 hover:text-muted-foreground"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                            <PasswordStrengthIndicator passwordStrength={passwordStrength} />
+                          </FormItem>
+                        )}
+                      />
 
-                  <FormField
-                    control={registerForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                            <Input 
-                              className="pl-10 h-10" 
-                              type={showConfirmPassword ? "text" : "password"} 
-                              placeholder="Confirm your password" 
-                              {...field} 
-                            />
-                            <button 
-                              type="button"
-                              className="absolute right-3 top-2.5 text-muted-foreground/80 hover:text-muted-foreground"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            >
-                              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                            </button>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      <FormField
+                        control={registerForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
+                                <Input 
+                                  className="pl-10 h-10" 
+                                  type={showConfirmPassword ? "text" : "password"} 
+                                  placeholder="Confirm your password" 
+                                  {...field} 
+                                />
+                                <button 
+                                  type="button"
+                                  className="absolute right-3 top-2.5 text-muted-foreground/80 hover:text-muted-foreground"
+                                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                >
+                                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                  <div className="flex items-center space-x-2 mt-4 p-2 rounded-md bg-muted/10 border border-muted/20">
-                    <input 
-                      type="checkbox" 
-                      id="terms" 
-                      className="rounded border-input h-4 w-4 text-primary accent-primary"
-                    />
-                    <label htmlFor="terms" className="text-sm text-muted-foreground">
-                      I agree to the <a href="#" className="text-primary hover:underline font-medium">Terms of Service</a> and <a href="#" className="text-primary hover:underline font-medium">Privacy Policy</a>
-                    </label>
-                  </div>
+                      <div className="flex items-center space-x-2 mt-4 p-2 rounded-md bg-muted/10 border border-muted/20">
+                        <input 
+                          type="checkbox" 
+                          id="terms" 
+                          className="rounded border-input h-4 w-4 text-primary accent-primary"
+                        />
+                        <label htmlFor="terms" className="text-sm text-muted-foreground">
+                          I agree to the <a href="#" className="text-primary hover:underline font-medium">Terms of Service</a> and <a href="#" className="text-primary hover:underline font-medium">Privacy Policy</a>
+                        </label>
+                      </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full h-10 font-medium shadow-sm transition-all hover:shadow-md" 
-                    disabled={registerMutation.isPending}
-                  >
-                    {registerMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating account...
-                      </>
-                    ) : (
-                      "Create Account"
-                    )}
-                  </Button>
-
-
-                </form>
-              </Form>
-            </TabsContent>
-          </Tabs>
+                      <Button 
+                        type="submit" 
+                        className="w-full h-10 font-medium shadow-sm transition-all hover:shadow-md" 
+                        disabled={registerMutation.isPending}
+                      >
+                        {registerMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Creating account...
+                          </>
+                        ) : (
+                          "Create Account"
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
