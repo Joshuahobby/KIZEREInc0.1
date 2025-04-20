@@ -118,8 +118,25 @@ export default function LostFound() {
   
   // Handle form submission
   const onSubmit = (data: ReportFormValues) => {
-    console.log("Submitting form with data:", data);
-    reportMutation.mutate(data);
+    // Create a copy of the data to avoid mutating the original form data
+    const submissionData = { ...data };
+    
+    // Ensure the date is properly formatted as an ISO string
+    if (submissionData.date && typeof submissionData.date === 'string') {
+      try {
+        // If it's already a valid date string, this will work
+        const date = new Date(submissionData.date);
+        if (!isNaN(date.getTime())) {
+          submissionData.date = date.toISOString();
+        }
+      } catch (e) {
+        console.error("Date conversion error:", e);
+        // If there's an error, we'll let the server handle it with defaults
+      }
+    }
+    
+    console.log("Submitting form with data:", submissionData);
+    reportMutation.mutate(submissionData);
   };
 
   return (

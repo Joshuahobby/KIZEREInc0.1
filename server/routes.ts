@@ -293,27 +293,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/reports", requireAuth, async (req, res) => {
     try {
+      console.log("Received report data:", req.body);
+      
+      // Handle the date field with extra validation
+      let reportDate;
+      try {
+        // In case the date is already a Date object or a valid ISO string
+        reportDate = new Date(req.body.date);
+        
+        // Check if the date is valid
+        if (isNaN(reportDate.getTime())) {
+          reportDate = new Date(); // Default to current date if invalid
+          console.log("Using default date due to invalid date input");
+        }
+      } catch (dateError) {
+        reportDate = new Date(); // Default to current date on error
+        console.log("Error parsing date, using default:", dateError);
+      }
+      
       // Create a new report object with the required data
       const reportData = {
         userId: req.user!.id,
-        type: req.body.type,
-        title: req.body.title,
-        description: req.body.description,
-        location: req.body.location,
-        date: new Date(req.body.date),
-        contactInfo: req.body.contactInfo,
+        type: req.body.type || 'lost', // Default to 'lost' if missing
+        title: req.body.title || 'Untitled Report', // Default title if missing
+        description: req.body.description || 'No description provided', // Default description
+        location: req.body.location || 'Unknown location', // Default location
+        date: reportDate,
+        contactInfo: req.body.contactInfo || null,
         itemId: req.body.itemId || null,
         status: 'Open'
       };
 
+      console.log("Processed report data:", reportData);
+
       // Create the report
       const newReport = await storage.createReport(reportData);
+      
+      console.log("Report created successfully:", newReport);
       
       // Return success response
       res.status(201).json(newReport);
     } catch (error) {
       console.error("Report creation error:", error);
-      res.status(500).json({ message: "Failed to create report" });
+      
+      // Provide more detailed error messages based on error type
+      if (error instanceof Error) {
+        res.status(500).json({ 
+          message: "Failed to create report",
+          error: error.message,
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to create report",
+          error: "Unknown error"
+        });
+      }
     }
   });
 
