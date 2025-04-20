@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { z } from 'zod';
 import { createLogger } from './logger';
+import { PAYMENT_FEES as CONFIG_PAYMENT_FEES, getPaymentAmount as configGetPaymentAmount } from '../config/payment.config';
 
 const logger = createLogger('FlutterwaveUtils');
 
@@ -18,12 +19,8 @@ try {
   throw new Error("Flutterwave configuration error: Missing required environment variables");
 }
 
-// Define our payment fee structure
-export const PAYMENT_FEES = {
-  ITEM_REGISTRATION: 2000, // RWF
-  LOST_ITEM_REPORT: 1000,  // RWF
-  FOUND_ITEM_REPORT: 0     // Free
-};
+// Use centralized payment fee structure
+export const PAYMENT_FEES = CONFIG_PAYMENT_FEES;
 
 // Types for Flutterwave response
 export interface FlutterwavePaymentResponse {
@@ -253,12 +250,6 @@ export async function initializePayment(paymentData: PaymentInitialization): Pro
  * @returns The payment amount in RWF
  */
 export function getPaymentAmount(paymentType: 'registration' | 'lost_report'): number {
-  switch (paymentType) {
-    case 'registration':
-      return PAYMENT_FEES.ITEM_REGISTRATION;
-    case 'lost_report':
-      return PAYMENT_FEES.LOST_ITEM_REPORT;
-    default:
-      throw new Error(`Invalid payment type: ${paymentType}`);
-  }
+  // Use the centralized config function
+  return configGetPaymentAmount(paymentType);
 }
