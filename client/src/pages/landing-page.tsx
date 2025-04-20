@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
-import { AuthModal } from "@/components/ui/auth-modal";
+import { AuthModal } from "@/components/ui/auth-modal-new";
 import pedestrianCrowdImage from "../assets/pedestrian_crowd.png";
 import { 
   Shield, 
