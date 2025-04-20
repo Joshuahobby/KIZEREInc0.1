@@ -220,25 +220,24 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
           {/* Standard Google Sign-In Button (Above tabs) */}
           <div className="px-6 pt-3 pb-4">
-            <Button 
+            <button 
               type="button" 
-              variant="outline"
-              className="w-full h-10 bg-white hover:bg-gray-50 text-gray-700 transition-all border border-gray-300 flex items-center justify-center"
+              className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 h-10 px-4 rounded-md border border-gray-300"
               onClick={handleGoogleSignIn}
               disabled={googleLoading}
             >
               {googleLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   <span className="font-medium">Signing in with Google...</span>
                 </>
               ) : (
                 <>
-                  <SiGoogle className="mr-2 h-5 w-5 text-[#4285F4]" />
+                  <SiGoogle className="h-5 w-5 text-[#4285F4]" />
                   <span className="font-medium">Continue with Google</span>
                 </>
               )}
-            </Button>
+            </button>
           </div>
 
           <div className="relative mb-4 mx-6">
