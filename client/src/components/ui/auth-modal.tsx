@@ -199,23 +199,23 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md overflow-hidden p-0">
+      <DialogContent className="sm:max-w-[500px] md:max-w-[550px] overflow-y-auto max-h-[90vh] p-0 rounded-xl">
         <div className="relative">
-          {/* Background gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-background to-background z-0 opacity-80"></div>
+          {/* Modern gradient background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background/90 z-0"></div>
           
-          {/* Header with brand identity */}
+          {/* Header with enhanced brand identity */}
           <div className="relative z-10 px-6 pt-6">
-            <div className="flex justify-center mb-2">
-              <div className="rounded-full bg-primary/10 p-2 mb-2">
+            <div className="flex justify-center mb-3">
+              <div className="rounded-full bg-primary/10 p-3 mb-2 shadow-sm">
                 <ShieldCheck className="h-8 w-8 text-primary" />
               </div>
             </div>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-center mb-1">
+              <DialogTitle className="text-2xl font-bold text-center mb-2">
                 {activeTab === "login" ? "Welcome Back" : "Join KIZERE"}
               </DialogTitle>
-              <DialogDescription className="text-center">
+              <DialogDescription className="text-center max-w-xs mx-auto">
                 {activeTab === "login" 
                   ? "Secure access to your registered items and protection features" 
                   : "Create an account to start tracking and protecting your valuable possessions"}
@@ -224,9 +224,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4 relative z-10">
-            <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1 mx-6">
-              <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">Sign In</TabsTrigger>
-              <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">Register</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1 mx-auto max-w-[90%]">
+              <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Sign In</TabsTrigger>
+              <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Register</TabsTrigger>
             </TabsList>
 
             {/* Login Form */}
@@ -349,9 +349,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
             </TabsContent>
 
             {/* Registration Form */}
-            <TabsContent value="register" className="px-6 pb-6">
+            <TabsContent value="register" className="px-6 pb-6 max-h-[65vh] overflow-y-auto">
               <Form {...registerForm}>
-                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-3">
                   <FormField
                     control={registerForm.control}
                     name="fullName"
@@ -360,8 +360,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         <FormLabel>Full Name</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                            <Input className="pl-10" placeholder="Enter your full name" {...field} />
+                            <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
+                            <Input className="pl-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" placeholder="Enter your full name" {...field} />
                           </div>
                         </FormControl>
                         <FormMessage />
