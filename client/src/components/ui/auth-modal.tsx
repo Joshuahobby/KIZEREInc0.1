@@ -223,37 +223,27 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
             </DialogHeader>
           </div>
 
-          {/* Google Sign-In Button - PROMINENT (Above tabs) */}
+          {/* Standard Google Sign-In Button (Above tabs) */}
           <div className="px-6 pt-3 pb-4">
-            <div className="text-xs text-center mb-2 text-primary font-medium">
-              Recommended
-            </div>
             <Button 
               type="button" 
-              className="w-full h-14 bg-[#00BFFF] hover:bg-[#00A0D6] text-white transition-all shadow-md hover:shadow-lg rounded-md border-0 flex items-center justify-center"
+              variant="outline"
+              className="w-full h-10 bg-white hover:bg-gray-50 text-gray-700 transition-all border border-gray-300 flex items-center justify-center"
               onClick={handleGoogleSignIn}
               disabled={googleLoading}
             >
               {googleLoading ? (
                 <>
-                  <Loader2 className="mr-3 h-6 w-6 animate-spin" />
-                  <span className="text-base font-medium">Signing in with Google...</span>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <span className="font-medium">Signing in with Google...</span>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center justify-center bg-white p-1 rounded-full mr-3">
-                    <SiGoogle className="h-5 w-5 text-gray-700" />
-                  </div>
-                  <span className="text-base font-medium">Continue with Google</span>
+                  <SiGoogle className="mr-2 h-5 w-5 text-[#4285F4]" />
+                  <span className="font-medium">Continue with Google</span>
                 </>
               )}
             </Button>
-            <div className="flex items-center justify-center mt-2">
-              <ShieldCheck className="h-4 w-4 text-primary mr-1" />
-              <p className="text-xs text-muted-foreground">
-                Fast, secure login with your Google account
-              </p>
-            </div>
           </div>
 
           <div className="relative mb-4 mx-6">
@@ -261,7 +251,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-muted-foreground font-medium">
+              <span className="bg-background px-3 text-muted-foreground">
                 Or use email/password
               </span>
             </div>
