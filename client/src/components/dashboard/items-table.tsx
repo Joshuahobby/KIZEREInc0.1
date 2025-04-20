@@ -425,8 +425,8 @@ export const ItemsTable = ({
                     <p>{selectedItem.category}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Serial Number</p>
-                    <p>{selectedItem.serialNumber || "N/A"}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Unique Identifier</p>
+                    <p>{selectedItem.uniqueIdentifier || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Registered Date</p>

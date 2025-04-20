@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
 import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { UserRole } from "@shared/schema";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -111,7 +112,7 @@ export default function EnhancedDashboard() {
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [preferences, setPreferences] = useState(defaultPreferences);
   
-  const userRole = user?.role || "Subscriber";
+  const userRole: UserRole = user?.role as UserRole || "Subscriber";
   
   // Fetch dashboard data
   const { 
