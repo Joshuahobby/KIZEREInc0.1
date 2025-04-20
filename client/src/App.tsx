@@ -13,6 +13,8 @@ import AuthCallback from "@/pages/auth-callback";
 import PaymentStatus from "@/pages/payment-status";
 import PaymentHistory from "@/pages/payment-history";
 import PaymentTest from "@/pages/payment-test";
+import PaymentDashboard from "@/pages/admin/payment-dashboard";
+import AdminDashboard from "@/pages/admin/dashboard";
 import { useAuth } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -28,6 +30,8 @@ function App() {
   const PaymentStatusComponent = () => <PaymentStatus />;
   const PaymentHistoryComponent = () => <PaymentHistory />;
   const PaymentTestComponent = () => <PaymentTest />;
+  const AdminDashboardComponent = () => <AdminDashboard />;
+  const PaymentDashboardComponent = () => <PaymentDashboard />;
   
   return (
     <ErrorBoundary>
@@ -56,6 +60,10 @@ function App() {
             <Route path="/payment-status" component={PaymentStatusComponent} />
             <ProtectedRoute path="/payment-history" component={PaymentHistoryComponent} requiredRole="any" />
             <ProtectedRoute path="/payment-test" component={PaymentTestComponent} requiredRole="any" />
+            
+            {/* Admin routes */}
+            <ProtectedRoute path="/admin" component={AdminDashboardComponent} requiredRole="Admin" />
+            <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
             
             {/* 404 route */}
             <Route component={NotFound} />
