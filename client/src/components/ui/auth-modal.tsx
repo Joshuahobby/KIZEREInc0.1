@@ -111,60 +111,13 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     try {
       setGoogleLoading(true);
       
-      // Get Firebase authentication result
-      const result = await signInWithGoogle();
+      // Simply trigger the Firebase sign-in process
+      // The AuthProvider in use-auth.tsx will handle the backend integration
+      // and redirection based on the user's role
+      await signInWithGoogle();
       
-      // Extract user info from Firebase result
-      const userInfo = extractUserInfo(result);
-      console.log("Firebase user authenticated:", result.user);
-      
-      if (!userInfo.email) {
-        toast({
-          title: "Authentication Failed",
-          description: "Could not get email from Google. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Send the Firebase auth data to our backend
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: userInfo.email,
-          name: userInfo.displayName || userInfo.email.split('@')[0],
-          uid: userInfo.uid,
-          token: userInfo.token,
-          photoURL: userInfo.photoURL
-        }),
-        credentials: "include"
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to authenticate with Google");
-      }
-      
-      // Get the user data from our backend
-      const userData = await response.json();
-      
-      // Update auth context with the authenticated user
-      queryClient.setQueryData(["/api/user"], userData);
-      
-      // Close the modal
+      // Just close the modal - navigation will be handled by the AuthProvider
       onClose();
-      
-      // Show success message
-      toast({
-        title: "Sign in successful",
-        description: `Welcome, ${userData.fullName || userData.username}!`,
-      });
-      
-      // Redirect to the appropriate dashboard
-      redirectToDashboardByRole(userData.role);
       
     } catch (error: any) {
       console.error("Google sign-in failed:", error);
