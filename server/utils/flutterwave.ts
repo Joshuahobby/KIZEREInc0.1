@@ -20,9 +20,9 @@ try {
 
 // Define our payment fee structure
 export const PAYMENT_FEES = {
-  ITEM_REGISTRATION: 500, // RWF
-  LOST_ITEM_REPORT: 500,  // RWF
-  FOUND_ITEM_REPORT: 0    // Free
+  ITEM_REGISTRATION: 2000, // RWF
+  LOST_ITEM_REPORT: 1000,  // RWF
+  FOUND_ITEM_REPORT: 0     // Free
 };
 
 // Types for Flutterwave response
@@ -135,7 +135,24 @@ export function generateTransactionReference(prefix = 'KIZERE'): string {
  */
 export async function verifyTransaction(transactionId: string): Promise<FlutterwaveVerificationResponse> {
   try {
-    const response = await fetch(`https://api.flutterwave.com/v3/transactions/${transactionId}/verify`, {
+    logger.info('Attempting to verify transaction', { transactionId });
+    
+    // Input validation
+    if (!transactionId) {
+      logger.error('Invalid transaction ID provided', { transactionId });
+      throw new Error('Invalid transaction ID: empty or undefined');
+    }
+    
+    // Clean up transaction ID if needed (sometimes there might be extra characters)
+    const cleanTransactionId = transactionId.trim();
+    
+    logger.info('Calling Flutterwave API', { 
+      transactionId: cleanTransactionId,
+      url: `https://api.flutterwave.com/v3/transactions/${cleanTransactionId}/verify` 
+    });
+    
+    // Make API request to Flutterwave
+    const response = await fetch(`https://api.flutterwave.com/v3/transactions/${cleanTransactionId}/verify`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
@@ -143,27 +160,48 @@ export async function verifyTransaction(transactionId: string): Promise<Flutterw
       }
     });
 
+    // Check if request was successful
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorMessage = '';
+      
+      try {
+        // Try to parse error as JSON
+        const errorData = await response.json();
+        errorMessage = errorData.message || JSON.stringify(errorData);
+      } catch {
+        // If not JSON, get as text
+        errorMessage = await response.text();
+      }
+      
       logger.error('Transaction verification failed', { 
-        transactionId, 
+        transactionId: cleanTransactionId, 
         status: response.status, 
-        error: errorText 
+        error: errorMessage
       });
-      throw new Error(`Transaction verification failed: ${errorText}`);
+      
+      throw new Error(`Transaction verification failed (${response.status}): ${errorMessage}`);
     }
 
+    // Parse response data
     const verificationData: FlutterwaveVerificationResponse = await response.json();
-    logger.info('Transaction verified', { 
-      transactionId, 
+    
+    logger.info('Transaction verification response received', { 
+      transactionId: cleanTransactionId, 
       status: verificationData.status,
+      message: verificationData.message,
+      dataStatus: verificationData.data?.status,
       amount: verificationData.data?.amount,
       currency: verificationData.data?.currency
     });
 
     return verificationData;
   } catch (error) {
-    logger.error('Error verifying transaction', { transactionId, error });
+    logger.error('Error verifying transaction', { 
+      transactionId, 
+      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      errorStack: error instanceof Error ? error.stack : undefined
+    });
+    
     throw new Error(`Error verifying transaction: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

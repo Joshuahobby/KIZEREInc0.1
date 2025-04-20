@@ -46,7 +46,37 @@ export default function PaymentStatus() {
     // Verify the payment with the server
     const verifyPayment = async () => {
       try {
+        console.log("Starting payment verification for:", txRef);
+        
+        // Add a short delay to allow server callback processing
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Check the payment status first
+        try {
+          const paymentData = await PaymentService.getPaymentStatus(txRef);
+          console.log("Payment status check:", paymentData);
+          
+          // If the payment already has a successful status, use that result
+          if (paymentData && paymentData.status === "successful") {
+            setStatus("success");
+            setMessage("Payment has been processed successfully");
+            
+            toast({
+              title: "Payment successful",
+              description: "Your payment has been processed successfully",
+              variant: "default"
+            });
+            return;
+          }
+        } catch (statusError) {
+          console.warn("Could not fetch payment status:", statusError);
+          // Continue with verification if status check fails
+        }
+        
+        // Proceed with verification
+        console.log("Proceeding with payment verification");
         const response = await PaymentService.verifyPayment(txRef);
+        console.log("Verification response:", response);
         
         if (response.status === "successful") {
           setStatus("success");
@@ -57,6 +87,16 @@ export default function PaymentStatus() {
             description: "Your payment has been processed successfully",
             variant: "default"
           });
+        } else if (response.status === "pending") {
+          // Keep in loading state if still pending
+          toast({
+            title: "Payment pending",
+            description: "Your payment is still being processed. This may take a few moments.",
+            variant: "default"
+          });
+          
+          // Retry after 5 seconds
+          setTimeout(verifyPayment, 5000);
         } else {
           setStatus("failed");
           setMessage(response.message || "Payment verification failed");
@@ -68,14 +108,31 @@ export default function PaymentStatus() {
           });
         }
       } catch (error) {
-        setStatus("error");
-        setMessage(error instanceof Error ? error.message : "An error occurred during payment verification");
+        console.error("Payment verification error:", error);
         
-        toast({
-          title: "Verification error",
-          description: error instanceof Error ? error.message : "An error occurred during payment verification",
-          variant: "destructive"
-        });
+        // Check if the error message indicates payment is still processing
+        const errorMsg = error instanceof Error ? error.message : "An error occurred";
+        
+        if (errorMsg.includes("not been processed") || errorMsg.includes("pending")) {
+          // If payment is still processing, retry after a delay
+          toast({
+            title: "Payment processing",
+            description: "Your payment is still being processed. Please wait...",
+            variant: "default"
+          });
+          
+          // Retry after 5 seconds
+          setTimeout(verifyPayment, 5000);
+        } else {
+          setStatus("error");
+          setMessage(errorMsg);
+          
+          toast({
+            title: "Verification error",
+            description: errorMsg,
+            variant: "destructive"
+          });
+        }
       }
     };
 
