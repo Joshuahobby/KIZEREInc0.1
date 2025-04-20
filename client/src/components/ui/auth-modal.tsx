@@ -218,44 +218,45 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
             </DialogHeader>
           </div>
 
-          {/* Standard Google Sign-In Button (Above tabs) */}
-          <div className="px-6 pt-3 pb-4">
-            <button 
-              type="button" 
-              className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 h-10 px-4 rounded-md border border-gray-300"
-              onClick={handleGoogleSignIn}
-              disabled={googleLoading}
-            >
-              {googleLoading ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span className="font-medium">Signing in with Google...</span>
-                </>
-              ) : (
-                <>
-                  <SiGoogle className="h-5 w-5 text-[#4285F4]" />
-                  <span className="font-medium">Continue with Google</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          <div className="relative mb-4 mx-6">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-3 text-muted-foreground">
-                Or use email/password
-              </span>
-            </div>
-          </div>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
+          {/* Tabs go first */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10 mt-4">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1 mx-auto max-w-[90%]">
               <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Sign In</TabsTrigger>
               <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Register</TabsTrigger>
             </TabsList>
+
+            {/* Google Button placed above tab content */}
+            <div className="px-6 pt-2 pb-4">
+              <button 
+                type="button" 
+                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-gray-700 h-10 px-4 rounded-md border border-gray-300"
+                onClick={handleGoogleSignIn}
+                disabled={googleLoading}
+              >
+                {googleLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span className="font-medium">Signing in with Google...</span>
+                  </>
+                ) : (
+                  <>
+                    <SiGoogle className="h-5 w-5 text-[#4285F4]" />
+                    <span className="font-medium">Continue with Google</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="relative mb-4 mx-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-3 text-muted-foreground">
+                  Or use email/password
+                </span>
+              </div>
+            </div>
 
             {/* Login Form */}
             <TabsContent value="login" className="px-6 pb-6 max-h-[65vh] overflow-y-auto">
