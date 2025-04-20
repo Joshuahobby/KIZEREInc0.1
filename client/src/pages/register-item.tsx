@@ -15,6 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { PaymentService } from "@/services/payment.service";
+import { getPaymentAmount, DEFAULT_CURRENCY } from "@/config/payment.config";
 import { Loader2, Check, ArrowRight, CreditCard, RefreshCw, CheckCircle } from "lucide-react";
 
 // Item categories
@@ -132,8 +133,7 @@ export default function RegisterItem() {
         
         // Initialize payment for this item registration
         const payment = await PaymentService.initializePayment({
-          amount: 2000, // Registration fee 2,000 RWF
-          type: "registration",
+          type: "registration", // The amount will be taken from central payment config
           itemId: item.id
         });
         
