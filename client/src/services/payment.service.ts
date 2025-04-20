@@ -1,5 +1,6 @@
 import { apiRequest } from "@/lib/queryClient";
 import { PaymentType } from "@shared/schema";
+import { getPaymentAmount, DEFAULT_CURRENCY } from "@/config/payment.config";
 
 /**
  * Request interface for payment initialization
@@ -166,13 +167,7 @@ export class PaymentService {
    * @returns Payment amount in RWF
    */
   static getPaymentAmount(type: PaymentType): number {
-    switch (type) {
-      case "registration":
-        return 2000; // 2,000 RWF for item registration
-      case "lost_report":
-        return 1000; // 1,000 RWF for lost item report
-      default:
-        return 0;
-    }
+    // Use the centralized payment configuration
+    return getPaymentAmount(type);
   }
 }
