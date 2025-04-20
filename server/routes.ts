@@ -19,6 +19,18 @@ import {
   getPaymentAmount
 } from "./utils/flutterwave";
 import { DEFAULT_CURRENCY } from "./config/payment.config";
+import { 
+  format, 
+  subDays, 
+  startOfDay, 
+  endOfDay, 
+  startOfWeek, 
+  endOfWeek, 
+  startOfMonth, 
+  endOfMonth, 
+  startOfYear, 
+  endOfYear 
+} from "date-fns";
 
 // Middleware to check authentication
 function requireAuth(req: Request, res: Response, next: Function) {
@@ -803,6 +815,304 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Payment history error:", error);
       res.status(500).json({ 
         message: "Failed to fetch payment history",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // ==== Admin Payment Dashboard API Endpoints ====
+  
+  // Get payment summary for admin dashboard
+  app.get("/api/admin/payments/summary", requireAdmin, async (req, res) => {
+    try {
+      // Get all payments
+      const allPayments = await storage.getAllPayments();
+      
+      // Calculate summary statistics
+      const summary = {
+        totalRevenue: 0,
+        registrationRevenue: 0,
+        lostReportRevenue: 0,
+        successfulTransactions: 0,
+        failedTransactions: 0,
+        pendingTransactions: 0
+      };
+      
+      // Process each payment
+      for (const payment of allPayments) {
+        // Only count successful payments for revenue
+        if (payment.status === 'successful') {
+          const amount = parseFloat(payment.amount);
+          summary.totalRevenue += amount;
+          
+          if (payment.type === 'registration') {
+            summary.registrationRevenue += amount;
+          } else if (payment.type === 'lost_report') {
+            summary.lostReportRevenue += amount;
+          }
+          
+          summary.successfulTransactions++;
+        } else if (payment.status === 'failed' || payment.status === 'cancelled') {
+          summary.failedTransactions++;
+        } else if (payment.status === 'pending') {
+          summary.pendingTransactions++;
+        }
+      }
+      
+      res.status(200).json(summary);
+    } catch (error) {
+      console.error("Admin payment summary error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch payment summary",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Get all payment transactions for admin dashboard with filtering, search, and pagination
+  app.get("/api/admin/payments", requireAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = parseInt(req.query.pageSize as string) || 10;
+      const search = req.query.search as string;
+      const status = req.query.status as string;
+      const type = req.query.type as string;
+      const dateRange = req.query.dateRange as string;
+      
+      // Prepare date filters
+      let dateFilter: { start: Date, end: Date } | null = null;
+      
+      if (dateRange) {
+        const now = new Date();
+        
+        switch (dateRange) {
+          case 'today':
+            dateFilter = {
+              start: startOfDay(now),
+              end: endOfDay(now)
+            };
+            break;
+            
+          case 'yesterday':
+            const yesterday = subDays(now, 1);
+            dateFilter = {
+              start: startOfDay(yesterday),
+              end: endOfDay(yesterday)
+            };
+            break;
+            
+          case 'week':
+            dateFilter = {
+              start: startOfWeek(now, { weekStartsOn: 1 }),
+              end: endOfWeek(now, { weekStartsOn: 1 })
+            };
+            break;
+            
+          case 'month':
+            dateFilter = {
+              start: startOfMonth(now),
+              end: endOfMonth(now)
+            };
+            break;
+            
+          case 'year':
+            dateFilter = {
+              start: startOfYear(now),
+              end: endOfYear(now)
+            };
+            break;
+        }
+      }
+      
+      // Get payments with filters
+      const { payments, total } = await storage.getPaymentsWithFilters({
+        page,
+        pageSize,
+        search,
+        status,
+        type,
+        dateFilter
+      });
+      
+      // For each payment, get the username
+      const transactions = await Promise.all(payments.map(async (payment) => {
+        const user = await storage.getUser(payment.userId);
+        return {
+          ...payment,
+          username: user ? user.username : 'Unknown'
+        };
+      }));
+      
+      res.status(200).json({
+        transactions,
+        total
+      });
+    } catch (error) {
+      console.error("Admin payments list error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch payment transactions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Export payments as CSV
+  app.get("/api/admin/payments/export", requireAdmin, async (req, res) => {
+    try {
+      const search = req.query.search as string;
+      const status = req.query.status as string;
+      const type = req.query.type as string;
+      const dateRange = req.query.dateRange as string;
+      
+      // Prepare date filters (same as in the list endpoint)
+      let dateFilter: { start: Date, end: Date } | null = null;
+      
+      if (dateRange) {
+        const now = new Date();
+        
+        switch (dateRange) {
+          case 'today':
+            dateFilter = {
+              start: startOfDay(now),
+              end: endOfDay(now)
+            };
+            break;
+            
+          case 'yesterday':
+            const yesterday = subDays(now, 1);
+            dateFilter = {
+              start: startOfDay(yesterday),
+              end: endOfDay(yesterday)
+            };
+            break;
+            
+          case 'week':
+            dateFilter = {
+              start: startOfWeek(now, { weekStartsOn: 1 }),
+              end: endOfWeek(now, { weekStartsOn: 1 })
+            };
+            break;
+            
+          case 'month':
+            dateFilter = {
+              start: startOfMonth(now),
+              end: endOfMonth(now)
+            };
+            break;
+            
+          case 'year':
+            dateFilter = {
+              start: startOfYear(now),
+              end: endOfYear(now)
+            };
+            break;
+        }
+      }
+      
+      // Get all payments with filters (no pagination)
+      const { payments } = await storage.getPaymentsWithFilters({
+        page: 1,
+        pageSize: 1000000, // Large number to get all records
+        search,
+        status,
+        type,
+        dateFilter
+      });
+      
+      // For each payment, get the username
+      const transactions = await Promise.all(payments.map(async (payment) => {
+        const user = await storage.getUser(payment.userId);
+        return {
+          ...payment,
+          username: user ? user.username : 'Unknown'
+        };
+      }));
+      
+      // Create CSV content manually
+      const headers = ["Transaction ID", "Reference", "User", "Amount", "Currency", "Type", "Status", "Date", "Created At"];
+      
+      // Function to escape CSV fields
+      const escapeField = (field: string | number | null | undefined) => {
+        if (field === null || field === undefined) return '';
+        return `"${String(field).replace(/"/g, '""')}"`;
+      };
+      
+      // Generate CSV rows
+      const rows = transactions.map(tx => [
+        escapeField(tx.id),
+        escapeField(tx.transactionRef),
+        escapeField(tx.username),
+        escapeField(tx.amount),
+        escapeField(tx.currency),
+        escapeField(tx.type === 'registration' ? 'Item Registration' : 'Lost Item Report'),
+        escapeField(tx.status),
+        escapeField(tx.paymentDate ? new Date(tx.paymentDate).toISOString() : ''),
+        escapeField(tx.createdAt ? new Date(tx.createdAt).toISOString() : '')
+      ].join(','));
+      
+      // Combine headers and rows
+      const csvContent = [headers.join(','), ...rows].join('\n');
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="payment-transactions-${new Date().toISOString().split('T')[0]}.csv"`);
+      
+      // Send CSV content
+      res.send(csvContent);
+    } catch (error) {
+      console.error("Admin payments export error:", error);
+      res.status(500).json({ 
+        message: "Failed to export payment transactions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Process refund
+  app.post("/api/admin/payments/refund/:id", requireAdmin, async (req, res) => {
+    try {
+      const paymentId = parseInt(req.params.id);
+      
+      // Get the payment
+      const payment = await storage.getPayment(paymentId);
+      if (!payment) {
+        return res.status(404).json({
+          message: "Payment not found"
+        });
+      }
+      
+      // Check if payment is in valid state for refund
+      if (payment.status !== 'successful') {
+        return res.status(400).json({
+          message: "Only successful payments can be refunded"
+        });
+      }
+      
+      // In a real-world scenario, you would call the payment gateway's refund API here
+      // For now, we'll just update the payment status
+      const refundedPayment = await storage.updatePayment(paymentId, {
+        status: 'refunded'
+      });
+      
+      // Create a notification for the user
+      await storage.createNotification({
+        userId: payment.userId,
+        title: 'Payment Refunded',
+        message: `Your payment of ${payment.amount} ${payment.currency} has been refunded.`,
+        type: 'payment',
+        isRead: false,
+        relatedItemId: payment.itemId,
+        relatedReportId: payment.reportId
+      });
+      
+      res.status(200).json({
+        message: "Refund processed successfully",
+        payment: refundedPayment
+      });
+    } catch (error) {
+      console.error("Admin payment refund error:", error);
+      res.status(500).json({ 
+        message: "Failed to process refund",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }

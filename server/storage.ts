@@ -7,7 +7,7 @@ import {
   paymentMethods, type PaymentMethod, type InsertPaymentMethod
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, like, and, or, desc } from "drizzle-orm";
+import { eq, like, and, or, desc, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -52,6 +52,17 @@ export interface IStorage {
   updatePayment(id: number, payment: Partial<Payment>): Promise<Payment | undefined>;
   getItemPayments(itemId: number): Promise<Payment[]>;
   getReportPayments(reportId: number): Promise<Payment[]>;
+  
+  // Admin payment methods
+  getAllPayments(): Promise<Payment[]>;
+  getPaymentsWithFilters(options: {
+    page: number;
+    pageSize: number;
+    search?: string;
+    status?: string;
+    type?: string;
+    dateFilter?: { start: Date; end: Date } | null;
+  }): Promise<{ payments: Payment[]; total: number }>;
   
   // Payment method storage
   getUserPaymentMethods(userId: number): Promise<PaymentMethod[]>;
@@ -315,6 +326,84 @@ export class DatabaseStorage implements IStorage {
       .from(payments)
       .where(eq(payments.reportId, reportId))
       .orderBy(desc(payments.createdAt));
+  }
+  
+  // Admin payment methods
+  async getAllPayments(): Promise<Payment[]> {
+    return await db
+      .select()
+      .from(payments)
+      .orderBy(desc(payments.createdAt));
+  }
+  
+  async getPaymentsWithFilters(options: {
+    page: number;
+    pageSize: number;
+    search?: string;
+    status?: string;
+    type?: string;
+    dateFilter?: { start: Date; end: Date } | null;
+  }): Promise<{ payments: Payment[]; total: number }> {
+    const { page, pageSize, search, status, type, dateFilter } = options;
+    
+    // Start with a base query
+    let query = db.select().from(payments);
+    
+    // Build conditions array
+    const conditions: any[] = [];
+    
+    if (status) {
+      conditions.push(eq(payments.status, status));
+    }
+    
+    if (type) {
+      conditions.push(eq(payments.type, type));
+    }
+    
+    if (dateFilter) {
+      conditions.push(
+        and(
+          sql`${payments.createdAt} >= ${dateFilter.start}`,
+          sql`${payments.createdAt} <= ${dateFilter.end}`
+        )
+      );
+    }
+    
+    // Apply search to transaction reference or transaction ID
+    if (search) {
+      conditions.push(
+        or(
+          sql`${payments.transactionRef} ILIKE ${`%${search}%`}`,
+          sql`CAST(${payments.id} AS TEXT) ILIKE ${`%${search}%`}`,
+          sql`CAST(${payments.amount} AS TEXT) ILIKE ${`%${search}%`}`
+        )
+      );
+    }
+    
+    // Apply all conditions
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    // Count total (for pagination)
+    const countQuery = db.select({ count: sql<number>`count(*)` }).from(payments);
+    if (conditions.length > 0) {
+      countQuery.where(and(...conditions));
+    }
+    
+    const countResult = await countQuery;
+    const total = countResult[0]?.count || 0;
+    
+    // Apply pagination and ordering
+    const paymentsResult = await query
+      .orderBy(desc(payments.createdAt))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+    
+    return {
+      payments: paymentsResult,
+      total
+    };
   }
 
   // Payment method storage
