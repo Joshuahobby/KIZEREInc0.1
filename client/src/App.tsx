@@ -17,6 +17,7 @@ import { ErrorBoundary } from "@/components/error-boundary";
 function App() {
   // Create safe component wrappers to ensure JSX Elements are always returned
   const DashboardComponent = () => <Dashboard />;
+  const EnhancedDashboardComponent = () => <EnhancedDashboard />;
   const RegisterItemComponent = () => <RegisterItem />;
   const SearchComponent = () => <Search />;
   const LostFoundComponent = () => <LostFound />;
@@ -37,6 +38,7 @@ function App() {
             
             {/* Role-restricted routes */}
             <ProtectedRoute path="/dashboard" component={DashboardComponent} requiredRole="any" />
+            <ProtectedRoute path="/enhanced-dashboard" component={EnhancedDashboardComponent} requiredRole="any" />
             <ProtectedRoute path="/register-item" component={RegisterItemComponent} requiredRole="any" />
             <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
             <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />

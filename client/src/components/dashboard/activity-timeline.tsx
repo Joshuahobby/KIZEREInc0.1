@@ -1,69 +1,59 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
+import React, { useState } from 'react';
+import { format, formatDistanceToNow } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Clock, 
-  ClipboardList, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Bell, 
-  Filter,
-  PenSquare
-} from "lucide-react";
+import { Filter, CheckCircle2, Clock, AlertTriangle, Info, HelpCircle, FolderPlus, FileEdit, Calendar } from "lucide-react";
 
-// Activity type definition
-export interface Activity {
+// Activity type representing a user's action
+interface Activity {
   id: number;
-  type: 'register' | 'status' | 'notification' | 'update' | string;
+  type: string;
   title: string;
-  timestamp: Date | string;
+  timestamp: Date;
   details: string;
-  itemId?: number;
-  category?: string;
+  category: string;
 }
 
 interface ActivityTimelineProps {
   activities: Activity[];
-  isLoading?: boolean;
+  isLoading: boolean;
 }
 
 /**
  * Activity Timeline Component
  * 
- * Displays a chronological timeline of user activities with filtering options
+ * Displays a chronological activity feed with filtering options,
+ * visual differentiation by activity type, and time information.
  */
 export const ActivityTimeline = ({ 
   activities = [], 
   isLoading = false 
 }: ActivityTimelineProps) => {
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState("all");
   
-  // Filter activities based on selected filter
+  // Filter activities based on selected category
   const filteredActivities = filter === "all" 
     ? activities 
-    : activities.filter(activity => activity.type === filter || 
-        (filter === "status" && (activity.type === "lost" || activity.type === "found")));
+    : activities.filter(activity => activity.type === filter);
   
   // Get icon based on activity type
   const getActivityIcon = (type: string) => {
     switch(type) {
       case 'register':
-        return <ClipboardList className="h-5 w-5 text-blue-500" />;
+        return <FolderPlus className="h-5 w-5 text-blue-500" />;
       case 'lost':
         return <AlertTriangle className="h-5 w-5 text-red-500" />;
       case 'found':
         return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-      case 'notification':
-        return <Bell className="h-5 w-5 text-amber-500" />;
       case 'update':
-        return <PenSquare className="h-5 w-5 text-purple-500" />;
+        return <FileEdit className="h-5 w-5 text-amber-500" />;
+      case 'notification':
+        return <Info className="h-5 w-5 text-purple-500" />;
       default:
-        return <Clock className="h-5 w-5 text-gray-500" />;
+        return <HelpCircle className="h-5 w-5 text-gray-500" />;
     }
   };
   
@@ -76,18 +66,18 @@ export const ActivityTimeline = ({
         return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       case 'found':
         return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case 'notification':
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200";
       case 'update':
+        return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200";
+      case 'notification':
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
     }
   };
   
-  // Generate loading skeletons
+  // Loading skeletons
   const renderSkeletons = () => {
-    return Array(4).fill(0).map((_, index) => (
+    return Array(3).fill(0).map((_, index) => (
       <div key={`skeleton-${index}`} className="py-3">
         <div className="flex items-start">
           <div className="flex-shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center">
@@ -114,20 +104,21 @@ export const ActivityTimeline = ({
             Activity Timeline
           </CardTitle>
           
-          {/* Category Filter */}
+          {/* Activity Filters */}
           <Tabs value={filter} onValueChange={setFilter} className="w-auto">
             <TabsList className="h-8">
               <TabsTrigger value="all" className="text-xs h-7 px-2">All</TabsTrigger>
               <TabsTrigger value="register" className="text-xs h-7 px-2">Registered</TabsTrigger>
-              <TabsTrigger value="status" className="text-xs h-7 px-2">Status Change</TabsTrigger>
-              <TabsTrigger value="notification" className="text-xs h-7 px-2">Notifications</TabsTrigger>
+              <TabsTrigger value="lost" className="text-xs h-7 px-2">Lost</TabsTrigger>
+              <TabsTrigger value="found" className="text-xs h-7 px-2">Found</TabsTrigger>
+              <TabsTrigger value="update" className="text-xs h-7 px-2">Updates</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="flow-root">
-          <ul role="list" className="-mb-8">
+          <ul role="list">
             {isLoading ? (
               renderSkeletons()
             ) : filteredActivities.length > 0 ? (
@@ -143,39 +134,39 @@ export const ActivityTimeline = ({
                       delay: index * 0.05,
                       ease: "easeOut" 
                     }}
+                    className="py-3 border-b border-border/40 last:border-0"
                   >
-                    <div className="relative pb-8">
-                      {index < filteredActivities.length - 1 ? (
-                        <span
-                          className="absolute top-5 left-5 -ml-px h-full w-0.5 bg-muted"
-                          aria-hidden="true"
-                        />
-                      ) : null}
-                      <div className="relative flex items-start space-x-3">
-                        <div className="relative">
-                          <div className="h-10 w-10 rounded-full bg-muted/50 border border-border/50 flex items-center justify-center">
-                            {getActivityIcon(activity.type)}
-                          </div>
+                    <div className="relative flex items-start space-x-3">
+                      <div className="relative">
+                        <div className="h-10 w-10 rounded-full bg-muted/50 border border-border/50 flex items-center justify-center">
+                          {getActivityIcon(activity.type)}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <div>
-                            <div className="flex justify-between">
-                              <p className="text-sm font-medium text-foreground">
-                                {activity.title}
-                                {activity.category && (
-                                  <Badge variant="secondary" className="ml-2 font-normal">
-                                    {activity.category}
-                                  </Badge>
-                                )}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {typeof activity.timestamp === 'string' 
-                                  ? activity.timestamp 
-                                  : format(new Date(activity.timestamp), 'MMM d, h:mm a')}
-                              </p>
-                            </div>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {activity.details}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div>
+                          <div className="flex justify-between">
+                            <p className="text-sm font-medium text-foreground">
+                              {activity.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground flex items-center">
+                              <Calendar className="h-3 w-3 mr-1" />
+                              {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                            </p>
+                          </div>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {activity.details}
+                          </p>
+                          
+                          {/* Activity meta information */}
+                          <div className="mt-2 flex space-x-2">
+                            <Badge 
+                              variant="outline" 
+                              className={getActivityBadgeClass(activity.type)}
+                            >
+                              {activity.category}
+                            </Badge>
+                            <p className="text-xs text-muted-foreground pt-1">
+                              {format(activity.timestamp, 'MMM d, h:mm a')}
                             </p>
                           </div>
                         </div>
@@ -191,14 +182,6 @@ export const ActivityTimeline = ({
             )}
           </ul>
         </div>
-        
-        {activities.length > 0 && !isLoading && (
-          <div className="mt-2 flex justify-center">
-            <Button variant="outline" size="sm">
-              View All Activity
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

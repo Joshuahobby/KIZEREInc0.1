@@ -1,90 +1,92 @@
-import { motion } from "framer-motion";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import React, { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 
 interface MiniChartProps {
   data: number[];
-  color: string;
+  color?: string;
   height?: number;
-  animated?: boolean;
+  width?: number;
+  showArea?: boolean;
+  showDots?: boolean;
+  maxValue?: number;
 }
 
 /**
- * MiniChart component for displaying small line charts in dashboard cards
+ * MiniChart Component
  * 
- * Used to show data trends in a compact visual format
+ * A small, lightweight chart component for displaying trends in dashboard cards
+ * with a clean, minimalist design.
  */
-export const MiniChart = ({ 
-  data, 
-  color, 
-  height = 40, 
-  animated = true 
-}: MiniChartProps) => {
-  // Convert simple number array to format required by recharts
-  const chartData = data.map((value, index) => ({ value, index }));
-  
-  // Create animation variants for the chart
-  const chartVariants = {
-    hidden: { opacity: 0, pathLength: 0 },
-    visible: { 
-      opacity: 1, 
-      pathLength: 1,
-      transition: { 
-        duration: 1.5, 
-        ease: "easeInOut"
-      } 
-    }
-  };
+export const MiniChart: React.FC<MiniChartProps> = ({
+  data = [],
+  color = '#3b82f6',
+  height = 40,
+  width = 100,
+  showArea = true,
+  showDots = true,
+  maxValue: customMaxValue,
+}) => {
+  // Prepare chart data
+  const maxValue = customMaxValue || Math.max(...data) * 1.2; // Add 20% padding to max value
+  const points = data.map((value, index) => {
+    const x = (index / (data.length - 1)) * width;
+    const y = height - (value / maxValue) * height;
+    return `${x},${y}`;
+  }).join(' ');
+
+  // Create path for area
+  const areaPath = `M0,${height} ${points} ${width},${height}`;
+
+  // Create path for line
+  const linePath = points;
 
   return (
-    <div className="w-full" style={{ height: `${height}px` }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-          <Line
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={animated}
-            animationDuration={1500}
+    <div className="relative">
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+        {/* Area fill */}
+        {showArea && (
+          <motion.path
+            initial={{ opacity: 0, pathLength: 0 }}
+            animate={{ opacity: 0.15, pathLength: 1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            d={areaPath}
+            fill={color}
+            fillOpacity="0.15"
           />
-        </LineChart>
-      </ResponsiveContainer>
+        )}
+        
+        {/* Line */}
+        <motion.polyline
+          initial={{ opacity: 0, pathLength: 0 }}
+          animate={{ opacity: 1, pathLength: 1 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          points={linePath}
+          fill="none"
+          stroke={color}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        
+        {/* Data points */}
+        {showDots && data.map((value, index) => {
+          const x = (index / (data.length - 1)) * width;
+          const y = height - (value / maxValue) * height;
+          return (
+            <motion.circle
+              key={index}
+              initial={{ opacity: 0, r: 0 }}
+              animate={{ opacity: 1, r: 3 }}
+              transition={{ delay: 0.8 + (index * 0.1), duration: 0.4 }}
+              cx={x}
+              cy={y}
+              fill="white"
+              stroke={color}
+              strokeWidth="1"
+            />
+          );
+        })}
+      </svg>
     </div>
-  );
-};
-
-/**
- * AnimatedMiniChart that leverages Framer Motion for more control over animations
- */
-export const AnimatedMiniChart = ({ 
-  data, 
-  color, 
-  height = 40 
-}: MiniChartProps) => {
-  // Convert simple number array to format required by recharts
-  const chartData = data.map((value, index) => ({ value, index }));
-  
-  return (
-    <motion.div
-      className="w-full"
-      style={{ height: `${height}px` }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-          <Line
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={false}
-          />
-        </LineChart>
-      </ResponsiveContainer>
-    </motion.div>
   );
 };
