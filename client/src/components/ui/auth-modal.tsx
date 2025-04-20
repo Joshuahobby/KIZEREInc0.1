@@ -223,7 +223,51 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
             </DialogHeader>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4 relative z-10">
+          {/* Google Sign-In Button - PROMINENT (Above tabs) */}
+          <div className="px-6 pt-3 pb-4">
+            <div className="text-xs text-center mb-2 text-primary font-medium">
+              Recommended
+            </div>
+            <Button 
+              type="button" 
+              className="w-full h-14 bg-[#00BFFF] hover:bg-[#00A0D6] text-white transition-all shadow-md hover:shadow-lg rounded-md border-0 flex items-center justify-center"
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading}
+            >
+              {googleLoading ? (
+                <>
+                  <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                  <span className="text-base font-medium">Signing in with Google...</span>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-center bg-white p-1 rounded-full mr-3">
+                    <SiGoogle className="h-5 w-5 text-gray-700" />
+                  </div>
+                  <span className="text-base font-medium">Continue with Google</span>
+                </>
+              )}
+            </Button>
+            <div className="flex items-center justify-center mt-2">
+              <ShieldCheck className="h-4 w-4 text-primary mr-1" />
+              <p className="text-xs text-muted-foreground">
+                Fast, secure login with your Google account
+              </p>
+            </div>
+          </div>
+
+          <div className="relative mb-4 mx-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-3 text-muted-foreground font-medium">
+                Or use email/password
+              </span>
+            </div>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1 mx-auto max-w-[90%]">
               <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Sign In</TabsTrigger>
               <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Register</TabsTrigger>
@@ -314,36 +358,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     )}
                   </Button>
 
-                  <div className="relative mt-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
 
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full h-10 font-medium border-muted/50 bg-background/80 hover:bg-background/90 hover:border-muted" 
-                    onClick={handleGoogleSignIn}
-                    disabled={googleLoading}
-                  >
-                    {googleLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in with Google...
-                      </>
-                    ) : (
-                      <>
-                        <SiGoogle className="mr-2 h-4 w-4 text-red-500" />
-                        Sign in with Google
-                      </>
-                    )}
-                  </Button>
                 </form>
               </Form>
             </TabsContent>
@@ -483,36 +498,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     )}
                   </Button>
 
-                  <div className="relative mt-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                        Or continue with
-                      </span>
-                    </div>
-                  </div>
 
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="w-full h-10 font-medium border-muted/50 bg-background/80 hover:bg-background/90 hover:border-muted" 
-                    onClick={handleGoogleSignIn}
-                    disabled={googleLoading}
-                  >
-                    {googleLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Signing in with Google...
-                      </>
-                    ) : (
-                      <>
-                        <SiGoogle className="mr-2 h-4 w-4 text-red-500" />
-                        Sign up with Google
-                      </>
-                    )}
-                  </Button>
                 </form>
               </Form>
             </TabsContent>
