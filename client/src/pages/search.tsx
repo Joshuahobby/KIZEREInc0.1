@@ -33,7 +33,7 @@ export default function Search() {
                              searchType === "lost" ? "Lost" : "Found");
     }
     
-    if (category) {
+    if (category && category !== "any") {
       params.append("category", category);
     }
     
@@ -149,7 +149,7 @@ export default function Search() {
                                   <SelectValue placeholder="Any Category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">Any Category</SelectItem>
+                                  <SelectItem value="any">Any Category</SelectItem>
                                   <SelectItem value="electronics">Electronics</SelectItem>
                                   <SelectItem value="documents">Documents</SelectItem>
                                   <SelectItem value="jewelry">Jewelry</SelectItem>
@@ -168,7 +168,7 @@ export default function Search() {
                                   <SelectValue placeholder="Any Time" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">Any Time</SelectItem>
+                                  <SelectItem value="any">Any Time</SelectItem>
                                   <SelectItem value="today">Today</SelectItem>
                                   <SelectItem value="week">This Week</SelectItem>
                                   <SelectItem value="month">This Month</SelectItem>
