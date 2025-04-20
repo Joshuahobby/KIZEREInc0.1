@@ -44,7 +44,7 @@ export const NotificationCenter = ({
   const filteredNotifications = filter === "all" 
     ? notifications 
     : notifications.filter(notification => {
-        if (filter === "unread") return !notification.read;
+        if (filter === "unread") return !notification.isRead;
         return notification.type === filter;
       });
   
@@ -138,11 +138,11 @@ export const NotificationCenter = ({
                       delay: index * 0.05,
                       ease: "easeOut" 
                     }}
-                    className={`py-3 border-b border-border/40 last:border-0 ${!notification.read ? 'bg-primary/5' : ''}`}
+                    className={`py-3 border-b border-border/40 last:border-0 ${!notification.isRead ? 'bg-primary/5' : ''}`}
                   >
                     <div className="relative flex items-start space-x-3">
                       <div className="relative">
-                        <div className={`h-10 w-10 rounded-full bg-muted/50 border border-border/50 flex items-center justify-center ${!notification.read ? 'ring-2 ring-primary/30' : ''}`}>
+                        <div className={`h-10 w-10 rounded-full bg-muted/50 border border-border/50 flex items-center justify-center ${!notification.isRead ? 'ring-2 ring-primary/30' : ''}`}>
                           {getNotificationIcon(notification.type)}
                         </div>
                       </div>
@@ -151,7 +151,7 @@ export const NotificationCenter = ({
                           <div className="flex justify-between">
                             <p className="text-sm font-medium text-foreground flex items-center">
                               {notification.title}
-                              {!notification.read && (
+                              {!notification.isRead && (
                                 <span className="ml-2 inline-block h-2 w-2 rounded-full bg-primary" />
                               )}
                             </p>
@@ -165,7 +165,7 @@ export const NotificationCenter = ({
                           
                           {/* Action buttons */}
                           <div className="mt-2 flex space-x-2">
-                            {!notification.read && (
+                            {!notification.isRead && (
                               <Button 
                                 variant="ghost" 
                                 size="sm"

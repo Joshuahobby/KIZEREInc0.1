@@ -106,7 +106,7 @@ export const ItemsTable = ({
       const searchLower = searchTerm.toLowerCase();
       return (
         item.name.toLowerCase().includes(searchLower) ||
-        item.serialNumber?.toLowerCase().includes(searchLower) ||
+        item.uniqueIdentifier?.toLowerCase().includes(searchLower) ||
         item.category.toLowerCase().includes(searchLower) ||
         item.location?.toLowerCase().includes(searchLower)
       );
