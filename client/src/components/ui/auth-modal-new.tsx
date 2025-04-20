@@ -159,38 +159,26 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       }
       
       // Send the Google auth data to our backend
-      try {
-        const response = await fetch("/api/auth/google", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email: userInfo.email,
-            name: userInfo.displayName || userInfo.email.split('@')[0],
-            uid: userInfo.uid,
-            token: userInfo.token,
-            photoURL: userInfo.photoURL
-          }),
-          credentials: "include"
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || "Failed to authenticate with Google");
-        }
-      } catch (backendError) {
-        console.error("Backend authentication error:", backendError);
-        toast({
-          title: "Authentication Failed",
-          description: backendError.message || "Server error during authentication. Please try again.",
-          variant: "destructive",
-        });
-        setGoogleLoading(false);
-        return;
+      const response = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userInfo.email,
+          name: userInfo.displayName || userInfo.email.split('@')[0],
+          uid: userInfo.uid,
+          token: userInfo.token,
+          photoURL: userInfo.photoURL
+        }),
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to authenticate with Google");
       }
       
-      // Process the user data returned from our backend
       const userData = await response.json();
       
       // Update auth context
