@@ -6,9 +6,9 @@ import { z } from "zod";
 import { 
   Dialog, 
   DialogContent, 
-  DialogDescription, 
   DialogHeader, 
-  DialogTitle 
+  DialogTitle,
+  DialogDescription 
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import { SiGoogle } from "react-icons/si";
 import { AuthModel } from "@/models/auth.model";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { auth, signInWithGoogle } from "@/lib/firebase";
+import { signInWithGoogle } from "@/lib/firebase";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
 
 // Use types from our authentication model
@@ -41,7 +41,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
-  const [location, navigate] = useLocation();
+  const [_, navigate] = useLocation();
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -140,29 +140,22 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[500px] md:max-w-[700px] overflow-y-auto max-h-[90vh] p-0 rounded-xl">
-        <div className="relative">
-          {/* Normal background */}
-          <div className="absolute inset-0 bg-background z-0"></div>
+      <DialogContent className="sm:max-w-[500px] md:max-w-[700px] p-0 rounded-xl overflow-hidden">
+        <div className="p-6">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-xl font-semibold text-center">
+              {activeTab === "login" ? "Welcome Back" : "Join KIZERE"}
+            </DialogTitle>
+            <DialogDescription className="text-center mx-auto max-w-xs">
+              {activeTab === "login" 
+                ? "Secure access to your registered items and protection features" 
+                : "Create an account to start tracking and protecting your valuable possessions"}
+            </DialogDescription>
+          </DialogHeader>
           
-          {/* Simple header */}
-          <div className="relative z-10 px-6 pt-6">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold text-center mb-2">
-                {activeTab === "login" ? "Welcome Back" : "Join KIZERE"}
-              </DialogTitle>
-              <DialogDescription className="text-center max-w-xs mx-auto">
-                {activeTab === "login" 
-                  ? "Secure access to your registered items and protection features" 
-                  : "Create an account to start tracking and protecting your valuable possessions"}
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-
-          {/* Side by side layout */}
-          <div className="flex flex-col md:flex-row p-6 gap-6">
-            {/* Left side: Google Button */}
-            <div className="md:w-1/2 flex flex-col justify-center items-center border-r border-border pr-4">
+          <div className="flex flex-col md:flex-row gap-6 mt-4">
+            {/* Left side - Google sign-in */}
+            <div className="md:w-1/3 flex flex-col items-center justify-center border-r border-border pr-4">
               <h3 className="text-lg font-medium mb-4">Quick Access</h3>
               <button 
                 type="button" 
@@ -173,7 +166,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                 {googleLoading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="font-medium">Signing in with Google...</span>
+                    <span className="font-medium">Signing in...</span>
                   </>
                 ) : (
                   <>
@@ -183,17 +176,21 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                 )}
               </button>
             </div>
-
-            {/* Right side: Email/Password forms */}
-            <div className="md:w-1/2">
-              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "login" | "register")} className="w-full relative z-10">
-                <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50 p-1">
-                  <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Sign In</TabsTrigger>
-                  <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm text-sm font-medium">Register</TabsTrigger>
+            
+            {/* Right side - Forms */}
+            <div className="md:w-2/3">
+              <Tabs 
+                value={activeTab} 
+                onValueChange={(value) => setActiveTab(value as "login" | "register")}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="login">Sign In</TabsTrigger>
+                  <TabsTrigger value="register">Register</TabsTrigger>
                 </TabsList>
-
+                
                 {/* Login Form */}
-                <TabsContent value="login" className="pb-6 max-h-[65vh] overflow-y-auto">
+                <TabsContent value="login">
                   <Form {...loginForm}>
                     <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
                       <FormField
@@ -201,7 +198,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm font-medium">Username / Phone / Email</FormLabel>
+                            <FormLabel>Username / Phone / Email</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -247,13 +244,13 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                       />
 
                       <div className="flex justify-between items-center text-sm mt-3">
-                        <div className="flex items-center bg-muted/10 border border-muted/20 rounded-md px-2 py-1">
+                        <div className="flex items-center space-x-2">
                           <input 
                             type="checkbox" 
                             id="remember" 
-                            className="rounded border-input h-4 w-4 text-primary accent-primary"
+                            className="rounded border-input h-4 w-4 text-primary"
                           />
-                          <label htmlFor="remember" className="ml-2 text-muted-foreground">
+                          <label htmlFor="remember" className="text-muted-foreground">
                             Remember me
                           </label>
                         </div>
@@ -264,7 +261,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
                       <Button 
                         type="submit" 
-                        className="w-full h-10 font-medium shadow-sm transition-all hover:shadow-md" 
+                        className="w-full h-10 mt-2" 
                         disabled={loginMutation.isPending}
                       >
                         {loginMutation.isPending ? (
@@ -279,9 +276,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     </form>
                   </Form>
                 </TabsContent>
-
+                
                 {/* Registration Form */}
-                <TabsContent value="register" className="pb-6 max-h-[65vh] overflow-y-auto">
+                <TabsContent value="register">
                   <Form {...registerForm}>
                     <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-3">
                       <FormField
@@ -289,7 +286,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         name="fullName"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm font-medium">Full Name</FormLabel>
+                            <FormLabel>Full Name</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -306,7 +303,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm font-medium">Phone Number or Email</FormLabel>
+                            <FormLabel>Phone Number or Email</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -365,7 +362,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         name="confirmPassword"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
+                            <FormLabel>Confirm Password</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -389,11 +386,11 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         )}
                       />
 
-                      <div className="flex items-center space-x-2 mt-4 p-2 rounded-md bg-muted/10 border border-muted/20">
+                      <div className="flex items-center space-x-2 mt-2">
                         <input 
                           type="checkbox" 
                           id="terms" 
-                          className="rounded border-input h-4 w-4 text-primary accent-primary"
+                          className="rounded border-input h-4 w-4 text-primary"
                         />
                         <label htmlFor="terms" className="text-sm text-muted-foreground">
                           I agree to the <a href="#" className="text-primary hover:underline font-medium">Terms of Service</a> and <a href="#" className="text-primary hover:underline font-medium">Privacy Policy</a>
@@ -402,7 +399,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
                       <Button 
                         type="submit" 
-                        className="w-full h-10 font-medium shadow-sm transition-all hover:shadow-md" 
+                        className="w-full h-10 mt-2" 
                         disabled={registerMutation.isPending}
                       >
                         {registerMutation.isPending ? (
