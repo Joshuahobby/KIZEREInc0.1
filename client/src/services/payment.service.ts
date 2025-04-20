@@ -60,14 +60,18 @@ export class PaymentService {
    */
   static async initializePayment(paymentDetails: InitializePaymentRequest): Promise<InitializePaymentResponse> {
     try {
+      console.log("Initializing payment with details:", paymentDetails);
       const response = await apiRequest("POST", "/api/payments/initialize", paymentDetails);
       
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Payment initialization failed with response:", errorData);
         throw new Error(errorData.message || "Failed to initialize payment");
       }
       
-      return await response.json();
+      const responseData = await response.json();
+      console.log("Payment initialization successful:", responseData);
+      return responseData;
     } catch (error) {
       console.error("Payment initialization error:", error);
       throw error instanceof Error ? error : new Error("Failed to initialize payment");
@@ -103,7 +107,19 @@ export class PaymentService {
    */
   static async getPaymentHistory(): Promise<PaymentHistoryItem[]> {
     try {
-      const response = await apiRequest("GET", "/api/payments/history");
+      // First try /api/payments/history endpoint
+      try {
+        const response = await apiRequest("GET", "/api/payments/history");
+        
+        if (response.ok) {
+          return await response.json();
+        }
+      } catch (innerError) {
+        console.warn("Could not fetch from /api/payments/history, trying /api/payments", innerError);
+      }
+      
+      // Fall back to /api/payments endpoint
+      const response = await apiRequest("GET", "/api/payments");
       
       if (!response.ok) {
         const errorData = await response.json();

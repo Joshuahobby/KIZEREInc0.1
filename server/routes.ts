@@ -528,11 +528,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Base redirect URL - the frontend will handle success/failure
-      const baseUrl = process.env.NODE_ENV === 'production' 
-        ? 'https://your-production-domain.com' 
-        : 'http://localhost:5000';
+      // Use the request origin or a default host
+      const baseUrl = req.headers.origin || 
+                     (process.env.NODE_ENV === 'production' 
+                      ? 'https://kizere.replit.app' 
+                      : 'http://localhost:5000');
       
-      const redirectUrl = `${baseUrl}/payment-callback`;
+      const redirectUrl = `${baseUrl}/payment-status`;
       
       // Initialize payment with Flutterwave
       const flutterwavePayment = await initializePayment({

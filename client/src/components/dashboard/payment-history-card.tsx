@@ -18,9 +18,10 @@ import { Loader2, CreditCard, ArrowRight } from "lucide-react";
 export function PaymentHistoryCard() {
   const [, setLocation] = useLocation();
   const { data: payments, isLoading, isError } = useQuery({
-    queryKey: ["/api/payments"],
+    queryKey: ["/api/payments/history"],
     queryFn: () => PaymentService.getPaymentHistory(),
     staleTime: 60000, // 1 minute
+    retry: 2, // Retry failed requests twice
   });
 
   // Show only the latest 5 payments
