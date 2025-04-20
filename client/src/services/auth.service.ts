@@ -6,14 +6,15 @@
  */
 import { 
   auth, 
-  signInWithGoogle as firebaseSignInWithGoogle, 
-  firebaseSignOut,
-  extractUserInfo
-} from "@/lib/firebase";
-import type { UserCredential } from "firebase/auth";
-import { queryClient } from "@/lib/queryClient";
-import { apiRequest } from "@/lib/queryClient";
+  FirebaseService
+} from "../lib/firebase";
+import type { UserCredential, User as FirebaseUser } from "firebase/auth";
+import { queryClient } from "../lib/queryClient";
+import { apiRequest } from "../lib/queryClient";
 import { User } from "@shared/schema";
+import { createLogger } from "../lib/logger";
+
+const logger = createLogger('AuthService');
 
 export interface AuthUserInfo {
   uid: string;
@@ -36,14 +37,14 @@ export class AuthService {
    */
   static async signInWithGoogle(): Promise<Omit<User, "password">> {
     try {
-      console.log("AuthService: Starting Google sign-in flow");
+      logger.info("Starting Google sign-in flow");
       
       // Trigger Firebase Google auth popup
-      const result = await firebaseSignInWithGoogle();
+      const result = await FirebaseService.signInWithGooglePopup();
       
       // Extract user info from result
-      const userInfo = extractUserInfo(result);
-      console.log("AuthService: Google sign-in successful", userInfo);
+      const userInfo = await this.extractUserInfo(result);
+      logger.info("Google sign-in successful", { email: userInfo.email });
       
       if (!userInfo.email) {
         throw new Error("Could not get email from Google. Please try again.");
@@ -52,7 +53,7 @@ export class AuthService {
       // Synchronize with backend
       return await this.syncGoogleAuthWithBackend(userInfo);
     } catch (error: any) {
-      console.error("AuthService: Google sign-in error:", error);
+      logger.error("Google sign-in error", { error });
       throw error instanceof Error 
         ? error 
         : new Error("Sign-in failed. Please try again.");
@@ -60,24 +61,43 @@ export class AuthService {
   }
   
   /**
+   * Extract user info from Firebase user credential
+   * 
+   * @param result Firebase UserCredential
+   * @returns AuthUserInfo object
+   */
+  private static async extractUserInfo(result: UserCredential): Promise<AuthUserInfo> {
+    const { user } = result;
+    const token = await user.getIdToken();
+    
+    return {
+      uid: user.uid,
+      displayName: user.displayName || '',
+      email: user.email || '',
+      photoURL: user.photoURL,
+      token
+    };
+  }
+  
+  /**
    * Sign out the user from both Firebase and the backend
    */
   static async signOut(): Promise<void> {
     try {
-      console.log("AuthService: Signing out user");
+      logger.info("Signing out user");
       
       // Sign out from backend session
       await apiRequest("POST", "/api/logout");
       
       // Sign out from Firebase
-      await firebaseSignOut();
+      await FirebaseService.signOut();
       
       // Clear user data from cache
       queryClient.setQueryData(["/api/user"], null);
       
-      console.log("AuthService: User signed out successfully");
+      logger.info("User signed out successfully");
     } catch (error) {
-      console.error("AuthService: Sign out error:", error);
+      logger.error("Sign out error", { error });
       throw error instanceof Error 
         ? error 
         : new Error("Sign out failed. Please try again.");

@@ -1,187 +1,213 @@
 /**
- * Error Service
+ * Centralized Error Service
  * 
- * A centralized service for handling errors consistently across the application.
- * This service provides standardized error handling, logging, and user feedback.
+ * Provides standardized error handling, tracking, and reporting
+ * across the application.
  */
-import { useToast } from "@/hooks/use-toast";
+import { createLogger } from '../lib/logger';
 
-// Define error types
-export interface ApiError extends Error {
-  status?: number;
-  code?: string;
-  details?: Record<string, any>;
-  errorId?: string;
+const logger = createLogger('ErrorService');
+
+// Unique error ID generator
+function generateErrorId(): string {
+  return `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-export interface ErrorDetails {
-  message: string;
-  title?: string;
-  status?: number;
-  code?: string;
-  details?: Record<string, any>;
-  errorId?: string;
+// Error types for categorization
+export type ErrorCategory = 
+  | 'auth' 
+  | 'api' 
+  | 'validation' 
+  | 'network' 
+  | 'payment'
+  | 'database'
+  | 'unknown';
+
+// Base application error class
+export class AppError extends Error {
+  public readonly id: string;
+  public readonly category: ErrorCategory;
+  public readonly timestamp: Date;
+  public readonly originalError?: Error;
+
+  constructor(
+    message: string, 
+    category: ErrorCategory = 'unknown', 
+    originalError?: Error
+  ) {
+    super(message);
+    this.name = 'AppError';
+    this.id = generateErrorId();
+    this.category = category;
+    this.timestamp = new Date();
+    this.originalError = originalError;
+
+    // Log the error immediately upon creation
+    logger.error(`${this.category.toUpperCase()} ERROR [${this.id}]: ${this.message}`, {
+      errorId: this.id,
+      category: this.category,
+      originalError: this.originalError ? {
+        name: this.originalError.name,
+        message: this.originalError.message,
+        stack: this.originalError.stack
+      } : undefined
+    });
+  }
+}
+
+// Specialized error classes
+export class AuthError extends AppError {
+  constructor(message: string, originalError?: Error) {
+    super(message, 'auth', originalError);
+    this.name = 'AuthError';
+  }
+}
+
+export class ApiError extends AppError {
+  public readonly statusCode?: number;
+  
+  constructor(message: string, statusCode?: number, originalError?: Error) {
+    super(message, 'api', originalError);
+    this.name = 'ApiError';
+    this.statusCode = statusCode;
+  }
+}
+
+export class ValidationError extends AppError {
+  public readonly fields?: Record<string, string>;
+  
+  constructor(message: string, fields?: Record<string, string>, originalError?: Error) {
+    super(message, 'validation', originalError);
+    this.name = 'ValidationError';
+    this.fields = fields;
+  }
+}
+
+export class NetworkError extends AppError {
+  constructor(message: string, originalError?: Error) {
+    super(message, 'network', originalError);
+    this.name = 'NetworkError';
+  }
+}
+
+export class PaymentError extends AppError {
+  public readonly transactionId?: string;
+  
+  constructor(message: string, transactionId?: string, originalError?: Error) {
+    super(message, 'payment', originalError);
+    this.name = 'PaymentError';
+    this.transactionId = transactionId;
+  }
+}
+
+export class DatabaseError extends AppError {
+  public readonly query?: string;
+  
+  constructor(message: string, query?: string, originalError?: Error) {
+    super(message, 'database', originalError);
+    this.name = 'DatabaseError';
+    this.query = query;
+  }
 }
 
 /**
- * Error Service class
- * Provides static methods for consistent error handling
+ * ErrorService for centralized error handling and reporting
  */
 export class ErrorService {
-  private static toast = useToast().toast;
-  private static errorCounter = 0;
-  
   /**
-   * Generate a sequential error ID
-   * 
-   * @returns A unique error ID for tracking
+   * Report an error to monitoring system
+   * @param error The error to report
    */
-  private static generateErrorId(): string {
-    const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
-    const counter = String(++this.errorCounter).padStart(4, '0');
-    return `ERR-${timestamp}-${counter}`;
-  }
-  
-  /**
-   * Handle API errors with consistent formatting
-   * 
-   * @param error The error to handle
-   * @param fallbackMessage Optional fallback message if error doesn't have one
-   * @returns Formatted error details
-   */
-  static handleApiError(error: unknown, fallbackMessage = "An unexpected error occurred"): ErrorDetails {
-    console.error("API Error:", error);
-    
-    // Generate unique error ID for tracking
-    const errorId = this.generateErrorId();
-    
-    if (error instanceof Response) {
-      return {
-        message: error.statusText || fallbackMessage,
-        status: error.status,
-        errorId
-      };
+  static reportError(error: AppError | Error): void {
+    if (!(error instanceof AppError)) {
+      error = new AppError(error.message, 'unknown', error);
     }
     
-    if (this.isApiError(error)) {
-      return {
-        message: error.message || fallbackMessage,
-        status: error.status,
-        code: error.code,
-        details: error.details,
-        errorId: error.errorId || errorId
-      };
-    }
+    logger.error(`Error reported: ${error.message}`, { error });
     
-    if (error instanceof Error) {
-      return {
-        message: error.message || fallbackMessage,
-        title: error.name || "Error",
-        errorId
-      };
-    }
-    
-    // For unknown error types
-    return {
-      message: typeof error === 'string' ? error : fallbackMessage,
-      errorId
-    };
-  }
-  
-  /**
-   * Display an error toast notification with consistent formatting
-   * 
-   * @param error The error to display
-   * @param fallbackMessage Optional fallback message if error doesn't have one
-   */
-  static notifyError(error: unknown, fallbackMessage = "An unexpected error occurred"): void {
-    const errorDetails = this.handleApiError(error, fallbackMessage);
-    
-    this.toast({
-      variant: "destructive",
-      title: errorDetails.title || "Error",
-      description: errorDetails.message,
-    });
-    
-    // For development, log additional details to console
-    if (process.env.NODE_ENV !== 'production') {
-      console.error("Error Details:", errorDetails);
+    // TODO: Implement external error reporting service integration
+    // if in production environment
+    if (import.meta.env.PROD) {
+      // Example: 
+      // sendToErrorMonitoring(error);
+      // or 
+      // sendToCentralizedLogging(error);
     }
   }
   
   /**
-   * Create an API error object with standardized format
-   * 
-   * @param message Error message
-   * @param status HTTP status code
-   * @param code Error code
-   * @param details Additional error details
-   * @returns API error object
+   * Handle API fetch error and transform into appropriate error type
+   * @param error Original fetch error
+   * @param endpoint API endpoint that was called
    */
-  static createApiError(message: string, status?: number, code?: string, details?: Record<string, any>): ApiError {
-    const error = new Error(message) as ApiError;
-    error.status = status;
-    error.code = code;
-    error.details = details;
-    error.errorId = this.generateErrorId();
-    return error;
-  }
-  
-  /**
-   * Check if an error is an API error
-   * 
-   * @param error Error to check
-   * @returns True if the error is an API error
-   */
-  static isApiError(error: unknown): error is ApiError {
-    return error instanceof Error && ('status' in error || 'code' in error);
-  }
-  
-  /**
-   * Extract error message from a response
-   * 
-   * @param response Response object
-   * @returns Error message
-   */
-  static async extractErrorMessageFromResponse(response: Response): Promise<string> {
-    try {
-      const data = await response.json();
-      return data.message || data.error || response.statusText || 'An error occurred';
-    } catch (e) {
-      return response.statusText || 'An error occurred';
+  static handleApiError(error: Error, endpoint: string): AppError {
+    if (error instanceof AppError) {
+      return error;
     }
+    
+    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      return new NetworkError(
+        `Network error while calling ${endpoint}. Please check your connection.`, 
+        error
+      );
+    }
+    
+    return new ApiError(
+      `API error while calling ${endpoint}: ${error.message}`, 
+      undefined, 
+      error
+    );
   }
   
   /**
-   * Create error from response
-   * 
-   * @param response Response object
-   * @returns API error
+   * Handle authentication error
+   * @param error Original error
+   * @param operation What auth operation was being performed
    */
-  static async createErrorFromResponse(response: Response): Promise<ApiError> {
-    const message = await this.extractErrorMessageFromResponse(response);
-    return this.createApiError(message, response.status);
+  static handleAuthError(error: Error, operation: string): AuthError {
+    return new AuthError(
+      `Authentication failed during ${operation}: ${error.message}`,
+      error
+    );
   }
-}
-
-/**
- * HOC error wrapper for async functions
- * Use this to wrap async functions with consistent error handling
- * 
- * @param fn Function to wrap
- * @param errorHandler Error handler function
- * @returns Wrapped function
- */
-export function withErrorHandling<T extends (...args: any[]) => Promise<any>>(
-  fn: T,
-  errorHandler: (error: unknown) => void = ErrorService.notifyError
-): (...args: Parameters<T>) => Promise<ReturnType<T> | null> {
-  return async (...args: Parameters<T>): Promise<ReturnType<T> | null> => {
-    try {
-      return await fn(...args);
-    } catch (error) {
-      errorHandler(error);
-      return null;
+  
+  /**
+   * Handle payment processing error
+   * @param error Original error
+   * @param transactionId Optional transaction ID
+   */
+  static handlePaymentError(error: Error, transactionId?: string): PaymentError {
+    return new PaymentError(
+      `Payment processing failed: ${error.message}`,
+      transactionId,
+      error
+    );
+  }
+  
+  /**
+   * Get a user-friendly error message regardless of error type
+   * @param error Any error object
+   */
+  static getUserFriendlyMessage(error: any): string {
+    if (error instanceof AppError) {
+      switch (error.category) {
+        case 'auth':
+          return 'Authentication failed. Please check your credentials and try again.';
+        case 'network':
+          return 'Network connection issue. Please check your internet connection and try again.';
+        case 'validation':
+          return 'Please check the form for errors and try again.';
+        case 'payment':
+          return 'Payment processing failed. Please try again or use a different payment method.';
+        case 'api':
+          return 'The service is temporarily unavailable. Please try again later.';
+        case 'database':
+          return 'A data error occurred. Please contact support if the issue persists.';
+        default:
+          return 'An unexpected error occurred. Please try again later.';
+      }
     }
-  };
+    
+    return error?.message || 'An unknown error occurred. Please try again later.';
+  }
 }

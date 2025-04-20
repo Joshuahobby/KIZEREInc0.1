@@ -7,8 +7,12 @@ import {
 import { insertUserSchema, User, InsertUser, UserLogin } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { auth, firebaseSignOut, extractUserInfo } from "@/lib/firebase";
+import { auth, FirebaseService } from "../lib/firebase";
+import { AuthService } from "../services/auth.service";
 import { useLocation } from "wouter";
+import { createLogger } from "../lib/logger";
+
+const logger = createLogger('useAuth');
 
 type AuthContextType = {
   user: Omit<User, "password"> | null;
@@ -56,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
-        console.log("Firebase user authenticated:", firebaseUser);
+        logger.info("Firebase user authenticated", { uid: firebaseUser.uid });
         
         try {
           // Extract user info from Firebase user
@@ -70,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           // Don't proceed if email is missing
           if (!userInfo.email) {
-            console.error("No email from Firebase auth");
+            logger.error("No email from Firebase auth");
             return;
           }
           
@@ -104,10 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             description: `Welcome, ${userData.fullName || userData.username}!`,
           });
         } catch (error) {
-          console.error("Error syncing Firebase auth with backend:", error);
+          logger.error("Error syncing Firebase auth with backend", { error });
         }
       } else {
-        console.log("No Firebase user authenticated");
+        logger.debug("No Firebase user authenticated");
       }
     });
     
@@ -170,11 +174,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      // Sign out from backend session
-      await apiRequest("POST", "/api/logout");
-      
-      // Also sign out from Firebase
-      await firebaseSignOut();
+      logger.info("Starting logout process");
+      // Use AuthService for logout
+      await AuthService.signOut();
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/user"], null);
@@ -184,8 +186,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Redirect to landing page after logout
       window.location.href = "/";
+      logger.info("Logout completed successfully");
     },
     onError: (error: Error) => {
+      logger.error("Logout failed", { error });
       toast({
         title: "Logout failed",
         description: error.message,
