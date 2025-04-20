@@ -51,7 +51,7 @@ export class DashboardService {
       // Calculate total revenue (only from successful payments)
       const totalRevenue = allPayments
         .filter(p => p.status === 'successful')
-        .reduce((total, payment) => total + payment.amount, 0);
+        .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
       
       // Get this month's and last month's revenue for comparison
       const now = new Date();

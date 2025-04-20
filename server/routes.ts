@@ -40,6 +40,7 @@ import {
 // Import service layer
 import { UserService } from "./services/user.service";
 import { PaymentService } from "./services/payment.service";
+import { DashboardService } from "./services/dashboard.service";
 
 // Create logger for routes
 const logger = createLogger('Routes');
@@ -1495,6 +1496,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Admin payments listing error:", error);
       res.status(500).json({ 
         message: "Failed to fetch payment transactions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Dashboard API
+  // Get admin dashboard payment summary
+  app.get("/api/admin/payments/summary", requireAdmin, async (req, res) => {
+    try {
+      const dashboardService = new DashboardService();
+      const summaryData = await dashboardService.getAdminPaymentSummary();
+      res.json(summaryData);
+    } catch (error) {
+      logger.error('Error fetching admin payment summary', { error });
+      res.status(500).json({ 
+        message: "Failed to fetch payment summary data",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Get user dashboard stats
+  app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const userRole = req.user!.role as any; // TODO: Fix typing
+      
+      const dashboardService = new DashboardService();
+      const dashboardStats = await dashboardService.getUserDashboardStats(userId, userRole);
+      res.json(dashboardStats);
+    } catch (error) {
+      logger.error('Error fetching user dashboard stats', { error, userId: req.user?.id });
+      res.status(500).json({ 
+        message: "Failed to fetch dashboard statistics",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
