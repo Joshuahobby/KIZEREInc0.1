@@ -1,5 +1,5 @@
 import { storage } from '../storage';
-import { createLogger } from '../../client/src/lib/logger';
+import { createLogger } from '../utils/logger';
 import { UserRole } from '../../shared/schema';
 
 const logger = createLogger('DashboardService');

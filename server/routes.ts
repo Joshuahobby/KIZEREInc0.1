@@ -1523,7 +1523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user!.id;
       const userRole = req.user!.role as any; // TODO: Fix typing
       
-      const dashboardService = new DashboardService();
+      // Use the imported singleton instance of dashboardService
       const dashboardStats = await dashboardService.getUserDashboardStats(userId, userRole);
       res.json(dashboardStats);
     } catch (error) {
