@@ -19,8 +19,7 @@ import { SiGoogle } from "react-icons/si";
 import { AuthModel } from "@/models/auth.model";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { signInWithGoogle, extractUserInfo } from "@/lib/firebase";
-import { queryClient } from "@/lib/queryClient";
+import { AuthService } from "@/services/auth.service";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
 
 // Use types from our authentication model
