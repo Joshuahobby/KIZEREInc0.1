@@ -201,18 +201,13 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px] md:max-w-[550px] overflow-y-auto max-h-[90vh] p-0 rounded-xl">
         <div className="relative">
-          {/* Modern gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background/90 z-0"></div>
+          {/* Normal background */}
+          <div className="absolute inset-0 bg-background z-0"></div>
           
-          {/* Header with enhanced brand identity */}
+          {/* Simple header */}
           <div className="relative z-10 px-6 pt-6">
-            <div className="flex justify-center mb-3">
-              <div className="rounded-full bg-primary/10 p-3 mb-2 shadow-sm">
-                <ShieldCheck className="h-8 w-8 text-primary" />
-              </div>
-            </div>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-center mb-2">
+              <DialogTitle className="text-xl font-semibold text-center mb-2">
                 {activeTab === "login" ? "Welcome Back" : "Join KIZERE"}
               </DialogTitle>
               <DialogDescription className="text-center max-w-xs mx-auto">
@@ -277,7 +272,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                           <div className="relative">
                             <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
+                              className="pl-10 h-10" 
                               placeholder="Enter your username, phone, or email" 
                               {...field} 
                             />
@@ -298,7 +293,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                           <div className="relative">
                             <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10 pr-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
+                              className="pl-10 h-10" 
                               type={showPassword ? "text" : "password"} 
                               placeholder="Enter your password" 
                               {...field} 
@@ -366,7 +361,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         <FormControl>
                           <div className="relative">
                             <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
-                            <Input className="pl-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" placeholder="Enter your full name" {...field} />
+                            <Input className="pl-10 h-10" placeholder="Enter your full name" {...field} />
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -384,7 +379,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                           <div className="relative">
                             <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
+                              className="pl-10 h-10" 
                               placeholder="e.g. +250 xxx xxx xxx or your@email.com" 
                               {...field} 
                             />
@@ -405,7 +400,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                           <div className="relative">
                             <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10 pr-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
+                              className="pl-10 h-10" 
                               type={showPassword ? "text" : "password"} 
                               placeholder="Create a password" 
                               {...field} 
@@ -443,7 +438,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                           <div className="relative">
                             <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10 pr-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
+                              className="pl-10 h-10" 
                               type={showConfirmPassword ? "text" : "password"} 
                               placeholder="Confirm your password" 
                               {...field} 
