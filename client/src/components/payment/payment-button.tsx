@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Button, ButtonProps } from "@/components/ui/button";
-import { PaymentModal } from "./payment-modal";
-import { InitializePaymentRequest } from "@/services/payment.service";
-import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { PaymentModal } from "./payment-modal";
+import { InitializePaymentRequest, PaymentService } from "@/services/payment.service";
+import { PaymentType } from "@shared/schema";
 
 interface PaymentButtonProps extends Omit<ButtonProps, "onClick"> {
-  paymentType: "registration" | "lost_report";
+  paymentType: PaymentType;
   amount?: number; // If not provided, will use default from server
   itemId?: number;
   reportId?: number;
@@ -26,61 +26,61 @@ export function PaymentButton({
   onPaymentCancel,
   showAmount = true,
   children,
-  ...buttonProps
+  className,
+  ...props
 }: PaymentButtonProps) {
-  const { toast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Payment details
+  
+  // Calculate payment amount if not provided
+  const paymentAmount = amount ?? PaymentService.getPaymentAmount(paymentType);
+  
+  // Payment details for the modal
   const paymentDetails: Omit<InitializePaymentRequest, "amount"> & { amount: number } = {
     type: paymentType,
-    amount: amount || (paymentType === "registration" ? 500 : 500), // Default amounts
-    ...(itemId && { itemId }),
-    ...(reportId && { reportId })
+    amount: paymentAmount,
+    ...(itemId ? { itemId } : {}),
+    ...(reportId ? { reportId } : {})
   };
-
-  // Handle button click
+  
+  // Handle button click to open payment modal
   const handleClick = () => {
-    try {
-      setIsLoading(true);
-      if (onPaymentInitiate) {
-        onPaymentInitiate();
-      }
-      setIsModalOpen(true);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to initiate payment process",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
+    setIsLoading(true);
+    if (onPaymentInitiate) {
+      onPaymentInitiate();
     }
+    setIsModalOpen(true);
+    setIsLoading(false);
   };
-
+  
   // Handle payment success
   const handlePaymentSuccess = (transactionRef: string) => {
     if (onPaymentSuccess) {
       onPaymentSuccess(transactionRef);
     }
   };
-
+  
+  // Handle payment cancel
+  const handlePaymentCancel = () => {
+    if (onPaymentCancel) {
+      onPaymentCancel();
+    }
+  };
+  
   return (
     <>
       <Button
         onClick={handleClick}
         disabled={isLoading}
-        {...buttonProps}
+        className={className}
+        {...props}
       >
         {isLoading ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : null}
+        {children || (
           <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Processing...
-          </>
-        ) : (
-          <>
-            {children || `Pay ${showAmount ? `${paymentDetails.amount} RWF` : ''}`}
+            Pay {showAmount ? `${paymentAmount} RWF` : ""}
           </>
         )}
       </Button>
@@ -90,7 +90,7 @@ export function PaymentButton({
         onOpenChange={setIsModalOpen}
         paymentDetails={paymentDetails}
         onPaymentSuccess={handlePaymentSuccess}
-        onPaymentCancel={onPaymentCancel}
+        onPaymentCancel={handlePaymentCancel}
       />
     </>
   );

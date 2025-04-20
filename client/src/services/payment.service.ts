@@ -2,147 +2,157 @@ import { apiRequest } from "@/lib/queryClient";
 import { PaymentType } from "@shared/schema";
 
 /**
- * Payment Fee Response
- */
-export interface PaymentFees {
-  itemRegistration: number;
-  lostItemReport: number;
-  foundItemReport: number;
-  currency: string;
-}
-
-/**
- * Initialize Payment Request
+ * Request interface for payment initialization
  */
 export interface InitializePaymentRequest {
-  amount?: number;
   type: PaymentType;
+  amount?: number; // Optional, server will use default if not provided
   itemId?: number;
   reportId?: number;
-  metadata?: Record<string, any>;
+  redirectUrl?: string; // Optional, will use default if not provided
 }
 
 /**
- * Initialize Payment Response
+ * Response interface for payment initialization
  */
 export interface InitializePaymentResponse {
-  paymentId: number;
   transactionRef: string;
-  amount: number;
-  currency: string;
-  paymentUrl: string | null;
-  redirectUrl: string;
+  paymentUrl: string;
 }
 
 /**
- * Payment Verification Response
+ * Response interface for payment verification
  */
 export interface VerifyPaymentResponse {
-  status: string;
+  status: "successful" | "failed" | "pending" | "cancelled";
   message: string;
-  payment: {
-    id: number;
-    userId: number;
-    amount: number;
-    currency: string;
-    type: string;
-    status: string;
-    transactionId: string | null;
-    transactionRef: string;
-    flutterwaveRef: string | null;
-    itemId: number | null;
-    reportId: number | null;
-    paymentDate: string | null;
-    createdAt: string;
-    metadata: Record<string, any> | null;
-  };
+  transactionRef: string;
+  amount?: number;
+  paymentDate?: string;
 }
 
 /**
- * Payment History Item
+ * Payment history item interface
  */
 export interface PaymentHistoryItem {
   id: number;
   userId: number;
+  transactionRef: string;
   amount: number;
   currency: string;
-  type: string;
   status: string;
-  transactionId: string | null;
-  transactionRef: string;
-  flutterwaveRef: string | null;
-  itemId: number | null;
-  reportId: number | null;
-  paymentDate: string | null;
+  type: string;
+  itemId?: number;
+  reportId?: number;
+  paymentDate?: string;
   createdAt: string;
-  metadata: Record<string, any> | null;
 }
 
 /**
- * Payment Service
- * 
- * Handles payment-related operations for the KIZERE platform
+ * Payment service to handle all payment-related API calls
  */
 export class PaymentService {
   /**
-   * Get payment fee structure
-   * 
-   * @returns Payment fee structure
-   */
-  static async getPaymentFees(): Promise<PaymentFees> {
-    try {
-      const response = await apiRequest("GET", "/api/payments/fees");
-      return await response.json();
-    } catch (error) {
-      console.error("Failed to fetch payment fees:", error);
-      throw new Error("Failed to fetch payment fees");
-    }
-  }
-
-  /**
    * Initialize a payment
    * 
-   * @param paymentData Payment initialization data
-   * @returns Payment initialization response
+   * @param paymentDetails Payment initialization details
+   * @returns Payment initialization response with transaction reference and payment URL
    */
-  static async initializePayment(paymentData: InitializePaymentRequest): Promise<InitializePaymentResponse> {
+  static async initializePayment(paymentDetails: InitializePaymentRequest): Promise<InitializePaymentResponse> {
     try {
-      const response = await apiRequest("POST", "/api/payments/initialize", paymentData);
+      const response = await apiRequest("POST", "/api/payments/initialize", paymentDetails);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to initialize payment");
+      }
+      
       return await response.json();
     } catch (error) {
-      console.error("Failed to initialize payment:", error);
-      throw new Error("Failed to initialize payment");
+      console.error("Payment initialization error:", error);
+      throw error instanceof Error ? error : new Error("Failed to initialize payment");
     }
   }
 
   /**
    * Verify a payment by transaction reference
    * 
-   * @param transactionRef Transaction reference
+   * @param transactionRef The transaction reference to verify
    * @returns Payment verification response
    */
   static async verifyPayment(transactionRef: string): Promise<VerifyPaymentResponse> {
     try {
       const response = await apiRequest("GET", `/api/payments/verify/${transactionRef}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to verify payment");
+      }
+      
       return await response.json();
     } catch (error) {
-      console.error("Failed to verify payment:", error);
-      throw new Error("Failed to verify payment");
+      console.error("Payment verification error:", error);
+      throw error instanceof Error ? error : new Error("Failed to verify payment");
     }
   }
 
   /**
-   * Get user's payment history
+   * Get payment history for the current user
    * 
    * @returns Array of payment history items
    */
   static async getPaymentHistory(): Promise<PaymentHistoryItem[]> {
     try {
-      const response = await apiRequest("GET", "/api/payments");
+      const response = await apiRequest("GET", "/api/payments/history");
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch payment history");
+      }
+      
       return await response.json();
     } catch (error) {
-      console.error("Failed to fetch payment history:", error);
-      throw new Error("Failed to fetch payment history");
+      console.error("Payment history fetch error:", error);
+      throw error instanceof Error ? error : new Error("Failed to fetch payment history");
+    }
+  }
+
+  /**
+   * Get payment status by transaction reference
+   * 
+   * @param transactionRef The transaction reference
+   * @returns Payment details
+   */
+  static async getPaymentStatus(transactionRef: string): Promise<PaymentHistoryItem> {
+    try {
+      const response = await apiRequest("GET", `/api/payments/status/${transactionRef}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch payment status");
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error("Payment status fetch error:", error);
+      throw error instanceof Error ? error : new Error("Failed to fetch payment status");
+    }
+  }
+
+  /**
+   * Calculate payment amount based on payment type
+   * 
+   * @param type Payment type
+   * @returns Payment amount in RWF
+   */
+  static getPaymentAmount(type: PaymentType): number {
+    switch (type) {
+      case "registration":
+        return 1000; // 1,000 RWF for item registration
+      case "lost_report":
+        return 500; // 500 RWF for lost item report
+      default:
+        return 0;
     }
   }
 }

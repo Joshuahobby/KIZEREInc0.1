@@ -87,7 +87,7 @@ export function PaymentModal({
         toast({
           title: "Payment verification",
           description: response.message,
-          variant: response.status === "successful" ? "default" : "destructive"
+          variant: "destructive"
         });
       }
     } catch (error) {

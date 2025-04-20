@@ -517,7 +517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a payment record in pending status
       const payment = await storage.createPayment({
         userId: user.id,
-        amount,
+        amount: amount.toString(),
         currency: "RWF",
         type: validatedData.type,
         status: "pending",
@@ -562,7 +562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transactionRef,
         amount,
         currency: "RWF",
-        paymentUrl: flutterwavePayment.data?.link || null,
+        paymentUrl: flutterwavePayment.data ? flutterwavePayment.data.status === 'success' ? flutterwavePayment.data.link : null : null,
         redirectUrl
       });
     } catch (error) {
