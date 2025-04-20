@@ -433,7 +433,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     name="confirmPassword"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm Password</FormLabel>
+                        <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
