@@ -10,6 +10,8 @@ import LostFound from "@/pages/lost-found";
 import UserManagement from "@/pages/user-management";
 import LandingPage from "@/pages/landing-page";
 import AuthCallback from "@/pages/auth-callback";
+import PaymentStatus from "@/pages/payment-status";
+import PaymentHistory from "@/pages/payment-history";
 import { useAuth } from "@/hooks/use-auth";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -22,6 +24,8 @@ function App() {
   const SearchComponent = () => <Search />;
   const LostFoundComponent = () => <LostFound />;
   const UserManagementComponent = () => <UserManagement />;
+  const PaymentStatusComponent = () => <PaymentStatus />;
+  const PaymentHistoryComponent = () => <PaymentHistory />;
   
   return (
     <ErrorBoundary>
@@ -45,6 +49,10 @@ function App() {
             <ProtectedRoute path="/lost-found/report" component={LostFoundComponent} requiredRole="any" />
             <ProtectedRoute path="/lost-found/report/:type" component={LostFoundComponent} requiredRole="any" />
             <ProtectedRoute path="/user-management" component={UserManagementComponent} requiredRole="Admin" />
+            
+            {/* Payment routes */}
+            <Route path="/payment-status" component={PaymentStatusComponent} />
+            <ProtectedRoute path="/payment-history" component={PaymentHistoryComponent} requiredRole="any" />
             
             {/* 404 route */}
             <Route component={NotFound} />

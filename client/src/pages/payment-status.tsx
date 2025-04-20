@@ -55,7 +55,7 @@ export default function PaymentStatus() {
           toast({
             title: "Payment successful",
             description: "Your payment has been processed successfully",
-            variant: "success"
+            variant: "default"
           });
         } else {
           setStatus("failed");

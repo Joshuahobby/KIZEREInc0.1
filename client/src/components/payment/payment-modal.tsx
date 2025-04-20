@@ -75,7 +75,7 @@ export function PaymentModal({
         toast({
           title: "Payment successful",
           description: "Your payment has been processed successfully",
-          variant: "success"
+          variant: "default"
         });
         
         if (onPaymentSuccess) {
@@ -87,7 +87,7 @@ export function PaymentModal({
         toast({
           title: "Payment verification",
           description: response.message,
-          variant: response.status === "successful" ? "success" : "destructive"
+          variant: response.status === "successful" ? "default" : "destructive"
         });
       }
     } catch (error) {
