@@ -238,7 +238,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username / Phone / Email</FormLabel>
+                        <FormLabel className="text-sm font-medium">Username / Phone / Email</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -283,18 +283,18 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     )}
                   />
 
-                  <div className="flex justify-between items-center text-sm mt-2">
-                    <div className="flex items-center">
+                  <div className="flex justify-between items-center text-sm mt-3">
+                    <div className="flex items-center bg-muted/10 border border-muted/20 rounded-md px-2 py-1">
                       <input 
                         type="checkbox" 
                         id="remember" 
-                        className="rounded border-input h-4 w-4 text-primary"
+                        className="rounded border-input h-4 w-4 text-primary accent-primary"
                       />
                       <label htmlFor="remember" className="ml-2 text-muted-foreground">
                         Remember me
                       </label>
                     </div>
-                    <a href="#" className="text-primary hover:underline">
+                    <a href="#" className="text-primary hover:underline font-medium">
                       Forgot password?
                     </a>
                   </div>
@@ -357,7 +357,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel className="text-sm font-medium">Full Name</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -374,7 +374,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number or Email</FormLabel>
+                        <FormLabel className="text-sm font-medium">Phone Number or Email</FormLabel>
                         <FormControl>
                           <div className="relative">
                             <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
@@ -457,14 +457,14 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     )}
                   />
 
-                  <div className="flex items-center space-x-2 mt-4">
+                  <div className="flex items-center space-x-2 mt-4 p-2 rounded-md bg-muted/10 border border-muted/20">
                     <input 
                       type="checkbox" 
                       id="terms" 
-                      className="rounded border-input h-4 w-4 text-primary"
+                      className="rounded border-input h-4 w-4 text-primary accent-primary"
                     />
                     <label htmlFor="terms" className="text-sm text-muted-foreground">
-                      I agree to the <a href="#" className="text-primary hover:underline">Terms of Service</a> and <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+                      I agree to the <a href="#" className="text-primary hover:underline font-medium">Terms of Service</a> and <a href="#" className="text-primary hover:underline font-medium">Privacy Policy</a>
                     </label>
                   </div>
 
@@ -497,7 +497,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="w-full" 
+                    className="w-full h-10 font-medium border-muted/50 bg-background/80 hover:bg-background/90 hover:border-muted" 
                     onClick={handleGoogleSignIn}
                     disabled={googleLoading}
                   >
@@ -508,7 +508,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                       </>
                     ) : (
                       <>
-                        <SiGoogle className="mr-2 h-4 w-4" />
+                        <SiGoogle className="mr-2 h-4 w-4 text-red-500" />
                         Sign up with Google
                       </>
                     )}
