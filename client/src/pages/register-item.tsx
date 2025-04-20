@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { PaymentService } from "@/services/payment.service";
-import { Loader2, Check, ArrowRight, CreditCard } from "lucide-react";
+import { Loader2, Check, ArrowRight, CreditCard, RefreshCw, CheckCircle } from "lucide-react";
 
 // Item categories
 const categories = [
