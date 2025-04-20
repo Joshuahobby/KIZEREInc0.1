@@ -29,6 +29,7 @@ export interface IStorage {
   updateItem(id: number, item: Partial<Item>): Promise<Item | undefined>;
   deleteItem(id: number): Promise<boolean>;
   searchItems(query: string, filters?: object): Promise<Item[]>;
+  getAllItems(): Promise<Item[]>;
   
   // Report methods
   getReport(id: number): Promise<Report | undefined>;
@@ -205,6 +206,10 @@ export class DatabaseStorage implements IStorage {
     } else {
       return await db.select().from(items);
     }
+  }
+  
+  async getAllItems(): Promise<Item[]> {
+    return await db.select().from(items);
   }
 
   // Report methods

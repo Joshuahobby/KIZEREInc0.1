@@ -1,14 +1,18 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
+import { db } from "./db";
+import { and, eq, like, or, sql, desc } from "drizzle-orm";
 import { 
   insertItemSchema, 
   insertReportSchema, 
   insertNotificationSchema,
   userRoles,
-  initiatePaymentSchema
+  initiatePaymentSchema,
+  items,
+  reports
 } from "@shared/schema";
 import { 
   generateTransactionReference, 
@@ -18,6 +22,8 @@ import {
   PAYMENT_FEES,
   getPaymentAmount
 } from "./utils/flutterwave";
+import { getPaymentDescription } from "./config/payment.config";
+import { createLogger } from "./utils/logger";
 import { DEFAULT_CURRENCY } from "./config/payment.config";
 import { 
   format, 
@@ -1235,8 +1241,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin API: Get item statistics
   app.get("/api/admin/items/stats", requireAdmin, async (req, res) => {
     try {
-      // Get all items
-      const allItems = await db.select().from(items);
+      // Get all items using storage interface
+      const allItems = await storage.getAllItems();
       
       // Calculate total items
       const totalItems = allItems.length;
@@ -1245,7 +1251,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const oneMonthAgo = new Date();
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
       
-      const newItemsThisMonth = allItems.filter(item => {
+      const newItemsThisMonth = allItems.filter((item) => {
         return new Date(item.registeredAt) >= oneMonthAgo;
       }).length;
       
@@ -1253,9 +1259,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         totalItems,
         newItemsThisMonth,
-        registeredItems: allItems.filter(item => item.status === 'Registered').length,
-        lostItems: allItems.filter(item => item.status === 'Lost').length,
-        foundItems: allItems.filter(item => item.status === 'Found').length
+        registeredItems: allItems.filter((item) => item.status === 'Registered').length,
+        lostItems: allItems.filter((item) => item.status === 'Lost').length,
+        foundItems: allItems.filter((item) => item.status === 'Found').length
       });
     } catch (error) {
       console.error("Item statistics error:", error);
@@ -1269,11 +1275,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin API: Get report statistics
   app.get("/api/admin/reports/stats", requireAdmin, async (req, res) => {
     try {
-      // Get all reports
-      const allReports = await db.select().from(reports);
+      // Get lost and found reports using storage interface
+      const lostReports = await storage.getLostReports();
+      const foundReports = await storage.getFoundReports();
+      const allReports = [...lostReports, ...foundReports];
       
       // Count open reports
-      const openReports = allReports.filter(report => report.status === 'Open').length;
+      const openReports = allReports.filter((report) => report.status === 'Open').length;
       
       // Calculate change from last week (dummy calculation for now)
       const changeLastWeek = -8; // This would normally be calculated from historical data
@@ -1283,9 +1291,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         openReports,
         changeLastWeek,
         totalReports: allReports.length,
-        lostReports: allReports.filter(report => report.type === 'lost').length,
-        foundReports: allReports.filter(report => report.type === 'found').length,
-        resolvedReports: allReports.filter(report => report.status === 'Resolved').length
+        lostReports: lostReports.length,
+        foundReports: foundReports.length,
+        resolvedReports: allReports.filter((report) => report.status === 'Resolved').length
       });
     } catch (error) {
       console.error("Report statistics error:", error);
