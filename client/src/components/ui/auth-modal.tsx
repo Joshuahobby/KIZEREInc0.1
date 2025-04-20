@@ -230,9 +230,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
             </TabsList>
 
             {/* Login Form */}
-            <TabsContent value="login" className="px-6 pb-6">
+            <TabsContent value="login" className="px-6 pb-6 max-h-[65vh] overflow-y-auto">
               <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-3">
                   <FormField
                     control={loginForm.control}
                     name="username"
@@ -241,9 +241,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         <FormLabel>Username / Phone / Email</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                            <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10" 
+                              className="pl-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
                               placeholder="Enter your username, phone, or email" 
                               {...field} 
                             />
@@ -262,16 +262,16 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         <FormLabel>Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                            <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10 pr-10" 
+                              className="pl-10 pr-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
                               type={showPassword ? "text" : "password"} 
                               placeholder="Enter your password" 
                               {...field} 
                             />
                             <button 
                               type="button"
-                              className="absolute right-3 top-2.5 text-muted-foreground"
+                              className="absolute right-3 top-2.5 text-muted-foreground/80 hover:text-muted-foreground"
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -301,7 +301,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
                   <Button 
                     type="submit" 
-                    className="w-full" 
+                    className="w-full h-10 font-medium shadow-sm transition-all hover:shadow-md" 
                     disabled={loginMutation.isPending}
                   >
                     {loginMutation.isPending ? (
@@ -328,7 +328,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                   <Button 
                     type="button" 
                     variant="outline" 
-                    className="w-full" 
+                    className="w-full h-10 font-medium border-muted/50 bg-background/80 hover:bg-background/90 hover:border-muted" 
                     onClick={handleGoogleSignIn}
                     disabled={googleLoading}
                   >
@@ -339,7 +339,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                       </>
                     ) : (
                       <>
-                        <SiGoogle className="mr-2 h-4 w-4" />
+                        <SiGoogle className="mr-2 h-4 w-4 text-red-500" />
                         Sign in with Google
                       </>
                     )}
@@ -377,9 +377,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         <FormLabel>Phone Number or Email</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                            <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10" 
+                              className="pl-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
                               placeholder="e.g. +250 xxx xxx xxx or your@email.com" 
                               {...field} 
                             />
@@ -398,9 +398,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         <FormLabel>Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                            <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10 pr-10" 
+                              className="pl-10 pr-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
                               type={showPassword ? "text" : "password"} 
                               placeholder="Create a password" 
                               {...field} 
@@ -415,7 +415,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                             />
                             <button 
                               type="button"
-                              className="absolute right-3 top-2.5 text-muted-foreground"
+                              className="absolute right-3 top-2.5 text-muted-foreground/80 hover:text-muted-foreground"
                               onClick={() => setShowPassword(!showPassword)}
                             >
                               {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -436,16 +436,16 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         <FormLabel>Confirm Password</FormLabel>
                         <FormControl>
                           <div className="relative">
-                            <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                            <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground/70" />
                             <Input 
-                              className="pl-10 pr-10" 
+                              className="pl-10 pr-10 h-10 border-muted/30 focus:border-primary/50 bg-background/60 backdrop-blur-sm" 
                               type={showConfirmPassword ? "text" : "password"} 
                               placeholder="Confirm your password" 
                               {...field} 
                             />
                             <button 
                               type="button"
-                              className="absolute right-3 top-2.5 text-muted-foreground"
+                              className="absolute right-3 top-2.5 text-muted-foreground/80 hover:text-muted-foreground"
                               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             >
                               {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -470,7 +470,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
                   <Button 
                     type="submit" 
-                    className="w-full" 
+                    className="w-full h-10 font-medium shadow-sm transition-all hover:shadow-md" 
                     disabled={registerMutation.isPending}
                   >
                     {registerMutation.isPending ? (
