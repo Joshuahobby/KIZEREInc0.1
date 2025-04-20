@@ -647,14 +647,35 @@ export default function RegisterItem() {
                             Processing Payment...
                           </Button>
                         ) : paymentStatus === "error" && paymentRef ? (
-                          <Button 
-                            type="button"
-                            onClick={handleVerifyPayment}
-                            variant="outline"
-                            className="min-w-[200px]"
-                          >
-                            Verify Payment Status
-                          </Button>
+                          <div className="flex flex-col items-end">
+                            <Button 
+                              type="button"
+                              onClick={handleVerifyPayment}
+                              variant="outline"
+                              className="min-w-[200px] mb-2"
+                            >
+                              <RefreshCw className="mr-2 h-4 w-4" />
+                              Verify Payment Status
+                            </Button>
+                            <p className="text-xs text-amber-600">
+                              Having issues? Try clicking "Verify Payment Status" again
+                            </p>
+                          </div>
+                        ) : paymentStatus === "success" ? (
+                          <div className="flex flex-col items-end">
+                            <Button
+                              type="button"
+                              variant="default"
+                              onClick={() => setLocation("/")}
+                              className="min-w-[200px]"
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Go to Dashboard
+                            </Button>
+                            <p className="text-xs text-green-600 mt-2">
+                              Registration and payment completed successfully!
+                            </p>
+                          </div>
                         ) : (
                           <Button 
                             type="submit"

@@ -649,6 +649,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If we have a Flutterwave transaction ID, verify the payment
       if (payment.transactionId) {
         try {
+          // Validate transaction ID - sometimes it might be stored but invalid
+          if (!payment.transactionId || payment.transactionId.trim() === '' || 
+              payment.transactionId.includes('demo-tx-')) {
+            console.log(`Payment ${payment.id} has invalid transaction ID: ${payment.transactionId}`);
+            
+            // In development or when auto-success is enabled, approve automatically
+            if (process.env.NODE_ENV === 'development' || process.env.PAYMENT_AUTO_SUCCESS === 'true') {
+              console.log(`Auto-approving payment ${payment.id} in development mode`);
+              const updatedPayment = await storage.updatePayment(payment.id, {
+                status: 'successful',
+                paymentDate: new Date()
+              });
+              
+              return res.status(200).json({
+                status: 'successful',
+                message: "Payment auto-approved in development",
+                payment: updatedPayment
+              });
+            }
+            
+            return res.status(400).json({
+              status: 'pending',
+              message: 'Invalid transaction ID, cannot verify with Flutterwave'
+            });
+          }
+          
           console.log(`Verifying payment ${payment.id} with transaction ID ${payment.transactionId}`);
           const verificationResult = await verifyTransaction(payment.transactionId);
           
@@ -656,8 +682,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Update payment based on verification result
           const updatedPayment = await storage.updatePayment(payment.id, {
-            status: verificationResult.data.status === 'successful' ? 'successful' : 'failed',
-            flutterwaveRef: verificationResult.data.flw_ref,
+            status: verificationResult.data?.status === 'successful' ? 'successful' : 'failed',
+            flutterwaveRef: verificationResult.data?.flw_ref || null,
             paymentDate: new Date()
           });
           
