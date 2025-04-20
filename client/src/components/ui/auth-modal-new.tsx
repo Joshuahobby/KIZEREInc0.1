@@ -148,24 +148,46 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       const userInfo = extractUserInfo(result);
       console.log("Google sign-in successful", userInfo);
       
-      // Send the Google auth data to our backend
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: userInfo.email,
-          name: userInfo.displayName,
-          uid: userInfo.uid,
-          token: userInfo.token,
-          photoURL: userInfo.photoURL
-        }),
-        credentials: "include"
-      });
+      if (!userInfo.email) {
+        toast({
+          title: "Authentication Failed",
+          description: "Could not get email from Google. Please try again.",
+          variant: "destructive",
+        });
+        setGoogleLoading(false);
+        return;
+      }
       
-      if (!response.ok) {
-        throw new Error("Failed to authenticate with Google");
+      // Send the Google auth data to our backend
+      try {
+        const response = await fetch("/api/auth/google", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: userInfo.email,
+            name: userInfo.displayName || userInfo.email.split('@')[0],
+            uid: userInfo.uid,
+            token: userInfo.token,
+            photoURL: userInfo.photoURL
+          }),
+          credentials: "include"
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to authenticate with Google");
+        }
+      } catch (backendError) {
+        console.error("Backend authentication error:", backendError);
+        toast({
+          title: "Authentication Failed",
+          description: backendError.message || "Server error during authentication. Please try again.",
+          variant: "destructive",
+        });
+        setGoogleLoading(false);
+        return;
       }
       
       // Process the user data returned from our backend

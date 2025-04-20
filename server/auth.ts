@@ -140,58 +140,5 @@ export function setupAuth(app: Express) {
     res.json(userWithoutPassword);
   });
   
-  // Google OAuth authentication
-  app.post("/api/auth/google", async (req, res, next) => {
-    try {
-      const { email, name, uid, token, photoURL } = req.body;
-      
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
-      }
-      
-      // Check if a user with this email already exists
-      let user = await storage.getUserByEmail(email);
-      
-      if (!user) {
-        // Create a new user if one doesn't exist
-        // Generate a random secure password since they'll use Google to login
-        const randomPassword = randomBytes(16).toString('hex');
-        const hashedPassword = await hashPassword(randomPassword);
-        
-        // Use either the name from Google or email as username if not provided
-        const username = email;
-        const fullName = name || email.split('@')[0];
-        
-        user = await storage.createUser({
-          username,
-          email,
-          fullName,
-          password: hashedPassword,
-          phoneNumber: null,
-          role: 'Subscriber'
-        });
-      }
-      
-      // Log the user in
-      req.login(user, (err) => {
-        if (err) return next(err);
-        
-        // Strip password from response
-        const { password, ...userWithoutPassword } = user;
-        
-        // Return user information
-        res.status(200).json({
-          ...userWithoutPassword,
-          googleAuth: {
-            uid,
-            token,
-            photoURL
-          }
-        });
-      });
-    } catch (error) {
-      console.error("Google auth error:", error);
-      next(error);
-    }
-  });
+  // Google OAuth authentication is now handled in routes.ts
 }

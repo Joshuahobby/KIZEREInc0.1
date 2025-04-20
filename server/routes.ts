@@ -63,6 +63,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
+  // Google Authentication Status endpoint
+  app.get("/api/auth/google/status", (req, res) => {
+    res.json({
+      status: "Available",
+      message: "Google authentication is configured and ready",
+      authenticated: req.isAuthenticated(),
+      user: req.isAuthenticated() ? req.user : null
+    });
+  });
+  
   // Google Authentication
   app.post("/api/auth/google", async (req, res) => {
     try {
@@ -96,6 +106,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Log in the user
+      if (!user) {
+        console.error("User is undefined after creation/lookup");
+        return res.status(500).json({ message: "Authentication failed" });
+      }
+      
       req.login(user, (err) => {
         if (err) {
           console.error("Login error:", err);
