@@ -7,8 +7,17 @@ import {
   insertItemSchema, 
   insertReportSchema, 
   insertNotificationSchema,
-  userRoles
+  userRoles,
+  initiatePaymentSchema
 } from "@shared/schema";
+import { 
+  generateTransactionReference, 
+  verifyTransaction, 
+  verifyWebhookSignature,
+  initializePayment,
+  PAYMENT_FEES,
+  getPaymentAmount
+} from "./utils/flutterwave";
 
 // Middleware to check authentication
 function requireAuth(req: Request, res: Response, next: Function) {
@@ -465,6 +474,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Payment routes
+  app.get("/api/payments/fees", (req, res) => {
+    // Return the payment fee structure
+    res.json({
+      itemRegistration: PAYMENT_FEES.ITEM_REGISTRATION,
+      lostItemReport: PAYMENT_FEES.LOST_ITEM_REPORT,
+      foundItemReport: PAYMENT_FEES.FOUND_ITEM_REPORT,
+      currency: "RWF"
+    });
+  });
+
+  // Fetch user's payment history
+  app.get("/api/payments", requireAuth, async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const payments = await storage.getUserPayments(userId);
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ 
+        message: "Failed to fetch payment history",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Initialize a payment
+  app.post("/api/payments/initialize", requireAuth, async (req, res) => {
+    try {
+      // Validate input
+      const validatedData = initiatePaymentSchema.parse(req.body);
+      
+      // Get payment amount based on type if not explicitly provided
+      const amount = validatedData.amount || getPaymentAmount(validatedData.type);
+      
+      // Generate a unique transaction reference
+      const transactionRef = generateTransactionReference();
+      
+      // Get user information
+      const user = req.user!;
+      
+      // Create a payment record in pending status
+      const payment = await storage.createPayment({
+        userId: user.id,
+        amount,
+        currency: "RWF",
+        type: validatedData.type,
+        status: "pending",
+        transactionRef,
+        itemId: validatedData.itemId || null,
+        reportId: validatedData.reportId || null,
+        metadata: validatedData.metadata || null
+      });
+      
+      // Base redirect URL - the frontend will handle success/failure
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://your-production-domain.com' 
+        : 'http://localhost:5000';
+      
+      const redirectUrl = `${baseUrl}/payment-callback`;
+      
+      // Initialize payment with Flutterwave
+      const flutterwavePayment = await initializePayment({
+        amount,
+        currency: "RWF",
+        tx_ref: transactionRef,
+        redirect_url: redirectUrl,
+        customer: {
+          email: user.email,
+          phone_number: user.phoneNumber || undefined,
+          name: user.fullName || user.username
+        },
+        customizations: {
+          title: "KIZERE Payment",
+          description: `Payment for ${validatedData.type === 'registration' ? 'item registration' : 'lost item report'}`,
+          logo: "https://kizere.rw/logo.png" // Replace with your actual logo URL
+        },
+        meta: {
+          paymentId: payment.id,
+          ...validatedData.metadata
+        }
+      });
+      
+      // Return necessary data to the client
+      res.status(200).json({
+        paymentId: payment.id,
+        transactionRef,
+        amount,
+        currency: "RWF",
+        paymentUrl: flutterwavePayment.data?.link || null,
+        redirectUrl
+      });
+    } catch (error) {
+      console.error("Payment initialization error:", error);
+      res.status(500).json({ 
+        message: "Failed to initialize payment",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Payment verification endpoint
+  app.get("/api/payments/verify/:reference", requireAuth, async (req, res) => {
+    try {
+      const transactionRef = req.params.reference;
+      
+      // Check if payment exists
+      const payment = await storage.getPaymentByTransactionRef(transactionRef);
+      if (!payment) {
+        return res.status(404).json({ message: "Payment not found" });
+      }
+      
+      // Only allow users to verify their own payments (or admins)
+      if (payment.userId !== req.user!.id && req.user!.role !== 'Admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // If payment is already verified, return existing status
+      if (payment.status === 'successful') {
+        return res.status(200).json({
+          status: payment.status,
+          message: "Payment already verified",
+          payment
+        });
+      }
+      
+      // If we have a Flutterwave transaction ID, verify the payment
+      if (payment.transactionId) {
+        try {
+          const verificationResult = await verifyTransaction(payment.transactionId);
+          
+          // Update payment based on verification result
+          const updatedPayment = await storage.updatePayment(payment.id, {
+            status: verificationResult.data.status === 'successful' ? 'successful' : 'failed',
+            flutterwaveRef: verificationResult.data.flw_ref,
+            paymentDate: new Date()
+          });
+          
+          // Return verification result
+          return res.status(200).json({
+            status: updatedPayment!.status,
+            message: `Payment ${updatedPayment!.status}`,
+            payment: updatedPayment
+          });
+        } catch (verifyError) {
+          return res.status(500).json({
+            status: 'error',
+            message: 'Failed to verify payment with Flutterwave',
+            error: verifyError instanceof Error ? verifyError.message : "Unknown error"
+          });
+        }
+      } else {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Payment has not been processed by Flutterwave yet'
+        });
+      }
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      res.status(500).json({ 
+        message: "Failed to verify payment",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Flutterwave webhook endpoint
+  app.post("/api/payments/webhook", async (req, res) => {
+    try {
+      // Verify webhook signature
+      const signature = req.headers['verif-hash'] as string;
+      if (!signature) {
+        return res.status(400).json({ message: "No signature provided" });
+      }
+      
+      // Verify the signature
+      const isValid = verifyWebhookSignature(signature, JSON.stringify(req.body));
+      if (!isValid) {
+        return res.status(401).json({ message: "Invalid signature" });
+      }
+      
+      // Process the webhook data
+      const eventData = req.body;
+      const { event, data } = eventData;
+      
+      // Handle different event types
+      if (event === 'charge.completed') {
+        // Find payment by transaction reference
+        const payment = await storage.getPaymentByTransactionRef(data.tx_ref);
+        if (!payment) {
+          return res.status(404).json({ message: "Payment not found" });
+        }
+        
+        // Update payment status based on webhook data
+        await storage.updatePayment(payment.id, {
+          status: data.status === 'successful' ? 'successful' : 'failed',
+          transactionId: data.id.toString(),
+          flutterwaveRef: data.flw_ref,
+          paymentDate: new Date()
+        });
+        
+        // Create notification for the user
+        await storage.createNotification({
+          userId: payment.userId,
+          title: 'Payment Processed',
+          message: `Your payment of ${payment.amount} RWF for ${payment.type === 'registration' ? 'item registration' : 'lost item report'} has been ${data.status}.`,
+          type: 'payment',
+          isRead: false,
+          relatedItemId: payment.itemId,
+          relatedReportId: payment.reportId
+        });
+        
+        // Return success response
+        return res.status(200).json({ message: "Webhook processed successfully" });
+      }
+      
+      // Return default response for unhandled events
+      return res.status(200).json({ message: "Unhandled event type" });
+    } catch (error) {
+      console.error("Webhook processing error:", error);
+      // Always return 200 to Flutterwave to avoid retries
+      res.status(200).json({ 
+        message: "Webhook processed with errors",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Payment callback endpoint (for redirect from Flutterwave)
+  app.get("/api/payments/callback", async (req, res) => {
+    try {
+      const { status, tx_ref, transaction_id } = req.query;
+      
+      // If Flutterwave redirected with a transaction_id, update the payment
+      if (transaction_id && tx_ref) {
+        const payment = await storage.getPaymentByTransactionRef(tx_ref as string);
+        if (payment) {
+          // Update the payment with the transaction ID for future verification
+          await storage.updatePayment(payment.id, {
+            transactionId: transaction_id as string,
+            status: status === 'successful' ? 'successful' : 'failed'
+          });
+        }
+      }
+      
+      // Redirect to the frontend (which will handle success/failure UI)
+      res.redirect(`/payment-status?status=${status}&tx_ref=${tx_ref}`);
+    } catch (error) {
+      // Redirect with error
+      res.redirect(`/payment-status?status=error&message=${encodeURIComponent('Failed to process payment callback')}`);
+    }
+  });
+
+  // Create the HTTP server
   const httpServer = createServer(app);
   return httpServer;
 }
