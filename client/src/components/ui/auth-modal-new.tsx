@@ -233,7 +233,43 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
             </DialogHeader>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-4 relative z-10">
+          {/* Google Sign In Button - VERY Prominent - BEFORE tabs */}
+          <div className="px-6 pt-4 pb-6">
+            <Button 
+              type="button" 
+              className="w-full h-16 bg-red-500 hover:bg-red-600 text-white transition-all shadow-md hover:shadow-lg rounded-md border-0 flex items-center justify-center"
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading}
+            >
+              {googleLoading ? (
+                <>
+                  <Loader2 className="mr-3 h-7 w-7 animate-spin" />
+                  <span className="text-lg font-medium">Signing in with Google...</span>
+                </>
+              ) : (
+                <>
+                  <SiGoogle className="mr-3 h-7 w-7" />
+                  <span className="text-lg font-medium">Continue with Google</span>
+                </>
+              )}
+            </Button>
+            <p className="text-center text-sm mt-2 text-muted-foreground font-medium">
+              Recommended: Fast, secure login with your Google account
+            </p>
+          </div>
+          
+          <div className="relative mb-4 mx-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-3 text-muted-foreground font-medium">
+                Or use email/password
+              </span>
+            </div>
+          </div>
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full relative z-10">
             <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1 mx-6">
               <TabsTrigger value="login" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">Sign In</TabsTrigger>
               <TabsTrigger value="register" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm">Register</TabsTrigger>
@@ -241,39 +277,6 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
             {/* Login Form */}
             <TabsContent value="login" className="px-6 pb-6">
-              {/* Google Sign In Button - Much More Prominent */}
-              <div className="mb-8 pt-2">
-                <p className="text-center text-sm mb-3 text-muted-foreground">Recommended sign-in method</p>
-                <Button 
-                  type="button" 
-                  className="w-full h-14 bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-600 dark:hover:bg-blue-700 transition-all shadow-md hover:shadow-lg rounded-md border-0"
-                  onClick={handleGoogleSignIn}
-                  disabled={googleLoading}
-                >
-                  {googleLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                      <span className="text-base font-medium">Signing in with Google...</span>
-                    </>
-                  ) : (
-                    <>
-                      <SiGoogle className="mr-3 h-6 w-6" />
-                      <span className="text-base font-medium">Sign in with Google</span>
-                    </>
-                  )}
-                </Button>
-              </div>
-              
-              <div className="relative mb-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or sign in with email
-                  </span>
-                </div>
-              </div>
               
               <Form {...loginForm}>
                 <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
@@ -363,42 +366,6 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
             {/* Registration Form */}
             <TabsContent value="register" className="px-6 pb-6">
-              {/* Google Sign Up Button - Much More Prominent */}
-              <div className="mb-8 pt-2">
-                <p className="text-center text-sm mb-3 text-muted-foreground">Recommended sign-up method</p>
-                <Button 
-                  type="button" 
-                  className="w-full h-14 bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-600 dark:hover:bg-blue-700 transition-all shadow-md hover:shadow-lg rounded-md border-0"
-                  onClick={handleGoogleSignIn}
-                  disabled={googleLoading}
-                >
-                  {googleLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                      <span className="text-base font-medium">Signing up with Google...</span>
-                    </>
-                  ) : (
-                    <>
-                      <SiGoogle className="mr-3 h-6 w-6" />
-                      <span className="text-base font-medium">Sign up with Google</span>
-                    </>
-                  )}
-                </Button>
-                <p className="text-xs text-center text-muted-foreground mt-2">
-                  Fast, secure signup with your Google account
-                </p>
-              </div>
-              
-              <div className="relative mb-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Or register with email
-                  </span>
-                </div>
-              </div>
             
               <Form {...registerForm}>
                 <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
