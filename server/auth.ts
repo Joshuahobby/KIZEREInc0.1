@@ -132,12 +132,26 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  app.get("/api/user", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     
-    // Strip password from response
-    const { password, ...userWithoutPassword } = req.user;
-    res.json(userWithoutPassword);
+    try {
+      // Use UserService to get fresh user data
+      const freshUserData = await UserService.getUserById(req.user.id);
+      
+      if (!freshUserData) {
+        return res.status(404).json({ message: "User no longer exists" });
+      }
+      
+      // Strip password from response
+      const { password, ...userWithoutPassword } = freshUserData;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      // Fallback to session user if service fails
+      const { password, ...userWithoutPassword } = req.user;
+      res.json(userWithoutPassword);
+    }
   });
   
   // Google OAuth authentication is now handled in routes.ts
