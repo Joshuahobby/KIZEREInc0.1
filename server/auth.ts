@@ -30,8 +30,10 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Generate a fallback session secret if needed (for development only)
-  const sessionSecret = env.SESSION_SECRET || randomBytes(32).toString('hex');
+  // Always generate a fallback session secret for development
+  // In production, SESSION_SECRET should be set properly
+  const sessionSecret = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
+  console.log("Using session secret:", sessionSecret ? "✓ Session secret available" : "⚠️ No session secret");
   
   const sessionSettings: session.SessionOptions = {
     secret: sessionSecret,
