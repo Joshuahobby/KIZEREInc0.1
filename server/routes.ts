@@ -40,7 +40,7 @@ import {
 // Import service layer
 import { UserService } from "./services/user.service";
 import { PaymentService } from "./services/payment.service";
-import { DashboardService } from "./services/dashboard.service";
+import { dashboardService, DashboardService } from "./services/dashboard.service";
 
 // Create logger for routes
 const logger = createLogger('Routes');
