@@ -68,7 +68,7 @@ export class DashboardService {
                  paymentDate.getFullYear() === thisYear &&
                  p.status === 'successful';
         })
-        .reduce((total, payment) => total + payment.amount, 0);
+        .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
       
       // Revenue from last month
       const lastMonthRevenue = allPayments
@@ -78,7 +78,7 @@ export class DashboardService {
                  paymentDate.getFullYear() === lastMonthYear &&
                  p.status === 'successful';
         })
-        .reduce((total, payment) => total + payment.amount, 0);
+        .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
       
       // Calculate percentage change
       const revenuePercentChange = lastMonthRevenue === 0 
@@ -114,7 +114,7 @@ export class DashboardService {
         if (payment.status === 'successful') {
           const currentType = typeMap.get(payment.type) || { amount: 0, count: 0 };
           typeMap.set(payment.type, {
-            amount: currentType.amount + payment.amount,
+            amount: currentType.amount + (parseFloat(payment.amount as string) || 0),
             count: currentType.count + 1
           });
         }
@@ -161,7 +161,7 @@ export class DashboardService {
                    paymentDate.getFullYear() === year &&
                    p.status === 'successful';
           })
-          .reduce((total, payment) => total + payment.amount, 0);
+          .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
         
         monthlyRevenue.push({
           month: `${monthNames[month]} ${year}`,
@@ -220,7 +220,7 @@ export class DashboardService {
       const totalFoundReports = reports.filter(r => r.type === 'found').length;
       const totalSpent = payments
         .filter(p => p.status === 'successful')
-        .reduce((total, payment) => total + payment.amount, 0);
+        .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
       
       // Sort items by registration date to get the most recent
       const sortedItems = [...items].sort((a, b) => 

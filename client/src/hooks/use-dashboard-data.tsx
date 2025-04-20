@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "../lib/queryClient";
 import { useAuth } from "../hooks/use-auth";
-import { Item, Report, Notification, Payment, UserRole } from "../../shared/schema";
+import { Item, Report, Notification, Payment, UserRole } from "@shared/schema";
 import { useMemo } from "react";
 import { createLogger } from "../lib/logger";
 
@@ -143,8 +143,32 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
     refetchInterval: (isAgent || isAdmin) ? refreshInterval : false
   });
 
+  // Query for unified dashboard stats
+  const { data: dashboardStats, isLoading: dashboardStatsLoading } = useQuery({
+    queryKey: ['/api/dashboard/stats'],
+    queryFn: async () => {
+      if (!user) return null;
+      const res = await apiRequest('GET', '/api/dashboard/stats');
+      return await res.json();
+    },
+    enabled: !!user,
+    refetchInterval: refreshInterval
+  });
+
   // Compute derived stats for all users
   const userStats: DashboardStats = useMemo(() => {
+    // If we have dashboard stats from the API, use those
+    if (dashboardStats) {
+      return {
+        ...dashboardStats,
+        // The API may return the amount as a string, ensure it's a number
+        totalSpent: typeof dashboardStats.totalSpent === 'string' 
+          ? parseFloat(dashboardStats.totalSpent) 
+          : dashboardStats.totalSpent
+      };
+    }
+    
+    // Fallback to client-side computation if API data is not available
     if (!items || !reports || !notifications || !payments) {
       return {
         totalItems: 0,
@@ -161,7 +185,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
     const totalLostReports = reports.filter(r => r.type === 'lost').length;
     const totalFoundReports = reports.filter(r => r.type === 'found').length;
     const totalSpent = payments.reduce((total, payment) => 
-      payment.status === 'successful' ? total + payment.amount : total, 0);
+      payment.status === 'successful' ? total + parseFloat(payment.amount as string) : total, 0);
     
     const sortedItems = [...items].sort((a, b) => 
       new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
@@ -179,7 +203,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
       pendingPayments,
       unreadNotifications
     };
-  }, [items, reports, notifications, payments]);
+  }, [items, reports, notifications, payments, dashboardStats, user]);
 
   // Compute admin stats
   const adminStats: AdminDashboardStats | null = useMemo(() => {
@@ -222,7 +246,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
 
   // Calculate loading state
   const isLoading = itemsLoading || reportsLoading || notificationsLoading || paymentsLoading || 
-    (isAdmin && (allUsersLoading || revenueSummaryLoading)) ||
+    dashboardStatsLoading || (isAdmin && (allUsersLoading || revenueSummaryLoading)) ||
     ((isAdmin || isAgent) && allReportsLoading);
 
   return {
