@@ -1198,6 +1198,249 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin API: Get user statistics
+  app.get("/api/admin/users/stats", requireAdmin, async (req, res) => {
+    try {
+      // Get all users
+      const allUsers = await storage.getAllUsers();
+      
+      // Calculate total users
+      const totalUsers = allUsers.length;
+      
+      // Calculate new users this week
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const newUsersThisWeek = allUsers.filter(user => {
+        return new Date(user.createdAt) >= oneWeekAgo;
+      }).length;
+      
+      // Return the statistics
+      res.json({
+        totalUsers,
+        newUsersThisWeek,
+        subscriberCount: allUsers.filter(user => user.role === 'Subscriber').length,
+        agentCount: allUsers.filter(user => user.role === 'Agent').length,
+        adminCount: allUsers.filter(user => user.role === 'Admin').length
+      });
+    } catch (error) {
+      console.error("User statistics error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch user statistics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Get item statistics
+  app.get("/api/admin/items/stats", requireAdmin, async (req, res) => {
+    try {
+      // Get all items
+      const allItems = await db.select().from(items);
+      
+      // Calculate total items
+      const totalItems = allItems.length;
+      
+      // Calculate new items this month
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      
+      const newItemsThisMonth = allItems.filter(item => {
+        return new Date(item.registeredAt) >= oneMonthAgo;
+      }).length;
+      
+      // Return the statistics
+      res.json({
+        totalItems,
+        newItemsThisMonth,
+        registeredItems: allItems.filter(item => item.status === 'Registered').length,
+        lostItems: allItems.filter(item => item.status === 'Lost').length,
+        foundItems: allItems.filter(item => item.status === 'Found').length
+      });
+    } catch (error) {
+      console.error("Item statistics error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch item statistics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Get report statistics
+  app.get("/api/admin/reports/stats", requireAdmin, async (req, res) => {
+    try {
+      // Get all reports
+      const allReports = await db.select().from(reports);
+      
+      // Count open reports
+      const openReports = allReports.filter(report => report.status === 'Open').length;
+      
+      // Calculate change from last week (dummy calculation for now)
+      const changeLastWeek = -8; // This would normally be calculated from historical data
+      
+      // Return the statistics
+      res.json({
+        openReports,
+        changeLastWeek,
+        totalReports: allReports.length,
+        lostReports: allReports.filter(report => report.type === 'lost').length,
+        foundReports: allReports.filter(report => report.type === 'found').length,
+        resolvedReports: allReports.filter(report => report.status === 'Resolved').length
+      });
+    } catch (error) {
+      console.error("Report statistics error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch report statistics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Get payment summary statistics
+  app.get("/api/admin/payments/summary", requireAdmin, async (req, res) => {
+    try {
+      // Get all payments
+      const allPayments = await storage.getAllPayments();
+      
+      // Calculate summary statistics
+      const totalRevenue = allPayments
+        .filter(p => p.status === 'successful')
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+        
+      const registrationRevenue = allPayments
+        .filter(p => p.status === 'successful' && p.type === 'registration')
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+        
+      const lostReportRevenue = allPayments
+        .filter(p => p.status === 'successful' && p.type === 'lost_report')
+        .reduce((sum, p) => sum + Number(p.amount), 0);
+        
+      // Count transactions by status
+      const successfulTransactions = allPayments.filter(p => p.status === 'successful').length;
+      const pendingTransactions = allPayments.filter(p => p.status === 'pending').length;
+      const failedTransactions = allPayments.filter(p => p.status === 'failed').length;
+      const cancelledTransactions = allPayments.filter(p => p.status === 'cancelled').length;
+      const refundedTransactions = allPayments.filter(p => p.status === 'refunded').length;
+      
+      // Count by payment type
+      const registrationCount = allPayments.filter(p => p.type === 'registration').length;
+      const lostReportCount = allPayments.filter(p => p.type === 'lost_report').length;
+      
+      // Return the summary
+      res.json({
+        totalRevenue,
+        registrationRevenue,
+        lostReportRevenue,
+        successfulTransactions,
+        pendingTransactions,
+        failedTransactions,
+        cancelledTransactions,
+        refundedTransactions,
+        totalTransactions: allPayments.length,
+        registrationCount,
+        lostReportCount
+      });
+    } catch (error) {
+      console.error("Payment summary error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch payment summary",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Get paginated, filtered payment transactions
+  app.get("/api/admin/payments", requireAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const pageSize = parseInt(req.query.pageSize as string) || 10;
+      const search = req.query.search as string;
+      const status = req.query.status as string;
+      const type = req.query.type as string;
+      const dateRange = req.query.dateRange as string;
+      
+      // Parse date range
+      let dateFilter: { start: Date, end: Date } | null = null;
+      if (dateRange) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        switch (dateRange) {
+          case 'today':
+            dateFilter = {
+              start: today,
+              end: new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1)
+            };
+            break;
+          case 'yesterday':
+            dateFilter = {
+              start: new Date(today.getTime() - 24 * 60 * 60 * 1000),
+              end: new Date(today.getTime() - 1)
+            };
+            break;
+          case 'week':
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            dateFilter = {
+              start: startOfWeek,
+              end: new Date(now.getTime())
+            };
+            break;
+          case 'month':
+            dateFilter = {
+              start: new Date(now.getFullYear(), now.getMonth(), 1),
+              end: new Date(now.getTime())
+            };
+            break;
+          case 'year':
+            dateFilter = {
+              start: new Date(now.getFullYear(), 0, 1),
+              end: new Date(now.getTime())
+            };
+            break;
+          default:
+            dateFilter = null;
+        }
+      }
+      
+      // Get payments with filters
+      const result = await storage.getPaymentsWithFilters({
+        page,
+        pageSize,
+        search,
+        status,
+        type,
+        dateFilter
+      });
+      
+      // Fetch usernames for each payment
+      const paymentsWithUsernames = await Promise.all(
+        result.payments.map(async (payment) => {
+          const user = await storage.getUser(payment.userId);
+          return {
+            ...payment,
+            username: user ? user.username : 'Unknown'
+          };
+        })
+      );
+      
+      // Return the payments with pagination info
+      res.json({
+        transactions: paymentsWithUsernames,
+        total: result.total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(result.total / pageSize)
+      });
+    } catch (error) {
+      console.error("Admin payments listing error:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch payment transactions",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Create the HTTP server
   const httpServer = createServer(app);
   return httpServer;

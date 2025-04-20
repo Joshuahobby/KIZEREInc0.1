@@ -212,13 +212,13 @@ export default function AdminPaymentDashboard() {
   };
 
   // Function to get status badge variant
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "success" => {
     switch (status) {
       case "successful": return "success";
       case "pending": return "outline";
       case "failed": case "cancelled": return "destructive";
       case "refunded": return "secondary";
-      default: return "secondary";
+      default: return "default";
     }
   };
 
