@@ -14,8 +14,8 @@ import { format } from "date-fns";
 export default function Search() {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState("all");
-  const [category, setCategory] = useState("");
-  const [dateFilter, setDateFilter] = useState("");
+  const [category, setCategory] = useState("any");
+  const [dateFilter, setDateFilter] = useState("any");
   const [location, setLocation] = useState("");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -41,7 +41,10 @@ export default function Search() {
       params.append("location", location);
     }
     
-    // TODO: Implement date filtering on the server side
+    // Apply date filtering if specified and not "any"
+    if (dateFilter && dateFilter !== "any") {
+      params.append("dateFilter", dateFilter);
+    }
     
     return params.toString();
   };
@@ -67,8 +70,8 @@ export default function Search() {
   const handleReset = () => {
     setSearchTerm("");
     setSearchType("all");
-    setCategory("");
-    setDateFilter("");
+    setCategory("any");
+    setDateFilter("any");
     setLocation("");
     setIsSearching(false);
   };
