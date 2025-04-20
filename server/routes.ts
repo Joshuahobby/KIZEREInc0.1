@@ -84,9 +84,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           username: email,
           email: email,
           password: `google_${uid}`, // We don't use this password for login
-          role: 'Subscriber' // Default role for new users
+          role: 'Subscriber', // Default role for new users
+          avatarUrl: photoURL || null
         });
         console.log(`Created new user from Google auth: ${user.id}`);
+      }
+      
+      // Update avatar URL if provided and different from what's stored
+      if (photoURL && (!user.avatarUrl || user.avatarUrl !== photoURL)) {
+        user = await storage.updateUser(user.id, { avatarUrl: photoURL });
       }
       
       // Log in the user
