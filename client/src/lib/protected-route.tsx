@@ -48,7 +48,7 @@ export function ProtectedRoute({
   const getDashboardByRole = (role: string): string => {
     switch (role) {
       case 'Admin':
-        return '/user-management';
+        return '/admin'; // Ensure role redirects match the routes in App.tsx
       case 'Agent':
         return '/lost-found';
       case 'Subscriber':

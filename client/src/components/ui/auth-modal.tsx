@@ -71,9 +71,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   function getDashboardPathByRole(role: string): string {
     switch (role) {
       case "Admin":
-        return "/admin/dashboard";
+        return "/admin"; // Updated to match App.tsx
       case "Agent":
-        return "/agent/lost-found";
+        return "/lost-found"; // Updated to match App.tsx
       default:
         return "/dashboard";
     }
