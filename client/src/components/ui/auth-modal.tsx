@@ -63,19 +63,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     },
   });
 
+  // Use AuthService for redirection based on role
   function redirectToDashboardByRole(role: string): void {
-    navigate(getDashboardPathByRole(role));
-  }
-
-  function getDashboardPathByRole(role: string): string {
-    switch (role) {
-      case "Admin":
-        return "/admin"; // Updated to match App.tsx
-      case "Agent":
-        return "/lost-found"; // Updated to match App.tsx
-      default:
-        return "/dashboard";
-    }
+    navigate(AuthService.getDashboardPathByRole(role));
   }
 
   const onLoginSubmit = (data: LoginFormValues) => {
@@ -110,13 +100,20 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     try {
       setGoogleLoading(true);
       
-      // Simply trigger the Firebase sign-in process
-      // The AuthProvider in use-auth.tsx will handle the backend integration
-      // and redirection based on the user's role
-      await signInWithGoogle();
+      // Use the centralized AuthService for Google sign-in
+      const userData = await AuthService.signInWithGoogle();
       
-      // Just close the modal - navigation will be handled by the AuthProvider
+      toast({
+        title: "Welcome!",
+        description: `You have successfully signed in as ${userData.fullName || userData.username}`,
+      });
+      
+      // Close the modal
       onClose();
+      
+      // Navigate to the appropriate dashboard based on user role
+      const dashboardPath = AuthService.getDashboardPathByRole(userData.role);
+      navigate(dashboardPath);
       
     } catch (error: any) {
       console.error("Google sign-in failed:", error);
