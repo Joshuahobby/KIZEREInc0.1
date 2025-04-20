@@ -247,7 +247,7 @@ export async function initializePayment(paymentData: PaymentInitialization): Pro
  * Get the payment amount based on the payment type
  * 
  * @param paymentType The type of payment ('registration' or 'lost_report')
- * @returns The payment amount in RWF
+ * @returns The payment amount in the default currency
  */
 export function getPaymentAmount(paymentType: 'registration' | 'lost_report'): number {
   // Use the centralized config function

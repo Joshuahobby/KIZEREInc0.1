@@ -164,7 +164,7 @@ export class PaymentService {
    * Calculate payment amount based on payment type
    * 
    * @param type Payment type
-   * @returns Payment amount in RWF
+   * @returns Payment amount in the default currency
    */
   static getPaymentAmount(type: PaymentType): number {
     // Use the centralized payment configuration
