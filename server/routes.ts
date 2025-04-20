@@ -114,7 +114,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Update avatar URL if provided and different from what's stored
-      if (photoURL && (!user.avatarUrl || user.avatarUrl !== photoURL)) {
+      if (user && photoURL && (!user.avatarUrl || user.avatarUrl !== photoURL)) {
         try {
           user = await UserService.updateUser(user.id, { avatarUrl: photoURL });
           logger.info('Updated user avatar from Google auth', { userId: user.id });

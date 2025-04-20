@@ -26,7 +26,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { AuthModel } from "@/models/auth.model";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
-import { FirebaseService } from "@/lib/firebase";
+import { AuthService } from "@/services/auth.service";
 import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { 
@@ -45,21 +45,8 @@ import { SiGoogle } from "react-icons/si";
 
 // Function to redirect to appropriate dashboard based on user role
 function redirectToDashboardByRole(role: string): void {
-  const dashboardPath = getDashboardPathByRole(role);
+  const dashboardPath = AuthService.getDashboardPathByRole(role);
   window.location.href = dashboardPath;
-}
-
-// Helper function to get the dashboard path based on user role
-function getDashboardPathByRole(role: string): string {
-  switch (role) {
-    case 'Admin':
-      return '/admin'; // Correct path to admin dashboard 
-    case 'Agent':
-      return '/lost-found';
-    case 'Subscriber':
-    default:
-      return '/dashboard'; // This redirects to UnifiedDashboardComponent
-  }
 }
 
 // Types from AuthModel
@@ -142,52 +129,11 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
   const handleGoogleSignIn = async () => {
     try {
-      // Start Google sign-in process
+      // Start Google sign-in process with the centralized AuthService
       setGoogleLoading(true);
-      const result = await FirebaseService.signInWithGooglePopup();
       
-      // Extract user information from Firebase result
-      const user = result.user;
-      console.log("Google sign-in successful", user);
-      
-      if (!user.email) {
-        toast({
-          title: "Authentication Failed",
-          description: "Could not get email from Google. Please try again.",
-          variant: "destructive",
-        });
-        setGoogleLoading(false);
-        return;
-      }
-      
-      // Get the user token
-      const token = await user.getIdToken();
-      
-      // Send the Google auth data to our backend
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: user.email,
-          name: user.displayName || user.email.split('@')[0],
-          uid: user.uid,
-          token: token,
-          photoURL: user.photoURL
-        }),
-        credentials: "include"
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Failed to authenticate with Google");
-      }
-      
-      const userData = await response.json();
-      
-      // Update auth context
-      queryClient.setQueryData(["/api/user"], userData);
+      // Use the centralized authentication service
+      const userData = await AuthService.signInWithGoogle();
       
       // Show success message
       toast({
@@ -200,6 +146,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       
       // Redirect to the appropriate dashboard based on user role
       redirectToDashboardByRole(userData.role);
+      
     } catch (error: any) {
       console.error("Google sign-in error:", error);
       toast({
