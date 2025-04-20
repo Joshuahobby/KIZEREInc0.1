@@ -16,8 +16,12 @@ export interface InitializePaymentRequest {
  * Response interface for payment initialization
  */
 export interface InitializePaymentResponse {
+  paymentId: number;
   transactionRef: string;
+  amount: number;
+  currency: string;
   paymentUrl: string;
+  redirectUrl: string;
 }
 
 /**
@@ -164,9 +168,9 @@ export class PaymentService {
   static getPaymentAmount(type: PaymentType): number {
     switch (type) {
       case "registration":
-        return 1000; // 1,000 RWF for item registration
+        return 2000; // 2,000 RWF for item registration
       case "lost_report":
-        return 500; // 500 RWF for lost item report
+        return 1000; // 1,000 RWF for lost item report
       default:
         return 0;
     }

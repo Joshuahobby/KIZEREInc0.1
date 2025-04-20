@@ -131,21 +131,17 @@ export default function RegisterItem() {
         setPaymentStatus("pending");
         
         // Initialize payment for this item registration
-        const payment = await PaymentService.initiatePayment({
+        const payment = await PaymentService.initializePayment({
           amount: 2000, // Registration fee 2,000 RWF
           type: "registration",
-          itemId: item.id,
-          metadata: {
-            itemName: item.name,
-            category: item.category
-          }
+          itemId: item.id
         });
         
         // Store payment reference for later verification
         setPaymentRef(payment.transactionRef);
         
         // Redirect to Flutterwave payment page
-        window.location.href = payment.redirectUrl;
+        window.location.href = payment.paymentUrl;
       } catch (error) {
         setPaymentStatus("error");
         
@@ -596,45 +592,89 @@ export default function RegisterItem() {
                               </div>
                             </div>
                           </div>
+                          
+                          <div className="mt-6 pt-4 border-t border-gray-200">
+                            <h4 className="text-sm font-medium text-neutral-500">Registration Fee</h4>
+                            <div className="mt-2 bg-white p-4 rounded-md border border-gray-100 flex items-center justify-between">
+                              <div className="flex items-center">
+                                <div className="bg-primary-50 p-2 rounded-full">
+                                  <CreditCard className="h-5 w-5 text-primary-600" />
+                                </div>
+                                <div className="ml-3">
+                                  <h5 className="text-sm font-medium text-neutral-900">Item Registration Fee</h5>
+                                  <p className="text-xs text-neutral-500">A one-time fee to protect your item</p>
+                                </div>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-lg">2,000 RWF</span>
+                              </div>
+                            </div>
+                            <p className="mt-2 text-xs text-neutral-500">
+                              After submitting, you'll be redirected to our secure payment provider to complete the registration fee payment.
+                            </p>
+                          </div>
                         </div>
                       </div>
                     )}
                     
                     {/* Form Navigation */}
-                    <div className="flex justify-end mt-8">
-                      {step > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handlePreviousStep}
-                          className="mr-4"
-                        >
-                          Previous
-                        </Button>
-                      )}
+                    <div className="flex justify-between mt-8 pt-4 border-t border-gray-200">
+                      <div>
+                        {step > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handlePreviousStep}
+                            disabled={registerMutation.isPending || paymentStatus === "pending"}
+                          >
+                            Previous
+                          </Button>
+                        )}
+                      </div>
                       
-                      {step < 4 ? (
-                        <Button
-                          type="button"
-                          onClick={handleNextStep}
-                        >
-                          Next
-                        </Button>
-                      ) : (
-                        <Button
-                          type="submit"
-                          disabled={registerMutation.isPending}
-                        >
-                          {registerMutation.isPending ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Registering...
-                            </>
-                          ) : (
-                            "Register Item"
-                          )}
-                        </Button>
-                      )}
+                      <div>
+                        {step < 4 ? (
+                          <Button
+                            type="button"
+                            onClick={handleNextStep}
+                          >
+                            Next
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          </Button>
+                        ) : paymentStatus === "pending" ? (
+                          <Button disabled className="min-w-[200px]">
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing Payment...
+                          </Button>
+                        ) : paymentStatus === "error" && paymentRef ? (
+                          <Button 
+                            type="button"
+                            onClick={handleVerifyPayment}
+                            variant="outline"
+                            className="min-w-[200px]"
+                          >
+                            Verify Payment Status
+                          </Button>
+                        ) : (
+                          <Button 
+                            type="submit"
+                            disabled={registerMutation.isPending}
+                            className="min-w-[200px]"
+                          >
+                            {registerMutation.isPending ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Registering...
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                Register and Pay
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </form>
                 </Form>
