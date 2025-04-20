@@ -584,19 +584,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const transactionRef = req.params.reference;
       
+      console.log(`Verifying payment with reference: ${transactionRef}`);
+      
       // Check if payment exists
       const payment = await storage.getPaymentByTransactionRef(transactionRef);
       if (!payment) {
-        return res.status(404).json({ message: "Payment not found" });
+        console.error(`Payment not found with reference: ${transactionRef}`);
+        return res.status(404).json({ 
+          status: 'error',
+          message: "Payment not found" 
+        });
       }
       
       // Only allow users to verify their own payments (or admins)
       if (payment.userId !== req.user!.id && req.user!.role !== 'Admin') {
-        return res.status(403).json({ message: "Access denied" });
+        console.error(`Access denied for user ${req.user!.id} trying to verify payment ${payment.id} owned by user ${payment.userId}`);
+        return res.status(403).json({ 
+          status: 'error',
+          message: "Access denied" 
+        });
       }
       
       // If payment is already verified, return existing status
       if (payment.status === 'successful') {
+        console.log(`Payment ${payment.id} already verified successfully`);
         return res.status(200).json({
           status: payment.status,
           message: "Payment already verified",
@@ -604,10 +615,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // For testing purposes in development, allow mock verification
+      if (process.env.NODE_ENV === 'development' && !payment.transactionId) {
+        console.log(`Development mode: Auto-verifying payment ${payment.id}`);
+        
+        // Mock the transaction ID and verification in development
+        const mockTransactionId = `dev-tx-${Date.now()}`;
+        const updatedPayment = await storage.updatePayment(payment.id, {
+          status: 'successful',
+          transactionId: mockTransactionId,
+          flutterwaveRef: `dev-flw-${Date.now()}`,
+          paymentDate: new Date()
+        });
+        
+        return res.status(200).json({
+          status: 'successful',
+          message: "Payment verified (development mode)",
+          payment: updatedPayment
+        });
+      }
+      
       // If we have a Flutterwave transaction ID, verify the payment
       if (payment.transactionId) {
         try {
+          console.log(`Verifying payment ${payment.id} with transaction ID ${payment.transactionId}`);
           const verificationResult = await verifyTransaction(payment.transactionId);
+          
+          console.log(`Verification result for payment ${payment.id}:`, verificationResult);
           
           // Update payment based on verification result
           const updatedPayment = await storage.updatePayment(payment.id, {
@@ -623,6 +657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             payment: updatedPayment
           });
         } catch (verifyError) {
+          console.error(`Error verifying payment ${payment.id} with Flutterwave:`, verifyError);
           return res.status(500).json({
             status: 'error',
             message: 'Failed to verify payment with Flutterwave',
@@ -630,14 +665,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       } else {
+        console.log(`Payment ${payment.id} has no transaction ID yet`);
         return res.status(400).json({
-          status: 'error',
+          status: 'pending',
           message: 'Payment has not been processed by Flutterwave yet'
         });
       }
     } catch (error) {
       console.error("Payment verification error:", error);
       res.status(500).json({ 
+        status: 'error',
         message: "Failed to verify payment",
         error: error instanceof Error ? error.message : "Unknown error"
       });

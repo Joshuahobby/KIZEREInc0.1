@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useLocation } from "wouter";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check } from "lucide-react";
+import { PaymentService } from "@/services/payment.service";
+import { Loader2, Check, ArrowRight, CreditCard } from "lucide-react";
 
 // Item categories
 const categories = [
@@ -86,6 +88,10 @@ export default function RegisterItem() {
     mode: "onChange",
   });
   
+  const [, setLocation] = useLocation();
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
+  const [paymentRef, setPaymentRef] = useState<string | null>(null);
+  
   // Item registration mutation
   const registerMutation = useMutation({
     mutationFn: async (data: ItemRegistrationValues) => {
@@ -110,24 +116,79 @@ export default function RegisterItem() {
       const res = await apiRequest("POST", "/api/items", itemData);
       return await res.json();
     },
-    onSuccess: () => {
+    onSuccess: async (item) => {
       // Invalidate and refetch items query to update the list
       queryClient.invalidateQueries({ queryKey: ["/api/items"] });
       queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
       
       toast({
         title: "Item registered successfully",
-        description: "Your item has been added to the database.",
+        description: "Item saved. Proceeding to payment...",
       });
       
-      // Reset form and go back to step 1
-      form.reset();
-      setStep(1);
+      // Initiate payment process for registration fee
+      try {
+        setPaymentStatus("pending");
+        
+        // Initialize payment for this item registration
+        const payment = await PaymentService.initiatePayment({
+          amount: 2000, // Registration fee 2,000 RWF
+          type: "registration",
+          itemId: item.id,
+          metadata: {
+            itemName: item.name,
+            category: item.category
+          }
+        });
+        
+        // Store payment reference for later verification
+        setPaymentRef(payment.transactionRef);
+        
+        // Redirect to Flutterwave payment page
+        window.location.href = payment.redirectUrl;
+      } catch (error) {
+        setPaymentStatus("error");
+        
+        toast({
+          title: "Payment initiation failed",
+          description: error instanceof Error ? error.message : "Failed to initiate payment. Please try again.",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
         title: "Registration failed",
         description: error.message || "Failed to register item. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Payment verification mutation
+  const verifyPaymentMutation = useMutation({
+    mutationFn: async (transactionRef: string) => {
+      return await PaymentService.verifyPayment(transactionRef);
+    },
+    onSuccess: (data) => {
+      setPaymentStatus("success");
+      
+      toast({
+        title: "Payment verified",
+        description: "Your payment has been verified successfully.",
+      });
+      
+      // Reset form and redirect to dashboard
+      form.reset();
+      setStep(1);
+      setLocation("/");
+    },
+    onError: (error: Error) => {
+      setPaymentStatus("error");
+      
+      toast({
+        title: "Payment verification failed",
+        description: error.message || "Failed to verify payment. Please contact support.",
         variant: "destructive",
       });
     },
@@ -159,6 +220,13 @@ export default function RegisterItem() {
   // Handle form submission (in final step)
   const onSubmit = (data: ItemRegistrationValues) => {
     registerMutation.mutate(data);
+  };
+  
+  // Handle payment verification
+  const handleVerifyPayment = () => {
+    if (paymentRef) {
+      verifyPaymentMutation.mutate(paymentRef);
+    }
   };
   
   return (
