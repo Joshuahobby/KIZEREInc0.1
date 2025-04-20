@@ -118,8 +118,7 @@ export default function LostFound() {
   
   // Handle form submission
   const onSubmit = (data: ReportFormValues) => {
-    // We'll let server-side code handle date conversion
-    // Submit the form without modifying the date format
+    console.log("Submitting form with data:", data);
     reportMutation.mutate(data);
   };
 

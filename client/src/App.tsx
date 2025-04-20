@@ -40,6 +40,7 @@ function App() {
             <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
             <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />
             <ProtectedRoute path="/lost-found/report" component={LostFoundComponent} requiredRole="any" />
+            <ProtectedRoute path="/lost-found/report/:type" component={LostFoundComponent} requiredRole="any" />
             <ProtectedRoute path="/user-management" component={UserManagementComponent} requiredRole="Admin" />
             
             {/* 404 route */}

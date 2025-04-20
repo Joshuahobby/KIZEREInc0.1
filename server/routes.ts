@@ -293,60 +293,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/reports", requireAuth, async (req, res) => {
     try {
-      // First, log debug information
-      console.log("Report submission:", {
-        body: req.body,
-        dateType: typeof req.body.date
-      });
+      // Create a new report object with the required data
+      const reportData = {
+        userId: req.user!.id,
+        type: req.body.type,
+        title: req.body.title,
+        description: req.body.description,
+        location: req.body.location,
+        date: new Date(req.body.date),
+        contactInfo: req.body.contactInfo,
+        itemId: req.body.itemId || null,
+        status: 'Open'
+      };
+
+      // Create the report
+      const newReport = await storage.createReport(reportData);
       
-      // Convert string dates to Date objects
-      const formData = { ...req.body };
-      
-      if (typeof formData.date === 'string') {
-        formData.date = new Date(formData.date);
-      }
-      
-      // Validate the input data with improved error handling
-      const result = insertReportSchema.safeParse({
-        ...formData,
-        userId: req.user!.id
-      });
-      
-      if (!result.success) {
-        // Return a detailed validation error
-        return res.status(400).json({
-          message: "Validation error",
-          errors: result.error.errors
-        });
-      }
-      
-      const validatedData = result.data;
-      const newReport = await storage.createReport(validatedData);
-      
-      // Create notification for found items (if the item was registered as lost)
-      if (validatedData.type === 'found' && validatedData.itemId) {
-        const item = await storage.getItem(validatedData.itemId);
-        if (item && item.status === 'Lost') {
-          await storage.createNotification({
-            userId: item.userId,
-            title: `Item Found: ${item.name}`,
-            message: `Someone has reported finding your ${item.name}. Click to see details and contact information.`,
-            type: 'item_found',
-            isRead: false,
-            relatedItemId: item.id,
-            relatedReportId: newReport.id
-          });
-        }
-      }
-      
+      // Return success response
       res.status(201).json(newReport);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Validation error", 
-          errors: error.errors 
-        });
-      }
+      console.error("Report creation error:", error);
       res.status(500).json({ message: "Failed to create report" });
     }
   });
