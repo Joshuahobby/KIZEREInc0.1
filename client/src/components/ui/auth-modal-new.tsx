@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AuthModel } from "@/models/auth.model";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
 import { AuthService } from "@/services/auth.service";
+import { FirebaseService } from "@/lib/firebase";
 import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { 
