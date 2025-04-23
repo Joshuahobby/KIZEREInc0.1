@@ -45,9 +45,9 @@ import {
 import { SiGoogle } from "react-icons/si";
 
 // Function to redirect to appropriate dashboard based on user role
-function redirectToDashboardByRole(role: string): void {
+function redirectToDashboardByRole(role: string, navigate: (to: string) => void): void {
   const dashboardPath = AuthService.getDashboardPathByRole(role);
-  window.location.href = dashboardPath;
+  navigate(dashboardPath);
 }
 
 // Types from AuthModel
@@ -68,6 +68,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string } | null>(null);
   const { loginMutation, registerMutation } = useAuth();
   const { toast } = useToast();
+  const [_, navigate] = useLocation(); // Get navigate function from wouter
 
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -113,7 +114,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     loginMutation.mutate(loginData, {
       onSuccess: (userData) => {
         // Redirect to the appropriate dashboard based on user role
-        redirectToDashboardByRole(userData.role);
+        redirectToDashboardByRole(userData.role, navigate);
       }
     });
   };
@@ -123,7 +124,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     registerMutation.mutate(registerData, {
       onSuccess: (userData) => {
         // Redirect to the appropriate dashboard based on user role
-        redirectToDashboardByRole(userData.role);
+        redirectToDashboardByRole(userData.role, navigate);
       }
     });
   };
@@ -146,7 +147,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       onClose();
       
       // Redirect to the appropriate dashboard based on user role
-      redirectToDashboardByRole(userData.role);
+      redirectToDashboardByRole(userData.role, navigate);
       
     } catch (error: any) {
       console.error("Google sign-in error:", error);

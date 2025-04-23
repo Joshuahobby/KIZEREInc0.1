@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Command, CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useDebounce } from '@/hooks/use-debounce';
+import { useDebounce } from '../../hooks/use-debounce';
 import { createLogger } from '@/lib/logger';
 import {
   Search,
