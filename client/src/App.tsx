@@ -44,48 +44,40 @@ function App() {
     <ErrorBoundary>
       <LanguageProvider defaultLanguage="rw">
         <AuthProvider>
-          <LoadingProvider>
-            <TooltipProvider>
-              {/* Loading overlay for page transitions */}
-              <LoadingOverlay />
+          <TooltipProvider>
+            <Switch>
+              {/* Public routes - using modal authentication on landing page */}
+              <Route path="/" component={LandingPage} />
               
-              {/* Route transition wrapper for smooth animations */}
-              <RouteTransition>
-                <Switch>
-                  {/* Public routes - using modal authentication on landing page */}
-                  <Route path="/" component={LandingPage} />
-                  
-                  {/* Auth callback route for handling OAuth redirects */}
-                  <Route path="/auth-callback" component={AuthCallback} />
-                  
-                  {/* Protected routes with role-based access */}
-                  
-                  {/* Role-restricted routes */}
-                  <ProtectedRoute path="/dashboard" component={UnifiedDashboardComponent} requiredRole="any" />
-                  <ProtectedRoute path="/old-dashboard" component={DashboardComponent} requiredRole="any" />
-                  <ProtectedRoute path="/enhanced-dashboard" component={EnhancedDashboardComponent} requiredRole="any" />
-                  <ProtectedRoute path="/register-item" component={RegisterItemComponent} requiredRole="any" />
-                  <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
-                  <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />
-                  <ProtectedRoute path="/lost-found/report" component={LostFoundComponent} requiredRole="any" />
-                  <ProtectedRoute path="/lost-found/report/:type" component={LostFoundComponent} requiredRole="any" />
-                  <ProtectedRoute path="/user-management" component={UserManagementComponent} requiredRole="Admin" />
-                  
-                  {/* Payment routes */}
-                  <Route path="/payment-status" component={PaymentStatusComponent} />
-                  <ProtectedRoute path="/payment-history" component={PaymentHistoryComponent} requiredRole="any" />
-                  <ProtectedRoute path="/payment-test" component={PaymentTestComponent} requiredRole="any" />
-                  
-                  {/* Admin routes */}
-                  <ProtectedRoute path="/admin" component={AdminDashboardComponent} requiredRole="Admin" />
-                  <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
-                  
-                  {/* 404 route */}
-                  <Route component={NotFound} />
-                </Switch>
-              </RouteTransition>
-            </TooltipProvider>
-          </LoadingProvider>
+              {/* Auth callback route for handling OAuth redirects */}
+              <Route path="/auth-callback" component={AuthCallback} />
+              
+              {/* Protected routes with role-based access */}
+              
+              {/* Role-restricted routes */}
+              <ProtectedRoute path="/dashboard" component={UnifiedDashboardComponent} requiredRole="any" />
+              <ProtectedRoute path="/old-dashboard" component={DashboardComponent} requiredRole="any" />
+              <ProtectedRoute path="/enhanced-dashboard" component={EnhancedDashboardComponent} requiredRole="any" />
+              <ProtectedRoute path="/register-item" component={RegisterItemComponent} requiredRole="any" />
+              <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
+              <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />
+              <ProtectedRoute path="/lost-found/report" component={LostFoundComponent} requiredRole="any" />
+              <ProtectedRoute path="/lost-found/report/:type" component={LostFoundComponent} requiredRole="any" />
+              <ProtectedRoute path="/user-management" component={UserManagementComponent} requiredRole="Admin" />
+              
+              {/* Payment routes */}
+              <Route path="/payment-status" component={PaymentStatusComponent} />
+              <ProtectedRoute path="/payment-history" component={PaymentHistoryComponent} requiredRole="any" />
+              <ProtectedRoute path="/payment-test" component={PaymentTestComponent} requiredRole="any" />
+              
+              {/* Admin routes */}
+              <ProtectedRoute path="/admin" component={AdminDashboardComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
+              
+              {/* 404 route */}
+              <Route component={NotFound} />
+            </Switch>
+          </TooltipProvider>
         </AuthProvider>
       </LanguageProvider>
     </ErrorBoundary>

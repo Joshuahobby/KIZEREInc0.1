@@ -23,8 +23,19 @@ interface LoadingProviderProps {
 export function LoadingProvider({ children }: LoadingProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const startLoading = () => setIsLoading(true);
-  const stopLoading = () => setIsLoading(false);
+  // Simplified loading management
+  const startLoading = () => {
+    setIsLoading(true);
+    
+    // Auto-reset loading state after 2 seconds as a safety measure
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+  };
+  
+  const stopLoading = () => {
+    setIsLoading(false);
+  };
 
   return (
     <LoadingContext.Provider value={{ isLoading, startLoading, stopLoading }}>

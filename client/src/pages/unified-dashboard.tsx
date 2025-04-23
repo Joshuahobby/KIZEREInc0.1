@@ -615,60 +615,63 @@ export default function UnifiedDashboard() {
       <Header />
       <main className="flex-1 bg-background p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
-          <PageTransition>
-            {isLoading ? (
-              <DashboardSkeleton />
-            ) : (
-              <>
-                {/* Welcome Banner */}
-                <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6 rounded-lg mb-6">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                    <div>
-                      <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                        Welcome back, {user.fullName || user.username}!
-                      </h1>
-                      <p className="text-muted-foreground">
-                        {isAdmin 
-                          ? "Manage your platform and view performance insights" 
-                          : isAgent 
-                            ? "Review and process lost and found reports"
-                            : "Track your items and manage your account"
-                        }
-                      </p>
-                    </div>
-                    <div className="mt-4 md:mt-0">
-                      <Button onClick={() => navigate("/register-item")}>
-                        <Plus className="h-4 w-4 mr-2" /> Register New Item
-                      </Button>
-                    </div>
+          {isLoading ? (
+            <DashboardSkeleton />
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              {/* Welcome Banner */}
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6 rounded-lg mb-6">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                  <div>
+                    <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                      Welcome back, {user.fullName || user.username}!
+                    </h1>
+                    <p className="text-muted-foreground">
+                      {isAdmin 
+                        ? "Manage your platform and view performance insights" 
+                        : isAgent 
+                          ? "Review and process lost and found reports"
+                          : "Track your items and manage your account"
+                      }
+                    </p>
+                  </div>
+                  <div className="mt-4 md:mt-0">
+                    <Button onClick={() => navigate("/register-item")}>
+                      <Plus className="h-4 w-4 mr-2" /> Register New Item
+                    </Button>
                   </div>
                 </div>
+              </div>
 
-                {/* Dashboard Tabs */}
-                <div className="bg-card rounded-lg shadow-sm mb-6 p-1">
-                  <div className="flex overflow-x-auto">
-                    {getDashboardTabs().map((tab) => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex items-center px-4 py-2 text-sm font-medium rounded-md mr-1 ${
-                          activeTab === tab.id
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-background hover:bg-muted"
-                        }`}
-                      >
-                        {tab.icon}
-                        <span className="ml-2">{tab.label}</span>
-                      </button>
-                    ))}
-                  </div>
+              {/* Dashboard Tabs */}
+              <div className="bg-card rounded-lg shadow-sm mb-6 p-1">
+                <div className="flex overflow-x-auto">
+                  {getDashboardTabs().map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center px-4 py-2 text-sm font-medium rounded-md mr-1 ${
+                        activeTab === tab.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background hover:bg-muted"
+                      }`}
+                    >
+                      {tab.icon}
+                      <span className="ml-2">{tab.label}</span>
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                {/* Dashboard Content */}
-                {renderDashboardContent()}
-              </>
-            )}
-          </PageTransition>
+              {/* Dashboard Content */}
+              {renderDashboardContent()}
+            </motion.div>
+          )}
         </div>
       </main>
       <Footer />
