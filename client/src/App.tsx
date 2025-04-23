@@ -49,6 +49,8 @@ function App() {
               {/* Public routes - using modal authentication on landing page */}
               <Route path="/" component={LandingPage} />
               
+              {/* Redirect root path for authenticated users to dashboard */}
+              
               {/* Auth callback route for handling OAuth redirects */}
               <Route path="/auth-callback" component={AuthCallback} />
               

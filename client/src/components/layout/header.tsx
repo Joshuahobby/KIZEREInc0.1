@@ -63,46 +63,53 @@ export function Header() {
     if (path !== "/" && location.startsWith(path)) return true;
     return false;
   };
+  
+  // Determine the appropriate dashboard path based on user role
+  const getDashboardPath = (): string => {
+    if (!user) return "/dashboard";
+    
+    switch (user.role) {
+      case "Admin":
+        return "/admin";
+      case "Agent":
+        return "/lost-found";
+      default:
+        return "/dashboard";
+    }
+  };
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {isAuthenticated ? (
-            /* For authenticated users, just show the logo */
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/">
-                <h1 className="text-2xl font-display font-bold text-primary-600 cursor-pointer">KIZERE</h1>
-              </Link>
-            </div>
-          ) : (
-            /* For non-authenticated users, show logo and navigation */
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <Link href="/">
-                  <h1 className="text-2xl font-display font-bold text-primary-600 cursor-pointer">KIZERE</h1>
-                </Link>
-              </div>
-              <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                {navigation.map((item) => {
-                  if (item.admin && !isAdmin) return null;
-                  
-                  return (
-                    <Link key={item.name} href={item.href}>
-                      <a
-                        className={`${
-                          isActive(item.href)
-                            ? "border-primary-500 text-neutral-900"
-                            : "border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700"
-                        } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
-                      >
-                        {item.name}
-                      </a>
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
+          {/* Always show the logo, but with a different link for authenticated users */}
+          <div className="flex-shrink-0 flex items-center">
+            <Link href={isAuthenticated ? getDashboardPath() : "/"}>
+              <h1 className="text-2xl font-display font-bold text-primary-600 cursor-pointer">KIZERE</h1>
+            </Link>
+          </div>
+          
+          {/* Only show navigation for non-authenticated users */}
+          {!isAuthenticated && (
+            <nav className="hidden sm:ml-6 sm:flex sm:space-x-8">
+              {navigation.map((item) => {
+                if (item.admin && !isAdmin) return null;
+                
+                return (
+                  <Link key={item.name} href={item.href}>
+                    <a
+                      className={`${
+                        isActive(item.href)
+                          ? "border-primary-500 text-neutral-900"
+                          : "border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700"
+                      } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                    >
+                      {item.name}
+                    </a>
+                  </Link>
+                );
+              })}
+            </nav>
           )}
 
           <div className="ml-6 flex items-center gap-2">
