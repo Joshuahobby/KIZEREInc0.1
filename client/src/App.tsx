@@ -46,10 +46,8 @@ function App() {
         <AuthProvider>
           <TooltipProvider>
             <Switch>
-              {/* Public routes - using modal authentication on landing page */}
+              {/* Root path needs special handling to redirect authenticated users */}
               <Route path="/" component={LandingPage} />
-              
-              {/* Redirect root path for authenticated users to dashboard */}
               
               {/* Auth callback route for handling OAuth redirects */}
               <Route path="/auth-callback" component={AuthCallback} />
