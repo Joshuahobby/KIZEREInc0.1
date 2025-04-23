@@ -20,6 +20,11 @@ import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { AuthProvider } from "@/hooks/use-auth";
 
+// Import our new transition components
+import { LoadingProvider } from "@/hooks/use-loading-state";
+import { RouteTransition } from "@/components/ui/route-transition";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
+
 function App() {
   // Create safe component wrappers to ensure JSX Elements are always returned
   const DashboardComponent = () => <Dashboard />;
