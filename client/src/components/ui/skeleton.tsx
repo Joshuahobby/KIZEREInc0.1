@@ -2,18 +2,20 @@ import { cn } from "@/lib/utils";
 
 interface SkeletonProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
 /**
  * Basic skeleton component for loading states
  */
-export function Skeleton({ className }: SkeletonProps) {
+export function Skeleton({ className, style }: SkeletonProps) {
   return (
     <div
       className={cn(
         "h-5 w-full animate-pulse rounded-md bg-muted/60",
         className
       )}
+      style={style}
     />
   );
 }
