@@ -76,6 +76,7 @@ interface UseDashboardDataOptions {
 }
 
 export function useDashboardData(options: UseDashboardDataOptions = {}): DashboardData {
+  // Convert options type to match TypeScript requirements
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
   const isAgent = user?.role === 'Agent';

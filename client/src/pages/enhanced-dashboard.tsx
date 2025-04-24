@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { useDashboardData, DashboardData } from "@/hooks/use-dashboard-data";
+import { useDashboardData, DashboardData, DashboardStats } from "@/hooks/use-dashboard-data";
 import { motion } from "framer-motion";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -56,21 +56,7 @@ const EnhancedDashboard: React.FC = () => {
   });
   
   // Extract data from dashboard data hook
-  const {
-    items = [],
-    reports = [],
-    notifications = [],
-    isLoading = true,
-    userStats = {
-      totalItems: 0,
-      totalLostReports: 0,
-      totalFoundReports: 0,
-      totalSpent: 0,
-      recentlyAddedItems: [],
-      pendingPayments: 0,
-      unreadNotifications: 0
-    }
-  } = dashboardData || {};
+  const { items, reports, notifications, isLoading, userStats } = dashboardData;
   
   // Determine user roles and access rights
   const isAdmin = user?.role === 'Admin';
