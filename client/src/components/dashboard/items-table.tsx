@@ -127,10 +127,10 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
             <TableRow key={item.id}>
               <TableCell className="font-medium">
                 <div className="flex items-center">
-                  {item.imageUrl ? (
+                  {item.imageUrls && item.imageUrls.length > 0 ? (
                     <div className="h-10 w-10 rounded bg-muted mr-3 overflow-hidden flex-shrink-0">
                       <img 
-                        src={item.imageUrl} 
+                        src={item.imageUrls[0]} 
                         alt={item.name} 
                         className="h-full w-full object-cover"
                       />
@@ -144,10 +144,10 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                 </div>
               </TableCell>
               <TableCell className="font-mono text-xs">
-                {item.serialNumber || "N/A"}
+                {item.uniqueIdentifier || "N/A"}
               </TableCell>
               <TableCell>{item.category}</TableCell>
-              <TableCell>{formatDate(item.registeredAt)}</TableCell>
+              <TableCell>{formatDate(item.registeredAt.toString())}</TableCell>
               <TableCell>{getStatusBadge(item.status)}</TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>

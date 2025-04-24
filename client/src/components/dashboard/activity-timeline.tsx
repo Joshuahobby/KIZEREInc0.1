@@ -48,7 +48,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
       id: item.id,
       type: 'item',
       title: `Registered: ${item.name}`,
-      description: `${item.category} - ${item.serialNumber || 'No serial number'}`,
+      description: `${item.category} - ${item.uniqueIdentifier || 'No ID'}`,
       timestamp: item.registeredAt,
       status: item.status,
       category: item.category,

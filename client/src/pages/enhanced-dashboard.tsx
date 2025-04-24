@@ -42,22 +42,39 @@ import {
 
 const EnhancedDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const { user, logout } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [_, navigate] = useLocation();
 
+  // Handle logout
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+
   // Use the dashboard data hook
-  const dashboardData = useDashboardData();
+  const dashboardData = useDashboardData({
+    refreshInterval: 60000
+  });
   
+  // Extract data from dashboard data hook
   const {
-    userStats,
-    adminStats,
-    isAdmin = false,
-    isAgent = false,
-    isLoading = true,
-    notifications = [],
     items = [],
-    reports = []
+    reports = [],
+    notifications = [],
+    isLoading = true,
+    userStats = {
+      totalItems: 0,
+      totalLostReports: 0,
+      totalFoundReports: 0,
+      totalSpent: 0,
+      recentlyAddedItems: [],
+      pendingPayments: 0,
+      unreadNotifications: 0
+    }
   } = dashboardData || {};
+  
+  // Determine user roles and access rights
+  const isAdmin = user?.role === 'Admin';
+  const isAgent = user?.role === 'Agent';
 
   // Animation variants
   const containerVariants = {
@@ -97,13 +114,14 @@ const EnhancedDashboard: React.FC = () => {
   }
 
   // Format currency values
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | string) => {
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
     return new Intl.NumberFormat('en-RW', { 
       style: 'currency',
       currency: 'RWF',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(value);
+    }).format(numValue);
   };
 
   return (
@@ -150,7 +168,7 @@ const EnhancedDashboard: React.FC = () => {
                       <span>Settings</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => logout()}>
+                    <DropdownMenuItem onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </DropdownMenuItem>
