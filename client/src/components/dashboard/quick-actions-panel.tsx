@@ -1,255 +1,217 @@
-import React from 'react';
-import { useLocation } from 'wouter';
-import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React from "react";
+import { useLocation } from "wouter";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { User } from "@shared/schema";
 import {
-  Plus,
+  PlusCircle,
   Search,
-  FileText,
   AlertTriangle,
   CheckCircle2,
-  Clock,
-  ArrowUpFromLine,
+  DollarSign,
+  FileEdit,
+  FileText,
+  UserCircle,
   Settings,
-  HelpCircle,
-  BookOpen,
-  BellRing
-} from 'lucide-react';
+  BarChart3,
+  Lock,
+  Smartphone,
+  Bookmark,
+  Upload,
+  Download
+} from "lucide-react";
 
-interface QuickActionsPanelProps {
-  user: Omit<User, 'password'>;
-  variant?: 'default' | 'compact' | 'card';
+interface QuickActionItemProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  href: string;
+  color?: string;
+  isDisabled?: boolean;
 }
 
-/**
- * Quick Actions Panel Component
- * 
- * Provides convenient access to the most frequently used actions based on user role,
- * improving accessibility of key platform features.
- */
-export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
-  user,
-  variant = 'default'
+interface QuickActionsPanelProps {
+  user: User;
+}
+
+const QuickActionItem: React.FC<QuickActionItemProps> = ({
+  icon,
+  title,
+  description,
+  href,
+  color = "primary",
+  isDisabled = false
 }) => {
   const [, navigate] = useLocation();
   
-  // Determine if user has admin or agent role
-  const isAdmin = user.role === 'Admin';
-  const isAgent = user.role === 'Agent';
-  
-  // Define action items based on user role
-  const getActions = () => {
-    const baseActions = [
-      {
-        id: 'register-item',
-        label: 'Register Item',
-        description: 'Register a new item in the system',
-        icon: <Plus className="h-5 w-5" />,
-        color: 'text-blue-500',
-        bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-        action: () => navigate('/register-item')
-      },
-      {
-        id: 'report-lost',
-        label: 'Report Lost',
-        description: 'File a report for a lost item',
-        icon: <AlertTriangle className="h-5 w-5" />,
-        color: 'text-red-500',
-        bgColor: 'bg-red-100 dark:bg-red-900/30',
-        action: () => navigate('/lost-found/report/lost')
-      },
-      {
-        id: 'report-found',
-        label: 'Report Found',
-        description: 'Submit a found item report',
-        icon: <CheckCircle2 className="h-5 w-5" />,
-        color: 'text-green-500',
-        bgColor: 'bg-green-100 dark:bg-green-900/30',
-        action: () => navigate('/lost-found/report/found')
-      },
-      {
-        id: 'search-items',
-        label: 'Search Items',
-        description: 'Search for registered items',
-        icon: <Search className="h-5 w-5" />,
-        color: 'text-purple-500',
-        bgColor: 'bg-purple-100 dark:bg-purple-900/30',
-        action: () => navigate('/search')
-      }
-    ];
-    
-    // Additional actions for admin users
-    const adminActions = [
-      {
-        id: 'manage-users',
-        label: 'Manage Users',
-        description: 'View and manage platform users',
-        icon: <Settings className="h-5 w-5" />,
-        color: 'text-amber-500',
-        bgColor: 'bg-amber-100 dark:bg-amber-900/30',
-        action: () => navigate('/admin/users')
-      },
-      {
-        id: 'analytics',
-        label: 'Analytics',
-        description: 'View platform analytics dashboard',
-        icon: <FileText className="h-5 w-5" />,
-        color: 'text-indigo-500',
-        bgColor: 'bg-indigo-100 dark:bg-indigo-900/30',
-        action: () => navigate('/admin/analytics')
-      }
-    ];
-    
-    // Additional actions for agent users
-    const agentActions = [
-      {
-        id: 'review-reports',
-        label: 'Review Reports',
-        description: 'Review and process pending reports',
-        icon: <Clock className="h-5 w-5" />,
-        color: 'text-amber-500',
-        bgColor: 'bg-amber-100 dark:bg-amber-900/30',
-        action: () => navigate('/agent/reports')
-      },
-      {
-        id: 'match-items',
-        label: 'Match Items',
-        description: 'Match lost items with found reports',
-        icon: <ArrowUpFromLine className="h-5 w-5" />,
-        color: 'text-teal-500',
-        bgColor: 'bg-teal-100 dark:bg-teal-900/30',
-        action: () => navigate('/agent/match')
-      }
-    ];
-    
-    // Assemble the final action list based on user role
-    let actions = [...baseActions];
-    
-    if (isAdmin) {
-      actions = [...actions, ...adminActions];
-    }
-    
-    if (isAgent) {
-      actions = [...actions, ...agentActions];
-    }
-    
-    // Add help-related actions at the end for all users
-    actions.push(
-      {
-        id: 'help-center',
-        label: 'Help Center',
-        description: 'Get help and support',
-        icon: <HelpCircle className="h-5 w-5" />,
-        color: 'text-gray-500',
-        bgColor: 'bg-gray-100 dark:bg-gray-800/50',
-        action: () => navigate('/help')
-      }
-    );
-    
-    return actions;
+  const colorVariants: Record<string, string> = {
+    primary: "bg-primary/10 text-primary hover:bg-primary/20",
+    blue: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50",
+    red: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50",
+    green: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50",
+    amber: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50",
+    purple: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50",
   };
   
-  const actions = getActions();
+  const colorClass = colorVariants[color] || colorVariants.primary;
   
-  // Determine how many actions to display based on variant
-  const displayActions = variant === 'compact' ? actions.slice(0, 4) : actions;
-  
-  // Render quick actions in a grid layout with icons and labels
-  const renderActionGrid = () => {
-    return (
-      <div className="grid grid-cols-2 gap-3 mt-3">
-        {displayActions.map((action) => (
-          <motion.div 
-            key={action.id}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <Button
-              variant="outline"
-              className="h-auto py-4 px-4 w-full flex flex-col items-center justify-center text-center border border-border/50 hover:border-primary/30 hover:bg-card/70"
-              onClick={action.action}
-            >
-              <div className={`rounded-full ${action.bgColor} ${action.color} p-3 mb-2`}>
-                {action.icon}
-              </div>
-              <div className="font-medium text-sm">{action.label}</div>
-              {variant !== 'compact' && (
-                <div className="text-xs text-muted-foreground mt-1">{action.description}</div>
-              )}
-            </Button>
-          </motion.div>
-        ))}
+  return (
+    <button
+      onClick={() => navigate(href)}
+      disabled={isDisabled}
+      className={`w-full text-left px-4 py-3 rounded-lg mb-2 transition-colors ${colorClass} ${
+        isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+      }`}
+    >
+      <div className="flex items-start">
+        <div className="flex-shrink-0 mr-3">
+          <div className="h-10 w-10 rounded-full flex items-center justify-center bg-white/90 dark:bg-background/90 shadow-sm">
+            {icon}
+          </div>
+        </div>
+        <div>
+          <h3 className="font-medium text-sm">{title}</h3>
+          <p className="text-xs opacity-90">{description}</p>
+        </div>
       </div>
-    );
-  };
+    </button>
+  );
+};
+
+export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) => {
+  const isAdmin = user?.role === "Admin";
+  const isAgent = user?.role === "Agent";
   
-  // Render quick actions as a list with horizontal layout
-  const renderActionList = () => {
-    return (
-      <div className="flex space-x-2 overflow-x-auto py-2 px-1 -mx-1">
-        {displayActions.map((action) => (
-          <motion.div 
-            key={action.id}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex-shrink-0"
-          >
-            <Button
-              variant="outline"
-              className="h-auto py-3 px-3 flex flex-col items-center justify-center border border-border/50 hover:border-primary/30"
-              onClick={action.action}
-            >
-              <div className={`rounded-full ${action.bgColor} ${action.color} p-2 mb-2`}>
-                {action.icon}
-              </div>
-              <div className="font-medium text-xs whitespace-nowrap">{action.label}</div>
-            </Button>
-          </motion.div>
-        ))}
-      </div>
-    );
-  };
+  // Common actions for all users
+  const commonActions: QuickActionItemProps[] = [
+    {
+      icon: <PlusCircle className="h-5 w-5 text-blue-600" />,
+      title: "Register New Item",
+      description: "Add a new item to your inventory",
+      href: "/register-item",
+      color: "blue"
+    },
+    {
+      icon: <Search className="h-5 w-5 text-purple-600" />,
+      title: "Advanced Search",
+      description: "Find items with detailed filters",
+      href: "/search",
+      color: "purple"
+    },
+    {
+      icon: <AlertTriangle className="h-5 w-5 text-amber-600" />,
+      title: "Report Lost Item",
+      description: "File a lost item report",
+      href: "/lost-found/report/lost",
+      color: "amber"
+    },
+    {
+      icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
+      title: "Report Found Item",
+      description: "Submit a found item report",
+      href: "/lost-found/report/found",
+      color: "green"
+    }
+  ];
   
-  // Render content based on variant
-  const renderContent = () => {
-    if (variant === 'card') {
-      return (
-        <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-display flex items-center">
-              <BellRing className="h-5 w-5 mr-2 text-[#00BFFF]" />
-              Quick Actions
-            </CardTitle>
-            <CardDescription>
-              Frequently used actions and tools
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {renderActionGrid()}
-          </CardContent>
-        </Card>
-      );
+  // Admin-specific actions
+  const adminActions: QuickActionItemProps[] = [
+    {
+      icon: <BarChart3 className="h-5 w-5 text-blue-600" />,
+      title: "Analytics Dashboard",
+      description: "View detailed platform statistics",
+      href: "/admin/analytics",
+      color: "blue"
+    },
+    {
+      icon: <UserCircle className="h-5 w-5 text-purple-600" />,
+      title: "User Management",
+      description: "Manage users and permissions",
+      href: "/admin/users",
+      color: "purple"
+    },
+    {
+      icon: <DollarSign className="h-5 w-5 text-green-600" />,
+      title: "Payment Dashboard",
+      description: "Monitor transactions and revenue",
+      href: "/admin/payment-dashboard",
+      color: "green"
+    },
+    {
+      icon: <Settings className="h-5 w-5 text-amber-600" />,
+      title: "System Settings",
+      description: "Configure platform settings",
+      href: "/admin/settings",
+      color: "amber"
     }
-    
-    if (variant === 'compact') {
-      return renderActionList();
+  ];
+  
+  // Agent-specific actions
+  const agentActions: QuickActionItemProps[] = [
+    {
+      icon: <FileText className="h-5 w-5 text-amber-600" />,
+      title: "Pending Reports",
+      description: "Review awaiting verification",
+      href: "/agent/reports/pending",
+      color: "amber"
+    },
+    {
+      icon: <FileEdit className="h-5 w-5 text-blue-600" />,
+      title: "Process Reports",
+      description: "Verify and update reports",
+      href: "/agent/reports/process",
+      color: "blue"
     }
-    
-    return (
-      <div>
-        <h3 className="text-lg font-medium flex items-center">
-          <BellRing className="h-5 w-5 mr-2 text-[#00BFFF]" />
+  ];
+  
+  // Determine which actions to show based on user role
+  const actionsList = isAdmin
+    ? [...adminActions, ...commonActions]
+    : isAgent
+      ? [...agentActions, ...commonActions]
+      : commonActions;
+  
+  return (
+    <Card className="h-full border border-border/50 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg font-display flex items-center">
+          <Bookmark className="h-5 w-5 mr-2 text-[#00BFFF]" />
           Quick Actions
-        </h3>
-        <p className="text-sm text-muted-foreground mb-3">
-          Frequently used actions and tools
-        </p>
-        {renderActionGrid()}
-      </div>
-    );
-  };
-  
-  return renderContent();
+        </CardTitle>
+        <CardDescription>
+          Frequently used tools and shortcuts
+        </CardDescription>
+      </CardHeader>
+      
+      <CardContent className="py-0">
+        <ScrollArea className="max-h-[330px] pr-3">
+          <div className="space-y-1">
+            {actionsList.map((action, index) => (
+              <QuickActionItem
+                key={index}
+                icon={action.icon}
+                title={action.title}
+                description={action.description}
+                href={action.href}
+                color={action.color}
+                isDisabled={action.isDisabled}
+              />
+            ))}
+          </div>
+        </ScrollArea>
+      </CardContent>
+      
+      <CardFooter className="flex justify-between pt-5 border-t mt-3">
+        <Button variant="outline" size="sm" className="h-8">
+          <Download className="h-4 w-4 mr-1" />
+          <span className="text-xs">Export Data</span>
+        </Button>
+        <Button variant="outline" size="sm" className="h-8">
+          <Upload className="h-4 w-4 mr-1" />
+          <span className="text-xs">Import Data</span>
+        </Button>
+      </CardFooter>
+    </Card>
+  );
 };

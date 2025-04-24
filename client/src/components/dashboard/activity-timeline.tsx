@@ -1,227 +1,261 @@
-import React, { useState, useEffect } from 'react';
-import { format, formatDistanceToNow } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React from "react";
+import { useLocation } from "wouter";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Filter, CheckCircle2, Clock, AlertTriangle, Info, HelpCircle, FolderPlus, FileEdit, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Item, Report } from "@shared/schema";
+import { 
+  ClipboardList, 
+  Clock, 
+  Package, 
+  AlertTriangle, 
+  CheckCircle2, 
+  QrCode, 
+  FileText,
+  BarChart, 
+  DollarSign 
+} from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Activity type representing a user's action
-interface Activity {
-  id: number;
-  type: string;
+interface ActivityItem {
+  id: number | string;
+  type: 'item' | 'report' | 'payment' | 'notification';
   title: string;
-  timestamp: Date;
-  details: string;
-  category: string;
+  description?: string;
+  timestamp: string | Date;
+  status?: string;
+  category?: string;
+  url: string;
 }
 
 interface ActivityTimelineProps {
-  activities?: Activity[];
-  items?: any[];
-  reports?: any[];
+  items?: Item[];
+  reports?: Report[];
   isLoading?: boolean;
 }
 
-/**
- * Activity Timeline Component
- * 
- * Displays a chronological activity feed with filtering options,
- * visual differentiation by activity type, and time information.
- */
-export const ActivityTimeline = ({ 
-  activities = [], 
+export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
   items = [],
   reports = [],
-  isLoading = false 
-}: ActivityTimelineProps) => {
-  
-  // Convert items and reports to activities if no activities are provided
-  const [convertedActivities, setConvertedActivities] = useState<Activity[]>([]);
-  
-  useEffect(() => {
-    if (activities.length > 0) {
-      // Use provided activities if available
-      setConvertedActivities(activities);
-    } else if (items.length > 0 || reports.length > 0) {
-      // Convert items to activities
-      const itemActivities = items.map((item, index) => ({
-        id: item.id || index,
-        type: 'register',
-        title: `Item Registered: ${item.name || 'Unnamed Item'}`,
-        timestamp: new Date(item.registeredAt || item.updatedAt || new Date()),
-        details: item.description || `${item.category || 'General'} item registered.`,
-        category: item.category || 'Item'
-      }));
-      
-      // Convert reports to activities
-      const reportActivities = reports.map((report, index) => ({
-        id: report.id || index + 1000, // Avoid ID collisions
-        type: report.type === 'lost' ? 'lost' : 'found',
-        title: `${report.type === 'lost' ? 'Lost' : 'Found'} Report: ${report.title || 'Unnamed Report'}`,
-        timestamp: new Date(report.reportedAt || report.updatedAt || new Date()),
-        details: report.description || `${report.type === 'lost' ? 'Lost' : 'Found'} item reported.`,
-        category: report.itemCategory || 'Report'
-      }));
-      
-      // Combine and sort by timestamp (newest first)
-      setConvertedActivities([...itemActivities, ...reportActivities]
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+  isLoading = false
+}) => {
+  const [, navigate] = useLocation();
+
+  // Merge and sort items and reports to create a timeline
+  const createTimeline = (): ActivityItem[] => {
+    const itemActivities: ActivityItem[] = items.map(item => ({
+      id: item.id,
+      type: 'item',
+      title: `Registered: ${item.name}`,
+      description: `${item.category} - ${item.serialNumber || 'No serial number'}`,
+      timestamp: item.registeredAt,
+      status: item.status,
+      category: item.category,
+      url: `/items/${item.id}`
+    }));
+
+    const reportActivities: ActivityItem[] = reports.map(report => ({
+      id: report.id,
+      type: 'report',
+      title: `${report.type === 'lost' ? 'Lost' : 'Found'} Report: ${report.title}`,
+      description: report.description,
+      timestamp: report.reportedAt,
+      status: report.status,
+      url: `/reports/${report.id}`
+    }));
+
+    // Combine all activities and sort by timestamp (newest first)
+    return [...itemActivities, ...reportActivities]
+      .sort((a, b) => {
+        const dateA = new Date(a.timestamp);
+        const dateB = new Date(b.timestamp);
+        return dateB.getTime() - dateA.getTime();
+      })
+      .slice(0, 10); // Show only the 10 most recent activities
+  };
+
+  const activityTimeline = createTimeline();
+
+  // Format the timestamp for display
+  const formatTimestamp = (timestamp: string | Date) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      // Today - show time
+      return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    } else if (diffDays === 1) {
+      // Yesterday
+      return 'Yesterday';
+    } else if (diffDays < 7) {
+      // Within a week - show day name
+      return date.toLocaleDateString([], { weekday: 'long' });
+    } else {
+      // Older - show date
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
     }
-  }, [activities, items, reports]);
-  
-  const [filter, setFilter] = useState("all");
-  
-  // Filter activities based on selected category
-  const filteredActivities = filter === "all" 
-    ? convertedActivities 
-    : convertedActivities.filter(activity => activity.type === filter);
-  
-  // Get icon based on activity type
-  const getActivityIcon = (type: string) => {
-    switch(type) {
-      case 'register':
-        return <FolderPlus className="h-5 w-5 text-blue-500" />;
-      case 'lost':
-        return <AlertTriangle className="h-5 w-5 text-red-500" />;
-      case 'found':
+  };
+
+  // Get icon based on activity type and status
+  const getActivityIcon = (activity: ActivityItem) => {
+    if (activity.type === 'item') {
+      return <Package className="h-5 w-5 text-blue-500" />;
+    } else if (activity.type === 'report') {
+      if (activity.title.toLowerCase().includes('lost')) {
+        return <AlertTriangle className="h-5 w-5 text-amber-500" />;
+      } else {
         return <CheckCircle2 className="h-5 w-5 text-green-500" />;
-      case 'update':
-        return <FileEdit className="h-5 w-5 text-amber-500" />;
-      case 'notification':
-        return <Info className="h-5 w-5 text-purple-500" />;
-      default:
-        return <HelpCircle className="h-5 w-5 text-gray-500" />;
+      }
+    } else if (activity.type === 'payment') {
+      return <DollarSign className="h-5 w-5 text-purple-500" />;
+    } else {
+      return <FileText className="h-5 w-5 text-gray-500" />;
     }
   };
-  
-  // Get badge color based on activity type
-  const getActivityBadgeClass = (type: string) => {
-    switch(type) {
-      case 'register':
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case 'lost':
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+
+  // Get status badge
+  const getStatusBadge = (status?: string) => {
+    if (!status) return null;
+    
+    let className = '';
+    
+    switch (status.toLowerCase()) {
+      case 'registered':
+        className = 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+        break;
+      case 'active':
+      case 'open':
+        className = 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
+        break;
+      case 'resolved':
       case 'found':
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case 'update':
-        return "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200";
-      case 'notification':
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+        className = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+        break;
+      case 'lost':
+        className = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        break;
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
+        className = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
-  };
-  
-  // Loading skeletons
-  const renderSkeletons = () => {
-    return Array(3).fill(0).map((_, index) => (
-      <div key={`skeleton-${index}`} className="py-3">
-        <div className="flex items-start">
-          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-            <Skeleton className="h-5 w-5 rounded-full" />
-          </div>
-          <div className="ml-4 flex-1">
-            <div className="flex justify-between">
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="h-5 w-20" />
-            </div>
-            <Skeleton className="h-4 w-full mt-2" />
-          </div>
-        </div>
-      </div>
-    ));
+    
+    return (
+      <Badge variant="outline" className={`${className} text-xs`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    );
   };
 
   return (
-    <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+    <Card className="h-full border border-border/50 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-display flex items-center">
-            <Clock className="h-5 w-5 mr-2 text-[#00BFFF]" />
+            <ClipboardList className="h-5 w-5 mr-2 text-[#00BFFF]" />
             Activity Timeline
           </CardTitle>
-          
-          {/* Activity Filters */}
-          <Tabs value={filter} onValueChange={setFilter} className="w-auto">
-            <TabsList className="h-8">
-              <TabsTrigger value="all" className="text-xs h-7 px-2">All</TabsTrigger>
-              <TabsTrigger value="register" className="text-xs h-7 px-2">Registered</TabsTrigger>
-              <TabsTrigger value="lost" className="text-xs h-7 px-2">Lost</TabsTrigger>
-              <TabsTrigger value="found" className="text-xs h-7 px-2">Found</TabsTrigger>
-              <TabsTrigger value="update" className="text-xs h-7 px-2">Updates</TabsTrigger>
-            </TabsList>
-          </Tabs>
         </div>
+        <CardDescription>Track your recent activity and interactions</CardDescription>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flow-root">
-          <ul role="list">
-            {isLoading ? (
-              renderSkeletons()
-            ) : filteredActivities.length > 0 ? (
-              <AnimatePresence>
-                {filteredActivities.map((activity, index) => (
-                  <motion.li 
-                    key={activity.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ 
-                      duration: 0.3, 
-                      delay: index * 0.05,
-                      ease: "easeOut" 
-                    }}
-                    className="py-3 border-b border-border/40 last:border-0"
-                  >
-                    <div className="relative flex items-start space-x-3">
-                      <div className="relative">
-                        <div className="h-10 w-10 rounded-full bg-muted/50 border border-border/50 flex items-center justify-center">
-                          {getActivityIcon(activity.type)}
+      
+      <CardContent className="py-0">
+        <ScrollArea className="max-h-[330px] pr-3">
+          {isLoading ? (
+            // Loading state
+            <div className="space-y-5">
+              {Array(5).fill(0).map((_, i) => (
+                <div key={i} className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <Skeleton className="h-10 w-10 rounded-full" />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : activityTimeline.length === 0 ? (
+            // Empty state
+            <div className="text-center py-8">
+              <ClipboardList className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No recent activity</h3>
+              <p className="text-muted-foreground text-sm max-w-xs mx-auto">
+                Your activity timeline will show your recent items and reports.
+              </p>
+              <div className="flex justify-center gap-2 mt-4">
+                <Button variant="outline" size="sm" onClick={() => navigate('/register-item')}>
+                  Register Item
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/lost-found/report')}>
+                  File Report
+                </Button>
+              </div>
+            </div>
+          ) : (
+            // Activity timeline
+            <div className="relative pl-4">
+              {/* Vertical timeline line */}
+              <div className="absolute left-4 top-0 bottom-0 w-px bg-border/60" />
+              
+              <div className="space-y-5">
+                {activityTimeline.map((activity, index) => (
+                  <div key={`${activity.type}-${activity.id}`} className="relative pb-1">
+                    {/* Timeline dot */}
+                    <div className="absolute -left-4 mt-1.5 h-8 w-8 rounded-full border-4 border-background bg-card flex items-center justify-center">
+                      {getActivityIcon(activity)}
+                    </div>
+                    
+                    {/* Timeline content */}
+                    <div 
+                      className="ml-6 cursor-pointer hover:bg-muted/50 p-3 rounded-lg transition-colors"
+                      onClick={() => navigate(activity.url)}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-medium text-sm">{activity.title}</h4>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(activity.status)}
                         </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div>
-                          <div className="flex justify-between">
-                            <p className="text-sm font-medium text-foreground">
-                              {activity.title}
-                            </p>
-                            <p className="text-xs text-muted-foreground flex items-center">
-                              <Calendar className="h-3 w-3 mr-1" />
-                              {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
-                            </p>
-                          </div>
-                          <p className="mt-1 text-sm text-muted-foreground">
-                            {activity.details}
-                          </p>
-                          
-                          {/* Activity meta information */}
-                          <div className="mt-2 flex space-x-2">
-                            <Badge 
-                              variant="outline" 
-                              className={getActivityBadgeClass(activity.type)}
-                            >
-                              {activity.category}
-                            </Badge>
-                            <p className="text-xs text-muted-foreground pt-1">
-                              {format(activity.timestamp, 'MMM d, h:mm a')}
-                            </p>
-                          </div>
-                        </div>
+                      
+                      {activity.description && (
+                        <p className="text-muted-foreground text-xs mb-1">
+                          {activity.description}
+                        </p>
+                      )}
+                      
+                      <div className="flex items-center text-xs text-muted-foreground">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {formatTimestamp(activity.timestamp)}
+                        
+                        {activity.category && (
+                          <>
+                            <span className="mx-1">•</span>
+                            <span>{activity.category}</span>
+                          </>
+                        )}
                       </div>
                     </div>
-                  </motion.li>
+                  </div>
                 ))}
-              </AnimatePresence>
-            ) : (
-              <div className="text-center py-6 text-muted-foreground">
-                <p>No activities found for the selected filter.</p>
               </div>
-            )}
-          </ul>
-        </div>
+            </div>
+          )}
+        </ScrollArea>
       </CardContent>
+      
+      <CardFooter className="flex justify-between border-t pt-3 mt-3">
+        <Button variant="ghost" size="sm" className="text-xs">
+          View All Activity
+        </Button>
+        <Button variant="ghost" size="sm" className="text-xs">
+          <Clock className="h-3.5 w-3.5 mr-1" />
+          24h
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

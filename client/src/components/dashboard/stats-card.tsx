@@ -1,135 +1,169 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MiniChart } from "@/components/dashboard/mini-chart";
-import { ArrowUpIcon, ArrowDownIcon, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowDownRight, ArrowUpRight, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface StatsCardProps {
   title: string;
-  value?: number;
-  previousValue?: number;
-  icon: React.ReactNode;
-  iconBgClass: string;
-  iconTextClass: string;
-  linkHref?: string;
-  isLoading?: boolean;
+  value: number | string;
+  previousValue?: number | string;
+  icon?: React.ReactNode;
+  iconBgClass?: string;
+  iconTextClass?: string;
   trendData?: number[];
   chartColor?: string;
-  successRate?: number;
-  delay?: number;
+  prefix?: string;
+  suffix?: string;
+  isLoading?: boolean;
+  formatter?: (value: number | string) => string;
 }
 
-/**
- * Enhanced Stats Card Component
- * 
- * Displays key metrics with trend visualization, comparison to previous period,
- * and visual indicators for increases/decreases.
- */
 export const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
   previousValue,
   icon,
-  iconBgClass,
-  iconTextClass,
-  linkHref,
+  iconBgClass = "bg-primary/10",
+  iconTextClass = "text-primary",
+  trendData = [],
+  chartColor = "#00BFFF",
+  prefix = "",
+  suffix = "",
   isLoading = false,
-  trendData,
-  chartColor,
-  successRate,
-  delay = 0
+  formatter = (val) => val.toString()
 }) => {
-  // Calculate percentage change
-  const percentChange = previousValue && value 
-    ? Math.round(((value - previousValue) / previousValue) * 100) 
-    : null;
-  
-  // Determine if change is positive, negative or neutral
-  const isPositive = percentChange && percentChange > 0;
-  const isNegative = percentChange && percentChange < 0;
-  
+  // Calculate percentage change if previousValue is provided
+  const percentChange = previousValue !== undefined && typeof value === 'number' && typeof previousValue === 'number'
+    ? ((value - previousValue) / previousValue) * 100
+    : undefined;
+
+  // Format the displayed value
+  const formattedValue = typeof value === 'number'
+    ? formatter(value)
+    : value.toString();
+
+  // Format the percentage change
+  const formattedChange = percentChange !== undefined
+    ? percentChange.toFixed(1) + '%'
+    : undefined;
+
+  // Determine if the trend is positive, negative, or neutral
+  const getTrendDirection = (change?: number) => {
+    if (change === undefined) return "neutral";
+    if (change > 0) return "positive";
+    if (change < 0) return "negative";
+    return "neutral";
+  };
+
+  const trendDirection = getTrendDirection(percentChange);
+
+  // Generate SVG path for the sparkline
+  const generateSparklinePath = (data: number[]) => {
+    if (!data.length) return "";
+    
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const range = max - min || 1;
+    const width = 80;
+    const height = 30;
+    
+    return data.map((value, index) => {
+      const x = (index / (data.length - 1)) * width;
+      const y = height - ((value - min) / range) * height;
+      return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+    }).join(" ");
+  };
+
+  const sparklinePath = generateSparklinePath(trendData);
+
+  // Get the trend icon based on direction
+  const getTrendIcon = (direction: string) => {
+    switch (direction) {
+      case "positive":
+        return <ArrowUpRight className="h-4 w-4 text-emerald-500" />;
+      case "negative":
+        return <ArrowDownRight className="h-4 w-4 text-red-500" />;
+      default:
+        return <Minus className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay }}
-      whileHover={{ y: -2 }}
-    >
-      <Card className="overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardContent className="p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">{title}</p>
-              
-              {isLoading ? (
-                <Skeleton className="h-9 w-20 mt-1" />
-              ) : (
-                <div className="flex items-baseline mt-1">
-                  <p className="text-2xl font-semibold">
-                    {value?.toLocaleString() || "0"}
-                  </p>
-                  
-                  {/* Success rate indicator (for cards that need it) */}
-                  {typeof successRate === 'number' && (
-                    <div className="ml-2 px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                      {successRate}%
-                    </div>
-                  )}
-                  
-                  {/* Percentage change indicator */}
-                  {percentChange !== null && (
-                    <div className={`ml-2 flex items-center text-xs ${
-                      isPositive ? 'text-green-600 dark:text-green-400' : 
-                      isNegative ? 'text-red-600 dark:text-red-400' : 
-                      'text-gray-500 dark:text-gray-400'
-                    }`}>
-                      {isPositive ? (
-                        <ArrowUpIcon className="h-3 w-3 mr-0.5" />
-                      ) : isNegative ? (
-                        <ArrowDownIcon className="h-3 w-3 mr-0.5" />
-                      ) : null}
-                      <span>{Math.abs(percentChange)}%</span>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              <div className="text-xs text-muted-foreground mt-1">
-                {previousValue !== undefined && !isLoading ? (
-                  <>vs. {previousValue.toLocaleString()} previous</>
-                ) : (
-                  isLoading ? <Skeleton className="h-3 w-32" /> : null
-                )}
-              </div>
+    <Card className="h-full border border-border/50 bg-card/50 backdrop-blur-sm">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-3">
+          <div className="font-medium text-sm text-muted-foreground">{title}</div>
+          {icon && (
+            <div className={`rounded-full p-2 ${iconBgClass}`}>
+              <div className={iconTextClass}>{icon}</div>
             </div>
-            
-            <div className={`rounded-lg p-2 ${iconBgClass}`}>
-              <div className={`h-6 w-6 ${iconTextClass}`}>
-                {icon}
-              </div>
+          )}
+        </div>
+        
+        {isLoading ? (
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-3/4" />
+            <div className="flex space-x-2">
+              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-5 w-24" />
             </div>
           </div>
-          
-          {/* Chart */}
-          {trendData && !isLoading ? (
-            <div className="mt-4">
-              <MiniChart 
-                data={trendData} 
-                color={chartColor}
-                height={30}
-                width={220}
-              />
+        ) : (
+          <>
+            <div className="text-2xl font-bold mb-1">
+              {prefix}{formattedValue}{suffix}
             </div>
-          ) : (
-            isLoading ? (
-              <div className="mt-4">
-                <Skeleton className="h-8 w-full" />
+            
+            <div className="flex items-center space-x-2">
+              {percentChange !== undefined && (
+                <Badge 
+                  variant="outline" 
+                  className={`
+                    flex items-center space-x-1 font-medium
+                    ${trendDirection === 'positive' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 
+                      trendDirection === 'negative' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 
+                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}
+                  `}
+                >
+                  {getTrendIcon(trendDirection)}
+                  <span>{formattedChange}</span>
+                </Badge>
+              )}
+              
+              <span className="text-xs text-muted-foreground">
+                vs. previous period
+              </span>
+            </div>
+            
+            {trendData.length > 0 && (
+              <div className="mt-3 relative h-[30px]">
+                <svg width="100%" height="30" className="overflow-visible">
+                  <defs>
+                    <linearGradient id={`gradient-${title.replace(/\s+/g, '-')}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={chartColor} stopOpacity="0.2" />
+                      <stop offset="100%" stopColor={chartColor} stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d={sparklinePath}
+                    fill="none"
+                    stroke={chartColor}
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d={`${sparklinePath} L ${trendData.length ? (trendData.length - 1) / (trendData.length - 1) * 80 : 0} 30 L 0 30 Z`}
+                    fill={`url(#gradient-${title.replace(/\s+/g, '-')})`}
+                    strokeWidth="0"
+                  />
+                </svg>
               </div>
-            ) : null
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 };
