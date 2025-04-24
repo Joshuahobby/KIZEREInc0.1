@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "../lib/queryClient";
 import { useAuth } from "../hooks/use-auth";
-import { Item, Report, Notification, Payment, UserRole } from "../../../shared/schema";
+import { Item, Report, Notification, Payment, UserRole, User } from "../../../shared/schema";
 import { useMemo } from "react";
 import { createLogger } from "../lib/logger";
 
@@ -56,11 +56,26 @@ export interface AdminDashboardStats extends DashboardStats {
   }[];
 }
 
+export interface DashboardData {
+  user: Omit<User, "password"> | null;
+  isAdmin: boolean;
+  isAgent: boolean;
+  userStats: DashboardStats;
+  adminStats: AdminDashboardStats | null;
+  isLoading: boolean;
+  items: Item[];
+  reports: Report[];
+  allReports: Report[];
+  notifications: Notification[];
+  payments: Payment[];
+  allUsers: any[] | null;
+}
+
 interface UseDashboardDataOptions {
   refreshInterval?: number;
 }
 
-export function useDashboardData(options: UseDashboardDataOptions = {}) {
+export function useDashboardData(options: UseDashboardDataOptions = {}): DashboardData {
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
   const isAgent = user?.role === 'Agent';
@@ -256,11 +271,11 @@ export function useDashboardData(options: UseDashboardDataOptions = {}) {
     userStats,
     adminStats,
     isLoading,
-    items,
-    reports,
-    allReports: isAdmin || isAgent ? allReports : reports,
-    notifications,
-    payments,
-    allUsers: isAdmin ? allUsers : null
+    items: items || [], 
+    reports: reports || [],
+    allReports: (isAdmin || isAgent) ? (allReports || []) : (reports || []),
+    notifications: notifications || [],
+    payments: payments || [],
+    allUsers: isAdmin ? (allUsers || []) : null
   };
 }

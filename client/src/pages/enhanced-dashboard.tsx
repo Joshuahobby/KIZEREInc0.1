@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { useDashboardData, DashboardData } from "@/hooks/use-dashboard-data";
 import { motion } from "framer-motion";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -51,7 +51,7 @@ const EnhancedDashboard: React.FC = () => {
   };
 
   // Use the dashboard data hook with refresh interval option
-  const dashboardData = useDashboardData({
+  const dashboardData: DashboardData = useDashboardData({
     refreshInterval: 60000 // Refresh every minute
   });
   

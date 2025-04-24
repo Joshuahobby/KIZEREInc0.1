@@ -32,7 +32,7 @@ interface QuickActionItemProps {
 }
 
 interface QuickActionsPanelProps {
-  user: User;
+  user: Omit<User, "password">;
 }
 
 const QuickActionItem: React.FC<QuickActionItemProps> = ({
