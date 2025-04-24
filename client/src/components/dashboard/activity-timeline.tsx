@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,8 +18,10 @@ interface Activity {
 }
 
 interface ActivityTimelineProps {
-  activities: Activity[];
-  isLoading: boolean;
+  activities?: Activity[];
+  items?: any[];
+  reports?: any[];
+  isLoading?: boolean;
 }
 
 /**
@@ -30,14 +32,51 @@ interface ActivityTimelineProps {
  */
 export const ActivityTimeline = ({ 
   activities = [], 
+  items = [],
+  reports = [],
   isLoading = false 
 }: ActivityTimelineProps) => {
+  
+  // Convert items and reports to activities if no activities are provided
+  const [convertedActivities, setConvertedActivities] = useState<Activity[]>([]);
+  
+  useEffect(() => {
+    if (activities.length > 0) {
+      // Use provided activities if available
+      setConvertedActivities(activities);
+    } else if (items.length > 0 || reports.length > 0) {
+      // Convert items to activities
+      const itemActivities = items.map((item, index) => ({
+        id: item.id || index,
+        type: 'register',
+        title: `Item Registered: ${item.name || 'Unnamed Item'}`,
+        timestamp: new Date(item.registeredAt || item.updatedAt || new Date()),
+        details: item.description || `${item.category || 'General'} item registered.`,
+        category: item.category || 'Item'
+      }));
+      
+      // Convert reports to activities
+      const reportActivities = reports.map((report, index) => ({
+        id: report.id || index + 1000, // Avoid ID collisions
+        type: report.type === 'lost' ? 'lost' : 'found',
+        title: `${report.type === 'lost' ? 'Lost' : 'Found'} Report: ${report.title || 'Unnamed Report'}`,
+        timestamp: new Date(report.reportedAt || report.updatedAt || new Date()),
+        details: report.description || `${report.type === 'lost' ? 'Lost' : 'Found'} item reported.`,
+        category: report.itemCategory || 'Report'
+      }));
+      
+      // Combine and sort by timestamp (newest first)
+      setConvertedActivities([...itemActivities, ...reportActivities]
+        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+    }
+  }, [activities, items, reports]);
+  
   const [filter, setFilter] = useState("all");
   
   // Filter activities based on selected category
   const filteredActivities = filter === "all" 
-    ? activities 
-    : activities.filter(activity => activity.type === filter);
+    ? convertedActivities 
+    : convertedActivities.filter(activity => activity.type === filter);
   
   // Get icon based on activity type
   const getActivityIcon = (type: string) => {
