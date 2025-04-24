@@ -50,9 +50,9 @@ const EnhancedDashboard: React.FC = () => {
     logoutMutation.mutate();
   };
 
-  // Use the dashboard data hook
+  // Use the dashboard data hook with refresh interval option
   const dashboardData = useDashboardData({
-    refreshInterval: 60000
+    refreshInterval: 60000 // Refresh every minute
   });
   
   // Extract data from dashboard data hook

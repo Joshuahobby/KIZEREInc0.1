@@ -47,9 +47,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     }
   };
 
-  // Format notification date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  // Format notification date - handles both string and Date objects
+  const formatDate = (dateInput: string | Date) => {
+    // Ensure we have a Date object
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
     const now = new Date();
     
     // Less than a day
