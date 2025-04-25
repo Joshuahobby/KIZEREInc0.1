@@ -24,22 +24,76 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Check if user is already authenticated on mount
   useEffect(() => {
-    const checkAuth = async () => {
+    let unsubscribe: (() => void) | undefined;
+    
+    const setupAuth = async () => {
       try {
-        const response = await fetch("/api/user");
-        if (response.ok) {
-          const userData = await response.json();
+        // First, check server-side session
+        const sessionResponse = await fetch("/api/user");
+        if (sessionResponse.ok) {
+          const userData = await sessionResponse.json();
           setUser(userData);
-          console.log("[useAuth] Firebase user authenticated", userData);
+          console.log("[useAuth] User authenticated from session", userData);
+          setIsLoading(false);
+          return;
         }
+        
+        // If no session, listen to Firebase auth state changes
+        const { onAuthChange } = await import('@/lib/firebase');
+        
+        unsubscribe = onAuthChange(async (firebaseUser) => {
+          if (firebaseUser) {
+            console.log("[useAuth] Firebase user signed in", firebaseUser.email);
+            
+            // When Firebase user signs in, create or get server session
+            try {
+              // Call server endpoint to sync Firebase auth with server session
+              const response = await fetch("/api/auth/google", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  email: firebaseUser.email,
+                  name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+                  uid: firebaseUser.uid,
+                  token: await firebaseUser.getIdToken(),
+                  photoURL: firebaseUser.photoURL,
+                }),
+              });
+              
+              if (response.ok) {
+                const userData = await response.json();
+                setUser(userData);
+                console.log("[useAuth] Server session created for Firebase user", userData);
+              } else {
+                console.error("[useAuth] Failed to create server session", await response.text());
+              }
+            } catch (error) {
+              console.error("[useAuth] Error syncing Firebase auth with server:", error);
+            }
+          } else {
+            // User is signed out
+            console.log("[useAuth] No Firebase user");
+            setUser(null);
+          }
+          
+          setIsLoading(false);
+        });
       } catch (error) {
-        console.error("[useAuth] Error checking authentication:", error);
-      } finally {
+        console.error("[useAuth] Error setting up authentication:", error);
         setIsLoading(false);
       }
     };
 
-    checkAuth();
+    setupAuth();
+    
+    // Cleanup function to unsubscribe from Firebase auth changes
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
   // Handle redirections based on user role
@@ -116,9 +170,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     setError(null);
     
-    // For now, we're just mocking the Google auth flow
     try {
-      window.location.href = "/api/auth/google";
+      // Use the Firebase SDK for Google authentication
+      const { signInWithGoogle } = await import('@/lib/firebase');
+      await signInWithGoogle();
+      
+      // Firebase will handle the redirect flow
+      // After redirect back, we'll check auth state in useEffect
+      console.log("[useAuth] Initiated Firebase Google sign-in");
     } catch (error) {
       console.error("[useAuth] Google login error:", error);
       setError(error instanceof Error ? error.message : "Google login failed");
@@ -129,11 +188,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     setIsLoading(true);
     try {
+      // Sign out from Firebase first
+      const { logOut } = await import('@/lib/firebase');
+      await logOut();
+      
+      // Also sign out from server session
       await fetch("/api/auth/logout", {
         method: "POST",
       });
+      
       setUser(null);
-      setLocation("/login");
+      setLocation("/");
+      console.log("[useAuth] Successfully signed out");
     } catch (error) {
       console.error("[useAuth] Logout error:", error);
       setError(error instanceof Error ? error.message : "Logout failed");
