@@ -92,8 +92,10 @@ const EnhancedDashboard: React.FC = () => {
         <Header />
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto text-center py-12">
-            <h2 className="text-2xl font-semibold mb-4">Please log in to access your dashboard</h2>
-            <Button onClick={() => navigate("/")}>Return to Home</Button>
+            <h2 className="text-2xl font-semibold mb-4">{t('auth.pleaseLoginToContinue')}</h2>
+            <Button onClick={() => navigate("/")}>
+              {t('nav.returnToHome')}
+            </Button>
           </div>
         </main>
         <Footer />
@@ -193,7 +195,7 @@ const EnhancedDashboard: React.FC = () => {
                 {isAdmin && (
                   <TabsTrigger value="admin" className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
-                    <span className="hidden md:inline">{t('dashboard.admin')}</span>
+                    <span className="hidden md:inline">{t('dashboard.adminTab')}</span>
                   </TabsTrigger>
                 )}
               </TabsList>
@@ -339,42 +341,42 @@ const EnhancedDashboard: React.FC = () => {
             {/* Other tabs would be implemented here */}
             <TabsContent value="items">
               <div className="bg-primary/5 border border-primary/10 rounded-lg p-8 text-center">
-                <h3 className="text-xl font-medium mb-2">Items Tab Content</h3>
+                <h3 className="text-xl font-medium mb-2">{t('dashboard.items.tabTitle')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  This tab would contain a comprehensive view of all your registered items with filtering, sorting, and batch actions.
+                  {t('dashboard.items.tabDescription')}
                 </p>
-                <Button>View Implementation Plan</Button>
+                <Button>{t('dashboard.viewImplementationPlan')}</Button>
               </div>
             </TabsContent>
             
             <TabsContent value="reports">
               <div className="bg-primary/5 border border-primary/10 rounded-lg p-8 text-center">
-                <h3 className="text-xl font-medium mb-2">Reports Tab Content</h3>
+                <h3 className="text-xl font-medium mb-2">{t('dashboard.reports.tabTitle')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  This tab would show all your lost and found reports with status tracking and updates.
+                  {t('dashboard.reports.tabDescription')}
                 </p>
-                <Button>View Implementation Plan</Button>
+                <Button>{t('dashboard.viewImplementationPlan')}</Button>
               </div>
             </TabsContent>
             
             <TabsContent value="payments">
               <div className="bg-primary/5 border border-primary/10 rounded-lg p-8 text-center">
-                <h3 className="text-xl font-medium mb-2">Payments Tab Content</h3>
+                <h3 className="text-xl font-medium mb-2">{t('dashboard.payments.tabTitle')}</h3>
                 <p className="text-muted-foreground mb-4">
-                  This tab would show your payment history, receipts, and subscription information.
+                  {t('dashboard.payments.tabDescription')}
                 </p>
-                <Button>View Implementation Plan</Button>
+                <Button>{t('dashboard.viewImplementationPlan')}</Button>
               </div>
             </TabsContent>
             
             {isAdmin && (
               <TabsContent value="admin">
                 <div className="bg-primary/5 border border-primary/10 rounded-lg p-8 text-center">
-                  <h3 className="text-xl font-medium mb-2">Admin Dashboard</h3>
+                  <h3 className="text-xl font-medium mb-2">{t('dashboard.adminPanel.tabTitle')}</h3>
                   <p className="text-muted-foreground mb-4">
-                    This tab would provide comprehensive admin controls and analytics for platform management.
+                    {t('dashboard.adminPanel.tabDescription')}
                   </p>
-                  <Button>View Implementation Plan</Button>
+                  <Button>{t('dashboard.viewImplementationPlan')}</Button>
                 </div>
               </TabsContent>
             )}

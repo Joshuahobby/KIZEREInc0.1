@@ -208,12 +208,40 @@
   },
   "dashboard": {
     "welcomeMessage": "Welcome to your dashboard",
+    "welcomeBack": "Welcome back",
+    "adminDescription": "Manage your platform and view performance insights",
+    "agentDescription": "Review and process lost and found reports",
+    "userDescription": "Track your items and manage your account",
+    "overview": "Overview",
     "registeredItems": "Registered Items",
     "recentActivity": "Recent Activity",
     "quickActions": "Quick Actions",
     "registerNewItem": "Register New Item",
     "viewAllItems": "View All Items",
-    "reportLostItem": "Report Lost Item"
+    "reportLostItem": "Report Lost Item",
+    "lostReports": "Lost Reports",
+    "foundReports": "Found Reports",
+    "totalSpent": "Total Spent",
+    "recentlyRegisteredItems": "Recently Registered Items",
+    "recentItemsDescription": "View and manage your most recently registered items",
+    "viewImplementationPlan": "View Implementation Plan",
+    "adminTab": "Admin",
+    "items": {
+      "tabTitle": "Items Tab Content",
+      "tabDescription": "This tab would contain a comprehensive view of all your registered items with filtering, sorting, and batch actions."
+    },
+    "reports": {
+      "tabTitle": "Reports Tab Content",
+      "tabDescription": "This tab would show all your lost and found reports with status tracking and updates."
+    },
+    "payments": {
+      "tabTitle": "Payments Tab Content",
+      "tabDescription": "This tab would show your payment history, receipts, and subscription information."
+    },
+    "adminPanel": {
+      "tabTitle": "Admin Dashboard",
+      "tabDescription": "This tab would provide comprehensive admin controls and analytics for platform management."
+    }
   },
   "items": {
     "registerNewItem": "Register New Item",
