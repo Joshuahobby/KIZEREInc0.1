@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -19,11 +19,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { PaymentService } from "@/services/payment.service";
 import { DEFAULT_CURRENCY } from "@/config/payment.config";
 import { cn } from "@/lib/utils";
+import { processFileUpload, ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE } from "@/utils/file-utils";
 import { 
   Loader2, 
   Check, 
@@ -39,7 +41,8 @@ import {
   CheckCircle,
   ArrowRight,
   RefreshCw,
-  Barcode
+  Barcode,
+  AlertCircle
 } from "lucide-react";
 
 // Item categories
@@ -56,8 +59,7 @@ const sections = [
   { id: "basic-info", name: "Basic Information" },
   { id: "details", name: "Details" },
   { id: "media", name: "Media & Documents" },
-  { id: "ownership", name: "Ownership Proof" },
-  { id: "review", name: "Review & Payment" }
+  { id: "ownership", name: "Ownership Proof" }
 ];
 
 // Item sub-categories based on main category
@@ -263,6 +265,16 @@ export default function EnhancedRegisterItem() {
     });
   };
   
+  // Refs for file inputs
+  const itemImageInputRef = useRef<HTMLInputElement>(null);
+  const receiptImageInputRef = useRef<HTMLInputElement>(null);
+  const warrantyDocInputRef = useRef<HTMLInputElement>(null);
+  const ownershipDocInputRef = useRef<HTMLInputElement>(null);
+  
+  // State for file upload errors
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
+  
   // Handle file drag events
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -274,59 +286,118 @@ export default function EnhancedRegisterItem() {
     setIsDragging(false);
   };
   
-  const handleFileDrop = (e: React.DragEvent) => {
+  // Handle file drop
+  const handleFileDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    setUploadError(null);
     
     // Process files
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      // In a real implementation, you would upload these files to your server
-      // and get back URLs to store in the form
+      setUploading(true);
       
-      // For demo purposes, just create an object URL
-      const file = e.dataTransfer.files[0];
-      const url = URL.createObjectURL(file);
-      
-      // Update form with the new image
-      const currentImages = form.getValues("imageUrls") || [];
-      form.setValue("imageUrls", [...currentImages, url]);
-      
-      // Set preview image
-      setPreviewImage(url);
+      try {
+        const files = Array.from(e.dataTransfer.files);
+        
+        // Process each file (maximum 5 files)
+        const filesToProcess = files.slice(0, 5);
+        
+        for (const file of filesToProcess) {
+          const result = await processFileUpload(file);
+          
+          if (result.success && result.data) {
+            // Update form with the new image
+            const currentImages = form.getValues("imageUrls") || [];
+            form.setValue("imageUrls", [...currentImages, result.data.url]);
+            
+            // Set preview image to the most recent upload
+            setPreviewImage(result.data.url);
+          } else if (result.error) {
+            setUploadError(result.error.message);
+            break;
+          }
+        }
+      } catch (error) {
+        setUploadError(error instanceof Error ? error.message : "Failed to upload files");
+      } finally {
+        setUploading(false);
+      }
     }
   };
   
-  // Handle file input change
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle file input change with type safety
+  const handleFileInputChange = (fieldName: string) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadError(null);
+    
     if (e.target.files && e.target.files.length > 0) {
-      // For demo purposes, just create an object URL
-      const file = e.target.files[0];
-      const url = URL.createObjectURL(file);
+      setUploading(true);
       
-      // Update form with the new image
-      const currentImages = form.getValues("imageUrls") || [];
-      form.setValue("imageUrls", [...currentImages, url]);
-      
-      // Set preview image
-      setPreviewImage(url);
+      try {
+        const file = e.target.files[0];
+        const result = await processFileUpload(file);
+        
+        if (result.success && result.data) {
+          // Special handling based on field name
+          if (fieldName === 'itemImages') {
+            const currentImages = form.getValues("imageUrls") || [];
+            form.setValue("imageUrls", [...currentImages, result.data.url]);
+            setPreviewImage(result.data.url);
+          } else if (fieldName === 'receiptImage') {
+            form.setValue("receiptImage", result.data.url);
+          } else if (fieldName === 'warrantyDocument') {
+            form.setValue("warrantyDocument", result.data.url);
+          } else if (fieldName === 'ownershipProof') {
+            form.setValue("ownershipProof", result.data.url);
+          }
+          
+          // Reset the file input so the same file can be selected again if needed
+          e.target.value = '';
+          
+          toast({
+            title: "File uploaded",
+            description: "Your file has been uploaded successfully",
+          });
+        } else if (result.error) {
+          setUploadError(result.error.message);
+        }
+      } catch (error) {
+        setUploadError(error instanceof Error ? error.message : "Failed to upload file");
+      } finally {
+        setUploading(false);
+      }
+    }
+  };
+  
+  // Trigger file input click
+  const triggerFileInput = (ref: React.RefObject<HTMLInputElement>) => {
+    if (ref.current) {
+      ref.current.click();
     }
   };
   
   // Get field visibility based on category
   const shouldShowField = (category: string, fieldName: string): boolean => {
-    // General logic for showing/hiding fields based on category
+    // No category selected yet, show nothing
+    if (!category) return false;
+    
+    // Fields shown for all categories
+    const commonFields = ["uniqueIdentifier", "description"];
+    if (commonFields.includes(fieldName)) return true;
+    
+    // Category-specific fields
     switch (category) {
       case "Electronics":
-        return ["brand", "model", "serialNumber", "color", "purchaseDate", "warranty"].includes(fieldName);
+        return ["brand", "model", "serialNumber", "color", "purchaseDate", "warranty", "value"].includes(fieldName);
       case "Documents":
-        return ["issueDate", "expiryDate", "documentNumber"].includes(fieldName);
+        return ["issueDate", "expiryDate", "documentNumber", "issueAuthority"].includes(fieldName);
       case "Jewelry":
-        return ["material", "weight", "color", "purchaseDate"].includes(fieldName);
+        return ["material", "weight", "color", "purchaseDate", "value"].includes(fieldName);
       case "Accessories":
-        return ["brand", "color", "purchaseDate"].includes(fieldName);
+        return ["brand", "color", "purchaseDate", "value"].includes(fieldName);
+      case "Other":
+        return ["color", "purchaseDate", "value", "additionalDetails"].includes(fieldName);
       default:
-        // For "Other" category or when no category is selected
-        return true;
+        return false;
     }
   };
   
@@ -962,7 +1033,7 @@ export default function EnhancedRegisterItem() {
                                 <div 
                                   className={cn(
                                     "border-2 border-dashed rounded-md p-6",
-                                    isDragging ? "border-primary-500 bg-primary-50" : "border-gray-300",
+                                    isDragging ? "border-primary-500 bg-primary-50" : uploading ? "border-primary-300 bg-primary-50" : "border-gray-300",
                                     "transition-colors duration-200"
                                   )}
                                   onDragOver={handleDragOver}
@@ -970,50 +1041,73 @@ export default function EnhancedRegisterItem() {
                                   onDrop={handleFileDrop}
                                 >
                                   <div className="flex flex-col items-center justify-center">
-                                    <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
-                                    <p className="mt-1 text-sm text-neutral-500">
-                                      Drag and drop image files here, or click to select files
-                                    </p>
-                                    <p className="text-xs text-neutral-400">
-                                      PNG, JPG, JPEG up to 5MB
-                                    </p>
-                                    <label className="mt-4">
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="cursor-pointer"
-                                        onClick={(e) => e.preventDefault()}
-                                      >
-                                        <Upload className="mr-2 h-4 w-4" />
-                                        Upload Images
-                                      </Button>
-                                      <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={handleFileInputChange}
-                                      />
-                                    </label>
-                                    
-                                    <div className="mt-4 flex items-center space-x-2">
-                                      <span className="text-xs text-neutral-500">or</span>
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="sm"
-                                        className="text-primary-600"
-                                      >
-                                        <Camera className="mr-2 h-4 w-4" />
-                                        Take Photo
-                                      </Button>
-                                    </div>
+                                    {uploading ? (
+                                      <>
+                                        <Loader2 className="h-12 w-12 text-primary-500 animate-spin" />
+                                        <p className="mt-2 text-sm text-neutral-600">
+                                          Uploading image...
+                                        </p>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
+                                        <p className="mt-1 text-sm text-neutral-500">
+                                          Drag and drop image files here, or click to select files
+                                        </p>
+                                        <p className="text-xs text-neutral-400">
+                                          PNG, JPG, JPEG up to 5MB
+                                        </p>
+                                        <input
+                                          ref={itemImageInputRef}
+                                          type="file"
+                                          accept="image/png,image/jpeg,image/jpg,image/gif"
+                                          className="hidden"
+                                          onChange={handleFileInputChange('itemImages')}
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          className="mt-4 cursor-pointer"
+                                          onClick={() => triggerFileInput(itemImageInputRef)}
+                                          disabled={uploading}
+                                        >
+                                          <Upload className="mr-2 h-4 w-4" />
+                                          Upload Images
+                                        </Button>
+                                        
+                                        <div className="mt-4 flex items-center space-x-2">
+                                          <span className="text-xs text-neutral-500">or</span>
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="text-primary-600"
+                                            onClick={() => triggerFileInput(itemImageInputRef)}
+                                            disabled={uploading}
+                                          >
+                                            <Camera className="mr-2 h-4 w-4" />
+                                            Take Photo
+                                          </Button>
+                                        </div>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                                 
+                                {/* Upload error message */}
+                                {uploadError && (
+                                  <Alert variant="destructive" className="mt-3">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertDescription>
+                                      {uploadError}
+                                    </AlertDescription>
+                                  </Alert>
+                                )}
+                                
                                 {/* Image Previews */}
                                 {watchedValues.imageUrls && watchedValues.imageUrls.length > 0 && (
-                                  <div className="mt-4 grid grid-cols-3 gap-4">
+                                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4">
                                     {watchedValues.imageUrls.map((image, index) => (
                                       <div key={index} className="relative group">
                                         <div className="border rounded-md overflow-hidden aspect-square">
@@ -1050,22 +1144,29 @@ export default function EnhancedRegisterItem() {
                                     <p className="mt-1 text-xs text-neutral-500">
                                       Upload a receipt image
                                     </p>
-                                    <label className="mt-2">
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="cursor-pointer text-xs"
-                                      >
-                                        Upload Receipt
-                                      </Button>
-                                      <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                      />
-                                    </label>
+                                    <input
+                                      ref={receiptImageInputRef}
+                                      type="file"
+                                      accept="image/png,image/jpeg,image/jpg,image/gif"
+                                      className="hidden"
+                                      onChange={handleFileInputChange('receiptImage')}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="mt-2 cursor-pointer text-xs"
+                                      onClick={() => triggerFileInput(receiptImageInputRef)}
+                                    >
+                                      Upload Receipt
+                                    </Button>
                                   </div>
+                                  {watchedValues.receiptImage && (
+                                    <div className="mt-2 flex items-center text-xs text-green-600">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Receipt uploaded successfully
+                                    </div>
+                                  )}
                                 </div>
                                 
                                 {form.getValues("warranty") && (
@@ -1076,22 +1177,29 @@ export default function EnhancedRegisterItem() {
                                       <p className="mt-1 text-xs text-neutral-500">
                                         Upload warranty document
                                       </p>
-                                      <label className="mt-2">
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          size="sm"
-                                          className="cursor-pointer text-xs"
-                                        >
-                                          Upload Document
-                                        </Button>
-                                        <input
-                                          type="file"
-                                          accept=".pdf,.png,.jpg,.jpeg"
-                                          className="hidden"
-                                        />
-                                      </label>
+                                      <input
+                                        ref={warrantyDocInputRef}
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/jpg,image/gif,.pdf"
+                                        className="hidden"
+                                        onChange={handleFileInputChange('warrantyDocument')}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="mt-2 cursor-pointer text-xs"
+                                        onClick={() => triggerFileInput(warrantyDocInputRef)}
+                                      >
+                                        Upload Document
+                                      </Button>
                                     </div>
+                                    {watchedValues.warrantyDocument && (
+                                      <div className="mt-2 flex items-center text-xs text-green-600">
+                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                        Warranty document uploaded successfully
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -1216,90 +1324,27 @@ export default function EnhancedRegisterItem() {
                           </AccordionContent>
                         </AccordionItem>
                         
-                        {/* Review Section */}
-                        <AccordionItem 
-                          value="review"
-                          className="border rounded-lg overflow-hidden border-gray-200"
-                        >
-                          <AccordionTrigger 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              toggleSection("review");
-                            }}
-                            className="px-4 py-3 hover:no-underline"
-                          >
+                        {/* Payment information block in the ownership section */}
+                        <div className="mt-8 bg-white p-5 rounded-md border border-gray-100">
+                          <h4 className="text-sm font-medium text-neutral-900 mb-4">Registration Fee</h4>
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center">
-                              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center mr-3">
-                                <span>5</span>
+                              <div className="bg-primary-50 p-2 rounded-full">
+                                <CreditCard className="h-5 w-5 text-primary-600" />
                               </div>
-                              <span>Review & Payment</span>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="px-4 pb-5 pt-2">
-                            <div className="space-y-6">
-                              <div className="bg-gray-50 p-4 rounded-md">
-                                <h4 className="font-medium text-neutral-900">Registration Summary</h4>
-                                <div className="mt-3 space-y-3 text-sm">
-                                  <div className="flex justify-between">
-                                    <span className="text-neutral-500">Item Name:</span>
-                                    <span className="font-medium">{watchedValues.name || "Not specified"}</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-neutral-500">Category:</span>
-                                    <span className="font-medium">{watchedValues.category || "Not specified"}</span>
-                                  </div>
-                                  <div className="flex justify-between">
-                                    <span className="text-neutral-500">Unique Identifier:</span>
-                                    <span className="font-medium">{watchedValues.uniqueIdentifier || "Not specified"}</span>
-                                  </div>
-                                  {watchedValues.brand && (
-                                    <div className="flex justify-between">
-                                      <span className="text-neutral-500">Brand:</span>
-                                      <span className="font-medium">{watchedValues.brand}</span>
-                                    </div>
-                                  )}
-                                  {watchedValues.model && (
-                                    <div className="flex justify-between">
-                                      <span className="text-neutral-500">Model:</span>
-                                      <span className="font-medium">{watchedValues.model}</span>
-                                    </div>
-                                  )}
-                                  {watchedValues.value && (
-                                    <div className="flex justify-between">
-                                      <span className="text-neutral-500">Estimated Value:</span>
-                                      <span className="font-medium">{watchedValues.value}</span>
-                                    </div>
-                                  )}
-                                  <div className="flex justify-between">
-                                    <span className="text-neutral-500">Images:</span>
-                                    <span className="font-medium">{watchedValues.imageUrls?.length || 0} uploaded</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div>
-                                <h4 className="text-sm font-medium text-neutral-500">Registration Fee</h4>
-                                <div className="mt-2 bg-white p-4 rounded-md border border-gray-100 flex items-center justify-between">
-                                  <div className="flex items-center">
-                                    <div className="bg-primary-50 p-2 rounded-full">
-                                      <CreditCard className="h-5 w-5 text-primary-600" />
-                                    </div>
-                                    <div className="ml-3">
-                                      <h5 className="text-sm font-medium text-neutral-900">Item Registration Fee</h5>
-                                      <p className="text-xs text-neutral-500">A one-time fee to protect your item</p>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <span className="font-semibold text-lg">2,000 RWF</span>
-                                  </div>
-                                </div>
-                                <p className="mt-2 text-xs text-neutral-500">
-                                  After submitting, you'll be redirected to our secure payment provider to complete the registration fee payment.
-                                </p>
+                              <div className="ml-3">
+                                <h5 className="text-sm font-medium text-neutral-900">Item Registration Fee</h5>
+                                <p className="text-xs text-neutral-500">A one-time fee to protect your item</p>
                               </div>
                             </div>
-                          </AccordionContent>
-                        </AccordionItem>
+                            <div>
+                              <span className="font-semibold text-lg">2,000 RWF</span>
+                            </div>
+                          </div>
+                          <p className="mt-3 text-xs text-neutral-500">
+                            When you click "Register Now," you'll be redirected to our secure payment provider.
+                          </p>
+                        </div>
                       </Accordion>
                     </CardContent>
                   </Card>
