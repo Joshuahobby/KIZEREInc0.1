@@ -16,7 +16,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export function Header() {
   const [location] = useLocation();
-  const { user, logoutMutation } = useAuth();
+  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
 
@@ -51,7 +51,7 @@ export function Header() {
   const navigation = isAuthenticated ? authNavigation : publicNavigation;
 
   const handleLogout = () => {
-    logoutMutation.mutate();
+    signOut();
   };
 
   const toggleMobileMenu = () => {

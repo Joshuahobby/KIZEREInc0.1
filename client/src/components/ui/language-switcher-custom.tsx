@@ -21,6 +21,7 @@ interface LanguageSwitcherProps {
 const languageNames: Record<Language, { name: string; nativeName: string }> = {
   en: { name: 'English', nativeName: 'English' },
   fr: { name: 'French', nativeName: 'Français' },
+  rw: { name: 'Kinyarwanda', nativeName: 'Kinyarwanda' },
 };
 
 export function LanguageSwitcher({ 
