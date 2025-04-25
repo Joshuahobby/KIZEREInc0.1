@@ -162,13 +162,62 @@
     }
   },
   "dashboard": {
-    "welcomeMessage": "Bienvenue sur votre tableau de bord",
+    "welcomeMessage": "Bon retour, {name}!",
+    "welcomeBack": "Bon retour",
+    "selectTab": "Sélectionnez un onglet du tableau de bord pour afficher le contenu",
+    "registerNewItem": "Enregistrer un Nouvel Objet",
+    "subtitles": {
+      "admin": "Gérez votre plateforme et consultez les analyses de performance",
+      "agent": "Examinez et traitez les signalements d'objets perdus et trouvés",
+      "user": "Suivez vos objets et gérez votre compte"
+    },
+    "tabs": {
+      "overview": "Aperçu",
+      "items": "Objets",
+      "reports": "Signalements",
+      "payments": "Paiements",
+      "adminPanel": "Panneau d'Admin",
+      "agentConsole": "Console d'Agent"
+    },
     "registeredItems": "Objets Enregistrés",
     "recentActivity": "Activité Récente",
     "quickActions": "Actions Rapides",
-    "registerNewItem": "Enregistrer un Nouvel Objet",
     "viewAllItems": "Voir Tous les Objets",
-    "reportLostItem": "Signaler un Objet Perdu"
+    "reportLostItem": "Signaler un Objet Perdu",
+    "lostReports": "Signalements de Perte",
+    "foundReports": "Objets Trouvés",
+    "totalSpent": "Total Dépensé",
+    "recentlyRegisteredItems": "Objets Récemment Enregistrés",
+    "recentItemsDescription": "Afficher et gérer vos objets enregistrés récemment",
+    "viewImplementationPlan": "Voir le Plan d'Implémentation",
+    "adminTab": "Admin",
+    "items": {
+      "title": "Objets",
+      "description": "Gérez vos objets enregistrés",
+      "registerNew": "Enregistrer Nouveau",
+      "tabTitle": "Contenu de l'Onglet Objets",
+      "tabDescription": "Cet onglet contiendrait une vue complète de tous vos objets enregistrés avec filtrage, tri et actions groupées."
+    },
+    "reports": {
+      "title": "Signalements",
+      "description": "Afficher et gérer vos signalements d'objets perdus et trouvés",
+      "newReport": "Nouveau Signalement",
+      "allReports": "Tous les Signalements",
+      "lostItems": "Objets Perdus",
+      "foundItems": "Objets Trouvés",
+      "tabTitle": "Contenu de l'Onglet Signalements",
+      "tabDescription": "Cet onglet afficherait tous vos signalements d'objets perdus et trouvés avec suivi de statut et mises à jour."
+    },
+    "payments": {
+      "title": "Paiements",
+      "description": "Suivez votre historique de paiement",
+      "tabTitle": "Contenu de l'Onglet Paiements",
+      "tabDescription": "Cet onglet afficherait votre historique de paiement, reçus et informations d'abonnement."
+    },
+    "adminPanel": {
+      "tabTitle": "Tableau de Bord Admin",
+      "tabDescription": "Cet onglet fournirait des contrôles administratifs complets et des analyses pour la gestion de la plateforme."
+    }
   },
   "items": {
     "registerNewItem": "Enregistrer un Nouvel Objet",
