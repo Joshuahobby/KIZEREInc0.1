@@ -1,73 +1,203 @@
 import QRCode from 'qrcode';
 
-/**
- * Options for QR code generation
- */
 export interface QRCodeOptions {
-  width?: number;
-  color?: {
-    dark?: string;
-    light?: string;
-  };
   errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H';
+  size?: number;
+  margin?: number;
+  foregroundColor?: string;
+  backgroundColor?: string;
 }
+
+/**
+ * Generate a QR code as an SVG string
+ * 
+ * @param data - The data to encode in the QR code
+ * @param options - Configuration options for the QR code
+ * @returns SVG string representation of the QR code
+ */
+export const generateQRCodeSVG = async (
+  data: string, 
+  options: QRCodeOptions = {}
+): Promise<string> => {
+  try {
+    const { 
+      errorCorrectionLevel = 'M', 
+      size = 300, 
+      margin = 4,
+      foregroundColor = '#000000',
+      backgroundColor = '#FFFFFF'
+    } = options;
+    
+    const qrOptions: QRCode.QRCodeToStringOptions = {
+      type: 'svg',
+      errorCorrectionLevel: errorCorrectionLevel,
+      width: size,
+      margin: margin,
+      color: {
+        dark: foregroundColor,
+        light: backgroundColor
+      }
+    };
+    
+    return await QRCode.toString(data, qrOptions);
+  } catch (error) {
+    console.error('Error generating QR code:', error);
+    throw error;
+  }
+};
 
 /**
  * Generate a QR code as a data URL
- * @param text The text or URL to encode in the QR code
- * @param options Configuration options for the QR code
- * @returns Promise resolving to the QR code as a data URL
+ * 
+ * @param data - The data to encode in the QR code
+ * @param options - Configuration options for the QR code
+ * @returns Data URL representation of the QR code
  */
-export async function generateQRCode(
-  text: string, 
+export const generateQRCodeDataURL = async (
+  data: string, 
   options: QRCodeOptions = {}
-): Promise<string> {
+): Promise<string> => {
   try {
-    const defaultOptions = {
-      width: 256,
-      margin: 1,
+    const { 
+      errorCorrectionLevel = 'M', 
+      size = 300, 
+      margin = 4,
+      foregroundColor = '#000000',
+      backgroundColor = '#FFFFFF'
+    } = options;
+    
+    const qrOptions: QRCode.QRCodeToDataURLOptions = {
+      errorCorrectionLevel: errorCorrectionLevel,
+      width: size,
+      margin: margin,
       color: {
-        dark: '#000000',
-        light: '#ffffff'
-      },
-      errorCorrectionLevel: 'M' as const
+        dark: foregroundColor,
+        light: backgroundColor
+      }
     };
     
-    const mergedOptions = { ...defaultOptions, ...options };
-    
-    return await QRCode.toDataURL(text, mergedOptions);
+    return await QRCode.toDataURL(data, qrOptions);
   } catch (error) {
-    console.error('QR code generation error:', error);
-    throw new Error('Failed to generate QR code');
+    console.error('Error generating QR code data URL:', error);
+    throw error;
   }
-}
+};
 
 /**
- * Generate a QR code for an item
- * @param itemId The unique identifier of the item
- * @param baseUrl The base URL of the application (for generating the full URL)
- * @param options Configuration options for the QR code
- * @returns Promise resolving to the QR code as a data URL
+ * Create a downloadable QR code image
+ * 
+ * @param data - The data to encode in the QR code
+ * @param options - Configuration options for the QR code
+ * @param filename - The filename for the downloaded QR code
  */
-export async function generateItemQRCode(
-  itemId: number, 
-  baseUrl: string = window.location.origin,
+export const downloadQRCode = async (
+  data: string, 
+  options: QRCodeOptions = {}, 
+  filename: string = 'qrcode.png'
+): Promise<void> => {
+  try {
+    const dataUrl = await generateQRCodeDataURL(data, options);
+    
+    // Create a link element to trigger the download
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (error) {
+    console.error('Error downloading QR code:', error);
+    throw error;
+  }
+};
+
+/**
+ * Generate a printable version of the QR code 
+ * 
+ * @param data - The data to encode in the QR code
+ * @param itemName - The name of the item for labeling
+ * @param options - Configuration options for the QR code
+ */
+export const printQRCode = async (
+  data: string,
+  itemName: string,
   options: QRCodeOptions = {}
-): Promise<string> {
-  const itemUrl = `${baseUrl}/items/verify/${itemId}`;
-  return generateQRCode(itemUrl, options);
-}
-
-/**
- * Download QR code as an image file
- * @param dataUrl The QR code as a data URL
- * @param filename The name of the file to download
- */
-export function downloadQRCode(dataUrl: string, filename: string = 'qrcode.png'): void {
-  const link = document.createElement('a');
-  link.href = dataUrl;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
+): Promise<void> => {
+  try {
+    const qrCodeDataUrl = await generateQRCodeDataURL(data, options);
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      throw new Error('Could not open print window. Check if popup blocker is enabled.');
+    }
+    
+    // Create the print document HTML
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>QR Code for ${itemName}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              margin: 0;
+              padding: 20px;
+              box-sizing: border-box;
+            }
+            .qr-container {
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              max-width: 400px;
+              text-align: center;
+            }
+            .qr-image {
+              width: ${options.size || 300}px;
+              height: ${options.size || 300}px;
+              margin-bottom: 15px;
+            }
+            .item-name {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 5px;
+            }
+            .scan-instructions {
+              font-size: 14px;
+              color: #666;
+            }
+            @media print {
+              body {
+                min-height: auto;
+                padding: 0;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="qr-container">
+            <img src="${qrCodeDataUrl}" class="qr-image" alt="QR code for ${itemName}" />
+            <div class="item-name">${itemName}</div>
+            <div class="scan-instructions">Scan this QR code to view item details</div>
+          </div>
+        </body>
+      </html>
+    `);
+    
+    // Wait for the image to load before printing
+    printWindow.document.addEventListener('load', () => {
+      printWindow.print();
+      printWindow.close();
+    }, true);
+    
+    printWindow.document.close();
+    
+  } catch (error) {
+    console.error('Error printing QR code:', error);
+    throw error;
+  }
+};

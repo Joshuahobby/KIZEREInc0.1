@@ -1,254 +1,193 @@
-import React, { createContext, ReactNode, useContext, useEffect } from "react";
-import {
-  useQuery,
-  useMutation,
-  UseMutationResult,
-} from "@tanstack/react-query";
-import { insertUserSchema, User, InsertUser, UserLogin } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { auth, FirebaseService } from "../lib/firebase";
-import { AuthService } from "../services/auth.service";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useLocation } from "wouter";
-import { createLogger } from "../lib/logger";
+import type { User } from "@shared/schema";
 
-const logger = createLogger('useAuth');
-
-type AuthContextType = {
-  user: Omit<User, "password"> | null;
+export interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
-  error: Error | null;
-  loginMutation: UseMutationResult<Omit<User, "password">, Error, UserLogin>;
-  logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<Omit<User, "password">, Error, InsertUser>;
-};
-
-export const AuthContext = createContext<AuthContextType | null>(null);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const { toast } = useToast();
-  const [, navigate] = useLocation();
-  
-  const {
-    data: user,
-    error,
-    isLoading,
-    refetch,
-  } = useQuery<Omit<User, "password"> | null, Error>({
-    queryKey: ["/api/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
-  });
-  
-  // Function to navigate to the correct dashboard based on role using AuthService
-  function navigateToDashboard(user: Omit<User, "password">): void {
-    // Set redirecting flag to prevent loops
-    if (isRedirecting.current) {
-      logger.debug("Already redirecting, skipping navigateToDashboard");
-      return;
-    }
-    
-    isRedirecting.current = true;
-    const dashboardPath = AuthService.getDashboardPathByRole(user.role);
-    logger.info("Redirecting to dashboard:", dashboardPath);
-    window.location.href = dashboardPath; // Use direct location change instead of wouter navigation
-  }
-  
-  // Track if we're in a redirect to prevent loops
-  const isRedirecting = React.useRef(false);
-
-  // Listen for Firebase auth state changes and sync with backend
-  useEffect(() => {
-    // Skip if we're already redirecting
-    if (isRedirecting.current) {
-      logger.debug("Skipping auth state change during redirect");
-      return () => {};
-    }
-    
-    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-      // Skip if we're at the dashboard already or if we're already redirecting
-      if (window.location.pathname.includes("/dashboard") || isRedirecting.current) {
-        logger.debug("Skipping auth sync - already at dashboard or redirecting");
-        return;
-      }
-
-      if (firebaseUser) {
-        logger.info("Firebase user authenticated", { uid: firebaseUser.uid });
-        
-        try {
-          // Extract user info from Firebase user
-          const userInfo = {
-            uid: firebaseUser.uid,
-            displayName: firebaseUser.displayName || "",
-            email: firebaseUser.email || "",
-            photoURL: firebaseUser.photoURL,
-            token: await firebaseUser.getIdToken()
-          };
-          
-          // Don't proceed if email is missing
-          if (!userInfo.email) {
-            logger.error("No email from Firebase auth");
-            return;
-          }
-          
-          // Send Firebase auth data to our backend
-          const response = await fetch("/api/auth/google", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: userInfo.email,
-              name: userInfo.displayName || userInfo.email.split('@')[0],
-              uid: userInfo.uid,
-              token: userInfo.token,
-              photoURL: userInfo.photoURL
-            }),
-            credentials: "include"
-          });
-          
-          if (!response.ok) {
-            throw new Error("Failed to authenticate with Google");
-          }
-          
-          // Get user data from backend and update auth context
-          const userData = await response.json();
-          queryClient.setQueryData(["/api/user"], userData);
-          
-          // Only redirect if we're not already at dashboard
-          if (!window.location.pathname.includes("/dashboard")) {
-            // Use our navigation function (which sets the redirecting flag)
-            navigateToDashboard(userData);
-            
-            toast({
-              title: "Sign in successful",
-              description: `Welcome, ${userData.fullName || userData.username}!`,
-            });
-          }
-        } catch (error) {
-          logger.error("Error syncing Firebase auth with backend", { error });
-          console.error("Error syncing Firebase auth:", error);
-          
-          // Only show error toast if it's not a standard authentication flow
-          // such as when a user is navigating to the site for the first time
-          if (window.location.pathname !== '/' && !window.location.pathname.includes('/auth-callback')) {
-            toast({
-              title: "Authentication error",
-              description: "There was an error syncing your authentication. Please try logging in again.",
-              variant: "destructive",
-            });
-          }
-        }
-      } else {
-        logger.debug("No Firebase user authenticated");
-      }
-    });
-    
-    // Cleanup on unmount
-    return () => unsubscribe();
-  }, [navigate, toast]);
-  
-  // If user data changes and user is logged in, navigate to correct dashboard
-  useEffect(() => {
-    // Skip if we're already redirecting or already at dashboard
-    if (isRedirecting.current || window.location.pathname.includes("/dashboard")) {
-      return;
-    }
-    
-    if (user && window.location.pathname === '/') {
-      navigateToDashboard(user);
-    }
-  }, [user, navigate]);
-
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: UserLogin) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
-      return await res.json();
-    },
-    onSuccess: (user: Omit<User, "password">) => {
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Logged in successfully",
-        description: `Welcome back, ${user.fullName}!`,
-      });
-      // Navigate to the appropriate dashboard
-      navigateToDashboard(user);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid username or password",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const registerMutation = useMutation({
-    mutationFn: async (credentials: InsertUser) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
-      return await res.json();
-    },
-    onSuccess: (user: Omit<User, "password">) => {
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Registration successful",
-        description: `Welcome to KIZERE, ${user.fullName}!`,
-      });
-      // Navigate to the appropriate dashboard
-      navigateToDashboard(user);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Registration failed",
-        description: error.message || "Failed to create account",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      logger.info("Starting logout process");
-      // Use AuthService for logout
-      await AuthService.signOut();
-    },
-    onSuccess: () => {
-      queryClient.setQueryData(["/api/user"], null);
-      toast({
-        title: "Logged out successfully",
-      });
-      
-      // Redirect to landing page after logout
-      window.location.href = "/";
-      logger.info("Logout completed successfully");
-    },
-    onError: (error: Error) => {
-      logger.error("Logout failed", { error });
-      toast({
-        title: "Logout failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  return (
-    <AuthContext.Provider
-      value={{
-        user: user ?? null,
-        isLoading,
-        error,
-        loginMutation,
-        logoutMutation,
-        registerMutation,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  signOut: () => Promise<void>;
+  signup: (email: string, password: string, fullName: string) => Promise<void>;
 }
 
-export function useAuth() {
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [, setLocation] = useLocation();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
+  // Check if user is already authenticated on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/user");
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          console.log("[useAuth] Firebase user authenticated", userData);
+        }
+      } catch (error) {
+        console.error("[useAuth] Error checking authentication:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // Handle redirections based on user role
+  useEffect(() => {
+    if (!user || isRedirecting) return;
+
+    const pathname = window.location.pathname;
+    
+    // Don't redirect on these routes
+    if (
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/agent")
+    ) {
+      return;
+    }
+
+    let dashboardPath = "/dashboard";
+    
+    // Set the appropriate dashboard path based on user role
+    if (user.role === "Admin") {
+      dashboardPath = "/admin/dashboard";
+    } else if (user.role === "Agent") {
+      dashboardPath = "/agent/dashboard";
+    }
+    
+    // Redirect to the appropriate dashboard
+    if (user) {
+      console.log("[useAuth] Redirecting to dashboard:", dashboardPath);
+      setIsRedirecting(true);
+      setLocation(dashboardPath);
+    }
+  }, [user, setLocation, isRedirecting]);
+
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+      
+      // Redirect based on role
+      if (userData.role === "Admin") {
+        setLocation("/admin/dashboard");
+      } else if (userData.role === "Agent") {
+        setLocation("/agent/dashboard");
+      } else {
+        setLocation("/dashboard");
+      }
+    } catch (error) {
+      console.error("[useAuth] Login error:", error);
+      setError(error instanceof Error ? error.message : "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    // For now, we're just mocking the Google auth flow
+    try {
+      window.location.href = "/api/auth/google";
+    } catch (error) {
+      console.error("[useAuth] Google login error:", error);
+      setError(error instanceof Error ? error.message : "Google login failed");
+      setIsLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    setIsLoading(true);
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+      setUser(null);
+      setLocation("/login");
+    } catch (error) {
+      console.error("[useAuth] Logout error:", error);
+      setError(error instanceof Error ? error.message : "Logout failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signup = async (email: string, password: string, fullName: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password, fullName }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Registration failed");
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+      setLocation("/dashboard");
+    } catch (error) {
+      console.error("[useAuth] Registration error:", error);
+      setError(error instanceof Error ? error.message : "Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const value = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    error,
+    login,
+    loginWithGoogle,
+    signOut,
+    signup,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-}
+};

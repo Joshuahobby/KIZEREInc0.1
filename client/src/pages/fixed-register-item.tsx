@@ -1,559 +1,320 @@
-import { useState, useEffect, useRef } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useState, useEffect } from "react";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { 
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { insertItemSchema } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import { InitializePaymentResponse } from "@/models/payment.model";
+import { cn } from "@/lib/utils";
+
+// UI Components
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { PaymentService } from "@/services/payment.service";
-import { DEFAULT_CURRENCY } from "@/config/payment.config";
-import { cn } from "@/lib/utils";
-import { processFileUpload, ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE } from "@/utils/file-utils";
-import { 
-  Loader2, 
-  Check, 
-  CreditCard, 
-  Save,
-  Upload,
-  Camera,
-  Calendar,
-  Info,
-  X,
-  Image as ImageIcon,
-  Clipboard,
-  CheckCircle,
-  ArrowRight,
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+
+// Lucide Icons
+import {
+  Loader2,
   RefreshCw,
-  Barcode,
-  AlertCircle
+  ArrowRight,
+  InfoIcon,
+  FileImage,
+  FileStack,
+  QrCode,
+  Check,
+  Fingerprint,
+  Search,
+  CreditCard,
 } from "lucide-react";
 
-// Item categories
+// Our custom components for new features
+import { SmartIdRecognizer } from "@/components/item-registration/smart-id-recognizer";
+import { BatchImageUpload } from "@/components/item-registration/batch-image-upload";
+import { OwnershipChain } from "@/components/item-registration/ownership-chain";
+import { QrCodeGenerator } from "@/components/item-registration/qr-code-generator";
+import { OwnershipDocument } from "@/utils/ownership-utils";
+
+// Form validation schema based on the shared schema
+const formSchema = insertItemSchema.extend({
+  // Add client-side specific validations here
+  name: z.string().min(2, { message: "Item name is too short" }).max(100),
+  description: z.string().optional(),
+  uniqueIdentifier: z.string().min(4, { message: "Identifier must be at least 4 characters" }),
+  // We'll handle file validation separately
+});
+
+// Form values type
+type ItemRegistrationValues = z.infer<typeof formSchema>;
+
+// Categories and sub-categories for the form
 const categories = [
   "Electronics",
   "Documents",
-  "Jewelry",
   "Accessories",
+  "Clothing",
   "Other"
 ];
 
-// Form sections - Updated to remove details section as it's now combined with basic-info
-const sections = [
-  { id: "basic-info", name: "Item Information" },
-  { id: "media", name: "Media & Documents" },
-  { id: "ownership", name: "Ownership Proof" }
-];
-
-// Item sub-categories based on main category
+// Sub-categories based on parent category
 const subCategories = {
   Electronics: [
-    "Mobile Phone",
+    "Smartphone",
     "Laptop",
-    "Tablet",
     "Camera",
-    "Headphones",
-    "Other Electronics",
+    "Tablet",
+    "Smartwatch",
+    "Other"
   ],
   Documents: [
     "ID Card",
     "Passport",
     "Driver's License",
     "Certificate",
-    "Other Documents",
-  ],
-  Jewelry: [
-    "Ring",
-    "Necklace",
-    "Bracelet",
-    "Watch",
-    "Other Jewelry",
+    "Other"
   ],
   Accessories: [
+    "Jewelry",
+    "Watch",
     "Bag",
     "Wallet",
-    "Glasses",
-    "Key",
-    "Other Accessories",
+    "Other"
+  ],
+  Clothing: [
+    "Outerwear",
+    "Formal",
+    "Casual",
+    "Sports",
+    "Other"
   ],
   Other: [
-    "Clothing",
-    "Book",
-    "Toy",
-    "Tool",
-    "Miscellaneous",
-  ],
+    "Miscellaneous"
+  ]
 };
 
-// Enhanced schema for the item registration form
-const itemRegistrationSchema = z.object({
-  // Basic Information
-  name: z.string().min(3, "Item name must be at least 3 characters"),
-  category: z.string().min(1, "Please select a category"),
-  subCategory: z.string().optional(),
-  uniqueIdentifier: z.string().min(1, "Unique identifier is required"),
-  description: z.string().optional(),
+export default function RegisterItem() {
+  // Form state
+  const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info"]);
+  const [itemImages, setItemImages] = useState<File[]>([]);
+  const [ownershipDocuments, setOwnershipDocuments] = useState<OwnershipDocument[]>([]);
+  const [completion, setCompletion] = useState(0);
+  const [paymentRef, setPaymentRef] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
   
-  // Details for electronics
-  brand: z.string().optional(),
-  model: z.string().optional(),
-  serialNumber: z.string().optional(),
-  color: z.string().optional(),
-  purchaseDate: z.string().optional(),
-  purchaseLocation: z.string().optional(),
-  value: z.string().optional(),
-  warranty: z.string().optional(),
-  
-  // Details for documents
-  documentNumber: z.string().optional(),
-  issueAuthority: z.string().optional(),
-  issueDate: z.string().optional(),
-  expiryDate: z.string().optional(),
-  
-  // Details for jewelry
-  material: z.string().optional(),
-  weight: z.string().optional(),
-  
-  // Details for other items
-  additionalDetails: z.string().optional(),
-  
-  // Media & Documents
-  imageUrls: z.array(z.string()).default([]),
-  receiptImage: z.string().optional(),
-  warrantyDocument: z.string().optional(),
-  
-  // Ownership Proof
-  ownershipProof: z.string().optional(),
-  ownershipDocumentType: z.string().optional(),
-  additionalNotes: z.string().optional(),
-});
-
-type ItemRegistrationValues = z.infer<typeof itemRegistrationSchema>;
-
-// Section completion requirement logic
-const isSectionComplete = (
-  data: Partial<ItemRegistrationValues>,
-  section: string
-): boolean => {
-  switch (section) {
-    case "basic-info":
-      // Basic info now combined with details
-      const hasBasicInfo = Boolean(
-        data.name && data.name.length >= 3 &&
-        data.category &&
-        data.uniqueIdentifier
-      );
-      
-      // Category-specific detail fields check
-      let hasDetails = false;
-      if (data.category === "Electronics") {
-        hasDetails = Boolean(data.brand || data.model || data.serialNumber);
-      } else if (data.category === "Documents") {
-        hasDetails = Boolean(data.documentNumber || data.issueAuthority);
-      } else if (data.category === "Jewelry" || data.category === "Accessories") {
-        hasDetails = Boolean(data.color || data.material || data.brand);
-      } else if (data.category === "Other") {
-        hasDetails = Boolean(data.additionalDetails);
-      }
-      
-      return hasBasicInfo;
-    case "media":
-      // Consider media complete if at least one image is uploaded
-      return (data.imageUrls && data.imageUrls.length > 0) || Boolean(data.receiptImage);
-    case "ownership":
-      // Consider ownership complete if proof type is selected
-      return Boolean(data.ownershipDocumentType);
-    default:
-      return false;
-  }
-};
-
-// Calculate form completion percentage
-const calculateCompletion = (data: Partial<ItemRegistrationValues>): number => {
-  let totalSections = 3; // Item info (combined basic+details), media, ownership
-  let completedSections = 0;
-  
-  if (isSectionComplete(data, "basic-info")) completedSections++;
-  if (isSectionComplete(data, "media")) completedSections++;
-  if (isSectionComplete(data, "ownership")) completedSections++;
-  
-  return Math.round((completedSections / totalSections) * 100);
-};
-
-export default function FixedRegisterItem() {
+  // Toast notifications
   const { toast } = useToast();
   
-  // State for UI interactions
-  const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info"]);
-  const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout | null>(null);
-  const [autoSaving, setAutoSaving] = useState<boolean>(false);
-  const [completion, setCompletion] = useState<number>(0);
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
-  const [paymentRef, setPaymentRef] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  
-  // Create the form
+  // Form initialization with react-hook-form and zod validation
   const form = useForm<ItemRegistrationValues>({
-    resolver: zodResolver(itemRegistrationSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      // Basic Information
       name: "",
       category: "",
       subCategory: "",
       uniqueIdentifier: "",
       description: "",
-      
-      // Electronics details
-      brand: "",
-      model: "",
-      serialNumber: "",
-      color: "",
-      purchaseDate: "",
-      purchaseLocation: "",
-      value: "",
-      warranty: "",
-      
-      // Document details
-      documentNumber: "",
-      issueAuthority: "",
-      issueDate: "",
-      expiryDate: "",
-      
-      // Jewelry details
-      material: "",
-      weight: "",
-      
-      // Other items
-      additionalDetails: "",
-      
-      // Media & Documents
-      imageUrls: [],
-      receiptImage: "",
-      warrantyDocument: "",
-      
-      // Ownership Proof
-      ownershipProof: "",
-      ownershipDocumentType: "",
-      additionalNotes: "",
+      status: "active",
     },
     mode: "onChange",
   });
   
-  const [, setLocation] = useLocation();
-  
-  // Watch form values for completion calculation
+  // Watch form values for determining completion percentage
   const watchedValues = form.watch();
   
-  useEffect(() => {
-    const newCompletion = calculateCompletion(watchedValues);
-    setCompletion(newCompletion);
-  }, [watchedValues]);
-  
-  // Auto-save functionality
-  useEffect(() => {
-    // Clear previous timer
-    if (autoSaveTimer) {
-      clearTimeout(autoSaveTimer);
-    }
-    
-    // Set new timer for auto-save
-    const timer = setTimeout(() => {
-      if (form.formState.isDirty) {
-        setAutoSaving(true);
-        // Simulate saving to local storage
-        localStorage.setItem('itemDraft', JSON.stringify(watchedValues));
-        
-        setTimeout(() => {
-          setAutoSaving(false);
-        }, 1000);
-      }
-    }, 3000);
-    
-    setAutoSaveTimer(timer);
-    
-    return () => {
-      if (autoSaveTimer) {
-        clearTimeout(autoSaveTimer);
-      }
-    };
-  }, [watchedValues, form.formState.isDirty]);
-  
-  // Handle accordion toggle
-  const toggleSection = (value: string) => {
+  // Toggle accordion sections
+  const toggleSection = (section: string) => {
     setExpandedSections(prev => {
-      if (prev.includes(value)) {
-        return prev.filter(v => v !== value);
+      if (prev.includes(section)) {
+        return prev.filter(s => s !== section);
       } else {
-        return [...prev, value];
+        return [...prev, section];
       }
     });
   };
   
-  // Refs for file inputs
-  const itemImageInputRef = useRef<HTMLInputElement>(null);
-  const receiptImageInputRef = useRef<HTMLInputElement>(null);
-  const warrantyDocInputRef = useRef<HTMLInputElement>(null);
-  const ownershipDocInputRef = useRef<HTMLInputElement>(null);
+  // Calculate form completion percentage
+  useEffect(() => {
+    setCompletion(calculateCompletion(watchedValues, itemImages, ownershipDocuments));
+  }, [watchedValues, itemImages, ownershipDocuments]);
   
-  // State for file upload errors
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<boolean>(false);
-  
-  // Handle file drag events
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-  
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
-  
-  // Handle file drop
-  const handleFileDrop = async (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    setUploadError(null);
-    
-    // Process files
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setUploading(true);
-      
-      try {
-        const files = Array.from(e.dataTransfer.files);
-        
-        // Process each file (maximum 5 files)
-        const filesToProcess = files.slice(0, 5);
-        
-        for (const file of filesToProcess) {
-          const result = await processFileUpload(file);
-          
-          if (result.success && result.data) {
-            // Update form with the new image
-            const currentImages = form.getValues("imageUrls") || [];
-            form.setValue("imageUrls", [...currentImages, result.data.url]);
-            
-            // Set preview image to the most recent upload
-            setPreviewImage(result.data.url);
-          } else if (result.error) {
-            setUploadError(result.error.message);
-            break;
-          }
-        }
-      } catch (error) {
-        setUploadError(error instanceof Error ? error.message : "Failed to upload files");
-      } finally {
-        setUploading(false);
-      }
-    }
-  };
-  
-  // Handle file input change with type safety
-  const handleFileInputChange = (fieldName: string) => async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUploadError(null);
-    
-    if (e.target.files && e.target.files.length > 0) {
-      setUploading(true);
-      
-      try {
-        const file = e.target.files[0];
-        const result = await processFileUpload(file);
-        
-        if (result.success && result.data) {
-          // Special handling based on field name
-          if (fieldName === 'itemImages') {
-            const currentImages = form.getValues("imageUrls") || [];
-            form.setValue("imageUrls", [...currentImages, result.data.url]);
-            setPreviewImage(result.data.url);
-          } else if (fieldName === 'receiptImage') {
-            form.setValue("receiptImage", result.data.url);
-          } else if (fieldName === 'warrantyDocument') {
-            form.setValue("warrantyDocument", result.data.url);
-          } else if (fieldName === 'ownershipProof') {
-            form.setValue("ownershipProof", result.data.url);
-          }
-          
-          // Reset the file input so the same file can be selected again if needed
-          e.target.value = '';
-          
-          toast({
-            title: "File uploaded",
-            description: "Your file has been uploaded successfully",
-          });
-        } else if (result.error) {
-          setUploadError(result.error.message);
-        }
-      } catch (error) {
-        setUploadError(error instanceof Error ? error.message : "Failed to upload file");
-      } finally {
-        setUploading(false);
-      }
-    }
-  };
-  
-  // Trigger file input click
-  const triggerFileInput = (ref: React.RefObject<HTMLInputElement>) => {
-    if (ref.current) {
-      ref.current.click();
-    }
-  };
-  
-  // Get field visibility based on category
-  const shouldShowField = (category: string, fieldName: string): boolean => {
-    // No category selected yet, show nothing
-    if (!category) return false;
-    
-    // Fields shown for all categories
-    const commonFields = ["uniqueIdentifier", "description"];
-    if (commonFields.includes(fieldName)) return true;
-    
-    // Category-specific fields
-    switch (category) {
-      case "Electronics":
-        return ["brand", "model", "serialNumber", "color", "purchaseDate", "warranty", "value"].includes(fieldName);
-      case "Documents":
-        return ["issueDate", "expiryDate", "documentNumber", "issueAuthority"].includes(fieldName);
-      case "Jewelry":
-        return ["material", "weight", "color", "purchaseDate", "value"].includes(fieldName);
-      case "Accessories":
-        return ["brand", "color", "purchaseDate", "value"].includes(fieldName);
-      case "Other":
-        return ["color", "purchaseDate", "value", "additionalDetails"].includes(fieldName);
+  // Helper function to check if a section is complete
+  const isSectionComplete = (
+    values: typeof watchedValues, 
+    section: string
+  ): boolean => {
+    switch (section) {
+      case "basic-info":
+        return !!values.name && 
+               !!values.category && 
+               !!values.uniqueIdentifier && 
+               (!!values.description || values.description === "");
+      case "media":
+        return itemImages.length > 0;
+      case "ownership":
+        return ownershipDocuments.length > 0;
       default:
         return false;
     }
   };
   
-  // Get completion status icon for section
+  // Helper function to get appropriate icon for each section
   const getSectionIcon = (section: string) => {
     const isComplete = isSectionComplete(watchedValues, section);
     
-    if (isComplete) {
-      return <Check className="h-5 w-5 text-green-500" />;
+    switch (section) {
+      case "basic-info":
+        return isComplete ? <Check className="h-4 w-4 text-green-600" /> : <InfoIcon className="h-4 w-4 text-gray-500" />;
+      case "media":
+        return isComplete ? <Check className="h-4 w-4 text-green-600" /> : <FileImage className="h-4 w-4 text-gray-500" />;
+      case "ownership":
+        return isComplete ? <Check className="h-4 w-4 text-green-600" /> : <FileStack className="h-4 w-4 text-gray-500" />;
+      case "qrcode":
+        return <QrCode className="h-4 w-4 text-gray-500" />;
+      default:
+        return null;
     }
+  };
+  
+  // Calculate overall completion percentage
+  function calculateCompletion(
+    values: typeof watchedValues,
+    images: File[],
+    documents: OwnershipDocument[]
+  ): number {
+    let totalFields = 0;
+    let completedFields = 0;
     
-    return null;
+    // Basic info section (weight: 50%)
+    totalFields += 5;
+    if (values.name) completedFields += 1;
+    if (values.category) completedFields += 1;
+    if (values.subCategory) completedFields += 1;
+    if (values.uniqueIdentifier) completedFields += 1;
+    if (values.description !== undefined) completedFields += 1;
+    
+    // Media section (weight: 25%)
+    if (images.length > 0) {
+      completedFields += 1.25;
+    }
+    totalFields += 1.25;
+    
+    // Ownership documents (weight: 25%)
+    if (documents.length > 0) {
+      completedFields += 1.25;
+    }
+    totalFields += 1.25;
+    
+    return Math.min(100, Math.round((completedFields / totalFields) * 100));
+  }
+  
+  // Handle smart ID detection from OCR
+  const handleIdentifierDetected = (value: string) => {
+    form.setValue("uniqueIdentifier", value, { shouldValidate: true });
   };
   
   // Item registration mutation
   const registerMutation = useMutation({
     mutationFn: async (data: ItemRegistrationValues) => {
-      // Prepare item data
-      const itemData = {
-        name: data.name,
-        category: data.category,
-        uniqueIdentifier: data.uniqueIdentifier,
-        description: data.description,
-        // Store additional details in the details JSON field
-        details: {
-          // Common fields
-          subCategory: data.subCategory,
-          additionalNotes: data.additionalNotes,
-          
-          // Handle fields based on category
-          ...(data.category === "Electronics" && {
-            brand: data.brand,
-            model: data.model,
-            serialNumber: data.serialNumber,
-            color: data.color,
-            purchaseDate: data.purchaseDate,
-            purchaseLocation: data.purchaseLocation,
-            value: data.value,
-            warranty: data.warranty,
-          }),
-          
-          ...(data.category === "Documents" && {
-            documentNumber: data.documentNumber,
-            issueAuthority: data.issueAuthority,
-            issueDate: data.issueDate,
-            expiryDate: data.expiryDate,
-          }),
-          
-          ...(data.category === "Jewelry" && {
-            material: data.material,
-            weight: data.weight,
-            color: data.color,
-            purchaseDate: data.purchaseDate,
-            value: data.value,
-          }),
-          
-          ...(data.category === "Accessories" && {
-            brand: data.brand,
-            color: data.color,
-            purchaseDate: data.purchaseDate,
-            value: data.value,
-          }),
-          
-          ...(data.category === "Other" && {
-            color: data.color,
-            purchaseDate: data.purchaseDate,
-            value: data.value,
-            additionalDetails: data.additionalDetails,
-          }),
-          
-          // Ownership information
-          ownershipDocumentType: data.ownershipDocumentType,
-          ownershipProof: data.ownershipProof,
-        },
-        imageUrls: data.imageUrls || [],
-      };
+      // Step 1: Upload images first if there are any
+      let imageUrls: string[] = [];
       
-      const res = await apiRequest("POST", "/api/items", itemData);
-      return await res.json();
-    },
-    onSuccess: async (item) => {
-      // Invalidate and refetch items query to update the list
-      queryClient.invalidateQueries({ queryKey: ["/api/items"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/stats"] });
+      if (itemImages.length > 0) {
+        const formData = new FormData();
+        itemImages.forEach((file, index) => {
+          formData.append('images', file);
+        });
+        
+        // Upload images
+        const uploadResponse = await apiRequest<{ urls: string[] }>('/api/upload/images', {
+          method: 'POST',
+          body: formData,
+          // Don't set Content-Type header, browser will set it with boundary
+        });
+        
+        imageUrls = uploadResponse.urls;
+      }
       
-      toast({
-        title: "Item registered successfully",
-        description: "Item saved. Proceeding to payment...",
+      // Step 2: Upload ownership documents if there are any
+      let documentUrls: { type: string; url: string; date: string; description: string }[] = [];
+      
+      if (ownershipDocuments.length > 0) {
+        const formData = new FormData();
+        ownershipDocuments.forEach((doc, index) => {
+          formData.append('documents', doc.file);
+          formData.append(`documentInfo${index}`, JSON.stringify({
+            type: doc.type,
+            date: doc.date.toISOString(),
+            description: doc.description
+          }));
+        });
+        
+        // Upload documents
+        const uploadResponse = await apiRequest<{ documents: { type: string; url: string; date: string; description: string }[] }>(
+          '/api/upload/documents', 
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+        
+        documentUrls = uploadResponse.documents;
+      }
+      
+      // Step 3: Register the item with image and document URLs
+      const registrationResponse = await apiRequest<{ itemId: number }>('/api/items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...data,
+          images: imageUrls,
+          documents: documentUrls,
+        }),
       });
       
-      // Initiate payment process for registration fee
-      try {
-        setPaymentStatus("pending");
-        
-        // Initialize payment for this item registration
-        const payment = await PaymentService.initializePayment({
-          type: "registration", // The amount will be taken from central payment config
-          itemId: item.id
-        });
-        
-        setPaymentRef(payment.transactionRef);
-        setPaymentStatus("success");
-        
-        // Redirect to payment page
-        window.location.href = payment.redirectUrl;
-      } catch (error) {
-        console.error("Payment initiation failed:", error);
-        setPaymentStatus("error");
-        
-        toast({
-          title: "Payment error",
-          description: "Failed to initiate payment. Please try again.",
-          variant: "destructive",
-        });
-      }
+      // Step 4: Initialize payment for the registration
+      const payment = await apiRequest<InitializePaymentResponse>('/api/payments/initialize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'registration',
+          itemId: registrationResponse.itemId,
+        }),
+      });
+      
+      setPaymentRef(payment.transactionRef);
+      setPaymentStatus("success");
+      
+      // Redirect to payment page
+      window.location.href = payment.redirectUrl;
     },
     onError: (error: Error) => {
       console.error("Item registration error:", error);
@@ -647,7 +408,7 @@ export default function FixedRegisterItem() {
                         onValueChange={setExpandedSections}
                         className="space-y-4"
                       >
-                        {/* Item Information Section (Combined Basic & Details) */}
+                        {/* Item Information Section */}
                         <AccordionItem
                           value="basic-info"
                           className={cn(
@@ -787,11 +548,17 @@ export default function FixedRegisterItem() {
                                         <div className="relative">
                                           <Input placeholder="Enter unique identifier" {...field} />
                                           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                            <Barcode className="h-4 w-4 text-neutral-400" />
+                                            <Fingerprint className="h-4 w-4 text-gray-400" />
                                           </div>
                                         </div>
                                       </FormControl>
                                       <FormMessage />
+                                      <div className="mt-2">
+                                        <SmartIdRecognizer 
+                                          onDetect={handleIdentifierDetected}
+                                          onSelectIdentifier={handleIdentifierDetected}
+                                        />
+                                      </div>
                                     </FormItem>
                                   )}
                                 />
@@ -808,10 +575,11 @@ export default function FixedRegisterItem() {
                                         <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
                                       </FormLabel>
                                       <FormControl>
-                                        <Textarea
-                                          placeholder="Describe your item with key details"
-                                          className="resize-none h-24"
-                                          {...field}
+                                        <Textarea 
+                                          placeholder="Describe your item with key details" 
+                                          className="min-h-[100px]"
+                                          {...field} 
+                                          value={field.value || ''}
                                         />
                                       </FormControl>
                                       <FormMessage />
@@ -819,431 +587,12 @@ export default function FixedRegisterItem() {
                                   )}
                                 />
                               </div>
-                              
-                              {/* Electronic device fields */}
-                              {form.getValues("category") === "Electronics" && (
-                                <>
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="brand"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Brand
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. Samsung, Apple, Sony" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="model"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Model
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. Galaxy S22, MacBook Pro, WH-1000XM4" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="serialNumber"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Serial Number
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="Device serial number" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="color"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Color
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. Space Gray, Midnight Blue" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="purchaseDate"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Purchase Date
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input type="date" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="value"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Estimated Value
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. 50000 RWF" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                </>
-                              )}
-                              
-                              {/* Document fields */}
-                              {form.getValues("category") === "Documents" && (
-                                <>
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="documentNumber"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Document Number
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="Document identification number" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="issueAuthority"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Issuing Authority
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. Ministry of Interior, University" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="issueDate"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Issue Date
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input type="date" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="expiryDate"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Expiry Date
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input type="date" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                </>
-                              )}
-                              
-                              {/* Jewelry fields */}
-                              {form.getValues("category") === "Jewelry" && (
-                                <>
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="material"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Material
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. Gold, Silver, Platinum" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="weight"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Weight
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. 10g, 2 carats" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="color"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Color
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. Yellow Gold, Rose Gold" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="value"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Estimated Value
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. 100000 RWF" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                </>
-                              )}
-                              
-                              {/* Accessories fields */}
-                              {form.getValues("category") === "Accessories" && (
-                                <>
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="brand"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Brand
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. Louis Vuitton, Ray-Ban" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="color"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Color
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. Black, Brown, Blue" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="value"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Estimated Value
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. 25000 RWF" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                </>
-                              )}
-                              
-                              {/* Other items fields */}
-                              {form.getValues("category") === "Other" && (
-                                <>
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="color"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Color
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. Red, Green, Blue" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-3">
-                                    <FormField
-                                      control={form.control}
-                                      name="value"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Estimated Value
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Input placeholder="e.g. 15000 RWF" {...field} />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                  
-                                  <div className="sm:col-span-6">
-                                    <FormField
-                                      control={form.control}
-                                      name="additionalDetails"
-                                      render={({ field }) => (
-                                        <FormItem>
-                                          <FormLabel>
-                                            Additional Details
-                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                          </FormLabel>
-                                          <FormControl>
-                                            <Textarea
-                                              placeholder="Add any other details that might help identify your item"
-                                              className="resize-none h-24"
-                                              {...field}
-                                            />
-                                          </FormControl>
-                                          <FormMessage />
-                                        </FormItem>
-                                      )}
-                                    />
-                                  </div>
-                                </>
-                              )}
-                              
-                              {/* If no category selected, show message */}
-                              {!form.getValues("category") && (
-                                <div className="sm:col-span-6 flex justify-center items-center py-8">
-                                  <div className="text-center">
-                                    <Info className="h-6 w-6 text-neutral-400 mx-auto mb-2" />
-                                    <p className="text-neutral-500">Please select a category first</p>
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           </AccordionContent>
                         </AccordionItem>
                         
-                        {/* Media & Documents Section */}
-                        <AccordionItem 
+                        {/* Media & Images Section */}
+                        <AccordionItem
                           value="media"
                           className={cn(
                             "border rounded-lg overflow-hidden", 
@@ -1268,183 +617,26 @@ export default function FixedRegisterItem() {
                               )}>
                                 {getSectionIcon("media") || <span>2</span>}
                               </div>
-                              <span>Media & Documents</span>
+                              <span>Media & Images</span>
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-5 pt-2">
-                            <div className="space-y-6">
-                              {/* Item Images */}
-                              <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                  <h4 className="text-sm font-medium text-neutral-900">Item Images</h4>
-                                  <span className="text-xs text-neutral-500">
-                                    {watchedValues.imageUrls?.length || 0}/5 images
-                                  </span>
-                                </div>
-                                
-                                <div 
-                                  className={cn(
-                                    "border-2 border-dashed rounded-lg p-6 transition-colors",
-                                    isDragging ? "border-primary-300 bg-primary-50" : "border-gray-300",
-                                    uploadError ? "border-red-300" : ""
-                                  )}
-                                  onDragOver={handleDragOver}
-                                  onDragLeave={handleDragLeave}
-                                  onDrop={handleFileDrop}
-                                >
-                                  <div className="text-center">
-                                    <Camera className="h-8 w-8 text-neutral-400 mx-auto mb-2" />
-                                    <h3 className="text-sm font-medium text-neutral-900 mb-1">
-                                      {isDragging ? "Drop images here" : "Upload Item Images"}
-                                    </h3>
-                                    <p className="text-xs text-neutral-500 mb-3">
-                                      Drag and drop your images here or click to browse
-                                    </p>
-                                    
-                                    {uploadError && (
-                                      <Alert variant="destructive" className="mb-3">
-                                        <AlertCircle className="h-4 w-4 mr-2" />
-                                        <AlertDescription className="text-xs">
-                                          {uploadError}
-                                        </AlertDescription>
-                                      </Alert>
-                                    )}
-                                    
-                                    <div className="mt-2">
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="secondary"
-                                        onClick={() => triggerFileInput(itemImageInputRef)}
-                                        disabled={uploading || ((watchedValues.imageUrls?.length || 0) >= 5)}
-                                      >
-                                        {uploading ? (
-                                          <>
-                                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                            Uploading...
-                                          </>
-                                        ) : (
-                                          <>
-                                            <Upload className="h-4 w-4 mr-2" />
-                                            Select Image
-                                          </>
-                                        )}
-                                      </Button>
-                                      <input
-                                        type="file"
-                                        ref={itemImageInputRef}
-                                        accept={ALLOWED_IMAGE_TYPES.join(",")}
-                                        className="hidden"
-                                        onChange={handleFileInputChange("itemImages")}
-                                        disabled={uploading || ((watchedValues.imageUrls?.length || 0) >= 5)}
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                                
-                                {/* Image Gallery */}
-                                {watchedValues.imageUrls && watchedValues.imageUrls.length > 0 && (
-                                  <div className="grid grid-cols-3 gap-3 mt-4">
-                                    {watchedValues.imageUrls.map((url, index) => (
-                                      <div 
-                                        key={index} 
-                                        className="relative aspect-square rounded-md overflow-hidden border"
-                                      >
-                                        <img 
-                                          src={url} 
-                                          alt={`Item image ${index + 1}`} 
-                                          className="w-full h-full object-cover"
-                                        />
-                                        <button
-                                          type="button"
-                                          className="absolute top-1 right-1 bg-neutral-800 bg-opacity-60 rounded-full p-1"
-                                          onClick={() => {
-                                            const newImages = [...watchedValues.imageUrls || []];
-                                            newImages.splice(index, 1);
-                                            form.setValue("imageUrls", newImages);
-                                          }}
-                                        >
-                                          <X className="h-3 w-3 text-white" />
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
+                            <div className="space-y-4">
+                              <h4 className="text-sm font-medium">Upload Item Images</h4>
+                              <p className="text-sm text-gray-500">
+                                Add multiple photos of your item from different angles. Clear photos help with identification.
+                              </p>
                               
-                              {/* Receipt Image */}
-                              <div className="space-y-3">
-                                <h4 className="text-sm font-medium text-neutral-900">Receipt (Optional)</h4>
-                                <div className="flex items-center">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => triggerFileInput(receiptImageInputRef)}
-                                    disabled={uploading}
-                                    className="mr-3"
-                                  >
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Upload Receipt
-                                  </Button>
-                                  <input
-                                    type="file"
-                                    ref={receiptImageInputRef}
-                                    accept={ALLOWED_IMAGE_TYPES.join(",")}
-                                    className="hidden"
-                                    onChange={handleFileInputChange("receiptImage")}
-                                    disabled={uploading}
-                                  />
-                                  
-                                  {watchedValues.receiptImage && (
-                                    <span className="text-xs text-green-600 flex items-center">
-                                      <Check className="h-3 w-3 mr-1" />
-                                      Receipt uploaded
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              {/* Warranty Document */}
-                              {form.getValues("category") === "Electronics" && (
-                                <div className="space-y-3">
-                                  <h4 className="text-sm font-medium text-neutral-900">Warranty (Optional)</h4>
-                                  <div className="flex items-center">
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => triggerFileInput(warrantyDocInputRef)}
-                                      disabled={uploading}
-                                      className="mr-3"
-                                    >
-                                      <Upload className="h-4 w-4 mr-2" />
-                                      Upload Warranty
-                                    </Button>
-                                    <input
-                                      type="file"
-                                      ref={warrantyDocInputRef}
-                                      accept={ALLOWED_IMAGE_TYPES.join(",")}
-                                      className="hidden"
-                                      onChange={handleFileInputChange("warrantyDocument")}
-                                      disabled={uploading}
-                                    />
-                                    
-                                    {watchedValues.warrantyDocument && (
-                                      <span className="text-xs text-green-600 flex items-center">
-                                        <Check className="h-3 w-3 mr-1" />
-                                        Warranty uploaded
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
+                              <BatchImageUpload 
+                                onChange={setItemImages}
+                                maxFiles={5}
+                              />
                             </div>
                           </AccordionContent>
                         </AccordionItem>
                         
-                        {/* Ownership Proof Section */}
-                        <AccordionItem 
+                        {/* Ownership Verification Section */}
+                        <AccordionItem
                           value="ownership"
                           className={cn(
                             "border rounded-lg overflow-hidden", 
@@ -1469,123 +661,103 @@ export default function FixedRegisterItem() {
                               )}>
                                 {getSectionIcon("ownership") || <span>3</span>}
                               </div>
-                              <span>Ownership Proof</span>
+                              <span>Ownership Verification</span>
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-5 pt-2">
-                            <div className="space-y-6">
-                              <div className="sm:col-span-6">
-                                <FormField
-                                  control={form.control}
-                                  name="ownershipDocumentType"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>
-                                        Proof of Ownership Type
-                                        <span className="text-red-500 ml-1">*</span>
-                                      </FormLabel>
-                                      <Select 
-                                        value={field.value || ""} 
-                                        onValueChange={field.onChange}
-                                      >
-                                        <FormControl>
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="Select document type" />
-                                          </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                          <SelectItem value="purchase_receipt">Purchase Receipt</SelectItem>
-                                          <SelectItem value="warranty_card">Warranty Card</SelectItem>
-                                          <SelectItem value="bank_statement">Bank Statement</SelectItem>
-                                          <SelectItem value="ownership_certificate">Ownership Certificate</SelectItem>
-                                          <SelectItem value="other">Other Document</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
+                            <div className="space-y-4">
+                              <h4 className="text-sm font-medium">Ownership Documentation</h4>
+                              <p className="text-sm text-gray-500">
+                                Upload documents that prove your ownership, such as receipts, warranties, or certificates.
+                              </p>
                               
-                              <div className="space-y-3">
-                                <h4 className="text-sm font-medium text-neutral-900">Upload Proof Document</h4>
-                                <div className="flex items-center">
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => triggerFileInput(ownershipDocInputRef)}
-                                    disabled={uploading || !watchedValues.ownershipDocumentType}
-                                    className="mr-3"
-                                  >
-                                    <Upload className="h-4 w-4 mr-2" />
-                                    Upload Document
-                                  </Button>
-                                  <input
-                                    type="file"
-                                    ref={ownershipDocInputRef}
-                                    accept={ALLOWED_IMAGE_TYPES.join(",")}
-                                    className="hidden"
-                                    onChange={handleFileInputChange("ownershipProof")}
-                                    disabled={uploading || !watchedValues.ownershipDocumentType}
-                                  />
-                                  
-                                  {!watchedValues.ownershipDocumentType && (
-                                    <span className="text-xs text-neutral-500">
-                                      Please select document type first
-                                    </span>
-                                  )}
-                                  
-                                  {watchedValues.ownershipProof && (
-                                    <span className="text-xs text-green-600 flex items-center">
-                                      <Check className="h-3 w-3 mr-1" />
-                                      Document uploaded
-                                    </span>
-                                  )}
-                                </div>
+                              <OwnershipChain 
+                                onChange={setOwnershipDocuments}
+                              />
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                        
+                        {/* QR Code Generator Section */}
+                        <AccordionItem
+                          value="qrcode"
+                          className="border rounded-lg overflow-hidden border-gray-200"
+                        >
+                          <AccordionTrigger 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleSection("qrcode");
+                            }}
+                            className="px-4 py-3 hover:no-underline"
+                          >
+                            <div className="flex items-center">
+                              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+                                {getSectionIcon("qrcode") || <span>4</span>}
                               </div>
+                              <span>QR Code Generator</span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pb-5 pt-2">
+                            <div className="space-y-4">
+                              <h4 className="text-sm font-medium">Generate Item QR Code</h4>
+                              <p className="text-sm text-gray-500">
+                                After registration, a unique QR code will be generated for your item. 
+                                This can be printed and attached to your item for easy identification.
+                              </p>
                               
-                              <div className="sm:col-span-6">
-                                <FormField
-                                  control={form.control}
-                                  name="additionalNotes"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>
-                                        Additional Notes
-                                        <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Textarea
-                                          placeholder="Add any relevant notes about ownership"
-                                          className="resize-none h-24"
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
+                              <QrCodeGenerator
+                                itemName={watchedValues.name || "Your Item"}
+                              />
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                        
+                        {/* Registration Fee Section */}
+                        <AccordionItem
+                          value="payment"
+                          className="border rounded-lg overflow-hidden border-gray-200"
+                        >
+                          <AccordionTrigger 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleSection("payment");
+                            }}
+                            className="px-4 py-3 hover:no-underline"
+                          >
+                            <div className="flex items-center">
+                              <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+                                <CreditCard className="h-4 w-4 text-gray-500" />
                               </div>
-                              
-                              {/* Payment information block in the ownership section */}
-                              <div className="bg-primary-50 p-4 rounded-md">
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <div className="bg-primary-50 p-2 rounded-full">
-                                      <CreditCard className="h-5 w-5 text-primary-600" />
-                                    </div>
-                                    <div className="ml-3">
-                                      <h5 className="text-sm font-medium text-neutral-900">Item Registration Fee</h5>
-                                      <p className="text-xs text-neutral-500">A one-time fee to protect your item</p>
-                                    </div>
+                              <span>Registration Fee</span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pb-5 pt-2">
+                            <div className="space-y-4">
+                              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                <h4 className="text-sm font-medium text-amber-800 flex items-center">
+                                  <InfoIcon className="h-4 w-4 mr-2" />
+                                  Registration Fee Information
+                                </h4>
+                                <p className="mt-2 text-sm text-amber-700">
+                                  A registration fee of 2,000 RWF is required to complete the registration process.
+                                  This fee helps us maintain the registry and provide secure identification services.
+                                </p>
+                                <div className="mt-4 bg-white rounded border border-amber-100 p-3">
+                                  <div className="flex justify-between text-sm">
+                                    <span className="font-medium">Registration Fee:</span>
+                                    <span>2,000 RWF</span>
                                   </div>
-                                  <div>
-                                    <span className="font-semibold text-lg">2,000 RWF</span>
+                                  <div className="flex justify-between text-xs text-amber-700 mt-1">
+                                    <span>Service Fee:</span>
+                                    <span>Included</span>
+                                  </div>
+                                  <div className="flex justify-between font-medium text-sm mt-3 pt-2 border-t">
+                                    <span>Total:</span>
+                                    <span>2,000 RWF</span>
                                   </div>
                                 </div>
-                                <p className="mt-3 text-xs text-neutral-500">
-                                  When you click "Register Now," you'll be redirected to our secure payment provider.
+                                <p className="mt-3 text-xs text-amber-700">
+                                  You'll be redirected to our secure payment gateway after submitting this form.
                                 </p>
                               </div>
                             </div>
@@ -1596,139 +768,175 @@ export default function FixedRegisterItem() {
                   </Card>
                 </form>
               </Form>
-              
-              {/* Auto-save indicator */}
-              <div className="flex items-center justify-end mt-2">
-                {autoSaving ? (
-                  <div className="flex items-center text-xs text-neutral-500">
-                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                    Saving draft...
-                  </div>
-                ) : (
-                  <div className="flex items-center text-xs text-neutral-500">
-                    <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                    Draft saved
-                  </div>
-                )}
-              </div>
             </div>
             
-            {/* Preview & Progress Section */}
+            {/* Preview & Sidebar Section */}
             <div className="md:col-span-1">
-              <div className="sticky top-8 space-y-8">
+              <div className="space-y-6 sticky top-6">
+                {/* Preview Card */}
                 <Card>
                   <CardContent className="p-6">
-                    <h3 className="font-medium text-sm text-neutral-900 mb-4">Form Progress</h3>
-                    <div className="space-y-3">
-                      <Card>
-                        <CardContent className="p-3">
-                          <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-medium">Item Information</h4>
-                            {isSectionComplete(watchedValues, "basic-info") ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                <Check className="h-3 w-3 mr-1" />
-                                Complete
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Incomplete
-                              </span>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
+                    <h3 className="text-lg font-medium mb-4">Item Preview</h3>
+                    
+                    <div className="space-y-4">
+                      {/* Item Details */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-500">Item</h4>
+                        <p className="text-lg font-medium mt-1">
+                          {watchedValues.name || "Item Name"}
+                        </p>
+                      </div>
                       
-                      {/* Details removed - merged with Item Information */}
-                      
-                      <Card>
-                        <CardContent className="p-3">
-                          <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-medium">Media & Documents</h4>
-                            {isSectionComplete(watchedValues, "media") ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                <Check className="h-3 w-3 mr-1" />
-                                Complete
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Incomplete
-                              </span>
-                            )}
+                      {/* Category */}
+                      <div className="flex space-x-2">
+                        {watchedValues.category && (
+                          <div className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                            {watchedValues.category}
                           </div>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardContent className="p-3">
-                          <div className="flex justify-between items-center">
-                            <h4 className="text-sm font-medium">Ownership Proof</h4>
-                            {isSectionComplete(watchedValues, "ownership") ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                <Check className="h-3 w-3 mr-1" />
-                                Complete
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                Incomplete
-                              </span>
-                            )}
+                        )}
+                        {watchedValues.subCategory && (
+                          <div className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+                            {watchedValues.subCategory}
                           </div>
-                        </CardContent>
-                      </Card>
+                        )}
+                      </div>
+                      
+                      {/* Identifier */}
+                      {watchedValues.uniqueIdentifier && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Identifier</h4>
+                          <p className="font-mono text-sm bg-gray-100 p-2 rounded mt-1">
+                            {watchedValues.uniqueIdentifier}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Description */}
+                      {watchedValues.description && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Description</h4>
+                          <p className="text-sm text-gray-700 mt-1">
+                            {watchedValues.description.length > 100
+                              ? `${watchedValues.description.substring(0, 100)}...`
+                              : watchedValues.description}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Image Count */}
+                      {itemImages.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Images</h4>
+                          <div className="flex items-center mt-1 space-x-1">
+                            <div className="bg-gray-100 text-gray-700 rounded-full px-2 py-0.5 text-xs">
+                              {itemImages.length} image{itemImages.length !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Document Count */}
+                      {ownershipDocuments.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-500">Ownership Documents</h4>
+                          <div className="flex items-center mt-1 space-x-1">
+                            <div className="bg-gray-100 text-gray-700 rounded-full px-2 py-0.5 text-xs">
+                              {ownershipDocuments.length} document{ownershipDocuments.length !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
                 
+                {/* Progress Card */}
                 <Card>
                   <CardContent className="p-6">
-                    <h3 className="font-medium text-sm text-neutral-900 mb-4">Item Preview</h3>
-                    {previewImage ? (
-                      <div className="aspect-square rounded-md overflow-hidden border mb-4">
-                        <img 
-                          src={previewImage} 
-                          alt="Item preview" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-square rounded-md overflow-hidden border mb-4 flex items-center justify-center bg-gray-50">
-                        <ImageIcon className="h-10 w-10 text-neutral-300" />
-                      </div>
-                    )}
+                    <h3 className="text-lg font-medium mb-2">Registration Progress</h3>
+                    <p className="text-sm text-gray-500 mb-4">
+                      Complete all required sections to register your item.
+                    </p>
                     
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="text-xs font-medium text-neutral-500">Item Name</h4>
-                        <p className="text-sm font-medium text-neutral-900">
-                          {watchedValues.name || "Not specified yet"}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <h4 className="text-xs font-medium text-neutral-500">Category</h4>
-                        <p className="text-sm font-medium text-neutral-900">
-                          {watchedValues.category 
-                            ? `${watchedValues.category}${watchedValues.subCategory ? ` - ${watchedValues.subCategory}` : ''}`
-                            : "Not specified yet"
-                          }
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <h4 className="text-xs font-medium text-neutral-500">Unique ID</h4>
-                        <p className="text-sm font-medium text-neutral-900">
-                          {watchedValues.uniqueIdentifier || "Not specified yet"}
-                        </p>
-                      </div>
-                      
-                      {watchedValues.description && (
-                        <div>
-                          <h4 className="text-xs font-medium text-neutral-500">Description</h4>
-                          <p className="text-sm text-neutral-700 line-clamp-3">
-                            {watchedValues.description}
-                          </p>
+                    <div className="space-y-4">
+                      {/* Progress steps */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <div className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center mr-2",
+                              isSectionComplete(watchedValues, "basic-info") 
+                                ? "bg-green-100" 
+                                : "bg-gray-100"
+                            )}>
+                              {isSectionComplete(watchedValues, "basic-info") 
+                                ? <Check className="h-4 w-4 text-green-600" /> 
+                                : <span className="text-xs">1</span>}
+                            </div>
+                            <span className="text-sm">Item Information</span>
+                          </div>
+                          {isSectionComplete(watchedValues, "basic-info") 
+                            ? <span className="text-xs text-green-600">Completed</span>
+                            : <span className="text-xs text-amber-600">In progress</span>}
                         </div>
-                      )}
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <div className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center mr-2",
+                              isSectionComplete(watchedValues, "media") 
+                                ? "bg-green-100" 
+                                : "bg-gray-100"
+                            )}>
+                              {isSectionComplete(watchedValues, "media") 
+                                ? <Check className="h-4 w-4 text-green-600" /> 
+                                : <span className="text-xs">2</span>}
+                            </div>
+                            <span className="text-sm">Media & Images</span>
+                          </div>
+                          {isSectionComplete(watchedValues, "media") 
+                            ? <span className="text-xs text-green-600">Completed</span>
+                            : <span className="text-xs text-gray-500">Required</span>}
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <div className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center mr-2",
+                              isSectionComplete(watchedValues, "ownership") 
+                                ? "bg-green-100" 
+                                : "bg-gray-100"
+                            )}>
+                              {isSectionComplete(watchedValues, "ownership") 
+                                ? <Check className="h-4 w-4 text-green-600" /> 
+                                : <span className="text-xs">3</span>}
+                            </div>
+                            <span className="text-sm">Ownership Verification</span>
+                          </div>
+                          {isSectionComplete(watchedValues, "ownership") 
+                            ? <span className="text-xs text-green-600">Completed</span>
+                            : <span className="text-xs text-gray-500">Required</span>}
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center">
+                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center mr-2">
+                              <CreditCard className="h-4 w-4 text-gray-500" />
+                            </div>
+                            <span className="text-sm">Payment</span>
+                          </div>
+                          <span className="text-xs text-gray-500">After submission</span>
+                        </div>
+                      </div>
+                      
+                      {/* Overall progress */}
+                      <div>
+                        <div className="flex justify-between text-xs text-gray-500 mb-1">
+                          <span>Overall Completion</span>
+                          <span>{completion}%</span>
+                        </div>
+                        <Progress value={completion} className="h-2" />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

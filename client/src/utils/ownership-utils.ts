@@ -1,158 +1,206 @@
+import {
+  validateDocumentFile,
+  formatFileSize,
+  createFilePreview,
+  revokeFilePreview
+} from './image-upload-utils';
+
 /**
- * Types of ownership documents
+ * Ownership document types
  */
-export enum OwnershipDocumentType {
-  RECEIPT = 'receipt',
-  WARRANTY = 'warranty',
-  CERTIFICATE = 'certificate',
-  REPAIR = 'repair_record',
-  MAINTENANCE = 'maintenance_record',
-  TRANSFER = 'transfer_document',
-  OTHER = 'other',
+export enum DocumentType {
+  Receipt = 'receipt',
+  Invoice = 'invoice',
+  WarrantyCard = 'warranty_card',
+  Certificate = 'certificate',
+  TransferDocument = 'transfer_document',
+  Other = 'other'
 }
 
 /**
- * Interface for ownership document with metadata
+ * Document verification status
+ */
+export enum VerificationStatus {
+  Pending = 'pending',
+  Verified = 'verified',
+  Rejected = 'rejected'
+}
+
+/**
+ * Ownership document interface
  */
 export interface OwnershipDocument {
   id: string;
-  file: File;
-  preview: string;
   name: string;
-  type: OwnershipDocumentType;
-  date: Date;
-  description: string;
-  order: number;
+  type: DocumentType;
+  file: File;
+  filePreview: string;
+  dateIssued: Date | null;
+  status: VerificationStatus;
+  position: number;
+  issuer?: string;
+  notes?: string;
+  size?: string;
 }
 
 /**
- * Get display name for ownership document type
- * @param type The ownership document type
- * @returns Human-readable document type name
- */
-export function getDocumentTypeName(type: OwnershipDocumentType): string {
-  const names: Record<OwnershipDocumentType, string> = {
-    [OwnershipDocumentType.RECEIPT]: 'Purchase Receipt',
-    [OwnershipDocumentType.WARRANTY]: 'Warranty Card',
-    [OwnershipDocumentType.CERTIFICATE]: 'Certificate of Authenticity',
-    [OwnershipDocumentType.REPAIR]: 'Repair Record',
-    [OwnershipDocumentType.MAINTENANCE]: 'Maintenance Record',
-    [OwnershipDocumentType.TRANSFER]: 'Transfer of Ownership',
-    [OwnershipDocumentType.OTHER]: 'Other Document',
-  };
-  
-  return names[type] || 'Unknown Document';
-}
-
-/**
- * Create a new ownership document
+ * Create a new ownership document object
  * @param file The document file
- * @param type The type of ownership document
- * @param date The date of the document
- * @param description Description of the document
- * @param order Order in the ownership chain
- * @returns OwnershipDocument object
+ * @param type The document type
+ * @param position The position in the ownership chain
+ * @returns Ownership document object
  */
 export function createOwnershipDocument(
   file: File,
-  type: OwnershipDocumentType = OwnershipDocumentType.OTHER,
-  date: Date = new Date(),
-  description: string = '',
-  order: number = 0
+  type: DocumentType = DocumentType.Other,
+  position: number = 0
 ): OwnershipDocument {
+  // Create a unique ID for the document
+  const id = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  
+  // Create file preview
+  const filePreview = createFilePreview(file);
+  
+  // Format file size
+  const size = formatFileSize(file.size);
+  
+  // Default document name (from file)
+  const name = file.name;
+  
   return {
-    id: `${type}-${Date.now()}`,
-    file,
-    preview: URL.createObjectURL(file),
-    name: file.name,
+    id,
+    name,
     type,
-    date,
-    description,
-    order,
+    file,
+    filePreview,
+    dateIssued: null,
+    status: VerificationStatus.Pending,
+    position,
+    size
   };
 }
 
 /**
- * Sort ownership documents chronologically
- * @param documents Array of ownership documents
- * @returns Sorted array of documents
+ * Validate an ownership document file
+ * @param file The file to validate
+ * @returns Validation result
  */
-export function sortOwnershipDocuments(documents: OwnershipDocument[]): OwnershipDocument[] {
-  return [...documents].sort((a, b) => {
-    // First sort by order if it's set
-    if (a.order !== b.order) {
-      return a.order - b.order;
+export function validateOwnershipDocument(file: File) {
+  return validateDocumentFile(file);
+}
+
+/**
+ * Organize ownership documents in chronological order
+ * @param documents Array of ownership documents
+ * @returns Sorted documents
+ */
+export function organizeDocumentsChronologically(documents: OwnershipDocument[]): OwnershipDocument[] {
+  // First sort by position
+  const sortedByPosition = [...documents].sort((a, b) => a.position - b.position);
+  
+  // Then, if dates are available, refine the order
+  const documentsWithDates = sortedByPosition.filter(doc => doc.dateIssued !== null);
+  const documentsWithoutDates = sortedByPosition.filter(doc => doc.dateIssued === null);
+  
+  if (documentsWithDates.length > 0) {
+    documentsWithDates.sort((a, b) => {
+      if (a.dateIssued && b.dateIssued) {
+        return a.dateIssued.getTime() - b.dateIssued.getTime();
+      }
+      return 0;
+    });
+    
+    // Combine the sorted documents
+    return [...documentsWithDates, ...documentsWithoutDates];
+  }
+  
+  return sortedByPosition;
+}
+
+/**
+ * Clean up ownership document resources
+ * @param documents Array of ownership documents to clean up
+ */
+export function cleanupDocumentResources(documents: OwnershipDocument[]): void {
+  // Revoke file preview URLs to free browser memory
+  for (const doc of documents) {
+    if (doc.filePreview) {
+      revokeFilePreview(doc.filePreview);
     }
-    // Then sort by date
-    return a.date.getTime() - b.date.getTime();
-  });
+  }
 }
 
 /**
- * Reorder an array of ownership documents
- * @param documents The array to reorder
- * @param startIndex The original index
- * @param endIndex The destination index
- * @returns New array with the reordered documents
- */
-export function reorderDocuments(
-  documents: OwnershipDocument[],
-  startIndex: number,
-  endIndex: number
-): OwnershipDocument[] {
-  const result = Array.from(documents);
-  const [removed] = result.splice(startIndex, 1);
-  result.splice(endIndex, 0, removed);
-  
-  // Update the order property of each document based on its new position
-  return result.map((doc, index) => ({
-    ...doc,
-    order: index,
-  }));
-}
-
-/**
- * Clean up object URLs to prevent memory leaks
- * @param documents Array of ownership documents with previews
- */
-export function cleanupDocumentPreviews(documents: OwnershipDocument[]): void {
-  documents.forEach(document => {
-    URL.revokeObjectURL(document.preview);
-  });
-}
-
-/**
- * Calculate the timespan of ownership based on documents
+ * Calculate the completeness of the ownership verification chain
  * @param documents Array of ownership documents
- * @returns String representation of ownership timespan
+ * @returns Percentage of completeness (0-100)
  */
-export function calculateOwnershipTimespan(documents: OwnershipDocument[]): string {
-  if (documents.length === 0) {
-    return 'No documents';
-  }
+export function calculateOwnershipChainCompleteness(documents: OwnershipDocument[]): number {
+  if (documents.length === 0) return 0;
   
-  const sortedDocs = sortOwnershipDocuments(documents);
-  const firstDate = sortedDocs[0].date;
-  const lastDate = sortedDocs[sortedDocs.length - 1].date;
+  // The more documents and verified documents, the higher the score
+  const baseScore = Math.min(documents.length * 20, 80); // Max 80% for number of docs
   
-  // If only one document or all documents have the same date
-  if (firstDate.getTime() === lastDate.getTime()) {
-    return `Since ${firstDate.toLocaleDateString()}`;
-  }
+  // Add up to 20% more for verified documents
+  const verifiedCount = documents.filter(doc => doc.status === VerificationStatus.Verified).length;
+  const verificationScore = (verifiedCount / documents.length) * 20;
   
-  // Calculate duration
-  const durationMs = lastDate.getTime() - firstDate.getTime();
-  const durationDays = Math.floor(durationMs / (1000 * 60 * 60 * 24));
+  return Math.min(baseScore + verificationScore, 100);
+}
+
+/**
+ * Export the ownership chain as a JSON object
+ * @param documents Array of ownership documents
+ * @returns JSON representation of the chain
+ */
+export function exportOwnershipChain(documents: OwnershipDocument[]): string {
+  // Sort documents chronologically
+  const sortedDocuments = organizeDocumentsChronologically(documents);
   
-  if (durationDays < 30) {
-    return `${durationDays} days (${firstDate.toLocaleDateString()} - ${lastDate.toLocaleDateString()})`;
-  }
+  // Create a simplified version without the File objects (can't be serialized)
+  const serializable = sortedDocuments.map(doc => ({
+    id: doc.id,
+    name: doc.name,
+    type: doc.type,
+    dateIssued: doc.dateIssued ? doc.dateIssued.toISOString() : null,
+    status: doc.status,
+    position: doc.position,
+    issuer: doc.issuer,
+    notes: doc.notes
+  }));
   
-  if (durationDays < 365) {
-    const months = Math.floor(durationDays / 30);
-    return `${months} months (${firstDate.toLocaleDateString()} - ${lastDate.toLocaleDateString()})`;
-  }
+  return JSON.stringify(serializable, null, 2);
+}
+
+/**
+ * Get a human-readable document type display name
+ * @param type The document type
+ * @returns Display name for the document type
+ */
+export function getDocumentTypeDisplayName(type: DocumentType): string {
+  const displayNames: Record<DocumentType, string> = {
+    [DocumentType.Receipt]: 'Receipt',
+    [DocumentType.Invoice]: 'Invoice',
+    [DocumentType.WarrantyCard]: 'Warranty Card',
+    [DocumentType.Certificate]: 'Certificate of Ownership',
+    [DocumentType.TransferDocument]: 'Transfer Document',
+    [DocumentType.Other]: 'Other Document'
+  };
   
-  const years = Math.floor(durationDays / 365);
-  return `${years} years (${firstDate.toLocaleDateString()} - ${lastDate.toLocaleDateString()})`;
+  return displayNames[type] || 'Document';
+}
+
+/**
+ * Get a human-readable verification status display name
+ * @param status The verification status
+ * @returns Display name for the verification status
+ */
+export function getVerificationStatusDisplayName(status: VerificationStatus): string {
+  const displayNames: Record<VerificationStatus, string> = {
+    [VerificationStatus.Pending]: 'Pending Verification',
+    [VerificationStatus.Verified]: 'Verified',
+    [VerificationStatus.Rejected]: 'Verification Rejected'
+  };
+  
+  return displayNames[status] || 'Unknown Status';
 }

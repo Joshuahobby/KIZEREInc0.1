@@ -1,148 +1,110 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { en } from './locales/en';
+import { fr } from './locales/fr';
+import { rw } from './locales/rw'; // Kinyarwanda
+import { sw } from './locales/sw'; // Swahili
 
-// Import all translation files
-import en from './locales/en.json';
-import fr from './locales/fr.json';
-import rw from './locales/rw.json';
-import sw from './locales/sw.json';
+type Translations = Record<string, string>;
 
-// Define the supported languages
-export type Language = 'rw' | 'en' | 'fr' | 'sw';
-
-// Define language information type
-export type LanguageInfo = {
-  [key in Language]: { name: string; nativeName: string; }
-};
-
-// Create a translations object with all languages
-const translations = {
-  en,
-  fr,
-  rw,
-  sw
-};
-
-// Type for nested translation objects
-export type TranslationValue = string | { [key: string]: TranslationValue };
-export type TranslationsType = { [key: string]: { [key: string]: TranslationValue } };
-
-interface LanguageContextType {
-  language: Language;
-  setLanguage: (language: Language) => void;
-  t: (key: string, params?: Record<string, string | number>) => string;
-  translations: TranslationsType;
-  languages: LanguageInfo;
+export interface LocaleData {
+  name: string;
+  translations: Translations;
+  nativeName: string;
 }
+
+export interface LocaleOption extends LocaleData {
+  code: string;
+}
+
+export interface LanguageContextType {
+  locale: string;
+  setLocale: (locale: string) => void;
+  t: (key: string, params?: Record<string, string | number>) => string;
+  availableLocales: LocaleOption[];
+}
+
+// Define available locales
+const locales: Record<string, LocaleData> = {
+  en: {
+    name: 'English',
+    nativeName: 'English',
+    translations: en,
+  },
+  fr: {
+    name: 'French',
+    nativeName: 'Français',
+    translations: fr,
+  },
+  rw: {
+    name: 'Kinyarwanda',
+    nativeName: 'Kinyarwanda',
+    translations: rw,
+  },
+  sw: {
+    name: 'Swahili',
+    nativeName: 'Kiswahili',
+    translations: sw,
+  },
+};
 
 // Create the context
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-// Local storage key for saved language preference
-const LANGUAGE_STORAGE_KEY = 'kizere-language';
+// Define the storage key
+const LOCALE_STORAGE_KEY = 'kizere-locale';
 
-// Helper function to get a nested translation value using dot notation
-const getNestedTranslation = (obj: any, path: string): string => {
-  const keys = path.split('.');
-  let result = obj;
-  
-  // Failsafe for common navigation paths that might be causing issues
-  if (path === 'profile.title') return 'Profile';
-  if (path === 'settings.title') return 'Settings';
-  if (path === 'auth.logout') return 'Logout';
-  if (path === 'nav.search') return 'Search';
-  if (path === 'nav.registerItems') return 'My Items';
-  if (path === 'dashboard.subtitles.user') return 'Track your items and manage your account';
-  if (path === 'dashboard.tabs.overview') return 'Overview';
-  if (path === 'dashboard.tabs.items') return 'Items';
-  if (path === 'dashboard.tabs.reports') return 'Reports';
-  if (path === 'dashboard.tabs.payments') return 'Payments';
-  if (path === 'dashboard.lostReports') return 'Lost Reports';
-  if (path === 'dashboard.foundReports') return 'Found Reports';
-  if (path === 'dashboard.totalSpent') return 'Total Spent';
-  if (path === 'dashboard.recentlyRegisteredItems') return 'Recently Registered Items';
-  if (path === 'dashboard.recentItemsDescription') return 'View and manage your most recently registered items';
-  
-  for (const key of keys) {
-    if (result && typeof result === 'object' && key in result) {
-      result = result[key];
-    } else {
-      // Only log in development
-      if (process.env.NODE_ENV === 'development') {
-        console.warn(`Translation key not found: ${path}`);
-      }
-      // Return a sensible fallback
-      return path.split('.').pop() || path;
-    }
-  }
-  
-  return typeof result === 'string' ? result : path;
-};
+// Provider component
+export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+  // Initialize state with stored preference or default to English
+  const [locale, setLocaleState] = useState(() => {
+    const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
+    return savedLocale && locales[savedLocale] ? savedLocale : 'en';
+  });
 
-interface LanguageProviderProps {
-  children: ReactNode;
-  defaultLanguage?: Language;
-}
-
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({ 
-  children, 
-  defaultLanguage = 'rw' // Kinyarwanda is the default language
-}) => {
-  // Define available languages
-  const languagesInfo: LanguageInfo = {
-    rw: { name: 'Kinyarwanda', nativeName: 'Kinyarwanda' },
-    en: { name: 'English', nativeName: 'English' },
-    fr: { name: 'French', nativeName: 'Français' },
-    sw: { name: 'Swahili', nativeName: 'Kiswahili' }
-  };
-  
-  // Try to get the saved language from localStorage, fallback to default
-  const getInitialLanguage = (): Language => {
-    if (typeof window !== 'undefined') {
-      const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Language;
-      return savedLanguage && Object.keys(translations).includes(savedLanguage) 
-        ? savedLanguage 
-        : defaultLanguage;
-    }
-    return defaultLanguage;
-  };
-
-  const [language, setLanguageState] = useState<Language>(getInitialLanguage);
-
-  // Update language and save to localStorage
-  const setLanguage = (newLanguage: Language) => {
-    setLanguageState(newLanguage);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, newLanguage);
+  // Update locale and save to localStorage
+  const setLocale = (newLocale: string) => {
+    if (locales[newLocale]) {
+      setLocaleState(newLocale);
+      localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
+      
+      // Update HTML lang attribute
+      document.documentElement.lang = newLocale;
     }
   };
+
+  // Set initial HTML lang attribute
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, []);
 
   // Translation function
   const t = (key: string, params?: Record<string, string | number>): string => {
-    // First try in the current language
-    let translatedText = getNestedTranslation(translations[language], key);
+    // Get the current translations
+    const translations = locales[locale]?.translations || {};
     
-    // If not found in current language, try English as fallback
-    if (translatedText === key && language !== 'en') {
-      translatedText = getNestedTranslation(translations['en'], key) || key;
-    }
+    // Get the translation for the key or fall back to the key itself
+    let translation = translations[key] || key;
     
     // Replace parameters if provided
     if (params) {
-      Object.keys(params).forEach(paramKey => {
-        translatedText = translatedText.replace(`{${paramKey}}`, String(params[paramKey]));
+      Object.entries(params).forEach(([param, value]) => {
+        translation = translation.replace(`{{${param}}}`, String(value));
       });
     }
     
-    return translatedText;
+    return translation;
   };
 
-  // Provide the language context
+  const availableLocales: LocaleOption[] = Object.entries(locales).map(([code, data]) => ({
+    ...data,
+    code,
+  }));
+
   const value = {
-    language,
-    setLanguage,
+    locale,
+    setLocale,
     t,
-    translations,
-    languages: languagesInfo
+    availableLocales,
   };
 
   return (
@@ -153,12 +115,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 };
 
 // Custom hook to use the language context
-function useLanguage(): LanguageContextType {
+export const useLanguage = () => {
   const context = useContext(LanguageContext);
+  
   if (context === undefined) {
     throw new Error('useLanguage must be used within a LanguageProvider');
   }
+  
   return context;
-}
-
-export { useLanguage };
+};
