@@ -78,7 +78,9 @@ export default function AuthCallback() {
         localStorage.removeItem("firebase_auth_nonce");
         
         // Redirect based on user role
-        setLocation(getUserRedirectPath(userData.role));
+        const redirectPath = getUserRedirectPath(userData.role);
+        console.log("Auth Callback: Redirecting to", redirectPath);
+        window.location.href = redirectPath; // Use direct location change instead of wouter navigation
       } catch (error: any) {
         console.error("Authentication error:", error);
         toast({
@@ -88,7 +90,8 @@ export default function AuthCallback() {
         });
         
         // Redirect to home page on error
-        setLocation("/");
+        console.log("Auth Callback: Error occurred, redirecting to home page");
+        window.location.href = "/"; // Use direct location change instead of wouter navigation
       }
     };
     

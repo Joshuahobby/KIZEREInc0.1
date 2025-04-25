@@ -47,9 +47,10 @@ export default function LandingPage() {
   useEffect(() => {
     if (user) {
       const dashboardPath = AuthService.getDashboardPathByRole(user.role);
-      navigate(dashboardPath);
+      console.log("Landing Page: User authenticated, redirecting to", dashboardPath);
+      window.location.href = dashboardPath; // Use direct location change instead of wouter navigation
     }
-  }, [user, navigate]);
+  }, [user]);
 
   // Animation variants
   const containerVariants = {

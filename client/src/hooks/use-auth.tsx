@@ -41,7 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Function to navigate to the correct dashboard based on role using AuthService
   function navigateToDashboard(user: Omit<User, "password">): void {
-    navigate(AuthService.getDashboardPathByRole(user.role));
+    const dashboardPath = AuthService.getDashboardPathByRole(user.role);
+    console.log("navigateToDashboard: Redirecting to", dashboardPath);
+    window.location.href = dashboardPath; // Use direct location change instead of wouter navigation
   }
   
   // Listen for Firebase auth state changes and sync with backend
@@ -99,6 +101,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         } catch (error) {
           logger.error("Error syncing Firebase auth with backend", { error });
+          console.error("Error syncing Firebase auth:", error);
+          
+          // Only show error toast if it's not a standard authentication flow
+          // such as when a user is navigating to the site for the first time
+          if (window.location.pathname !== '/' && !window.location.pathname.includes('/auth-callback')) {
+            toast({
+              title: "Authentication error",
+              description: "There was an error syncing your authentication. Please try logging in again.",
+              variant: "destructive",
+            });
+          }
         }
       } else {
         logger.debug("No Firebase user authenticated");

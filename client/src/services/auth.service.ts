@@ -130,32 +130,43 @@ export class AuthService {
    * @returns User data from backend
    */
   private static async syncGoogleAuthWithBackend(userInfo: AuthUserInfo): Promise<Omit<User, "password">> {
-    const response = await fetch("/api/auth/google", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: userInfo.email,
-        name: userInfo.displayName || userInfo.email.split('@')[0],
-        uid: userInfo.uid,
-        token: userInfo.token,
-        photoURL: userInfo.photoURL
-      }),
-      credentials: "include"
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Failed to authenticate with Google");
+    try {
+      logger.info("Syncing Google auth with backend", { email: userInfo.email });
+      
+      const response = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: userInfo.email,
+          name: userInfo.displayName || userInfo.email.split('@')[0],
+          uid: userInfo.uid,
+          token: userInfo.token,
+          photoURL: userInfo.photoURL
+        }),
+        credentials: "include"
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        logger.error("Failed to sync with backend", { status: response.status, errorData });
+        throw new Error(errorData.message || `Failed to authenticate with Google (${response.status})`);
+      }
+      
+      const userData = await response.json();
+      logger.info("Backend sync successful", { userId: userData.id, role: userData.role });
+      
+      // Update auth context
+      queryClient.setQueryData(["/api/user"], userData);
+      
+      return userData;
+    } catch (error) {
+      logger.error("Backend sync error", { error });
+      throw error instanceof Error 
+        ? error 
+        : new Error("Failed to synchronize with backend. Please try again.");
     }
-    
-    const userData = await response.json();
-    
-    // Update auth context
-    queryClient.setQueryData(["/api/user"], userData);
-    
-    return userData;
   }
   
   /**
