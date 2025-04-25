@@ -465,10 +465,10 @@ export default function UnifiedDashboard() {
               <CardContent>
                 <Tabs defaultValue="all" className="w-full">
                   <TabsList className="grid w-full grid-cols-4 mb-4">
-                    <TabsTrigger value="all">All Reports</TabsTrigger>
-                    <TabsTrigger value="lost">Lost Items</TabsTrigger>
-                    <TabsTrigger value="found">Found Items</TabsTrigger>
-                    <TabsTrigger value="resolved">Resolved</TabsTrigger>
+                    <TabsTrigger value="all">{t('dashboard.agent.allReports')}</TabsTrigger>
+                    <TabsTrigger value="lost">{t('dashboard.agent.lostItems')}</TabsTrigger>
+                    <TabsTrigger value="found">{t('dashboard.agent.foundItems')}</TabsTrigger>
+                    <TabsTrigger value="resolved">{t('dashboard.agent.resolvedItems')}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="all">
                     {/* All Reports Table */}
@@ -533,19 +533,19 @@ export default function UnifiedDashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Button className="flex flex-col items-center justify-center h-24 space-y-2" variant="outline">
                     <Search className="h-6 w-6" />
-                    <span>Search Items</span>
+                    <span>{t('dashboard.agent.actions.search')}</span>
                   </Button>
                   <Button className="flex flex-col items-center justify-center h-24 space-y-2" variant="outline">
                     <FileText className="h-6 w-6" />
-                    <span>New Report</span>
+                    <span>{t('dashboard.agent.actions.newReport')}</span>
                   </Button>
                   <Button className="flex flex-col items-center justify-center h-24 space-y-2" variant="outline">
                     <Clock className="h-6 w-6" />
-                    <span>Recent Activity</span>
+                    <span>{t('dashboard.agent.actions.recentActivity')}</span>
                   </Button>
                   <Button className="flex flex-col items-center justify-center h-24 space-y-2" variant="outline">
                     <Bell className="h-6 w-6" />
-                    <span>Notifications</span>
+                    <span>{t('dashboard.agent.actions.notifications')}</span>
                   </Button>
                 </div>
               </CardContent>
@@ -605,9 +605,9 @@ export default function UnifiedDashboard() {
               <CardContent>
                 <Tabs defaultValue="all" className="w-full">
                   <TabsList className="grid w-full grid-cols-3 mb-4">
-                    <TabsTrigger value="all">All Reports</TabsTrigger>
-                    <TabsTrigger value="lost">Lost Items</TabsTrigger>
-                    <TabsTrigger value="found">Found Items</TabsTrigger>
+                    <TabsTrigger value="all">{t('dashboard.reports.allReports')}</TabsTrigger>
+                    <TabsTrigger value="lost">{t('dashboard.reports.lostItems')}</TabsTrigger>
+                    <TabsTrigger value="found">{t('dashboard.reports.foundItems')}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="all">
                     {/* Render all reports table */}
@@ -630,7 +630,7 @@ export default function UnifiedDashboard() {
           animate="visible"
         >
           <motion.div variants={itemVariants} className="mb-6">
-            <h2 className="text-2xl font-semibold mb-4">Payment History</h2>
+            <h2 className="text-2xl font-semibold mb-4">{t('dashboard.payments.title')}</h2>
             <PaymentHistoryCard />
           </motion.div>
         </motion.div>
