@@ -111,7 +111,7 @@ const itemRegistrationSchema = z.object({
   uniqueIdentifier: z.string().min(1, "Unique identifier is required"),
   description: z.string().optional(),
   
-  // Details
+  // Details for electronics
   brand: z.string().optional(),
   model: z.string().optional(),
   serialNumber: z.string().optional(),
@@ -120,6 +120,19 @@ const itemRegistrationSchema = z.object({
   purchaseLocation: z.string().optional(),
   value: z.string().optional(),
   warranty: z.string().optional(),
+  
+  // Details for documents
+  documentNumber: z.string().optional(),
+  issueAuthority: z.string().optional(),
+  issueDate: z.string().optional(),
+  expiryDate: z.string().optional(),
+  
+  // Details for jewelry
+  material: z.string().optional(),
+  weight: z.string().optional(),
+  
+  // Details for other items
+  additionalDetails: z.string().optional(),
   
   // Media & Documents
   imageUrls: z.array(z.string()).default([]),
@@ -192,11 +205,14 @@ export default function EnhancedRegisterItem() {
   const form = useForm<ItemRegistrationValues>({
     resolver: zodResolver(itemRegistrationSchema),
     defaultValues: {
+      // Basic Information
       name: "",
       category: "",
       subCategory: "",
       uniqueIdentifier: "",
       description: "",
+      
+      // Electronics details
       brand: "",
       model: "",
       serialNumber: "",
@@ -205,9 +221,26 @@ export default function EnhancedRegisterItem() {
       purchaseLocation: "",
       value: "",
       warranty: "",
+      
+      // Document details
+      documentNumber: "",
+      issueAuthority: "",
+      issueDate: "",
+      expiryDate: "",
+      
+      // Jewelry details
+      material: "",
+      weight: "",
+      
+      // Other items
+      additionalDetails: "",
+      
+      // Media & Documents
       imageUrls: [],
       receiptImage: "",
       warrantyDocument: "",
+      
+      // Ownership Proof
       ownershipProof: "",
       ownershipDocumentType: "",
       additionalNotes: "",
@@ -423,17 +456,54 @@ export default function EnhancedRegisterItem() {
         description: data.description,
         // Store additional details in the details JSON field
         details: {
-          brand: data.brand,
-          model: data.model,
-          serialNumber: data.serialNumber,
-          color: data.color,
-          purchaseDate: data.purchaseDate,
-          purchaseLocation: data.purchaseLocation,
-          value: data.value,
-          warranty: data.warranty,
+          // Common fields
           subCategory: data.subCategory,
-          ownershipDocumentType: data.ownershipDocumentType,
           additionalNotes: data.additionalNotes,
+          
+          // Handle fields based on category
+          ...(data.category === "Electronics" && {
+            brand: data.brand,
+            model: data.model,
+            serialNumber: data.serialNumber,
+            color: data.color,
+            purchaseDate: data.purchaseDate,
+            purchaseLocation: data.purchaseLocation,
+            value: data.value,
+            warranty: data.warranty,
+          }),
+          
+          ...(data.category === "Documents" && {
+            documentNumber: data.documentNumber,
+            issueAuthority: data.issueAuthority,
+            issueDate: data.issueDate,
+            expiryDate: data.expiryDate,
+          }),
+          
+          ...(data.category === "Jewelry" && {
+            material: data.material,
+            weight: data.weight,
+            color: data.color,
+            purchaseDate: data.purchaseDate,
+            value: data.value,
+          }),
+          
+          ...(data.category === "Accessories" && {
+            brand: data.brand,
+            color: data.color,
+            purchaseDate: data.purchaseDate,
+            value: data.value,
+          }),
+          
+          ...(data.category === "Other" && {
+            color: data.color,
+            purchaseDate: data.purchaseDate,
+            value: data.value,
+            additionalDetails: data.additionalDetails,
+          }),
+          
+          // Ownership information
+          ownershipDocumentType: data.ownershipDocumentType,
+          ownershipProof: data.ownershipProof,
         },
         imageUrls: data.imageUrls || [],
       };
@@ -825,172 +895,595 @@ export default function EnhancedRegisterItem() {
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-5 pt-2">
                             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                              <div className="sm:col-span-3">
-                                <FormField
-                                  control={form.control}
-                                  name="brand"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>
-                                        Brand
-                                        <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="e.g. Samsung, Apple, Sony" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              
-                              <div className="sm:col-span-3">
-                                <FormField
-                                  control={form.control}
-                                  name="model"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>
-                                        Model
-                                        <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="e.g. Galaxy S21, iPhone 13" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              
+                              {/* Electronic device fields */}
                               {form.getValues("category") === "Electronics" && (
-                                <div className="sm:col-span-3">
-                                  <FormField
-                                    control={form.control}
-                                    name="serialNumber"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>
-                                          Serial Number
-                                          <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                        </FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="e.g. SN1234567890" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="brand"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Brand
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Samsung, Apple, Sony" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="model"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Model
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Galaxy S21, iPhone 13" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="serialNumber"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Serial Number
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. SN1234567890" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="color"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Color
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Black, Silver, Blue" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="purchaseDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Purchase Date
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <div className="flex">
+                                            <FormControl>
+                                              <Input 
+                                                type="date" 
+                                                className="rounded-r-none"
+                                                {...field} 
+                                              />
+                                            </FormControl>
+                                            <Button 
+                                              type="button" 
+                                              variant="outline"
+                                              className="rounded-l-none border-l-0"
+                                            >
+                                              <Calendar className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="purchaseLocation"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Purchase Location
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Kigali Mall, Amazon" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="value"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Estimated Value
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 50,000 RWF" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="warranty"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Warranty Information
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 2 years, expires Dec 2023" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
                               )}
                               
-                              <div className="sm:col-span-3">
-                                <FormField
-                                  control={form.control}
-                                  name="color"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>
-                                        Color
-                                        <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="e.g. Black, Silver, Blue" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
+                              {/* Document fields */}
+                              {form.getValues("category") === "Documents" && (
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="documentNumber"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Document Number
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. ID1234567890" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="issueAuthority"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Issuing Authority
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Government of Rwanda" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="issueDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Issue Date
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <div className="flex">
+                                            <FormControl>
+                                              <Input 
+                                                type="date" 
+                                                className="rounded-r-none"
+                                                {...field} 
+                                              />
+                                            </FormControl>
+                                            <Button 
+                                              type="button" 
+                                              variant="outline"
+                                              className="rounded-l-none border-l-0"
+                                            >
+                                              <Calendar className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="expiryDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Expiry Date
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <div className="flex">
+                                            <FormControl>
+                                              <Input 
+                                                type="date" 
+                                                className="rounded-r-none"
+                                                {...field} 
+                                              />
+                                            </FormControl>
+                                            <Button 
+                                              type="button" 
+                                              variant="outline"
+                                              className="rounded-l-none border-l-0"
+                                            >
+                                              <Calendar className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
                               
-                              <div className="sm:col-span-3">
-                                <FormField
-                                  control={form.control}
-                                  name="purchaseDate"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>
-                                        Purchase Date
-                                        <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                      </FormLabel>
-                                      <div className="flex">
-                                        <FormControl>
-                                          <Input 
-                                            type="date" 
-                                            className="rounded-r-none"
-                                            {...field} 
-                                          />
-                                        </FormControl>
-                                        <Button 
-                                          type="button" 
-                                          variant="outline"
-                                          className="rounded-l-none border-l-0"
-                                        >
-                                          <Calendar className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
+                              {/* Jewelry fields */}
+                              {form.getValues("category") === "Jewelry" && (
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="material"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Material
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Gold, Silver, Platinum" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="weight"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Weight
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 5 grams" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="color"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Color
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Yellow Gold, Rose Gold" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="purchaseDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Purchase Date
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <div className="flex">
+                                            <FormControl>
+                                              <Input 
+                                                type="date" 
+                                                className="rounded-r-none"
+                                                {...field} 
+                                              />
+                                            </FormControl>
+                                            <Button 
+                                              type="button" 
+                                              variant="outline"
+                                              className="rounded-l-none border-l-0"
+                                            >
+                                              <Calendar className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="value"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Estimated Value
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 50,000 RWF" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
                               
-                              <div className="sm:col-span-3">
-                                <FormField
-                                  control={form.control}
-                                  name="purchaseLocation"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>
-                                        Purchase Location
-                                        <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="e.g. Kigali Mall, Amazon" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
+                              {/* Accessories fields */}
+                              {form.getValues("category") === "Accessories" && (
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="brand"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Brand
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Nike, Gucci, Ray-Ban" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="color"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Color
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Black, Brown, Red" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="purchaseDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Purchase Date
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <div className="flex">
+                                            <FormControl>
+                                              <Input 
+                                                type="date" 
+                                                className="rounded-r-none"
+                                                {...field} 
+                                              />
+                                            </FormControl>
+                                            <Button 
+                                              type="button" 
+                                              variant="outline"
+                                              className="rounded-l-none border-l-0"
+                                            >
+                                              <Calendar className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="value"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Estimated Value
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 15,000 RWF" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
                               
-                              <div className="sm:col-span-3">
-                                <FormField
-                                  control={form.control}
-                                  name="value"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>
-                                        Estimated Value
-                                        <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                      </FormLabel>
-                                      <FormControl>
-                                        <Input placeholder="e.g. 50,000 RWF" {...field} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
+                              {/* Other fields */}
+                              {form.getValues("category") === "Other" && (
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="color"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Color
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Red, Blue, Green" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="purchaseDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Purchase/Acquisition Date
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <div className="flex">
+                                            <FormControl>
+                                              <Input 
+                                                type="date" 
+                                                className="rounded-r-none"
+                                                {...field} 
+                                              />
+                                            </FormControl>
+                                            <Button 
+                                              type="button" 
+                                              variant="outline"
+                                              className="rounded-l-none border-l-0"
+                                            >
+                                              <Calendar className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="value"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Estimated Value
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 10,000 RWF" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-6">
+                                    <FormField
+                                      control={form.control}
+                                      name="additionalDetails"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Additional Details
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Textarea 
+                                              placeholder="Any other important details about this item"
+                                              className="h-20"
+                                              {...field} 
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
                               
-                              {(form.getValues("purchaseDate") || form.getValues("category") === "Electronics") && (
-                                <div className="sm:col-span-3">
-                                  <FormField
-                                    control={form.control}
-                                    name="warranty"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>
-                                          Warranty Information
-                                          <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
-                                        </FormLabel>
-                                        <FormControl>
-                                          <Input placeholder="e.g. 2 years, expires Dec 2023" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
+                              {/* If no category selected, show message */}
+                              {!form.getValues("category") && (
+                                <div className="sm:col-span-6 flex justify-center items-center py-8">
+                                  <div className="text-center">
+                                    <Info className="h-6 w-6 text-neutral-400 mx-auto mb-2" />
+                                    <p className="text-neutral-500">Please select a category in the Basic Information section first</p>
+                                  </div>
                                 </div>
                               )}
                             </div>
