@@ -11,7 +11,19 @@
     "profile": "Profile",
     "settings": "Settings",
     "logout": "Logout",
-    "language": "Language"
+    "language": "Language",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success!",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "filter": "Filter",
+    "sort": "Sort",
+    "refresh": "Refresh"
   },
   "nav": {
     "home": "Home",
@@ -24,7 +36,8 @@
     "search": "Search",
     "features": "Features",
     "howItWorks": "How It Works",
-    "testimonials": "Testimonials"
+    "testimonials": "Testimonials",
+    "returnToHome": "Return to Home"
   },
   "auth": {
     "login": "Sign In",
@@ -38,6 +51,7 @@
     "signUpWithGoogle": "Sign up with Google",
     "loginDescription": "Secure access to your registered items and protection features",
     "registerDescription": "Create an account to start tracking and protecting your valuable possessions",
+    "pleaseLoginToContinue": "Please log in to access your dashboard",
     "fullName": "Full Name",
     "fullNamePlaceholder": "Enter your full name",
     "phoneOrEmail": "Phone Number or Email",
