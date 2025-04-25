@@ -208,7 +208,32 @@
     "quickActions": "Ibikorwa Byihuse",
     "registerNewItem": "Andika Ikintu Gishya",
     "viewAllItems": "Reba Ibintu Byose",
-    "reportLostItem": "Menyekanisha Ikintu Cyabuze"
+    "reportLostItem": "Menyekanisha Ikintu Cyabuze",
+    "lostReports": "Raporo z'Ibyabuze",
+    "foundReports": "Raporo z'Ibyabonetse",
+    "totalSpent": "Amafaranga Yose",
+    "recentlyRegisteredItems": "Ibintu Byanditswe Vuba",
+    "recentItemsDescription": "Reba ibintu byawe byanditswe vuba aha",
+    "returnToHome": "Garuka ku ipaji y'ibanze",
+    "welcomeBack": "Murakaza neza, {name}",
+    "admin": {
+      "totalRevenue": "Amafaranga Yose",
+      "totalUsers": "Abakoresha Bose",
+      "registeredItems": "Ibintu Byanditswe",
+      "activeReports": "Raporo Zigikorwa",
+      "monthlyRevenue": "Amafaranga ku Kwezi",
+      "revenueDescription": "Uburyo indabo y'amafaranga yinjira",
+      "paymentStatus": "Imimerere y'Ubwishyu",
+      "paymentTypes": "Ubwoko bw'Ubwishyu",
+      "recentTransactions": "Ubwishyu Bushya",
+      "transactionsDescription": "Igenzura ry'ubwishyu bushya bukozwe mu minsi ishize"
+    },
+    "agent": {
+      "activeReports": "Raporo Zigikorwa",
+      "pendingReports": "Raporo Zitarangijwe",
+      "resolvedReports": "Raporo Zarangijwe",
+      "assignedReports": "Raporo Washyizweho"
+    }
   },
   "items": {
     "registerNewItem": "Andika Ikintu Gishya",

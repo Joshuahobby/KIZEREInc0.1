@@ -65,7 +65,7 @@ const logger = createLogger('UnifiedDashboard');
 
 export default function UnifiedDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
-  const { user, logoutMutation } = useAuth();
+  const { user, signOut } = useAuth();
   const [, navigate] = useLocation();
   const { t } = useLanguage();
   
@@ -113,7 +113,7 @@ export default function UnifiedDashboard() {
 
   // Handle logout
   const handleLogout = () => {
-    logoutMutation.mutate();
+    signOut();
   };
 
   if (!user) {
