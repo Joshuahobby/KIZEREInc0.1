@@ -571,7 +571,7 @@ export default function UnifiedDashboard() {
                   <CardDescription>{t('dashboard.items.description')}</CardDescription>
                 </div>
                 <Button size="sm" onClick={() => navigate("/register-item")}>
-                  <Plus className="h-4 w-4 mr-2" /> Register New
+                  <Plus className="h-4 w-4 mr-2" /> {t('dashboard.items.registerNew')}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -599,7 +599,7 @@ export default function UnifiedDashboard() {
                   <CardDescription>{t('dashboard.reports.description')}</CardDescription>
                 </div>
                 <Button size="sm" onClick={() => navigate("/lost-found/report")}>
-                  <Plus className="h-4 w-4 mr-2" /> New Report
+                  <Plus className="h-4 w-4 mr-2" /> {t('dashboard.reports.newReport')}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -640,7 +640,7 @@ export default function UnifiedDashboard() {
     // Fallback - should never reach here
     return (
       <div className="p-6 text-center">
-        <p>Select a dashboard tab to view content</p>
+        <p>{t('dashboard.selectTab')}</p>
       </div>
     );
   };
@@ -650,22 +650,22 @@ export default function UnifiedDashboard() {
     const tabs = [
       {
         id: "overview",
-        label: "Overview",
+        label: t('dashboard.tabs.overview'),
         icon: <LayoutDashboard className="h-5 w-5" />
       },
       {
         id: "items",
-        label: "Items",
+        label: t('dashboard.tabs.items'),
         icon: <ShoppingBag className="h-5 w-5" />
       },
       {
         id: "reports",
-        label: "Reports",
+        label: t('dashboard.tabs.reports'),
         icon: <ClipboardList className="h-5 w-5" />
       },
       {
         id: "payments",
-        label: "Payments",
+        label: t('dashboard.tabs.payments'),
         icon: <DollarSign className="h-5 w-5" />
       }
     ];
@@ -674,7 +674,7 @@ export default function UnifiedDashboard() {
     if (isAdmin) {
       tabs.push({
         id: "admin",
-        label: "Admin Panel",
+        label: t('dashboard.tabs.adminPanel'),
         icon: <BarChart3 className="h-5 w-5" />
       });
     }
@@ -683,7 +683,7 @@ export default function UnifiedDashboard() {
     if (isAgent || isAdmin) {
       tabs.push({
         id: "agent",
-        label: "Agent Console",
+        label: t('dashboard.tabs.agentConsole'),
         icon: <Search className="h-5 w-5" />
       });
     }
@@ -707,20 +707,20 @@ export default function UnifiedDashboard() {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
                 <div>
                   <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                    Welcome back, {user.fullName || user.username}!
+                    {t('dashboard.welcomeMessage', { name: user.fullName || user.username })}
                   </h1>
                   <p className="text-muted-foreground">
                     {isAdmin 
-                      ? "Manage your platform and view performance insights" 
+                      ? t('dashboard.subtitles.admin')
                       : isAgent 
-                        ? "Review and process lost and found reports"
-                        : "Track your items and manage your account"
+                        ? t('dashboard.subtitles.agent')
+                        : t('dashboard.subtitles.user')
                     }
                   </p>
                 </div>
                 <div className="mt-4 md:mt-0">
                   <Button onClick={() => navigate("/register-item")}>
-                    <Plus className="h-4 w-4 mr-2" /> Register New Item
+                    <Plus className="h-4 w-4 mr-2" /> {t('dashboard.registerNewItem')}
                   </Button>
                 </div>
               </div>
