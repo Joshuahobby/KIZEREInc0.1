@@ -217,6 +217,21 @@
     "recentItemsDescription": "Reba ibintu byawe byanditswe vuba aha",
     "returnToHome": "Garuka ku ipaji y'ibanze",
     "welcomeBack": "Murakaza neza, {name}",
+    "subtitles": {
+      "user": "Gucunga ibintu byawe wanditse n'ibikorwa",
+      "agent": "Gukurikirana ibyabuze n'ibyabonetse",
+      "admin": "Igenzura n'imicungire ya sisitemu"
+    },
+    "tabs": {
+      "overview": "Incamake",
+      "items": "Ibintu",
+      "reports": "Raporo",
+      "payments": "Ubwishyu",
+      "admin": "Admin",
+      "adminPanel": "Igice cy'Umuyobozi",
+      "agent": "Umukozi",
+      "agentConsole": "Igice cy'Umukozi"
+    },
     "admin": {
       "totalRevenue": "Amafaranga Yose",
       "totalUsers": "Abakoresha Bose",
@@ -233,8 +248,32 @@
       "activeReports": "Raporo Zigikorwa",
       "pendingReports": "Raporo Zitarangijwe",
       "resolvedReports": "Raporo Zarangijwe",
-      "assignedReports": "Raporo Washyizweho"
-    }
+      "assignedReports": "Raporo Washyizweho",
+      "manageReports": "Gucunga Raporo",
+      "reportsDescription": "Gucunga no gukurikirana raporo z'ibyabuze n'ibyabonetse",
+      "allReports": "Raporo Zose",
+      "lostItems": "Ibyabuze",
+      "foundItems": "Ibyabonetse",
+      "resolvedItems": "Ibyakemuwe"
+    },
+    "items": {
+      "title": "Ibintu Byanjye Byanditswe",
+      "description": "Reba kandi ucunge ibintu byawe byose wanditse",
+      "registerNew": "Andika Gishya"
+    },
+    "reports": {
+      "title": "Raporo Zanjye",
+      "description": "Kugenzura raporo zawe z'ibyabuze n'ibyabonetse",
+      "allReports": "Raporo Zose",
+      "lostItems": "Ibyabuze",
+      "foundItems": "Ibyabonetse",
+      "newReport": "Raporo Nshya"
+    },
+    "payments": {
+      "title": "Amateka y'Ubwishyu",
+      "description": "Reba amateka y'ubwishyu bwawe"
+    },
+    "selectTab": "Hitamo umutwe"
   },
   "items": {
     "registerNewItem": "Andika Ikintu Gishya",
