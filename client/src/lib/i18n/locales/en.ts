@@ -369,6 +369,32 @@ export default {
     itemManagement: 'Item Management',
     kizereProvides: 'KIZERE provides a comprehensive platform for registering, protecting, and recovering your valuable items.',
     
+    // Features section
+    feature1Title: 'Smart ID Recognition',
+    feature1Desc: 'Our advanced OCR technology automatically detects serial numbers, IMEI, and other identifiers from images.',
+    feature2Title: 'Ownership Verification Chain',
+    feature2Desc: 'Upload and manage documents that verify the ownership history of your items for greater security.',
+    feature3Title: 'QR Code Generation',
+    feature3Desc: 'Generate custom QR codes for your items that can be printed and attached for easy recovery.',
+    feature4Title: 'Batch Image Upload',
+    feature4Desc: 'Upload and arrange multiple images of your items with an intuitive drag-and-drop interface.',
+    feature5Title: 'Item Analytics',
+    feature5Desc: 'Get detailed statistics about your registered items and recovery success rates.',
+    feature6Title: 'Global Recovery Network',
+    feature6Desc: 'Access to our worldwide network of agents to help recover your lost items quickly.',
+    learnMoreAction: 'Learn More',
+    
+    // Stats and call to action
+    startToday: 'Start Today',
+    readyToSecure: 'Ready to Secure Your Valuables?',
+    joinThousands: 'Join thousands of satisfied users protecting their items with KIZERE',
+    createFreeAccount: 'Create Free Account',
+    noCardRequired: 'No credit card required',
+    statItems: 'Items Registered',
+    statRecoveries: 'Items Recovered',
+    statUsers: 'Active Users',
+    statSatisfaction: 'Satisfaction Rate',
+    
     howItWorks: {
       simpleProcess: 'Simple Process',
       sectionTitle: 'How It Works',
@@ -404,6 +430,70 @@ export default {
         quote: 'When my phone was lost, the finder scanned the QR code, and I was notified immediately. This service is truly a game-changer!'
       },
       viewMore: 'View More Testimonials'
+    },
+    
+    // Mobile app section
+    mobileApp: {
+      sectionTitle: 'Mobile Access',
+      mainTitle: 'KIZERE on Your Mobile Device',
+      description: 'Access your items, manage certificates, and respond to lost & found alerts from anywhere with our mobile app.',
+      features: {
+        feature1: 'Instant notifications when your lost item is found',
+        feature2: 'Scan QR codes directly from the app',
+        feature3: 'Offline access to your digital certificates',
+        feature4: 'Secure biometric authentication'
+      },
+      downloadOn: 'Download on',
+      appStore: 'App Store',
+      getItOn: 'Get it on',
+      googlePlay: 'Google Play'
+    },
+    
+    // FAQ section
+    faq: {
+      sectionTitle: 'Questions & Answers',
+      mainTitle: 'Frequently Asked Questions',
+      description: 'Find answers to commonly asked questions about our service.',
+      questions: {
+        security: {
+          question: 'How secure is my data on KIZERE?',
+          answer: 'We use industry-standard encryption protocols to protect your data. All personal information and item details are encrypted both in transit and at rest, and we regularly perform security audits to ensure your data remains safe.'
+        },
+        items: {
+          question: 'What types of items can I register?',
+          answer: 'You can register almost any valuable item including electronics, jewelry, documents, accessories, and more. Our system is particularly effective for items with unique identifiers like serial numbers, IMEI numbers, or other distinguishing characteristics.'
+        },
+        lostFound: {
+          question: 'How does the lost and found process work?',
+          answer: 'When someone finds your item, they can scan the QR code attached to it. This notifies you immediately and provides the finder with instructions on how to safely return your item to you, while protecting your privacy.'
+        },
+        limits: {
+          question: 'Is there a limit to how many items I can register?',
+          answer: 'Basic accounts can register up to 5 items. Premium subscribers can register unlimited items and access additional features like priority support and enhanced recovery services.'
+        }
+      },
+      contactUs: 'Can\'t find your answer? Contact our support team.'
+    },
+    
+    // Footer
+    footerDescription: 'KIZERE is a comprehensive platform for item registration, lost and found reporting, and ownership management with a focus on security and efficiency.',
+    footer: {
+      quickLinks: 'Quick Links',
+      home: 'Home',
+      features: 'Features',
+      pricing: 'Pricing',
+      faq: 'FAQ',
+      resources: 'Resources',
+      blog: 'Blog',
+      documentation: 'Documentation',
+      community: 'Community',
+      tutorials: 'Tutorials',
+      contact: 'Contact Us',
+      location: 'Kigali, Rwanda',
+      copyright: '© 2025 KIZERE. All rights reserved.',
+      privacyPolicy: 'Privacy Policy',
+      termsOfService: 'Terms of Service',
+      cookiePolicy: 'Cookie Policy'
     }
   },
   
@@ -419,7 +509,9 @@ export default {
   auth: {
     signIn: 'Sign In',
     register: 'Register',
-    signOut: 'Sign Out'
+    signOut: 'Sign Out',
+    login: 'Login',
+    getStarted: 'Get Started'
   },
   
   // Notifications

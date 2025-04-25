@@ -1,0 +1,146 @@
+r valuable items.
+landing.feature1Title
+
+landing.feature1Desc
+landing.learnMoreAction
+landing.feature2Title
+
+landing.feature2Desc
+landing.learnMoreAction
+landing.feature3Title
+
+landing.feature3Desc
+landing.learnMoreAction
+landing.feature4Title
+
+landing.feature4Desc
+landing.learnMoreAction
+landing.feature5Title
+
+landing.feature5Desc
+landing.learnMoreAction
+landing.feature6Title
+
+landing.feature6Desc
+landing.learnMoreAction
+landing.startToday
+landing.readyToSecure
+
+landing.joinThousands
+landing.noCardRequired
+15,000+
+
+landing.statItems
+1,230+
+
+landing.statRecoveries
+8,500+
+
+landing.statUsers
+98%
+
+landing.statSatisfaction
+Simple Process
+How It Works
+
+Our platform makes it easy to register your items and secure them with digital certificates. Follow these simple steps:
+Busy pedestrian crossing with people from diverse backgrounds
+
+Join thousands of users protecting their valuables with KIZERE
+1
+Register Your Item
+
+Upload details and photos of your item with our easy-to-use registration form.
+2
+Generate Digital Certificate
+
+Receive a secure digital certificate that proves your ownership.
+3
+Print QR Code Tags
+
+Attach QR code tags to your items for easy identification and recovery.
+4
+Quick Recovery Process
+
+If your item is lost, the finder can scan the QR code to initiate the recovery process.
+User Testimonials
+What Our Users Say
+
+Hear from people who have successfully protected and recovered their valuable items.
+JM
+James M.
+
+Kigali, Rwanda
+
+I lost my laptop at the airport, but thanks to KIZERE, it was returned to me within 24 hours. The QR code system works amazingly well!
+5.0
+FN
+Francine N.
+
+Musanze, Rwanda
+
+The registration process was so simple, and I love the peace of mind knowing all my valuables are protected with digital certificates.
+5.0
+RK
+Robert K.
+
+Huye, Rwanda
+
+When my phone was lost, the finder scanned the QR code, and I was notified immediately. This service is truly a game-changer!
+5.0
+landing.mobileApp.sectionTitle
+landing.mobileApp.mainTitle
+
+landing.mobileApp.description
+
+landing.mobileApp.features.feature1
+
+landing.mobileApp.features.feature2
+
+landing.mobileApp.features.feature3
+
+landing.mobileApp.features.feature4
+KIZERE Mobile App
+landing.faq.sectionTitle
+landing.faq.mainTitle
+
+landing.faq.description
+landing.faq.questions.security.question
+
+landing.faq.questions.security.answer
+landing.faq.questions.items.question
+
+landing.faq.questions.items.answer
+landing.faq.questions.lostFound.question
+
+landing.faq.questions.lostFound.answer
+landing.faq.questions.limits.question
+
+landing.faq.questions.limits.answer
+KIZERE
+
+landing.footerDescription
+landing.footer.quickLinks
+
+    landing.footer.home
+    landing.footer.features
+    landing.footer.pricing
+    landing.footer.faq
+
+landing.footer.resources
+
+    landing.footer.blog
+    landing.footer.documentation
+    landing.footer.community
+    landing.footer.tutorials
+
+landing.footer.contact
+
+support@kizere.com
++254 712 345 678
+
+    landing.footer.location
+
+landing.footer.copyright
+landing.footer.privacyPolicy
+landing.footer.termsOfService
