@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
 import { User } from "@shared/schema";
+import { AuthService } from "@/services/auth.service";
 
 // Type for role requirements
 type RoleRequirement = 'Admin' | 'Agent' | 'Subscriber' | 'any';
@@ -44,17 +45,9 @@ export function ProtectedRoute({
     return user.role === requiredRole;
   };
 
-  // Function to get the appropriate dashboard for a user's role
+  // Use the centralized AuthService for determining dashboard paths
   const getDashboardByRole = (role: string): string => {
-    switch (role) {
-      case 'Admin':
-        return '/admin'; // Ensure role redirects match the routes in App.tsx
-      case 'Agent':
-        return '/lost-found';
-      case 'Subscriber':
-      default:
-        return '/dashboard';
-    }
+    return AuthService.getDashboardPathByRole(role);
   };
 
   if (isLoading) {

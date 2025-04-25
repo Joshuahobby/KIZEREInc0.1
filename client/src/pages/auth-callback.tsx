@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { auth } from "@/lib/firebase";
 import { queryClient } from "@/lib/queryClient";
 import { Loader2 } from "lucide-react";
+import { AuthService } from "@/services/auth.service";
 
 /**
  * Auth Callback Page
@@ -97,17 +98,9 @@ export default function AuthCallback() {
     }
   }, [isLoading, setLocation, toast]);
 
-  // Helper function to determine redirect path based on role
+  // Use the centralized AuthService for determining dashboard paths
   const getUserRedirectPath = (role: string): string => {
-    switch (role) {
-      case "Admin":
-        return "/admin"; // Correct path to admin dashboard
-      case "Agent":
-        return "/lost-found";
-      case "Subscriber":
-      default:
-        return "/dashboard"; // Redirect to unified dashboard
-    }
+    return AuthService.getDashboardPathByRole(role);
   };
   
   return (

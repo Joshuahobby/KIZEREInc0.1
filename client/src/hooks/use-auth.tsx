@@ -39,21 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
   
-  // Helper function to get the appropriate dashboard path based on user role
-  function getDashboardPathByRole(role: string): string {
-    switch (role) {
-      case "Admin":
-        return "/admin";
-      case "Agent":
-        return "/lost-found";
-      default:
-        return "/dashboard";
-    }
-  }
-  
-  // Function to navigate to the correct dashboard based on role
+  // Function to navigate to the correct dashboard based on role using AuthService
   function navigateToDashboard(user: Omit<User, "password">): void {
-    navigate(getDashboardPathByRole(user.role));
+    navigate(AuthService.getDashboardPathByRole(user.role));
   }
   
   // Listen for Firebase auth state changes and sync with backend
