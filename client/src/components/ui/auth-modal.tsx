@@ -64,8 +64,25 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
-  // Use the auth context
-  const auth = useAuth();
+  // Use try-catch to handle potential auth context issues
+  let auth: AuthContextType;
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error("[AuthModal] Failed to access auth context:", error);
+    // Provide default values to prevent render errors
+    auth = {
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+      login: async () => { throw new Error("Auth context not available") },
+      loginWithGoogle: async () => { throw new Error("Auth context not available") },
+      signOut: async () => { throw new Error("Auth context not available") },
+      signup: async () => { throw new Error("Auth context not available") }
+    };
+  }
+  
   const { toast } = useToast();
   
   // Reset state when modal opens/closes
