@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import UnifiedDashboard from "@/pages/unified-dashboard";
-import RegisterItem from "@/pages/fixed-register-item";
+import ItemRegistration from "@/pages/item-registration";
 import Search from "@/pages/search";
 import LostFound from "@/pages/lost-found";
 import UserManagement from "@/pages/user-management";
@@ -26,7 +26,7 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 function App() {
   // Create safe component wrappers to ensure JSX Elements are always returned
   const UnifiedDashboardComponent = () => <UnifiedDashboard />;
-  const RegisterItemComponent = () => <RegisterItem />;
+  const ItemRegistrationComponent = () => <ItemRegistration />;
   const SearchComponent = () => <Search />;
   const LostFoundComponent = () => <LostFound />;
   const UserManagementComponent = () => <UserManagement />;
@@ -52,7 +52,7 @@ function App() {
               
               {/* Role-restricted routes */}
               <ProtectedRoute path="/dashboard" component={UnifiedDashboardComponent} requiredRole="any" />
-              <ProtectedRoute path="/register-item" component={RegisterItemComponent} requiredRole="any" />
+              <ProtectedRoute path="/register-item" component={ItemRegistrationComponent} requiredRole="any" />
               <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
               <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />
               <ProtectedRoute path="/lost-found/report" component={LostFoundComponent} requiredRole="any" />

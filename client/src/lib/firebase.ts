@@ -2,18 +2,13 @@ import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
   signInWithRedirect, 
-  signOut, 
   GoogleAuthProvider, 
-  getRedirectResult, 
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  updateProfile,
-  sendPasswordResetEmail,
-  User as FirebaseUser
+  signOut, 
+  onAuthStateChanged, 
+  User 
 } from "firebase/auth";
 
-// Firebase configuration
+// Firebase configuration using environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
@@ -22,82 +17,42 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase app
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+
+// Google provider for authentication
 const googleProvider = new GoogleAuthProvider();
 
-// Authentication functions
-export const signInWithGoogle = async (): Promise<void> => {
-  try {
-    await signInWithRedirect(auth, googleProvider);
-  } catch (error) {
-    console.error("Error signing in with Google:", error);
-    throw error;
-  }
-};
+/**
+ * Initiates Google sign-in with redirect
+ */
+export function signInWithGoogle() {
+  signInWithRedirect(auth, googleProvider);
+}
 
-export const loginWithEmailPassword = async (email: string, password: string): Promise<FirebaseUser> => {
-  try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
-  } catch (error) {
-    console.error("Error logging in with email/password:", error);
-    throw error;
-  }
-};
+/**
+ * Signs out the current user
+ */
+export function logOut() {
+  return signOut(auth);
+}
 
-export const registerWithEmailPassword = async (
-  email: string, 
-  password: string, 
-  displayName: string
-): Promise<FirebaseUser> => {
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(userCredential.user, { displayName });
-    return userCredential.user;
-  } catch (error) {
-    console.error("Error registering with email/password:", error);
-    throw error;
-  }
-};
-
-export const resetPassword = async (email: string): Promise<void> => {
-  try {
-    await sendPasswordResetEmail(auth, email);
-  } catch (error) {
-    console.error("Error sending password reset email:", error);
-    throw error;
-  }
-};
-
-export const logoutUser = async (): Promise<void> => {
-  try {
-    await signOut(auth);
-  } catch (error) {
-    console.error("Error signing out:", error);
-    throw error;
-  }
-};
-
-export const handleRedirectResult = async (): Promise<FirebaseUser | null> => {
-  try {
-    const result = await getRedirectResult(auth);
-    return result ? result.user : null;
-  } catch (error) {
-    console.error("Error handling redirect result:", error);
-    throw error;
-  }
-};
-
-export const getCurrentUser = (): FirebaseUser | null => {
+/**
+ * Gets the current authenticated user
+ * @returns The current user or null if not authenticated
+ */
+export function getCurrentUser(): User | null {
   return auth.currentUser;
-};
+}
 
-export const subscribeToAuthChanges = (
-  callback: (user: FirebaseUser | null) => void
-): (() => void) => {
+/**
+ * Listens for authentication state changes
+ * @param callback Function to call when auth state changes
+ * @returns Unsubscribe function
+ */
+export function onAuthChange(callback: (user: User | null) => void) {
   return onAuthStateChanged(auth, callback);
-};
+}
 
-export { auth, app };
+export { auth };

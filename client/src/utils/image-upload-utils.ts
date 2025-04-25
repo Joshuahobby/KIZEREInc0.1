@@ -1,167 +1,92 @@
 /**
- * Helper functions for image uploading, validation, and processing
+ * Image upload utilities
+ * Provides common functions for image upload, validation, and processing
  */
 
-// Maximum file size in bytes (5MB)
-export const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
-// Accepted file types for images
-export const ACCEPTED_IMAGE_TYPES = {
+/**
+ * Supported image MIME types
+ */
+export const SUPPORTED_IMAGE_TYPES = {
   'image/jpeg': ['.jpg', '.jpeg'],
   'image/png': ['.png'],
-  'image/gif': ['.gif'],
   'image/webp': ['.webp'],
-};
-
-// Accepted file types for documents
-export const ACCEPTED_DOCUMENT_TYPES = {
-  'application/pdf': ['.pdf'],
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'image/png': ['.png'],
-  'application/msword': ['.doc'],
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+  'image/gif': ['.gif']
 };
 
 /**
- * File validation error type
+ * Check if file is an image based on MIME type
+ * 
+ * @param file The file to check
+ * @returns True if the file is a supported image type
  */
-export type FileValidationError = 'too-many-files' | 'file-too-large' | 'file-invalid-type' | 'too-many-uploads';
-
-/**
- * File validation result interface
- */
-export interface FileValidationResult {
-  valid: boolean;
-  errorCode?: FileValidationError;
-  errorMessage?: string;
+export function isImageFile(file: File): boolean {
+  return Object.keys(SUPPORTED_IMAGE_TYPES).includes(file.type);
 }
 
 /**
- * Validate file size and type for image uploads
+ * Get the extension for a given MIME type
+ * 
+ * @param mimeType The MIME type to get the extension for
+ * @returns The file extension (with dot) or empty string if not found
+ */
+export function getExtensionForMimeType(mimeType: string): string {
+  return SUPPORTED_IMAGE_TYPES[mimeType as keyof typeof SUPPORTED_IMAGE_TYPES]?.[0] || '';
+}
+
+/**
+ * Validate image file size
+ * 
  * @param file The file to validate
- * @param maxSize Maximum allowed file size in bytes
- * @returns Validation result
+ * @param maxSizeMB Maximum size in megabytes
+ * @returns True if the file size is within the allowed limit
  */
-export function validateImageFile(file: File, maxSize: number = MAX_FILE_SIZE): FileValidationResult {
-  // Check file size
-  if (file.size > maxSize) {
-    return {
-      valid: false,
-      errorCode: 'file-too-large',
-      errorMessage: `File is too large. Maximum size is ${maxSize / (1024 * 1024)}MB.`
-    };
-  }
-  
-  // Check file type
-  if (!Object.keys(ACCEPTED_IMAGE_TYPES).includes(file.type)) {
-    return {
-      valid: false,
-      errorCode: 'file-invalid-type',
-      errorMessage: 'File type not accepted. Please upload JPG, PNG, GIF, or WebP images.'
-    };
-  }
-  
-  return { valid: true };
+export function validateImageSize(file: File, maxSizeMB: number): boolean {
+  const maxSizeBytes = maxSizeMB * 1024 * 1024;
+  return file.size <= maxSizeBytes;
 }
 
 /**
- * Validate file size and type for document uploads
- * @param file The file to validate
- * @param maxSize Maximum allowed file size in bytes
- * @returns Validation result
+ * Create object URL for a file
+ * 
+ * @param file The file to create an object URL for
+ * @returns The object URL
  */
-export function validateDocumentFile(file: File, maxSize: number = MAX_FILE_SIZE): FileValidationResult {
-  // Check file size
-  if (file.size > maxSize) {
-    return {
-      valid: false,
-      errorCode: 'file-too-large',
-      errorMessage: `File is too large. Maximum size is ${maxSize / (1024 * 1024)}MB.`
-    };
-  }
-  
-  // Check file type
-  if (!Object.keys(ACCEPTED_DOCUMENT_TYPES).includes(file.type)) {
-    return {
-      valid: false,
-      errorCode: 'file-invalid-type',
-      errorMessage: 'File type not accepted. Please upload PDF, JPG, PNG, DOC, or DOCX files.'
-    };
-  }
-  
-  return { valid: true };
-}
-
-/**
- * Create a preview URL for a file
- * @param file The file to preview
- * @returns URL for previewing the file
- */
-export function createFilePreview(file: File): string {
+export function createObjectURL(file: File): string {
   return URL.createObjectURL(file);
 }
 
 /**
- * Revoke a preview URL to free browser memory
- * @param previewUrl The preview URL to revoke
+ * Release an object URL to free memory
+ * 
+ * @param url The object URL to release
  */
-export function revokeFilePreview(previewUrl: string): void {
-  URL.revokeObjectURL(previewUrl);
+export function releaseObjectURL(url: string): void {
+  URL.revokeObjectURL(url);
 }
 
 /**
- * Create a formatted file size string (e.g., "2.5 MB")
- * @param bytes The file size in bytes
- * @returns Formatted file size string
- */
-export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
-  
-  const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-}
-
-/**
- * Convert a Data URL to a File object
- * @param dataUrl The Data URL to convert
- * @param filename The filename to use
- * @returns File object
- */
-export function dataURLtoFile(dataUrl: string, filename: string): File {
-  const arr = dataUrl.split(',');
-  const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/png';
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  
-  return new File([u8arr], filename, { type: mime });
-}
-
-/**
- * Compress an image file to reduce its size
- * @param file The image file to compress
+ * Resize an image to a maximum width and height while maintaining aspect ratio
+ * 
+ * @param file The image file to resize
  * @param maxWidth Maximum width in pixels
- * @param quality Compression quality (0-1)
- * @returns Promise with the compressed file
+ * @param maxHeight Maximum height in pixels
+ * @param quality JPEG quality (0-1)
+ * @returns Promise resolving to a new Blob containing the resized image
  */
-export async function compressImage(
+export async function resizeImage(
   file: File,
   maxWidth: number = 1200,
+  maxHeight: number = 1200,
   quality: number = 0.8
-): Promise<File> {
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    // Create image element
+    // Create image element to load the file
     const img = new Image();
+    img.src = URL.createObjectURL(file);
+    
     img.onload = () => {
-      // Create canvas for drawing the resized image
-      const canvas = document.createElement('canvas');
+      // Release the object URL
+      URL.revokeObjectURL(img.src);
       
       // Calculate dimensions while maintaining aspect ratio
       let width = img.width;
@@ -172,11 +97,17 @@ export async function compressImage(
         width = maxWidth;
       }
       
-      // Set canvas dimensions
+      if (height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
+      }
+      
+      // Create canvas for resizing
+      const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
       
-      // Draw image on canvas
+      // Draw the image on the canvas
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         reject(new Error('Could not get canvas context'));
@@ -185,44 +116,44 @@ export async function compressImage(
       
       ctx.drawImage(img, 0, 0, width, height);
       
-      // Convert to data URL with compression
-      const dataUrl = canvas.toDataURL(file.type, quality);
-      
-      // Convert back to File
-      const compressedFile = dataURLtoFile(dataUrl, file.name);
-      
-      resolve(compressedFile);
+      // Convert to blob
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Could not convert canvas to blob'));
+          }
+        },
+        file.type,
+        quality
+      );
     };
     
     img.onerror = () => {
-      reject(new Error('Error loading image'));
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Failed to load image'));
     };
-    
-    // Load image from file
-    img.src = URL.createObjectURL(file);
   });
 }
 
 /**
- * Organize files into numbered order based on their position
- * @param files Array of files with positions
- * @returns Files with standardized names (e.g., "image_1.jpg", "image_2.jpg")
+ * Generate a unique filename for an uploaded image
+ * 
+ * @param originalName Original filename
+ * @param mimeType MIME type of the file
+ * @returns A unique filename with correct extension
  */
-export function organizeFilesWithOrder<T extends { file: File; position: number }>(
-  files: T[]
-): (T & { standardizedName: string })[] {
-  // Sort by position
-  const sortedFiles = [...files].sort((a, b) => a.position - b.position);
+export function generateUniqueImageFilename(originalName: string, mimeType: string): string {
+  const extension = getExtensionForMimeType(mimeType);
+  const timestamp = Date.now();
+  const randomString = Math.random().toString(36).substring(2, 8);
   
-  // Add standardized names
-  return sortedFiles.map((fileObj, index) => {
-    const { file } = fileObj;
-    const extension = file.name.split('.').pop() || 'jpg';
-    const standardizedName = `image_${index + 1}.${extension}`;
-    
-    return {
-      ...fileObj,
-      standardizedName
-    };
-  });
+  // Keep original name part but sanitize it
+  const sanitizedName = originalName
+    .replace(/\.[^/.]+$/, '') // Remove extension
+    .replace(/[^a-z0-9]/gi, '-') // Replace non-alphanumeric with hyphens
+    .substring(0, 30); // Limit length
+  
+  return `${sanitizedName}-${timestamp}-${randomString}${extension}`;
 }

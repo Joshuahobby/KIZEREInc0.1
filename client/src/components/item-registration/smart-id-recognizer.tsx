@@ -1,240 +1,211 @@
-import { useState, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Loader2, Upload, Check, X, FileText, AlertCircle, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { recognizeTextFromImage, extractIdentifiers, ExtractedIdentifier } from "@/utils/ocr-utils";
+import React, { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Separator } from '@/components/ui/separator';
+import { LuCamera, LuLoader, LuX } from 'react-icons/lu';
+import { extractTextFromImage, extractIdentifiers } from '@/utils/ocr-utils';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
-interface SmartIdRecognizerProps {
-  onDetect: (value: string) => void;
-  onSelectIdentifier: (identifier: string) => void;
-  className?: string;
+export interface SmartIDRecognizerProps {
+  onIdentifierSelected: (identifier: string) => void;
 }
 
-export function SmartIdRecognizer({
-  onDetect,
-  onSelectIdentifier,
-  className
-}: SmartIdRecognizerProps) {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [detectedText, setDetectedText] = useState("");
-  const [identifiers, setIdentifiers] = useState<ExtractedIdentifier[]>([]);
+export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerProps) {
+  const { t } = useLanguage();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  
-  // Handle file drop
-  const onDrop = useCallback(async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [detectedIdentifiers, setDetectedIdentifiers] = useState<string[]>([]);
+  const [selectedIdentifier, setSelectedIdentifier] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     
-    const file = acceptedFiles[0];
+    if (!file) return;
+    
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+      setError(t('batch_upload_invalid_type'));
+      return;
+    }
+    
+    setSelectedFile(file);
+    setError(null);
+    setDetectedIdentifiers([]);
+    setSelectedIdentifier('');
     
     // Create a preview
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
     const preview = URL.createObjectURL(file);
-    setPreviewUrl(preview);
-    setSelectedFile(file);
+    setFilePreview(preview);
+  };
+
+  // Process image with OCR
+  const processImage = async () => {
+    if (!selectedFile) return;
     
-    // Reset results
-    setDetectedText("");
-    setIdentifiers([]);
+    setIsProcessing(true);
+    setError(null);
+    setDetectedIdentifiers([]);
+    setSelectedIdentifier('');
     
     try {
-      setIsProcessing(true);
-      
-      // Process the image using OCR
-      const result = await recognizeTextFromImage(file);
-      setDetectedText(result.text);
-      
+      // Extract text from image
+      const extractedText = await extractTextFromImage(selectedFile);
       // Extract potential identifiers
-      const extractedIds = extractIdentifiers(result.text, result.confidence);
-      setIdentifiers(extractedIds);
+      const identifiers = extractIdentifiers(extractedText);
       
-      // If we found identifiers, pass the most confident one to the parent
-      if (extractedIds.length > 0) {
-        // Sort by confidence and type priority (IMEI > Serial > Document > Unknown)
-        const sortedIds = [...extractedIds].sort((a, b) => {
-          // First by type
-          const typeOrder = { imei: 0, serial: 1, document: 2, unknown: 3 };
-          const typeDiff = typeOrder[a.type] - typeOrder[b.type];
-          if (typeDiff !== 0) return typeDiff;
-          
-          // Then by confidence
-          return b.confidence - a.confidence;
-        });
-        
-        // Notify the parent of the best match
-        onDetect(sortedIds[0].value);
-        
-        toast({
-          title: "Identifier detected",
-          description: `Found ${sortedIds.length} potential identifier${sortedIds.length !== 1 ? 's' : ''}. You can select from the list below.`,
-          variant: "default",
-        });
+      if (identifiers.length === 0) {
+        setError(t('smart_id_no_results'));
       } else {
-        toast({
-          title: "No identifiers found",
-          description: "We couldn't detect any unique identifiers in this image. You can still enter it manually.",
-          variant: "destructive",
-        });
+        setDetectedIdentifiers(identifiers);
+        // Auto-select the first identifier
+        setSelectedIdentifier(identifiers[0]);
       }
-    } catch (error) {
-      console.error("OCR processing error:", error);
-      toast({
-        title: "Processing failed",
-        description: "Failed to process the image. Please try another image or enter the identifier manually.",
-        variant: "destructive",
-      });
+    } catch (err) {
+      console.error('OCR processing error:', err);
+      setError(t('error_try_again'));
     } finally {
       setIsProcessing(false);
     }
-  }, [onDetect, previewUrl]);
-  
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png']
-    },
-    maxSize: 5 * 1024 * 1024, // 5MB
-    multiple: false,
-  });
-  
-  const clearSelection = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setPreviewUrl(null);
-    setSelectedFile(null);
-    setDetectedText("");
-    setIdentifiers([]);
   };
-  
+
+  // Clear selected file
+  const clearFile = () => {
+    if (filePreview) {
+      URL.revokeObjectURL(filePreview);
+    }
+    
+    setSelectedFile(null);
+    setFilePreview(null);
+    setError(null);
+    setDetectedIdentifiers([]);
+    setSelectedIdentifier('');
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Use selected identifier
+  const useIdentifier = () => {
+    if (selectedIdentifier) {
+      onIdentifierSelected(selectedIdentifier);
+      clearFile();
+    }
+  };
+
   return (
-    <div className={cn("space-y-4", className)}>
-      {/* Main dropzone area */}
-      <div
-        {...getRootProps()}
-        className={cn(
-          "border-2 border-dashed rounded-lg transition-all relative",
-          isDragActive ? "border-primary bg-primary/10" : "border-gray-300 bg-gray-50",
-          previewUrl ? "aspect-square max-w-xs mx-auto" : "p-6"
-        )}
-      >
-        <input {...getInputProps()} />
-        
-        {previewUrl ? (
-          <>
-            <img 
-              src={previewUrl} 
-              alt="Document for OCR" 
-              className="w-full h-full object-contain rounded-lg"
-            />
-            <Button
-              type="button"
-              variant="destructive"
-              size="icon"
-              className="absolute top-2 right-2 h-6 w-6 rounded-full"
-              onClick={(e) => {
-                e.stopPropagation();
-                clearSelection();
-              }}
-            >
-              <X className="h-3 w-3" />
-            </Button>
-            
-            {isProcessing && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
-                <div className="text-center text-white">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                  <p className="text-sm font-medium">Processing image...</p>
-                </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center space-y-3 py-4">
-            <Search className="h-12 w-12 mx-auto text-gray-400" />
-            <div>
-              <p className="text-sm font-medium">
-                {isDragActive 
-                  ? "Drop image here..." 
-                  : "Upload an image of your item's identification label"
-                }
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Works with labels showing IMEI, serial numbers, or document IDs
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{t('smart_id_title')}</CardTitle>
+        <CardDescription>{t('smart_id_description')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {!selectedFile ? (
+            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md border-muted-foreground/30 hover:border-muted-foreground/50">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                ref={fileInputRef}
+              />
+              <Button 
+                variant="outline" 
+                onClick={() => fileInputRef.current?.click()}
+                className="mb-2"
+              >
+                <LuCamera className="mr-2 h-4 w-4" />
+                {t('smart_id_upload')}
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                {t('item_drag_images')}
               </p>
             </div>
-            <Button 
-              type="button" 
-              variant="outline"
-              disabled={isProcessing}
-            >
-              <Upload className="h-4 w-4 mr-2" /> 
-              Select Image
-            </Button>
-          </div>
-        )}
-      </div>
-      
-      {/* Detected identifiers */}
-      {identifiers.length > 0 && (
-        <div className="border rounded-lg p-4 bg-gray-50">
-          <h4 className="text-sm font-medium mb-2 flex items-center">
-            <FileText className="h-4 w-4 mr-1" />
-            Detected Identifiers
-          </h4>
-          
-          <div className="space-y-2">
-            {identifiers.map((identifier, index) => (
-              <div 
-                key={`${identifier.type}-${index}`} 
-                className="flex items-center justify-between bg-white p-2 rounded border"
-              >
-                <div>
-                  <span className="text-xs font-medium capitalize mr-2">
-                    {identifier.type}:
-                  </span>
-                  <span className="text-sm font-mono">{identifier.value}</span>
-                </div>
+          ) : (
+            <div className="relative">
+              <div className="flex justify-end">
                 <Button
-                  type="button"
                   variant="ghost"
-                  size="sm"
-                  onClick={() => onSelectIdentifier(identifier.value)}
+                  size="icon"
+                  onClick={clearFile}
+                  className="absolute top-2 right-2 bg-background/80 h-8 w-8 rounded-full"
                 >
-                  Use This
+                  <LuX className="h-4 w-4" />
                 </Button>
               </div>
-            ))}
-          </div>
+              {filePreview && (
+                <img
+                  src={filePreview}
+                  alt="Selected image"
+                  className="w-full h-auto max-h-[300px] object-contain rounded-md mb-4"
+                />
+              )}
+              
+              {!isProcessing && detectedIdentifiers.length === 0 && !error && (
+                <Button 
+                  onClick={processImage} 
+                  className="w-full mt-2"
+                >
+                  {t('smart_id_processing')}
+                </Button>
+              )}
+              
+              {isProcessing && (
+                <div className="flex items-center justify-center py-4">
+                  <LuLoader className="mr-2 h-5 w-5 animate-spin" />
+                  <span>{t('smart_id_processing')}</span>
+                </div>
+              )}
+              
+              {error && (
+                <div className="text-destructive text-sm mt-2">
+                  {error}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {detectedIdentifiers.length > 0 && (
+            <div className="space-y-3">
+              <Separator />
+              <h3 className="font-medium">{t('smart_id_select_identifier')}:</h3>
+              
+              <RadioGroup
+                value={selectedIdentifier}
+                onValueChange={setSelectedIdentifier}
+                className="space-y-2"
+              >
+                {detectedIdentifiers.map((identifier, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <RadioGroupItem value={identifier} id={`identifier-${index}`} />
+                    <Label htmlFor={`identifier-${index}`} className="cursor-pointer">
+                      <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">
+                        {identifier}
+                      </code>
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+              
+              <Button 
+                onClick={useIdentifier}
+                disabled={!selectedIdentifier}
+                className="w-full mt-4"
+              >
+                {t('smart_id_use_selected')}
+              </Button>
+            </div>
+          )}
         </div>
-      )}
-      
-      {/* Full OCR text */}
-      {detectedText && (
-        <details className="text-xs">
-          <summary className="font-medium cursor-pointer">View all detected text</summary>
-          <div className="mt-2 p-3 bg-gray-100 rounded border font-mono text-xs whitespace-pre-wrap max-h-32 overflow-y-auto">
-            {detectedText}
-          </div>
-        </details>
-      )}
-      
-      {/* Instructions */}
-      <Alert variant="default" className="bg-blue-50 border-blue-200">
-        <AlertCircle className="h-4 w-4 text-blue-700" />
-        <AlertTitle className="text-blue-700 text-sm">Smart ID Recognition</AlertTitle>
-        <AlertDescription className="text-blue-600 text-xs">
-          Upload a clear image of your item's label, box, or documentation. 
-          The system will attempt to identify unique identifiers like IMEI, 
-          serial numbers, or document IDs automatically.
-        </AlertDescription>
-      </Alert>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

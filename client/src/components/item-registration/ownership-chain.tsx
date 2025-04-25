@@ -1,530 +1,273 @@
-import { useState, useEffect, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
-import { 
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy
-} from "@dnd-kit/sortable";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AlertCircle,
-  Calendar,
-  ChevronUp,
-  ChevronDown,
-  PlusCircle,
-  Trash2,
-  FileStack,
-  Link2,
-  History,
-  X,
-  Upload
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { toast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { 
-  OwnershipDocument, 
-  OwnershipDocumentType, 
-  createOwnershipDocument, 
-  sortOwnershipDocuments,
-  reorderDocuments,
-  cleanupDocumentPreviews,
-  getDocumentTypeName,
-  calculateOwnershipTimespan
-} from "@/utils/ownership-utils";
+import React, { useState, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { LuPlus, LuTrash2, LuArrowDown, LuCalendar, LuLoader } from 'react-icons/lu';
+import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 
-interface OwnershipChainProps {
-  onChange: (documents: OwnershipDocument[]) => void;
-  className?: string;
+export interface OwnershipDocument {
+  id: string;
+  file: File;
+  title: string;
+  date: string;
+  description: string;
 }
 
-export function OwnershipChain({ onChange, className }: OwnershipChainProps) {
+export interface OwnershipChainProps {
+  onDocumentsChange: (documents: OwnershipDocument[]) => void;
+}
+
+export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
+  const { t } = useLanguage();
+  const { toast } = useToast();
   const [documents, setDocuments] = useState<OwnershipDocument[]>([]);
-  const [expandedDocId, setExpandedDocId] = useState<string | null>(null);
-  
-  // DnD Kit sensors configuration
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-  
-  // Handle document reordering
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (over && active.id !== over.id) {
-      setDocuments((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id);
-        const newIndex = items.findIndex(item => item.id === over.id);
-        return reorderDocuments(items, oldIndex, newIndex);
-      });
-    }
-  }, []);
-  
-  // Dropzone for the document upload
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
-    // Handle rejected files
-    if (rejectedFiles.length > 0) {
-      rejectedFiles.forEach(({ file, errors }) => {
-        const errorMessages = errors.map(e => e.message).join(', ');
-        toast({
-          title: "File rejected",
-          description: `${file.name}: ${errorMessages}`,
-          variant: "destructive",
-        });
-      });
-    }
-    
-    // Process accepted files
-    if (acceptedFiles.length > 0) {
-      const file = acceptedFiles[0]; // Take only the first file for now
-      
-      // Create a new document entry
-      const newDocument = createOwnershipDocument(
-        file,
-        OwnershipDocumentType.RECEIPT, // Default type
-        new Date(),
-        "",
-        documents.length
-      );
-      
-      setDocuments(prev => [...prev, newDocument]);
-      setExpandedDocId(newDocument.id); // Expand the newly added document
-      
-      toast({
-        title: "Document added",
-        description: "Please complete the document details.",
-        variant: "default",
-      });
-    }
-  }, [documents]);
-  
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
-    onDrop,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'image/*': ['.jpeg', '.jpg', '.png'],
-      'application/msword': ['.doc'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-    },
-    maxSize: 10 * 1024 * 1024, // 10MB
-    multiple: false,
+  const [isUploading, setIsUploading] = useState(false);
+  const [currentDocument, setCurrentDocument] = useState<{
+    file: File | null;
+    title: string;
+    date: string;
+    description: string;
+  }>({
+    file: null,
+    title: '',
+    date: '',
+    description: '',
   });
   
-  // Remove a document
-  const removeDocument = useCallback((id: string) => {
-    setDocuments(prev => {
-      // Find the document to remove
-      const docToRemove = prev.find(doc => doc.id === id);
-      
-      // If found, revoke its object URL
-      if (docToRemove) {
-        URL.revokeObjectURL(docToRemove.preview);
-      }
-      
-      // Remove the document and return the updated array
-      return prev.filter(doc => doc.id !== id);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Handle file selection
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Check if file is a PDF or image
+    if (!file.type.match('application/pdf') && !file.type.match('image/')) {
+      toast({
+        title: t('error_title'),
+        description: t('ownership_invalid_file_type'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    setCurrentDocument(prev => ({
+      ...prev,
+      file,
+    }));
+  };
+  
+  // Add new document to chain
+  const addDocument = () => {
+    if (!currentDocument.file || !currentDocument.title) {
+      toast({
+        title: t('error_title'),
+        description: t('ownership_required_fields'),
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    const newDocument: OwnershipDocument = {
+      id: Math.random().toString(36).substr(2, 9),
+      file: currentDocument.file,
+      title: currentDocument.title,
+      date: currentDocument.date,
+      description: currentDocument.description,
+    };
+    
+    const updatedDocuments = [...documents, newDocument];
+    setDocuments(updatedDocuments);
+    onDocumentsChange(updatedDocuments);
+    
+    // Reset current document form
+    setCurrentDocument({
+      file: null,
+      title: '',
+      date: '',
+      description: '',
     });
     
-    // If the removed document was expanded, close the expansion
-    if (expandedDocId === id) {
-      setExpandedDocId(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
-  }, [expandedDocId]);
+    
+    toast({
+      title: t('ownership_document_added'),
+      description: t('ownership_document_added_desc'),
+    });
+  };
   
-  // Update document metadata
-  const updateDocument = useCallback((id: string, updates: Partial<OwnershipDocument>) => {
-    setDocuments(prev => 
-      prev.map(doc => 
-        doc.id === id 
-          ? { ...doc, ...updates }
-          : doc
-      )
-    );
-  }, []);
+  // Remove document from chain
+  const removeDocument = (id: string) => {
+    const updatedDocuments = documents.filter(doc => doc.id !== id);
+    setDocuments(updatedDocuments);
+    onDocumentsChange(updatedDocuments);
+    
+    toast({
+      title: t('ownership_document_removed'),
+      description: t('ownership_document_removed_desc'),
+    });
+  };
   
-  // Toggle document expansion
-  const toggleExpand = useCallback((id: string) => {
-    setExpandedDocId(prev => prev === id ? null : id);
-  }, []);
-  
-  // Update the parent component when documents change
-  useEffect(() => {
-    onChange(documents);
-  }, [documents, onChange]);
-  
-  // Cleanup preview URLs when unmounting
-  useEffect(() => {
-    return () => {
-      cleanupDocumentPreviews(documents);
-    };
-  }, [documents]);
-  
-  // Sort documents by order
-  const sortedDocuments = sortOwnershipDocuments(documents);
-  
-  return (
-    <div className={cn("space-y-6", className)}>
-      {/* Header with overview */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50 rounded-lg p-4 border">
-        <div>
-          <h3 className="text-sm font-medium flex items-center">
-            <FileStack className="h-4 w-4 mr-2 text-primary" />
-            Ownership Documentation
-          </h3>
-          <p className="text-xs text-gray-500 mt-1">
-            Create a verifiable chain of ownership with supporting documents
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <div className="text-xs border rounded-full px-3 py-1 bg-white">
-            <span className="font-medium">{documents.length}</span> document{documents.length !== 1 ? 's' : ''}
-          </div>
-          
-          {documents.length > 0 && (
-            <div className="text-xs border rounded-full px-3 py-1 bg-white flex items-center">
-              <History className="h-3 w-3 mr-1 text-gray-400" />
-              {calculateOwnershipTimespan(documents)}
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Document upload area */}
-      <div
-        {...getRootProps()}
-        className={cn(
-          "border-2 border-dashed rounded-lg transition-all",
-          "flex flex-col items-center justify-center p-6",
-          isDragActive ? "border-primary bg-primary/10" : "border-gray-300 bg-gray-50"
-        )}
-      >
-        <input {...getInputProps()} />
-        
-        <div className="text-center space-y-3">
-          <PlusCircle className="h-12 w-12 mx-auto text-gray-400" />
-          <div>
-            <p className="text-sm font-medium">
-              {isDragActive 
-                ? "Drop document here..." 
-                : "Add ownership document"
-              }
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Upload receipts, warranty cards, certificates, or other ownership documents
-            </p>
-          </div>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={(e) => {
-              e.stopPropagation();
-              open();
-            }}
-          >
-            <Upload className="h-4 w-4 mr-2" /> 
-            Select Document
-          </Button>
-        </div>
-      </div>
-      
-      {/* Document list */}
-      {documents.length > 0 && (
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium flex items-center">
-            <Link2 className="h-4 w-4 mr-2" />
-            Ownership Timeline
-          </h4>
-          
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={sortedDocuments.map(doc => doc.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-3">
-                {sortedDocuments.map((document, index) => (
-                  <DocumentItem
-                    key={document.id}
-                    document={document}
-                    isExpanded={document.id === expandedDocId}
-                    onToggleExpand={() => toggleExpand(document.id)}
-                    onRemove={() => removeDocument(document.id)}
-                    onUpdate={(updates) => updateDocument(document.id, updates)}
-                    isFirst={index === 0}
-                    isLast={index === sortedDocuments.length - 1}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
-        </div>
-      )}
-      
-      {/* Instructions */}
-      <Alert variant="default" className="bg-blue-50 border-blue-200">
-        <AlertCircle className="h-4 w-4 text-blue-700" />
-        <AlertTitle className="text-blue-700 text-sm">Ownership Verification</AlertTitle>
-        <AlertDescription className="text-blue-600 text-xs">
-          Upload documents that prove your ownership of the item. This creates a verifiable
-          ownership chain that can be useful in case of disputes or when selling the item.
-          Start with the original purchase receipt and add subsequent documents in chronological order.
-        </AlertDescription>
-      </Alert>
-    </div>
-  );
-}
-
-// Individual document item component
-interface DocumentItemProps {
-  document: OwnershipDocument;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
-  onRemove: () => void;
-  onUpdate: (updates: Partial<OwnershipDocument>) => void;
-  isFirst: boolean;
-  isLast: boolean;
-}
-
-function DocumentItem({
-  document,
-  isExpanded,
-  onToggleExpand,
-  onRemove,
-  onUpdate,
-  isFirst,
-  isLast
-}: DocumentItemProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: document.id });
-
-  const style = {
-    transform: transform ? `translate3d(0, ${transform.y}px, 0)` : undefined,
-    transition,
-    zIndex: isDragging ? 10 : 1,
+  // Get file name to display
+  const getFileName = (file: File | null) => {
+    if (!file) return '';
+    
+    const name = file.name;
+    if (name.length > 20) {
+      return name.substring(0, 17) + '...';
+    }
+    return name;
   };
   
   return (
-    <Card
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "relative",
-        isDragging ? "shadow-lg opacity-80" : "",
-        isExpanded ? "border-primary" : ""
-      )}
-    >
-      {/* Timeline connector lines */}
-      {!isFirst && (
-        <div className="absolute left-6 -top-3 w-0.5 h-3 bg-gray-300" />
-      )}
-      {!isLast && (
-        <div className="absolute left-6 -bottom-3 w-0.5 h-3 bg-gray-300" />
-      )}
-      
-      <CardHeader className="pb-2 flex flex-row items-center gap-3">
-        <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-300">
-            {(() => {
-              switch (document.type) {
-                case OwnershipDocumentType.RECEIPT:
-                  return <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18.5 3a2.5 2.5 0 1 1 0 5H3"/></svg>;
-                case OwnershipDocumentType.WARRANTY:
-                  return <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>;
-                case OwnershipDocumentType.CERTIFICATE:
-                  return <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6H3v11a2 2 0 0 0 2 2h10"/><path d="M15 8v6"/><path d="M15 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M14.5 14.5 17 17"/><path d="M17 8h4"/><path d="M21 12h-4"/><path d="M21 16h-4"/></svg>;
-                case OwnershipDocumentType.REPAIR:
-                  return <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-rose-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
-                case OwnershipDocumentType.MAINTENANCE:
-                  return <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-sky-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>;
-                case OwnershipDocumentType.TRANSFER:
-                  return <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>;
-                default:
-                  return <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>;
-              }
-            })()}
-          </div>
-        </div>
-        
-        <div className="flex-grow">
-          <CardTitle className="text-sm">
-            {getDocumentTypeName(document.type)}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            {format(document.date, 'PP')}
-          </CardDescription>
-        </div>
-        
-        <div className="flex items-center gap-1">
-          {/* Drag handle */}
-          <div
-            {...attributes}
-            {...listeners}
-            className="p-2 cursor-grab active:cursor-grabbing rounded-full hover:bg-gray-100"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg>
-          </div>
-          
-          {/* Expand toggle */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleExpand();
-            }}
-          >
-            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </Button>
-          
-          {/* Remove button */}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
-        </div>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{t('ownership_title')}</CardTitle>
+        <CardDescription>{t('ownership_description')}</CardDescription>
       </CardHeader>
-      
-      {isExpanded && (
-        <>
-          <CardContent className="space-y-4 pt-0">
-            {/* Document preview */}
-            <div className="aspect-video bg-gray-100 rounded-md overflow-hidden flex items-center justify-center">
-              {document.file.type.startsWith('image/') ? (
-                <img
-                  src={document.preview}
-                  alt={document.name}
-                  className="w-full h-full object-contain"
-                />
+      <CardContent className="space-y-5">
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <LuLoader className="mr-2 h-4 w-4 animate-spin" />
+                  {t('uploading')}
+                </>
               ) : (
-                <div className="text-center">
-                  <FileStack className="h-12 w-12 mx-auto text-gray-400 mb-2" />
-                  <p className="text-xs text-gray-600">{document.name}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {document.file.type || 'Unknown document type'}
-                  </p>
-                </div>
+                <>
+                  <LuPlus className="mr-2 h-4 w-4" />
+                  {t('ownership_select_file')}
+                </>
               )}
-            </div>
-            
-            {/* Document type */}
-            <div className="grid gap-2">
-              <Label htmlFor={`doc-type-${document.id}`}>Document Type</Label>
-              <Select
-                value={document.type}
-                onValueChange={(value) => onUpdate({ type: value as OwnershipDocumentType })}
-              >
-                <SelectTrigger id={`doc-type-${document.id}`}>
-                  <SelectValue placeholder="Select document type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={OwnershipDocumentType.RECEIPT}>Purchase Receipt</SelectItem>
-                  <SelectItem value={OwnershipDocumentType.WARRANTY}>Warranty Card</SelectItem>
-                  <SelectItem value={OwnershipDocumentType.CERTIFICATE}>Certificate of Authenticity</SelectItem>
-                  <SelectItem value={OwnershipDocumentType.REPAIR}>Repair Record</SelectItem>
-                  <SelectItem value={OwnershipDocumentType.MAINTENANCE}>Maintenance Record</SelectItem>
-                  <SelectItem value={OwnershipDocumentType.TRANSFER}>Transfer of Ownership</SelectItem>
-                  <SelectItem value={OwnershipDocumentType.OTHER}>Other Document</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {/* Document date */}
-            <div className="grid gap-2">
-              <Label htmlFor={`doc-date-${document.id}`}>Document Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                    id={`doc-date-${document.id}`}
-                  >
-                    <Calendar className="mr-2 h-4 w-4" />
-                    {format(document.date, 'PPP')}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <CalendarComponent
-                    mode="single"
-                    selected={document.date}
-                    onSelect={(date) => date && onUpdate({ date })}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            
-            {/* Description */}
-            <div className="grid gap-2">
-              <Label htmlFor={`doc-desc-${document.id}`}>Description</Label>
-              <Textarea
-                id={`doc-desc-${document.id}`}
-                value={document.description}
-                onChange={(e) => onUpdate({ description: e.target.value })}
-                placeholder="Enter any additional details about this document"
-                className="min-h-[100px]"
+            </Button>
+            <input
+              type="file"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept="application/pdf,image/*"
+            />
+            {currentDocument.file && (
+              <div className="text-sm">
+                {getFileName(currentDocument.file)}
+              </div>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="doc-title">{t('ownership_doc_title')} *</Label>
+              <Input
+                id="doc-title"
+                placeholder={t('ownership_doc_title_placeholder')}
+                value={currentDocument.title}
+                onChange={(e) => setCurrentDocument(prev => ({ ...prev, title: e.target.value }))}
               />
             </div>
-          </CardContent>
-          
-          <CardFooter className="flex justify-between pt-0">
-            <div className="text-xs text-gray-500">
-              Added {format(new Date(document.file.lastModified), 'PPpp')}
+            <div className="space-y-2">
+              <Label htmlFor="doc-date">{t('ownership_doc_date')}</Label>
+              <div className="relative">
+                <Input
+                  id="doc-date"
+                  type="date"
+                  placeholder={t('ownership_doc_date_placeholder')}
+                  value={currentDocument.date}
+                  onChange={(e) => setCurrentDocument(prev => ({ ...prev, date: e.target.value }))}
+                />
+                <LuCalendar className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              </div>
             </div>
-          </CardFooter>
-        </>
-      )}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="doc-description">{t('ownership_doc_description')}</Label>
+            <Textarea
+              id="doc-description"
+              placeholder={t('ownership_doc_description_placeholder')}
+              value={currentDocument.description}
+              onChange={(e) => setCurrentDocument(prev => ({ ...prev, description: e.target.value }))}
+              rows={3}
+            />
+          </div>
+          
+          <Button 
+            onClick={addDocument} 
+            disabled={!currentDocument.file || !currentDocument.title || isUploading}
+            className="w-full"
+          >
+            <LuPlus className="mr-2 h-4 w-4" />
+            {t('ownership_add_document')}
+          </Button>
+        </div>
+        
+        {documents.length > 0 && (
+          <>
+            <Separator />
+            <div className="space-y-4">
+              <h3 className="font-medium text-base">{t('ownership_chain_title')}</h3>
+              <div className="space-y-6">
+                {documents.map((doc, index) => (
+                  <div key={doc.id} className="relative pl-6 border-l-2 border-dashed pb-6 last:border-0 last:pb-0">
+                    <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-primary" />
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-medium">{doc.title}</h4>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeDocument(doc.id)}
+                          className="h-8 w-8 text-destructive"
+                        >
+                          <LuTrash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="flex items-center text-sm text-muted-foreground">
+                        <span>{getFileName(doc.file)}</span>
+                        {doc.date && (
+                          <span className="ml-2 pl-2 border-l">
+                            {new Date(doc.date).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {doc.description && (
+                        <p className="text-sm text-muted-foreground">{doc.description}</p>
+                      )}
+                    </div>
+                    
+                    {index < documents.length - 1 && (
+                      <div className="absolute -left-3 bottom-3 flex items-center justify-center">
+                        <LuArrowDown className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <div className="text-sm text-muted-foreground">
+          {documents.length > 0
+            ? t('ownership_documents_count', { count: documents.length })
+            : t('ownership_no_documents')}
+        </div>
+      </CardFooter>
     </Card>
   );
 }

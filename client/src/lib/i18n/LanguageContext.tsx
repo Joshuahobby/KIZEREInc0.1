@@ -1,126 +1,110 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { en } from './locales/en';
-import { fr } from './locales/fr';
-import { rw } from './locales/rw'; // Kinyarwanda
-import { sw } from './locales/sw'; // Swahili
+import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import en from './locales/en';
+import fr from './locales/fr';
 
-type Translations = Record<string, string>;
+// Define available languages
+export type Language = 'en' | 'fr';
 
-export interface LocaleData {
-  name: string;
-  translations: Translations;
-  nativeName: string;
-}
-
-export interface LocaleOption extends LocaleData {
-  code: string;
-}
-
-export interface LanguageContextType {
-  locale: string;
-  setLocale: (locale: string) => void;
-  t: (key: string, params?: Record<string, string | number>) => string;
-  availableLocales: LocaleOption[];
-}
-
-// Define available locales
-const locales: Record<string, LocaleData> = {
-  en: {
-    name: 'English',
-    nativeName: 'English',
-    translations: en,
-  },
-  fr: {
-    name: 'French',
-    nativeName: 'Français',
-    translations: fr,
-  },
-  rw: {
-    name: 'Kinyarwanda',
-    nativeName: 'Kinyarwanda',
-    translations: rw,
-  },
-  sw: {
-    name: 'Swahili',
-    nativeName: 'Kiswahili',
-    translations: sw,
-  },
+// Create language dictionaries
+const languages: Record<Language, Record<string, string>> = {
+  en,
+  fr,
 };
 
-// Create the context
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+// Default to English if no language is set
+const DEFAULT_LANGUAGE: Language = 'en';
 
-// Define the storage key
-const LOCALE_STORAGE_KEY = 'kizere-locale';
+// Get initial language from localStorage or use default
+const getInitialLanguage = (): Language => {
+  if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
+  
+  const savedLanguage = localStorage.getItem('language') as Language;
+  return savedLanguage && Object.keys(languages).includes(savedLanguage)
+    ? savedLanguage
+    : DEFAULT_LANGUAGE;
+};
 
-// Provider component
-export const LanguageProvider = ({ children }: { children: ReactNode }) => {
-  // Initialize state with stored preference or default to English
-  const [locale, setLocaleState] = useState(() => {
-    const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
-    return savedLocale && locales[savedLocale] ? savedLocale : 'en';
-  });
+interface LanguageContextType {
+  language: Language;
+  setLanguage: (language: Language) => void;
+  t: (key: string, options?: Record<string, any>) => string;
+  getLanguages: () => { code: Language; name: string }[];
+}
 
-  // Update locale and save to localStorage
-  const setLocale = (newLocale: string) => {
-    if (locales[newLocale]) {
-      setLocaleState(newLocale);
-      localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
-      
-      // Update HTML lang attribute
-      document.documentElement.lang = newLocale;
-    }
+const LanguageContext = createContext<LanguageContextType>({
+  language: DEFAULT_LANGUAGE,
+  setLanguage: () => {},
+  t: (key: string) => key,
+  getLanguages: () => [],
+});
+
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const [language, setLanguageState] = useState<Language>(getInitialLanguage());
+
+  // Update the language state and save to localStorage
+  const setLanguage = (newLanguage: Language) => {
+    setLanguageState(newLanguage);
+    localStorage.setItem('language', newLanguage);
+    // Optional: Update HTML lang attribute
+    document.documentElement.lang = newLanguage;
   };
 
-  // Set initial HTML lang attribute
+  // Initialize language on mount
   useEffect(() => {
-    document.documentElement.lang = locale;
+    // Set the HTML lang attribute
+    document.documentElement.lang = language;
   }, []);
 
   // Translation function
-  const t = (key: string, params?: Record<string, string | number>): string => {
-    // Get the current translations
-    const translations = locales[locale]?.translations || {};
+  const t = (key: string, options?: Record<string, any>): string => {
+    const dictionary = languages[language] || languages[DEFAULT_LANGUAGE];
     
-    // Get the translation for the key or fall back to the key itself
-    let translation = translations[key] || key;
+    let text = dictionary[key] || languages[DEFAULT_LANGUAGE][key] || key;
     
-    // Replace parameters if provided
-    if (params) {
-      Object.entries(params).forEach(([param, value]) => {
-        translation = translation.replace(`{{${param}}}`, String(value));
+    // Replace placeholders with values if options are provided
+    if (options) {
+      Object.keys(options).forEach(optionKey => {
+        const regex = new RegExp(`{{${optionKey}}}`, 'g');
+        text = text.replace(regex, options[optionKey].toString());
       });
     }
     
-    return translation;
+    return text;
   };
 
-  const availableLocales: LocaleOption[] = Object.entries(locales).map(([code, data]) => ({
-    ...data,
-    code,
-  }));
+  // Helper to get all available languages
+  const getLanguages = () => [
+    { code: 'en', name: 'English' },
+    { code: 'fr', name: 'Français' },
+  ];
 
-  const value = {
-    locale,
-    setLocale,
+  const contextValue: LanguageContextType = {
+    language,
+    setLanguage,
     t,
-    availableLocales,
+    getLanguages,
   };
 
   return (
-    <LanguageContext.Provider value={value}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
 // Custom hook to use the language context
-export const useLanguage = () => {
-  const context = useContext(LanguageContext);
-  
-  if (context === undefined) {
-    throw new Error('useLanguage must be used within a LanguageProvider');
-  }
-  
-  return context;
+export const useLanguage = () => useContext(LanguageContext);
+
+// Higher-order component to wrap components that need translations
+export const withLanguage = <P extends object>(
+  Component: React.ComponentType<P & { t: (key: string, options?: Record<string, any>) => string }>
+) => {
+  return (props: P) => {
+    const { t } = useLanguage();
+    return <Component {...props} t={t} />;
+  };
 };

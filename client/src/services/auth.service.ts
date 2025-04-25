@@ -1,183 +1,129 @@
-/**
- * Centralized Authentication Service
- * 
- * Handles all authentication-related operations to ensure consistency
- * and avoid duplication across the application.
- */
+import { User } from 'firebase/auth';
 import { 
-  auth, 
-  FirebaseService
-} from "../lib/firebase";
-import type { UserCredential, User as FirebaseUser } from "firebase/auth";
-import { queryClient } from "../lib/queryClient";
-import { apiRequest } from "../lib/queryClient";
-import { User } from "@shared/schema";
-import { createLogger } from "../lib/logger";
-
-const logger = createLogger('AuthService');
-
-export interface AuthUserInfo {
-  uid: string;
-  displayName: string;
-  email: string;
-  photoURL: string | null;
-  token: string;
-}
+  signInWithGoogle,
+  logOut,
+  getCurrentUser,
+  onAuthChange
+} from '@/lib/firebase';
 
 /**
- * Authentication Service
- * Provides centralized methods for all authentication operations
+ * AuthService provides centralized authentication functions
  */
-export class AuthService {
+export const AuthService = {
   /**
-   * Sign in with Google using Firebase
-   * Also handles backend synchronization
-   * 
-   * @returns Promise with user data from backend
+   * Initiates Google sign-in with redirect
    */
-  static async signInWithGoogle(): Promise<Omit<User, "password">> {
-    try {
-      logger.info("Starting Google sign-in flow");
-      
-      // Trigger Firebase Google auth popup
-      const result = await FirebaseService.signInWithGooglePopup();
-      
-      // Extract user info from result
-      const userInfo = await this.extractUserInfo(result);
-      logger.info("Google sign-in successful", { email: userInfo.email });
-      
-      if (!userInfo.email) {
-        throw new Error("Could not get email from Google. Please try again.");
-      }
-      
-      // Synchronize with backend
-      return await this.syncGoogleAuthWithBackend(userInfo);
-    } catch (error: any) {
-      logger.error("Google sign-in error", { error });
-      throw error instanceof Error 
-        ? error 
-        : new Error("Sign-in failed. Please try again.");
-    }
-  }
-  
-  /**
-   * Extract user info from Firebase user credential
-   * 
-   * @param result Firebase UserCredential
-   * @returns AuthUserInfo object
-   */
-  private static async extractUserInfo(result: UserCredential): Promise<AuthUserInfo> {
-    const { user } = result;
-    const token = await user.getIdToken();
-    
-    return {
-      uid: user.uid,
-      displayName: user.displayName || '',
-      email: user.email || '',
-      photoURL: user.photoURL,
-      token
-    };
-  }
-  
-  /**
-   * Sign out the user from both Firebase and the backend
-   */
-  static async signOut(): Promise<void> {
-    try {
-      logger.info("Signing out user");
-      
-      // Sign out from backend session
-      await apiRequest("POST", "/api/logout");
-      
-      // Sign out from Firebase
-      await FirebaseService.signOut();
-      
-      // Clear user data from cache
-      queryClient.setQueryData(["/api/user"], null);
-      
-      logger.info("User signed out successfully");
-    } catch (error) {
-      logger.error("Sign out error", { error });
-      throw error instanceof Error 
-        ? error 
-        : new Error("Sign out failed. Please try again.");
-    }
-  }
-  
-  /**
-   * Get the appropriate dashboard path based on user role
-   * This is the central source of truth for dashboard redirection paths
-   * 
-   * @param role User role
-   * @returns Dashboard path for the role
-   */
-  static getDashboardPathByRole(role: string): string {
-    switch (role) {
-      case "Admin":
-        return "/admin";
-      case "Agent":
-        return "/dashboard"; // Using unified dashboard for all users
-      case "Subscriber":
-      default:
-        return "/dashboard";
-    }
-  }
-  
-  /**
-   * Synchronize Google authentication with the backend
-   * 
-   * @param userInfo User information from Google auth
-   * @returns User data from backend
-   */
-  private static async syncGoogleAuthWithBackend(userInfo: AuthUserInfo): Promise<Omit<User, "password">> {
-    try {
-      logger.info("Syncing Google auth with backend", { email: userInfo.email });
-      
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: userInfo.email,
-          name: userInfo.displayName || userInfo.email.split('@')[0],
-          uid: userInfo.uid,
-          token: userInfo.token,
-          photoURL: userInfo.photoURL
-        }),
-        credentials: "include"
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        logger.error("Failed to sync with backend", { status: response.status, errorData });
-        throw new Error(errorData.message || `Failed to authenticate with Google (${response.status})`);
-      }
-      
-      const userData = await response.json();
-      logger.info("Backend sync successful", { userId: userData.id, role: userData.role });
-      
-      // Update auth context
-      queryClient.setQueryData(["/api/user"], userData);
-      
-      return userData;
-    } catch (error) {
-      logger.error("Backend sync error", { error });
-      throw error instanceof Error 
-        ? error 
-        : new Error("Failed to synchronize with backend. Please try again.");
-    }
-  }
-  
-  /**
-   * Check if a user is currently authenticated
-   * 
-   * @returns User data or null if not authenticated
-   */
-  static getCurrentUser(): Omit<User, "password"> | null {
-    return queryClient.getQueryData(["/api/user"]) || null;
-  }
-}
+  signInWithGoogle,
 
-// Export auth instance for direct access when needed
-export { auth };
+  /**
+   * Signs out the current user
+   */
+  logOut,
+
+  /**
+   * Gets the current authenticated user
+   * @returns The current user or null if not authenticated
+   */
+  getCurrentUser,
+
+  /**
+   * Listens for authentication state changes
+   * @param callback Function to call when auth state changes
+   * @returns Unsubscribe function
+   */
+  onAuthChange,
+
+  /**
+   * Determine if a user is logged in
+   * @returns boolean indicating if user is logged in
+   */
+  isAuthenticated(): boolean {
+    return getCurrentUser() !== null;
+  },
+
+  /**
+   * Get user display name or email
+   * @returns User display name, email, or null if not logged in
+   */
+  getUserDisplayName(): string | null {
+    const user = getCurrentUser();
+    if (!user) return null;
+    return user.displayName || user.email || null;
+  },
+
+  /**
+   * Get user email
+   * @returns User email or null if not available
+   */
+  getUserEmail(): string | null {
+    const user = getCurrentUser();
+    if (!user) return null;
+    return user.email;
+  },
+
+  /**
+   * Get user photo URL
+   * @returns User photo URL or null if not available
+   */
+  getUserPhotoUrl(): string | null {
+    const user = getCurrentUser();
+    if (!user) return null;
+    return user.photoURL;
+  },
+
+  /**
+   * Get Firebase user ID
+   * @returns User ID or null if not logged in
+   */
+  getUserId(): string | null {
+    const user = getCurrentUser();
+    if (!user) return null;
+    return user.uid;
+  },
+
+  /**
+   * Get user role from database
+   * @returns Promise that resolves to user role
+   */
+  async getUserRole(): Promise<string> {
+    const user = getCurrentUser();
+    if (!user) return 'guest';
+    
+    try {
+      const response = await fetch(`/api/users/role?uid=${user.uid}`);
+      if (!response.ok) return 'user'; // Default to regular user on error
+      
+      const data = await response.json();
+      return data.role || 'user';
+    } catch (error) {
+      console.error("Error fetching user role:", error);
+      return 'user'; // Default to regular user on error
+    }
+  },
+
+  /**
+   * Determine redirect path based on user role
+   * @returns Dashboard path for redirecting after login
+   */
+  async getDashboardPathForUser(): Promise<string> {
+    try {
+      const role = await this.getUserRole();
+      
+      switch (role) {
+        case 'admin':
+          return '/admin-dashboard';
+        case 'staff':
+          return '/staff-dashboard';
+        case 'user':
+        default:
+          return '/dashboard';
+      }
+    } catch (error) {
+      console.error("Error determining dashboard path:", error);
+      return '/dashboard'; // Default path on error
+    }
+  }
+};
+
+// Also export as default for backward compatibility
+export default AuthService;
