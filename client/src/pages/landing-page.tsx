@@ -8,7 +8,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { AuthService } from "@/services/auth.service";
-import pedestrianCrowdImage from "../assets/pedestrian_crowd.png";
+import crowdImage from "../assets/crowd.jpg";
 import { 
   Shield, 
   Search, 
@@ -631,7 +631,7 @@ export default function LandingPage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/30 to-black/50 mix-blend-overlay z-10 dark:mix-blend-soft-light"></div>
                 <motion.img 
-                  src={pedestrianCrowdImage} 
+                  src={crowdImage} 
                   alt="Busy pedestrian crossing with people from diverse backgrounds" 
                   className="w-full h-auto object-cover"
                   initial={{ scale: 1.1, filter: "blur(5px)" }}

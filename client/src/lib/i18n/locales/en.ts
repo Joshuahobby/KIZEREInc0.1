@@ -300,6 +300,35 @@ export default {
   'landing.itemManagement': 'Item Management',
   'landing.kizereProvides': 'KIZERE provides a comprehensive platform for registering, protecting, and recovering your valuable items.',
   
+  // How It Works Section
+  'landing.howItWorks.simpleProcess': 'Simple Process',
+  'landing.howItWorks.sectionTitle': 'How It Works',
+  'landing.howItWorks.description': 'Our platform makes it easy to register your items and secure them with digital certificates. Follow these simple steps:',
+  'landing.howItWorks.communityDesc': 'Join thousands of users protecting their valuables with KIZERE',
+  'landing.howItWorks.step1Title': 'Register Your Item',
+  'landing.howItWorks.step1Desc': 'Upload details and photos of your item with our easy-to-use registration form.',
+  'landing.howItWorks.step2Title': 'Generate Digital Certificate',
+  'landing.howItWorks.step2Desc': 'Receive a secure digital certificate that proves your ownership.',
+  'landing.howItWorks.step3Title': 'Print QR Code Tags',
+  'landing.howItWorks.step3Desc': 'Attach QR code tags to your items for easy identification and recovery.',
+  'landing.howItWorks.step4Title': 'Quick Recovery Process',
+  'landing.howItWorks.step4Desc': 'If your item is lost, the finder can scan the QR code to initiate the recovery process.',
+  
+  // Testimonials Section
+  'landing.testimonials.sectionTitle': 'User Testimonials',
+  'landing.testimonials.mainTitle': 'What Our Users Say',
+  'landing.testimonials.subtitle': 'Hear from people who have successfully protected and recovered their valuable items.',
+  'landing.testimonials.testimonial1.name': 'James M.',
+  'landing.testimonials.testimonial1.location': 'Kigali, Rwanda',
+  'landing.testimonials.testimonial1.quote': 'I lost my laptop at the airport, but thanks to KIZERE, it was returned to me within 24 hours. The QR code system works amazingly well!',
+  'landing.testimonials.testimonial2.name': 'Francine N.',
+  'landing.testimonials.testimonial2.location': 'Musanze, Rwanda',
+  'landing.testimonials.testimonial2.quote': 'The registration process was so simple, and I love the peace of mind knowing all my valuables are protected with digital certificates.',
+  'landing.testimonials.testimonial3.name': 'Robert K.',
+  'landing.testimonials.testimonial3.location': 'Huye, Rwanda',
+  'landing.testimonials.testimonial3.quote': 'When my phone was lost, the finder scanned the QR code, and I was notified immediately. This service is truly a game-changer!',
+  'landing.testimonials.viewMore': 'View More Testimonials',
+  
   // Misc
   contact_us: 'Contact Us',
   about_us: 'About Us',
