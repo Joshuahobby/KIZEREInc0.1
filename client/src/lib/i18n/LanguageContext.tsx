@@ -6,7 +6,7 @@ import fr from './locales/fr';
 export type Language = 'en' | 'fr';
 
 // Create language dictionaries
-const languages: Record<Language, Record<string, string>> = {
+const translations = {
   en,
   fr,
 };
@@ -19,13 +19,14 @@ const getInitialLanguage = (): Language => {
   if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
   
   const savedLanguage = localStorage.getItem('language') as Language;
-  return savedLanguage && Object.keys(languages).includes(savedLanguage)
+  return savedLanguage && Object.keys(translations).includes(savedLanguage)
     ? savedLanguage
     : DEFAULT_LANGUAGE;
 };
 
 interface LanguageContextType {
   language: Language;
+  translations: Record<Language, any>;
   setLanguage: (language: Language) => void;
   t: (key: string, options?: Record<string, any>) => string;
   getLanguages: () => { code: Language; name: string }[];
@@ -33,6 +34,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType>({
   language: DEFAULT_LANGUAGE,
+  translations,
   setLanguage: () => {},
   t: (key: string) => key,
   getLanguages: () => [],
@@ -61,39 +63,35 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
   // Translation function
   const t = (key: string, options?: Record<string, any>): string => {
-    const dictionary = languages[language] || languages[DEFAULT_LANGUAGE];
+    // Split the key by periods to traverse the translations object
+    const keys = key.split(".");
     
-    // Handle nested key access (e.g., 'nav.home', 'landing.howItWorks.sectionTitle')
-    const getNestedValue = (obj: any, path: string): string | undefined => {
-      const keys = path.split('.');
-      let current = obj;
-      
-      for (const key of keys) {
-        if (current === undefined || current === null) return undefined;
-        if (typeof current === 'object' && key in current) {
-          current = current[key];
-        } else {
-          return undefined;
-        }
-      }
-      
-      return typeof current === 'string' ? current : undefined;
-    };
+    // Get the current language's translations or default to empty object
+    const currentTranslations = translations[language] || {};
     
-    // Try to get the value from the current language, then fallback to default language
-    let text = getNestedValue(dictionary, key) || 
-               getNestedValue(languages[DEFAULT_LANGUAGE], key) || 
-               key;
+    // Traverse the translations object
+    let value = keys.reduce((obj, k) => (obj && obj[k] !== undefined ? obj[k] : undefined), currentTranslations as any);
     
-    // Replace placeholders with values if options are provided
-    if (options) {
-      Object.keys(options).forEach(optionKey => {
-        const regex = new RegExp(`{{${optionKey}}}`, 'g');
-        text = text.replace(regex, options[optionKey].toString());
+    // If translation not found in current language, try in default language
+    if (value === undefined && language !== DEFAULT_LANGUAGE) {
+      const defaultTranslations = translations[DEFAULT_LANGUAGE] || {};
+      value = keys.reduce((obj, k) => (obj && obj[k] !== undefined ? obj[k] : undefined), defaultTranslations as any);
+    }
+    
+    // If still not found, return the key itself
+    if (value === undefined) {
+      console.warn(`Translation key not found: ${key}`);
+      return key;
+    }
+    
+    // Handle params replacement if any
+    if (options && typeof value === "string") {
+      Object.entries(options).forEach(([paramKey, paramValue]) => {
+        value = (value as string).replace(new RegExp(`{{${paramKey}}}`, "g"), String(paramValue));
       });
     }
     
-    return text;
+    return value as string;
   };
 
   // Helper to get all available languages
@@ -104,6 +102,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
   const contextValue: LanguageContextType = {
     language,
+    translations,
     setLanguage,
     t,
     getLanguages,
