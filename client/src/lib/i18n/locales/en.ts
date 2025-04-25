@@ -34,6 +34,15 @@ export default {
   reset_password: 'Reset Password',
   confirm_password: 'Confirm Password',
   
+  // Auth nested
+  auth: {
+    login: 'Login',
+    signup: 'Sign Up', 
+    logout: 'Logout',
+    forgotPassword: 'Forgot Password?',
+    resetPassword: 'Reset Password'
+  },
+  
   // Navigation - Flat (for backward compatibility)
   nav_home: 'Home',
   nav_dashboard: 'Dashboard',
@@ -77,6 +86,29 @@ export default {
   dashboard_no_items: 'No items registered yet',
   dashboard_no_reports: 'No reports yet',
   dashboard_no_notifications: 'No notifications',
+  
+  // Dashboard nested structure
+  dashboard: {
+    welcomeMessage: 'Welcome back, {name}',
+    subtitles: {
+      user: 'Manage your registered items and activity',
+      agent: 'Track lost & found items and users',
+      admin: 'System overview and management'
+    },
+    registerNewItem: 'Register New Item',
+    tabs: {
+      overview: 'Overview',
+      items: 'Items',
+      reports: 'Reports',
+      payments: 'Payments'
+    },
+    registeredItems: 'Registered Items',
+    lostReports: 'Lost Reports',
+    foundReports: 'Found Reports',
+    totalSpent: 'Total Spent',
+    recentlyRegisteredItems: 'Recently Registered Items',
+    recentItemsDescription: 'Your most recently registered items'
+  },
   
   // Item Registration
   item_registration: 'Item Registration',
