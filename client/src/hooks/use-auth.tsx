@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect } from "react";
+import React, { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -41,14 +41,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Function to navigate to the correct dashboard based on role using AuthService
   function navigateToDashboard(user: Omit<User, "password">): void {
+    // Set redirecting flag to prevent loops
+    if (isRedirecting.current) {
+      logger.debug("Already redirecting, skipping navigateToDashboard");
+      return;
+    }
+    
+    isRedirecting.current = true;
     const dashboardPath = AuthService.getDashboardPathByRole(user.role);
-    console.log("navigateToDashboard: Redirecting to", dashboardPath);
+    logger.info("Redirecting to dashboard:", dashboardPath);
     window.location.href = dashboardPath; // Use direct location change instead of wouter navigation
   }
   
+  // Track if we're in a redirect to prevent loops
+  const isRedirecting = React.useRef(false);
+
   // Listen for Firebase auth state changes and sync with backend
   useEffect(() => {
+    // Skip if we're already redirecting
+    if (isRedirecting.current) {
+      logger.debug("Skipping auth state change during redirect");
+      return () => {};
+    }
+    
     const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      // Skip if we're at the dashboard already or if we're already redirecting
+      if (window.location.pathname.includes("/dashboard") || isRedirecting.current) {
+        logger.debug("Skipping auth sync - already at dashboard or redirecting");
+        return;
+      }
+
       if (firebaseUser) {
         logger.info("Firebase user authenticated", { uid: firebaseUser.uid });
         
@@ -90,15 +112,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const userData = await response.json();
           queryClient.setQueryData(["/api/user"], userData);
           
-          // Navigate to the appropriate dashboard
-          const dashboardPath = AuthService.getDashboardPathByRole(userData.role);
-          console.log("useAuth: Navigating to dashboard:", dashboardPath);
-          window.location.href = dashboardPath;
-          
-          toast({
-            title: "Sign in successful",
-            description: `Welcome, ${userData.fullName || userData.username}!`,
-          });
+          // Only redirect if we're not already at dashboard
+          if (!window.location.pathname.includes("/dashboard")) {
+            // Use our navigation function (which sets the redirecting flag)
+            navigateToDashboard(userData);
+            
+            toast({
+              title: "Sign in successful",
+              description: `Welcome, ${userData.fullName || userData.username}!`,
+            });
+          }
         } catch (error) {
           logger.error("Error syncing Firebase auth with backend", { error });
           console.error("Error syncing Firebase auth:", error);
@@ -124,6 +147,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // If user data changes and user is logged in, navigate to correct dashboard
   useEffect(() => {
+    // Skip if we're already redirecting or already at dashboard
+    if (isRedirecting.current || window.location.pathname.includes("/dashboard")) {
+      return;
+    }
+    
     if (user && window.location.pathname === '/') {
       navigateToDashboard(user);
     }
