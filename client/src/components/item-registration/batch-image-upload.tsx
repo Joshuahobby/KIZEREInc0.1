@@ -6,7 +6,7 @@ import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { DndContext, DragEndEvent, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { LuImage, LuUpload, LuX, LuGripVertical, LuTrash2, LuLoader, LuPlusCircle } from 'react-icons/lu';
+import { LuImage, LuUpload, LuX, LuGripVertical, LuTrash2, LuLoader, LuPlus } from 'react-icons/lu';
 
 interface SortableItemProps {
   id: string;
@@ -323,7 +323,7 @@ export function BatchImageUpload({
                       className="aspect-square flex flex-col items-center justify-center border border-dashed rounded-md hover:border-primary/50 transition-colors cursor-pointer p-2"
                       onClick={() => fileInputRef.current?.click()}
                     >
-                      <LuPlusCircle className="h-6 w-6 text-muted-foreground mb-2" />
+                      <LuPlus className="h-6 w-6 text-muted-foreground mb-2" />
                       <span className="text-xs text-center text-muted-foreground">
                         {t('add_more_images')}
                       </span>

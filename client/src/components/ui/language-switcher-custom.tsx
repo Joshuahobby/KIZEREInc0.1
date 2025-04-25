@@ -17,14 +17,20 @@ interface LanguageSwitcherProps {
   className?: string;
 }
 
+// Language display names
+const languageNames: Record<Language, { name: string; nativeName: string }> = {
+  en: { name: 'English', nativeName: 'English' },
+  fr: { name: 'French', nativeName: 'Français' },
+};
+
 export function LanguageSwitcher({ 
   variant = 'default',
   className
 }: LanguageSwitcherProps) {
-  const { language, setLanguage, t, languages } = useLanguage();
+  const { language, setLanguage, t, getLanguages } = useLanguage();
   
-  // Get current language display name
-  const currentLanguage = languages[language];
+  // Get list of available languages
+  const availableLanguages = getLanguages();
 
   return (
     <DropdownMenu>
@@ -42,26 +48,26 @@ export function LanguageSwitcher({
           {variant !== 'icon-only' && (
             <span className="text-sm">
               {variant === 'default' ? 
-                currentLanguage.nativeName : 
+                languageNames[language]?.nativeName || language : 
                 language.toUpperCase()}
             </span>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>{t('common.language')}</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('settings_language')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {(Object.keys(languages) as Language[]).map((lang) => (
+        {availableLanguages.map((lang) => (
           <DropdownMenuItem 
-            key={lang}
+            key={lang.code}
             className={cn(
               "flex items-center justify-between cursor-pointer",
-              lang === language && "font-medium"
+              lang.code === language && "font-medium"
             )}
-            onClick={() => setLanguage(lang)}
+            onClick={() => setLanguage(lang.code as Language)}
           >
-            <span>{languages[lang].nativeName}</span>
-            {lang === language && <Check className="h-4 w-4 ml-2" />}
+            <span>{lang.name}</span>
+            {lang.code === language && <Check className="h-4 w-4 ml-2" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

@@ -1,13 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { LuCamera, LuLoader, LuX } from 'react-icons/lu';
-import { extractTextFromImage, extractIdentifiers } from '@/utils/ocr-utils';
+import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { LuImage, LuLoader, LuSearch, LuX } from 'react-icons/lu';
+import { extractTextFromImage, extractIdentifiers, determineIdentifierType } from '@/utils/ocr-utils';
 
 export interface SmartIDRecognizerProps {
   onIdentifierSelected: (identifier: string) => void;
@@ -15,88 +15,118 @@ export interface SmartIDRecognizerProps {
 
 export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerProps) {
   const { t } = useLanguage();
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedImage, setSelectedImage] = useState<{ file: File; url: string } | null>(null);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [detectedIdentifiers, setDetectedIdentifiers] = useState<string[]>([]);
   const [selectedIdentifier, setSelectedIdentifier] = useState<string>('');
-  const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    
     if (!file) return;
     
     // Check if file is an image
     if (!file.type.startsWith('image/')) {
-      setError(t('batch_upload_invalid_type'));
+      toast({
+        title: t('error_title'),
+        description: t('smart_id_invalid_file_type'),
+        variant: 'destructive',
+      });
       return;
     }
     
-    setSelectedFile(file);
+    // Reset previous states
     setError(null);
     setDetectedIdentifiers([]);
     setSelectedIdentifier('');
     
-    // Create a preview
-    const preview = URL.createObjectURL(file);
-    setFilePreview(preview);
+    // Create and store image preview
+    const imageUrl = URL.createObjectURL(file);
+    setSelectedImage({ file, url: imageUrl });
   };
 
-  // Process image with OCR
+  // Process the selected image with OCR
   const processImage = async () => {
-    if (!selectedFile) return;
+    if (!selectedImage) return;
     
     setIsProcessing(true);
     setError(null);
-    setDetectedIdentifiers([]);
-    setSelectedIdentifier('');
     
     try {
-      // Extract text from image
-      const extractedText = await extractTextFromImage(selectedFile);
-      // Extract potential identifiers
+      // Extract text from image using OCR
+      const extractedText = await extractTextFromImage(selectedImage.file);
+      
+      // Extract potential identifiers from the text
       const identifiers = extractIdentifiers(extractedText);
       
       if (identifiers.length === 0) {
-        setError(t('smart_id_no_results'));
+        setError(t('smart_id_no_identifiers'));
       } else {
         setDetectedIdentifiers(identifiers);
-        // Auto-select the first identifier
-        setSelectedIdentifier(identifiers[0]);
+        // If there's only one identifier, select it automatically
+        if (identifiers.length === 1) {
+          setSelectedIdentifier(identifiers[0]);
+        }
       }
     } catch (err) {
       console.error('OCR processing error:', err);
-      setError(t('error_try_again'));
+      setError(t('smart_id_processing_error'));
+      toast({
+        title: t('error_title'),
+        description: t('smart_id_processing_error'),
+        variant: 'destructive',
+      });
     } finally {
       setIsProcessing(false);
     }
   };
 
-  // Clear selected file
-  const clearFile = () => {
-    if (filePreview) {
-      URL.revokeObjectURL(filePreview);
+  // Remove the selected image
+  const removeImage = () => {
+    if (selectedImage) {
+      URL.revokeObjectURL(selectedImage.url);
     }
-    
-    setSelectedFile(null);
-    setFilePreview(null);
+    setSelectedImage(null);
     setError(null);
     setDetectedIdentifiers([]);
     setSelectedIdentifier('');
     
+    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  // Use selected identifier
+  // Use the selected identifier
   const useIdentifier = () => {
-    if (selectedIdentifier) {
-      onIdentifierSelected(selectedIdentifier);
-      clearFile();
+    if (!selectedIdentifier) return;
+    
+    onIdentifierSelected(selectedIdentifier);
+    toast({
+      title: t('smart_id_success'),
+      description: t('smart_id_success_desc'),
+    });
+    
+    // Clean up after successful use
+    removeImage();
+  };
+
+  // Get the type of the selected identifier for display purposes
+  const getIdentifierTypeLabel = (identifier: string): string => {
+    const type = determineIdentifierType(identifier);
+    
+    switch (type) {
+      case 'imei':
+        return t('smart_id_type_imei');
+      case 'serial':
+        return t('smart_id_type_serial');
+      case 'id':
+        return t('smart_id_type_id');
+      default:
+        return t('smart_id_type_unknown');
     }
   };
 
@@ -106,57 +136,66 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
         <CardTitle>{t('smart_id_title')}</CardTitle>
         <CardDescription>{t('smart_id_description')}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {!selectedFile ? (
-            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md border-muted-foreground/30 hover:border-muted-foreground/50">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-                ref={fileInputRef}
-              />
-              <Button 
-                variant="outline" 
-                onClick={() => fileInputRef.current?.click()}
-                className="mb-2"
-              >
-                <LuCamera className="mr-2 h-4 w-4" />
-                {t('smart_id_upload')}
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                {t('item_drag_images')}
-              </p>
-            </div>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col items-center gap-4">
+          <input
+            type="file"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+          />
+          
+          {!selectedImage ? (
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full sm:w-auto"
+            >
+              <LuImage className="mr-2 h-4 w-4" />
+              {t('smart_id_select_image')}
+            </Button>
           ) : (
-            <div className="relative">
-              <div className="flex justify-end">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={clearFile}
-                  className="absolute top-2 right-2 bg-background/80 h-8 w-8 rounded-full"
+            <div className="w-full space-y-4">
+              <div className="relative aspect-video w-full max-w-md mx-auto overflow-hidden rounded-md border">
+                <img 
+                  src={selectedImage.url} 
+                  alt={t('smart_id_image_alt')} 
+                  className="w-full h-full object-contain" 
+                />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 text-white hover:bg-black/70"
+                  onClick={removeImage}
                 >
                   <LuX className="h-4 w-4" />
                 </Button>
               </div>
-              {filePreview && (
-                <img
-                  src={filePreview}
-                  alt="Selected image"
-                  className="w-full h-auto max-h-[300px] object-contain rounded-md mb-4"
-                />
-              )}
               
-              {!isProcessing && detectedIdentifiers.length === 0 && !error && (
-                <Button 
-                  onClick={processImage} 
-                  className="w-full mt-2"
+              <div className="flex gap-2">
+                <Button
+                  variant="default"
+                  onClick={processImage}
+                  disabled={isProcessing}
+                  className="flex-1"
                 >
-                  {t('smart_id_processing')}
+                  {isProcessing ? (
+                    <LuLoader className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <LuSearch className="mr-2 h-4 w-4" />
+                  )}
+                  {t('smart_id_process')}
                 </Button>
-              )}
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isProcessing}
+                >
+                  <LuImage className="mr-2 h-4 w-4" />
+                  {t('smart_id_change_image')}
+                </Button>
+              </div>
               
               {isProcessing && (
                 <div className="flex items-center justify-center py-4">

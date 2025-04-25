@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
 import { SiGoogle } from "react-icons/si";
 import { 
   Eye, 
@@ -63,10 +62,11 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string } | null>(null);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
-  const { loginMutation, registerMutation } = useAuth();
+  // Use the auth context
+  const auth = useAuth();
   const { toast } = useToast();
-  const [_, navigate] = useLocation();
   
   // Reset state when modal opens/closes
   useEffect(() => {
@@ -79,13 +79,6 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       setPasswordStrength(null);
     }
   }, [isOpen, defaultTab]);
-
-  // Close modal when login/register is successful
-  useEffect(() => {
-    if (loginMutation.isSuccess || registerMutation.isSuccess) {
-      onClose();
-    }
-  }, [loginMutation.isSuccess, registerMutation.isSuccess, onClose]);
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -107,66 +100,85 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     },
   });
 
-  // Use AuthService for redirection based on role
-  function redirectToDashboardByRole(role: string): void {
-    const dashboardPath = AuthService.getDashboardPathByRole(role);
-    console.log("Auth Modal redirectToDashboardByRole: Navigating to:", dashboardPath);
-    window.location.href = dashboardPath; // Use direct location change instead of wouter navigation
-  }
+  // No need for custom redirection - auth hook will handle it
 
-  const onLoginSubmit = (data: LoginFormValues) => {
-    const loginData = AuthModel.prepareLoginData(data);
-    loginMutation.mutate(loginData, {
-      onSuccess: (user) => {
-        toast({
-          title: "Welcome back!",
-          description: `You have successfully signed in as ${user.fullName || user.username}`,
-        });
-        onClose();
-        redirectToDashboardByRole(user.role);
-      },
-    });
+  const onLoginSubmit = async (data: LoginFormValues) => {
+    try {
+      setIsSubmitting(true);
+      const loginData = AuthModel.prepareLoginData(data);
+      
+      // Use the login method from useAuth hook
+      await auth.login(loginData.username, loginData.password);
+      
+      toast({
+        title: "Welcome back!",
+        description: "You have successfully signed in",
+      });
+      
+      onClose();
+      
+      // Let the auth hook handle redirection
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description: error?.message || "Failed to login",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const onRegisterSubmit = (data: RegisterFormValues) => {
-    const registerData = AuthModel.prepareRegisterData(data);
-    registerMutation.mutate(registerData, {
-      onSuccess: (user) => {
-        toast({
-          title: "Account created!",
-          description: "You have successfully created an account",
-        });
-        onClose();
-        redirectToDashboardByRole(user.role);
-      },
-    });
+  const onRegisterSubmit = async (data: RegisterFormValues) => {
+    try {
+      setIsSubmitting(true);
+      const registerData = AuthModel.prepareRegisterData(data);
+      
+      // Use the signup method from useAuth hook
+      await auth.signup(registerData.username, registerData.password, registerData.fullName);
+      
+      toast({
+        title: "Account created!",
+        description: "You have successfully created an account",
+      });
+      
+      onClose();
+      
+      // Let the auth hook handle redirection
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration failed",
+        description: error?.message || "Failed to create account",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleGoogleSignIn = async () => {
     try {
       setGoogleLoading(true);
       
-      // Use the centralized AuthService for Google sign-in
-      const userData = await AuthService.signInWithGoogle();
+      // Use the auth hook's loginWithGoogle method
+      await auth.loginWithGoogle();
       
       toast({
         title: "Welcome!",
-        description: `You have successfully signed in as ${userData.fullName || userData.username}`,
+        description: "You have successfully signed in with Google",
       });
       
       // Close the modal
       onClose();
       
-      // Navigate to the appropriate dashboard based on user role
-      const dashboardPath = AuthService.getDashboardPathByRole(userData.role);
-      console.log("Auth Modal: Navigating to dashboard path:", dashboardPath);
-      window.location.href = dashboardPath; // Use direct location change instead of wouter navigation
-      
+      // Navigation will be handled by the auth hook
     } catch (error: any) {
       console.error("Google sign-in failed:", error);
       toast({
         title: "Sign in failed",
-        description: error.message || "Failed to authenticate with Google",
+        description: error?.message || "Failed to authenticate with Google",
         variant: "destructive",
       });
     } finally {
@@ -331,9 +343,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     <Button 
                       type="submit" 
                       className="w-full mt-2" 
-                      disabled={loginMutation.isPending}
+                      disabled={isSubmitting}
                     >
-                      {loginMutation.isPending ? (
+                      {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Signing in...
@@ -469,9 +481,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                     <Button 
                       type="submit" 
                       className="w-full mt-2" 
-                      disabled={registerMutation.isPending}
+                      disabled={isSubmitting}
                     >
-                      {registerMutation.isPending ? (
+                      {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Creating account...
