@@ -42,10 +42,15 @@ const LanguageContext = createContext<LanguageContextType>({
 
 interface LanguageProviderProps {
   children: ReactNode;
+  defaultLanguage?: Language;
 }
 
-export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(getInitialLanguage());
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ 
+  children, 
+  defaultLanguage = DEFAULT_LANGUAGE 
+}) => {
+  const initialLang = defaultLanguage || getInitialLanguage();
+  const [language, setLanguageState] = useState<Language>(initialLang);
 
   // Update the language state and save to localStorage
   const setLanguage = (newLanguage: Language) => {
@@ -96,8 +101,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
 
   // Helper to get all available languages
   const getLanguages = () => [
-    { code: 'en', name: 'English' },
-    { code: 'fr', name: 'Français' },
+    { code: 'en' as Language, name: 'English' },
+    { code: 'fr' as Language, name: 'Français' },
   ];
 
   const contextValue: LanguageContextType = {

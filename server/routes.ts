@@ -89,6 +89,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       fullName: "Demo User",
       username: "demo@example.com",
       email: "demo@example.com",
+      password: "google_auth_password", // Required field
+      phoneNumber: null,
       role: "Subscriber",
       avatarUrl: null,
       createdAt: new Date()
@@ -129,6 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             username: email,
             email: email,
             password: `google_${uid}`, // We don't use this password for login
+            phoneNumber: null,
             role: 'Subscriber', // Default role for new users
             avatarUrl: photoURL || null
           });
@@ -142,8 +145,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update avatar URL if provided and different from what's stored
       if (user && photoURL && (!user.avatarUrl || user.avatarUrl !== photoURL)) {
         try {
-          user = await UserService.updateUser(user.id, { avatarUrl: photoURL });
-          logger.info('Updated user avatar from Google auth', { userId: user.id });
+          const updatedUser = await UserService.updateUser(user.id, { avatarUrl: photoURL });
+          if (updatedUser) {
+            user = updatedUser;
+            logger.info('Updated user avatar from Google auth', { userId: user.id });
+          }
         } catch (updateError) {
           logger.warn('Failed to update user avatar', { userId: user.id, error: updateError });
           // Non-critical error, continue with login
