@@ -109,43 +109,59 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         // const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`);
         // const data = await response.json();
         
+        // Determine if the query looks like a unique identifier
+        const isUniqueIdQuery = /^[A-Za-z0-9\-]{6,}$/.test(debouncedQuery);
+        
         // For now, generate demo results based on the query
+        // In a real implementation, we would search specifically in uniqueId fields
         const demoResults: SearchResult[] = [
           {
             id: '1',
             type: 'item',
-            title: `Laptop - ${debouncedQuery}`,
-            description: 'Dell XPS 13, Silver, last registered on 2023-10-15',
+            title: 'Dell XPS 13 Laptop',
+            description: 'Silver, registered on 2023-10-15',
             category: 'Electronics',
             status: 'registered',
             date: '2023-10-15',
-            url: '/items/1'
+            url: '/items/1',
+            uniqueId: '358735-92ADKX-4672B'
           },
           {
             id: '2',
-            type: 'report',
-            title: `Lost Report - ${debouncedQuery}`,
-            description: 'Report for lost wallet, black leather with ID cards',
-            status: 'active',
-            date: '2023-11-05',
-            url: '/reports/2'
+            type: 'item',
+            title: 'National ID Card',
+            description: 'Government issued ID, registered on 2023-12-22',
+            category: 'Documents',
+            status: 'registered',
+            date: '2023-12-22',
+            url: '/items/2',
+            uniqueId: '119874356782'
           },
           {
             id: '3',
             type: 'item',
-            title: `Smartphone - ${debouncedQuery}`,
-            description: 'iPhone 14 Pro, Black, 128GB',
+            title: 'iPhone 14 Pro',
+            description: 'Black, 128GB, registered on 2023-09-20',
             category: 'Electronics',
             status: 'registered',
             date: '2023-09-20',
-            url: '/items/3'
+            url: '/items/3',
+            uniqueId: '352022-11937845-01'
           }
         ];
         
-        // Apply filters if active
+        // First filter by unique ID if it appears to be a unique ID search
         let filteredResults = demoResults;
+        if (isUniqueIdQuery) {
+          // In a real implementation, we would check if the search exactly or partially matches uniqueId fields
+          filteredResults = demoResults.filter(result => 
+            result.uniqueId && result.uniqueId.toLowerCase().includes(debouncedQuery.toLowerCase())
+          );
+        }
+        
+        // Then apply type filters if active
         if (activeFilter) {
-          filteredResults = demoResults.filter(result => {
+          filteredResults = filteredResults.filter(result => {
             if (activeFilter === 'items') return result.type === 'item';
             if (activeFilter === 'reports') return result.type === 'report';
             if (activeFilter === 'users') return result.type === 'user';
@@ -483,6 +499,11 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                               <p className="text-xs text-muted-foreground truncate mt-1">
                                 {result.description}
                               </p>
+                              {result.uniqueId && (
+                                <p className="text-xs text-primary font-mono mt-1">
+                                  ID: {result.uniqueId}
+                                </p>
+                              )}
                               <div className="flex space-x-2 mt-2">
                                 {result.category && (
                                   <Badge variant="secondary" className="text-xs px-1.5 py-0 h-5">
@@ -508,7 +529,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                         No results found for <strong>"{query}"</strong>
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Try adjusting your search or filters
+                        Try entering a complete unique ID such as an IMEI number or document ID
                       </p>
                     </div>
                   </CommandEmpty>
@@ -544,7 +565,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                   Start typing to search
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Search for items, reports, users, and more
+                  Search for items by unique identifiers (IMEI, Document ID, etc.)
                 </p>
               </div>
             )}
