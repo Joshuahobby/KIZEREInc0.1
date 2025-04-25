@@ -65,8 +65,9 @@ const logger = createLogger('UnifiedDashboard');
 
 export default function UnifiedDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
-  const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
   
   const dashboardData = useDashboardData();
   const {
@@ -110,6 +111,11 @@ export default function UnifiedDashboard() {
     }
   };
 
+  // Handle logout
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+
   if (!user) {
     // Handle not logged in state
     return (
@@ -117,8 +123,8 @@ export default function UnifiedDashboard() {
         <Header />
         <main className="flex-1 p-6">
           <div className="max-w-7xl mx-auto text-center py-12">
-            <h2 className="text-2xl font-semibold mb-4">Please log in to access your dashboard</h2>
-            <Button onClick={() => navigate("/")}>Return to Home</Button>
+            <h2 className="text-2xl font-semibold mb-4">{t('auth.loginRequired')}</h2>
+            <Button onClick={() => navigate("/")}>{t('common.returnToHome')}</Button>
           </div>
         </main>
         <Footer />
@@ -156,7 +162,7 @@ export default function UnifiedDashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Registered Items"
+                title={t('dashboard.registeredItems')}
                 value={userStats.totalItems}
                 icon={<ShoppingBag className="h-5 w-5" />}
                 iconBgClass="bg-blue-100 dark:bg-blue-900/30"

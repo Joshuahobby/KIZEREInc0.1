@@ -52,6 +52,7 @@ interface RecentSearch {
 interface GlobalSearchProps {
   placeholder?: string;
   variant?: 'default' | 'compact' | 'inline' | 'navbar';
+  onSearch?: (query: string) => void;
 }
 
 /**
@@ -62,7 +63,8 @@ interface GlobalSearchProps {
  */
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   placeholder = "Search by unique ID (IMEI, Document ID, etc.)",
-  variant = 'default'
+  variant = 'default',
+  onSearch
 }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -101,6 +103,11 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       if (!debouncedQuery || debouncedQuery.length < 2) {
         setResults([]);
         return;
+      }
+      
+      // Call the onSearch callback if provided
+      if (onSearch && debouncedQuery.length >= 2) {
+        onSearch(debouncedQuery);
       }
       
       setIsLoading(true);
@@ -208,7 +215,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
     };
     
     performSearch();
-  }, [debouncedQuery, activeFilter]);
+  }, [debouncedQuery, activeFilter, onSearch]);
   
   // Handle keyboard shortcuts for opening search
   useEffect(() => {
@@ -246,6 +253,10 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
   // Handle clicking a search result
   const handleResultClick = (result: SearchResult) => {
     saveRecentSearch(query);
+    // Call the onSearch callback if provided
+    if (onSearch) {
+      onSearch(query);
+    }
     navigate(result.url);
     setOpen(false);
   };
