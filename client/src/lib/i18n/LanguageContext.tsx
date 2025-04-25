@@ -96,7 +96,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     // Handle params replacement if any
     if (options && typeof value === "string") {
       Object.entries(options).forEach(([paramKey, paramValue]) => {
-        value = (value as string).replace(new RegExp(`{{${paramKey}}}`, "g"), String(paramValue));
+        // Support both {name} and {{name}} formats for parameter replacement
+        value = (value as string)
+          .replace(new RegExp(`{${paramKey}}`, "g"), String(paramValue))
+          .replace(new RegExp(`{{${paramKey}}}`, "g"), String(paramValue));
       });
     }
     
