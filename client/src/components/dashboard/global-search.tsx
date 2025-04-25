@@ -23,7 +23,8 @@ import {
   SlidersHorizontal,
   AlertCircle,
   Smartphone,
-  FileText
+  FileText,
+  ScanLine
 } from 'lucide-react';
 
 // Logger for tracking search activity
@@ -123,8 +124,11 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         // Check for UUID format
         const isUuidFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(debouncedQuery);
         
+        // Check for serial number format (often starts with SN, S/N or similar)
+        const isSerialNumFormat = /^(SN[-:]?|S\/N:?)?[A-Z0-9\-]{5,}$/i.test(debouncedQuery);
+        
         // Combined unique ID check
-        const isUniqueIdQuery = isImeiFormat || isDocIdFormat || isUuidFormat || /^[A-Za-z0-9\-]{6,}$/.test(debouncedQuery);
+        const isUniqueIdQuery = isImeiFormat || isDocIdFormat || isUuidFormat || isSerialNumFormat || /^[A-Za-z0-9\-]{6,}$/.test(debouncedQuery);
         
         // For now, generate demo results based on the query
         // In a real implementation, we would search specifically in uniqueId fields
@@ -161,6 +165,17 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
             date: '2023-09-20',
             url: '/items/3',
             uniqueId: '352022-11937845-01'
+          },
+          {
+            id: '4',
+            type: 'item',
+            title: 'Samsung Smart TV',
+            description: '55-inch 4K TV, registered on 2023-11-05',
+            category: 'Electronics',
+            status: 'registered',
+            date: '2023-11-05',
+            url: '/items/4',
+            uniqueId: 'SN-XC7992-83A'
           }
         ];
         
@@ -546,6 +561,17 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                         Try entering a complete unique ID such as an IMEI number or document ID
                       </p>
                       
+                      <div className="mt-2 flex items-center justify-center space-x-1 text-xs text-muted-foreground">
+                        <kbd className="rounded border border-border/50 bg-muted px-1.5">
+                          <span className="text-xs">Tab</span>
+                        </kbd>
+                        <span>+</span>
+                        <kbd className="rounded border border-border/50 bg-muted px-1.5">
+                          <span className="text-xs">Enter</span>
+                        </kbd>
+                        <span>for instant search</span>
+                      </div>
+                      
                       {/* Search tips based on query type */}
                       <div className="mt-4 p-3 bg-muted/50 rounded-md text-left max-w-md w-full mx-4">
                         <div className="flex items-center mb-1">
@@ -562,6 +588,12 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                         {/^[A-Za-z0-9\-]{1,5}$/.test(query) && (
                           <p className="text-xs text-muted-foreground">
                             Your search is too short. Document IDs typically contain 6 or more characters.
+                          </p>
+                        )}
+                        
+                        {/^s[n/]?[-:]?/i.test(query) && query.length < 9 && (
+                          <p className="text-xs text-muted-foreground">
+                            For serial numbers, make sure to include the complete number after the "SN" prefix.
                           </p>
                         )}
                         
@@ -613,6 +645,16 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                 <p className="text-sm text-muted-foreground mt-1">
                   Search for items by unique identifiers
                 </p>
+                <div className="mt-2 flex items-center justify-center space-x-1 text-xs text-muted-foreground">
+                  <kbd className="rounded border border-border/50 bg-muted px-1.5">
+                    <span className="text-xs">Tab</span>
+                  </kbd>
+                  <span>+</span>
+                  <kbd className="rounded border border-border/50 bg-muted px-1.5">
+                    <span className="text-xs">Enter</span>
+                  </kbd>
+                  <span>for instant search</span>
+                </div>
                 
                 {/* Helpful search tips for unique IDs */}
                 <div className="mt-4 grid grid-cols-1 gap-2 w-full max-w-md px-4">
@@ -636,6 +678,17 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                       Alphanumeric ID found on official documents
                     </p>
                     <code className="text-xs bg-background px-1 py-0.5 rounded mt-1 block">Example: RW-1198743-2023</code>
+                  </div>
+                  
+                  <div className="bg-muted/50 p-3 rounded-md text-left">
+                    <div className="flex items-center mb-1">
+                      <ScanLine className="h-4 w-4 mr-2 text-purple-500" />
+                      <span className="font-medium text-sm">Serial Number</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Product serial number typically found on the device or packaging
+                    </p>
+                    <code className="text-xs bg-background px-1 py-0.5 rounded mt-1 block">Example: SN-XC7992-83A</code>
                   </div>
                 </div>
               </div>
