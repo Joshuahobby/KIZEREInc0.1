@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import UnifiedDashboard from "@/pages/unified-dashboard";
-import RegisterItem from "@/pages/register-item";
+import RegisterItem from "@/pages/enhanced-register-item";
 import Search from "@/pages/search";
 import LostFound from "@/pages/lost-found";
 import UserManagement from "@/pages/user-management";
