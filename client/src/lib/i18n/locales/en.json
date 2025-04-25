@@ -207,7 +207,8 @@
     "recentItemsDescription": "Your most recently registered items",
     "items": {
       "title": "My Registered Items",
-      "description": "View and manage all your registered items"
+      "description": "View and manage all your registered items",
+      "registerNew": "Register New"
     },
     "reports": {
       "title": "My Reports",
