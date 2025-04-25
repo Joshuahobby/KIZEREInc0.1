@@ -1274,27 +1274,45 @@ export default function EnhancedRegisterItem() {
                                 <div className="sm:col-span-6">
                                   <h4 className="text-sm font-medium mb-2">Upload Ownership Document</h4>
                                   <div className="border-2 border-dashed border-gray-300 rounded-md p-4 flex flex-col items-center justify-center">
-                                    <Clipboard className="mx-auto h-8 w-8 text-gray-400" />
-                                    <p className="mt-1 text-xs text-neutral-500">
-                                      Upload a document that proves your ownership
-                                    </p>
-                                    <label className="mt-2">
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="cursor-pointer"
-                                        disabled={!form.getValues("ownershipDocumentType")}
-                                      >
-                                        Upload Document
-                                      </Button>
-                                      <input
-                                        type="file"
-                                        accept=".pdf,.png,.jpg,.jpeg"
-                                        className="hidden"
-                                      />
-                                    </label>
+                                    {uploading ? (
+                                      <>
+                                        <Loader2 className="h-8 w-8 text-primary-500 animate-spin" />
+                                        <p className="mt-1 text-xs text-neutral-600">
+                                          Uploading document...
+                                        </p>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Clipboard className="mx-auto h-8 w-8 text-gray-400" />
+                                        <p className="mt-1 text-xs text-neutral-500">
+                                          Upload a document that proves your ownership
+                                        </p>
+                                        <input
+                                          ref={ownershipDocInputRef}
+                                          type="file"
+                                          accept="image/png,image/jpeg,image/jpg,image/gif,.pdf"
+                                          className="hidden"
+                                          onChange={handleFileInputChange('ownershipProof')}
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          className="mt-2 cursor-pointer"
+                                          disabled={!form.getValues("ownershipDocumentType") || uploading}
+                                          onClick={() => triggerFileInput(ownershipDocInputRef)}
+                                        >
+                                          Upload Document
+                                        </Button>
+                                      </>
+                                    )}
                                   </div>
+                                  {watchedValues.ownershipProof && (
+                                    <div className="mt-2 flex items-center text-xs text-green-600">
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Ownership document uploaded successfully
+                                    </div>
+                                  )}
                                 </div>
                                 
                                 <div className="sm:col-span-6">
