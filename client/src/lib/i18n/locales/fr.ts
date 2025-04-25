@@ -159,6 +159,33 @@ export default {
   validation_password_match: 'Les mots de passe ne correspondent pas',
   validation_invalid_format: 'Format invalide',
   
+  // Landing Page
+  'landing.nav.features': 'Caractéristiques',
+  'landing.nav.howItWorks': 'Comment ça marche',
+  'landing.nav.testimonials': 'Témoignages',
+  'landing.trustedUsers': 'Utilisé par des milliers d\'utilisateurs',
+  'landing.heroTitle1': 'Protection Numérique Sécurisée',
+  'landing.heroTitle2': 'Pour Vos Objets de Valeur',
+  'landing.heroSubtitle': 'Enregistrez, protégez et récupérez facilement vos objets avec notre plateforme numérique complète.',
+  'landing.registerNow': 'Inscrivez-vous Maintenant',
+  'landing.learnMore': 'En Savoir Plus',
+  'landing.secure': 'Sécurisé et Privé',
+  'landing.digitalCertificates': 'Certificats Numériques',
+  'landing.itemRegistration': 'Enregistrement d\'Objet',
+  'landing.registered': 'Enregistré',
+  'landing.demoItem.name': 'Samsung Galaxy S22',
+  'landing.demoItem.serial': 'SN: GHXK29803MVXA',
+  'landing.demoItem.date': 'Enregistré: 25 Avril 2025',
+  'landing.demoItem.certificate': 'Certificat Numérique',
+  'landing.powerfulFeatures': 'Fonctionnalités Puissantes',
+  'landing.completeSolution': 'Solution Complète pour',
+  'landing.itemManagement': 'Gestion d\'Objets',
+  'landing.kizereProvides': 'KIZERE fournit une plateforme complète pour enregistrer, protéger et récupérer vos objets de valeur.',
+  
+  // Auth
+  'auth.login': 'Connexion',
+  'auth.getStarted': 'Commencer',
+  
   // Misc
   copyright: '© {{year}} KIZERE. Tous droits réservés.',
 };
