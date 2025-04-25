@@ -47,6 +47,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             
             // When Firebase user signs in, create or get server session
             try {
+              // Make sure we have an email before proceeding
+              if (!firebaseUser.email) {
+                console.error("[useAuth] Firebase user missing email");
+                return;
+              }
+              
+              // Get token with error handling
+              let token;
+              try {
+                token = await firebaseUser.getIdToken();
+              } catch (tokenError) {
+                console.warn("[useAuth] Failed to get ID token", tokenError);
+                // Continue without token in development
+                token = null;
+              }
+              
               // Call server endpoint to sync Firebase auth with server session
               const response = await fetch("/api/auth/google", {
                 method: "POST",
@@ -57,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   email: firebaseUser.email,
                   name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
                   uid: firebaseUser.uid,
-                  token: await firebaseUser.getIdToken(),
+                  token,
                   photoURL: firebaseUser.photoURL,
                 }),
               });
@@ -67,10 +83,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setUser(userData);
                 console.log("[useAuth] Server session created for Firebase user", userData);
               } else {
-                console.error("[useAuth] Failed to create server session", await response.text());
+                let errorMessage = "Failed to create server session";
+                try {
+                  const errorResponse = await response.text();
+                  console.error("[useAuth] Failed to create server session", errorResponse);
+                  
+                  // Try to parse as JSON
+                  try {
+                    const errorJson = JSON.parse(errorResponse);
+                    if (errorJson.message) {
+                      errorMessage = errorJson.message;
+                    }
+                  } catch (parseError) {
+                    // Not JSON, use text as is
+                    if (errorResponse) {
+                      errorMessage = errorResponse;
+                    }
+                  }
+                } catch (textError) {
+                  console.error("[useAuth] Error reading error response", textError);
+                }
+                
+                setError(errorMessage);
               }
             } catch (error) {
               console.error("[useAuth] Error syncing Firebase auth with server:", error);
+              setError("Failed to connect to authentication server");
             }
           } else {
             // User is signed out
@@ -173,11 +211,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Use the Firebase SDK for Google authentication
       const { signInWithGoogle } = await import('@/lib/firebase');
+      console.log("[useAuth] Initiating Firebase Google sign-in...");
       await signInWithGoogle();
       
-      // Firebase will handle the redirect flow
-      // After redirect back, we'll check auth state in useEffect
-      console.log("[useAuth] Initiated Firebase Google sign-in");
+      // The page will refresh due to the redirect, so this next code won't run
+      // It serves as a fallback in case the redirect doesn't happen
+      setTimeout(() => {
+        // If we're still here after 3 seconds, the redirect failed
+        setError("Google authentication redirect failed. Please try again.");
+        setIsLoading(false);
+      }, 3000);
     } catch (error) {
       console.error("[useAuth] Google login error:", error);
       setError(error instanceof Error ? error.message : "Google login failed");

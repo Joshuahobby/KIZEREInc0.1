@@ -7,12 +7,20 @@ const logger = createLogger('FirebaseAdmin');
 // Initialize the app if it hasn't been initialized already
 if (!admin.apps.length) {
   try {
-    // If using environment variables for Firebase service account
-    admin.initializeApp({
-      projectId: env.VITE_FIREBASE_PROJECT_ID,
-      // We're using app default credentials since we're not providing a service account key
-      // This works in both development and production environments that have the right permissions
-    });
+    // Check if Firebase project ID is available
+    const projectId = env.VITE_FIREBASE_PROJECT_ID;
+    
+    if (!projectId) {
+      logger.warn('Firebase Project ID not found in environment variables. Using fallback initialization.');
+      // Fallback initialization - will work for basic token validation but with limited features
+      admin.initializeApp();
+    } else {
+      // If using environment variables for Firebase service account
+      admin.initializeApp({
+        projectId: projectId,
+        // We're using app default credentials since we're not providing a service account key
+      });
+    }
     
     logger.info('Firebase Admin SDK initialized successfully');
   } catch (error) {
