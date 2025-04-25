@@ -1,22 +1,23 @@
 import { useState } from "react";
-import { useAuth } from "../hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import { useDashboardData } from "../hooks/use-dashboard-data.tsx";
+import { useDashboardData, DashboardData, DashboardStats } from "@/hooks/use-dashboard-data";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
-import { Header } from "../components/layout/header";
-import { Footer } from "../components/layout/footer";
-import { Button } from "../components/ui/button";
-import { Skeleton, DashboardSkeleton } from "../components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { StatsCard } from "../components/dashboard/stats-card";
-import { ActivityTimeline } from "../components/dashboard/activity-timeline";
-import { NotificationCenter } from "../components/dashboard/notification-center";
-import { PaymentHistoryCard } from "../components/dashboard/payment-history-card";
-import { ItemsTable } from "../components/dashboard/items-table";
-import { QuickActionsPanel } from "../components/dashboard/quick-actions-panel";
-import { GlobalSearch } from "../components/dashboard/global-search";
-import { createLogger } from "../lib/logger";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
+import { Button } from "@/components/ui/button";
+import { Skeleton, DashboardSkeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { StatsCard } from "@/components/dashboard/stats-card";
+import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
+import { NotificationCenter } from "@/components/dashboard/notification-center";
+import { PaymentHistoryCard } from "@/components/dashboard/payment-history-card";
+import { ItemsTable } from "@/components/dashboard/items-table";
+import { QuickActionsPanel } from "@/components/dashboard/quick-actions-panel";
+import { GlobalSearch } from "@/components/dashboard/global-search";
+import { createLogger } from "@/lib/logger";
 import {
   Table,
   TableBody,
@@ -25,8 +26,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "../components/ui/table";
-import { Badge } from "../components/ui/badge";
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard,
   Search,
@@ -41,14 +42,24 @@ import {
   ShoppingBag,
   DollarSign,
   Plus,
-  Loader2
+  Loader2,
+  RefreshCw,
+  LogOut,
+  ChevronDown,
+  Settings,
+  HelpCircle,
+  Filter,
+  ArrowDownUp,
+  Calendar,
+  BellRing,
+  User
 } from "lucide-react";
 
 // Import admin-specific components
-import { PaymentAnalyticsChart } from "../components/dashboard/payment-analytics-chart";
-import { PaymentStatusChart } from "../components/dashboard/payment-status-chart";
-import { PaymentTypeChart } from "../components/dashboard/payment-type-chart";
-import { RecentTransactions } from "../components/dashboard/recent-transactions";
+import { PaymentAnalyticsChart } from "@/components/dashboard/payment-analytics-chart";
+import { PaymentStatusChart } from "@/components/dashboard/payment-status-chart";
+import { PaymentTypeChart } from "@/components/dashboard/payment-type-chart";
+import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 
 const logger = createLogger('UnifiedDashboard');
 
