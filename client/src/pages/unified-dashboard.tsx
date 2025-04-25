@@ -15,6 +15,7 @@ import { NotificationCenter } from "../components/dashboard/notification-center"
 import { PaymentHistoryCard } from "../components/dashboard/payment-history-card";
 import { ItemsTable } from "../components/dashboard/items-table";
 import { QuickActionsPanel } from "../components/dashboard/quick-actions-panel";
+import { GlobalSearch } from "../components/dashboard/global-search";
 import { createLogger } from "../lib/logger";
 import {
   Table,
@@ -190,6 +191,11 @@ export default function UnifiedDashboard() {
               />
             </motion.div>
           </div>
+
+          {/* Global Search */}
+          <motion.div variants={itemVariants} className="mb-6">
+            <GlobalSearch onSearch={(query) => logger.info(`Search query: ${query}`)} />
+          </motion.div>
 
           {/* Main Content Grid */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">

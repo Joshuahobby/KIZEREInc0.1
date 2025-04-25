@@ -16,7 +16,7 @@ import { NotificationCenter } from "@/components/dashboard/notification-center";
 import { PaymentHistoryCard } from "@/components/dashboard/payment-history-card";
 import { ItemsTable } from "@/components/dashboard/items-table";
 import { QuickActionsPanel } from "@/components/dashboard/quick-actions-panel";
-import { HeaderSearch } from "@/components/dashboard/header-search";
+import { GlobalSearch } from "@/components/dashboard/global-search";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { 
   LayoutDashboard, 
@@ -138,7 +138,7 @@ const EnhancedDashboard: React.FC = () => {
               </div>
               
               <div className="flex items-center gap-3 w-full md:w-auto">
-                <HeaderSearch />
+                <GlobalSearch />
                 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
