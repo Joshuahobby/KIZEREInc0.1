@@ -174,7 +174,7 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Lost Reports"
+                title={t('dashboard.lostReports')}
                 value={userStats.totalLostReports}
                 icon={<AlertTriangle className="h-5 w-5" />}
                 iconBgClass="bg-amber-100 dark:bg-amber-900/30"
@@ -186,7 +186,7 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Found Reports"
+                title={t('dashboard.foundReports')}
                 value={userStats.totalFoundReports}
                 icon={<CheckCircle2 className="h-5 w-5" />}
                 iconBgClass="bg-green-100 dark:bg-green-900/30"
@@ -198,7 +198,7 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Total Spent"
+                title={t('dashboard.totalSpent')}
                 value={userStats.totalSpent}
                 icon={<DollarSign className="h-5 w-5" />}
                 iconBgClass="bg-purple-100 dark:bg-purple-900/30"
@@ -236,9 +236,9 @@ export default function UnifiedDashboard() {
           <motion.div variants={itemVariants}>
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>Recently Registered Items</CardTitle>
+                <CardTitle>{t('dashboard.recentlyRegisteredItems')}</CardTitle>
                 <CardDescription>
-                  View and manage your most recently registered items
+                  {t('dashboard.recentItemsDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -267,7 +267,7 @@ export default function UnifiedDashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Total Revenue"
+                title={t('dashboard.admin.totalRevenue')}
                 value={adminStats?.totalRevenue || 0}
                 previousValue={adminStats?.revenue?.lastMonth}
                 icon={<DollarSign className="h-5 w-5" />}
@@ -280,7 +280,7 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Total Users"
+                title={t('dashboard.admin.totalUsers')}
                 value={adminStats?.totalUsers || 0}
                 icon={<Users className="h-5 w-5" />}
                 iconBgClass="bg-blue-100 dark:bg-blue-900/30"
@@ -292,7 +292,7 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Registered Items"
+                title={t('dashboard.admin.registeredItems')}
                 value={userStats.totalItems}
                 icon={<ShoppingBag className="h-5 w-5" />}
                 iconBgClass="bg-indigo-100 dark:bg-indigo-900/30"
@@ -304,7 +304,7 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Active Reports"
+                title={t('dashboard.admin.activeReports')}
                 value={(adminStats?.reportBreakdown?.lost || 0) + (adminStats?.reportBreakdown?.found || 0)}
                 icon={<FileText className="h-5 w-5" />}
                 iconBgClass="bg-red-100 dark:bg-red-900/30"
@@ -320,9 +320,9 @@ export default function UnifiedDashboard() {
             <motion.div variants={itemVariants}>
               <Card>
                 <CardHeader>
-                  <CardTitle>Monthly Revenue</CardTitle>
+                  <CardTitle>{t('dashboard.admin.monthlyRevenue')}</CardTitle>
                   <CardDescription>
-                    Revenue trends over the past months
+                    {t('dashboard.admin.revenueDescription')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -334,7 +334,7 @@ export default function UnifiedDashboard() {
             <motion.div variants={itemVariants} className="grid gap-6 grid-rows-2">
               <Card>
                 <CardHeader>
-                  <CardTitle>Payment Status</CardTitle>
+                  <CardTitle>{t('dashboard.admin.paymentStatus')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <PaymentStatusChart data={
