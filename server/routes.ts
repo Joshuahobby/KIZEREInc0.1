@@ -41,6 +41,17 @@ import {
 import { UserService } from "./services/user.service";
 import { PaymentService } from "./services/payment.service";
 import { dashboardService, DashboardService } from "./services/dashboard.service";
+import { scrypt, randomBytes, timingSafeEqual } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+// We need hashPassword function in this file for Google auth simulation
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 // Create logger for routes
 const logger = createLogger('Routes');
@@ -81,31 +92,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Google Authentication endpoint - this simulates OAuth consent flow
-  app.get("/api/auth/google", (req, res) => {
-    // In a real implementation, this would redirect to Google OAuth consent screen
-    // For now, create a mock response to simulate the flow
-    const mockUser = {
-      id: 1,
-      fullName: "Demo User",
-      username: "demo@example.com",
-      email: "demo@example.com",
-      password: "google_auth_password", // Required field
-      phoneNumber: null,
-      role: "Subscriber",
-      avatarUrl: null,
-      createdAt: new Date()
-    };
-    
-    // Log in the mock user
-    req.login(mockUser, (err) => {
-      if (err) {
-        console.error("Login error:", err);
-        return res.status(500).json({ message: "Authentication failed" });
+  app.get("/api/auth/google", async (req, res) => {
+    try {
+      // In a real implementation, this would redirect to Google OAuth consent screen
+      // For now, we'll try to create or find a mock user in the database
+      
+      const email = "demo@example.com";
+      
+      // Check if mock user already exists
+      let user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Create the mock user if it doesn't exist
+        user = await storage.createUser({
+          fullName: "Demo User",
+          username: email,
+          email: email,
+          password: await hashPassword("google_auth_password"),
+          phoneNumber: null,
+          role: "Subscriber",
+          avatarUrl: null
+        });
+        
+        console.log("Created mock Google user:", user.id);
+      } else {
+        console.log("Found existing mock Google user:", user.id);
       }
       
-      // Redirect to the frontend
-      res.redirect("/");
-    });
+      // Log in the user
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Authentication failed" });
+        }
+        
+        console.log("Successfully logged in mock Google user:", user.id);
+        
+        // Redirect to the frontend
+        res.redirect("/");
+      });
+    } catch (error: any) {
+      console.error("Google auth simulation error:", error);
+      res.status(500).json({ 
+        message: "Authentication failed", 
+        error: error.message || "Unknown error" 
+      });
+    }
   });
   
   // Google Authentication
