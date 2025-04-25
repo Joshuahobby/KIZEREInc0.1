@@ -34,7 +34,7 @@ export default {
   reset_password: 'Reset Password',
   confirm_password: 'Confirm Password',
   
-  // Navigation
+  // Navigation - Flat (for backward compatibility)
   nav_home: 'Home',
   nav_dashboard: 'Dashboard',
   nav_items: 'Items',
@@ -46,7 +46,7 @@ export default {
   nav_report_lost: 'Report Lost',
   nav_report_found: 'Report Found',
 
-  // Header Navigation
+  // Header Navigation - Nested (for new implementation)
   nav: {
     home: 'Home',
     features: 'Features',
@@ -293,7 +293,7 @@ export default {
   success_report_updated: 'Report updated successfully',
   success_report_deleted: 'Report deleted successfully',
   
-  // Landing Page
+  // Landing Page - flat (for backward compatibility)
   'landing.nav.features': 'Features',
   'landing.nav.howItWorks': 'How It Works',
   'landing.nav.testimonials': 'Testimonials',
@@ -315,8 +315,6 @@ export default {
   'landing.completeSolution': 'Complete Solution for',
   'landing.itemManagement': 'Item Management',
   'landing.kizereProvides': 'KIZERE provides a comprehensive platform for registering, protecting, and recovering your valuable items.',
-  
-  // How It Works Section
   'landing.howItWorks.simpleProcess': 'Simple Process',
   'landing.howItWorks.sectionTitle': 'How It Works',
   'landing.howItWorks.description': 'Our platform makes it easy to register your items and secure them with digital certificates. Follow these simple steps:',
@@ -329,8 +327,6 @@ export default {
   'landing.howItWorks.step3Desc': 'Attach QR code tags to your items for easy identification and recovery.',
   'landing.howItWorks.step4Title': 'Quick Recovery Process',
   'landing.howItWorks.step4Desc': 'If your item is lost, the finder can scan the QR code to initiate the recovery process.',
-  
-  // Testimonials Section
   'landing.testimonials.sectionTitle': 'User Testimonials',
   'landing.testimonials.mainTitle': 'What Our Users Say',
   'landing.testimonials.subtitle': 'Hear from people who have successfully protected and recovered their valuable items.',
@@ -344,6 +340,72 @@ export default {
   'landing.testimonials.testimonial3.location': 'Huye, Rwanda',
   'landing.testimonials.testimonial3.quote': 'When my phone was lost, the finder scanned the QR code, and I was notified immediately. This service is truly a game-changer!',
   'landing.testimonials.viewMore': 'View More Testimonials',
+  
+  // Landing Page - nested structure
+  landing: {
+    nav: {
+      features: 'Features',
+      howItWorks: 'How It Works',
+      testimonials: 'Testimonials'
+    },
+    trustedUsers: 'Trusted by thousands of users',
+    heroTitle1: 'Secure Digital Protection',
+    heroTitle2: 'For Your Valuable Items',
+    heroSubtitle: 'Register, protect and easily recover your items with our comprehensive digital platform.',
+    registerNow: 'Register Now',
+    learnMore: 'Learn More',
+    secure: 'Secure & Private',
+    digitalCertificates: 'Digital Certificates',
+    itemRegistration: 'Item Registration',
+    registered: 'Registered',
+    demoItem: {
+      name: 'Samsung Galaxy S22',
+      serial: 'SN: GHXK29803MVXA',
+      date: 'Registered: April 25, 2025',
+      certificate: 'Digital Certificate'
+    },
+    powerfulFeatures: 'Powerful Features',
+    completeSolution: 'Complete Solution for',
+    itemManagement: 'Item Management',
+    kizereProvides: 'KIZERE provides a comprehensive platform for registering, protecting, and recovering your valuable items.',
+    
+    howItWorks: {
+      simpleProcess: 'Simple Process',
+      sectionTitle: 'How It Works',
+      description: 'Our platform makes it easy to register your items and secure them with digital certificates. Follow these simple steps:',
+      communityDesc: 'Join thousands of users protecting their valuables with KIZERE',
+      step1Title: 'Register Your Item',
+      step1Desc: 'Upload details and photos of your item with our easy-to-use registration form.',
+      step2Title: 'Generate Digital Certificate',
+      step2Desc: 'Receive a secure digital certificate that proves your ownership.',
+      step3Title: 'Print QR Code Tags',
+      step3Desc: 'Attach QR code tags to your items for easy identification and recovery.',
+      step4Title: 'Quick Recovery Process',
+      step4Desc: 'If your item is lost, the finder can scan the QR code to initiate the recovery process.'
+    },
+    
+    testimonials: {
+      sectionTitle: 'User Testimonials',
+      mainTitle: 'What Our Users Say',
+      subtitle: 'Hear from people who have successfully protected and recovered their valuable items.',
+      testimonial1: {
+        name: 'James M.',
+        location: 'Kigali, Rwanda',
+        quote: 'I lost my laptop at the airport, but thanks to KIZERE, it was returned to me within 24 hours. The QR code system works amazingly well!'
+      },
+      testimonial2: {
+        name: 'Francine N.',
+        location: 'Musanze, Rwanda',
+        quote: 'The registration process was so simple, and I love the peace of mind knowing all my valuables are protected with digital certificates.'
+      },
+      testimonial3: {
+        name: 'Robert K.',
+        location: 'Huye, Rwanda',
+        quote: 'When my phone was lost, the finder scanned the QR code, and I was notified immediately. This service is truly a game-changer!'
+      },
+      viewMore: 'View More Testimonials'
+    }
+  },
   
   // Common
   common: {

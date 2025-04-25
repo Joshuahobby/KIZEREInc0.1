@@ -63,7 +63,27 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) 
   const t = (key: string, options?: Record<string, any>): string => {
     const dictionary = languages[language] || languages[DEFAULT_LANGUAGE];
     
-    let text = dictionary[key] || languages[DEFAULT_LANGUAGE][key] || key;
+    // Handle nested key access (e.g., 'nav.home', 'landing.howItWorks.sectionTitle')
+    const getNestedValue = (obj: any, path: string): string | undefined => {
+      const keys = path.split('.');
+      let current = obj;
+      
+      for (const key of keys) {
+        if (current === undefined || current === null) return undefined;
+        if (typeof current === 'object' && key in current) {
+          current = current[key];
+        } else {
+          return undefined;
+        }
+      }
+      
+      return typeof current === 'string' ? current : undefined;
+    };
+    
+    // Try to get the value from the current language, then fallback to default language
+    let text = getNestedValue(dictionary, key) || 
+               getNestedValue(languages[DEFAULT_LANGUAGE], key) || 
+               key;
     
     // Replace placeholders with values if options are provided
     if (options) {
