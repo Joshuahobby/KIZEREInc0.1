@@ -122,6 +122,24 @@ export const AuthService = {
       console.error("Error determining dashboard path:", error);
       return '/dashboard'; // Default path on error
     }
+  },
+
+  /**
+   * Determines dashboard path by user role
+   * @param role User role string
+   * @returns Dashboard path for the specified role
+   */
+  getDashboardPathByRole(role: string): string {
+    console.log("Getting dashboard for role:", role);
+    switch(role) {
+      case 'Admin':
+        return '/admin-dashboard';
+      case 'Agent':
+        return '/agent-dashboard';
+      case 'Subscriber':
+      default:
+        return '/dashboard';
+    }
   }
 };
 
