@@ -50,7 +50,8 @@
     "termsAgree": "J'accepte les",
     "termsOfService": "Conditions d'Utilisation",
     "privacyPolicy": "Politique de Confidentialité",
-    "and": "et"
+    "and": "et",
+    "loginRequired": "Vous devez être connecté pour voir cette page"
   },
   "landing": {
     "nav": {

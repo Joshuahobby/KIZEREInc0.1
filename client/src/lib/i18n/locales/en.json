@@ -231,8 +231,5 @@
     "noData": "No data available",
     "loginRequired": "Login Required",
     "notAuthenticated": "You need to be logged in to view this page"
-  },
-  "auth": {
-    "loginRequired": "You need to be logged in to view this page"
   }
 }

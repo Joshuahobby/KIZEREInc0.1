@@ -50,7 +50,8 @@
     "termsAgree": "Nemeye",
     "termsOfService": "Amabwiriza y'ikoreshwa",
     "privacyPolicy": "Politiki y'ibanga",
-    "and": "na"
+    "and": "na",
+    "loginRequired": "Ugomba kwinjira kugira ngo ubashe kureba iyi paji"
   },
   "landing": {
     "nav": {
