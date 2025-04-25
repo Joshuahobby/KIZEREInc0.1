@@ -106,6 +106,7 @@ export class AuthService {
   
   /**
    * Get the appropriate dashboard path based on user role
+   * This is the central source of truth for dashboard redirection paths
    * 
    * @param role User role
    * @returns Dashboard path for the role
@@ -115,7 +116,8 @@ export class AuthService {
       case "Admin":
         return "/admin";
       case "Agent":
-        return "/lost-found";
+        return "/dashboard"; // Using unified dashboard for all users
+      case "Subscriber":
       default:
         return "/dashboard";
     }
