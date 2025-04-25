@@ -249,9 +249,9 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
         pending: reports ? reports.filter(r => r.status === 'Open').length : 0
       },
       userRoleDistribution: [
-        { role: 'Admin', count: allUsers.filter(u => u.role === 'Admin').length },
-        { role: 'Agent', count: allUsers.filter(u => u.role === 'Agent').length },
-        { role: 'Subscriber', count: allUsers.filter(u => u.role === 'Subscriber').length }
+        { role: 'Admin', count: allUsers.filter((u: any) => u.role === 'Admin').length },
+        { role: 'Agent', count: allUsers.filter((u: any) => u.role === 'Agent').length },
+        { role: 'Subscriber', count: allUsers.filter((u: any) => u.role === 'Subscriber').length }
       ],
       recentTransactions: revenueSummary.recentTransactions || [],
       paymentsByType: revenueSummary.paymentsByType || [],

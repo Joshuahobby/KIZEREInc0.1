@@ -2,8 +2,6 @@ import { Switch, Route } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard";
-import EnhancedDashboard from "@/pages/enhanced-dashboard";
 import UnifiedDashboard from "@/pages/unified-dashboard";
 import RegisterItem from "@/pages/register-item";
 import Search from "@/pages/search";
@@ -27,8 +25,6 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 function App() {
   // Create safe component wrappers to ensure JSX Elements are always returned
-  const DashboardComponent = () => <Dashboard />;
-  const EnhancedDashboardComponent = () => <EnhancedDashboard />;
   const UnifiedDashboardComponent = () => <UnifiedDashboard />;
   const RegisterItemComponent = () => <RegisterItem />;
   const SearchComponent = () => <Search />;
@@ -56,8 +52,6 @@ function App() {
               
               {/* Role-restricted routes */}
               <ProtectedRoute path="/dashboard" component={UnifiedDashboardComponent} requiredRole="any" />
-              <ProtectedRoute path="/old-dashboard" component={DashboardComponent} requiredRole="any" />
-              <ProtectedRoute path="/enhanced-dashboard" component={EnhancedDashboardComponent} requiredRole="any" />
               <ProtectedRoute path="/register-item" component={RegisterItemComponent} requiredRole="any" />
               <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
               <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />

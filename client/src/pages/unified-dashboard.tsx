@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { useLocation } from "wouter";
-import { useDashboardData } from "../hooks/use-dashboard-data";
+import { useDashboardData } from "../hooks/use-dashboard-data.tsx";
 import { motion } from "framer-motion";
 import { Header } from "../components/layout/header";
 import { Footer } from "../components/layout/footer";
@@ -314,7 +314,15 @@ export default function UnifiedDashboard() {
                   <CardTitle>Payment Status</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <PaymentStatusChart data={adminStats?.paymentsByStatus || []} />
+                  <PaymentStatusChart data={
+                    (adminStats?.paymentsByStatus || []).map(item => ({
+                      name: item.status,
+                      value: item.count,
+                      color: item.status === 'successful' ? '#10b981' : 
+                             item.status === 'pending' ? '#f59e0b' : 
+                             item.status === 'failed' ? '#ef4444' : '#94a3b8'
+                    }))
+                  } />
                 </CardContent>
               </Card>
 
@@ -323,7 +331,14 @@ export default function UnifiedDashboard() {
                   <CardTitle>Payment Types</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <PaymentTypeChart data={adminStats?.paymentsByType || []} />
+                  <PaymentTypeChart data={
+                    (adminStats?.paymentsByType || []).map(item => ({
+                      name: item.type,
+                      value: item.amount,
+                      color: item.type === 'registration' ? '#3b82f6' : 
+                             item.type === 'lost_report' ? '#8b5cf6' : '#94a3b8'
+                    }))
+                  } />
                 </CardContent>
               </Card>
             </motion.div>
@@ -339,7 +354,18 @@ export default function UnifiedDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <RecentTransactions transactions={adminStats?.recentTransactions || []} />
+                <RecentTransactions transactions={
+                  (adminStats?.recentTransactions || []).map(transaction => ({
+                    id: transaction.id,
+                    transactionRef: transaction.transactionRef,
+                    amount: transaction.amount,
+                    currency: transaction.currency,
+                    status: transaction.status,
+                    type: transaction.type,
+                    createdAt: new Date(transaction.createdAt).toISOString(),
+                    username: `User ${transaction.userId}` // Add mock username
+                  }))
+                } />
               </CardContent>
             </Card>
           </motion.div>
