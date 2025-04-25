@@ -56,6 +56,9 @@
   "registration": {
     "title": "Register Your Item",
     "subtitle": "Protect your valuable possessions by registering them in our secure digital registry.",
+    "item_register_title": "Register Your Item",
+    "item_register_subtitle": "Register your item for safekeeping and recovery in case it gets lost",
+    "item_register_success": "Item Registered Successfully",
     "steps": {
       "itemInfo": "Item Information",
       "media": "Media & Images",
