@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useLocation } from "wouter";
 import type { User } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export interface AuthContextType {
   user: User | null;
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const { toast } = useToast();
 
   // Check if user is already authenticated on mount
   useEffect(() => {
@@ -82,6 +84,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 const userData = await response.json();
                 setUser(userData);
                 console.log("[useAuth] Server session created for Firebase user", userData);
+                
+                // Show success toast
+                toast({
+                  title: "Welcome!",
+                  description: "You have successfully signed in with Google",
+                });
               } else {
                 let errorMessage = "Failed to create server session";
                 try {

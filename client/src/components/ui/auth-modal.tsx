@@ -163,25 +163,22 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       setGoogleLoading(true);
       
       // Use the auth hook's loginWithGoogle method
+      // This will redirect to Google login page
       await auth.loginWithGoogle();
       
-      toast({
-        title: "Welcome!",
-        description: "You have successfully signed in with Google",
-      });
+      // The code below won't execute because the page will redirect
+      // The toast should be shown after redirect back and successful authentication
+      // which is handled in the useAuth hook
       
-      // Close the modal
-      onClose();
-      
-      // Navigation will be handled by the auth hook
+      // onClose will be called automatically when the page redirects
     } catch (error: any) {
-      console.error("Google sign-in failed:", error);
+      // This will only run if there's an error initiating the redirect
+      console.error("Google sign-in redirect failed:", error);
       toast({
         title: "Sign in failed",
-        description: error?.message || "Failed to authenticate with Google",
+        description: error?.message || "Failed to start Google authentication",
         variant: "destructive",
       });
-    } finally {
       setGoogleLoading(false);
     }
   };
