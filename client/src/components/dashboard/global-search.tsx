@@ -20,7 +20,10 @@ import {
   CalendarRange,
   X,
   User,
-  SlidersHorizontal
+  SlidersHorizontal,
+  AlertCircle,
+  Smartphone,
+  FileText
 } from 'lucide-react';
 
 // Logger for tracking search activity
@@ -110,7 +113,18 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         // const data = await response.json();
         
         // Determine if the query looks like a unique identifier
-        const isUniqueIdQuery = /^[A-Za-z0-9\-]{6,}$/.test(debouncedQuery);
+        // Determine if the query looks like various types of unique identifiers
+        // Check for IMEI format (15-17 digits)
+        const isImeiFormat = /^\d{15,17}$/.test(debouncedQuery);
+        
+        // Check for document ID formats (alphanumeric with possible separators)
+        const isDocIdFormat = /^[A-Za-z0-9\-\/]{6,}$/.test(debouncedQuery);
+        
+        // Check for UUID format
+        const isUuidFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(debouncedQuery);
+        
+        // Combined unique ID check
+        const isUniqueIdQuery = isImeiFormat || isDocIdFormat || isUuidFormat || /^[A-Za-z0-9\-]{6,}$/.test(debouncedQuery);
         
         // For now, generate demo results based on the query
         // In a real implementation, we would search specifically in uniqueId fields
@@ -531,6 +545,38 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                       <p className="text-sm text-muted-foreground mt-1">
                         Try entering a complete unique ID such as an IMEI number or document ID
                       </p>
+                      
+                      {/* Search tips based on query type */}
+                      <div className="mt-4 p-3 bg-muted/50 rounded-md text-left max-w-md w-full mx-4">
+                        <div className="flex items-center mb-1">
+                          <AlertCircle className="h-4 w-4 mr-2 text-amber-500" />
+                          <span className="font-medium text-sm">Search Tips</span>
+                        </div>
+                        
+                        {/^\d+$/.test(query) && query.length < 15 && (
+                          <p className="text-xs text-muted-foreground">
+                            For IMEI numbers, ensure you enter all 15-17 digits without spaces or special characters.
+                          </p>
+                        )}
+                        
+                        {/^[A-Za-z0-9\-]{1,5}$/.test(query) && (
+                          <p className="text-xs text-muted-foreground">
+                            Your search is too short. Document IDs typically contain 6 or more characters.
+                          </p>
+                        )}
+                        
+                        {!/^\d+$/.test(query) && !/^[A-Za-z0-9\-\/]+$/.test(query) && (
+                          <p className="text-xs text-muted-foreground">
+                            Make sure your search only contains letters, numbers, and common separators like hyphens.
+                          </p>
+                        )}
+                        
+                        {(query.includes(' ') || query.includes(',')) && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Remove spaces or commas from your search term for better results.
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </CommandEmpty>
                 )}
@@ -565,8 +611,33 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
                   Start typing to search
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Search for items by unique identifiers (IMEI, Document ID, etc.)
+                  Search for items by unique identifiers
                 </p>
+                
+                {/* Helpful search tips for unique IDs */}
+                <div className="mt-4 grid grid-cols-1 gap-2 w-full max-w-md px-4">
+                  <div className="bg-muted/50 p-3 rounded-md text-left">
+                    <div className="flex items-center mb-1">
+                      <Smartphone className="h-4 w-4 mr-2 text-blue-500" />
+                      <span className="font-medium text-sm">IMEI Number</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      15-17 digits found under battery or by dialing *#06#
+                    </p>
+                    <code className="text-xs bg-background px-1 py-0.5 rounded mt-1 block">Example: 352022119378450</code>
+                  </div>
+                  
+                  <div className="bg-muted/50 p-3 rounded-md text-left">
+                    <div className="flex items-center mb-1">
+                      <FileText className="h-4 w-4 mr-2 text-green-500" />
+                      <span className="font-medium text-sm">Document ID</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Alphanumeric ID found on official documents
+                    </p>
+                    <code className="text-xs bg-background px-1 py-0.5 rounded mt-1 block">Example: RW-1198743-2023</code>
+                  </div>
+                </div>
               </div>
             )}
           </CommandList>
