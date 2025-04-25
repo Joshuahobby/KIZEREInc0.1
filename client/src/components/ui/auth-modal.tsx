@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/tabs";
 
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth, AuthContextType } from "@/hooks/use-auth";
 import { AuthService } from "@/services/auth.service";
 import { AuthModel } from "@/models/auth.model";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
