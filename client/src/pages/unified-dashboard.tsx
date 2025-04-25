@@ -351,7 +351,7 @@ export default function UnifiedDashboard() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Payment Types</CardTitle>
+                  <CardTitle>{t('dashboard.admin.paymentTypes')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <PaymentTypeChart data={
@@ -371,9 +371,9 @@ export default function UnifiedDashboard() {
           <motion.div variants={itemVariants}>
             <Card className="mb-6">
               <CardHeader>
-                <CardTitle>Recent Transactions</CardTitle>
+                <CardTitle>{t('dashboard.admin.recentTransactions')}</CardTitle>
                 <CardDescription>
-                  Latest payment transactions across the platform
+                  {t('dashboard.admin.transactionsDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -408,7 +408,7 @@ export default function UnifiedDashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Active Reports"
+                title={t('dashboard.agent.activeReports')}
                 value={allReports.filter((r: any) => r.status === "active").length}
                 icon={<ClipboardList className="h-5 w-5" />}
                 iconBgClass="bg-orange-100 dark:bg-orange-900/30"
@@ -420,7 +420,7 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Lost Reports"
+                title={t('dashboard.agent.lostReports')}
                 value={allReports.filter((r: any) => r.type === "lost" && r.status === "active").length}
                 icon={<AlertTriangle className="h-5 w-5" />}
                 iconBgClass="bg-red-100 dark:bg-red-900/30"
@@ -432,7 +432,7 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Found Reports"
+                title={t('dashboard.agent.foundReports')}
                 value={allReports.filter((r: any) => r.type === "found" && r.status === "active").length}
                 icon={<CheckCircle2 className="h-5 w-5" />}
                 iconBgClass="bg-green-100 dark:bg-green-900/30"
@@ -444,7 +444,7 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Resolved Reports"
+                title={t('dashboard.agent.resolvedReports')}
                 value={allReports.filter((r: any) => r.status === "resolved").length}
                 icon={<Clock className="h-5 w-5" />}
                 iconBgClass="bg-blue-100 dark:bg-blue-900/30"
@@ -459,8 +459,8 @@ export default function UnifiedDashboard() {
           <motion.div variants={itemVariants} className="mb-6">
             <Card>
               <CardHeader>
-                <CardTitle>Manage Reports</CardTitle>
-                <CardDescription>View and process active lost and found reports</CardDescription>
+                <CardTitle>{t('dashboard.agent.manageReports')}</CardTitle>
+                <CardDescription>{t('dashboard.agent.reportsDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="all" className="w-full">
@@ -526,8 +526,8 @@ export default function UnifiedDashboard() {
           <motion.div variants={itemVariants} className="mb-6">
             <Card>
               <CardHeader>
-                <CardTitle>Agent Actions</CardTitle>
-                <CardDescription>Quick access to common agent tasks</CardDescription>
+                <CardTitle>{t('dashboard.agent.agentActions')}</CardTitle>
+                <CardDescription>{t('dashboard.agent.actionsDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -567,8 +567,8 @@ export default function UnifiedDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>Your Registered Items</CardTitle>
-                  <CardDescription>Manage all your registered items</CardDescription>
+                  <CardTitle>{t('dashboard.items.title')}</CardTitle>
+                  <CardDescription>{t('dashboard.items.description')}</CardDescription>
                 </div>
                 <Button size="sm" onClick={() => navigate("/register-item")}>
                   <Plus className="h-4 w-4 mr-2" /> Register New
@@ -595,8 +595,8 @@ export default function UnifiedDashboard() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle>Your Reports</CardTitle>
-                  <CardDescription>Manage your lost and found reports</CardDescription>
+                  <CardTitle>{t('dashboard.reports.title')}</CardTitle>
+                  <CardDescription>{t('dashboard.reports.description')}</CardDescription>
                 </div>
                 <Button size="sm" onClick={() => navigate("/lost-found/report")}>
                   <Plus className="h-4 w-4 mr-2" /> New Report
