@@ -56,8 +56,7 @@ const categories = [
 
 // Form sections
 const sections = [
-  { id: "basic-info", name: "Basic Information" },
-  { id: "details", name: "Details" },
+  { id: "basic-info", name: "Item Information" },
   { id: "media", name: "Media & Documents" },
   { id: "ownership", name: "Ownership Proof" }
 ];
@@ -154,16 +153,26 @@ const isSectionComplete = (
 ): boolean => {
   switch (section) {
     case "basic-info":
-      return Boolean(
+      // Basic info now combined with details
+      const hasBasicInfo = Boolean(
         data.name && data.name.length >= 3 &&
         data.category &&
         data.uniqueIdentifier
       );
-    case "details":
-      // Only checking if any of the fields are filled, not requiring all
-      return Boolean(
-        data.brand || data.model || data.color || data.purchaseDate || data.value
-      );
+      
+      // Category-specific detail fields check
+      let hasDetails = false;
+      if (data.category === "Electronics") {
+        hasDetails = Boolean(data.brand || data.model || data.serialNumber);
+      } else if (data.category === "Documents") {
+        hasDetails = Boolean(data.documentNumber || data.issueAuthority);
+      } else if (data.category === "Jewelry" || data.category === "Accessories") {
+        hasDetails = Boolean(data.color || data.material || data.brand);
+      } else if (data.category === "Other") {
+        hasDetails = Boolean(data.additionalDetails);
+      }
+      
+      return hasBasicInfo;
     case "media":
       // Consider media complete if at least one image is uploaded
       return (data.imageUrls && data.imageUrls.length > 0) || Boolean(data.receiptImage);
@@ -177,11 +186,10 @@ const isSectionComplete = (
 
 // Calculate form completion percentage
 const calculateCompletion = (data: Partial<ItemRegistrationValues>): number => {
-  let totalSections = 4; // Basic info, details, media, ownership
+  let totalSections = 3; // Item info (combined basic+details), media, ownership
   let completedSections = 0;
   
   if (isSectionComplete(data, "basic-info")) completedSections++;
-  if (isSectionComplete(data, "details")) completedSections++;
   if (isSectionComplete(data, "media")) completedSections++;
   if (isSectionComplete(data, "ownership")) completedSections++;
   
@@ -676,7 +684,7 @@ export default function EnhancedRegisterItem() {
                         onValueChange={setExpandedSections}
                         className="space-y-4"
                       >
-                        {/* Basic Information Section */}
+                        {/* Item Information Section (Combined Basic & Details) */}
                         <AccordionItem
                           value="basic-info"
                           className={cn(
@@ -702,11 +710,12 @@ export default function EnhancedRegisterItem() {
                               )}>
                                 {getSectionIcon("basic-info") || <span>1</span>}
                               </div>
-                              <span>Basic Information</span>
+                              <span>Item Information</span>
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-5 pt-2">
                             <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                              {/* Basic Information Fields */}
                               <div className="sm:col-span-6">
                                 <FormField
                                   control={form.control}
@@ -741,6 +750,19 @@ export default function EnhancedRegisterItem() {
                                           field.onChange(value);
                                           // Reset subcategory when category changes
                                           form.setValue("subCategory", "");
+                                          
+                                          // Reset category-specific fields
+                                          form.resetField("brand");
+                                          form.resetField("model");
+                                          form.resetField("serialNumber");
+                                          form.resetField("color");
+                                          form.resetField("documentNumber");
+                                          form.resetField("issueAuthority");
+                                          form.resetField("issueDate");
+                                          form.resetField("expiryDate");
+                                          form.resetField("material");
+                                          form.resetField("weight");
+                                          form.resetField("additionalDetails");
                                         }}
                                         defaultValue={field.value}
                                       >
@@ -838,6 +860,432 @@ export default function EnhancedRegisterItem() {
                                 />
                               </div>
                               
+                              {/* Category-specific detail fields */}
+                              {form.getValues("category") === "Electronics" && (
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="brand"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Brand
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Samsung, Apple, Sony" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="model"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Model
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Galaxy S21, iPhone 13" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="serialNumber"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Serial Number
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. SN1234567890" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="color"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Color
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Black, Silver, Blue" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="purchaseDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Purchase Date
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <div className="flex">
+                                            <FormControl>
+                                              <Input 
+                                                type="date" 
+                                                className="rounded-r-none"
+                                                {...field} 
+                                              />
+                                            </FormControl>
+                                            <Button 
+                                              type="button" 
+                                              variant="outline"
+                                              className="rounded-l-none border-l-0"
+                                            >
+                                              <Calendar className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="value"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Estimated Value
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 50,000 RWF" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              
+                              {/* Document fields */}
+                              {form.getValues("category") === "Documents" && (
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="documentNumber"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Document Number
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. ID1234567890" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="issueAuthority"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Issuing Authority
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Government of Rwanda" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="issueDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Issue Date
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <div className="flex">
+                                            <FormControl>
+                                              <Input 
+                                                type="date" 
+                                                className="rounded-r-none"
+                                                {...field} 
+                                              />
+                                            </FormControl>
+                                            <Button 
+                                              type="button" 
+                                              variant="outline"
+                                              className="rounded-l-none border-l-0"
+                                            >
+                                              <Calendar className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="expiryDate"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Expiry Date
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <div className="flex">
+                                            <FormControl>
+                                              <Input 
+                                                type="date" 
+                                                className="rounded-r-none"
+                                                {...field} 
+                                              />
+                                            </FormControl>
+                                            <Button 
+                                              type="button" 
+                                              variant="outline"
+                                              className="rounded-l-none border-l-0"
+                                            >
+                                              <Calendar className="h-4 w-4" />
+                                            </Button>
+                                          </div>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              
+                              {/* Jewelry fields */}
+                              {form.getValues("category") === "Jewelry" && (
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="material"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Material
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Gold, Silver, Platinum" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="weight"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Weight
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 5 grams" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="color"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Color
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Yellow Gold, Rose Gold" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="value"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Estimated Value
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 50,000 RWF" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              
+                              {/* Accessories fields */}
+                              {form.getValues("category") === "Accessories" && (
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="brand"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Brand
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Nike, Gucci, Ray-Ban" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="color"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Color
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Black, Brown, Red" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="value"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Estimated Value
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 15,000 RWF" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              
+                              {/* Other fields */}
+                              {form.getValues("category") === "Other" && (
+                                <>
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="color"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Color
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. Red, Blue, Green" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                  
+                                  <div className="sm:col-span-3">
+                                    <FormField
+                                      control={form.control}
+                                      name="value"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>
+                                            Estimated Value
+                                            <span className="ml-1 text-sm text-neutral-500">(Optional)</span>
+                                          </FormLabel>
+                                          <FormControl>
+                                            <Input placeholder="e.g. 10,000 RWF" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              
+                              {/* Show description field for all categories */}
                               <div className="sm:col-span-6">
                                 <FormField
                                   control={form.control}
@@ -863,38 +1311,6 @@ export default function EnhancedRegisterItem() {
                             </div>
                           </AccordionContent>
                         </AccordionItem>
-                        
-                        {/* Details Section */}
-                        <AccordionItem 
-                          value="details"
-                          className={cn(
-                            "border rounded-lg overflow-hidden", 
-                            isSectionComplete(watchedValues, "details") 
-                              ? "border-green-200 bg-green-50" 
-                              : "border-gray-200"
-                          )}
-                        >
-                          <AccordionTrigger 
-                            onClick={(e) => {
-                              e.preventDefault();
-                              toggleSection("details");
-                            }}
-                            className="px-4 py-3 hover:no-underline"
-                          >
-                            <div className="flex items-center">
-                              <div className={cn(
-                                "w-6 h-6 rounded-full flex items-center justify-center mr-3",
-                                isSectionComplete(watchedValues, "details") 
-                                  ? "bg-green-100" 
-                                  : "bg-gray-100"
-                              )}>
-                                {getSectionIcon("details") || <span>2</span>}
-                              </div>
-                              <span>Details</span>
-                            </div>
-                          </AccordionTrigger>
-                          <AccordionContent className="px-4 pb-5 pt-2">
-                            <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                               {/* Electronic device fields */}
                               {form.getValues("category") === "Electronics" && (
                                 <>
@@ -2008,23 +2424,7 @@ export default function EnhancedRegisterItem() {
                     </CardContent>
                   </Card>
                   
-                  <Card>
-                    <CardContent className="p-3">
-                      <div className="flex justify-between items-center">
-                        <h4 className="text-sm font-medium">Details</h4>
-                        {isSectionComplete(watchedValues, "details") ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            <Check className="h-3 w-3 mr-1" />
-                            Complete
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                            Incomplete
-                          </span>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                  {/* Details removed - merged with Item Information */}
                   
                   <Card>
                     <CardContent className="p-3">
