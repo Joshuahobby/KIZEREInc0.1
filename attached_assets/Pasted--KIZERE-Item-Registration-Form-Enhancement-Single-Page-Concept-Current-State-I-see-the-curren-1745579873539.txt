@@ -1,0 +1,52 @@
+# KIZERE Item Registration Form Enhancement - Single-Page Concept
+
+## Current State
+I see the current item registration form uses a multi-step wizard approach that potentially creates friction in the user experience. We need a more modern, streamlined approach.
+
+## Development Requirements
+
+Please redesign the item registration form using a single-page approach with the following specifications:
+
+### Core Structure
+- Convert the multi-step wizard into a single-page form with accordion-style collapsible sections
+- Implement a two-column layout with form fields on the left and real-time item preview on the right
+- Create a persistent floating action bar with "Save Draft" and "Register Now" options
+- Display a clear progress indicator showing overall form completion percentage
+
+### Section Organization
+- Group fields into logical sections: Basic Information, Details, Media & Documents, Ownership Proof, Review
+- Include visual indicators for completed sections (checkmarks, color changes)
+- Allow users to complete sections in any order without forced linear progression
+- Add section completion indicators with micro-animations for positive feedback
+
+### Smart Field Management
+- Implement dynamic field display based on item category selection
+- Create category-specific fields that only appear when relevant
+- Build field dependencies (e.g., warranty information only appears if purchase date is entered)
+- Use inline contextual help text that appears when fields are focused
+
+### Media & Document Handling
+- Create an inline drag-and-drop upload area for images and documents
+- Implement direct camera access for mobile users
+- Include thumbnail previews with edit/delete options
+- Add document type classification for ownership documentation
+
+### User Experience Enhancements
+- Build smart field validation with inline error messages and suggestions
+- Add barcode/QR scanning capability for automatic product identification
+- Implement autosave functionality to prevent data loss
+- Create smart suggestions based on partial information entered
+
+### Visual Design
+- Maintain the deep navy background with our brand colors (#00BFFF blue and complementary yellow accents)
+- Use subtle animations for state changes and feedback
+- Implement a responsive design that adapts gracefully to all screen sizes
+- Create a visually appealing item preview card that updates in real-time
+
+### Payment Integration
+- Seamlessly integrate the 500 RWF payment process at the end of the form
+- Show payment due calculation based on item registration type
+- Create a smooth transition to payment gateway within the same page context
+- Provide clear payment confirmation with item registration receipt
+
+The design should feel modern, fluid, and efficient while still collecting comprehensive information about items. Focus on reducing friction points and creating a premium registration experience that encourages users to provide complete information.
