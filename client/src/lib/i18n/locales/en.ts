@@ -34,14 +34,7 @@ export default {
   reset_password: 'Reset Password',
   confirm_password: 'Confirm Password',
   
-  // Auth nested
-  auth: {
-    login: 'Login',
-    signup: 'Sign Up', 
-    logout: 'Logout',
-    forgotPassword: 'Forgot Password?',
-    resetPassword: 'Reset Password'
-  },
+  // No duplicate keys here
   
   // Navigation - Flat (for backward compatibility)
   nav_home: 'Home',
@@ -62,13 +55,15 @@ export default {
     about: 'About',
     contact: 'Contact',
     register: 'Register Items',
+    registerItems: 'Register Items',
     search: 'Search Items',
     lostFound: 'Lost & Found',
     dashboard: 'Dashboard',
     profile: 'Profile',
     settings: 'Settings',
     navigation: 'Navigation',
-    account: 'Account'
+    account: 'Account',
+    userManagement: 'User Management'
   },
   
   // Dashboard
@@ -265,6 +260,12 @@ export default {
   profile_update_success: 'Profile updated successfully',
   profile_update_error: 'Failed to update profile',
   
+  // Profile nested
+  profile: {
+    title: 'Profile',
+    personalInfo: 'Personal Information'
+  },
+  
   // Settings
   settings_title: 'Settings',
   settings_account: 'Account',
@@ -275,6 +276,17 @@ export default {
   settings_security: 'Security',
   settings_dark_mode: 'Dark Mode',
   settings_light_mode: 'Light Mode',
+  
+  // Settings nested
+  settings: {
+    title: 'Settings',
+    account: 'Account',
+    notifications: 'Notifications',
+    language: 'Language',
+    appearance: 'Appearance',
+    privacy: 'Privacy',
+    security: 'Security'
+  },
   
   // Notifications
   notification_new_item: 'New item registered',
@@ -543,7 +555,10 @@ export default {
     register: 'Register',
     signOut: 'Sign Out',
     login: 'Login',
-    getStarted: 'Get Started'
+    getStarted: 'Get Started',
+    logout: 'Logout',
+    forgotPassword: 'Forgot Password?',
+    resetPassword: 'Reset Password'
   },
   
   // Notifications
