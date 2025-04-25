@@ -232,6 +232,24 @@
       "agent": "Umukozi",
       "agentConsole": "Igice cy'Umukozi"
     },
+    "selectTab": "Hitamo umutwe",
+    "items": {
+      "title": "Ibintu Byanjye Byanditswe",
+      "description": "Reba kandi ucunge ibintu byawe byose wanditse",
+      "registerNew": "Andika Gishya"
+    },
+    "reports": {
+      "title": "Raporo Zanjye",
+      "description": "Kugenzura raporo zawe z'ibyabuze n'ibyabonetse",
+      "allReports": "Raporo Zose",
+      "lostItems": "Ibyabuze",
+      "foundItems": "Ibyabonetse",
+      "newReport": "Raporo Nshya"
+    },
+    "payments": {
+      "title": "Amateka y'Ubwishyu",
+      "description": "Reba amateka y'ubwishyu bwawe"
+    },
     "admin": {
       "totalRevenue": "Amafaranga Yose",
       "totalUsers": "Abakoresha Bose",
@@ -256,24 +274,59 @@
       "foundItems": "Ibyabonetse",
       "resolvedItems": "Ibyakemuwe"
     },
-    "items": {
-      "title": "Ibintu Byanjye Byanditswe",
-      "description": "Reba kandi ucunge ibintu byawe byose wanditse",
-      "registerNew": "Andika Gishya"
+    "quickActions": "Ibikorwa Byihuse",
+    "recentActivity": "Ibikorwa Bishya",
+    "notifications": "Imenyesha",
+    "noData": "Nta makuru ahari",
+    "loginRequired": "Kwinjira Bisabwa",
+    "notAuthenticated": "Ugomba kwinjira kugira ngo urebe iyi paji"
+  },
+  "registration": {
+    "title": "Andika Ikintu Cyawe",
+    "subtitle": "Kurinda ibintu byawe bifite agaciro ubyandikisha muri sisitemu yacu yizewe.",
+    "item_register_title": "Andika Ikintu Cyawe",
+    "item_register_subtitle": "Andikisha ikintu cyawe mu bwizerwe no kukigarura mu gihe cyabuze",
+    "item_register_success": "Ikintu Cyanditswe Neza",
+    "item_basic_info": "Amakuru y'Ibanze",
+    "item_details": "Amakuru y'Ikintu",
+    "item_images": "Amafoto y'Ikintu",
+    "ownership_title": "Kugenzura uburenganzira bwo gutunga",
+    "item_name": "Izina ry'Ikintu",
+    "item_category": "Icyiciro",
+    "item_subcategory": "Icyiciro Gitoya",
+    "item_description": "Ibisobanuro",
+    "item_location": "Aho Cyaherutse Kuboneka",
+    "item_color": "Ibara",
+    "item_tips": "Inama",
+    "steps": {
+      "itemInfo": "Amakuru y'Ikintu",
+      "media": "Amafoto",
+      "ownership": "Kugenzura Uburenganzira",
+      "qrCode": "Imibare ya QR",
+      "payment": "Amafaranga yo Kwandika"
     },
-    "reports": {
-      "title": "Raporo Zanjye",
-      "description": "Kugenzura raporo zawe z'ibyabuze n'ibyabonetse",
-      "allReports": "Raporo Zose",
-      "lostItems": "Ibyabuze",
-      "foundItems": "Ibyabonetse",
-      "newReport": "Raporo Nshya"
+    "fields": {
+      "name": "Izina ry'Ikintu",
+      "category": "Icyiciro",
+      "subCategory": "Icyiciro Gitoya",
+      "uniqueIdentifier": "Ikiranga Ikintu",
+      "description": "Ibisobanuro",
+      "optional": "Bishoboka",
+      "required": "Bisabwa"
     },
-    "payments": {
-      "title": "Amateka y'Ubwishyu",
-      "description": "Reba amateka y'ubwishyu bwawe"
+    "actions": {
+      "reset": "Tangira Bushya",
+      "register": "Andika Nonaha",
+      "processing": "Byarimo Gutunganywa..."
     },
-    "selectTab": "Hitamo umutwe"
+    "preview": {
+      "title": "Igaragaza ry'Ikintu",
+      "item": "Ikintu",
+      "identifier": "Ikiranga",
+      "description": "Ibisobanuro",
+      "images": "Amafoto",
+      "documents": "Inyandiko z'Uburenganzira"
+    }
   },
   "items": {
     "registerNewItem": "Andika Ikintu Gishya",
