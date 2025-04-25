@@ -45,6 +45,22 @@ export default {
   nav_register_item: 'Register Item',
   nav_report_lost: 'Report Lost',
   nav_report_found: 'Report Found',
+
+  // Header Navigation
+  nav: {
+    home: 'Home',
+    features: 'Features',
+    about: 'About',
+    contact: 'Contact',
+    register: 'Register Items',
+    search: 'Search Items',
+    lostFound: 'Lost & Found',
+    dashboard: 'Dashboard',
+    profile: 'Profile',
+    settings: 'Settings',
+    navigation: 'Navigation',
+    account: 'Account'
+  },
   
   // Dashboard
   dashboard_title: 'Dashboard',
@@ -328,6 +344,27 @@ export default {
   'landing.testimonials.testimonial3.location': 'Huye, Rwanda',
   'landing.testimonials.testimonial3.quote': 'When my phone was lost, the finder scanned the QR code, and I was notified immediately. This service is truly a game-changer!',
   'landing.testimonials.viewMore': 'View More Testimonials',
+  
+  // Common
+  common: {
+    notifications: 'Notifications',
+    new: 'New',
+    ago: 'hours ago',
+    viewAll: 'View All'
+  },
+  
+  // Auth
+  auth: {
+    signIn: 'Sign In',
+    register: 'Register',
+    signOut: 'Sign Out'
+  },
+  
+  // Notifications
+  notifications: {
+    itemMatched: 'Item Match Found',
+    itemMatchedDesc: 'Someone reported finding an item that matches your lost item description.'
+  },
   
   // Misc
   contact_us: 'Contact Us',
