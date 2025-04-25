@@ -45,7 +45,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthService } from "@/services/auth.service";
-import * as AuthModel from "@/models/auth.model";
+import { AuthModel } from "@/models/auth.model";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
 
 type LoginFormValues = z.infer<typeof AuthModel.loginSchema>;

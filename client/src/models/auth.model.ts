@@ -7,7 +7,8 @@ import { InsertUser, UserLogin } from '@shared/schema';
  * This model handles authentication-related functionality such as
  * user login, registration, validation, and state management.
  */
-export class AuthModel {
+// Define class with static methods
+class AuthModelClass {
   /**
    * Custom validator for username, which can be an email or phone number
    * - Phone numbers should follow Rwanda format (+250 XXX XXX XXX)
@@ -146,3 +147,6 @@ export class AuthModel {
     return phone; // Return original if we couldn't format it
   }
 }
+
+// Export an instance of the class
+export const AuthModel = AuthModelClass;
