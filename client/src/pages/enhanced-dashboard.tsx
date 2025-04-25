@@ -123,14 +123,14 @@ const EnhancedDashboard: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold">
-                  Welcome back, {user.fullName || user.username}!
+                  {t('dashboard.welcomeBack')}, {user.fullName || user.username}!
                 </h1>
                 <p className="text-muted-foreground mt-1">
                   {isAdmin 
-                    ? "Manage your platform and view performance insights" 
+                    ? t('dashboard.adminDescription') 
                     : isAgent 
-                      ? "Review and process lost and found reports"
-                      : "Track your items and manage your account"
+                      ? t('dashboard.agentDescription')
+                      : t('dashboard.userDescription')
                   }
                 </p>
               </div>
@@ -164,7 +164,7 @@ const EnhancedDashboard: React.FC = () => {
                 </DropdownMenu>
                 
                 <Button onClick={() => navigate("/register-item")}>
-                  <Plus className="h-4 w-4 mr-2" /> Register Item
+                  <Plus className="h-4 w-4 mr-2" /> {t('dashboard.registerNewItem')}
                 </Button>
               </div>
             </div>
@@ -176,24 +176,24 @@ const EnhancedDashboard: React.FC = () => {
               <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 w-full">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <LayoutDashboard className="h-4 w-4" />
-                  <span className="hidden md:inline">Overview</span>
+                  <span className="hidden md:inline">{t('dashboard.overview')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="items" className="flex items-center gap-2">
                   <ShoppingBag className="h-4 w-4" />
-                  <span className="hidden md:inline">My Items</span>
+                  <span className="hidden md:inline">{t('dashboard.registeredItems')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="reports" className="flex items-center gap-2">
                   <ClipboardList className="h-4 w-4" />
-                  <span className="hidden md:inline">Reports</span>
+                  <span className="hidden md:inline">{t('reports.title')}</span>
                 </TabsTrigger>
                 <TabsTrigger value="payments" className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
-                  <span className="hidden md:inline">Payments</span>
+                  <span className="hidden md:inline">{t('payments.title')}</span>
                 </TabsTrigger>
                 {isAdmin && (
                   <TabsTrigger value="admin" className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
-                    <span className="hidden md:inline">Admin</span>
+                    <span className="hidden md:inline">{t('dashboard.admin')}</span>
                   </TabsTrigger>
                 )}
               </TabsList>
@@ -210,7 +210,7 @@ const EnhancedDashboard: React.FC = () => {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
                   <motion.div variants={itemVariants}>
                     <StatsCard
-                      title="Registered Items"
+                      title={t('dashboard.registeredItems')}
                       value={userStats?.totalItems || 0}
                       icon={<ShoppingBag className="h-5 w-5" />}
                       iconBgClass="bg-blue-100 dark:bg-blue-900/30"
@@ -223,7 +223,7 @@ const EnhancedDashboard: React.FC = () => {
 
                   <motion.div variants={itemVariants}>
                     <StatsCard
-                      title="Lost Reports"
+                      title={t('dashboard.lostReports')}
                       value={userStats?.totalLostReports || 0}
                       icon={<AlertTriangle className="h-5 w-5" />}
                       iconBgClass="bg-amber-100 dark:bg-amber-900/30"
@@ -236,7 +236,7 @@ const EnhancedDashboard: React.FC = () => {
 
                   <motion.div variants={itemVariants}>
                     <StatsCard
-                      title="Found Reports"
+                      title={t('dashboard.foundReports')}
                       value={userStats?.totalFoundReports || 0}
                       icon={<CheckCircle2 className="h-5 w-5" />}
                       iconBgClass="bg-green-100 dark:bg-green-900/30"
@@ -249,7 +249,7 @@ const EnhancedDashboard: React.FC = () => {
 
                   <motion.div variants={itemVariants}>
                     <StatsCard
-                      title="Total Spent"
+                      title={t('dashboard.totalSpent')}
                       value={userStats?.totalSpent || 0}
                       icon={<DollarSign className="h-5 w-5" />}
                       iconBgClass="bg-purple-100 dark:bg-purple-900/30"
@@ -286,19 +286,19 @@ const EnhancedDashboard: React.FC = () => {
                   <Card className="mb-6 border border-border/50 bg-card/50 backdrop-blur-sm">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                       <div>
-                        <CardTitle className="text-lg font-display">Recently Registered Items</CardTitle>
+                        <CardTitle className="text-lg font-display">{t('dashboard.recentlyRegisteredItems')}</CardTitle>
                         <CardDescription>
-                          View and manage your most recently registered items
+                          {t('dashboard.recentItemsDescription')}
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" className="h-8">
                           <Filter className="h-3.5 w-3.5 mr-1" />
-                          <span className="text-xs">Filter</span>
+                          <span className="text-xs">{t('common.filter')}</span>
                         </Button>
                         <Button variant="outline" size="sm" className="h-8">
                           <ArrowDownUp className="h-3.5 w-3.5 mr-1" />
-                          <span className="text-xs">Sort</span>
+                          <span className="text-xs">{t('common.sort')}</span>
                         </Button>
                       </div>
                     </CardHeader>
@@ -324,11 +324,11 @@ const EnhancedDashboard: React.FC = () => {
                     </CardContent>
                     <CardFooter className="flex justify-between border-t py-3">
                       <Button variant="ghost" size="sm">
-                        <span className="text-xs">View All Items</span>
+                        <span className="text-xs">{t('dashboard.viewAllItems')}</span>
                       </Button>
                       <Button variant="ghost" size="sm">
                         <RefreshCw className="h-3.5 w-3.5 mr-1" />
-                        <span className="text-xs">Refresh</span>
+                        <span className="text-xs">{t('common.refresh')}</span>
                       </Button>
                     </CardFooter>
                   </Card>
