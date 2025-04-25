@@ -5,7 +5,9 @@
     "notifications": "Notifications",
     "new": "New",
     "ago": "ago",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "returnToHome": "Return to Home",
+    "language": "Language"
   },
   "nav": {
     "home": "Home",
@@ -32,7 +34,8 @@
     "signOutSuccess": "Signed out successfully",
     "signOutSuccessDescription": "You have been signed out of your account",
     "signOutError": "Sign out error",
-    "signOutErrorDescription": "There was a problem signing you out"
+    "signOutErrorDescription": "There was a problem signing you out",
+    "loginRequired": "You need to be logged in to view this page"
   },
   "footer": {
     "description": "KIZERE is a comprehensive digital platform for streamlined item registration, lost and found reporting, and intelligent ownership management.",
@@ -165,5 +168,71 @@
     "print": "Print",
     "share": "Share",
     "notSupported": "Sharing Not Supported"
+  },
+  "dashboard": {
+    "welcomeMessage": "Welcome back, {name}",
+    "subtitles": {
+      "user": "Manage your registered items and activity",
+      "agent": "Track lost & found items and users",
+      "admin": "System overview and management"
+    },
+    "registerNewItem": "Register New Item",
+    "tabs": {
+      "overview": "Overview",
+      "items": "Items",
+      "reports": "Reports",
+      "payments": "Payments",
+      "admin": "Admin",
+      "agent": "Agent"
+    },
+    "registeredItems": "Registered Items",
+    "lostReports": "Lost Reports",
+    "foundReports": "Found Reports",
+    "totalSpent": "Total Spent",
+    "recentlyRegisteredItems": "Recently Registered Items",
+    "recentItemsDescription": "Your most recently registered items",
+    "items": {
+      "title": "My Registered Items",
+      "description": "View and manage all your registered items"
+    },
+    "reports": {
+      "title": "My Reports",
+      "description": "Track your lost and found reports"
+    },
+    "payments": {
+      "title": "Payment History",
+      "description": "View your payment transactions and history"
+    },
+    "admin": {
+      "title": "Admin Dashboard",
+      "description": "Administrative tools and analytics",
+      "totalRevenue": "Total Revenue",
+      "totalUsers": "Total Users",
+      "registeredItems": "Registered Items",
+      "activeReports": "Active Reports",
+      "monthlyRevenue": "Monthly Revenue",
+      "revenueDescription": "Revenue breakdown by month",
+      "paymentStatus": "Payment Status",
+      "paymentTypes": "Payment Types",
+      "recentTransactions": "Recent Transactions",
+      "transactionsDescription": "Latest payment transactions"
+    },
+    "agent": {
+      "title": "Agent Dashboard",
+      "description": "Manage lost and found reports",
+      "activeReports": "Active Reports",
+      "lostReports": "Lost Reports",
+      "foundReports": "Found Reports",
+      "pendingMatches": "Pending Matches"
+    },
+    "quickActions": "Quick Actions",
+    "recentActivity": "Recent Activity",
+    "notifications": "Notifications",
+    "noData": "No data available",
+    "loginRequired": "Login Required",
+    "notAuthenticated": "You need to be logged in to view this page"
+  },
+  "auth": {
+    "loginRequired": "You need to be logged in to view this page"
   }
 }
