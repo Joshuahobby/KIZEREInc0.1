@@ -1,14 +1,18 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import en from './locales/en';
 import fr from './locales/fr';
+// Import the Kinyarwanda translations directly
+// @ts-ignore - Allow direct import of JSON files
+import rw from './locales/rw.json';
 
 // Define available languages
-export type Language = 'en' | 'fr';
+export type Language = 'en' | 'fr' | 'rw';
 
 // Create language dictionaries
 const translations = {
   en,
   fr,
+  rw,
 };
 
 // Default to English if no language is set
@@ -103,6 +107,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   const getLanguages = () => [
     { code: 'en' as Language, name: 'English' },
     { code: 'fr' as Language, name: 'Français' },
+    { code: 'rw' as Language, name: 'Kinyarwanda' },
   ];
 
   const contextValue: LanguageContextType = {
