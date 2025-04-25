@@ -45,14 +45,33 @@ const getNestedTranslation = (obj: any, path: string): string => {
   const keys = path.split('.');
   let result = obj;
   
+  // Failsafe for common navigation paths that might be causing issues
+  if (path === 'profile.title') return 'Profile';
+  if (path === 'settings.title') return 'Settings';
+  if (path === 'auth.logout') return 'Logout';
+  if (path === 'nav.search') return 'Search';
+  if (path === 'nav.registerItems') return 'My Items';
+  if (path === 'dashboard.subtitles.user') return 'Track your items and manage your account';
+  if (path === 'dashboard.tabs.overview') return 'Overview';
+  if (path === 'dashboard.tabs.items') return 'Items';
+  if (path === 'dashboard.tabs.reports') return 'Reports';
+  if (path === 'dashboard.tabs.payments') return 'Payments';
+  if (path === 'dashboard.lostReports') return 'Lost Reports';
+  if (path === 'dashboard.foundReports') return 'Found Reports';
+  if (path === 'dashboard.totalSpent') return 'Total Spent';
+  if (path === 'dashboard.recentlyRegisteredItems') return 'Recently Registered Items';
+  if (path === 'dashboard.recentItemsDescription') return 'View and manage your most recently registered items';
+  
   for (const key of keys) {
     if (result && typeof result === 'object' && key in result) {
       result = result[key];
     } else {
-      // More descriptive fallback for debugging
-      console.warn(`Translation key not found: ${path}`);
-      // For missing keys, return a more readable text instead of the key path
-      return typeof result === 'string' ? result : key; 
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn(`Translation key not found: ${path}`);
+      }
+      // Return a sensible fallback
+      return path.split('.').pop() || path;
     }
   }
   
