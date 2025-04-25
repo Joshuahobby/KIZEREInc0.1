@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,11 +12,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { PaymentService } from "@/services/payment.service";
-import { getPaymentAmount, DEFAULT_CURRENCY } from "@/config/payment.config";
-import { Loader2, Check, ArrowRight, CreditCard, RefreshCw, CheckCircle } from "lucide-react";
+import { DEFAULT_CURRENCY } from "@/config/payment.config";
+import { cn } from "@/lib/utils";
+import { 
+  Loader2, 
+  Check, 
+  CreditCard, 
+  Save,
+  Upload,
+  Camera,
+  Calendar,
+  Info,
+  X,
+  Image as ImageIcon,
+  Clipboard,
+  CheckCircle,
+  ArrowRight,
+  RefreshCw,
+  Barcode
+} from "lucide-react";
 
 // Item categories
 const categories = [
@@ -27,7 +51,16 @@ const categories = [
   "Other"
 ];
 
-// Item registration steps
+// Form sections
+const sections = [
+  { id: "basic-info", name: "Basic Information" },
+  { id: "details", name: "Details" },
+  { id: "media", name: "Media & Documents" },
+  { id: "ownership", name: "Ownership Proof" },
+  { id: "review", name: "Review & Payment" }
+];
+
+// Legacy steps for multi-step wizard (will be replaced with accordion)
 const steps = [
   { id: 1, name: "Basic Info" },
   { id: 2, name: "Details" },
@@ -35,40 +68,132 @@ const steps = [
   { id: 4, name: "Review" }
 ];
 
-// Basic info form schema
-const basicInfoSchema = z.object({
+// Item sub-categories based on main category
+const subCategories = {
+  Electronics: [
+    "Mobile Phone",
+    "Laptop",
+    "Tablet",
+    "Camera",
+    "Headphones",
+    "Other Electronics",
+  ],
+  Documents: [
+    "ID Card",
+    "Passport",
+    "Driver's License",
+    "Certificate",
+    "Other Documents",
+  ],
+  Jewelry: [
+    "Ring",
+    "Necklace",
+    "Bracelet",
+    "Watch",
+    "Other Jewelry",
+  ],
+  Accessories: [
+    "Bag",
+    "Wallet",
+    "Glasses",
+    "Key",
+    "Other Accessories",
+  ],
+  Other: [
+    "Clothing",
+    "Book",
+    "Toy",
+    "Tool",
+    "Miscellaneous",
+  ],
+};
+
+// Enhanced schema for the item registration form
+const itemRegistrationSchema = z.object({
+  // Basic Information
   name: z.string().min(3, "Item name must be at least 3 characters"),
   category: z.string().min(1, "Please select a category"),
+  subCategory: z.string().optional(),
   uniqueIdentifier: z.string().min(1, "Unique identifier is required"),
   description: z.string().optional(),
-});
-
-// Details form schema (step 2)
-const detailsSchema = z.object({
+  
+  // Details
   brand: z.string().optional(),
   model: z.string().optional(),
+  serialNumber: z.string().optional(),
   color: z.string().optional(),
   purchaseDate: z.string().optional(),
   purchaseLocation: z.string().optional(),
   value: z.string().optional(),
+  warranty: z.string().optional(),
+  
+  // Media & Documents
+  imageUrls: z.array(z.string()).default([]),
+  receiptImage: z.string().optional(),
+  warrantyDocument: z.string().optional(),
+  
+  // Ownership Proof
+  ownershipProof: z.string().optional(),
+  ownershipDocumentType: z.string().optional(),
+  additionalNotes: z.string().optional(),
 });
 
-// Media form schema (step 3)
-const mediaSchema = z.object({
-  imageUrls: z.array(z.string()).optional(),
-});
-
-// Combined schema for the entire form
-const itemRegistrationSchema = basicInfoSchema.merge(detailsSchema).merge(mediaSchema);
-
-type BasicInfoValues = z.infer<typeof basicInfoSchema>;
-type DetailsValues = z.infer<typeof detailsSchema>;
-type MediaValues = z.infer<typeof mediaSchema>;
 type ItemRegistrationValues = z.infer<typeof itemRegistrationSchema>;
 
+// Section completion requirement logic
+const isSectionComplete = (
+  data: Partial<ItemRegistrationValues>,
+  section: string
+): boolean => {
+  switch (section) {
+    case "basic-info":
+      return Boolean(
+        data.name && data.name.length >= 3 &&
+        data.category &&
+        data.uniqueIdentifier
+      );
+    case "details":
+      // Only checking if any of the fields are filled, not requiring all
+      return Boolean(
+        data.brand || data.model || data.color || data.purchaseDate || data.value
+      );
+    case "media":
+      // Consider media complete if at least one image is uploaded
+      return (data.imageUrls && data.imageUrls.length > 0) || Boolean(data.receiptImage);
+    case "ownership":
+      // Consider ownership complete if proof type is selected
+      return Boolean(data.ownershipDocumentType);
+    default:
+      return false;
+  }
+};
+
+// Calculate form completion percentage
+const calculateCompletion = (data: Partial<ItemRegistrationValues>): number => {
+  let totalSections = 4; // Basic info, details, media, ownership
+  let completedSections = 0;
+  
+  if (isSectionComplete(data, "basic-info")) completedSections++;
+  if (isSectionComplete(data, "details")) completedSections++;
+  if (isSectionComplete(data, "media")) completedSections++;
+  if (isSectionComplete(data, "ownership")) completedSections++;
+  
+  return Math.round((completedSections / totalSections) * 100);
+};
+
 export default function RegisterItem() {
-  const [step, setStep] = useState(1);
   const { toast } = useToast();
+  
+  // State for UI interactions
+  const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info"]);
+  const [step, setStep] = useState(1);
+  const [autoSaveTimer, setAutoSaveTimer] = useState<NodeJS.Timeout | null>(null);
+  const [autoSaving, setAutoSaving] = useState<boolean>(false);
+  const [completion, setCompletion] = useState<number>(0);
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
+  const [paymentRef, setPaymentRef] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   // Create the form
   const form = useForm<ItemRegistrationValues>({
@@ -76,22 +201,154 @@ export default function RegisterItem() {
     defaultValues: {
       name: "",
       category: "",
+      subCategory: "",
       uniqueIdentifier: "",
       description: "",
       brand: "",
       model: "",
+      serialNumber: "",
       color: "",
       purchaseDate: "",
       purchaseLocation: "",
       value: "",
+      warranty: "",
       imageUrls: [],
+      receiptImage: "",
+      warrantyDocument: "",
+      ownershipProof: "",
+      ownershipDocumentType: "",
+      additionalNotes: "",
     },
     mode: "onChange",
   });
   
   const [, setLocation] = useLocation();
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
-  const [paymentRef, setPaymentRef] = useState<string | null>(null);
+  
+  // Watch form values for completion calculation
+  const watchedValues = form.watch();
+  
+  useEffect(() => {
+    const newCompletion = calculateCompletion(watchedValues);
+    setCompletion(newCompletion);
+  }, [watchedValues]);
+  
+  // Auto-save functionality
+  useEffect(() => {
+    // Clear previous timer
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+    }
+    
+    // Set new timer for auto-save
+    const timer = setTimeout(() => {
+      if (form.formState.isDirty) {
+        setAutoSaving(true);
+        // Simulate saving to local storage
+        localStorage.setItem('itemDraft', JSON.stringify(watchedValues));
+        
+        setTimeout(() => {
+          setAutoSaving(false);
+        }, 1000);
+      }
+    }, 3000);
+    
+    setAutoSaveTimer(timer);
+    
+    return () => {
+      if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+      }
+    };
+  }, [watchedValues, form.formState.isDirty]);
+  
+  // Handle accordion toggle
+  const toggleSection = (value: string) => {
+    setExpandedSections(prev => {
+      if (prev.includes(value)) {
+        return prev.filter(v => v !== value);
+      } else {
+        return [...prev, value];
+      }
+    });
+  };
+  
+  // Handle file drag events
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+  
+  const handleFileDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    // Process files
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      // In a real implementation, you would upload these files to your server
+      // and get back URLs to store in the form
+      
+      // For demo purposes, just create an object URL
+      const file = e.dataTransfer.files[0];
+      const url = URL.createObjectURL(file);
+      
+      // Update form with the new image
+      const currentImages = form.getValues("imageUrls") || [];
+      form.setValue("imageUrls", [...currentImages, url]);
+      
+      // Set preview image
+      setPreviewImage(url);
+    }
+  };
+  
+  // Handle file input change
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      // For demo purposes, just create an object URL
+      const file = e.target.files[0];
+      const url = URL.createObjectURL(file);
+      
+      // Update form with the new image
+      const currentImages = form.getValues("imageUrls") || [];
+      form.setValue("imageUrls", [...currentImages, url]);
+      
+      // Set preview image
+      setPreviewImage(url);
+    }
+  };
+  
+  // Get field visibility based on category
+  const shouldShowField = (category: string, fieldName: string): boolean => {
+    // General logic for showing/hiding fields based on category
+    switch (category) {
+      case "Electronics":
+        return ["brand", "model", "serialNumber", "color", "purchaseDate", "warranty"].includes(fieldName);
+      case "Documents":
+        return ["issueDate", "expiryDate", "documentNumber"].includes(fieldName);
+      case "Jewelry":
+        return ["material", "weight", "color", "purchaseDate"].includes(fieldName);
+      case "Accessories":
+        return ["brand", "color", "purchaseDate"].includes(fieldName);
+      default:
+        // For "Other" category or when no category is selected
+        return true;
+    }
+  };
+  
+  // Get completion status icon for section
+  const getSectionIcon = (section: string) => {
+    const isComplete = isSectionComplete(watchedValues, section);
+    
+    if (isComplete) {
+      return <Check className="h-5 w-5 text-green-500" />;
+    }
+    
+    return null;
+  };
   
   // Item registration mutation
   const registerMutation = useMutation({
