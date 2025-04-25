@@ -37,6 +37,7 @@ interface SearchResult {
   date?: string;
   imageUrl?: string;
   url: string;
+  uniqueId?: string; // IMEI, official document ID, or other unique ID
 }
 
 interface RecentSearch {
@@ -56,7 +57,7 @@ interface GlobalSearchProps {
  * This component provides both a trigger button and a command palette.
  */
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({
-  placeholder = "Search items, reports, users...",
+  placeholder = "Search by unique ID (IMEI, Document ID, etc.)",
   variant = 'default'
 }) => {
   const [open, setOpen] = useState(false);
