@@ -89,7 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           queryClient.setQueryData(["/api/user"], userData);
           
           // Navigate to the appropriate dashboard
-          navigateToDashboard(userData);
+          const dashboardPath = AuthService.getDashboardPathByRole(userData.role);
+          console.log("useAuth: Navigating to dashboard:", dashboardPath);
+          window.location.href = dashboardPath;
           
           toast({
             title: "Sign in successful",

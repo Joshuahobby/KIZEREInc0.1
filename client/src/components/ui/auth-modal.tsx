@@ -109,7 +109,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
   // Use AuthService for redirection based on role
   function redirectToDashboardByRole(role: string): void {
-    navigate(AuthService.getDashboardPathByRole(role));
+    const dashboardPath = AuthService.getDashboardPathByRole(role);
+    console.log("Auth Modal redirectToDashboardByRole: Navigating to:", dashboardPath);
+    window.location.href = dashboardPath; // Use direct location change instead of wouter navigation
   }
 
   const onLoginSubmit = (data: LoginFormValues) => {
@@ -157,7 +159,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       
       // Navigate to the appropriate dashboard based on user role
       const dashboardPath = AuthService.getDashboardPathByRole(userData.role);
-      navigate(dashboardPath);
+      console.log("Auth Modal: Navigating to dashboard path:", dashboardPath);
+      window.location.href = dashboardPath; // Use direct location change instead of wouter navigation
       
     } catch (error: any) {
       console.error("Google sign-in failed:", error);
