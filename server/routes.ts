@@ -99,17 +99,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Google Authentication
+  // Google Authentication with Firebase token verification
   app.post("/api/auth/google", async (req, res) => {
     try {
       const { email, name, uid, token, photoURL } = req.body;
       
-      if (!email || !name || !uid) {
+      if (!email || !name || !uid || !token) {
         logger.warn('Google auth missing required fields', { email });
         return res.status(400).json({ message: "Missing required fields" });
       }
       
       console.log("Processing Google authentication for:", email);
+      
+      // Verify Firebase token
+      const { verifyFirebaseToken } = await import('./utils/firebase-admin');
+      const decodedToken = await verifyFirebaseToken(token);
+      
+      // If token verification fails, return error
+      if (!decodedToken) {
+        logger.warn('Invalid Firebase token', { email });
+        return res.status(401).json({ message: "Invalid authentication token" });
+      }
+      
+      // Ensure token UID matches provided UID
+      if (decodedToken.uid !== uid) {
+        logger.warn('Token UID mismatch', { tokenUid: decodedToken.uid, providedUid: uid });
+        return res.status(401).json({ message: "Authentication token mismatch" });
+      }
       
       // Check if user exists using UserService
       let user = await UserService.getUserByEmail(email);
@@ -117,18 +133,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         // Create a new user if not found
         try {
+          // Create secure random password that won't be used for login
+          const securePassword = `firebase_${uid}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+          
           user = await UserService.createUser({
             fullName: name,
             username: email,
             email: email,
-            password: `google_${uid}`, // We don't use this password for login
+            password: securePassword, // This password is not used for login, only Firebase auth
             phoneNumber: null,
             role: 'Subscriber', // Default role for new users
             avatarUrl: photoURL || null
           });
-          logger.info('Created new user from Google auth', { userId: user.id, email });
+          logger.info('Created new user from Firebase auth', { userId: user.id, email });
         } catch (createError) {
-          logger.error('Failed to create user from Google auth', { error: createError, email });
+          logger.error('Failed to create user from Firebase auth', { error: createError, email });
           return res.status(500).json({ message: "Failed to create user account" });
         }
       }
@@ -139,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const updatedUser = await UserService.updateUser(user.id, { avatarUrl: photoURL });
           if (updatedUser) {
             user = updatedUser;
-            logger.info('Updated user avatar from Google auth', { userId: user.id });
+            logger.info('Updated user avatar from Firebase auth', { userId: user.id });
           }
         } catch (updateError) {
           logger.warn('Failed to update user avatar', { userId: user.id, error: updateError });
@@ -164,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(200).json(userData);
       });
     } catch (error) {
-      logger.error('Google auth error', { error });
+      logger.error('Firebase auth error', { error });
       res.status(500).json({ message: "Authentication failed" });
     }
   });
