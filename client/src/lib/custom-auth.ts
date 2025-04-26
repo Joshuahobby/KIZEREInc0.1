@@ -2,8 +2,9 @@ import { getAuth } from "firebase/auth";
 import { getApp } from "firebase/app";
 
 /**
- * Custom authentication functions that don't rely on Firebase's redirect/popup methods
- * This works better on Replit domains where Firebase's redirect/popup handlers don't work
+ * Custom authentication functions as backup only
+ * As requested by the user, we're using Firebase's popup method for authentication
+ * This module is kept for backward compatibility but isn't actively used
  */
 
 // Helper function to generate a random state token for CSRF protection
@@ -15,12 +16,16 @@ function generateStateToken() {
 
 /**
  * Opens a new window to the Google Authentication URL with the correct parameters
- * This bypasses Firebase's built-in auth handlers and allows us to use Google Auth directly
+ * NOTE: This function is no longer recommended. Use firebase.ts signInWithGoogle instead
+ * which uses the popup method as requested.
  * 
  * @param redirectPath The path to redirect to after successful authentication (e.g. '/dashboard')
  * @returns A promise that resolves when the popup is opened
+ * @deprecated Use signInWithGoogle from firebase.ts instead
  */
 export function openGoogleAuthWindow(redirectPath: string = '/dashboard'): Promise<{ success: boolean, user?: any, error?: string }> {
+  console.warn('[CustomAuth] This method is deprecated. Use signInWithGoogle from firebase.ts instead');
+  
   return new Promise((resolve) => {
     try {
       // Get the Firebase app instance
