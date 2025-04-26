@@ -14,6 +14,7 @@ import PaymentHistory from "@/pages/payment-history";
 import PaymentTest from "@/pages/payment-test";
 import PaymentDashboard from "@/pages/admin/payment-dashboard";
 import AdminDashboard from "@/pages/admin/dashboard";
+import { MissionControl } from "@/pages/admin/mission-control";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useEffect } from "react";
@@ -79,6 +80,7 @@ function App() {
   const PaymentTestComponent = () => <PaymentTest />;
   const AdminDashboardComponent = () => <AdminDashboard />;
   const PaymentDashboardComponent = () => <PaymentDashboard />;
+  const MissionControlComponent = () => <MissionControl />;
   
   return (
     <ErrorBoundary>
@@ -111,6 +113,7 @@ function App() {
               {/* Admin routes */}
               <ProtectedRoute path="/admin" component={AdminDashboardComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/mission-control" component={MissionControlComponent} requiredRole="Admin" />
               
               {/* 404 route */}
               <Route component={NotFound} />

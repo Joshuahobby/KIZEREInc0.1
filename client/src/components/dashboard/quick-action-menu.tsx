@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { 
   Plus, 
   X, 
@@ -8,137 +8,169 @@ import {
   FileText, 
   BarChart3, 
   Settings,
-  Bell
-} from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useLocation, Link } from "wouter";
+  FileEdit,
+  BookOpen,
+  Zap
+} from 'lucide-react';
+import { useLocation } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-/**
- * QuickActionMenu component
- * 
- * A floating circular menu that provides quick access to critical functions
- * from anywhere in the admin dashboard
- */
-export function QuickActionMenu() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [location, navigate] = useLocation();
+interface QuickActionMenuProps {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  className?: string;
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+}
 
-  // Define actions with their icons, labels, and navigation targets
+export function QuickActionMenu({ 
+  isOpen: propIsOpen, 
+  onOpenChange,
+  className,
+  position = 'bottom-right'
+}: QuickActionMenuProps) {
+  const [isOpen, setIsOpen] = useState(propIsOpen || false);
+  const [, navigate] = useLocation();
+
+  // Toggle menu open/closed
+  const toggleMenu = () => {
+    const newState = !isOpen;
+    setIsOpen(newState);
+    onOpenChange?.(newState);
+  };
+
+  // Actions available in the quick action menu
   const actions = [
-    { 
-      icon: <UserPlus size={18} />, 
-      label: "Add User", 
-      color: "#00BFFF",
-      onClick: () => navigate("/admin/users/new")
+    {
+      icon: <UserPlus className="h-4 w-4" />,
+      label: 'Add User',
+      description: 'Create a new user account',
+      onClick: () => navigate('/admin/users/new')
     },
-    { 
-      icon: <Package size={18} />, 
-      label: "Register Item", 
-      color: "#00BFFF",
-      onClick: () => navigate("/admin/items/new") 
+    {
+      icon: <Package className="h-4 w-4" />,
+      label: 'Register Item',
+      description: 'Register a new valuable item',
+      onClick: () => navigate('/admin/items/new')
     },
-    { 
-      icon: <FileText size={18} />, 
-      label: "New Report", 
-      color: "#00BFFF",
-      onClick: () => navigate("/admin/reports/new") 
+    {
+      icon: <FileText className="h-4 w-4" />,
+      label: 'New Report',
+      description: 'Create a lost or found report',
+      onClick: () => navigate('/admin/reports/new')
     },
-    { 
-      icon: <BarChart3 size={18} />, 
-      label: "Analytics", 
-      color: "#FFD700",
-      onClick: () => navigate("/admin/analytics") 
+    {
+      icon: <BarChart3 className="h-4 w-4" />,
+      label: 'Analytics',
+      description: 'View system analytics',
+      onClick: () => navigate('/admin/analytics')
     },
-    { 
-      icon: <Bell size={18} />, 
-      label: "Notifications", 
-      color: "#FFD700",
-      onClick: () => navigate("/admin/notifications") 
-    },
-    { 
-      icon: <Settings size={18} />, 
-      label: "Settings", 
-      color: "#FFD700",
-      onClick: () => navigate("/admin/settings") 
-    },
+    {
+      icon: <Settings className="h-4 w-4" />,
+      label: 'Settings',
+      description: 'System configuration',
+      onClick: () => navigate('/admin/settings')
+    }
   ];
 
-  const toggleMenu = () => setIsOpen(!isOpen);
+  // Position classes based on position prop
+  const getPositionClasses = () => {
+    switch (position) {
+      case 'top-left':
+        return 'top-4 left-4';
+      case 'top-right':
+        return 'top-4 right-4';
+      case 'bottom-left':
+        return 'bottom-4 left-4';
+      case 'bottom-right':
+      default:
+        return 'bottom-4 right-4';
+    }
+  };
+
+  // Determine action menu position
+  const getActionMenuPositionClasses = () => {
+    switch (position) {
+      case 'top-left':
+        return 'top-16 left-4';
+      case 'top-right':
+        return 'top-16 right-4';
+      case 'bottom-left':
+        return 'bottom-16 left-4';
+      case 'bottom-right':
+      default:
+        return 'bottom-16 right-4';
+    }
+  };
 
   return (
-    <div className="fixed right-6 bottom-6 z-50">
-      <TooltipProvider>
-        {/* Main toggle button */}
-        <motion.button
-          className="flex items-center justify-center w-14 h-14 rounded-full bg-[#00BFFF] text-white shadow-lg hover:bg-[#00BFFF]/90 focus:outline-none"
-          onClick={toggleMenu}
-          whileTap={{ scale: 0.95 }}
-          aria-label={isOpen ? "Close quick actions" : "Open quick actions"}
-        >
+    <>
+      {/* Backdrop when menu is open (mobile only) */}
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
-            animate={{ rotate: isOpen ? 45 : 0 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden fixed inset-0 bg-black/40 z-40"
+            onClick={toggleMenu}
+          />
+        )}
+      </AnimatePresence>
+      
+      {/* Quick action button */}
+      <Button
+        size="icon"
+        className={cn(
+          "fixed z-50 h-12 w-12 rounded-full shadow-lg bg-[#00BFFF] hover:bg-[#00BFFF]/90 transition-all",
+          getPositionClasses(),
+          className
+        )}
+        onClick={toggleMenu}
+      >
+        {isOpen ? (
+          <X className="h-5 w-5" />
+        ) : (
+          <Zap className="h-5 w-5" />
+        )}
+      </Button>
+      
+      {/* Action menu */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            className={cn(
+              "fixed z-40 bg-gray-900 shadow-xl rounded-lg border border-gray-800 w-60",
+              getActionMenuPositionClasses()
+            )}
           >
-            {isOpen ? <X size={24} /> : <Plus size={24} />}
-          </motion.div>
-        </motion.button>
-
-        {/* Action buttons that appear when menu is open */}
-        <AnimatePresence>
-          {isOpen && (
-            <>
-              {/* Semi-transparent overlay to capture clicks outside */}
-              <motion.div
-                className="fixed inset-0 bg-black/20 z-40"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsOpen(false)}
-              />
-              
-              {/* Action buttons */}
+            <div className="p-2 flex flex-col gap-1">
               {actions.map((action, index) => (
-                <Tooltip key={action.label}>
-                  <TooltipTrigger asChild>
-                    <motion.button
-                      className="absolute right-3 w-10 h-10 rounded-full text-white shadow-md flex items-center justify-center"
-                      style={{ backgroundColor: action.color }}
-                      initial={{ opacity: 0, y: 0 }}
-                      animate={{ 
-                        opacity: 1, 
-                        y: -60 * (index + 1),
-                        transition: { 
-                          delay: 0.05 * index,
-                          type: "spring",
-                          stiffness: 260,
-                          damping: 20
-                        }
-                      }}
-                      exit={{ 
-                        opacity: 0, 
-                        y: 0,
-                        transition: { 
-                          delay: 0.03 * (actions.length - index),
-                          duration: 0.2
-                        }
-                      }}
-                      onClick={action.onClick}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      aria-label={action.label}
-                    >
-                      {action.icon}
-                    </motion.button>
-                  </TooltipTrigger>
-                  <TooltipContent side="left">
-                    <p>{action.label}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <button
+                  key={index}
+                  className="flex items-center gap-3 p-2 text-left rounded-md hover:bg-gray-800 text-gray-300 transition-colors"
+                  onClick={() => {
+                    action.onClick();
+                    toggleMenu();
+                  }}
+                >
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-[#00BFFF]">
+                    {action.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white">{action.label}</p>
+                    <p className="text-xs text-gray-400 truncate">{action.description}</p>
+                  </div>
+                </button>
               ))}
-            </>
-          )}
-        </AnimatePresence>
-      </TooltipProvider>
-    </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

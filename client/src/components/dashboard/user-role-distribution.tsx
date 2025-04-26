@@ -1,22 +1,23 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
-export interface PaymentStatusData {
+export interface UserRoleData {
   name: string;
   value: number;
   color?: string;
 }
 
-interface PaymentStatusChartProps {
-  data: PaymentStatusData[];
+interface UserRoleDistributionProps {
+  data: UserRoleData[];
+  className?: string;
 }
 
-export function PaymentStatusChart({ data }: PaymentStatusChartProps) {
-  // Default colors for payment statuses
-  const DEFAULT_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
+export function UserRoleDistribution({ data, className }: UserRoleDistributionProps) {
+  // Default colors for user roles
+  const DEFAULT_COLORS = ['#3b82f6', '#8b5cf6', '#14b8a6'];
   
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={200} className={className}>
       <PieChart>
         <Pie
           data={data}
@@ -37,7 +38,7 @@ export function PaymentStatusChart({ data }: PaymentStatusChartProps) {
           ))}
         </Pie>
         <Tooltip 
-          formatter={(value: number) => [`${value}%`, 'Percentage']}
+          formatter={(value: number) => [`${value}`, 'Users']}
           contentStyle={{ 
             backgroundColor: '#1f2937', 
             borderColor: '#374151',

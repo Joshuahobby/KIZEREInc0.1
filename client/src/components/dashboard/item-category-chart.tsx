@@ -1,39 +1,36 @@
 import React from 'react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-export interface PaymentTimeSeriesData {
-  date: string;
-  amount: number;
+export interface ItemCategoryData {
+  name: string;
+  value: number;
+  color?: string;
 }
 
-interface PaymentAnalyticsChartProps {
-  data: PaymentTimeSeriesData[];
+interface ItemCategoryChartProps {
+  data: ItemCategoryData[];
   className?: string;
 }
 
-export function PaymentAnalyticsChart({ data, className }: PaymentAnalyticsChartProps) {
+export function ItemCategoryChart({ data, className }: ItemCategoryChartProps) {
+  // Default color for bars
+  const DEFAULT_COLOR = '#00BFFF';
+  
   return (
     <ResponsiveContainer width="100%" height={200} className={className}>
-      <AreaChart
+      <BarChart
         data={data}
         margin={{
-          top: 10,
+          top: 5,
           right: 30,
-          left: 0,
-          bottom: 0,
+          left: 20,
+          bottom: 5,
         }}
+        barSize={20}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
         <XAxis 
-          dataKey="date" 
+          dataKey="name"
           tick={{ fill: '#9ca3af' }}
           axisLine={{ stroke: '#4b5563' }}
         />
@@ -48,17 +45,15 @@ export function PaymentAnalyticsChart({ data, className }: PaymentAnalyticsChart
             borderRadius: '0.375rem',
             color: '#f3f4f6'
           }}
+          cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
         />
-        <Area 
-          type="monotone" 
-          dataKey="amount" 
-          stroke="#00BFFF" 
-          fill="#00BFFF" 
-          fillOpacity={0.2}
-          activeDot={{ r: 6 }}
-          name="Revenue"
+        <Bar 
+          dataKey="value" 
+          fill={DEFAULT_COLOR}
+          radius={[4, 4, 0, 0]}
+          name="Items"
         />
-      </AreaChart>
+      </BarChart>
     </ResponsiveContainer>
   );
 }
