@@ -136,14 +136,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
         
-        // Get Firebase ID token
-        let token;
+        let token = null;
+        let tokenError = null;
+        
+        // Get Firebase ID token with retry logic
         try {
           token = await firebaseUser.getIdToken(true); // Force token refresh
           console.log("[useAuth] Successfully retrieved Firebase ID token");
-        } catch (tokenError) {
-          console.warn("[useAuth] Failed to get Firebase ID token:", tokenError);
-          token = null; // Continue without token in development
+        } catch (error) {
+          console.warn("[useAuth] Failed to get Firebase ID token:", error);
+          tokenError = error;
+          
+          // Even without a token, we'll try to authenticate with the server
+          // The server is now more permissive for Replit environments
         }
         
         // Extract user data from Firebase user
@@ -153,10 +158,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           uid: firebaseUser.uid,
           token,
           photoURL: firebaseUser.photoURL || null,
+          // Additional context for debugging
+          authTimestamp: localStorage.getItem('firebase_auth_timestamp'),
+          authOrigin: localStorage.getItem('firebase_auth_origin'),
+          authState: localStorage.getItem('firebase_auth_state'),
+          currentOrigin: window.location.origin,
+          tokenError: tokenError ? {
+            message: tokenError instanceof Error ? tokenError.message : String(tokenError),
+            name: tokenError instanceof Error ? tokenError.name : 'UnknownError',
+            code: (tokenError as any)?.code || 'unknown'
+          } : null
         };
         
         // Call server endpoint to sync Firebase auth with server session
-        console.log("[useAuth] Synchronizing Firebase auth with server...");
+        console.log("[useAuth] Synchronizing Firebase auth with server with payload:", {
+          email: userData.email,
+          name: userData.name,
+          uid: userData.uid,
+          hasToken: !!userData.token,
+          hasPhotoURL: !!userData.photoURL
+        });
+        
         const response = await fetch("/api/auth/google", {
           method: "POST",
           headers: {

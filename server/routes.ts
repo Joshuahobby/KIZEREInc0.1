@@ -103,16 +103,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/google", async (req, res) => {
     try {
       const { email, name, uid, token, photoURL } = req.body;
+      const origin = req.headers.origin;
+      const referer = req.headers.referer;
+      const isReplitEnvironment = 
+        (origin && (origin.includes('replit') || origin.includes('repl.co'))) ||
+        (referer && (referer.includes('replit') || referer.includes('repl.co')));
+      
+      logger.info('Google auth request details', {
+        hasEmail: !!email,
+        hasName: !!name,
+        hasUid: !!uid,
+        hasToken: !!token,
+        origin,
+        referer,
+        isReplitEnvironment
+      });
       
       if (!email || !name || !uid) {
-        logger.warn('Google auth missing required fields', { email });
+        logger.warn('Google auth missing required fields', { 
+          hasEmail: !!email,
+          hasName: !!name, 
+          hasUid: !!uid
+        });
         return res.status(400).json({ message: "Missing required fields" });
       }
       
       console.log("Processing Google authentication for:", email);
       
-      // For development, we can proceed with authentication without token verification
-      // In production, token verification should always be enabled
+      // For development or Replit environment, we can proceed without strict token verification
       let tokenVerified = false;
       
       // Only verify token if it's provided
@@ -137,14 +155,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             error: tokenError
           });
           
-          // In production, you might want to return an error here
-          // For development, we're continuing even if token verification fails
-          if (process.env.NODE_ENV === 'production') {
-            // Show limited error details in production
+          // For Replit dev environments, proceed even with token errors
+          if (isReplitEnvironment || process.env.NODE_ENV !== 'production') {
+            logger.info('Development/Replit environment: proceeding without token verification');
+          } else if (process.env.NODE_ENV === 'production') {
+            // In production, we'd normally reject invalid tokens
+            // But we'll proceed with a warning for now
             logger.warn('Proceeding without token verification in production environment');
-          } else {
-            logger.info('Development mode: proceeding without token verification');
           }
+        }
+      } else {
+        logger.warn('No token provided for verification');
+        // For Replit environment, allow authentication without token
+        if (isReplitEnvironment) {
+          logger.info('Replit environment: proceeding without token');
         }
       }
       

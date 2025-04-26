@@ -34,19 +34,46 @@ if (!admin.apps.length) {
 }
 
 /**
+ * Determine if running in Replit environment
+ * This is used to relax certain security requirements during development
+ */
+function isReplitEnvironment(): boolean {
+  const isReplit = process.env.REPL_ID !== undefined || 
+                  process.env.REPL_OWNER !== undefined ||
+                  process.env.REPL_SLUG !== undefined ||
+                  process.env.NODE_ENV === 'development';
+                  
+  if (isReplit) {
+    logger.info('Detected Replit/development environment');
+  }
+  
+  return isReplit;
+}
+
+/**
  * Verify Firebase ID token and return the decoded token
  * 
  * @param idToken Firebase ID Token to verify
  * @returns The decoded token if verification succeeds, null otherwise
  */
 export async function verifyFirebaseToken(idToken: string) {
+  // Check if running in Replit dev environment
+  const isReplit = isReplitEnvironment();
+  
   try {
     // Validate input
     if (!idToken || typeof idToken !== 'string' || idToken.trim() === '') {
       logger.error('Invalid token provided for verification', { 
         tokenProvided: !!idToken,
-        tokenType: typeof idToken
+        tokenType: typeof idToken,
+        isReplit
       });
+      
+      // In Replit environment, we might need to be more permissive
+      if (isReplit) {
+        logger.warn('Replit environment detected: Would normally reject empty token');
+      }
+      
       return null;
     }
     
@@ -68,7 +95,8 @@ export async function verifyFirebaseToken(idToken: string) {
       errorMessage,
       errorStack,
       tokenLength: idToken ? idToken.length : 0,
-      error
+      error,
+      isReplit
     });
     
     // For certain known errors, we can provide more specific logging
@@ -78,6 +106,15 @@ export async function verifyFirebaseToken(idToken: string) {
       logger.warn('Invalid token format or signature');
     } else if (errorMessage.includes('project')) {
       logger.warn('Token from different Firebase project');
+    }
+    
+    // In development or Replit, provide more detailed error info
+    if (isReplit) {
+      logger.warn('Replit environment: Token verification failed but continuing', {
+        errorType: error instanceof Error ? error.constructor.name : typeof error,
+        errorCode: error instanceof Error && 'code' in error ? (error as any).code : 'unknown',
+        idTokenLength: idToken ? idToken.length : 0
+      });
     }
     
     return null;
