@@ -406,16 +406,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               description: `Signed in as ${serverUser.fullName || serverUser.email}`,
             });
             
-            // Determine which dashboard to redirect to based on user role
-            let dashboardPath = "/dashboard";
-            if (serverUser.role === "Admin") {
-              dashboardPath = "/admin/dashboard";
-            } else if (serverUser.role === "Agent") {
-              dashboardPath = "/agent/dashboard";
-            }
-            
-            // Redirect to the appropriate dashboard
-            setLocation(dashboardPath);
+            // Use the AuthService to determine the correct dashboard path
+            // This centralizes our redirect logic and makes it consistent
+            import('@/services/auth.service').then(({ AuthService }) => {
+              const dashboardPath = AuthService.getDashboardPathByRole(serverUser.role);
+              console.log(`[useAuth] Redirecting ${serverUser.role} user to: ${dashboardPath}`);
+              
+              // Redirect to the appropriate dashboard
+              setLocation(dashboardPath);
+            });
           } else {
             console.error("[useAuth] Failed to synchronize popup auth with server:", response.status);
             throw new Error("Failed to create server session");

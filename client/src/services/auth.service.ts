@@ -133,9 +133,9 @@ export const AuthService = {
     console.log("Getting dashboard for role:", role);
     switch(role) {
       case 'Admin':
-        return '/admin-dashboard';
+        return '/admin'; // Changed to match the route in App.tsx
       case 'Agent':
-        return '/agent-dashboard';
+        return '/dashboard'; // Agents use the regular dashboard for now
       case 'Subscriber':
       default:
         return '/dashboard';
