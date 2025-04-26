@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   BarChart3,
   Bell,
+  BellRing,
   CreditCard,
   FileText,
   Home,
@@ -23,7 +24,18 @@ import {
   List,
   ChevronRight,
   ChevronDown,
-  BookCheck
+  BookCheck,
+  Sliders,
+  PanelTop,
+  LayoutGrid,
+  Info,
+  Calendar,
+  Clock,
+  ArrowRight,
+  ArrowRightCircle,
+  HelpCircle,
+  Filter,
+  X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +57,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 // TODO: Use translation hook once fully implemented
 // import { useTranslation } from "@/hooks/use-translation";
 const useTranslation = () => ({ t: (key: string) => key });
@@ -57,13 +70,20 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ReactNode;
+  badge?: number;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
   const { user, signOut } = useAuth();
   const { t } = useTranslation();
-  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
+    // Default open categories
+    Overview: true
+  });
+  const [showActionPanel, setShowActionPanel] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
 
   // Check if user has admin role
   const isAdmin = user?.role === "Admin";
@@ -73,6 +93,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     title: string;
     icon: React.ReactNode;
     items: NavItem[];
+    badge?: number;
   }
 
   const navCategories: NavCategory[] = [
