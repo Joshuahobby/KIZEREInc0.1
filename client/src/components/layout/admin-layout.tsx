@@ -268,7 +268,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Top navigation bar */}
-      <header className="sticky top-0 z-40 border-b bg-background">
+      <header className="sticky top-0 z-40 border-b bg-background shadow-sm">
         <div className="container flex h-16 items-center justify-between py-4">
           <div className="flex items-center gap-2 md:gap-4">
             {/* Mobile menu trigger */}
@@ -349,8 +349,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               </a>
             </Link>
 
+            {/* Global search */}
+            <div className="hidden md:block relative max-w-md w-full ml-4">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search anything..." 
+                className="pl-8 w-full" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
             {/* Desktop navigation */}
-            <nav className="hidden md:flex md:gap-2 lg:gap-6">
+            <nav className="hidden lg:flex lg:gap-2 xl:gap-6 ml-4">
               {topNavItems.map((item) => (
                 <Link key={item.href} href={item.href}>
                   <a
@@ -369,8 +380,38 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </nav>
           </div>
 
-          {/* User dropdown menu */}
+          {/* Right side actions */}
           <div className="flex items-center gap-2">
+            {/* Notification bell */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute top-1 right-1 flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background"></span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Notifications</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {/* Customization toggle */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => setShowActionPanel(!showActionPanel)}
+                  >
+                    <Sliders className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Customize dashboard</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            {/* User dropdown menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -380,7 +421,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 >
                   <Avatar>
                     <AvatarImage
-                      src={undefined}
+                      src={user?.avatarUrl || undefined}
                       alt={user?.username || "User"}
                     />
                     <AvatarFallback>{getUserInitials()}</AvatarFallback>
@@ -423,16 +464,31 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </header>
 
-      {/* Main content with sidebar */}
+      {/* Main content with three-panel layout */}
       <div className="flex-1 flex flex-col md:flex-row">
-        {/* Admin sidebar - desktop only */}
-        <aside className="hidden md:block w-64 border-r bg-muted/10 p-6 pt-8">
+        {/* Left panel: Navigation sidebar - desktop only */}
+        <aside className="hidden md:block w-64 border-r bg-muted/10 p-4 pt-6 overflow-y-auto">
           <div className="space-y-6">
-            <div className="relative mb-4">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search..." className="pl-8" />
+            {/* Recently viewed */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-2 text-muted-foreground px-3">Recently Viewed</h3>
+              <div className="space-y-1">
+                <Link href="/admin/users/5">
+                  <a className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span>User ID #5</span>
+                  </a>
+                </Link>
+                <Link href="/admin/items/10">
+                  <a className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground">
+                    <Database className="h-4 w-4 text-muted-foreground" />
+                    <span>Item ID #10</span>
+                  </a>
+                </Link>
+              </div>
             </div>
             
+            {/* Navigation categories */}
             <nav className="flex flex-col space-y-2">
               {navCategories.map((category) => (
                 <Collapsible
@@ -446,6 +502,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       {category.icon}
                       <span>{category.title}</span>
                     </div>
+                    {category.badge && (
+                      <Badge variant="outline" className="ml-auto mr-2 px-1">
+                        {category.badge}
+                      </Badge>
+                    )}
                     <ChevronDown className={cn(
                       "h-4 w-4 transition-transform duration-200",
                       openCategories[category.title] ? "rotate-180 transform" : ""
@@ -464,6 +525,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                         >
                           {item.icon}
                           <span>{item.title}</span>
+                          {item.badge && (
+                            <Badge variant="outline" className="ml-auto">
+                              {item.badge}
+                            </Badge>
+                          )}
                         </a>
                       </Link>
                     ))}
@@ -471,13 +537,152 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 </Collapsible>
               ))}
             </nav>
+            
+            {/* Quick shortcuts */}
+            <div className="pt-4">
+              <h3 className="text-sm font-medium mb-2 text-muted-foreground px-3">Shortcuts</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" className="justify-start">
+                  <Users className="h-3.5 w-3.5 mr-2" />
+                  <span>New User</span>
+                </Button>
+                <Button variant="outline" size="sm" className="justify-start">
+                  <Database className="h-3.5 w-3.5 mr-2" />
+                  <span>New Item</span>
+                </Button>
+                <Button variant="outline" size="sm" className="justify-start">
+                  <FileText className="h-3.5 w-3.5 mr-2" />
+                  <span>Reports</span>
+                </Button>
+                <Button variant="outline" size="sm" className="justify-start">
+                  <Settings className="h-3.5 w-3.5 mr-2" />
+                  <span>Settings</span>
+                </Button>
+              </div>
+            </div>
           </div>
         </aside>
         
-        {/* Main content area */}
-        <main className="flex-1 overflow-auto p-6">
+        {/* Center panel: Main content area */}
+        <main className="flex-1 overflow-auto p-6 bg-gradient-to-b from-background to-muted/20">
           {children}
         </main>
+        
+        {/* Right panel: Action panel - context-sensitive */}
+        {showActionPanel && (
+          <aside className="hidden lg:block w-80 border-l bg-muted/10 p-4 pt-6 overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-medium">Actions & Insights</h3>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setShowActionPanel(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Alerts and insights */}
+            <div className="mb-6 space-y-3">
+              <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+                <div className="flex items-start">
+                  <AlertTriangle className="h-4 w-4 text-yellow-500 mt-0.5 mr-2" />
+                  <div>
+                    <h4 className="text-sm font-medium">3 pending verifications</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Items awaiting your approval</p>
+                    <Button variant="link" size="sm" className="h-6 px-0 text-xs mt-1">
+                      Review now <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-md">
+                <div className="flex items-start">
+                  <Info className="h-4 w-4 text-blue-500 mt-0.5 mr-2" />
+                  <div>
+                    <h4 className="text-sm font-medium">Revenue up 12% this week</h4>
+                    <p className="text-xs text-muted-foreground mt-1">Registration payments increased</p>
+                    <Button variant="link" size="sm" className="h-6 px-0 text-xs mt-1">
+                      View report <ArrowRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Recent activity */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-3">Recent Activity</h3>
+              <div className="space-y-4">
+                {[
+                  { icon: <Users className="h-4 w-4" />, text: "New user registered", time: "5 minutes ago" },
+                  { icon: <Database className="h-4 w-4" />, text: "Item #1042 registered", time: "30 minutes ago" },
+                  { icon: <CreditCard className="h-4 w-4" />, text: "Payment of RWF 5,000 received", time: "1 hour ago" },
+                  { icon: <Bell className="h-4 w-4" />, text: "System notification sent to all users", time: "2 hours ago" }
+                ].map((activity, i) => (
+                  <div key={i} className="flex items-start">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted mr-3">
+                      {activity.icon}
+                    </div>
+                    <div>
+                      <p className="text-sm">{activity.text}</p>
+                      <p className="text-xs text-muted-foreground">{activity.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button variant="outline" size="sm" className="mt-3 w-full">View all activity</Button>
+            </div>
+            
+            {/* Upcoming tasks or calendar */}
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-3">Upcoming Tasks</h3>
+              <div className="space-y-3">
+                {[
+                  { text: "Review verification requests", date: "Today", priority: "high" },
+                  { text: "Check payment reconciliation", date: "Tomorrow", priority: "medium" },
+                  { text: "System maintenance", date: "Apr 30", priority: "normal" }
+                ].map((task, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-background rounded-md border">
+                    <div className="flex items-start gap-3">
+                      <div className={`h-2 w-2 rounded-full mt-1.5 ${
+                        task.priority === 'high' ? 'bg-red-500' : 
+                        task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                      }`}></div>
+                      <div>
+                        <p className="text-sm font-medium">{task.text}</p>
+                        <div className="flex items-center mt-1">
+                          <Calendar className="h-3 w-3 text-muted-foreground mr-1" />
+                          <span className="text-xs text-muted-foreground">{task.date}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Quick settings */}
+            <div>
+              <h3 className="text-sm font-medium mb-3">Quick Settings</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Notifications</span>
+                  <Button variant="outline" size="sm">Configure</Button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">System status emails</span>
+                  <Button variant="outline" size="sm">Configure</Button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Dashboard preferences</span>
+                  <Button variant="outline" size="sm">Configure</Button>
+                </div>
+              </div>
+            </div>
+          </aside>
+        )}
       </div>
 
       {/* Footer */}
