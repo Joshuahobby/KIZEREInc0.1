@@ -20,6 +20,7 @@ import {
   Filter,
   HelpCircle,
   Inbox,
+  Info,
   Loader2,
   Package,
   PieChart,
@@ -856,12 +857,12 @@ export default function AdminDashboard() {
           sidebarContext.type === 'items' ? <Package className="h-5 w-5" /> :
           sidebarContext.type === 'reports' ? <FileText className="h-5 w-5" /> :
           sidebarContext.type === 'payments' ? <CreditCard className="h-5 w-5" /> :
-          sidebarContext.type === 'insight' ? <AlertTriangle className="h-5 w-5" /> : <Info className="h-5 w-5" />
+          sidebarContext.type === 'insight' ? <AlertTriangle className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />
         }
-        open={showContextSidebar}
+        isOpen={showContextSidebar}
         onClose={() => setShowContextSidebar(false)}
-        width={400}
-        position="right"
+        data={sidebarContext.data || {}}
+        type={sidebarContext.type}
         tabs={
           sidebarContext.type === 'users' ? [
             { id: 'list', title: 'Users', icon: <Users className="h-4 w-4" />, content: <div className="text-white">User list content would appear here</div> },
@@ -928,6 +929,7 @@ export default function AdminDashboard() {
           title="Revenue Analysis"
           id="revenue-detail"
           onClose={() => setSelectedDetailView(null)}
+          children={null}
           sections={[
             {
               id: 'overview',
@@ -1055,6 +1057,7 @@ export default function AdminDashboard() {
           title="System Status Details"
           id="system-status"
           onClose={() => setSelectedDetailView(null)}
+          children={null}
           sections={[
             {
               id: 'current-status',
