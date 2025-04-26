@@ -111,9 +111,9 @@ export const AuthService = {
       
       switch (role) {
         case 'admin':
-          return '/admin-dashboard';
-        case 'staff':
-          return '/staff-dashboard';
+          return '/admin';
+        case 'agent':
+          return '/dashboard';
         case 'user':
         default:
           return '/dashboard';

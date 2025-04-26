@@ -294,17 +294,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    let dashboardPath = "/dashboard";
-    
-    // Set the appropriate dashboard path based on user role
-    if (user.role === "Admin") {
-      dashboardPath = "/admin/dashboard";
-    } else if (user.role === "Agent") {
-      dashboardPath = "/agent/dashboard";
-    }
-    
-    // Redirect to the appropriate dashboard
+    // Use the AuthService to determine the correct dashboard path
     if (user) {
+      const dashboardPath = AuthService.getDashboardPathByRole(user.role);
       console.log("[useAuth] Redirecting to dashboard:", dashboardPath);
       setIsRedirecting(true);
       setLocation(dashboardPath);
@@ -331,14 +323,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userData = await response.json();
       setUser(userData);
       
-      // Redirect based on role
-      if (userData.role === "Admin") {
-        setLocation("/admin/dashboard");
-      } else if (userData.role === "Agent") {
-        setLocation("/agent/dashboard");
-      } else {
-        setLocation("/dashboard");
-      }
+      // Use the AuthService to determine the correct dashboard path
+      const dashboardPath = AuthService.getDashboardPathByRole(userData.role);
+      console.log(`[useAuth] Redirecting ${userData.role} user to: ${dashboardPath}`);
+      setLocation(dashboardPath);
     } catch (error) {
       console.error("[useAuth] Login error:", error);
       setError(error instanceof Error ? error.message : "Login failed");
