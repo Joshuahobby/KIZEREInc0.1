@@ -52,11 +52,24 @@ export function openGoogleAuthWindow(redirectPath: string = '/dashboard'): Promi
         state: stateToken
       });
       
+      // Get Firebase project config for OAuth
+      const firebaseConfig = {
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        appId: import.meta.env.VITE_FIREBASE_APP_ID
+      };
+      
+      // Create Firebase OAuth client ID based on project ID
+      const firebaseOAuthClientId = `${firebaseConfig.projectId}.apps.googleusercontent.com`;
+      
+      // Update oauthParams with actual client ID
+      oauthParams.set('client_id', firebaseOAuthClientId);
+      
       // Build the full Google OAuth URL
       const googleOAuthUrl = `https://accounts.google.com/o/oauth2/auth?${oauthParams.toString()}`;
       
       console.log('[CustomAuth] Opening Google auth window with URL params:', {
-        client_id: '407408718192.apps.googleusercontent.com',
+        client_id: firebaseOAuthClientId,
         redirect_uri: redirectUri,
         state: stateToken
       });

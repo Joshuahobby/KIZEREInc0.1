@@ -83,11 +83,24 @@ export class AuthCallbackController {
         hasApiKey: !!firebaseApiKey
       });
       
+      // Get Firebase configuration from environment
+      const firebaseProjectId = process.env.VITE_FIREBASE_PROJECT_ID;
+      const firebaseApiKey = process.env.VITE_FIREBASE_API_KEY;
+      
+      // Create OAuth client ID from project ID
+      const clientId = `${firebaseProjectId}.apps.googleusercontent.com`;
+      
+      logger.info('Firebase config for OAuth', { 
+        hasProjectId: !!firebaseProjectId,
+        hasApiKey: !!firebaseApiKey,
+        clientId
+      });
+      
       // Send request to Google to exchange code for tokens
       const tokenResponse = await axios.post(tokenUrl, {
         code,
-        client_id: '407408718192.apps.googleusercontent.com',
-        client_secret: process.env.GOOGLE_CLIENT_SECRET || 'GOCSPX-DUMMY_SECRET_REPLACE_THIS',
+        client_id: clientId,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET || 'client_secret_not_required_for_implicit_flow',
         redirect_uri: redirectUri,
         grant_type: 'authorization_code'
       });
