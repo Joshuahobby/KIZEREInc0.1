@@ -18,6 +18,19 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
+// Add a custom auth domain for development - use the current hostname
+// This helps when the Firebase console doesn't have the Replit domain in the authorized domains
+const currentDomain = window.location.hostname;
+if (currentDomain.includes('replit') || currentDomain.includes('repl.co')) {
+  console.log(`[Firebase] Running on Replit domain: ${currentDomain}. Using current origin for authentication redirects.`);
+  try {
+    // Use the current URL as the auth domain for redirection purposes
+    firebaseConfig.authDomain = window.location.host;
+  } catch (error) {
+    console.warn('[Firebase] Failed to set custom auth domain:', error);
+  }
+}
+
 // Validate Firebase config with detailed logging
 const validateFirebaseConfig = () => {
   const requiredVars = [
@@ -83,24 +96,36 @@ export function signInWithGoogle(redirectUrl?: string) {
       localStorage.setItem('firebase_auth_redirect', redirectUrl);
     }
     
+    // Add timestamp for debugging redirect issues
+    localStorage.setItem('firebase_auth_timestamp', Date.now().toString());
+    
+    // Store current host for validation after redirect
+    localStorage.setItem('firebase_auth_origin', window.location.origin);
+    
     // Build parameters with state for CSRF protection
     const parameters: any = {
       prompt: 'select_account', // Forces account selection even if already logged in
       state
     };
     
-    // Always include redirect URL in parameters to improve tracking
-    if (redirectUrl) {
-      parameters.redirect_uri = window.location.origin + '/auth-callback';
-    }
+    // Get the callback URL
+    const callbackUrl = '/auth-callback';
+    const absoluteCallbackUrl = window.location.origin + callbackUrl;
+    
+    // Log the full redirect configuration
+    console.log('[Firebase] Google sign-in configuration:', {
+      state,
+      redirectUrl,
+      callbackUrl: absoluteCallbackUrl,
+      origin: window.location.origin,
+      hostname: window.location.hostname
+    });
     
     googleProvider.setCustomParameters(parameters);
     
-    console.log('[Firebase] Starting Google sign-in redirect flow', {
-      state,
-      hasRedirectUrl: !!redirectUrl
-    });
+    console.log('[Firebase] Starting Google sign-in redirect flow');
     
+    // Perform the redirect with the provider
     return signInWithRedirect(auth, googleProvider);
   } catch (error) {
     console.error('[Firebase] Error starting Google sign-in redirect:', error);

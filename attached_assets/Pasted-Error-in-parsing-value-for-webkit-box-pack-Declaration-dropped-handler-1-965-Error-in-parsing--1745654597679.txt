@@ -1,0 +1,831 @@
+Error in parsing value for ‘-webkit-box-pack’.  Declaration dropped. handler:1:965
+Error in parsing value for ‘-moz-box-pack’.  Declaration dropped. handler:1:1019
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/
+[HTTP/1.1 200 OK 739ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@vite/client
+[HTTP/1.1 200 OK 4394ms]
+
+GET
+https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@react-refresh
+[HTTP/1.1 200 OK 1712ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/main.tsx?v=2caCcZzMtaUKKKRlxNeaD
+[HTTP/1.1 200 OK 476ms]
+
+GET
+https://replit.com/public/js/replit-dev-banner.js
+[HTTP/2 200  0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-dom_client.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx
+[HTTP/1.1 200 OK 3625ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/queryClient.ts?v=2caCcZzMtaUKKKRlxNeaD
+[HTTP/1.1 200 OK 862ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/toaster.tsx
+[HTTP/1.1 304 Not Modified 2107ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/App.tsx?v=2caCcZzMtaUKKKRlxNeaD
+[HTTP/1.1 200 OK 2641ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/index.css?v=2caCcZzMtaUKKKRlxNeaD
+[HTTP/1.1 200 OK 4405ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VJA5E53X.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-QRIEPQWS.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-toast.ts
+[HTTP/1.1 304 Not Modified 1378ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/toast.tsx
+[HTTP/1.1 200 OK 1466ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/tooltip.tsx
+[HTTP/1.1 304 Not Modified 933ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/protected-route.tsx
+[HTTP/1.1 304 Not Modified 934ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/not-found.tsx
+[HTTP/1.1 304 Not Modified 1197ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/unified-dashboard.tsx
+[HTTP/1.1 304 Not Modified 1195ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/item-registration.tsx
+[HTTP/1.1 304 Not Modified 1192ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/search.tsx
+[HTTP/1.1 304 Not Modified 1189ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/lost-found.tsx
+[HTTP/1.1 304 Not Modified 1554ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/user-management.tsx
+[HTTP/1.1 304 Not Modified 1554ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/landing-page.tsx
+[HTTP/1.1 304 Not Modified 1568ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/auth-callback.tsx
+[HTTP/1.1 304 Not Modified 1807ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/payment-status.tsx
+[HTTP/1.1 304 Not Modified 1805ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/payment-history.tsx
+[HTTP/1.1 304 Not Modified 1820ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/payment-test.tsx
+[HTTP/1.1 304 Not Modified 1943ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/payment-dashboard.tsx
+[HTTP/1.1 304 Not Modified 2066ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/dashboard.tsx
+[HTTP/1.1 304 Not Modified 2066ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/LanguageContext.tsx
+[HTTP/1.1 304 Not Modified 2097ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/error-boundary.tsx
+[HTTP/1.1 304 Not Modified 2107ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/vite/dist/client/env.mjs
+[HTTP/1.1 304 Not Modified 1918ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/utils.ts
+[HTTP/1.1 304 Not Modified 348ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-toast.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/class-variance-authority.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/lucide-react.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/services/auth.service.ts
+[HTTP/1.1 304 Not Modified 1351ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AMO7TTGP.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-I23OICY7.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WKUZQA3D.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-VL2OMZND.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-DL6JEB3T.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XJHPYMSP.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UA7G4IGV.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-A6JAMYPY.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5Q5YC75F.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5JUHJQDP.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2M7HY3UG.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KREND35G.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-T5ONMTIY.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YENB44SV.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-U7P2NEEE.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx
+[HTTP/1.1 304 Not Modified 324ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-dashboard-data.tsx
+[HTTP/1.1 304 Not Modified 1020ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layout/header.tsx
+[HTTP/1.1 304 Not Modified 1007ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layout/footer.tsx
+[HTTP/1.1 304 Not Modified 1180ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/button.tsx
+[HTTP/1.1 304 Not Modified 1186ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/skeleton.tsx
+[HTTP/1.1 304 Not Modified 1191ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/tabs.tsx
+[HTTP/1.1 304 Not Modified 275ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/stats-card.tsx
+[HTTP/1.1 304 Not Modified 1217ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/activity-timeline.tsx
+[HTTP/1.1 304 Not Modified 1206ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/notification-center.tsx
+[HTTP/1.1 304 Not Modified 1245ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/payment-history-card.tsx
+[HTTP/1.1 304 Not Modified 1550ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/items-table.tsx
+[HTTP/1.1 304 Not Modified 1551ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/quick-actions-panel.tsx
+[HTTP/1.1 304 Not Modified 1550ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/global-search.tsx
+[HTTP/1.1 304 Not Modified 1549ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/logger.ts
+[HTTP/1.1 304 Not Modified 1513ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/table.tsx
+[HTTP/1.1 304 Not Modified 1512ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/badge.tsx
+[HTTP/1.1 304 Not Modified 1784ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/payment-analytics-chart.tsx
+[HTTP/1.1 304 Not Modified 1774ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/payment-status-chart.tsx
+[HTTP/1.1 304 Not Modified 1773ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/payment-type-chart.tsx
+[HTTP/1.1 304 Not Modified 1771ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/recent-transactions.tsx
+[HTTP/1.1 304 Not Modified 1765ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/input.tsx
+[HTTP/1.1 304 Not Modified 1788ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx
+[HTTP/1.1 304 Not Modified 2048ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/date-fns.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@hookform_resolvers_zod.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-hook-form.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/zod.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/header.tsx
+[HTTP/1.1 304 Not Modified 2035ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/footer.tsx
+[HTTP/1.1 304 Not Modified 2037ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/shared/schema.ts
+[HTTP/1.1 304 Not Modified 2075ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/queryClient.ts
+[HTTP/1.1 304 Not Modified 2076ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/firebase.ts
+[HTTP/1.1 304 Not Modified 2077ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/accordion.tsx
+[HTTP/1.1 304 Not Modified 2309ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/textarea.tsx
+[HTTP/1.1 304 Not Modified 2310ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/form.tsx
+[HTTP/1.1 304 Not Modified 2314ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/progress.tsx
+[HTTP/1.1 304 Not Modified 2339ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/alert.tsx
+[HTTP/1.1 304 Not Modified 2332ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/item-registration/batch-image-upload.tsx
+[HTTP/1.1 304 Not Modified 2333ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/item-registration/ownership-chain.tsx
+[HTTP/1.1 304 Not Modified 2565ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/item-registration/qr-code-generator.tsx
+[HTTP/1.1 304 Not Modified 2570ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/item-registration/smart-id-recognizer.tsx
+[HTTP/1.1 304 Not Modified 2590ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/clsx.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/tailwind-merge.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AO6B2ZZ6.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WGQNECLP.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/dialog.tsx
+[HTTP/1.1 304 Not Modified 266ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/theme-toggle.tsx
+[HTTP/1.1 304 Not Modified 2491ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/language-switcher-custom.tsx
+[HTTP/1.1 304 Not Modified 2503ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/auth-modal.tsx
+[HTTP/1.1 304 Not Modified 252ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/assets/crowd.jpg?import
+[HTTP/1.1 304 Not Modified 2717ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-367JDTV5.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-ENYZ4MRF.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/services/payment.service.ts
+[HTTP/1.1 304 Not Modified 261ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-icons_si.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/models/auth.model.ts
+[HTTP/1.1 304 Not Modified 269ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/password-strength-indicator.tsx
+[HTTP/1.1 200 OK 2408ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6PQQLTLM.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7JOWPB7O.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UMWMWBIR.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/config/payment.config.ts
+[HTTP/1.1 304 Not Modified 261ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-7CP5XZ5J.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/dropdown-menu.tsx
+[HTTP/1.1 304 Not Modified 264ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layout/admin-layout.tsx
+[HTTP/1.1 304 Not Modified 2196ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/locales/en.ts
+[HTTP/1.1 304 Not Modified 2205ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/locales/fr.ts
+[HTTP/1.1 304 Not Modified 2526ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/locales/rw.json?import
+[HTTP/1.1 304 Not Modified 2528ms]
+
+[vite] connecting... client:495:9
+GET
+wss://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/?token=Oz1cNnt1rsUx
+[HTTP/1.1 101 Switching Protocols 3002ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/avatar-with-initials.tsx
+[HTTP/1.1 304 Not Modified 255ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-slot.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/scroll-area.tsx
+[HTTP/1.1 304 Not Modified 269ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/avatar.tsx
+[HTTP/1.1 304 Not Modified 1918ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/command.tsx
+[HTTP/1.1 304 Not Modified 256ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-debounce.ts
+[HTTP/1.1 304 Not Modified 1613ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6ZMM2PAV.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/recharts.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/cmdk.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/logo.tsx
+[HTTP/1.1 304 Not Modified 274ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/sheet.tsx
+[HTTP/1.1 304 Not Modified 988ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/navigation-menu.tsx
+[HTTP/1.1 304 Not Modified 1393ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/providers/theme-provider.tsx
+[HTTP/1.1 304 Not Modified 1392ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/LanguageSwitcher.tsx
+[HTTP/1.1 304 Not Modified 1390ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/useTranslation.tsx
+[HTTP/1.1 304 Not Modified 1390ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/drizzle-orm_pg-core.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/drizzle-zod.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/firebase_app.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/firebase_auth.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-ST7PQ2HY.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YCQ2WU5I.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BYJYLGTN.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-accordion.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/label.tsx
+[HTTP/1.1 304 Not Modified 261ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-progress.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_core.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_sortable.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_utilities.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-icons_lu.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-F5Y63KJI.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-CI5CI4DN.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/separator.tsx
+[HTTP/1.1 304 Not Modified 258ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/switch.tsx
+[HTTP/1.1 304 Not Modified 263ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/slider.tsx
+[HTTP/1.1 304 Not Modified 975ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/color-picker.tsx
+[HTTP/1.1 304 Not Modified 1321ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/qrcode.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/radio-group.tsx
+[HTTP/1.1 304 Not Modified 1311ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/utils/ocr-utils.ts
+[HTTP/1.1 304 Not Modified 1311ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-label.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-separator.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-switch.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-avatar.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-navigation-menu.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-slider.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+[vite] connected. client:618:15
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-radio-group.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-colorful.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/popover.tsx
+[HTTP/1.1 304 Not Modified 283ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/tesseract__js.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-popover.js?v=abd56ca4
+[HTTP/1.1 200 OK 0ms]
+
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools chunk-XQLYTHWV.js:21551:25
+[Firebase] Checking configuration variables: 
+Object { hasApiKey: true, hasProjectId: true, hasAppId: true, authDomain: "kizere-99ac2.firebaseapp.com" }
+firebase.ts:23:11
+[Firebase] Configuration validation passed firebase.ts:35:11
+[Firebase] Successfully initialized Firebase app firebase.ts:41:11
+Error in parsing value for ‘-webkit-text-size-adjust’.  Declaration dropped. 5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev:141:29
+Unknown property ‘-moz-osx-font-smoothing’.  Declaration dropped. 5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev:511:27
+Unknown property ‘-moz-column-gap’.  Declaration dropped. 5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev:1629:19
+Unknown property ‘-moz-column-gap’.  Declaration dropped. 5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev:1633:19
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/favicon.ico
+
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/user
+[HTTP/1.1 401 Unauthorized 1117ms]
+
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/user
+[HTTP/1.1 401 Unauthorized 1120ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/assets/crowd.jpg
+[HTTP/1.1 304 Not Modified 271ms]
+
+GET
+https://i.ibb.co/QdQDwVC/mobile-mockup.png
+[HTTP/2 404  1177ms]
+
+GET
+https://apis.google.com/js/api.js?onload=__iframefcb227200
+[HTTP/3 200  605ms]
+
+[Firebase] Checking for redirect result... firebase.ts:95:13
+[Firebase] Getting redirect result from auth instance firebase.ts:107:13
+[useAuth] No server session found, status: 401 use-auth.tsx:46:21
+[Firebase] Checking for redirect result... firebase.ts:95:13
+[Firebase] Getting redirect result from auth instance firebase.ts:107:13
+[useAuth] No server session found, status: 401 use-auth.tsx:46:21
+[Firebase] Checking for redirect result... firebase.ts:95:13
+[Firebase] Getting redirect result from auth instance firebase.ts:107:13
+GET
+https://apis.google.com/_/scs/abc-static/_/js/k=gapi.lb.en.aua8ukEWe74.O/m=gapi_iframes/rt=j/sv=1/d=1/ed=1/rs=AHpOoo-9vDKdscewy8drQ984EeTo0iOz2A/cb=gapi.loaded_0?le=scs
+[HTTP/2 200  0ms]
+
+GET
+https://kizere-99ac2.firebaseapp.com/__/auth/iframe?apiKey=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o&appName=[DEFAULT]&v=11.6.0&eid=p&usegapi=1&jsh=m;/_/scs/abc-static/_/js/k=gapi.lb.en.aua8ukEWe74.O/d=1/rs=AHpOoo-9vDKdscewy8drQ984EeTo0iOz2A/m=__features__#id=I0_1745654543749&_gfid=I0_1745654543749&parent=https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev&pfname=&rpctoken=20329590
+
+GET
+data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230099cc' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E
+
+Source map error: No sources are declared in this source map.
+Resource URL: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4
+Source Map URL: chunk-SNAQBZPT.js.map
+GET
+https://kizere-99ac2.firebaseapp.com/__/auth/iframe.js
+[HTTP/3 200  0ms]
+
+XHRGET
+https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o&cb=1745654544095
+[HTTP/3 200  759ms]
+
+XHROPTIONS
+https://www.googleapis.com/identitytoolkit/v3/relyingparty/getProjectConfig?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o&cb=1745654544095
+[HTTP/3 200  574ms]
+
+[Firebase] No redirect result found 3 firebase.ts:149:13
+[useAuth] Firebase auth state changed - no user 2 use-auth.tsx:85:21
+Source map error: No sources are declared in this source map.
+Resource URL: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/clsx.js?v=abd56ca4
+Source Map URL: clsx.js.map
+Source map error: No sources are declared in this source map.
+Resource URL: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-slot.js?v=abd56ca4
+Source Map URL: @radix-ui_react-slot.js.map
+Source map error: No sources are declared in this source map.
+Resource URL: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-hook-form.js?v=abd56ca4
+Source Map URL: react-hook-form.js.map
+Source map error: No sources are declared in this source map.
+Resource URL: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/zod.js?v=abd56ca4
+Source Map URL: zod.js.map
+Source map error: No sources are declared in this source map.
+Resource URL: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_core.js?v=abd56ca4
+Source Map URL: @dnd-kit_core.js.map
+Source map error: No sources are declared in this source map.
+Resource URL: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_utilities.js?v=abd56ca4
+Source Map URL: @dnd-kit_utilities.js.map
+Source map error: No sources are declared in this source map.
+Resource URL: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=abd56ca4
+Source Map URL: @radix-ui_react-dialog.js.map
+Source map error: No sources are declared in this source map.
+Resource URL: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react.js?v=abd56ca4
+Source Map URL: react.js.map
