@@ -148,9 +148,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Only verify token if it's provided
       if (token) {
         try {
-          // Import the entire module with proper firebase-admin.ts exports
-          const firebaseAdmin = await import('./utils/firebase-admin');
-          const decodedToken = await firebaseAdmin.verifyFirebaseToken(token);
+          // Import the specific function from the module
+          const { verifyFirebaseToken } = await import('./utils/firebase-admin');
+          const decodedToken = await verifyFirebaseToken(token);
           
           // If token verification succeeds, ensure UID matches
           if (decodedToken && decodedToken.uid === uid) {
