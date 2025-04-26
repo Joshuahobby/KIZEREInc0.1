@@ -3,11 +3,20 @@ import crypto from "crypto";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { createLogger } from "./utils/logger";
+import { setupSecurityMiddleware } from "./middleware/security.middleware";
+import { handleRequestError } from "./utils/error-handler";
 
+const logger = createLogger('Server');
 const app = express();
+
+// Basic middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Apply security middleware before route handlers
+setupSecurityMiddleware(app);
+
+// Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -41,60 +50,18 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  // Global error handler with improved error logging
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    // Generate a unique request ID for tracking this error
-    const requestId = crypto.randomUUID();
+  // Global error handler using centralized error handler
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+    // Log the original error for debugging
+    logger.error('Global error handler caught an error', {
+      path: req.path,
+      method: req.method,
+      error: err.message || 'Unknown error',
+      stack: err.stack
+    });
     
-    // Create structured error response
-    const errorResponse = {
-      status: 'error',
-      message: err.message || 'An unexpected error occurred',
-      code: err.code || 'UNKNOWN_ERROR',
-      requestId: requestId
-    };
-    
-    // Extract status code from error
-    const status = err.status || err.statusCode || 500;
-    
-    // Enhanced logging with request context
-    const logContext = {
-      requestId,
-      path: _req.path,
-      method: _req.method,
-      statusCode: status,
-      errorCode: err.code,
-      errorType: err.name || (err.constructor ? err.constructor.name : 'UnknownError'),
-      errorStack: err.stack
-    };
-    
-    // Log based on error severity
-    if (status >= 500) {
-      console.error(`[ERROR] Server error (${requestId}):`, err.message);
-      console.error(logContext);
-    } else if (status >= 400) {
-      console.warn(`[WARN] Client error (${requestId}):`, err.message);
-      console.warn(logContext);
-    }
-    
-    // Send appropriate response to client
-    // In production, don't expose internal error details
-    const clientResponse = process.env.NODE_ENV === 'production' 
-      ? { 
-          message: status === 500 ? 'Internal server error' : err.message,
-          requestId,
-          status: 'error'
-        }
-      : { 
-          message: err.message || 'Internal server error',
-          requestId,
-          status: 'error',
-          details: err.details || null,
-          code: err.code || null
-        };
-        
-    res.status(status).json(clientResponse);
-    // Don't throw the error again - this is causing the app to crash
+    // Use our centralized error handler to format the response
+    handleRequestError(err, res);
   });
 
   // importantly only setup vite in development and after
