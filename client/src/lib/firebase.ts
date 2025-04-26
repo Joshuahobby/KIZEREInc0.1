@@ -29,10 +29,9 @@ try {
   const currentOrigin = window.location.origin;
   const currentHostname = window.location.hostname;
   
-  // Use the complete hostname (with port if necessary) as the auth domain
-  firebaseConfig.authDomain = window.location.host;
-  
-  console.log(`[Firebase] Using current hostname as auth domain: ${firebaseConfig.authDomain}`);
+  // We must use the actual authDomain from Firebase console for popup auth to work
+  // Just keeping the original authDomain from our config
+  console.log(`[Firebase] Using Firebase authDomain: ${firebaseConfig.authDomain}`);
   console.log(`[Firebase] Current origin: ${currentOrigin}`);
   
   // We need to prevent the browser from accidentally using an unregistered domain
@@ -133,68 +132,36 @@ export async function signInWithGoogle(redirectUrl?: string) {
     // Apply the custom parameters to the provider
     googleProvider.setCustomParameters(parameters);
     
-    // Determine if we're on a Replit domain or development environment
-    const currentHostname = window.location.hostname;
-    const isReplitDomain = currentHostname.includes('replit') || currentHostname.includes('repl.co');
+    // ALWAYS use popup authentication regardless of the domain
+    // This avoids the need for a Firebase auth handler page which doesn't exist on Replit
+    console.log('[Firebase] Using popup authentication to avoid handler URL issues');
     
-    console.log(`[Firebase] Detected environment: ${isReplitDomain ? 'Replit' : 'standard'}`);
-    
-    // For Replit domains, use popup authentication instead of redirect
-    // This avoids the need for a Firebase auth handler page
-    if (isReplitDomain) {
-      console.log('[Firebase] Using popup authentication for Replit domain');
+    // Use popup authentication for all domains
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
       
-      // Use popup authentication for Replit domains
-      try {
-        const result = await signInWithPopup(auth, googleProvider);
-        
-        // Extract auth data
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const user = result.user;
-        
-        console.log('[Firebase] Popup authentication successful', {
-          email: user.email,
-          uid: user.uid,
-          displayName: user.displayName || 'No display name'
-        });
-        
-        // Return auth result
-        return {
-          success: true,
-          user,
-          credential,
-          method: 'popup'
-        };
-      } catch (popupError: any) {
-        console.error('[Firebase] Popup authentication error:', popupError);
-        
-        // Return structured error
-        throw new Error(`Authentication failed: ${popupError.message || 'Unknown error'}`);
-      }
-    } else {
-      // For standard domains, use redirect authentication
-      console.log('[Firebase] Starting Google sign-in redirect flow');
+      // Extract auth data
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      const user = result.user;
       
-      // Set the callback URL for redirect
-      const callbackUrl = '/auth-callback';
-      const absoluteCallbackUrl = window.location.origin + callbackUrl;
-      parameters.redirect_uri = absoluteCallbackUrl;
-      
-      // Log the full configuration
-      console.log('[Firebase] Google sign-in configuration:', {
-        state,
-        redirectUrl,
-        callbackUrl: absoluteCallbackUrl,
-        origin: window.location.origin,
-        hostname: window.location.hostname,
-        parameters
+      console.log('[Firebase] Popup authentication successful', {
+        email: user.email,
+        uid: user.uid,
+        displayName: user.displayName || 'No display name'
       });
       
-      // Update the provider with the current parameters
-      googleProvider.setCustomParameters(parameters);
+      // Return auth result
+      return {
+        success: true,
+        user,
+        credential,
+        method: 'popup'
+      };
+    } catch (popupError: any) {
+      console.error('[Firebase] Popup authentication error:', popupError);
       
-      // Perform the redirect with the provider
-      return signInWithRedirect(auth, googleProvider);
+      // Return structured error
+      throw new Error(`Authentication failed: ${popupError.message || 'Unknown error'}`);
     }
   } catch (error) {
     console.error('[Firebase] Error initiating Google sign-in:', error);
