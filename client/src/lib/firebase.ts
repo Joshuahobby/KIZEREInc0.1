@@ -91,81 +91,70 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 /**
- * Initiates Google sign-in with popup or redirect based on environment
+ * Initiates Google sign-in with redirect for Replit environments or popup for other environments
  * @param redirectUrl Optional URL to redirect after successful authentication
  * @returns A promise that resolves when authentication is complete
  */
 export async function signInWithGoogle(redirectUrl?: string) {
   try {
     // Reset the auth instance if needed
-    // This helps avoid issues with stale authentication state
     if (auth.currentUser) {
       console.log('[Firebase] Existing user found, signing out before new sign in');
       await signOut(auth).catch(e => console.warn('[Firebase] Pre-signIn signOut error:', e));
     }
     
-    // Configure additional scopes and parameters for more user information
+    // Add scopes
     googleProvider.addScope('profile');
     googleProvider.addScope('email');
     
-    // Create a state parameter for CSRF protection
+    // Create CSRF protection state
     const state = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
     localStorage.setItem('firebase_auth_state', state);
     
-    // Store redirect URL if provided
+    // Store redirect URL and metadata
     if (redirectUrl) {
       localStorage.setItem('firebase_auth_redirect', redirectUrl);
     }
-    
-    // Add timestamp for debugging redirect issues
     localStorage.setItem('firebase_auth_timestamp', Date.now().toString());
-    
-    // Store current host for validation
     localStorage.setItem('firebase_auth_origin', window.location.origin);
     
-    // Build parameters with state for CSRF protection
-    const parameters: any = {
-      prompt: 'select_account', // Forces account selection even if already logged in
+    // Set custom parameters
+    googleProvider.setCustomParameters({
+      prompt: 'select_account',
       state
-    };
+    });
     
-    // Apply the custom parameters to the provider
-    googleProvider.setCustomParameters(parameters);
+    // Detect if on Replit domain
+    const isReplitDomain = window.location.hostname.includes('replit');
+    console.log(`[Firebase] Auth running on ${isReplitDomain ? 'Replit' : 'standard'} domain`);
     
-    // ALWAYS use popup authentication regardless of the domain
-    // This avoids the need for a Firebase auth handler page which doesn't exist on Replit
-    console.log('[Firebase] Using popup authentication to avoid handler URL issues');
-    
-    // Use popup authentication for all domains
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      
-      // Extract auth data
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const user = result.user;
-      
-      console.log('[Firebase] Popup authentication successful', {
-        email: user.email,
-        uid: user.uid,
-        displayName: user.displayName || 'No display name'
-      });
-      
-      // Return auth result
-      return {
-        success: true,
-        user,
-        credential,
-        method: 'popup'
-      };
-    } catch (popupError: any) {
-      console.error('[Firebase] Popup authentication error:', popupError);
-      
-      // Return structured error
-      throw new Error(`Authentication failed: ${popupError.message || 'Unknown error'}`);
+    // Use different auth methods based on domain
+    if (isReplitDomain) {
+      console.log('[Firebase] Using redirect auth for Replit domain');
+      await signInWithRedirect(auth, googleProvider);
+      console.log('[Firebase] Redirect initiated');
+      return { success: true, method: 'redirect' };
+    } else {
+      console.log('[Firebase] Using popup auth for standard domain');
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const user = result.user;
+        
+        console.log('[Firebase] Popup auth successful', { 
+          email: user.email,
+          hasUid: !!user.uid 
+        });
+        
+        return { success: true, user, credential, method: 'popup' };
+      } catch (popupError: any) {
+        console.error('[Firebase] Popup auth error:', popupError.code || 'unknown');
+        throw popupError;
+      }
     }
-  } catch (error) {
-    console.error('[Firebase] Error initiating Google sign-in:', error);
-    throw error; // Re-throw for proper error handling upstream
+  } catch (error: any) {
+    console.error('[Firebase] Sign-in error:', error.message || 'Unknown error');
+    throw error;
   }
 }
 
