@@ -352,103 +352,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     
     try {
-      // Use the Firebase SDK for Google authentication
-      const { signInWithGoogle } = await import('@/lib/firebase');
-      console.log("[useAuth] Initiating Firebase Google sign-in...");
+      // Use our custom Google authentication method that bypasses Firebase handlers
+      const { openGoogleAuthWindow } = await import('@/lib/custom-auth');
+      console.log("[useAuth] Initiating custom Google sign-in...");
       
       // Determine the appropriate redirect URL
-      const callbackUrl = redirectUrl || '/auth-callback';
+      const redirectPath = redirectUrl || '/dashboard';
       
-      // Start the Google sign-in flow
-      // This will use popup for Replit domains and redirect for others
-      const result = await signInWithGoogle(callbackUrl);
+      // Open the popup window to Google authentication
+      const result = await openGoogleAuthWindow(redirectPath);
       
-      // If we got an immediate result (from popup auth), handle it
-      if (result && 'success' in result && result.success === true) {
-        console.log("[useAuth] Popup authentication successful:", {
-          hasUser: !!result.user,
-          method: result.method
+      // Check if authentication was successful
+      if (result.success && result.user) {
+        console.log("[useAuth] Custom authentication successful");
+        
+        // User data is already synchronized with server in our backend
+        // Just set the user in state
+        setUser(result.user);
+        
+        toast({
+          title: "Welcome!",
+          description: `Signed in as ${result.user.fullName || result.user.email}`,
         });
         
-        // Process the authentication result directly
-        if (result.user) {
-          // Get the user token if possible
-          let token = null;
-          try {
-            token = await result.user.getIdToken();
-          } catch (tokenError) {
-            console.warn("[useAuth] Failed to get token for popup auth:", tokenError);
-          }
-          
-          // Send user data to server to create session
-          const userData = {
-            email: result.user.email || '',
-            name: result.user.displayName || result.user.email?.split('@')[0] || 'User',
-            uid: result.user.uid,
-            token,
-            photoURL: result.user.photoURL || null,
-          };
-          
-          // Call the server to synchronize the session
-          console.log("[useAuth] Synchronizing popup auth with server");
-          const response = await fetch("/api/auth/google", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(userData),
-            credentials: "include"
-          });
-          
-          if (response.ok) {
-            const serverUser = await response.json();
-            setUser(serverUser);
-            toast({
-              title: "Welcome!",
-              description: `Signed in as ${serverUser.fullName || serverUser.email}`,
-            });
-          } else {
-            console.error("[useAuth] Failed to synchronize popup auth with server:", response.status);
-            throw new Error("Failed to create server session");
-          }
-        } else {
-          throw new Error("Authentication succeeded but user data is missing");
+        // Determine which dashboard to redirect to based on user role
+        let dashboardPath = "/dashboard";
+        if (result.user.role === "Admin") {
+          dashboardPath = "/admin/dashboard";
+        } else if (result.user.role === "Agent") {
+          dashboardPath = "/agent/dashboard";
         }
         
-        return;
+        // Redirect to the appropriate dashboard
+        setLocation(dashboardPath);
+        
+      } else {
+        // Authentication failed
+        const errorMessage = result.error || "Authentication failed";
+        console.error("[useAuth] Custom authentication failed:", errorMessage);
+        
+        toast({
+          title: "Authentication Failed",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        
+        throw new Error(errorMessage);
       }
-      
-      // For redirect flow (non-Replit domains), the auth-callback page will handle everything
-      // So we just show a loading state until the redirect happens
-      
-      // The page will redirect to Google for authentication, so the code below
-      // is just a fallback in case the redirect doesn't happen for some reason
-      setTimeout(() => {
-        // If we're still here after 5 seconds, the redirect failed
-        if (document.location.pathname !== '/auth-callback') {
-          console.error("[useAuth] Google sign-in redirect did not occur after 5 seconds");
-          setError("Google authentication redirect failed. Please try again.");
-          setIsLoading(false);
-          
-          // Show an error toast
-          toast({
-            title: "Sign-in Error",
-            description: "Failed to redirect to Google. Please try again or use a different sign-in method.",
-            variant: "destructive"
-          });
-        }
-      }, 5000);
     } catch (error) {
-      // Handle any errors that occur while initiating the sign-in flow
       console.error("[useAuth] Google login error:", error);
-      const errorMessage = error instanceof Error ? error.message : "Google login failed";
-      setError(errorMessage);
-      setIsLoading(false);
+      setError(error instanceof Error ? error.message : "Google login failed");
       
-      // Show an error toast
       toast({
-        title: "Sign-in Error",
-        description: errorMessage,
+        title: "Authentication Error",
+        description: error instanceof Error ? error.message : "Google authentication failed. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
