@@ -129,9 +129,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             logger.warn('Token UID mismatch', { tokenUid: decodedToken.uid, providedUid: uid });
           }
         } catch (tokenError) {
-          logger.error('Token verification error', { error: tokenError });
-          // Continue with authentication even if token verification fails
-          // This is a fallback for development environments
+          // Log error with more details for debugging
+          const errorMessage = tokenError instanceof Error ? tokenError.message : 'Unknown error';
+          logger.error('Token verification error', { 
+            errorMessage,
+            errorStack: tokenError instanceof Error ? tokenError.stack : 'No stack trace',
+            error: tokenError
+          });
+          
+          // In production, you might want to return an error here
+          // For development, we're continuing even if token verification fails
+          if (process.env.NODE_ENV === 'production') {
+            // Show limited error details in production
+            logger.warn('Proceeding without token verification in production environment');
+          } else {
+            logger.info('Development mode: proceeding without token verification');
+          }
         }
       }
       

@@ -77,15 +77,31 @@ export async function handleRedirectResult() {
     }
     return null;
   } catch (error: any) {
-    console.error('[Firebase] Error handling redirect result:', error);
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    // The email of the user's account used for sign-in
-    const email = error.customData?.email;
-    // The credential that was used for the attempt
-    const credential = GoogleAuthProvider.credentialFromError(error);
+    // Enhanced error logging
+    const errorData = {
+      code: error.code || 'unknown',
+      message: error.message || 'Unknown error',
+      email: error.customData?.email || 'no-email',
+      stack: error.stack || 'No stack trace'
+    };
     
-    throw error;
+    console.error('[Firebase] Error handling redirect result:', errorData);
+    
+    // Get credential from error if possible
+    try {
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      console.info('[Firebase] Retrieved credential from error:', !!credential);
+    } catch (credError) {
+      console.warn('[Firebase] Could not retrieve credential from error');
+    }
+    
+    // Instead of re-throwing the error which causes an unhandled promise rejection,
+    // we'll return a rejection result object that the caller can handle
+    return {
+      success: false,
+      error: errorData,
+      handled: true
+    };
   }
 }
 

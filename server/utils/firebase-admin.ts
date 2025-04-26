@@ -36,11 +36,45 @@ if (!admin.apps.length) {
  */
 export async function verifyFirebaseToken(idToken: string) {
   try {
+    // Validate input
+    if (!idToken || typeof idToken !== 'string' || idToken.trim() === '') {
+      logger.error('Invalid token provided for verification', { 
+        tokenProvided: !!idToken,
+        tokenType: typeof idToken
+      });
+      return null;
+    }
+    
+    // Attempt to verify token
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    logger.info('Token verification succeeded', { uid: decodedToken.uid });
+    
+    // Successful verification
+    logger.info('Token verification succeeded', { 
+      uid: decodedToken.uid,
+      email: decodedToken.email || 'no-email'
+    });
     return decodedToken;
   } catch (error) {
-    logger.error('Token verification failed', { error });
+    // Enhanced error logging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : 'No stack trace';
+    
+    logger.error('Token verification failed', { 
+      errorMessage,
+      errorStack,
+      tokenLength: idToken ? idToken.length : 0,
+      error
+    });
+    
+    // For certain known errors, we can provide more specific logging
+    if (errorMessage.includes('expired')) {
+      logger.warn('Firebase token expired - user needs to reauthenticate');
+    } else if (errorMessage.includes('Invalid')) {
+      logger.warn('Invalid token format or signature');
+    } else if (errorMessage.includes('project')) {
+      logger.warn('Token from different Firebase project');
+    }
+    
     return null;
   }
 }

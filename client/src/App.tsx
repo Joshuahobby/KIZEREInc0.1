@@ -30,11 +30,20 @@ function App() {
       try {
         const { handleRedirectResult } = await import('@/lib/firebase');
         const result = await handleRedirectResult();
+        
+        // Check if result is a successful login or an error object
         if (result) {
-          console.log('[App] Successfully handled Firebase redirect result');
+          if ('success' in result && result.success === false) {
+            // This is an error result from our enhanced error handling
+            console.warn('[App] Firebase redirect had an error:', result.error);
+          } else {
+            // This is a successful authentication result
+            console.log('[App] Successfully handled Firebase redirect result');
+          }
         }
       } catch (error) {
-        // Provide more detailed error logging
+        // This catch block should never be reached due to our improved error handling,
+        // but we'll keep it as a fallback
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         const errorStack = error instanceof Error ? error.stack : 'No stack trace';
         
@@ -50,13 +59,12 @@ function App() {
       }
     };
     
-    // We use Promise.resolve().then() to handle the promise rejection properly
-    // and prevent unhandled promise rejection warnings
-    Promise.resolve().then(() => {
+    // Handle the redirect in a way that prevents unhandled promise rejections
+    setTimeout(() => {
       handleRedirect().catch(err => {
         console.error('[App] Unhandled error in redirect handler:', err);
       });
-    });
+    }, 0);
   }, []);
 
   // Create safe component wrappers to ensure JSX Elements are always returned
