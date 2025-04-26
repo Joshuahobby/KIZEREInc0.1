@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
+import crypto from "crypto";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { createLogger } from "./utils/logger";
 
 const app = express();
 app.use(express.json());
@@ -39,12 +41,59 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Global error handler with improved error logging
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+    // Generate a unique request ID for tracking this error
+    const requestId = crypto.randomUUID();
+    
+    // Create structured error response
+    const errorResponse = {
+      status: 'error',
+      message: err.message || 'An unexpected error occurred',
+      code: err.code || 'UNKNOWN_ERROR',
+      requestId: requestId
+    };
+    
+    // Extract status code from error
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    console.error("Server error:", err);
-    res.status(status).json({ message });
+    
+    // Enhanced logging with request context
+    const logContext = {
+      requestId,
+      path: _req.path,
+      method: _req.method,
+      statusCode: status,
+      errorCode: err.code,
+      errorType: err.name || (err.constructor ? err.constructor.name : 'UnknownError'),
+      errorStack: err.stack
+    };
+    
+    // Log based on error severity
+    if (status >= 500) {
+      console.error(`[ERROR] Server error (${requestId}):`, err.message);
+      console.error(logContext);
+    } else if (status >= 400) {
+      console.warn(`[WARN] Client error (${requestId}):`, err.message);
+      console.warn(logContext);
+    }
+    
+    // Send appropriate response to client
+    // In production, don't expose internal error details
+    const clientResponse = process.env.NODE_ENV === 'production' 
+      ? { 
+          message: status === 500 ? 'Internal server error' : err.message,
+          requestId,
+          status: 'error'
+        }
+      : { 
+          message: err.message || 'Internal server error',
+          requestId,
+          status: 'error',
+          details: err.details || null,
+          code: err.code || null
+        };
+        
+    res.status(status).json(clientResponse);
     // Don't throw the error again - this is causing the app to crash
   });
 
