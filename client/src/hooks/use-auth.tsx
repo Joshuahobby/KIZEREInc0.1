@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useLocation } from "wouter";
 import type { User } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { AuthService } from "@/services/auth.service";
 
 export interface AuthContextType {
   user: User | null;
