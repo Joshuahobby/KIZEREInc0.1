@@ -34,11 +34,29 @@ function App() {
           console.log('[App] Successfully handled Firebase redirect result');
         }
       } catch (error) {
-        console.error('[App] Error handling Firebase redirect:', error);
+        // Provide more detailed error logging
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorStack = error instanceof Error ? error.stack : 'No stack trace';
+        
+        console.error('[App] Error handling Firebase redirect:', {
+          message: errorMessage,
+          stack: errorStack,
+          error
+        });
+        
+        // We don't want to show UI errors for this, as it happens on page load
+        // and would be confusing to users.
+        // Instead, log to monitoring/analytics in a real production environment.
       }
     };
     
-    handleRedirect();
+    // We use Promise.resolve().then() to handle the promise rejection properly
+    // and prevent unhandled promise rejection warnings
+    Promise.resolve().then(() => {
+      handleRedirect().catch(err => {
+        console.error('[App] Unhandled error in redirect handler:', err);
+      });
+    });
   }, []);
 
   // Create safe component wrappers to ensure JSX Elements are always returned

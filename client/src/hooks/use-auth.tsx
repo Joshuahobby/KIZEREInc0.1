@@ -115,8 +115,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setError(errorMessage);
               }
             } catch (error) {
-              console.error("[useAuth] Error syncing Firebase auth with server:", error);
-              setError("Failed to connect to authentication server");
+              const errorMessage = error instanceof Error ? error.message : "Unknown error";
+              console.error("[useAuth] Error syncing Firebase auth with server:", {
+                message: errorMessage,
+                error: error
+              });
+              
+              // Apply a more specific error message
+              if (error instanceof TypeError && errorMessage.includes('NetworkError')) {
+                setError("Network error: Could not connect to authentication server. Please check your internet connection and try again.");
+              } else if (error instanceof TypeError && errorMessage.includes('Failed to fetch')) {
+                setError("Server connection error: Authentication server is not responding. Please try again later.");
+              } else {
+                setError(`Authentication error: ${errorMessage}`);
+              }
+              
+              // Also show a toast for better visibility
+              toast({
+                title: "Authentication Error",
+                description: "There was a problem connecting to the authentication service. Please try again later.",
+                variant: "destructive"
+              });
             }
           } else {
             // User is signed out
