@@ -1,206 +1,200 @@
 /**
  * User Service
- * 
- * Centralizes all user-related business logic and operations.
- * This service acts as an intermediary between routes and storage layer.
+ * Handles all user-related business logic
  */
-
-import { storage } from '../storage';
 import { User, InsertUser } from '@shared/schema';
 import { createLogger } from '../utils/logger';
+import { validatePasswordStrength } from '../utils/auth';
+import { DatabaseError, NotFoundError, ValidationError } from '../utils/error-handler';
+import { userRepository } from '../repositories/user.repository';
 
 const logger = createLogger('UserService');
 
-/**
- * User Service class
- * Handles all user-related business logic
- */
 export class UserService {
   /**
-   * Get a user by ID
-   * 
-   * @param id User ID
+   * Get user by ID
+   * @param userId User ID to look up
    * @returns User object or undefined if not found
    */
-  static async getUserById(id: number): Promise<User | undefined> {
+  static async getUserById(userId: number): Promise<User | undefined> {
     try {
-      logger.info('Getting user by ID', { userId: id });
-      return await storage.getUser(id);
+      logger.info('Getting user by ID', { userId });
+      return await userRepository.findById(userId);
     } catch (error) {
-      logger.error('Error getting user by ID', { userId: id, error });
-      throw error;
+      logger.error('Error getting user by ID', { userId, error });
+      throw new DatabaseError('Failed to retrieve user', { userId });
     }
   }
   
   /**
-   * Get a user by username
-   * 
-   * @param username Username to look up
-   * @returns User object or undefined if not found
-   */
-  static async getUserByUsername(username: string): Promise<User | undefined> {
-    try {
-      logger.info('Getting user by username', { username });
-      return await storage.getUserByUsername(username);
-    } catch (error) {
-      logger.error('Error getting user by username', { username, error });
-      throw error;
-    }
-  }
-  
-  /**
-   * Get a user by email
-   * 
+   * Get user by email
    * @param email Email to look up
    * @returns User object or undefined if not found
    */
   static async getUserByEmail(email: string): Promise<User | undefined> {
     try {
       logger.info('Getting user by email', { email });
-      return await storage.getUserByEmail(email);
+      return await userRepository.findByEmail(email);
     } catch (error) {
       logger.error('Error getting user by email', { email, error });
-      throw error;
+      throw new DatabaseError('Failed to retrieve user by email');
+    }
+  }
+  
+  /**
+   * Get user by username
+   * @param username Username to look up
+   * @returns User object or undefined if not found
+   */
+  static async getUserByUsername(username: string): Promise<User | undefined> {
+    try {
+      return await userRepository.findByUsername(username);
+    } catch (error) {
+      logger.error('Error getting user by username', { username, error });
+      throw new DatabaseError('Failed to retrieve user by username');
     }
   }
   
   /**
    * Create a new user
-   * 
    * @param userData User data to create
    * @returns Created user object
    */
   static async createUser(userData: InsertUser): Promise<User> {
     try {
-      logger.info('Creating new user', { email: userData.email });
-      
-      // Check if user with email already exists
-      const existingUserByEmail = await this.getUserByEmail(userData.email);
-      if (existingUserByEmail) {
-        logger.warn('User with this email already exists', { email: userData.email });
-        throw new Error('User with this email already exists');
+      // Validate password strength if provided
+      if (userData.password) {
+        const validation = validatePasswordStrength(userData.password);
+        if (!validation.valid) {
+          throw new ValidationError(validation.message || 'Password does not meet strength requirements');
+        }
       }
       
-      // Check if user with username already exists
-      const existingUserByUsername = await this.getUserByUsername(userData.username);
-      if (existingUserByUsername) {
-        logger.warn('User with this username already exists', { username: userData.username });
-        throw new Error('User with this username already exists');
+      // Check if email is already in use
+      const existingEmail = await userRepository.findByEmail(userData.email);
+      if (existingEmail) {
+        throw new ValidationError('Email address is already in use');
       }
       
-      // Create the user
-      const newUser = await storage.createUser(userData);
-      logger.info('User created successfully', { userId: newUser.id });
+      // Check if username is already in use (if provided)
+      if (userData.username) {
+        const existingUsername = await userRepository.findByUsername(userData.username);
+        if (existingUsername) {
+          throw new ValidationError('Username is already in use');
+        }
+      }
       
-      return newUser;
+      const user = await userRepository.create(userData);
+      logger.info('User created successfully', { userId: user.id, email: userData.email });
+      return user;
     } catch (error) {
-      logger.error('Error creating user', { error });
-      throw error;
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      logger.error('Error creating user', { error, email: userData.email });
+      throw new DatabaseError('Failed to create user account');
     }
   }
   
   /**
    * Update an existing user
-   * 
-   * @param id User ID
-   * @param userData User data to update
-   * @returns Updated user object or undefined if not found
+   * @param userId User ID to update
+   * @param userData Data to update
+   * @returns Updated user object
    */
-  static async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+  static async updateUser(userId: number, userData: Partial<User>): Promise<User> {
     try {
-      logger.info('Updating user', { userId: id });
-      
-      // Check if user exists
-      const existingUser = await this.getUserById(id);
-      if (!existingUser) {
-        logger.warn('User not found for update', { userId: id });
-        return undefined;
-      }
-      
-      // If updating email, check if it's already in use by another user
-      if (userData.email && userData.email !== existingUser.email) {
-        const userWithEmail = await this.getUserByEmail(userData.email);
-        if (userWithEmail && userWithEmail.id !== id) {
-          logger.warn('Email already in use by another user', { email: userData.email });
-          throw new Error('Email already in use by another user');
+      // Validate password strength if being updated
+      if (userData.password) {
+        const validation = validatePasswordStrength(userData.password);
+        if (!validation.valid) {
+          throw new ValidationError(validation.message || 'Password does not meet strength requirements');
         }
       }
       
-      // If updating username, check if it's already in use by another user
-      if (userData.username && userData.username !== existingUser.username) {
-        const userWithUsername = await this.getUserByUsername(userData.username);
-        if (userWithUsername && userWithUsername.id !== id) {
-          logger.warn('Username already in use by another user', { username: userData.username });
-          throw new Error('Username already in use by another user');
+      // Check if email is being changed and is already in use
+      if (userData.email) {
+        const existingEmail = await userRepository.findByEmail(userData.email);
+        if (existingEmail && existingEmail.id !== userId) {
+          throw new ValidationError('Email address is already in use');
         }
       }
       
-      // Update the user
-      const updatedUser = await storage.updateUser(id, userData);
-      logger.info('User updated successfully', { userId: id });
+      // Check if username is being changed and is already in use
+      if (userData.username) {
+        const existingUsername = await userRepository.findByUsername(userData.username);
+        if (existingUsername && existingUsername.id !== userId) {
+          throw new ValidationError('Username is already in use');
+        }
+      }
       
+      const updatedUser = await userRepository.update(userId, userData);
+      logger.info('User updated successfully', { userId });
       return updatedUser;
     } catch (error) {
-      logger.error('Error updating user', { userId: id, error });
-      throw error;
+      if (error instanceof ValidationError || error instanceof NotFoundError) {
+        throw error;
+      }
+      logger.error('Error updating user', { userId, error });
+      throw new DatabaseError('Failed to update user');
     }
   }
   
   /**
    * Get all users
-   * 
    * @returns Array of all users
    */
   static async getAllUsers(): Promise<User[]> {
     try {
-      logger.info('Getting all users');
-      return await storage.getAllUsers();
+      return await userRepository.findAll();
     } catch (error) {
       logger.error('Error getting all users', { error });
-      throw error;
+      throw new DatabaseError('Failed to retrieve users');
     }
   }
   
   /**
-   * Get user statistics
-   * 
-   * @returns User statistics
+   * Delete a user
+   * @param userId User ID to delete
+   * @returns True if deletion was successful
    */
-  static async getUserStatistics(): Promise<{ totalUsers: number; newUsersThisWeek: number; activeUsers: number; usersByRole: Record<string, number> }> {
+  static async deleteUser(userId: number): Promise<boolean> {
     try {
-      logger.info('Getting user statistics');
-      
-      // Get all users
-      const allUsers = await this.getAllUsers();
-      
-      // Calculate total users
-      const totalUsers = allUsers.length;
-      
-      // Calculate new users this week
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-      const newUsersThisWeek = allUsers.filter(
-        user => new Date(user.createdAt) > oneWeekAgo
-      ).length;
-      
-      // Calculate active users (placeholder logic - in production this would use session data)
-      const activeUsers = Math.floor(totalUsers * 0.7); // Placeholder logic
-      
-      // Calculate users by role
-      const usersByRole = allUsers.reduce((acc, user) => {
-        acc[user.role] = (acc[user.role] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      
-      return {
-        totalUsers,
-        newUsersThisWeek,
-        activeUsers,
-        usersByRole
-      };
+      return await userRepository.delete(userId);
     } catch (error) {
-      logger.error('Error getting user statistics', { error });
-      throw error;
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      logger.error('Error deleting user', { userId, error });
+      throw new DatabaseError('Failed to delete user');
+    }
+  }
+  
+  /**
+   * Find users by role
+   * @param role Role to filter by
+   * @returns Users with the specified role
+   */
+  static async getUsersByRole(role: string): Promise<User[]> {
+    try {
+      return await userRepository.findByRole(role);
+    } catch (error) {
+      logger.error('Error getting users by role', { role, error });
+      throw new DatabaseError('Failed to retrieve users by role');
+    }
+  }
+  
+  /**
+   * Search users by query
+   * @param query Search query (name, email, username)
+   * @returns Matching users
+   */
+  static async searchUsers(query: string): Promise<User[]> {
+    try {
+      return await userRepository.searchUsers(query);
+    } catch (error) {
+      logger.error('Error searching users', { query, error });
+      throw new DatabaseError('Failed to search users');
     }
   }
 }
