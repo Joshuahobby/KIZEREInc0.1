@@ -17,6 +17,7 @@ import AdminDashboard from "@/pages/admin/dashboard";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useEffect } from "react";
+import { AuthProvider } from "@/hooks/use-auth";
 
 // Import our new transition components
 import { LoadingProvider } from "@/hooks/use-loading-state";
@@ -82,38 +83,40 @@ function App() {
   return (
     <ErrorBoundary>
       <LanguageProvider defaultLanguage="en">
-        <TooltipProvider>
-          <Switch>
-            {/* Root path needs special handling to redirect authenticated users */}
-            <Route path="/" component={LandingPage} />
-            
-            {/* Auth callback route for handling OAuth redirects */}
-            <Route path="/auth-callback" component={AuthCallback} />
-            
-            {/* Protected routes with role-based access */}
-            
-            {/* Role-restricted routes */}
-            <ProtectedRoute path="/dashboard" component={UnifiedDashboardComponent} requiredRole="any" />
-            <ProtectedRoute path="/register-item" component={ItemRegistrationComponent} requiredRole="any" />
-            <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
-            <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />
-            <ProtectedRoute path="/lost-found/report" component={LostFoundComponent} requiredRole="any" />
-            <ProtectedRoute path="/lost-found/report/:type" component={LostFoundComponent} requiredRole="any" />
-            <ProtectedRoute path="/user-management" component={UserManagementComponent} requiredRole="Admin" />
-            
-            {/* Payment routes */}
-            <Route path="/payment-status" component={PaymentStatusComponent} />
-            <ProtectedRoute path="/payment-history" component={PaymentHistoryComponent} requiredRole="any" />
-            <ProtectedRoute path="/payment-test" component={PaymentTestComponent} requiredRole="any" />
-            
-            {/* Admin routes */}
-            <ProtectedRoute path="/admin" component={AdminDashboardComponent} requiredRole="Admin" />
-            <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
-            
-            {/* 404 route */}
-            <Route component={NotFound} />
-          </Switch>
-        </TooltipProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Switch>
+              {/* Root path needs special handling to redirect authenticated users */}
+              <Route path="/" component={LandingPage} />
+              
+              {/* Auth callback route for handling OAuth redirects */}
+              <Route path="/auth-callback" component={AuthCallback} />
+              
+              {/* Protected routes with role-based access */}
+              
+              {/* Role-restricted routes */}
+              <ProtectedRoute path="/dashboard" component={UnifiedDashboardComponent} requiredRole="any" />
+              <ProtectedRoute path="/register-item" component={ItemRegistrationComponent} requiredRole="any" />
+              <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
+              <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />
+              <ProtectedRoute path="/lost-found/report" component={LostFoundComponent} requiredRole="any" />
+              <ProtectedRoute path="/lost-found/report/:type" component={LostFoundComponent} requiredRole="any" />
+              <ProtectedRoute path="/user-management" component={UserManagementComponent} requiredRole="Admin" />
+              
+              {/* Payment routes */}
+              <Route path="/payment-status" component={PaymentStatusComponent} />
+              <ProtectedRoute path="/payment-history" component={PaymentHistoryComponent} requiredRole="any" />
+              <ProtectedRoute path="/payment-test" component={PaymentTestComponent} requiredRole="any" />
+              
+              {/* Admin routes */}
+              <ProtectedRoute path="/admin" component={AdminDashboardComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
+              
+              {/* 404 route */}
+              <Route component={NotFound} />
+            </Switch>
+          </TooltipProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ErrorBoundary>
   );

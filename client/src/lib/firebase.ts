@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
   signInWithRedirect, 
+  signInWithPopup,
   GoogleAuthProvider, 
   signOut, 
   onAuthStateChanged, 
@@ -89,18 +90,17 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
 /**
- * Initiates Google sign-in with redirect
+ * Initiates Google sign-in with popup or redirect based on environment
  * @param redirectUrl Optional URL to redirect after successful authentication
- * @returns A promise that resolves when the redirect is complete
+ * @returns A promise that resolves when authentication is complete
  */
-export function signInWithGoogle(redirectUrl?: string) {
+export async function signInWithGoogle(redirectUrl?: string) {
   try {
     // Reset the auth instance if needed
     // This helps avoid issues with stale authentication state
     if (auth.currentUser) {
       console.log('[Firebase] Existing user found, signing out before new sign in');
-      // We don't await this since we're about to redirect anyway
-      signOut(auth).catch(e => console.warn('[Firebase] Pre-signIn signOut error:', e));
+      await signOut(auth).catch(e => console.warn('[Firebase] Pre-signIn signOut error:', e));
     }
     
     // Configure additional scopes and parameters for more user information
@@ -119,7 +119,7 @@ export function signInWithGoogle(redirectUrl?: string) {
     // Add timestamp for debugging redirect issues
     localStorage.setItem('firebase_auth_timestamp', Date.now().toString());
     
-    // Store current host for validation after redirect
+    // Store current host for validation
     localStorage.setItem('firebase_auth_origin', window.location.origin);
     
     // Build parameters with state for CSRF protection
@@ -128,37 +128,74 @@ export function signInWithGoogle(redirectUrl?: string) {
       state
     };
     
-    // For Replit domains, we need to explicitly set our callback URL
-    const callbackUrl = '/auth-callback';
-    const absoluteCallbackUrl = window.location.origin + callbackUrl;
-    
-    // Only for Replit domains - helps with redirect handling
-    const currentHostname = window.location.hostname;
-    if (currentHostname.includes('replit') || currentHostname.includes('repl.co')) {
-      // Add redirect_uri parameter for Replit domains
-      parameters.redirect_uri = absoluteCallbackUrl;
-      console.log('[Firebase] Added explicit redirect_uri for Replit domain:', absoluteCallbackUrl);
-    }
-    
-    // Log the full redirect configuration
-    console.log('[Firebase] Google sign-in configuration:', {
-      state,
-      redirectUrl,
-      callbackUrl: absoluteCallbackUrl,
-      origin: window.location.origin,
-      hostname: window.location.hostname,
-      parameters
-    });
-    
     // Apply the custom parameters to the provider
     googleProvider.setCustomParameters(parameters);
     
-    console.log('[Firebase] Starting Google sign-in redirect flow');
+    // Determine if we're on a Replit domain or development environment
+    const currentHostname = window.location.hostname;
+    const isReplitDomain = currentHostname.includes('replit') || currentHostname.includes('repl.co');
     
-    // Perform the redirect with the provider
-    return signInWithRedirect(auth, googleProvider);
+    console.log(`[Firebase] Detected environment: ${isReplitDomain ? 'Replit' : 'standard'}`);
+    
+    // For Replit domains, use popup authentication instead of redirect
+    // This avoids the need for a Firebase auth handler page
+    if (isReplitDomain) {
+      console.log('[Firebase] Using popup authentication for Replit domain');
+      
+      // Use popup authentication for Replit domains
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        
+        // Extract auth data
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const user = result.user;
+        
+        console.log('[Firebase] Popup authentication successful', {
+          email: user.email,
+          uid: user.uid,
+          displayName: user.displayName || 'No display name'
+        });
+        
+        // Return auth result
+        return {
+          success: true,
+          user,
+          credential,
+          method: 'popup'
+        };
+      } catch (popupError: any) {
+        console.error('[Firebase] Popup authentication error:', popupError);
+        
+        // Return structured error
+        throw new Error(`Authentication failed: ${popupError.message || 'Unknown error'}`);
+      }
+    } else {
+      // For standard domains, use redirect authentication
+      console.log('[Firebase] Starting Google sign-in redirect flow');
+      
+      // Set the callback URL for redirect
+      const callbackUrl = '/auth-callback';
+      const absoluteCallbackUrl = window.location.origin + callbackUrl;
+      parameters.redirect_uri = absoluteCallbackUrl;
+      
+      // Log the full configuration
+      console.log('[Firebase] Google sign-in configuration:', {
+        state,
+        redirectUrl,
+        callbackUrl: absoluteCallbackUrl,
+        origin: window.location.origin,
+        hostname: window.location.hostname,
+        parameters
+      });
+      
+      // Update the provider with the current parameters
+      googleProvider.setCustomParameters(parameters);
+      
+      // Perform the redirect with the provider
+      return signInWithRedirect(auth, googleProvider);
+    }
   } catch (error) {
-    console.error('[Firebase] Error starting Google sign-in redirect:', error);
+    console.error('[Firebase] Error initiating Google sign-in:', error);
     throw error; // Re-throw for proper error handling upstream
   }
 }

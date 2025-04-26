@@ -359,24 +359,82 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Determine the appropriate redirect URL
       const callbackUrl = redirectUrl || '/auth-callback';
       
-      // Start the Google sign-in flow with redirect
-      // This will save the state to localStorage and then redirect to Google
-      await signInWithGoogle(callbackUrl);
+      // Start the Google sign-in flow
+      // This will use popup for Replit domains and redirect for others
+      const result = await signInWithGoogle(callbackUrl);
+      
+      // If we got an immediate result (from popup auth), handle it
+      if (result && 'success' in result && result.success === true) {
+        console.log("[useAuth] Popup authentication successful:", {
+          hasUser: !!result.user,
+          method: result.method
+        });
+        
+        // Process the authentication result directly
+        if (result.user) {
+          // Get the user token if possible
+          let token = null;
+          try {
+            token = await result.user.getIdToken();
+          } catch (tokenError) {
+            console.warn("[useAuth] Failed to get token for popup auth:", tokenError);
+          }
+          
+          // Send user data to server to create session
+          const userData = {
+            email: result.user.email || '',
+            name: result.user.displayName || result.user.email?.split('@')[0] || 'User',
+            uid: result.user.uid,
+            token,
+            photoURL: result.user.photoURL || null,
+          };
+          
+          // Call the server to synchronize the session
+          console.log("[useAuth] Synchronizing popup auth with server");
+          const response = await fetch("/api/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(userData),
+            credentials: "include"
+          });
+          
+          if (response.ok) {
+            const serverUser = await response.json();
+            setUser(serverUser);
+            toast({
+              title: "Welcome!",
+              description: `Signed in as ${serverUser.fullName || serverUser.email}`,
+            });
+          } else {
+            console.error("[useAuth] Failed to synchronize popup auth with server:", response.status);
+            throw new Error("Failed to create server session");
+          }
+        } else {
+          throw new Error("Authentication succeeded but user data is missing");
+        }
+        
+        return;
+      }
+      
+      // For redirect flow (non-Replit domains), the auth-callback page will handle everything
+      // So we just show a loading state until the redirect happens
       
       // The page will redirect to Google for authentication, so the code below
       // is just a fallback in case the redirect doesn't happen for some reason
       setTimeout(() => {
         // If we're still here after 5 seconds, the redirect failed
-        console.error("[useAuth] Google sign-in redirect did not occur after 5 seconds");
-        setError("Google authentication redirect failed. Please try again.");
-        setIsLoading(false);
-        
-        // Show an error toast
-        toast({
-          title: "Sign-in Error",
-          description: "Failed to redirect to Google. Please try again or use a different sign-in method.",
-          variant: "destructive"
-        });
+        if (document.location.pathname !== '/auth-callback') {
+          console.error("[useAuth] Google sign-in redirect did not occur after 5 seconds");
+          setError("Google authentication redirect failed. Please try again.");
+          setIsLoading(false);
+          
+          // Show an error toast
+          toast({
+            title: "Sign-in Error",
+            description: "Failed to redirect to Google. Please try again or use a different sign-in method.",
+            variant: "destructive"
+          });
+        }
       }, 5000);
     } catch (error) {
       // Handle any errors that occur while initiating the sign-in flow

@@ -1,0 +1,108 @@
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/user
+[HTTP/1.1 401 Unauthorized 728ms]
+
+	
+GET
+	https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/user
+Status
+401
+Unauthorized
+VersionHTTP/1.1
+Transferred383 B (12 B size)
+Referrer Policystrict-origin-when-cross-origin
+DNS ResolutionSystem
+
+	
+Content-Length
+	12
+Content-Type
+	text/plain; charset=utf-8
+Date
+	Sat, 26 Apr 2025 08:24:16 GMT
+Etag
+	W/"c-dAuDFQrdjS3hezqxDTNgW7AOlYk"
+Replit-Cluster
+	worf
+X-Powered-By
+	Express
+X-Robots-Tag
+	none, noindex, noarchive, nofollow, nositelinkssearchbox, noimageindex
+X-Robots-Tag
+	none, noindex, noarchive, nofollow, nositelinkssearchbox, noimageindex
+	
+Accept
+	*/*
+Accept-Encoding
+	gzip, deflate, br, zstd
+Accept-Language
+	en-US,en;q=0.5
+Connection
+	keep-alive
+Cookie
+	connect.sid=s%3A_mvSe6HODHQ4PmvuIAMgPB2ZBLuTJIdp.4DO1EJTmhBL%2BdLIghZycTwRCPwL81DvOQI1DvuUwN%2Bs
+Host
+	5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev
+Priority
+	u=4
+Referer
+	https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/__/auth/handler?apiKey=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o&appName=%5BDEFAULT%5D&authType=signInViaRedirect&redirectUrl=https%3A%2F%2F5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev%2F&v=11.6.0&providerId=google.com&customParameters=%7B%22prompt%22%3A%22select_account%22%2C%22state%22%3A%227jkdk125qwkm9xyekxb%22%2C%22redirect_uri%22%3A%22https%3A%2F%2F5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev%2Fauth-callback%22%7D&scopes=profile%2Cemail
+Sec-Fetch-Dest
+	empty
+Sec-Fetch-Mode
+	cors
+Sec-Fetch-Site
+	same-origin
+User-Agent
+	Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0
+[Firebase] Error handling redirect result: 
+Object { code: "unknown", message: "Redirect result timeout", email: null, stack: "handleRedirectResult/timeoutPromise</<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/firebase.ts:146:31\nsetTimeout handler*handleRedirectResult/timeoutPromise<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/firebase.ts:146:17\nhandleRedirectResult@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/firebase.ts:145:28\nhandleRedirect@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/App.tsx?v=znvtwtO_CgBropcDpiY7e:43:30\nasync*App/</<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/App.tsx?v=znvtwtO_CgBropcDpiY7e:62:7\nsetTimeout handler*App/<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/App.tsx?v=znvtwtO_CgBropcDpiY7e:61:15\ncommitHookEffectListMount@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:16915:34\ncommitPassiveMountOnFiber@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18156:44\ncommitPassiveMountEffects_complete@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18129:42\ncommitPassiveMountEffects_begin@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18119:49\ncommitPassiveMountEffects@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18109:42\nflushPassiveEffectsImpl@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:19490:36\nflushPassiveEffects@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:19447:22\nperformSyncWorkOnRoot@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18868:11\nflushSyncCallbacks@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:9119:30\ncommitRootImpl@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:19432:11\ncommitRoot@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:19277:27\nfinishConcurrentRender@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18805:25\nperformConcurrentWorkOnRoot@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18718:37\nworkLoop@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:197:50\nflushWork@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:176:22\nperformWorkUntilDeadline@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:384:29\nEventHandlerNonNull*node_modules/scheduler/cjs/scheduler.development.js/<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:405:11\nnode_modules/scheduler/cjs/scheduler.development.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:453:9\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\nnode_modules/scheduler/index.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:465:24\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\nnode_modules/react-dom/cjs/react-dom.development.js/<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:481:25\nnode_modules/react-dom/cjs/react-dom.development.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:21571:9\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\nnode_modules/react-dom/index.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:21583:24\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\nnode_modules/react-dom/client.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-dom_client.js?v=abd56ca4:12:13\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\n@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-dom_client.js?v=abd56ca4:38:16\n", timestamp: "2025-04-26T08:24:29.295Z" }
+firebase.ts:343:12
+    handleRedirectResult firebase.ts:343
+    handleRedirect App.tsx:32
+    App App.tsx:64
+    (Async: setTimeout handler)
+    App App.tsx:63
+    React 13
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+    (Async: EventHandlerNonNull)
+    js scheduler.development.js:571
+    js scheduler.development.js:633
+    __require2 chunk-SNAQBZPT.js:18
+    js index.js:6
+    __require2 chunk-SNAQBZPT.js:18
+    React 2
+    __require2 chunk-SNAQBZPT.js:18
+    js React
+    __require2 chunk-SNAQBZPT.js:18
+    js React
+    __require2 chunk-SNAQBZPT.js:18
+    <anonymous> react-dom_client.js:38
+[Firebase] Error handling redirect result: 
+Object { code: "unknown", message: "Redirect result timeout", email: null, stack: "handleRedirectResult/timeoutPromise</<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/firebase.ts:146:31\nsetTimeout handler*handleRedirectResult/timeoutPromise<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/firebase.ts:146:17\nhandleRedirectResult@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/firebase.ts:145:28\nsetupAuth@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:53:40\nasync*AuthProvider/<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:216:5\ncommitHookEffectListMount@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:16915:34\ncommitPassiveMountOnFiber@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18156:44\ncommitPassiveMountEffects_complete@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18129:42\ncommitPassiveMountEffects_begin@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18119:49\ncommitPassiveMountEffects@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18109:42\nflushPassiveEffectsImpl@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:19490:36\nflushPassiveEffects@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:19447:22\nperformSyncWorkOnRoot@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18868:11\nflushSyncCallbacks@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:9119:30\ncommitRootImpl@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:19432:11\ncommitRoot@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:19277:27\nfinishConcurrentRender@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18805:25\nperformConcurrentWorkOnRoot@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:18718:37\nworkLoop@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:197:50\nflushWork@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:176:22\nperformWorkUntilDeadline@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:384:29\nEventHandlerNonNull*node_modules/scheduler/cjs/scheduler.development.js/<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:405:11\nnode_modules/scheduler/cjs/scheduler.development.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:453:9\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\nnode_modules/scheduler/index.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:465:24\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\nnode_modules/react-dom/cjs/react-dom.development.js/<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:481:25\nnode_modules/react-dom/cjs/react-dom.development.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:21571:9\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\nnode_modules/react-dom/index.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XQLYTHWV.js?v=abd56ca4:21583:24\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\nnode_modules/react-dom/client.js@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-dom_client.js?v=abd56ca4:12:13\n__require2@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-SNAQBZPT.js?v=abd56ca4:18:50\n@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-dom_client.js?v=abd56ca4:38:16\n", timestamp: "2025-04-26T08:24:30.936Z" }
+firebase.ts:343:12
+    handleRedirectResult firebase.ts:343
+    setupAuth use-auth.tsx:56
+    AuthProvider use-auth.tsx:268
+    React 13
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+    (Async: EventHandlerNonNull)
+    js scheduler.development.js:571
+    js scheduler.development.js:633
+    __require2 chunk-SNAQBZPT.js:18
+    js index.js:6
+    __require2 chunk-SNAQBZPT.js:18
+    React 2
+    __require2 chunk-SNAQBZPT.js:18
+    js React
+    __require2 chunk-SNAQBZPT.js:18
+    js React
+    __require2 chunk-SNAQBZPT.js:18
+    <anonymous> react-dom_client.js:38
+
+​
+
