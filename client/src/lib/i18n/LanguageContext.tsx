@@ -89,7 +89,11 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     
     // If still not found, return the key itself
     if (value === undefined) {
-      console.warn(`Translation key not found: ${key}`);
+      console.warn(`Translation key not found: ${key}`, {
+        language,
+        availableKeys: Object.keys(currentTranslations).join(', '),
+        path: keys.join('.')
+      });
       return key;
     }
     

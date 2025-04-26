@@ -53,6 +53,88 @@
     "itemMatched": "Item Match Found",
     "itemMatchedDesc": "A lost item matching your description has been found."
   },
+  "dashboard": {
+    "welcomeMessage": "Welcome back, {name}",
+    "welcomeBack": "Welcome back",
+    "subtitles": {
+      "user": "Manage your registered items and activity",
+      "agent": "Track lost & found items and users",
+      "admin": "System overview and management"
+    },
+    "registerNewItem": "Register New Item",
+    "tabs": {
+      "overview": "Overview",
+      "items": "Items",
+      "reports": "Reports",
+      "payments": "Payments",
+      "admin": "Admin",
+      "adminPanel": "Admin Panel",
+      "agent": "Agent",
+      "agentConsole": "Agent Console"
+    },
+    "selectTab": "Select a tab to view content",
+    "registeredItems": "Registered Items",
+    "lostReports": "Lost Reports",
+    "foundReports": "Found Reports",
+    "totalSpent": "Total Spent",
+    "recentlyRegisteredItems": "Recently Registered Items",
+    "recentItemsDescription": "Your most recently registered items",
+    "items": {
+      "title": "My Registered Items",
+      "description": "View and manage all your registered items",
+      "registerNew": "Register New"
+    },
+    "reports": {
+      "title": "My Reports",
+      "description": "Track your lost and found reports",
+      "newReport": "New Report",
+      "allReports": "All Reports",
+      "lostItems": "Lost Items",
+      "foundItems": "Found Items"
+    },
+    "payments": {
+      "title": "Payment History",
+      "description": "View your payment transactions and history"
+    },
+    "admin": {
+      "title": "Admin Dashboard",
+      "description": "Administrative tools and analytics",
+      "totalRevenue": "Total Revenue",
+      "totalUsers": "Total Users",
+      "registeredItems": "Registered Items",
+      "activeReports": "Active Reports",
+      "monthlyRevenue": "Monthly Revenue",
+      "revenueDescription": "Revenue breakdown by month",
+      "paymentStatus": "Payment Status",
+      "paymentTypes": "Payment Types",
+      "recentTransactions": "Recent Transactions",
+      "transactionsDescription": "Latest payment transactions"
+    },
+    "agent": {
+      "title": "Agent Dashboard",
+      "description": "Manage lost and found reports",
+      "activeReports": "Active Reports",
+      "pendingReports": "Pending Reports",
+      "resolvedReports": "Resolved Reports",
+      "assignedReports": "Assigned Reports",
+      "manageReports": "Manage Reports",
+      "reportsDescription": "Track and manage lost and found reports",
+      "allReports": "All Reports",
+      "lostItems": "Lost Items",
+      "foundItems": "Found Items",
+      "resolvedItems": "Resolved Items",
+      "lostReports": "Lost Reports",
+      "foundReports": "Found Reports",
+      "pendingMatches": "Pending Matches"
+    },
+    "quickActions": "Quick Actions",
+    "recentActivity": "Recent Activity",
+    "notifications": "Notifications",
+    "noData": "No data available",
+    "loginRequired": "Login Required",
+    "notAuthenticated": "You need to be logged in to view this page",
+    "returnToHome": "Return to Home"
+  },
   "registration": {
     "title": "Register Your Item",
     "subtitle": "Protect your valuable possessions by registering them in our secure digital registry.",
@@ -183,68 +265,25 @@
     "share": "Share",
     "notSupported": "Sharing Not Supported"
   },
-  "dashboard": {
-    "welcomeMessage": "Welcome back, {name}",
-    "subtitles": {
-      "user": "Manage your registered items and activity",
-      "agent": "Track lost & found items and users",
-      "admin": "System overview and management"
-    },
+  "items": {
     "registerNewItem": "Register New Item",
-    "tabs": {
-      "overview": "Overview",
-      "items": "Items",
-      "reports": "Reports",
-      "payments": "Payments",
-      "admin": "Admin",
-      "agent": "Agent"
-    },
-    "registeredItems": "Registered Items",
-    "lostReports": "Lost Reports",
-    "foundReports": "Found Reports",
-    "totalSpent": "Total Spent",
-    "recentlyRegisteredItems": "Recently Registered Items",
-    "recentItemsDescription": "Your most recently registered items",
-    "items": {
-      "title": "My Registered Items",
-      "description": "View and manage all your registered items",
-      "registerNew": "Register New"
-    },
-    "reports": {
-      "title": "My Reports",
-      "description": "Track your lost and found reports"
-    },
-    "payments": {
-      "title": "Payment History",
-      "description": "View your payment transactions and history"
-    },
-    "admin": {
-      "title": "Admin Dashboard",
-      "description": "Administrative tools and analytics",
-      "totalRevenue": "Total Revenue",
-      "totalUsers": "Total Users",
-      "registeredItems": "Registered Items",
-      "activeReports": "Active Reports",
-      "monthlyRevenue": "Monthly Revenue",
-      "revenueDescription": "Revenue breakdown by month",
-      "paymentStatus": "Payment Status",
-      "paymentTypes": "Payment Types",
-      "recentTransactions": "Recent Transactions",
-      "transactionsDescription": "Latest payment transactions"
-    },
-    "agent": {
-      "title": "Agent Dashboard",
-      "description": "Manage lost and found reports",
-      "activeReports": "Active Reports",
-      "lostReports": "Lost Reports",
-      "foundReports": "Found Reports",
-      "pendingMatches": "Pending Matches"
-    },
-    "quickActions": "Quick Actions",
-    "recentActivity": "Recent Activity",
-    "notifications": "Notifications",
-    "noData": "No data available",
-    "loginRequired": "Login Required",
-    "notAuthenticated": "You need to be logged in to view this page"
+    "itemName": "Item Name",
+    "category": "Category",
+    "serialNumber": "Serial Number",
+    "description": "Description",
+    "purchaseDate": "Purchase Date",
+    "purchaseValue": "Purchase Value",
+    "uploadImage": "Upload Image",
+    "additionalDetails": "Additional Details"
+  },
+  "reports": {
+    "reportLostItem": "Report Lost Item",
+    "reportFoundItem": "Report Found Item",
+    "itemDetails": "Item Details",
+    "lastSeen": "Last Seen",
+    "contactInformation": "Contact Information",
+    "reward": "Reward (Optional)",
+    "reportDate": "Report Date",
+    "status": "Status"
   }
 }
