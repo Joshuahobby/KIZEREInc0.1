@@ -27,139 +27,233 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Check if user is already authenticated on mount
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
+    let isMounted = true; // Track mounted state to prevent setState on unmounted component
     
     const setupAuth = async () => {
       try {
         // First, check server-side session
-        const sessionResponse = await fetch("/api/user");
-        if (sessionResponse.ok) {
-          const userData = await sessionResponse.json();
-          setUser(userData);
-          console.log("[useAuth] User authenticated from session", userData);
+        try {
+          const sessionResponse = await fetch("/api/user");
+          if (sessionResponse.ok) {
+            const userData = await sessionResponse.json();
+            if (isMounted) {
+              setUser(userData);
+              console.log("[useAuth] User authenticated from session", userData);
+              setIsLoading(false);
+              return;
+            }
+          } else {
+            console.log("[useAuth] No server session found, status:", sessionResponse.status);
+          }
+        } catch (sessionError) {
+          console.warn("[useAuth] Error checking session:", sessionError);
+          // Continue to Firebase auth if session check fails
+        }
+        
+        // If no session, try to handle any pending Firebase redirect
+        try {
+          const { handleRedirectResult } = await import('@/lib/firebase');
+          const redirectResult = await handleRedirectResult();
+          
+          if (redirectResult) {
+            console.log("[useAuth] Processing Firebase redirect result:", redirectResult);
+            
+            // Type guard for error result
+            if ('success' in redirectResult && redirectResult.success === false && 'error' in redirectResult) {
+              // Handle authentication errors from redirect
+              console.warn("[useAuth] Firebase redirect authentication failed:", redirectResult.error);
+              
+              if (isMounted) {
+                // Safe access to error message with fallback
+                const errorMessage = redirectResult.error?.message || 'Unknown authentication error';
+                setError(`Authentication failed: ${errorMessage}`);
+                toast({
+                  title: "Authentication Failed",
+                  description: "There was a problem signing in with Google. Please try again.",
+                  variant: "destructive"
+                });
+                setIsLoading(false);
+              }
+              return;
+            } 
+            // Type guard for successful result
+            else if ('success' in redirectResult && redirectResult.success === true && 'user' in redirectResult) {
+              // Successfully authenticated with Firebase from redirect
+              await synchronizeWithServer(redirectResult.user);
+            }
+            // Legacy format support
+            else if ('user' in redirectResult) {
+              // Handle legacy redirect result format
+              await synchronizeWithServer(redirectResult.user);
+            }
+          }
+        } catch (redirectError) {
+          console.error("[useAuth] Error handling Firebase redirect:", redirectError);
+          // Continue to normal Firebase auth state monitoring
+        }
+        
+        // Set up Firebase auth state change listener
+        const { onAuthChange } = await import('@/lib/firebase');
+        
+        unsubscribe = onAuthChange(async (firebaseUser) => {
+          if (!isMounted) return;
+          
+          if (firebaseUser) {
+            console.log("[useAuth] Firebase auth state changed - user signed in:", firebaseUser.email);
+            await synchronizeWithServer(firebaseUser);
+          } else {
+            // User is signed out from Firebase
+            console.log("[useAuth] Firebase auth state changed - no user");
+            setUser(null);
+            setIsLoading(false);
+          }
+        });
+      } catch (error) {
+        console.error("[useAuth] Critical error setting up authentication:", error);
+        
+        if (isMounted) {
+          toast({
+            title: "Authentication System Error",
+            description: "There was a problem with the authentication system. Please reload the page or try again later.",
+            variant: "destructive"
+          });
+          setError("Authentication system error");
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    // Helper function to synchronize Firebase auth with server session
+    const synchronizeWithServer = async (firebaseUser: any) => {
+      if (!isMounted) return;
+      
+      try {
+        // Validate basic user data
+        if (!firebaseUser.email) {
+          console.error("[useAuth] Firebase user missing email");
+          setError("Missing email from authentication provider");
           setIsLoading(false);
           return;
         }
         
-        // If no session, listen to Firebase auth state changes
-        const { onAuthChange } = await import('@/lib/firebase');
+        // Get Firebase ID token
+        let token;
+        try {
+          token = await firebaseUser.getIdToken(true); // Force token refresh
+          console.log("[useAuth] Successfully retrieved Firebase ID token");
+        } catch (tokenError) {
+          console.warn("[useAuth] Failed to get Firebase ID token:", tokenError);
+          token = null; // Continue without token in development
+        }
         
-        unsubscribe = onAuthChange(async (firebaseUser) => {
-          if (firebaseUser) {
-            console.log("[useAuth] Firebase user signed in", firebaseUser.email);
+        // Extract user data from Firebase user
+        const userData = {
+          email: firebaseUser.email,
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          uid: firebaseUser.uid,
+          token,
+          photoURL: firebaseUser.photoURL || null,
+        };
+        
+        // Call server endpoint to sync Firebase auth with server session
+        console.log("[useAuth] Synchronizing Firebase auth with server...");
+        const response = await fetch("/api/auth/google", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userData),
+          credentials: "include" // Important for cookies
+        });
+        
+        if (response.ok) {
+          const serverUser = await response.json();
+          
+          if (isMounted) {
+            setUser(serverUser);
+            setError(null);
+            console.log("[useAuth] Server session created/updated for Firebase user", serverUser);
             
-            // When Firebase user signs in, create or get server session
+            // Show success toast
+            toast({
+              title: "Welcome!",
+              description: `Signed in as ${serverUser.fullName || serverUser.email}`,
+            });
+          }
+        } else {
+          // Handle server-side authentication errors
+          let errorMessage = "Failed to create server session";
+          
+          try {
+            // Try to parse error as JSON
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch (jsonError) {
+            // If not JSON, try to get as text
             try {
-              // Make sure we have an email before proceeding
-              if (!firebaseUser.email) {
-                console.error("[useAuth] Firebase user missing email");
-                return;
-              }
-              
-              // Get token with error handling
-              let token;
-              try {
-                token = await firebaseUser.getIdToken();
-              } catch (tokenError) {
-                console.warn("[useAuth] Failed to get ID token", tokenError);
-                // Continue without token in development
-                token = null;
-              }
-              
-              // Call server endpoint to sync Firebase auth with server session
-              const response = await fetch("/api/auth/google", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  email: firebaseUser.email,
-                  name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-                  uid: firebaseUser.uid,
-                  token,
-                  photoURL: firebaseUser.photoURL,
-                }),
-              });
-              
-              if (response.ok) {
-                const userData = await response.json();
-                setUser(userData);
-                console.log("[useAuth] Server session created for Firebase user", userData);
-                
-                // Show success toast
-                toast({
-                  title: "Welcome!",
-                  description: "You have successfully signed in with Google",
-                });
-              } else {
-                let errorMessage = "Failed to create server session";
-                try {
-                  const errorResponse = await response.text();
-                  console.error("[useAuth] Failed to create server session", errorResponse);
-                  
-                  // Try to parse as JSON
-                  try {
-                    const errorJson = JSON.parse(errorResponse);
-                    if (errorJson.message) {
-                      errorMessage = errorJson.message;
-                    }
-                  } catch (parseError) {
-                    // Not JSON, use text as is
-                    if (errorResponse) {
-                      errorMessage = errorResponse;
-                    }
-                  }
-                } catch (textError) {
-                  console.error("[useAuth] Error reading error response", textError);
-                }
-                
-                setError(errorMessage);
-              }
-            } catch (error) {
-              const errorMessage = error instanceof Error ? error.message : "Unknown error";
-              console.error("[useAuth] Error syncing Firebase auth with server:", {
-                message: errorMessage,
-                error: error
-              });
-              
-              // Apply a more specific error message
-              if (error instanceof TypeError && errorMessage.includes('NetworkError')) {
-                setError("Network error: Could not connect to authentication server. Please check your internet connection and try again.");
-              } else if (error instanceof TypeError && errorMessage.includes('Failed to fetch')) {
-                setError("Server connection error: Authentication server is not responding. Please try again later.");
-              } else {
-                setError(`Authentication error: ${errorMessage}`);
-              }
-              
-              // Also show a toast for better visibility
-              toast({
-                title: "Authentication Error",
-                description: "There was a problem connecting to the authentication service. Please try again later.",
-                variant: "destructive"
-              });
+              const errorText = await response.text();
+              if (errorText) errorMessage = errorText;
+            } catch (textError) {
+              // Keep default error message
             }
-          } else {
-            // User is signed out
-            console.log("[useAuth] No Firebase user");
-            setUser(null);
           }
           
-          setIsLoading(false);
-        });
+          console.error("[useAuth] Server auth failed:", {
+            status: response.status,
+            message: errorMessage
+          });
+          
+          if (isMounted) {
+            setError(errorMessage);
+            toast({
+              title: "Authentication Error",
+              description: "There was a problem with the server authentication. Please try again.",
+              variant: "destructive"
+            });
+          }
+        }
       } catch (error) {
-        console.error("[useAuth] Error setting up authentication:", error);
-        setIsLoading(false);
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        console.error("[useAuth] Error syncing Firebase auth with server:", {
+          message: errorMessage,
+          error: error
+        });
+        
+        if (isMounted) {
+          // Apply a more specific error message
+          if (error instanceof TypeError && errorMessage.includes('NetworkError')) {
+            setError("Network error: Could not connect to authentication server. Please check your internet connection.");
+          } else if (error instanceof TypeError && errorMessage.includes('Failed to fetch')) {
+            setError("Server connection error: Authentication server is not responding. Please try again later.");
+          } else {
+            setError(`Authentication error: ${errorMessage}`);
+          }
+          
+          toast({
+            title: "Authentication Error",
+            description: "There was a problem connecting to the authentication service. Please try again later.",
+            variant: "destructive"
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
+    // Start the authentication setup
     setupAuth();
     
-    // Cleanup function to unsubscribe from Firebase auth changes
+    // Cleanup function to prevent memory leaks and side effects
     return () => {
+      isMounted = false;
       if (unsubscribe) {
+        console.log("[useAuth] Unsubscribing from Firebase auth changes");
         unsubscribe();
       }
     };
-  }, []);
+  }, [toast]);
 
   // Handle redirections based on user role
   useEffect(() => {
