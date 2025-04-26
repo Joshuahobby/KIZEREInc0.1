@@ -156,12 +156,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Create secure random password that won't be used for login
           const securePassword = `firebase_${uid}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+          const hashedPassword = await hashPassword(securePassword);
           
           user = await UserService.createUser({
             fullName: name,
             username: email,
             email: email,
-            password: securePassword, // This password is not used for login, only Firebase auth
+            password: hashedPassword, // This password is not used for login, only Firebase auth
             phoneNumber: null,
             role: 'Subscriber', // Default role for new users
             avatarUrl: photoURL || null
@@ -207,6 +208,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       logger.error('Firebase auth error', { error });
       res.status(500).json({ message: "Authentication failed" });
     }
+  });
+  
+  // Enhanced logout endpoint for Firebase authentication
+  app.post("/api/auth/logout", (req, res) => {
+    // Log before logout attempt
+    logger.info('User logout requested', { 
+      isAuthenticated: req.isAuthenticated(),
+      userId: req.user?.id
+    });
+    
+    // Passport logout function
+    req.logout((err) => {
+      if (err) {
+        logger.error('Logout error', { error: err });
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      
+      // Destroy the session to ensure complete logout
+      req.session.destroy((sessionErr) => {
+        if (sessionErr) {
+          logger.error('Session destruction error', { error: sessionErr });
+          // Continue anyway as the user is already logged out
+        }
+        
+        // Clear any cookies
+        res.clearCookie('connect.sid');
+        
+        logger.info('User logged out successfully');
+        return res.status(200).json({ message: "Logged out successfully" });
+      });
+    });
   });
 
   // Items API

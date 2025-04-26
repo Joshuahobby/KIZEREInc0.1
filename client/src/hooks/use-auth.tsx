@@ -352,21 +352,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     setIsLoading(true);
     try {
+      console.log("[useAuth] Starting logout process");
+      
       // Sign out from Firebase first
-      const { logOut } = await import('@/lib/firebase');
-      await logOut();
+      try {
+        const { logOut } = await import('@/lib/firebase');
+        await logOut();
+        console.log("[useAuth] Firebase logout successful");
+      } catch (firebaseError) {
+        console.warn("[useAuth] Firebase logout error:", firebaseError);
+        // Continue with server logout even if Firebase logout fails
+      }
       
       // Also sign out from server session
-      await fetch("/api/auth/logout", {
-        method: "POST",
+      try {
+        const response = await fetch("/api/auth/logout", {
+          method: "POST",
+          credentials: "include", // Important for cookies
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        
+        if (response.ok) {
+          console.log("[useAuth] Server session logout successful");
+        } else {
+          console.warn("[useAuth] Server logout returned non-OK status:", response.status);
+        }
+      } catch (serverError) {
+        console.warn("[useAuth] Server logout request failed:", serverError);
+        // Continue even if server logout fails
+      }
+      
+      // Clear local state regardless of API results
+      setUser(null);
+      setError(null);
+      setLocation("/");
+      
+      // Show success notification
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
       });
       
-      setUser(null);
-      setLocation("/");
-      console.log("[useAuth] Successfully signed out");
+      console.log("[useAuth] Logout complete");
     } catch (error) {
       console.error("[useAuth] Logout error:", error);
       setError(error instanceof Error ? error.message : "Logout failed");
+      
+      // Show error notification
+      toast({
+        title: "Logout Error",
+        description: "There was a problem signing out. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }

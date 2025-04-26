@@ -15,14 +15,19 @@ if (!admin.apps.length) {
       // Fallback initialization - will work for basic token validation but with limited features
       admin.initializeApp();
     } else {
-      // If using environment variables for Firebase service account
+      // Initialize with minimal configuration for token verification
+      // For production, use a service account key file
       admin.initializeApp({
         projectId: projectId,
-        // We're using app default credentials since we're not providing a service account key
       });
     }
     
     logger.info('Firebase Admin SDK initialized successfully');
+    logger.info('Current Firebase Admin configuration:', { 
+      projectId,
+      hasApiKey: !!env.VITE_FIREBASE_API_KEY,
+      authDomain: projectId ? `${projectId}.firebaseapp.com` : undefined
+    });
   } catch (error) {
     logger.error('Error initializing Firebase Admin SDK', { error });
   }
