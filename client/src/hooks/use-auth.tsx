@@ -9,7 +9,7 @@ export interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
+  loginWithGoogle: (redirectUrl?: string) => Promise<void>;
   signOut: () => Promise<void>;
   signup: (email: string, password: string, fullName: string) => Promise<void>;
 }
@@ -325,7 +325,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = async (redirectUrl?: string) => {
     setIsLoading(true);
     setError(null);
     
@@ -333,19 +333,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Use the Firebase SDK for Google authentication
       const { signInWithGoogle } = await import('@/lib/firebase');
       console.log("[useAuth] Initiating Firebase Google sign-in...");
-      await signInWithGoogle();
       
-      // The page will refresh due to the redirect, so this next code won't run
-      // It serves as a fallback in case the redirect doesn't happen
+      // Determine the appropriate redirect URL
+      const callbackUrl = redirectUrl || '/auth-callback';
+      
+      // Start the Google sign-in flow with redirect
+      // This will save the state to localStorage and then redirect to Google
+      await signInWithGoogle(callbackUrl);
+      
+      // The page will redirect to Google for authentication, so the code below
+      // is just a fallback in case the redirect doesn't happen for some reason
       setTimeout(() => {
-        // If we're still here after 3 seconds, the redirect failed
+        // If we're still here after 5 seconds, the redirect failed
+        console.error("[useAuth] Google sign-in redirect did not occur after 5 seconds");
         setError("Google authentication redirect failed. Please try again.");
         setIsLoading(false);
-      }, 3000);
+        
+        // Show an error toast
+        toast({
+          title: "Sign-in Error",
+          description: "Failed to redirect to Google. Please try again or use a different sign-in method.",
+          variant: "destructive"
+        });
+      }, 5000);
     } catch (error) {
+      // Handle any errors that occur while initiating the sign-in flow
       console.error("[useAuth] Google login error:", error);
-      setError(error instanceof Error ? error.message : "Google login failed");
+      const errorMessage = error instanceof Error ? error.message : "Google login failed";
+      setError(errorMessage);
       setIsLoading(false);
+      
+      // Show an error toast
+      toast({
+        title: "Sign-in Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
     }
   };
 

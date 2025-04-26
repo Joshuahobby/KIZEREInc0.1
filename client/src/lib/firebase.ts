@@ -18,7 +18,7 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Validate Firebase config
+// Validate Firebase config with detailed logging
 const validateFirebaseConfig = () => {
   const requiredVars = [
     { key: 'VITE_FIREBASE_API_KEY', value: firebaseConfig.apiKey },
@@ -26,13 +26,22 @@ const validateFirebaseConfig = () => {
     { key: 'VITE_FIREBASE_APP_ID', value: firebaseConfig.appId }
   ];
   
+  console.log('[Firebase] Checking configuration variables:', {
+    hasApiKey: !!firebaseConfig.apiKey,
+    hasProjectId: !!firebaseConfig.projectId,
+    hasAppId: !!firebaseConfig.appId,
+    authDomain: firebaseConfig.authDomain
+  });
+  
   const missingVars = requiredVars.filter(v => !v.value);
   
   if (missingVars.length > 0) {
     const missingKeys = missingVars.map(v => v.key).join(', ');
-    console.error(`Missing required Firebase configuration variables: ${missingKeys}`);
+    console.error(`[Firebase] Missing required configuration variables: ${missingKeys}`);
     throw new Error(`Firebase configuration incomplete: ${missingKeys}`);
   }
+  
+  console.log('[Firebase] Configuration validation passed');
 };
 
 // Validate before initializing
@@ -56,18 +65,42 @@ const googleProvider = new GoogleAuthProvider();
 
 /**
  * Initiates Google sign-in with redirect
+ * @param redirectUrl Optional URL to redirect after successful authentication
  * @returns A promise that resolves when the redirect is complete
  */
-export function signInWithGoogle() {
+export function signInWithGoogle(redirectUrl?: string) {
   try {
     // Configure additional scopes and parameters
     googleProvider.addScope('profile');
     googleProvider.addScope('email');
-    googleProvider.setCustomParameters({
-      prompt: 'select_account' // Forces account selection even if already logged in
+    
+    // Create a state parameter for CSRF protection
+    const state = Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('firebase_auth_state', state);
+    
+    // Store redirect URL if provided
+    if (redirectUrl) {
+      localStorage.setItem('firebase_auth_redirect', redirectUrl);
+    }
+    
+    // Build parameters with state for CSRF protection
+    const parameters: any = {
+      prompt: 'select_account', // Forces account selection even if already logged in
+      state
+    };
+    
+    // Always include redirect URL in parameters to improve tracking
+    if (redirectUrl) {
+      parameters.redirect_uri = window.location.origin + '/auth-callback';
+    }
+    
+    googleProvider.setCustomParameters(parameters);
+    
+    console.log('[Firebase] Starting Google sign-in redirect flow', {
+      state,
+      hasRedirectUrl: !!redirectUrl
     });
     
-    console.log('[Firebase] Starting Google sign-in redirect flow');
     return signInWithRedirect(auth, googleProvider);
   } catch (error) {
     console.error('[Firebase] Error starting Google sign-in redirect:', error);
@@ -117,10 +150,22 @@ export async function handleRedirectResult() {
   try {
     console.log('[Firebase] Checking for redirect result...');
     
+    // Check if auth instance is valid
+    if (!auth) {
+      console.error('[Firebase] Auth instance is not available');
+      return {
+        success: false,
+        error: { message: 'Firebase auth not initialized' },
+        handled: true
+      };
+    }
+    
     // Use Promise.race with a timeout to prevent hanging
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Redirect result timeout')), 10000);
+      setTimeout(() => reject(new Error('Redirect result timeout')), 15000);
     });
+    
+    console.log('[Firebase] Getting redirect result from auth instance');
     
     const result = await Promise.race([
       getRedirectResult(auth),
@@ -128,9 +173,12 @@ export async function handleRedirectResult() {
     ]) as any;
     
     if (result) {
+      console.log('[Firebase] Received redirect result, processing...');
+      
       // This gives you a Google Access Token
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const token = credential?.accessToken;
+      const idToken = await result.user?.getIdToken();
       
       // Get the user info
       const user = result.user;
@@ -147,7 +195,9 @@ export async function handleRedirectResult() {
       console.log('[Firebase] Successfully handled redirect result', { 
         email: user.email,
         uid: user.uid,
-        hasToken: !!token
+        hasToken: !!token,
+        hasIdToken: !!idToken,
+        displayName: user.displayName || 'No display name'
       });
       
       // Verify we have the minimum required user data
@@ -164,12 +214,34 @@ export async function handleRedirectResult() {
         success: true,
         user,
         credential,
-        token
+        token,
+        idToken
       };
     }
     
     // No redirect result (normal case when not coming from a redirect)
     console.log('[Firebase] No redirect result found');
+    
+    // Check if user is already logged in
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      console.log('[Firebase] User is already logged in:', {
+        email: currentUser.email,
+        uid: currentUser.uid,
+        displayName: currentUser.displayName || 'No display name'
+      });
+      
+      const idToken = await currentUser.getIdToken(true);
+      
+      return {
+        success: true,
+        user: currentUser,
+        token: null,
+        idToken,
+        alreadyLoggedIn: true
+      };
+    }
+    
     return null;
     
   } catch (error: any) {

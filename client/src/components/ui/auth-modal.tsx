@@ -179,18 +179,27 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     try {
       setGoogleLoading(true);
       
-      // Use the auth hook's loginWithGoogle method
+      // Get current location for redirect after successful authentication
+      const currentPath = window.location.pathname;
+      const redirectUrl = currentPath === '/' ? '/dashboard' : currentPath;
+      
+      // Store context for authentication flow
+      localStorage.setItem('auth_source', 'auth_modal');
+      
+      console.log("[AuthModal] Starting Google sign-in with redirect to:", redirectUrl);
+      
+      // Use the auth hook's loginWithGoogle method with our redirect URL
       // This will redirect to Google login page
-      await auth.loginWithGoogle();
+      await auth.loginWithGoogle(redirectUrl);
       
       // The code below won't execute because the page will redirect
       // The toast should be shown after redirect back and successful authentication
-      // which is handled in the useAuth hook
+      // which is handled in the useAuth hook and auth-callback.tsx
       
       // onClose will be called automatically when the page redirects
     } catch (error: any) {
       // This will only run if there's an error initiating the redirect
-      console.error("Google sign-in redirect failed:", error);
+      console.error("[AuthModal] Google sign-in redirect failed:", error);
       toast({
         title: "Sign in failed",
         description: error?.message || "Failed to start Google authentication",

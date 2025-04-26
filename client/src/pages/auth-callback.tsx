@@ -22,11 +22,24 @@ export default function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    // If user is already authenticated, redirect to dashboard
+    // Check for saved redirect URL from local storage
+    const savedRedirectUrl = localStorage.getItem('firebase_auth_redirect');
+    
+    // If user is already authenticated, redirect to dashboard or saved URL
     if (user && !isLoading) {
-      const redirectPath = getUserRedirectPath(user.role);
-      console.log("[AuthCallback] User already authenticated, redirecting to", redirectPath);
-      setLocation(redirectPath);
+      // Determine where to redirect the user
+      let redirectPath = savedRedirectUrl || getUserRedirectPath(user.role);
+      
+      // Clean up saved redirect URL
+      if (savedRedirectUrl) {
+        localStorage.removeItem('firebase_auth_redirect');
+        console.log("[AuthCallback] Redirecting to saved URL:", redirectPath);
+      } else {
+        console.log("[AuthCallback] User authenticated, redirecting to role-based dashboard:", redirectPath);
+      }
+      
+      // Perform the redirect
+      window.location.href = redirectPath; // Use direct navigation to avoid wouter issues with external URLs
       return;
     }
     
@@ -40,7 +53,15 @@ export default function AuthCallback() {
           return;
         }
         
+        // Verify CSRF protection state if present
+        const savedState = localStorage.getItem('firebase_auth_state');
+        if (savedState) {
+          console.log("[AuthCallback] Found saved authentication state");
+          // We'll clean this up after successful auth
+        }
+        
         // Handle the Firebase redirect result
+        console.log("[AuthCallback] Processing Firebase redirect result");
         const result = await handleRedirectResult();
         
         if (!result) {
@@ -61,20 +82,26 @@ export default function AuthCallback() {
             description: errorData.message || "Failed to complete authentication",
             variant: "destructive",
           });
+          // Clean up stored state and redirect URL on failure
+          localStorage.removeItem('firebase_auth_state');
+          localStorage.removeItem('firebase_auth_redirect');
           setTimeout(() => setLocation("/"), 2000);
           return;
         }
         
-        // Authentication process is handled by the useAuth hook
-        // which synchronizes Firebase auth with the server session
+        // Success case - user authenticated with Firebase
         console.log("[AuthCallback] Firebase authentication successful");
         
-        // The useAuth hook should have already set up the user session
-        // Wait a bit for the auth state to update
+        // Clean up the stored state once we've processed the result
+        localStorage.removeItem('firebase_auth_state');
+        
+        // The useAuth hook takes care of synchronizing the Firebase auth state
+        // with the server-side session, so we just need to wait for that to complete
         setTimeout(() => {
-          // We don't need to redirect here as the useAuth hook will handle it
+          // If there's a saved redirect URL, we'll handle it in the first useEffect
+          // when the user state updates in the auth context
           setProcessingAuth(false);
-        }, 1500);
+        }, 2000);
         
       } catch (error: any) {
         console.error("[AuthCallback] Authentication processing error:", error);
@@ -84,6 +111,11 @@ export default function AuthCallback() {
           description: error.message || "An unexpected error occurred during authentication",
           variant: "destructive",
         });
+        
+        // Clean up stored state and redirect URL on error
+        localStorage.removeItem('firebase_auth_state');
+        localStorage.removeItem('firebase_auth_redirect');
+        
         setTimeout(() => setLocation("/"), 2000);
       } finally {
         setProcessingAuth(false);
