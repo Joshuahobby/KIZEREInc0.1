@@ -1659,6 +1659,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Unified admin dashboard statistics endpoint
+  app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+    try {
+      logger.info('Admin requesting unified dashboard statistics');
+      
+      // Get all users
+      const allUsers = await storage.getAllUsers();
+      const totalUsers = allUsers.length;
+      
+      // Get all items
+      const allItems = await storage.getAllItems();
+      const totalItems = allItems.length;
+      
+      // Get all reports
+      const lostReports = await storage.getLostReports();
+      const foundReports = await storage.getFoundReports();
+      const allReports = [...lostReports, ...foundReports];
+      const pendingReports = allReports.filter(report => report.status === 'Open').length;
+      
+      // Get all payments
+      const allPayments = await storage.getAllPayments();
+      const totalPayments = allPayments.length;
+      
+      // Return the combined statistics
+      res.json({
+        totalUsers,
+        totalItems,
+        pendingReports,
+        totalPayments,
+        // Additional statistics that might be useful for the dashboard
+        userStats: {
+          subscriberCount: allUsers.filter(user => user.role === 'Subscriber').length,
+          agentCount: allUsers.filter(user => user.role === 'Agent').length,
+          adminCount: allUsers.filter(user => user.role === 'Admin').length
+        },
+        itemStats: {
+          registeredItems: allItems.filter(item => item.status === 'Registered').length,
+          lostItems: allItems.filter(item => item.status === 'Lost').length,
+          foundItems: allItems.filter(item => item.status === 'Found').length
+        },
+        reportStats: {
+          lostReportsCount: lostReports.length,
+          foundReportsCount: foundReports.length,
+          resolvedReportsCount: allReports.filter(report => report.status === 'Resolved').length
+        },
+        paymentStats: {
+          successfulPayments: allPayments.filter(p => p.status === 'successful').length,
+          pendingPayments: allPayments.filter(p => p.status === 'pending').length,
+          failedPayments: allPayments.filter(p => p.status === 'failed').length
+        }
+      });
+    } catch (error) {
+      logger.error('Error fetching unified admin stats', { error });
+      res.status(500).json({ 
+        message: "Failed to fetch admin dashboard statistics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Get user dashboard stats
   app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
