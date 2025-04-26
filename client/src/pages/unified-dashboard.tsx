@@ -56,7 +56,7 @@ import {
 } from "lucide-react";
 
 // Import admin-specific components
-import { PaymentAnalyticsChart } from "@/components/dashboard/payment-analytics-chart";
+import { PaymentAnalyticsChart } from "@/components/dashboard/payment-analytics-chart-fixed";
 import { PaymentStatusChart } from "@/components/dashboard/payment-status-chart";
 import { PaymentTypeChart } from "@/components/dashboard/payment-type-chart";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";

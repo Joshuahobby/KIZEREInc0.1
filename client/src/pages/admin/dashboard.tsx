@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { PaymentAnalyticsChart, PaymentStatusChart } from "@/components/dashboard/payment-analytics-chart";
+import { PaymentAnalyticsChart, PaymentStatusChart } from "@/components/dashboard/payment-analytics-chart-fixed";
 import { ItemStatusDistribution, ItemCategoryChart } from "@/components/dashboard/item-stats-chart";
 import { UserRoleDistribution } from "@/components/dashboard/user-stats-chart";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";

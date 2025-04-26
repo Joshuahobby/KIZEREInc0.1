@@ -1,34 +1,39 @@
 import React from 'react';
 import { 
-  AreaChart, 
-  Area, 
+  LineChart, 
+  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceLine
 } from 'recharts';
 
-export interface PaymentTimeSeriesData {
+export interface PaymentAnalyticsData {
   date: string;
   amount: number;
 }
 
 interface PaymentAnalyticsChartProps {
-  data: PaymentTimeSeriesData[];
+  data: PaymentAnalyticsData[];
   className?: string;
 }
 
 export function PaymentAnalyticsChart({ data, className }: PaymentAnalyticsChartProps) {
+  // Calculate the average amount
+  const totalAmount = data.reduce((sum, entry) => sum + entry.amount, 0);
+  const averageAmount = totalAmount / data.length;
+  
   return (
     <ResponsiveContainer width="100%" height={200} className={className}>
-      <AreaChart
+      <LineChart
         data={data}
         margin={{
-          top: 10,
+          top: 5,
           right: 30,
-          left: 0,
-          bottom: 0,
+          left: 20,
+          bottom: 5,
         }}
       >
         <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -40,6 +45,7 @@ export function PaymentAnalyticsChart({ data, className }: PaymentAnalyticsChart
         <YAxis 
           tick={{ fill: '#9ca3af' }}
           axisLine={{ stroke: '#4b5563' }}
+          tickFormatter={(value) => `$${value}`}
         />
         <Tooltip
           contentStyle={{ 
@@ -48,17 +54,29 @@ export function PaymentAnalyticsChart({ data, className }: PaymentAnalyticsChart
             borderRadius: '0.375rem',
             color: '#f3f4f6'
           }}
+          formatter={(value: number) => [`$${value.toLocaleString()}`, 'Amount']}
+          labelFormatter={(label) => `Date: ${label}`}
         />
-        <Area 
-          type="monotone" 
-          dataKey="amount" 
-          stroke="#00BFFF" 
-          fill="#00BFFF" 
-          fillOpacity={0.2}
-          activeDot={{ r: 6 }}
-          name="Revenue"
+        <ReferenceLine 
+          y={averageAmount} 
+          stroke="#f59e0b" 
+          strokeDasharray="3 3"
+          label={{ 
+            value: 'Avg', 
+            position: 'right', 
+            fill: '#f59e0b',
+            fontSize: 12
+          }}
         />
-      </AreaChart>
+        <Line
+          type="monotone"
+          dataKey="amount"
+          stroke="#00BFFF"
+          strokeWidth={2}
+          dot={{ r: 4, fill: '#00BFFF', stroke: '#00BFFF' }}
+          activeDot={{ r: 6, fill: '#00BFFF', stroke: '#ffffff' }}
+        />
+      </LineChart>
     </ResponsiveContainer>
   );
 }

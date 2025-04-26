@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
 export interface PaymentStatusData {
   name: string;
@@ -9,42 +9,95 @@ export interface PaymentStatusData {
 
 interface PaymentStatusChartProps {
   data: PaymentStatusData[];
+  className?: string;
 }
 
-export function PaymentStatusChart({ data }: PaymentStatusChartProps) {
-  // Default colors for payment statuses
-  const DEFAULT_COLORS = ['#10b981', '#f59e0b', '#ef4444'];
+export function PaymentStatusChart({ data, className }: PaymentStatusChartProps) {
+  // Default colors if none provided
+  const DEFAULT_COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#9ca3af'];
   
+  const renderCustomizedLabel = ({ 
+    cx, 
+    cy, 
+    midAngle, 
+    innerRadius, 
+    outerRadius, 
+    percent 
+  }: {
+    cx: number;
+    cy: number;
+    midAngle: number;
+    innerRadius: number;
+    outerRadius: number;
+    percent: number;
+  }) => {
+    const RADIAN = Math.PI / 180;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+    return (
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? 'start' : 'end'}
+        dominantBaseline="central"
+        fontSize={12}
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
+  };
+
+  // Create custom Legend
+  const renderLegend = (props: any) => {
+    const { payload } = props;
+    return (
+      <ul className="flex justify-center flex-wrap gap-x-4 mt-2">
+        {payload.map((entry: any, index: number) => (
+          <li key={`item-${index}`} className="flex items-center">
+            <div
+              className="w-3 h-3 rounded-full mr-2"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-xs text-gray-300">{entry.value}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
   return (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={200} className={className}>
       <PieChart>
         <Pie
           data={data}
           cx="50%"
           cy="50%"
           labelLine={false}
-          outerRadius={70}
-          innerRadius={35}
+          label={renderCustomizedLabel}
+          outerRadius={80}
+          innerRadius={40}
           fill="#8884d8"
           dataKey="value"
-          label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
         >
           {data.map((entry, index) => (
-            <Cell 
-              key={`cell-${index}`} 
-              fill={entry.color || DEFAULT_COLORS[index % DEFAULT_COLORS.length]} 
+            <Cell
+              key={`cell-${index}`}
+              fill={entry.color || DEFAULT_COLORS[index % DEFAULT_COLORS.length]}
             />
           ))}
         </Pie>
-        <Tooltip 
-          formatter={(value: number) => [`${value}%`, 'Percentage']}
-          contentStyle={{ 
-            backgroundColor: '#1f2937', 
+        <Tooltip
+          contentStyle={{
+            backgroundColor: '#1f2937',
             borderColor: '#374151',
             borderRadius: '0.375rem',
             color: '#f3f4f6'
           }}
         />
+        <Legend content={renderLegend} />
       </PieChart>
     </ResponsiveContainer>
   );

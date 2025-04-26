@@ -21,8 +21,7 @@ import { ActivityTimeline, TimelineEvent } from '@/components/command-center/act
 import { QuickActionMenu } from '@/components/command-center/quick-action-menu';
 
 // Import existing data components
-import { PaymentAnalyticsChart } from "@/components/dashboard/payment-analytics-chart";
-import { PaymentStatusChart } from "@/components/dashboard/payment-status-chart";
+import { PaymentAnalyticsChart, PaymentStatusChart } from "@/components/dashboard/payment-analytics-chart-fixed";
 import { UserRoleDistribution } from "@/components/dashboard/user-role-distribution";
 import { ItemCategoryChart } from "@/components/dashboard/item-category-chart";
 import { ContextualSidebar } from "@/components/dashboard/contextual-sidebar";
