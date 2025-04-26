@@ -14,6 +14,7 @@ import PaymentHistory from "@/pages/payment-history";
 import PaymentTest from "@/pages/payment-test";
 import PaymentDashboard from "@/pages/admin/payment-dashboard";
 import AdminDashboard from "@/pages/admin/dashboard";
+import AdminDashboardNew from "@/pages/admin/dashboard-new";
 import { MissionControl } from "@/pages/admin/mission-control";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -79,6 +80,7 @@ function App() {
   const PaymentHistoryComponent = () => <PaymentHistory />;
   const PaymentTestComponent = () => <PaymentTest />;
   const AdminDashboardComponent = () => <AdminDashboard />;
+  const AdminDashboardNewComponent = () => <AdminDashboardNew />;
   const PaymentDashboardComponent = () => <PaymentDashboard />;
   const MissionControlComponent = () => <MissionControl />;
   
@@ -112,6 +114,7 @@ function App() {
               
               {/* Admin routes */}
               <ProtectedRoute path="/admin" component={AdminDashboardComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/new" component={AdminDashboardNewComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/mission-control" component={MissionControlComponent} requiredRole="Admin" />
               
