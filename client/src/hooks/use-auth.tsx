@@ -406,10 +406,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               description: `Signed in as ${serverUser.fullName || serverUser.email}`,
             });
             
-            // Use the AuthService to determine the correct dashboard path
-            // This centralizes our redirect logic and makes it consistent
-            import('@/services/auth.service').then(({ AuthService }) => {
-              const dashboardPath = AuthService.getDashboardPathByRole(serverUser.role);
+            // Use our auth helpers to determine the best redirect path
+            import('@/lib/auth-helpers').then(({ AuthHelpers }) => {
+              const dashboardPath = AuthHelpers.getPostLoginRedirect(serverUser, redirectUrl);
               console.log(`[useAuth] Redirecting ${serverUser.role} user to: ${dashboardPath}`);
               
               // Redirect to the appropriate dashboard

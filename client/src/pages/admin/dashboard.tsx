@@ -1,338 +1,342 @@
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronRight, Users, FileText, Clock, Settings, BarChart3, Wallet, Bell } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AdminLayout } from "@/components/layout/admin-layout";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from "@/components/ui/card";
-import { BarChart3, Users, ShoppingBag, AlertCircle, DollarSign, Loader2 } from 'lucide-react';
-import { PaymentAnalyticsChart } from "@/components/dashboard/payment-analytics-chart";
-import { PaymentStatusChart } from "@/components/dashboard/payment-status-chart";
-import { PaymentTypeChart } from "@/components/dashboard/payment-type-chart";
-import { RecentTransactions } from "@/components/dashboard/recent-transactions";
-import { apiRequest } from "@/lib/queryClient";
-import { DEFAULT_CURRENCY } from "@/config/payment.config";
+import { useLocation } from "wouter";
 
 export default function AdminDashboard() {
-  // State for chart data
-  const [monthlyRevenueData, setMonthlyRevenueData] = useState([]);
-  const [paymentStatusData, setPaymentStatusData] = useState([]);
-  const [paymentTypeData, setPaymentTypeData] = useState([]);
-
-  // Fetch summary statistics
-  const { 
-    data: revenueSummary, 
-    isLoading: isRevenueSummaryLoading 
-  } = useQuery({
-    queryKey: ["/api/admin/payments/summary"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/payments/summary");
-      if (!res.ok) {
-        throw new Error("Failed to fetch revenue summary");
-      }
-      return await res.json();
-    }
+  const { user } = useAuth();
+  const [_, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalItems: 0,
+    pendingReports: 0,
+    totalPayments: 0
   });
 
-  // Fetch recent transactions
-  const { 
-    data: recentTransactions, 
-    isLoading: isRecentTransactionsLoading 
-  } = useQuery({
-    queryKey: ["/api/admin/payments", 1, 5],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/payments?page=1&pageSize=5");
-      if (!res.ok) {
-        throw new Error("Failed to fetch recent transactions");
-      }
-      const data = await res.json();
-      return data.transactions;
-    }
-  });
-
-  // Fetch user stats
-  const {
-    data: userStats,
-    isLoading: isUserStatsLoading
-  } = useQuery({
-    queryKey: ["/api/admin/users/stats"],
-    queryFn: async () => {
-      try {
-        const res = await apiRequest("GET", "/api/admin/users/stats");
-        if (!res.ok) {
-          return { totalUsers: 0, newUsersThisWeek: 0 };
-        }
-        return await res.json();
-      } catch (error) {
-        return { totalUsers: 0, newUsersThisWeek: 0 };
-      }
-    }
-  });
-
-  // Fetch item stats
-  const {
-    data: itemStats,
-    isLoading: isItemStatsLoading
-  } = useQuery({
-    queryKey: ["/api/admin/items/stats"],
-    queryFn: async () => {
-      try {
-        const res = await apiRequest("GET", "/api/admin/items/stats");
-        if (!res.ok) {
-          return { totalItems: 0, newItemsThisMonth: 0 };
-        }
-        return await res.json();
-      } catch (error) {
-        return { totalItems: 0, newItemsThisMonth: 0 };
-      }
-    }
-  });
-
-  // Fetch report stats
-  const {
-    data: reportStats,
-    isLoading: isReportStatsLoading
-  } = useQuery({
-    queryKey: ["/api/admin/reports/stats"],
-    queryFn: async () => {
-      try {
-        const res = await apiRequest("GET", "/api/admin/reports/stats");
-        if (!res.ok) {
-          return { openReports: 0, changeLastWeek: 0 };
-        }
-        return await res.json();
-      } catch (error) {
-        return { openReports: 0, changeLastWeek: 0 };
-      }
-    }
-  });
-
-  // Process data for charts when revenue summary changes
   useEffect(() => {
-    if (revenueSummary) {
-      // Create payment status chart data
-      const statusData = [
-        { 
-          name: 'Successful', 
-          value: revenueSummary.successfulTransactions || 0, 
-          color: '#10b981' 
-        },
-        { 
-          name: 'Pending', 
-          value: revenueSummary.pendingTransactions || 0, 
-          color: '#f59e0b' 
-        },
-        { 
-          name: 'Failed', 
-          value: revenueSummary.failedTransactions || 0, 
-          color: '#ef4444' 
-        },
-        { 
-          name: 'Cancelled', 
-          value: revenueSummary.cancelledTransactions || 0, 
-          color: '#6b7280' 
-        },
-        { 
-          name: 'Refunded', 
-          value: revenueSummary.refundedTransactions || 0, 
-          color: '#3b82f6' 
+    // Fetch dashboard statistics
+    const fetchStats = async () => {
+      try {
+        const response = await fetch("/api/admin/stats");
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
         }
-      ];
-      setPaymentStatusData(statusData);
-
-      // Create payment type chart data
-      const typeData = [
-        {
-          name: 'Registration',
-          value: revenueSummary.registrationCount || 0,
-          color: '#8b5cf6'
-        },
-        {
-          name: 'Lost Report',
-          value: revenueSummary.lostReportCount || 0,
-          color: '#ec4899'
-        }
-      ];
-      setPaymentTypeData(typeData);
-
-      // Monthly revenue data (simulated for demo)
-      const currentMonth = new Date().getMonth();
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      
-      // Demo data using the total revenue allocated across months
-      const totalRevenue = revenueSummary.totalRevenue || 0;
-      const months = [];
-      
-      for (let i = 0; i < 12; i++) {
-        const monthIndex = (currentMonth - 11 + i) % 12;
-        const isCurrentMonth = monthIndex === currentMonth;
-        
-        // More revenue for current and recent months for demo
-        let factor = 0.05;
-        if (i > 9) factor = 0.15;
-        if (i > 10) factor = 0.25;
-        if (i === 11) factor = 0.3;
-        
-        months.push({
-          name: monthNames[monthIndex],
-          value: Math.round(totalRevenue * factor)
-        });
+      } catch (error) {
+        console.error("Error fetching admin stats:", error);
       }
-      
-      setMonthlyRevenueData(months);
-    }
-  }, [revenueSummary]);
+    };
+
+    fetchStats();
+  }, []);
+
+  if (!user || user.role !== "Admin") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+        <p className="text-muted-foreground mb-4 text-center">
+          You don't have the required permissions to access the admin dashboard.
+        </p>
+        <Button onClick={() => setLocation("/")}>Return to Home</Button>
+      </div>
+    );
+  }
 
   return (
-    <AdminLayout>
-      <div className="container py-8">
-        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Stats Cards */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Users
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isUserStatsLoading ? (
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Loading...</span>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">
-                      {userStats?.totalUsers?.toLocaleString() || 0}
-                    </div>
-                    <Users className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {userStats?.newUsersThisWeek > 0 ? '+' : ''}{userStats?.newUsersThisWeek || 0} this week
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Registered Items
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isItemStatsLoading ? (
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Loading...</span>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">
-                      {itemStats?.totalItems?.toLocaleString() || 0}
-                    </div>
-                    <ShoppingBag className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {itemStats?.newItemsThisMonth > 0 ? '+' : ''}{itemStats?.newItemsThisMonth || 0} this month
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Open Reports
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isReportStatsLoading ? (
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Loading...</span>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">
-                      {reportStats?.openReports?.toLocaleString() || 0}
-                    </div>
-                    <AlertCircle className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {reportStats?.changeLastWeek > 0 ? '+' : ''}{reportStats?.changeLastWeek || 0} since last week
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Revenue
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isRevenueSummaryLoading ? (
-                <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Loading...</span>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between">
-                    <div className="text-2xl font-bold">
-                      {DEFAULT_CURRENCY} {(revenueSummary?.totalRevenue || 0).toLocaleString()}
-                    </div>
-                    <DollarSign className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    From {revenueSummary?.successfulTransactions || 0} successful payments
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
+    <div className="container px-4 py-8 mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your platform, users, and view statistics
+          </p>
         </div>
-        
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          <PaymentAnalyticsChart 
-            paymentData={monthlyRevenueData} 
-            isLoading={isRevenueSummaryLoading} 
-          />
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-          <PaymentStatusChart 
-            data={paymentStatusData} 
-            isLoading={isRevenueSummaryLoading} 
-          />
-          <PaymentTypeChart 
-            data={paymentTypeData} 
-            isLoading={isRevenueSummaryLoading} 
-          />
-        </div>
-        
-        {/* Recent Transactions */}
-        <div className="grid grid-cols-1 gap-6">
-          <RecentTransactions 
-            transactions={recentTransactions} 
-            isLoading={isRecentTransactionsLoading} 
-          />
+        <div className="flex items-center space-x-4 mt-4 md:mt-0">
+          <Bell className="h-5 w-5 text-muted-foreground" />
+          <div className="flex items-center space-x-2">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt={user.fullName} className="w-10 h-10 rounded-full" />
+              ) : (
+                <span className="text-primary font-medium">{user.fullName?.charAt(0) || "A"}</span>
+              )}
+            </div>
+            <div className="hidden md:block">
+              <p className="text-sm font-medium">{user.fullName}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
         </div>
       </div>
-    </AdminLayout>
+
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="bg-muted/50 p-1">
+          <TabsTrigger value="overview" className="text-sm">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="users" className="text-sm">
+            <Users className="h-4 w-4 mr-2" />
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="items" className="text-sm">
+            <FileText className="h-4 w-4 mr-2" />
+            Items
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="text-sm">
+            <Clock className="h-4 w-4 mr-2" />
+            Reports
+          </TabsTrigger>
+          <TabsTrigger value="payments" className="text-sm">
+            <Wallet className="h-4 w-4 mr-2" />
+            Payments
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="text-sm">
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="p-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalUsers}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  +12% from last month
+                </p>
+              </CardContent>
+              <CardFooter className="pt-0">
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setActiveTab("users")}>
+                  View all users
+                  <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Registered Items</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalItems}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  +8% from last month
+                </p>
+              </CardContent>
+              <CardFooter className="pt-0">
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setActiveTab("items")}>
+                  View all items
+                  <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Pending Reports</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.pendingReports}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  +2 new reports today
+                </p>
+              </CardContent>
+              <CardFooter className="pt-0">
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setActiveTab("reports")}>
+                  View all reports
+                  <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalPayments}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  +15% from last month
+                </p>
+              </CardContent>
+              <CardFooter className="pt-0">
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setLocation("/admin/payment-dashboard")}>
+                  View payment dashboard
+                  <ChevronRight className="h-3 w-3 ml-1" />
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>Recent Activity</CardTitle>
+                <CardDescription>
+                  Latest system activity for the past 7 days
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-start">
+                      <div className="w-2 h-2 rounded-full bg-primary mt-2 mr-2" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          {["New user registration", "Item registered", "Lost report created", "Payment received", "User password reset"][i]}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {i === 0 ? "Just now" : i === 1 ? "2 hours ago" : i === 2 ? "Yesterday" : `${i + 1} days ago`}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" className="w-full">
+                  View All Activity
+                </Button>
+              </CardFooter>
+            </Card>
+
+            <Card className="col-span-1">
+              <CardHeader>
+                <CardTitle>System Status</CardTitle>
+                <CardDescription>
+                  Overview of system health and performance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[
+                    { name: "Server Uptime", value: "99.9%", status: "good" },
+                    { name: "API Response Time", value: "89ms", status: "good" },
+                    { name: "Database Load", value: "42%", status: "good" },
+                    { name: "Storage Usage", value: "68%", status: "warning" },
+                    { name: "Monthly API Calls", value: "245K", status: "good" }
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <p className="text-sm font-medium">{item.name}</p>
+                      <div className="flex items-center">
+                        <span className="text-sm mr-2">{item.value}</span>
+                        <div 
+                          className={`w-3 h-3 rounded-full ${
+                            item.status === 'good' 
+                              ? 'bg-green-500' 
+                              : item.status === 'warning' 
+                                ? 'bg-yellow-500' 
+                                : 'bg-red-500'
+                          }`} 
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" className="w-full">
+                  View System Details
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="users">
+          <Card>
+            <CardHeader>
+              <CardTitle>User Management</CardTitle>
+              <CardDescription>
+                View and manage all users on the platform
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                User management functionality will be displayed here. You can view, edit, and manage user accounts, roles, and permissions.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" onClick={() => setLocation("/user-management")}>Go to User Management</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="items">
+          <Card>
+            <CardHeader>
+              <CardTitle>Item Management</CardTitle>
+              <CardDescription>
+                View and manage all registered items
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Item management functionality will be displayed here. You can view, edit, and manage registered items in the system.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports">
+          <Card>
+            <CardHeader>
+              <CardTitle>Report Management</CardTitle>
+              <CardDescription>
+                View and manage all lost and found reports
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Report management functionality will be displayed here. You can view, process, and manage lost and found reports.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="payments">
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Management</CardTitle>
+              <CardDescription>
+                View and manage all payment transactions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Payment management functionality will be displayed here. You can view, process, and manage payment transactions.
+              </p>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" onClick={() => setLocation("/admin/payment-dashboard")}>Go to Payment Dashboard</Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Settings</CardTitle>
+              <CardDescription>
+                Configure system-wide settings and preferences
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                System settings functionality will be displayed here. You can configure various system parameters and preferences.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
