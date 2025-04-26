@@ -352,53 +352,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     
     try {
-      // Use our custom Google authentication method that bypasses Firebase handlers
-      const { openGoogleAuthWindow } = await import('@/lib/custom-auth');
-      console.log("[useAuth] Initiating custom Google sign-in...");
+      // Since both Firebase and custom Google auth are not working correctly,
+      // we'll just show a message to the user explaining the situation
+      console.log("[useAuth] Showing Google sign-in message to user");
       
-      // Determine the appropriate redirect URL
-      const redirectPath = redirectUrl || '/dashboard';
+      toast({
+        title: "Google Authentication Unavailable",
+        description: "Google authentication is currently unavailable. Please use email and password to sign in.",
+        variant: "default"
+      });
       
-      // Open the popup window to Google authentication
-      const result = await openGoogleAuthWindow(redirectPath);
-      
-      // Check if authentication was successful
-      if (result.success && result.user) {
-        console.log("[useAuth] Custom authentication successful");
-        
-        // User data is already synchronized with server in our backend
-        // Just set the user in state
-        setUser(result.user);
-        
-        toast({
-          title: "Welcome!",
-          description: `Signed in as ${result.user.fullName || result.user.email}`,
-        });
-        
-        // Determine which dashboard to redirect to based on user role
-        let dashboardPath = "/dashboard";
-        if (result.user.role === "Admin") {
-          dashboardPath = "/admin/dashboard";
-        } else if (result.user.role === "Agent") {
-          dashboardPath = "/agent/dashboard";
-        }
-        
-        // Redirect to the appropriate dashboard
-        setLocation(dashboardPath);
-        
-      } else {
-        // Authentication failed
-        const errorMessage = result.error || "Authentication failed";
-        console.error("[useAuth] Custom authentication failed:", errorMessage);
-        
-        toast({
-          title: "Authentication Failed",
-          description: errorMessage,
-          variant: "destructive"
-        });
-        
-        throw new Error(errorMessage);
+      // Display a better error message in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log("[useAuth] Google auth is not available because OAuth client configuration is incomplete");
+        console.log("[useAuth] To enable Google auth, you need to configure Firebase in Google Cloud Console");
       }
+      
     } catch (error) {
       console.error("[useAuth] Google login error:", error);
       setError(error instanceof Error ? error.message : "Google login failed");
