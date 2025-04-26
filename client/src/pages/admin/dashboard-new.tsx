@@ -863,64 +863,6 @@ export default function AdminDashboard() {
         onClose={() => setShowContextSidebar(false)}
         data={sidebarContext.data || {}}
         type={sidebarContext.type}
-        tabs={
-          sidebarContext.type === 'users' ? [
-            { id: 'list', title: 'Users', icon: <Users className="h-4 w-4" />, content: <div className="text-white">User list content would appear here</div> },
-            { id: 'roles', title: 'Roles', icon: <Settings className="h-4 w-4" />, content: <div className="text-white">Role management content would appear here</div> },
-            { id: 'activity', title: 'Activity', icon: <Activity className="h-4 w-4" />, content: <div className="text-white">User activity logs would appear here</div> }
-          ] : 
-          sidebarContext.type === 'items' ? [
-            { id: 'list', title: 'Items', icon: <Package className="h-4 w-4" />, content: <div className="text-white">Item list content would appear here</div> },
-            { id: 'categories', title: 'Categories', icon: <Tags className="h-4 w-4" />, content: <div className="text-white">Category management content would appear here</div> }
-          ] : 
-          sidebarContext.type === 'reports' ? [
-            { id: 'pending', title: 'Pending', icon: <AlertTriangle className="h-4 w-4" />, content: <div className="text-white">Pending reports would appear here</div> },
-            { id: 'processed', title: 'Processed', icon: <CheckCircle className="h-4 w-4" />, content: <div className="text-white">Processed reports would appear here</div> }
-          ] : 
-          sidebarContext.type === 'payments' ? [
-            { id: 'transactions', title: 'Transactions', icon: <CreditCard className="h-4 w-4" />, content: <div className="text-white">Payment transactions would appear here</div> },
-            { id: 'stats', title: 'Analytics', icon: <BarChart3 className="h-4 w-4" />, content: <div className="text-white">Payment analytics would appear here</div> }
-          ] : 
-          sidebarContext.type === 'insight' ? [
-            { id: 'details', title: 'Details', icon: <Info className="h-4 w-4" />, content: (
-              <div className="text-white">
-                <div className={`p-3 rounded-lg text-sm border border-opacity-20 ${
-                  sidebarContext.data?.insight.type === 'alert' ? 'bg-red-500/10 border-red-500' : 
-                  sidebarContext.data?.insight.type === 'warning' ? 'bg-yellow-500/10 border-yellow-500' :
-                  sidebarContext.data?.insight.type === 'success' ? 'bg-green-500/10 border-green-500' :
-                  'bg-[#00BFFF]/10 border-[#00BFFF]'
-                }`}>
-                  <h3 className="font-medium mb-2">{sidebarContext.data?.insight?.title}</h3>
-                  <p className="text-sm text-gray-300 mb-4">{sidebarContext.data?.insight?.message}</p>
-                  <div className="text-xs text-gray-400">{sidebarContext.data?.insight?.time}</div>
-                </div>
-              </div>
-            )},
-            { id: 'actions', title: 'Actions', icon: <Settings className="h-4 w-4" />, content: <div className="text-white">Insight actions would appear here</div> }
-          ] : undefined
-        }
-        actions={[
-          { 
-            label: 'Refresh', 
-            icon: <Loader2 className="h-4 w-4" />, 
-            onClick: () => {}, 
-            variant: 'subtle' 
-          },
-          { 
-            label: 'Configure', 
-            icon: <Settings className="h-4 w-4" />, 
-            onClick: () => {}, 
-            variant: 'default' 
-          }
-        ]}
-        footer={
-          <Button 
-            className="w-full bg-[#00BFFF] hover:bg-[#00BFFF]/90 text-white"
-            onClick={() => setShowContextSidebar(false)}
-          >
-            Close Panel
-          </Button>
-        }
       />
       
       {/* Expandable Detail Views */}
