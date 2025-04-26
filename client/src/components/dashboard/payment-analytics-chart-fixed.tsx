@@ -23,14 +23,14 @@ interface PaymentAnalyticsChartProps {
 }
 
 export function PaymentAnalyticsChart({ 
-  data, 
+  data = [], 
   className,
   title,
   description 
 }: PaymentAnalyticsChartProps) {
   // Calculate the average amount
-  const totalAmount = data.length > 0 ? data.reduce((sum, entry) => sum + entry.amount, 0) : 0;
-  const averageAmount = data.length > 0 ? totalAmount / data.length : 0;
+  const totalAmount = data && data.length > 0 ? data.reduce((sum, entry) => sum + entry.amount, 0) : 0;
+  const averageAmount = data && data.length > 0 ? totalAmount / data.length : 0;
   
   return (
     <div className={className}>

@@ -326,7 +326,7 @@ export default function UnifiedDashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <PaymentAnalyticsChart paymentData={adminStats?.monthlyRevenue?.map(item => ({ name: item.month, value: item.revenue })) || []} />
+                  <PaymentAnalyticsChart data={adminStats?.monthlyRevenue?.map(item => ({ date: item.month, amount: item.revenue })) || []} />
                 </CardContent>
               </Card>
             </motion.div>

@@ -315,7 +315,16 @@ export default function AdminDashboard() {
                 <CardContent className="px-6">
                   <PaymentAnalyticsChart 
                     title="" 
-                    description="" 
+                    description=""
+                    data={[
+                      { date: 'Jan', amount: 2400 },
+                      { date: 'Feb', amount: 1398 },
+                      { date: 'Mar', amount: 9800 },
+                      { date: 'Apr', amount: 3908 },
+                      { date: 'May', amount: 4800 },
+                      { date: 'Jun', amount: 3800 },
+                      { date: 'Jul', amount: 4300 }
+                    ]}
                   />
                 </CardContent>
               </Card>
@@ -415,7 +424,13 @@ export default function AdminDashboard() {
                   </div>
                 </CardHeader>
                 <CardContent className="px-6">
-                  <ItemCategoryChart />
+                  <ItemCategoryChart data={[
+                    { name: 'Electronics', value: 45 },
+                    { name: 'Jewelry', value: 28 },
+                    { name: 'Documents', value: 33 },
+                    { name: 'Phones', value: 22 },
+                    { name: 'Other', value: 12 }
+                  ]} />
                 </CardContent>
               </Card>
             </div>

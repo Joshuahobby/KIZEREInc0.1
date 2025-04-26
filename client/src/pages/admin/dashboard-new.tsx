@@ -335,7 +335,16 @@ export default function AdminDashboard() {
           <div className="h-[300px]">
             <PaymentAnalyticsChart 
               title="" 
-              description="" 
+              description=""
+              data={[
+                { date: 'Jan', amount: 2400 },
+                { date: 'Feb', amount: 1398 },
+                { date: 'Mar', amount: 9800 },
+                { date: 'Apr', amount: 3908 },
+                { date: 'May', amount: 4800 },
+                { date: 'Jun', amount: 3800 },
+                { date: 'Jul', amount: 4300 }
+              ]}
             />
           </div>
           <div className="mt-4 text-center">
@@ -462,7 +471,13 @@ export default function AdminDashboard() {
       content: (
         <div className="h-full flex flex-col">
           <div className="flex-1">
-            <ItemCategoryChart />
+            <ItemCategoryChart data={[
+              { name: 'Electronics', value: 45 },
+              { name: 'Jewelry', value: 28 },
+              { name: 'Documents', value: 33 },
+              { name: 'Phones', value: 22 },
+              { name: 'Other', value: 12 }
+            ]} />
           </div>
           <div className="mt-2 text-center">
             <Button 
@@ -929,7 +944,16 @@ export default function AdminDashboard() {
                   <div className="h-[400px]">
                     <PaymentAnalyticsChart 
                       title="Revenue Over Time" 
-                      description="Monthly payment collection trends" 
+                      description="Monthly payment collection trends"
+                      data={[
+                        { date: 'Jan', amount: 2400 },
+                        { date: 'Feb', amount: 1398 },
+                        { date: 'Mar', amount: 9800 },
+                        { date: 'Apr', amount: 3908 },
+                        { date: 'May', amount: 4800 },
+                        { date: 'Jun', amount: 3800 },
+                        { date: 'Jul', amount: 4300 }
+                      ]}
                     />
                   </div>
                 </div>
