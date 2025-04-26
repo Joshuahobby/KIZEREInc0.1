@@ -60,21 +60,7 @@ export default function AdminDashboard() {
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig | null>(null);
   
   // Fetch dashboard stats
-  const { data: stats, isLoading, error, refetch } = useDashboardStats(timeRange);
-  
-  // Mock chart data
-  const chartData = {
-    userRoleData: [
-      { name: 'Subscribers', value: 65 },
-      { name: 'Agents', value: 25 },
-      { name: 'Admins', value: 10 }
-    ],
-    paymentStatusData: [
-      { name: 'Successful', value: 72 },
-      { name: 'Pending', value: 21 },
-      { name: 'Failed', value: 7 }
-    ]
-  };
+  const { stats, chartData, isLoading, isError, error, refetch } = useDashboardStats();
   
   // System insights with filtering
   const insights = [
