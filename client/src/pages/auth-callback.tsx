@@ -106,16 +106,21 @@ export default function AuthCallback() {
           let errorMessage = errorData.message || "Unknown error";
           let troubleShootingTip = "";
           
-          if (errorData.code === 'auth/invalid-api-key') {
+          // Get the error code - handle both object shapes
+          const errorCode = (errorData as any).code || '';
+          
+          if (errorCode === 'auth/invalid-api-key') {
             troubleShootingTip = "The Firebase API key appears to be invalid. Please check your Firebase configuration.";
-          } else if (errorData.code === 'auth/internal-error') {
+          } else if (errorCode === 'auth/internal-error') {
             troubleShootingTip = "An internal Firebase error occurred. This could be due to misconfigured Firebase settings or network issues.";
-          } else if (errorData.code === 'auth/network-request-failed') {
+          } else if (errorCode === 'auth/network-request-failed') {
             troubleShootingTip = "A network error occurred. Please check your internet connection and try again.";
-          } else if (errorData.code === 'auth/operation-not-allowed') {
+          } else if (errorCode === 'auth/operation-not-allowed') {
             troubleShootingTip = "The sign-in provider is not enabled in your Firebase console.";
-          } else if (errorData.code === 'auth/unauthorized-domain') {
+          } else if (errorCode === 'auth/unauthorized-domain') {
             troubleShootingTip = "This domain is not authorized to use Firebase Authentication. Add your domain to the authorized domains list in the Firebase console.";
+          } else if (errorMessage.includes('domain')) {
+            troubleShootingTip = "This domain may not be authorized for Firebase Authentication. Check the authorized domains in your Firebase console.";
           }
           
           const fullErrorMessage = troubleShootingTip 

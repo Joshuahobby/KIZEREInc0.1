@@ -20,15 +20,27 @@ const firebaseConfig = {
 
 // Add a custom auth domain for development - use the current hostname
 // This helps when the Firebase console doesn't have the Replit domain in the authorized domains
-const currentDomain = window.location.hostname;
-if (currentDomain.includes('replit') || currentDomain.includes('repl.co')) {
-  console.log(`[Firebase] Running on Replit domain: ${currentDomain}. Using current origin for authentication redirects.`);
-  try {
-    // Use the current URL as the auth domain for redirection purposes
-    firebaseConfig.authDomain = window.location.host;
-  } catch (error) {
-    console.warn('[Firebase] Failed to set custom auth domain:', error);
+try {
+  // Always override the authDomain with the current origin to ensure
+  // the authentication flow works in development environments
+  const currentOrigin = window.location.origin;
+  const currentHostname = window.location.hostname;
+  
+  // Use the complete hostname (with port if necessary) as the auth domain
+  firebaseConfig.authDomain = window.location.host;
+  
+  console.log(`[Firebase] Using current hostname as auth domain: ${firebaseConfig.authDomain}`);
+  console.log(`[Firebase] Current origin: ${currentOrigin}`);
+  
+  // We need to prevent the browser from accidentally using an unregistered domain
+  // for the redirect, so we force the redirect domain to be the same as the current origin
+  if (typeof window !== 'undefined' && window.location) {
+    // This will be used later when configuring the GoogleAuthProvider
+    localStorage.setItem('firebase_auth_domain', window.location.host);
+    localStorage.setItem('firebase_auth_origin', window.location.origin);
   }
+} catch (error) {
+  console.warn('[Firebase] Failed to set custom auth domain:', error);
 }
 
 // Validate Firebase config with detailed logging
@@ -83,12 +95,20 @@ const googleProvider = new GoogleAuthProvider();
  */
 export function signInWithGoogle(redirectUrl?: string) {
   try {
-    // Configure additional scopes and parameters
+    // Reset the auth instance if needed
+    // This helps avoid issues with stale authentication state
+    if (auth.currentUser) {
+      console.log('[Firebase] Existing user found, signing out before new sign in');
+      // We don't await this since we're about to redirect anyway
+      signOut(auth).catch(e => console.warn('[Firebase] Pre-signIn signOut error:', e));
+    }
+    
+    // Configure additional scopes and parameters for more user information
     googleProvider.addScope('profile');
     googleProvider.addScope('email');
     
     // Create a state parameter for CSRF protection
-    const state = Math.random().toString(36).substring(2, 15);
+    const state = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
     localStorage.setItem('firebase_auth_state', state);
     
     // Store redirect URL if provided
@@ -108,9 +128,17 @@ export function signInWithGoogle(redirectUrl?: string) {
       state
     };
     
-    // Get the callback URL
+    // For Replit domains, we need to explicitly set our callback URL
     const callbackUrl = '/auth-callback';
     const absoluteCallbackUrl = window.location.origin + callbackUrl;
+    
+    // Only for Replit domains - helps with redirect handling
+    const currentHostname = window.location.hostname;
+    if (currentHostname.includes('replit') || currentHostname.includes('repl.co')) {
+      // Add redirect_uri parameter for Replit domains
+      parameters.redirect_uri = absoluteCallbackUrl;
+      console.log('[Firebase] Added explicit redirect_uri for Replit domain:', absoluteCallbackUrl);
+    }
     
     // Log the full redirect configuration
     console.log('[Firebase] Google sign-in configuration:', {
@@ -118,9 +146,11 @@ export function signInWithGoogle(redirectUrl?: string) {
       redirectUrl,
       callbackUrl: absoluteCallbackUrl,
       origin: window.location.origin,
-      hostname: window.location.hostname
+      hostname: window.location.hostname,
+      parameters
     });
     
+    // Apply the custom parameters to the provider
     googleProvider.setCustomParameters(parameters);
     
     console.log('[Firebase] Starting Google sign-in redirect flow');
@@ -185,6 +215,23 @@ export async function handleRedirectResult() {
       };
     }
     
+    // Retrieve the authentication context from localStorage
+    // This is used for debugging and to ensure the redirect flow works correctly
+    const savedState = localStorage.getItem('firebase_auth_state');
+    const savedRedirect = localStorage.getItem('firebase_auth_redirect');
+    const savedTimestamp = localStorage.getItem('firebase_auth_timestamp');
+    const savedOrigin = localStorage.getItem('firebase_auth_origin');
+    const savedDomain = localStorage.getItem('firebase_auth_domain');
+    
+    console.log('[Firebase] Auth context from localStorage:', {
+      hasState: !!savedState,
+      hasRedirect: !!savedRedirect,
+      savedTimestamp: savedTimestamp ? new Date(parseInt(savedTimestamp)).toISOString() : null,
+      savedOrigin,
+      savedDomain,
+      currentUrl: window.location.href,
+    });
+    
     // Use Promise.race with a timeout to prevent hanging
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Redirect result timeout')), 15000);
@@ -192,6 +239,13 @@ export async function handleRedirectResult() {
     
     console.log('[Firebase] Getting redirect result from auth instance');
     
+    // Check if we're on a Replit domain - may need special handling
+    const isReplitDomain = window.location.hostname.includes('replit') || 
+                           window.location.hostname.includes('repl.co');
+    
+    console.log(`[Firebase] Running on ${isReplitDomain ? 'Replit' : 'standard'} domain`);
+    
+    // Get the redirect result
     const result = await Promise.race([
       getRedirectResult(auth),
       timeoutPromise
