@@ -10,13 +10,15 @@ import {
   User 
 } from "firebase/auth";
 
-// Firebase configuration using environment variables
+// Firebase configuration using environment variables or direct values
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o",
+  authDomain: "kizere-99ac2.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "kizere-99ac2",
+  storageBucket: "kizere-99ac2.firebasestorage.app",
+  messagingSenderId: "222601639458",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:222601639458:web:9fe0224b8ca6968064fc7b",
+  measurementId: "G-WZX1SN8XWS"
 };
 
 // Add a custom auth domain for development - use the current hostname

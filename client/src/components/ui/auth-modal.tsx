@@ -236,36 +236,30 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
               </div>
             </div>
             
-            {/* Google button - disabled state with explanation */}
-            <div
-              className="w-full h-full min-h-[240px] bg-gray-100 text-gray-500 shadow-md rounded-md border-0 flex flex-col items-center justify-center relative overflow-hidden"
+            {/* Google button - big and prominent */}
+            <Button 
+              type="button" 
+              className="w-full h-full min-h-[240px] bg-[#00BFFF] hover:bg-[#00A0D6] text-white shadow-md hover:shadow-lg rounded-md border-0 flex flex-col items-center justify-center"
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading}
             >
-              <div className="absolute top-0 left-0 w-full bg-yellow-400 text-center py-1 text-sm">
-                Currently unavailable
-              </div>
-              
-              <div className="bg-white p-3 rounded-full mb-4 opacity-50">
-                <SiGoogle className="h-10 w-10 text-gray-700" />
-              </div>
-              <span className="text-xl font-medium text-gray-500">Google Sign-In</span>
-              <p className="text-sm mt-2 max-w-[220px] text-center opacity-90">
-                Google authentication requires configuration in Firebase console
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-4"
-                onClick={() => {
-                  toast({
-                    title: "Google Authentication Unavailable",
-                    description: "Please use email and password authentication instead.",
-                    variant: "default",
-                  });
-                }}
-              >
-                Learn more
-              </Button>
-            </div>
+              {googleLoading ? (
+                <>
+                  <Loader2 className="h-10 w-10 animate-spin mb-4" />
+                  <span className="text-xl font-medium">Signing in with Google...</span>
+                </>
+              ) : (
+                <>
+                  <div className="bg-white p-3 rounded-full mb-4">
+                    <SiGoogle className="h-10 w-10 text-gray-700" />
+                  </div>
+                  <span className="text-xl font-medium">Continue with Google</span>
+                  <p className="text-sm mt-2 max-w-[200px] text-center opacity-90">
+                    Fast, secure login with your Google account
+                  </p>
+                </>
+              )}
+            </Button>
           </div>
           
           {/* RIGHT SIDE - Traditional auth methods */}

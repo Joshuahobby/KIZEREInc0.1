@@ -352,21 +352,86 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     
     try {
-      // Since both Firebase and custom Google auth are not working correctly,
-      // we'll just show a message to the user explaining the situation
-      console.log("[useAuth] Showing Google sign-in message to user");
+      // Use the Firebase SDK for Google authentication
+      const { signInWithGoogle } = await import('@/lib/firebase');
+      console.log("[useAuth] Initiating Firebase Google sign-in...");
       
-      toast({
-        title: "Google Authentication Unavailable",
-        description: "Google authentication is currently unavailable. Please use email and password to sign in.",
-        variant: "default"
-      });
+      // Determine the appropriate redirect URL
+      const callbackUrl = redirectUrl || '/dashboard';
       
-      // Display a better error message in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log("[useAuth] Google auth is not available because OAuth client configuration is incomplete");
-        console.log("[useAuth] To enable Google auth, you need to configure Firebase in Google Cloud Console");
+      // Start the Google sign-in flow
+      // This will use popup for Replit domains and redirect for others
+      const result = await signInWithGoogle(callbackUrl);
+      
+      // If we got an immediate result (from popup auth), handle it
+      if (result && 'success' in result && result.success === true) {
+        console.log("[useAuth] Popup authentication successful:", {
+          hasUser: !!result.user,
+          method: result.method
+        });
+        
+        // Process the authentication result directly
+        if (result.user) {
+          // Get the user token if possible
+          let token = null;
+          try {
+            token = await result.user.getIdToken();
+          } catch (tokenError) {
+            console.warn("[useAuth] Failed to get token for popup auth:", tokenError);
+          }
+          
+          // Send user data to server to create session
+          const userData = {
+            email: result.user.email || '',
+            name: result.user.displayName || result.user.email?.split('@')[0] || 'User',
+            uid: result.user.uid,
+            token,
+            photoURL: result.user.photoURL || null,
+          };
+          
+          // Call the server to synchronize the session
+          console.log("[useAuth] Synchronizing popup auth with server");
+          const response = await fetch("/api/auth/google", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(userData),
+            credentials: "include"
+          });
+          
+          if (response.ok) {
+            const serverUser = await response.json();
+            setUser(serverUser);
+            toast({
+              title: "Welcome!",
+              description: `Signed in as ${serverUser.fullName || serverUser.email}`,
+            });
+            
+            // Determine which dashboard to redirect to based on user role
+            let dashboardPath = "/dashboard";
+            if (serverUser.role === "Admin") {
+              dashboardPath = "/admin/dashboard";
+            } else if (serverUser.role === "Agent") {
+              dashboardPath = "/agent/dashboard";
+            }
+            
+            // Redirect to the appropriate dashboard
+            setLocation(dashboardPath);
+          } else {
+            console.error("[useAuth] Failed to synchronize popup auth with server:", response.status);
+            throw new Error("Failed to create server session");
+          }
+        } else {
+          throw new Error("Authentication succeeded but user data is missing");
+        }
+        
+        return;
       }
+      
+      // For redirect flow (non-Replit domains), the auth-callback page will handle everything
+      toast({
+        title: "Redirecting...",
+        description: "Please wait while we redirect you to Google for authentication",
+      });
       
     } catch (error) {
       console.error("[useAuth] Google login error:", error);
