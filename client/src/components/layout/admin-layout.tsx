@@ -1,16 +1,29 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import {
+  AlertTriangle,
   BarChart3,
+  Bell,
   CreditCard,
+  FileText,
+  Home,
   LayoutDashboard,
   LogOut,
   Menu,
+  PackageSearch,
   Search,
   Settings,
   Shield,
+  Star,
   Users,
+  Wallet,
+  Database,
+  Lock,
+  List,
+  ChevronRight,
+  ChevronDown,
+  BookCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +38,13 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 // TODO: Use translation hook once fully implemented
 // import { useTranslation } from "@/hooks/use-translation";
 const useTranslation = () => ({ t: (key: string) => key });
@@ -41,44 +61,169 @@ interface NavItem {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
-  const { user, logoutMutation } = useAuth();
+  const { user, signOut } = useAuth();
   const { t } = useTranslation();
+  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
 
   // Check if user has admin role
   const isAdmin = user?.role === "Admin";
 
-  // Navigation items for admin sidebar
-  const navItems: NavItem[] = [
+  // Navigation categories and items for admin sidebar
+  interface NavCategory {
+    title: string;
+    icon: React.ReactNode;
+    items: NavItem[];
+  }
+
+  const navCategories: NavCategory[] = [
     {
-      title: "Dashboard",
-      href: "/admin",
+      title: "Overview",
       icon: <LayoutDashboard className="h-5 w-5" />,
+      items: [
+        {
+          title: "Dashboard",
+          href: "/admin",
+          icon: <Home className="h-5 w-5" />,
+        },
+        {
+          title: "Analytics",
+          href: "/admin/analytics",
+          icon: <BarChart3 className="h-5 w-5" />,
+        },
+        {
+          title: "Activity Logs",
+          href: "/admin/activity",
+          icon: <FileText className="h-5 w-5" />,
+        },
+      ],
     },
     {
       title: "User Management",
-      href: "/admin/users",
       icon: <Users className="h-5 w-5" />,
+      items: [
+        {
+          title: "User Directory",
+          href: "/admin/users",
+          icon: <List className="h-5 w-5" />,
+        },
+        {
+          title: "User Verification",
+          href: "/admin/user-verification",
+          icon: <BookCheck className="h-5 w-5" />,
+        },
+        {
+          title: "Permissions",
+          href: "/admin/permissions",
+          icon: <Lock className="h-5 w-5" />,
+        },
+      ],
     },
     {
-      title: "Payment Dashboard",
-      href: "/admin/payment-dashboard",
-      icon: <CreditCard className="h-5 w-5" />,
+      title: "Item Registry",
+      icon: <Database className="h-5 w-5" />,
+      items: [
+        {
+          title: "Item Database",
+          href: "/admin/items",
+          icon: <List className="h-5 w-5" />,
+        },
+        {
+          title: "Categories",
+          href: "/admin/categories",
+          icon: <FileText className="h-5 w-5" />,
+        },
+        {
+          title: "Verification Queue",
+          href: "/admin/item-verification",
+          icon: <AlertTriangle className="h-5 w-5" />,
+        },
+      ],
     },
     {
-      title: "Analytics",
-      href: "/admin/analytics",
-      icon: <BarChart3 className="h-5 w-5" />,
+      title: "Lost & Found",
+      icon: <PackageSearch className="h-5 w-5" />,
+      items: [
+        {
+          title: "Match Dashboard",
+          href: "/admin/matches",
+          icon: <Star className="h-5 w-5" />,
+        },
+        {
+          title: "Case Management",
+          href: "/admin/cases",
+          icon: <FileText className="h-5 w-5" />,
+        },
+        {
+          title: "Notifications",
+          href: "/admin/notifications",
+          icon: <Bell className="h-5 w-5" />,
+        },
+      ],
     },
     {
-      title: "Settings",
-      href: "/admin/settings",
+      title: "Financial",
+      icon: <Wallet className="h-5 w-5" />,
+      items: [
+        {
+          title: "Payment Dashboard",
+          href: "/admin/payment-dashboard",
+          icon: <CreditCard className="h-5 w-5" />,
+        },
+        {
+          title: "Transactions",
+          href: "/admin/transactions",
+          icon: <FileText className="h-5 w-5" />,
+        },
+        {
+          title: "Reports",
+          href: "/admin/financial-reports",
+          icon: <BarChart3 className="h-5 w-5" />,
+        },
+      ],
+    },
+    {
+      title: "System",
       icon: <Settings className="h-5 w-5" />,
+      items: [
+        {
+          title: "Settings",
+          href: "/admin/settings",
+          icon: <Settings className="h-5 w-5" />,
+        },
+        {
+          title: "Security",
+          href: "/admin/security",
+          icon: <Lock className="h-5 w-5" />,
+        },
+        {
+          title: "API & Integrations",
+          href: "/admin/api",
+          icon: <Database className="h-5 w-5" />,
+        },
+      ],
     },
   ];
 
+  // Flatten nav categories for top bar
+  const topNavItems: NavItem[] = [
+    { title: "Dashboard", href: "/admin", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { title: "Users", href: "/admin/users", icon: <Users className="h-5 w-5" /> },
+    { title: "Items", href: "/admin/items", icon: <Database className="h-5 w-5" /> },
+    { title: "Matches", href: "/admin/matches", icon: <Star className="h-5 w-5" /> },
+    { title: "Payments", href: "/admin/payment-dashboard", icon: <CreditCard className="h-5 w-5" /> },
+  ];
+
+  // Toggle category open/closed state
+  const toggleCategory = (categoryTitle: string) => {
+    setOpenCategories((prev) => ({
+      ...prev,
+      [categoryTitle]: !prev[categoryTitle],
+    }));
+  };
+
   // Handle logout
   const handleLogout = () => {
-    logoutMutation.mutate();
+    signOut();
   };
 
   // Get user initials for avatar fallback
@@ -117,28 +262,56 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72">
-                <div className="flex flex-col space-y-6">
+              <SheetContent side="left" className="w-80 overflow-y-auto">
+                <div className="flex flex-col space-y-6 py-4">
                   <div className="flex items-center space-x-2">
                     <Shield className="h-6 w-6 text-primary" />
                     <span className="text-lg font-bold">KIZERE Admin</span>
                   </div>
+                  <div className="relative">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search..."
+                      className="pl-8"
+                    />
+                  </div>
                   <Separator />
-                  <nav className="flex flex-col space-y-1">
-                    {navItems.map((item) => (
-                      <Link key={item.href} href={item.href}>
-                        <a
-                          className={cn(
-                            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                            location === item.href
-                              ? "bg-accent text-accent-foreground"
-                              : "transparent"
-                          )}
-                        >
-                          {item.icon}
-                          {item.title}
-                        </a>
-                      </Link>
+                  <nav className="flex flex-col space-y-1 pr-1">
+                    {navCategories.map((category) => (
+                      <Collapsible
+                        key={category.title}
+                        open={openCategories[category.title]}
+                        onOpenChange={() => toggleCategory(category.title)}
+                        className="w-full"
+                      >
+                        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                          <div className="flex items-center gap-3">
+                            {category.icon}
+                            <span>{category.title}</span>
+                          </div>
+                          <ChevronDown className={cn(
+                            "h-4 w-4 transition-transform duration-200",
+                            openCategories[category.title] ? "rotate-180 transform" : ""
+                          )} />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pl-4">
+                          {category.items.map((item) => (
+                            <Link key={item.href} href={item.href}>
+                              <a
+                                className={cn(
+                                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                                  location === item.href
+                                    ? "bg-accent text-accent-foreground"
+                                    : "transparent"
+                                )}
+                              >
+                                {item.icon}
+                                <span>{item.title}</span>
+                              </a>
+                            </Link>
+                          ))}
+                        </CollapsibleContent>
+                      </Collapsible>
                     ))}
                   </nav>
                 </div>
@@ -157,7 +330,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
             {/* Desktop navigation */}
             <nav className="hidden md:flex md:gap-2 lg:gap-6">
-              {navItems.map((item) => (
+              {topNavItems.map((item) => (
                 <Link key={item.href} href={item.href}>
                   <a
                     className={cn(
@@ -167,6 +340,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                         : "text-muted-foreground"
                     )}
                   >
+                    {item.icon && <span className="mr-1">{item.icon}</span>}
                     {item.title}
                   </a>
                 </Link>
@@ -228,8 +402,62 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1">{children}</main>
+      {/* Main content with sidebar */}
+      <div className="flex-1 flex flex-col md:flex-row">
+        {/* Admin sidebar - desktop only */}
+        <aside className="hidden md:block w-64 border-r bg-muted/10 p-6 pt-8">
+          <div className="space-y-6">
+            <div className="relative mb-4">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search..." className="pl-8" />
+            </div>
+            
+            <nav className="flex flex-col space-y-2">
+              {navCategories.map((category) => (
+                <Collapsible
+                  key={category.title}
+                  open={openCategories[category.title]}
+                  onOpenChange={() => toggleCategory(category.title)}
+                  className="w-full"
+                >
+                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                    <div className="flex items-center gap-3">
+                      {category.icon}
+                      <span>{category.title}</span>
+                    </div>
+                    <ChevronDown className={cn(
+                      "h-4 w-4 transition-transform duration-200",
+                      openCategories[category.title] ? "rotate-180 transform" : ""
+                    )} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pl-8 pt-1">
+                    {category.items.map((item) => (
+                      <Link key={item.href} href={item.href}>
+                        <a
+                          className={cn(
+                            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                            location === item.href
+                              ? "bg-accent text-accent-foreground"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          {item.icon}
+                          <span>{item.title}</span>
+                        </a>
+                      </Link>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              ))}
+            </nav>
+          </div>
+        </aside>
+        
+        {/* Main content area */}
+        <main className="flex-1 overflow-auto p-6">
+          {children}
+        </main>
+      </div>
 
       {/* Footer */}
       <footer className="border-t py-6">
