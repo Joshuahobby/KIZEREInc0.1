@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { QuickActionMenu } from "@/components/dashboard/quick-action-menu";
 import {
   AlertTriangle,
   BarChart3,
@@ -706,6 +707,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </nav>
         </div>
       </footer>
+      
+      {/* Quick action floating menu */}
+      <QuickActionMenu />
     </div>
   );
 }
