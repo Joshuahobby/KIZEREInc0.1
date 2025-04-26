@@ -13,9 +13,8 @@ import PaymentStatus from "@/pages/payment-status";
 import PaymentHistory from "@/pages/payment-history";
 import PaymentTest from "@/pages/payment-test";
 import PaymentDashboard from "@/pages/admin/payment-dashboard";
-import AdminDashboard from "@/pages/admin/dashboard";
-import AdminDashboardNew from "@/pages/admin/dashboard-new";
-import { MissionControl } from "@/pages/admin/mission-control";
+import AdminDashboardClassic from "@/pages/admin/dashboard";
+import AdminDashboard from "@/pages/admin/dashboard-new";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useEffect } from "react";
@@ -80,9 +79,8 @@ function App() {
   const PaymentHistoryComponent = () => <PaymentHistory />;
   const PaymentTestComponent = () => <PaymentTest />;
   const AdminDashboardComponent = () => <AdminDashboard />;
-  const AdminDashboardNewComponent = () => <AdminDashboardNew />;
+  const AdminDashboardClassicComponent = () => <AdminDashboardClassic />;
   const PaymentDashboardComponent = () => <PaymentDashboard />;
-  const MissionControlComponent = () => <MissionControl />;
   
   return (
     <ErrorBoundary>
@@ -114,9 +112,8 @@ function App() {
               
               {/* Admin routes */}
               <ProtectedRoute path="/admin" component={AdminDashboardComponent} requiredRole="Admin" />
-              <ProtectedRoute path="/admin/new" component={AdminDashboardNewComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/classic" component={AdminDashboardClassicComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
-              <ProtectedRoute path="/admin/mission-control" component={MissionControlComponent} requiredRole="Admin" />
               
               {/* 404 route */}
               <Route component={NotFound} />
