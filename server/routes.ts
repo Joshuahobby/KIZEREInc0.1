@@ -99,6 +99,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
+  // Handle Google OAuth callback
+  app.get("/api/auth/google-callback", async (req, res) => {
+    try {
+      // Import and use the auth callback controller
+      const { AuthCallbackController } = await import('./controllers/auth-callback.controller');
+      return AuthCallbackController.handleGoogleCallback(req, res);
+    } catch (error) {
+      console.error("Error handling Google OAuth callback:", error);
+      res.status(500).send("Authentication error");
+    }
+  });
+  
   // Google Authentication with Firebase token verification
   app.post("/api/auth/google", async (req, res) => {
     try {
