@@ -2,37 +2,19 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ChevronRight, Users, FileText, Clock, Settings, BarChart3, Wallet, Bell } from "lucide-react";
+import { ChevronRight, Users, FileText, Clock, Settings, BarChart3, Wallet, Bell, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { PaymentAnalyticsChart, PaymentStatusChart } from "@/components/dashboard/payment-analytics-chart";
+import { ItemStatusDistribution, ItemCategoryChart } from "@/components/dashboard/item-stats-chart";
+import { UserRoleDistribution } from "@/components/dashboard/user-stats-chart";
+import { useDashboardStats } from "@/hooks/use-dashboard-stats";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [_, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalItems: 0,
-    pendingReports: 0,
-    totalPayments: 0
-  });
-
-  useEffect(() => {
-    // Fetch dashboard statistics
-    const fetchStats = async () => {
-      try {
-        const response = await fetch("/api/admin/stats");
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error("Error fetching admin stats:", error);
-      }
-    };
-
-    fetchStats();
-  }, []);
+  const { stats, chartData, isLoading, refetch } = useDashboardStats();
 
   if (!user || user.role !== "Admin") {
     return (
@@ -102,153 +84,195 @@ export default function AdminDashboard() {
         </TabsList>
 
         <TabsContent value="overview" className="p-0">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalUsers}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  +12% from last month
-                </p>
-              </CardContent>
-              <CardFooter className="pt-0">
-                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setActiveTab("users")}>
-                  View all users
-                  <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
-              </CardFooter>
-            </Card>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-muted-foreground">Loading dashboard data...</span>
+            </div>
+          ) : !stats ? (
+            <div className="flex flex-col items-center justify-center py-10">
+              <p className="text-muted-foreground mb-2">Failed to load dashboard statistics</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                Retry
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats?.totalUsers || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Last updated: {new Date().toLocaleDateString()}
+                    </p>
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setActiveTab("users")}>
+                      View all users
+                      <ChevronRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </CardFooter>
+                </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Registered Items</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalItems}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  +8% from last month
-                </p>
-              </CardContent>
-              <CardFooter className="pt-0">
-                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setActiveTab("items")}>
-                  View all items
-                  <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
-              </CardFooter>
-            </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Registered Items</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats?.totalItems || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Last updated: {new Date().toLocaleDateString()}
+                    </p>
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setActiveTab("items")}>
+                      View all items
+                      <ChevronRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </CardFooter>
+                </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Pending Reports</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.pendingReports}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  +2 new reports today
-                </p>
-              </CardContent>
-              <CardFooter className="pt-0">
-                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setActiveTab("reports")}>
-                  View all reports
-                  <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
-              </CardFooter>
-            </Card>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Pending Reports</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats?.pendingReports || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Last updated: {new Date().toLocaleDateString()}
+                    </p>
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setActiveTab("reports")}>
+                      View all reports
+                      <ChevronRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </CardFooter>
+                </Card>
 
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats.totalPayments}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  +15% from last month
-                </p>
-              </CardContent>
-              <CardFooter className="pt-0">
-                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setLocation("/admin/payment-dashboard")}>
-                  View payment dashboard
-                  <ChevronRight className="h-3 w-3 ml-1" />
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Total Payments</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{stats?.totalPayments || 0}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Last updated: {new Date().toLocaleDateString()}
+                    </p>
+                  </CardContent>
+                  <CardFooter className="pt-0">
+                    <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => setLocation("/admin/payment-dashboard")}>
+                      View payment dashboard
+                      <ChevronRight className="h-3 w-3 ml-1" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>
-                  Latest system activity for the past 7 days
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="flex items-start">
-                      <div className="w-2 h-2 rounded-full bg-primary mt-2 mr-2" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
-                          {["New user registration", "Item registered", "Lost report created", "Payment received", "User password reset"][i]}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {i === 0 ? "Just now" : i === 1 ? "2 hours ago" : i === 2 ? "Yesterday" : `${i + 1} days ago`}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+              {/* Analytics Charts */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+                <PaymentAnalyticsChart 
+                  title="Revenue Trends" 
+                  description="Monthly payment collection trends" 
+                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <PaymentStatusChart 
+                    data={chartData?.paymentStatusData || []} 
+                  />
+                  <UserRoleDistribution 
+                    data={chartData?.userRoleData || []} 
+                  />
                 </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" size="sm" className="w-full">
-                  View All Activity
-                </Button>
-              </CardFooter>
-            </Card>
+              </div>
 
-            <Card className="col-span-1">
-              <CardHeader>
-                <CardTitle>System Status</CardTitle>
-                <CardDescription>
-                  Overview of system health and performance
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {[
-                    { name: "Server Uptime", value: "99.9%", status: "good" },
-                    { name: "API Response Time", value: "89ms", status: "good" },
-                    { name: "Database Load", value: "42%", status: "good" },
-                    { name: "Storage Usage", value: "68%", status: "warning" },
-                    { name: "Monthly API Calls", value: "245K", status: "good" }
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <p className="text-sm font-medium">{item.name}</p>
-                      <div className="flex items-center">
-                        <span className="text-sm mr-2">{item.value}</span>
-                        <div 
-                          className={`w-3 h-3 rounded-full ${
-                            item.status === 'good' 
-                              ? 'bg-green-500' 
-                              : item.status === 'warning' 
-                                ? 'bg-yellow-500' 
-                                : 'bg-red-500'
-                          }`} 
-                        />
-                      </div>
+              {/* Additional Analytics */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+                <ItemStatusDistribution 
+                  data={chartData?.itemStatusData || []} 
+                />
+                <ItemCategoryChart />
+              </div>
+
+              {/* Recent Activity and System Status */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>
+                      Latest system activity for the past 7 days
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="flex items-start">
+                          <div className="w-2 h-2 rounded-full bg-primary mt-2 mr-2" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">
+                              {["New user registration", "Item registered", "Lost report created", "Payment received", "User password reset"][i]}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {i === 0 ? "Just now" : i === 1 ? "2 hours ago" : i === 2 ? "Yesterday" : `${i + 1} days ago`}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" size="sm" className="w-full">
-                  View System Details
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" size="sm" className="w-full">
+                      View All Activity
+                    </Button>
+                  </CardFooter>
+                </Card>
+
+                <Card className="col-span-1">
+                  <CardHeader>
+                    <CardTitle>System Status</CardTitle>
+                    <CardDescription>
+                      Overview of system health and performance
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {[
+                        { name: "Server Uptime", value: "99.9%", status: "good" },
+                        { name: "API Response Time", value: "89ms", status: "good" },
+                        { name: "Database Load", value: "42%", status: "good" },
+                        { name: "Storage Usage", value: "68%", status: "warning" },
+                        { name: "Monthly API Calls", value: "245K", status: "good" }
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-center justify-between">
+                          <p className="text-sm font-medium">{item.name}</p>
+                          <div className="flex items-center">
+                            <span className="text-sm mr-2">{item.value}</span>
+                            <div 
+                              className={`w-3 h-3 rounded-full ${
+                                item.status === 'good' 
+                                  ? 'bg-green-500' 
+                                  : item.status === 'warning' 
+                                    ? 'bg-yellow-500' 
+                                    : 'bg-red-500'
+                              }`} 
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" size="sm" className="w-full">
+                      View System Details
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="users">

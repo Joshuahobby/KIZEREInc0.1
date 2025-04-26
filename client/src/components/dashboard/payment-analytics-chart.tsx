@@ -1,81 +1,124 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
-interface PaymentData {
-  name: string;
-  value: number;
-}
+// Sample data for demonstration
+const revenueData = [
+  { name: "Jan", revenue: 4500 },
+  { name: "Feb", revenue: 5200 },
+  { name: "Mar", revenue: 4800 },
+  { name: "Apr", revenue: 6000 },
+  { name: "May", revenue: 5600 },
+  { name: "Jun", revenue: 7000 },
+  { name: "Jul", revenue: 7600 },
+];
 
 interface PaymentAnalyticsChartProps {
-  paymentData?: PaymentData[];
-  isLoading?: boolean;
+  title?: string;
+  description?: string;
+  data?: any[];
 }
 
-export function PaymentAnalyticsChart({ paymentData = [], isLoading = false }: PaymentAnalyticsChartProps) {
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card p-3 border shadow-sm rounded-md">
-          <p className="font-medium">{label}</p>
-          <p className="text-sm">
-            Revenue: <span className="font-semibold">{payload[0].value.toLocaleString()} RWF</span>
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
+export function PaymentAnalyticsChart({
+  title = "Payment Analytics",
+  description = "Overview of payment trends over time",
+  data = revenueData,
+}: PaymentAnalyticsChartProps) {
   return (
-    <Card className="col-span-4">
+    <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
-        <CardTitle className="text-base font-medium">Monthly Revenue</CardTitle>
-        <CardDescription>Revenue trends over the past 12 months</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="h-[350px] flex items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : paymentData.length === 0 ? (
-          <div className="h-[350px] flex flex-col items-center justify-center text-center">
-            <p className="text-muted-foreground">No revenue data available</p>
-          </div>
-        ) : (
-          <div className="h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={paymentData}
-                margin={{ top: 10, right: 10, left: 10, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis 
-                  dataKey="name" 
-                  axisLine={false} 
-                  tickLine={false}
-                  tick={{ fontSize: 12 }}
-                  dy={10}
-                />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false}
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `${value.toLocaleString()}`}
-                  dx={-10}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar
-                  dataKey="value"
-                  fill="var(--primary)"
-                  radius={[4, 4, 0, 0]}
-                  barSize={30}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+              <defs>
+                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--chart-primary)" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="var(--chart-primary)" stopOpacity={0.1} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="name" className="text-xs" />
+              <YAxis className="text-xs" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "var(--background)",
+                  borderColor: "var(--border)",
+                  borderRadius: "var(--radius)",
+                }}
+                labelClassName="text-primary font-medium"
+              />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="var(--chart-primary)"
+                fillOpacity={1}
+                fill="url(#colorRevenue)"
+                activeDot={{ r: 6 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function PaymentStatusChart({ 
+  data = [
+    { name: "Successful", value: 65 },
+    { name: "Pending", value: 20 },
+    { name: "Failed", value: 15 },
+  ] 
+}) {
+  const colors = [
+    "var(--chart-success)",
+    "var(--chart-warning)",
+    "var(--chart-danger)",
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Payment Status</CardTitle>
+        <CardDescription>Distribution of payment statuses</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} margin={{ top: 20, right: 10, left: 0, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="name" className="text-xs" />
+              <YAxis className="text-xs" />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "var(--background)",
+                  borderColor: "var(--border)",
+                  borderRadius: "var(--radius)",
+                }}
+                formatter={(value: number) => [`${value}%`, "Percentage"]}
+              />
+              <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                {data.map((_, index) => (
+                  <rect key={`rect-${index}`} fill={colors[index % colors.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

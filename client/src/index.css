@@ -10,6 +10,14 @@
   --kizere-blue-dark: #0099CC;
   --kizere-blue-light: #99E5FF;
   
+  /* Chart colors */
+  --chart-primary: #00BFFF;
+  --chart-secondary: #FFD700;
+  --chart-accent: #8A2BE2;
+  --chart-success: #10B981;
+  --chart-warning: #F59E0B;
+  --chart-danger: #EF4444;
+  
   /* Light theme */
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
