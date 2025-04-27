@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { MetricsCard } from './metrics-card';
 import { useDashboardStats } from '@/hooks/use-dashboard-stats';
 import { useDashboard } from '@/context/dashboard-context';
@@ -10,7 +10,7 @@ import { Users, Package, AlertTriangle, DollarSign } from 'lucide-react';
  * Connected to the dashboard API service and displays live data
  */
 export function MetricsDashboard() {
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
   const { stats, isLoading } = useDashboardStats();
   const { state } = useDashboard();
 

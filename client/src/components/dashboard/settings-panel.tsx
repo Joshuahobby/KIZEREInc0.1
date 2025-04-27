@@ -147,9 +147,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                       onClick={() => toggleSection(section)}
                     >
                       {dashboardConfig.visibleSections.includes(section) ? (
-                        <CheckboxCheckedIcon className="mr-2 h-4 w-4" />
+                        <CheckSquare className="mr-2 h-4 w-4" />
                       ) : (
-                        <CheckboxUncheckedIcon className="mr-2 h-4 w-4" />
+                        <Square className="mr-2 h-4 w-4" />
                       )}
                       {section.charAt(0).toUpperCase() + section.slice(1)}
                     </Button>
@@ -177,9 +177,9 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
                       }}
                     >
                       {dashboardConfig.favoriteCards.includes(card) ? (
-                        <CheckboxCheckedIcon className="mr-2 h-4 w-4" />
+                        <CheckSquare className="mr-2 h-4 w-4" />
                       ) : (
-                        <CheckboxUncheckedIcon className="mr-2 h-4 w-4" />
+                        <Square className="mr-2 h-4 w-4" />
                       )}
                       {card.charAt(0).toUpperCase() + card.slice(1)}
                     </Button>

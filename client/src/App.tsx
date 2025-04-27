@@ -15,6 +15,7 @@ import PaymentTest from "@/pages/payment-test";
 import PaymentDashboard from "@/pages/admin/payment-dashboard";
 import AdminDashboardClassic from "@/pages/admin/dashboard";
 import AdminDashboard from "@/pages/admin/dashboard-new";
+import CommandCenter from "@/pages/admin/command-center";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useEffect } from "react";
@@ -80,6 +81,7 @@ function App() {
   const PaymentTestComponent = () => <PaymentTest />;
   const AdminDashboardComponent = () => <AdminDashboard />;
   const AdminDashboardClassicComponent = () => <AdminDashboardClassic />;
+  const CommandCenterComponent = () => <CommandCenter />;
   const PaymentDashboardComponent = () => <PaymentDashboard />;
   
   return (

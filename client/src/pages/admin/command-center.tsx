@@ -354,7 +354,35 @@ export default function CommandCenter() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <ActivityFeed events={activityEvents} isLoading={activityLoading} maxItems={5} />
+                    <div className="space-y-4">
+                      {activityLoading ? (
+                        <div className="animate-pulse flex flex-col space-y-3">
+                          <div className="h-6 bg-muted-foreground/20 rounded w-3/4"></div>
+                          <div className="h-4 bg-muted-foreground/20 rounded w-full"></div>
+                          <div className="h-6 bg-muted-foreground/20 rounded w-3/4 mt-6"></div>
+                          <div className="h-4 bg-muted-foreground/20 rounded w-5/6"></div>
+                        </div>
+                      ) : (
+                        activityEvents.slice(0, 5).map(event => (
+                          <div key={event.id} className="border-b border-border/40 pb-3 last:border-0">
+                            <div className="flex justify-between items-start mb-1">
+                              <h4 className="font-medium text-sm">{event.title}</h4>
+                              <span className="text-xs text-muted-foreground">{event.relativeTime || '—'}</span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{event.message}</p>
+                            <div className="flex mt-2">
+                              <Badge variant={
+                                event.type === 'info' ? 'outline' :
+                                event.type === 'success' ? 'default' :
+                                event.type === 'warning' ? 'secondary' : 'destructive'
+                              } className="text-xs">
+                                {event.category}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
                 
@@ -371,7 +399,28 @@ export default function CommandCenter() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <SystemStatus systemStatus={systemStatus} isLoading={systemLoading} />
+                    <div className="space-y-4">
+                      {systemStatus.services.map(service => (
+                        <div key={service.id} className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className={`w-3 h-3 rounded-full mr-2 ${
+                              service.status === 'operational' ? 'bg-green-500' : 
+                              service.status === 'degraded' ? 'bg-yellow-500' :
+                              service.status === 'maintenance' ? 'bg-blue-500' : 'bg-red-500'
+                            }`}></div>
+                            <span>{service.name}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">{service.status}</span>
+                        </div>
+                      ))}
+                      {systemLoading && (
+                        <div className="animate-pulse flex flex-col space-y-3">
+                          <div className="h-4 bg-muted-foreground/20 rounded w-3/4"></div>
+                          <div className="h-4 bg-muted-foreground/20 rounded w-full"></div>
+                          <div className="h-4 bg-muted-foreground/20 rounded w-5/6"></div>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               </div>
