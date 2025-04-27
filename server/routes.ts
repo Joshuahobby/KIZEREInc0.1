@@ -323,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allowedFields = ['fullName', 'email', 'phoneNumber', 'avatarUrl'];
       const filteredUpdateData = Object.keys(updateData)
         .filter(key => allowedFields.includes(key))
-        .reduce((obj, key) => {
+        .reduce<Record<string, any>>((obj, key) => {
           obj[key] = updateData[key];
           return obj;
         }, {});
@@ -340,11 +340,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       logger.info('User updated their profile', { userId });
       res.json(userWithoutPassword);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error updating user profile', { error, userId: req.user?.id });
       
       // Handle validation errors
-      if (error.name === 'ValidationError') {
+      if (error?.name === 'ValidationError') {
         return res.status(400).json({ message: error.message });
       }
       

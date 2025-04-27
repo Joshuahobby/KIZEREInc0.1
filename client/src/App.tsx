@@ -16,6 +16,7 @@ import PaymentDashboard from "@/pages/admin/payment-dashboard";
 import AdminDashboardClassic from "@/pages/admin/dashboard";
 import AdminDashboard from "@/pages/admin/dashboard-new";
 import CommandCenter from "@/pages/admin/command-center";
+import ProfilePage from "@/pages/profile";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useEffect } from "react";
@@ -83,6 +84,7 @@ function App() {
   const AdminDashboardClassicComponent = () => <AdminDashboardClassic />;
   const CommandCenterComponent = () => <CommandCenter />;
   const PaymentDashboardComponent = () => <PaymentDashboard />;
+  const ProfilePageComponent = () => <ProfilePage />;
   
   return (
     <ErrorBoundary>
@@ -117,6 +119,9 @@ function App() {
               <ProtectedRoute path="/admin/command-center" component={CommandCenterComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/classic" component={AdminDashboardClassicComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
+              
+              {/* Profile route */}
+              <ProtectedRoute path="/profile" component={ProfilePageComponent} requiredRole="any" />
               
               {/* 404 route */}
               <Route component={NotFound} />
