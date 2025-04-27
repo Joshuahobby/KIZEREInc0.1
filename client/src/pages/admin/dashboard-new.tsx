@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
+import { useSystemStatus } from "@/hooks/use-system-status";
+import { useActivityFeed } from "@/hooks/use-activity-feed";
+import { useDashboard, DashboardProvider } from "@/context/dashboard-context";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertTriangle,
   ArrowRight,
@@ -41,7 +45,8 @@ import {
   Wifi,
   Database,
   Shield,
-  HardDrive
+  HardDrive,
+  RefreshCw
 } from "lucide-react";
 import { PaymentAnalyticsChart, PaymentStatusChart } from "@/components/dashboard/payment-analytics-chart-fixed";
 import { UserRoleDistribution } from "@/components/dashboard/user-role-distribution";
@@ -51,10 +56,14 @@ import { ContextualSidebar } from "@/components/dashboard/contextual-sidebar";
 import { ExpandableDetailView } from "@/components/dashboard/expandable-detail-view";
 import { QuickActionMenu } from "@/components/dashboard/quick-action-menu";
 import { MetricsCard } from "@/components/dashboard/metrics-card";
+import { MetricsDashboard } from "@/components/dashboard/metrics-dashboard";
+import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { ActivityFeed, ActivityEvent } from "@/components/dashboard/activity-feed";
 import { EnhancedPaymentAnalytics } from "@/components/dashboard/enhanced-payment-analytics";
 import { SystemStatus, SystemStatusItemProps } from "@/components/dashboard/system-status";
 import { DataTableDashboard, renderStatusBadge } from "@/components/dashboard/data-table-dashboard";
+import { DashboardWrapper } from "@/components/dashboard/dashboard-wrapper";
+import { SettingsToggle } from "@/components/dashboard/settings-panel";
 
 export default function AdminDashboard() {
   const { user } = useAuth();

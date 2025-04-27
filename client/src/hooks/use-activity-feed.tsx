@@ -83,7 +83,7 @@ export function useActivityFeed(options: {
         
         // Apply limit
         return events.slice(0, limit);
-      } catch (err) {
+      } catch (err: any) {
         // If API endpoint doesn't exist yet, use default data
         if (err.status === 404) {
           console.warn('Activity log API not implemented yet, using default data');

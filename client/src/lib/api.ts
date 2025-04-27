@@ -125,7 +125,7 @@ export async function apiPut<T, D = any>(
   try {
     const response = await apiRequest('PUT', endpoint, data);
     return await response.json();
-  } catch (error) {
+  } catch (error: any) {
     if (error.name === 'AbortError') {
       // Request was aborted, handle silently
       return null;
@@ -153,7 +153,7 @@ export async function apiDelete<T>(
   try {
     const response = await apiRequest('DELETE', endpoint);
     return await response.json();
-  } catch (error) {
+  } catch (error: any) {
     if (error.name === 'AbortError') {
       // Request was aborted, handle silently
       return null;

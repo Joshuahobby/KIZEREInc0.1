@@ -109,7 +109,7 @@ export function useSystemStatus() {
       try {
         const result = await adminApi.getSystemStatus();
         return result as SystemStatus;
-      } catch (err) {
+      } catch (err: any) {
         // If API endpoint doesn't exist yet, use default data
         if (err.status === 404) {
           console.warn('System status API not implemented yet, using default data');
