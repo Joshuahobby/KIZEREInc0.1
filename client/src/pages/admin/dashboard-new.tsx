@@ -46,7 +46,8 @@ import {
   Database,
   Shield,
   HardDrive,
-  RefreshCw
+  RefreshCw,
+  Terminal
 } from "lucide-react";
 import { PaymentAnalyticsChart, PaymentStatusChart } from "@/components/dashboard/payment-analytics-chart-fixed";
 import { UserRoleDistribution } from "@/components/dashboard/user-role-distribution";
@@ -895,6 +896,16 @@ export default function AdminDashboard() {
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="h-9 gap-1.5 hidden md:flex items-center"
+            onClick={() => navigate("/admin/command-center")}
+          >
+            <Terminal className="h-4 w-4" />
+            Command Center
+          </Button>
+          
           <div className="relative w-full sm:w-48 md:w-64">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
