@@ -105,6 +105,29 @@ export default function CommandCenter() {
                 <Menu className="h-5 w-5" />
               </Button>
               <h1 className="text-xl font-bold text-primary">KIZERE Command Center</h1>
+              
+              {/* Dashboard Navigation */}
+              <div className="hidden md:flex items-center ml-4 border-l border-border/50 pl-4">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-xs gap-1"
+                  onClick={() => navigate("/admin")}
+                >
+                  <LayoutDashboard className="h-3.5 w-3.5" />
+                  Standard
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-xs gap-1"
+                  onClick={() => navigate("/admin/classic")}
+                >
+                  <Activity className="h-3.5 w-3.5" />
+                  Classic
+                </Button>
+              </div>
+              
               <Tabs defaultValue={timeRange} onValueChange={setTimeRange}>
                 <TabsList>
                   <TabsTrigger value="7d">Week</TabsTrigger>
