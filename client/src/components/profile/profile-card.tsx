@@ -26,8 +26,12 @@ export function ProfileCard({ user, onEdit }: ProfileCardProps) {
 
   // Format date
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (e) {
+      return dateString || 'Unknown date';
+    }
   };
 
   return (

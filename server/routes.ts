@@ -374,6 +374,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify current password
+      // Import the comparePasswords function from the module where it's defined
+      const { comparePasswords } = await import('./utils/auth');
       const isPasswordValid = await comparePasswords(currentPassword, user.password);
       
       if (!isPasswordValid) {
@@ -385,11 +387,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       logger.info('User changed their password', { userId });
       res.json({ message: "Password updated successfully" });
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error changing user password', { error, userId: req.user?.id });
       
       // Handle validation errors
-      if (error.name === 'ValidationError') {
+      if (error?.name === 'ValidationError') {
         return res.status(400).json({ message: error.message });
       }
       
@@ -409,7 +411,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const role = req.user.role;
       
       // Define role-based permissions
-      const permissions = {
+      const permissions: Record<string, string[]> = {
         Admin: [
           'can_view_dashboard',
           'can_create_user',

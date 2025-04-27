@@ -183,7 +183,7 @@ export default function ProfilePage() {
           <TabsContent value="permissions" className="space-y-4 mt-6">
             <UserPermissionsPanel 
               userRole={user.role} 
-              permissions={permissionsData?.permissions || []} 
+              permissions={permissionsData && typeof permissionsData === 'object' && 'permissions' in permissionsData ? permissionsData.permissions : []} 
               isLoading={permissionsLoading}
             />
           </TabsContent>

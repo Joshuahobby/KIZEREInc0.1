@@ -1,87 +1,52 @@
-/**
- * Authentication utilities
- * Handles password hashing and verification
- */
 import bcrypt from 'bcrypt';
-import { createLogger } from './logger';
-
-const logger = createLogger('AuthUtils');
-const SALT_ROUNDS = 10;
 
 /**
- * Hash a plain text password
- * @param password Plain text password to hash
- * @returns Hashed password
+ * Hashes a password using bcrypt
+ * @param password The plain text password to hash
+ * @returns Promise resolving to the hashed password
  */
 export async function hashPassword(password: string): Promise<string> {
-  try {
-    const salt = await bcrypt.genSalt(SALT_ROUNDS);
-    return await bcrypt.hash(password, salt);
-  } catch (error) {
-    logger.error('Error hashing password', { error });
-    throw new Error('Failed to hash password');
-  }
+  const saltRounds = 10;
+  return bcrypt.hash(password, saltRounds);
 }
 
 /**
- * Compare a plain text password with a hashed password
- * @param plainPassword Plain text password to compare
- * @param hashedPassword Hashed password to compare against
- * @returns True if passwords match
+ * Compares a supplied password with a stored hashed password
+ * @param supplied The plain text password to check
+ * @param stored The stored hashed password to compare against
+ * @returns Promise resolving to a boolean indicating if the passwords match
  */
-export async function comparePasswords(plainPassword: string, hashedPassword: string): Promise<boolean> {
-  try {
-    return await bcrypt.compare(plainPassword, hashedPassword);
-  } catch (error) {
-    logger.error('Error comparing passwords', { error });
-    throw new Error('Failed to compare passwords');
-  }
+export async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
+  return bcrypt.compare(supplied, stored);
 }
 
 /**
- * Generates a random string token
- * @param length Length of the token to generate
- * @returns Random token string
- */
-export function generateToken(length: number = 32): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let token = '';
-  
-  for (let i = 0; i < length; i++) {
-    token += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  
-  return token;
-}
-
-/**
- * Check if a password meets strength requirements
- * @param password Password to check
- * @returns Object with validation result and message
+ * Validates the strength of a password
+ * @param password The password to validate
+ * @returns Object containing validity and message
  */
 export function validatePasswordStrength(password: string): { valid: boolean; message?: string } {
   if (!password || password.length < 8) {
     return { valid: false, message: 'Password must be at least 8 characters long' };
   }
   
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasLowercase = /[a-z]/.test(password);
-  const hasNumbers = /\d/.test(password);
-  const hasSpecialChars = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-  
-  if (!hasUppercase) {
+  // Check for at least one uppercase letter
+  if (!/[A-Z]/.test(password)) {
     return { valid: false, message: 'Password must contain at least one uppercase letter' };
   }
   
-  if (!hasLowercase) {
+  // Check for at least one lowercase letter
+  if (!/[a-z]/.test(password)) {
     return { valid: false, message: 'Password must contain at least one lowercase letter' };
   }
   
-  if (!hasNumbers) {
+  // Check for at least one number
+  if (!/\d/.test(password)) {
     return { valid: false, message: 'Password must contain at least one number' };
   }
   
-  if (!hasSpecialChars) {
+  // Check for at least one special character
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
     return { valid: false, message: 'Password must contain at least one special character' };
   }
   

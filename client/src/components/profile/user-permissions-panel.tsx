@@ -59,7 +59,7 @@ export function UserPermissionsPanel({ userRole, permissions, isLoading }: UserP
 
   // Permission description helper
   const getPermissionDescription = (permission: string) => {
-    const descriptions = {
+    const descriptions: Record<string, string> = {
       can_view_dashboard: t("profile.permissions.canViewDashboard"),
       can_create_user: t("profile.permissions.canCreateUser"),
       can_delete_user: t("profile.permissions.canDeleteUser"),
