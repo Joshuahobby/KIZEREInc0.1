@@ -114,6 +114,7 @@ function App() {
               
               {/* Admin routes */}
               <ProtectedRoute path="/admin" component={AdminDashboardComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/command-center" component={CommandCenterComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/classic" component={AdminDashboardClassicComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
               
