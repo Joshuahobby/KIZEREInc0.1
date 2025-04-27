@@ -875,9 +875,9 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="max-w-[1600px] mx-auto">
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 pb-12">
       {/* Header section */}
-      <div className="flex justify-between items-center py-4 sticky top-0 z-10 border-b border-border/60 mb-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex flex-col sm:flex-row gap-4 sm:justify-between sm:items-center py-4 sticky top-0 z-10 border-b border-border/60 mb-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div>
           <h1 className="text-2xl font-semibold">KIZERE Command Center</h1>
           <p className="text-sm text-muted-foreground">
@@ -885,20 +885,20 @@ export default function AdminDashboard() {
           </p>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="relative w-64">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative w-full sm:w-48 md:w-64">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               type="text" 
               placeholder="Search..." 
-              className="pl-8 h-9"
+              className="pl-8 h-9 w-full"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[180px] h-9">
+            <SelectTrigger className="w-[150px] sm:w-[180px] h-9">
               <SelectValue placeholder="Select time range" />
             </SelectTrigger>
             <SelectContent>
@@ -910,16 +910,18 @@ export default function AdminDashboard() {
             </SelectContent>
           </Select>
           
-          <Button variant="ghost" size="icon" onClick={() => refetch()}>
-            <Loader2 className="h-5 w-5 text-muted-foreground" />
-          </Button>
-          
-          <Button variant="ghost" size="icon">
-            <Bell className="h-5 w-5 text-muted-foreground" />
-          </Button>
-          
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
-            {user?.fullName?.charAt(0) || 'A'}
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => refetch()}>
+              <Loader2 className="h-5 w-5 text-muted-foreground" />
+            </Button>
+            
+            <Button variant="ghost" size="icon">
+              <Bell className="h-5 w-5 text-muted-foreground" />
+            </Button>
+            
+            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
+              {user?.fullName?.charAt(0) || 'A'}
+            </div>
           </div>
         </div>
       </div>
@@ -1090,9 +1092,9 @@ export default function AdminDashboard() {
           </div>
           
           {/* Analytics and activity section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Enhanced payment analytics */}
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 order-2 lg:order-1">
               <EnhancedPaymentAnalytics
                 title="Revenue Analytics"
                 description="Track payment trends and performance"
@@ -1112,7 +1114,7 @@ export default function AdminDashboard() {
             </div>
             
             {/* Activity feed */}
-            <div>
+            <div className="order-1 lg:order-2">
               <ActivityFeed
                 events={activityEvents}
                 onEventClick={(event) => {
@@ -1131,7 +1133,7 @@ export default function AdminDashboard() {
           </div>
           
           {/* Charts and system status section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* Payment status chart */}
             <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="pb-2">
@@ -1221,16 +1223,18 @@ export default function AdminDashboard() {
             </Card>
             
             {/* System status */}
-            <SystemStatus
-              items={systemStatusItems}
-              lastUpdated={new Date().toLocaleString()}
-              onRefresh={() => refetch()}
-              isLoading={isLoading}
-            />
+            <Card className="border border-border/50 bg-card/50 backdrop-blur-sm md:col-span-2 lg:col-span-1">
+              <SystemStatus
+                items={systemStatusItems}
+                lastUpdated={new Date().toLocaleString()}
+                onRefresh={() => refetch()}
+                isLoading={isLoading}
+              />
+            </Card>
           </div>
           
           {/* Recent transactions and item categories */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Recent transactions */}
             <DataTableDashboard
               title="Recent Transactions"
@@ -1307,13 +1311,13 @@ export default function AdminDashboard() {
           {user?.role === 'Admin' && (
             <Card className="border border-border/50 bg-card/50 backdrop-blur-sm mt-8">
               <CardContent className="pt-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
                     <h3 className="text-lg font-semibold">Dashboard Layout</h3>
                     <p className="text-sm text-muted-foreground">Use the customizable dashboard interface instead?</p>
                   </div>
                   <Button 
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground w-full sm:w-auto"
                     onClick={() => setUseCustomDashboard(true)}
                   >
                     <LayoutDashboard className="h-4 w-4 mr-2" />
