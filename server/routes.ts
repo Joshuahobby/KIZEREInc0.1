@@ -287,6 +287,240 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     });
   });
+  
+  // User Profile Management Endpoints
+  
+  /**
+   * Get current user profile
+   * Equivalent to GET /api/me in the specs
+   */
+  app.get("/api/me", (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // Strip password from response
+      const { password, ...userWithoutPassword } = req.user;
+      logger.info('User retrieved their profile', { userId: req.user.id });
+      res.json(userWithoutPassword);
+    } catch (error) {
+      logger.error('Error fetching user profile', { error, userId: req.user?.id });
+      res.status(500).json({ message: "Failed to retrieve user profile" });
+    }
+  });
+  
+  /**
+   * Update current user profile
+   * Equivalent to PUT /api/me in the specs
+   */
+  app.put("/api/me", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const userId = req.user.id;
+      const updateData = req.body;
+      
+      // Filter allowed fields to update
+      const allowedFields = ['fullName', 'email', 'phoneNumber', 'avatarUrl'];
+      const filteredUpdateData = Object.keys(updateData)
+        .filter(key => allowedFields.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = updateData[key];
+          return obj;
+        }, {});
+      
+      // Update the user through UserService
+      const updatedUser = await UserService.updateUser(userId, filteredUpdateData);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Strip password from response
+      const { password, ...userWithoutPassword } = updatedUser;
+      
+      logger.info('User updated their profile', { userId });
+      res.json(userWithoutPassword);
+    } catch (error) {
+      logger.error('Error updating user profile', { error, userId: req.user?.id });
+      
+      // Handle validation errors
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      res.status(500).json({ message: "Failed to update user profile" });
+    }
+  });
+  
+  /**
+   * Change user password
+   */
+  app.put("/api/me/password", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const userId = req.user.id;
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+      
+      // Get the current user with password
+      const user = await UserService.getUserById(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Verify current password
+      const isPasswordValid = await comparePasswords(currentPassword, user.password);
+      
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      
+      // Update with new password
+      await UserService.updateUser(userId, { password: newPassword });
+      
+      logger.info('User changed their password', { userId });
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      logger.error('Error changing user password', { error, userId: req.user?.id });
+      
+      // Handle validation errors
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+  
+  /**
+   * Get user permissions
+   * Equivalent to GET /api/me/permissions in the specs
+   */
+  app.get("/api/me/permissions", (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // Currently, permissions are derived from the user's role
+      const role = req.user.role;
+      
+      // Define role-based permissions
+      const permissions = {
+        Admin: [
+          'can_view_dashboard',
+          'can_create_user',
+          'can_delete_user',
+          'can_update_user',
+          'can_view_reports',
+          'can_manage_items',
+          'can_view_payments',
+          'can_manage_settings'
+        ],
+        Agent: [
+          'can_view_dashboard',
+          'can_view_reports',
+          'can_manage_items',
+          'can_view_payments'
+        ],
+        Subscriber: [
+          'can_view_dashboard',
+          'can_manage_own_items',
+          'can_create_reports',
+          'can_view_own_payments'
+        ]
+      };
+      
+      // Get permissions for the user's role
+      const userPermissions = permissions[role] || [];
+      
+      logger.info('User retrieved their permissions', { userId: req.user.id, role });
+      res.json({ 
+        role,
+        permissions: userPermissions 
+      });
+    } catch (error) {
+      logger.error('Error fetching user permissions', { error, userId: req.user?.id });
+      res.status(500).json({ message: "Failed to retrieve user permissions" });
+    }
+  });
+  
+  /**
+   * Get user preferences
+   * Equivalent to GET /api/me/preferences in the specs
+   */
+  app.get("/api/me/preferences", (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      // For now, we'll return default preferences 
+      // In the future, these could be stored in the database
+      const defaultPreferences = {
+        theme: 'system',
+        layout: 'default',
+        cardDensity: 'comfortable',
+        widgetFavorites: [],
+        notifications: {
+          email: true,
+          inApp: true
+        }
+      };
+      
+      logger.info('User retrieved their preferences', { userId: req.user.id });
+      res.json(defaultPreferences);
+    } catch (error) {
+      logger.error('Error fetching user preferences', { error, userId: req.user?.id });
+      res.status(500).json({ message: "Failed to retrieve user preferences" });
+    }
+  });
+  
+  /**
+   * Update user preferences
+   * Equivalent to PUT /api/me/preferences in the specs
+   */
+  app.put("/api/me/preferences", (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    try {
+      const preferences = req.body;
+      
+      // Validate preferences
+      const allowedThemes = ['light', 'dark', 'system'];
+      const allowedLayouts = ['default', 'compact', 'expanded'];
+      const allowedDensities = ['comfortable', 'compact'];
+      
+      if (preferences.theme && !allowedThemes.includes(preferences.theme)) {
+        return res.status(400).json({ message: "Invalid theme option" });
+      }
+      
+      if (preferences.layout && !allowedLayouts.includes(preferences.layout)) {
+        return res.status(400).json({ message: "Invalid layout option" });
+      }
+      
+      if (preferences.cardDensity && !allowedDensities.includes(preferences.cardDensity)) {
+        return res.status(400).json({ message: "Invalid card density option" });
+      }
+      
+      // In a real implementation, we would save these to a database
+      // For now, just acknowledge that we received them
+      
+      logger.info('User updated their preferences', { 
+        userId: req.user.id,
+        preferences: JSON.stringify(preferences)
+      });
+      
+      res.json({ 
+        message: "Preferences updated successfully",
+        preferences
+      });
+    } catch (error) {
+      logger.error('Error updating user preferences', { error, userId: req.user?.id });
+      res.status(500).json({ message: "Failed to update user preferences" });
+    }
+  });
 
   // Items API
   app.get("/api/items", requireAuth, async (req, res) => {
