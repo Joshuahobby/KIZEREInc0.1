@@ -128,37 +128,7 @@ export async function signInWithGoogle(redirectUrl?: string) {
     console.log('[Firebase] Using popup authentication as requested');
     
     try {
-      // Configure the popup to be centered and properly sized
-      const width = 500;
-      const height = 600;
-      const left = window.innerWidth / 2 - width / 2;
-      const top = window.innerHeight / 2 - height / 2;
-      
-      // Firebase uses a specific popup method, but we can customize some aspects
-      auth.tenantId = null; // Ensure no tenant ID is set to prevent conflicts
-      
-      // Add custom settings to the provider
-      googleProvider.setCustomParameters({
-        prompt: 'select_account',
-        login_hint: localStorage.getItem('last_email') || '',
-        // Additional properties to make popup more reliable
-        authType: 'signIn',
-        state: state,
-        // App specific settings
-        app_display: 'popup',
-        display: 'popup',
-        // This ensures we're using the right domain
-        auth_domain: firebaseConfig.authDomain
-      });
-      
-      // Try the popup sign-in with enhanced error handling
-      console.log('[Firebase] Opening authentication popup', {
-        timestamp: new Date().toISOString(),
-        provider: 'google.com',
-        popup_settings: {width, height, top, left}
-      });
-      
-      // Open popup in a user interaction handler to avoid popup blockers
+      // Open popup for authentication
       const result = await signInWithPopup(auth, googleProvider);
       
       // Extract auth data
