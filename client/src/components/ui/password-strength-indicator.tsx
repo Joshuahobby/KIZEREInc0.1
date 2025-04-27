@@ -1,50 +1,51 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface PasswordStrengthIndicatorProps {
-  passwordStrength: {
-    isStrong: boolean;
-    message: string;
-  } | null;
+  score: number;
+  maxScore: number;
 }
 
-export function PasswordStrengthIndicator({ passwordStrength }: PasswordStrengthIndicatorProps) {
-  const [visible, setVisible] = useState<boolean>(false);
-
-  useEffect(() => {
-    // Show strength indicator when passwordStrength changes
-    if (passwordStrength) {
-      setVisible(true);
-    }
-  }, [passwordStrength]);
-
-  if (!passwordStrength) {
-    return null;
+export function PasswordStrengthIndicator({ score, maxScore }: PasswordStrengthIndicatorProps) {
+  const { t } = useTranslation();
+  
+  // Calculate the strength percentage
+  const strengthPercentage = (score / maxScore) * 100;
+  
+  // Determine strength level based on score
+  let strengthLevel: 'weak' | 'fair' | 'good' | 'strong' | 'very-strong';
+  let strengthColor: string;
+  
+  if (score === 0) {
+    strengthLevel = 'weak';
+    strengthColor = 'bg-red-500';
+  } else if (score <= maxScore * 0.25) {
+    strengthLevel = 'weak';
+    strengthColor = 'bg-red-500';
+  } else if (score <= maxScore * 0.5) {
+    strengthLevel = 'fair';
+    strengthColor = 'bg-orange-500';
+  } else if (score <= maxScore * 0.75) {
+    strengthLevel = 'good';
+    strengthColor = 'bg-yellow-500';
+  } else if (score < maxScore) {
+    strengthLevel = 'strong';
+    strengthColor = 'bg-green-500';
+  } else {
+    strengthLevel = 'very-strong';
+    strengthColor = 'bg-green-600';
   }
-
+  
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          className={`flex items-center text-sm space-x-2 mt-1.5 rounded-md p-1.5 ${
-            passwordStrength.isStrong
-              ? "text-emerald-600 dark:text-emerald-400"
-              : "text-amber-600 dark:text-amber-400"
-          }`}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-        >
-          {passwordStrength.isStrong ? (
-            <CheckCircle className="h-4 w-4 flex-shrink-0" />
-          ) : (
-            <AlertCircle className="h-4 w-4 flex-shrink-0" />
-          )}
-          <span>{passwordStrength.message}</span>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div className="space-y-1 mt-1">
+      <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+        <div 
+          className={`h-full ${strengthColor} transition-all duration-300 ease-in-out`} 
+          style={{ width: `${strengthPercentage}%` }}
+        />
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {t(`profile.security.passwordStrength.${strengthLevel}`)}
+      </p>
+    </div>
   );
 }

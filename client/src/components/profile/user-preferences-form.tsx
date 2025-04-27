@@ -1,147 +1,167 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { UserPreferences } from "@/types/user";
+
+// UI Components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Moon, Sun, Monitor, Grid3X3, LayoutGrid, Palette, Bell } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+
+// Define the form schema
+const preferencesFormSchema = z.object({
+  theme: z.enum(["light", "dark", "system"], {
+    required_error: "Please select a theme",
+  }),
+  language: z.string({
+    required_error: "Please select a language",
+  }),
+  notifications: z.object({
+    email: z.boolean().default(true),
+    sms: z.boolean().default(false),
+    push: z.boolean().default(true),
+  }),
+  dashboardLayout: z.enum(["default", "compact", "wide"], {
+    required_error: "Please select a dashboard layout",
+  }),
+  currency: z.string({
+    required_error: "Please select a currency",
+  }),
+  timezone: z.string({
+    required_error: "Please select a timezone",
+  }),
+});
+
+type PreferencesFormValues = z.infer<typeof preferencesFormSchema>;
 
 interface UserPreferencesFormProps {
-  preferences: {
-    theme?: string;
-    layout?: string;
-    cardDensity?: string;
-    widgetFavorites?: string[];
-    notifications?: {
-      email?: boolean;
-      inApp?: boolean;
-    };
-  };
+  preferences: Partial<UserPreferences>;
   isLoading: boolean;
 }
 
 export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesFormProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
-  const [formValues, setFormValues] = useState({
-    theme: preferences.theme || 'system',
-    layout: preferences.layout || 'default',
-    cardDensity: preferences.cardDensity || 'comfortable',
-    notifications: {
-      email: preferences.notifications?.email !== false,
-      inApp: preferences.notifications?.inApp !== false
-    }
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Available languages for the application
+  const availableLanguages = [
+    { value: "en", label: "English" },
+    { value: "fr", label: "Français" },
+    { value: "es", label: "Español" },
+    { value: "de", label: "Deutsch" },
+    { value: "pt", label: "Português" },
+    { value: "ar", label: "العربية" },
+  ];
+
+  // Timezones - limited selection for simplicity
+  const timezones = [
+    { value: "UTC", label: "UTC" },
+    { value: "America/New_York", label: "Eastern Time (US & Canada)" },
+    { value: "America/Chicago", label: "Central Time (US & Canada)" },
+    { value: "America/Denver", label: "Mountain Time (US & Canada)" },
+    { value: "America/Los_Angeles", label: "Pacific Time (US & Canada)" },
+    { value: "Europe/London", label: "London" },
+    { value: "Europe/Paris", label: "Paris" },
+    { value: "Asia/Tokyo", label: "Tokyo" },
+    { value: "Australia/Sydney", label: "Sydney" },
+  ];
+
+  // Currencies - limited selection for simplicity
+  const currencies = [
+    { value: "USD", label: "US Dollar ($)" },
+    { value: "EUR", label: "Euro (€)" },
+    { value: "GBP", label: "British Pound (£)" },
+    { value: "JPY", label: "Japanese Yen (¥)" },
+    { value: "CAD", label: "Canadian Dollar (C$)" },
+    { value: "AUD", label: "Australian Dollar (A$)" },
+    { value: "NGN", label: "Nigerian Naira (₦)" },
+    { value: "GHS", label: "Ghanaian Cedi (GH₵)" },
+  ];
+
+  // Set up the form with default values from the preferences
+  const form = useForm<PreferencesFormValues>({
+    resolver: zodResolver(preferencesFormSchema),
+    defaultValues: {
+      theme: (preferences?.theme as "light" | "dark" | "system") || "system",
+      language: preferences?.language || i18n.language || "en",
+      notifications: {
+        email: preferences?.notifications?.email ?? true,
+        sms: preferences?.notifications?.sms ?? false,
+        push: preferences?.notifications?.push ?? true,
+      },
+      dashboardLayout: (preferences?.dashboardLayout as "default" | "compact" | "wide") || "default",
+      currency: preferences?.currency || "USD",
+      timezone: preferences?.timezone || "UTC",
+    },
   });
 
-  // API mutation for updating preferences
-  const updatePreferencesMutation = useMutation({
-    mutationFn: async (values: typeof formValues) => {
-      const response = await apiRequest("PUT", "/api/me/preferences", values);
-      return response.json();
+  // Set up mutation for updating preferences
+  const mutation = useMutation({
+    mutationFn: (data: PreferencesFormValues) => {
+      return apiRequest('PUT', '/api/me/preferences', data);
     },
     onSuccess: () => {
       toast({
-        title: t("profile.preferences.updateSuccess"),
-        description: t("profile.preferences.updateSuccessDesc"),
+        title: t("profile.preferences.saveSuccess"),
+        description: t("profile.preferences.saveSuccessDesc"),
       });
+      // Update the language if it was changed
+      const newLanguage = form.getValues().language;
+      if (newLanguage !== i18n.language) {
+        i18n.changeLanguage(newLanguage);
+      }
+      // Refresh preferences data
       queryClient.invalidateQueries({ queryKey: ['/api/me/preferences'] });
     },
     onError: (error) => {
+      console.error("Error updating preferences:", error);
       toast({
-        title: t("profile.preferences.updateError"),
-        description: error.message || t("profile.preferences.updateErrorDesc"),
-        variant: "destructive"
+        title: t("profile.preferences.saveError"),
+        description: (error as Error)?.message || t("profile.preferences.saveErrorDesc"),
+        variant: "destructive",
       });
-    }
+    },
+    onSettled: () => {
+      setIsSaving(false);
+    },
   });
 
-  const handleSavePreferences = () => {
-    updatePreferencesMutation.mutate(formValues);
-  };
-
-  // Handle theme change
-  const handleThemeChange = (value: string) => {
-    setFormValues((prev) => ({
-      ...prev,
-      theme: value
-    }));
-
-    // For immediate feedback - actually apply theme change to body
-    if (value === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (value === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else {
-      // system - check preference
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (prefersDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  };
-
-  // Handle layout change
-  const handleLayoutChange = (value: string) => {
-    setFormValues((prev) => ({
-      ...prev,
-      layout: value
-    }));
-  };
-
-  // Handle card density change
-  const handleDensityChange = (value: string) => {
-    setFormValues((prev) => ({
-      ...prev,
-      cardDensity: value
-    }));
-  };
-
-  // Handle notification settings change
-  const handleNotificationChange = (key: 'email' | 'inApp', checked: boolean) => {
-    setFormValues((prev) => ({
-      ...prev,
-      notifications: {
-        ...prev.notifications,
-        [key]: checked
-      }
-    }));
+  // Handle form submission
+  const onSubmit = (data: PreferencesFormValues) => {
+    setIsSaving(true);
+    mutation.mutate(data);
   };
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <Skeleton className="h-8 w-48 mb-2" />
-          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-8 w-1/3" />
+          <Skeleton className="h-4 w-1/2 mt-2" />
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div>
-              <Skeleton className="h-4 w-32 mb-3" />
-              <div className="flex gap-4">
-                <Skeleton className="h-32 w-32" />
-                <Skeleton className="h-32 w-32" />
-                <Skeleton className="h-32 w-32" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-5 w-1/4" />
+                <Skeleton className="h-10 w-full" />
               </div>
-            </div>
-            <div>
-              <Skeleton className="h-4 w-32 mb-3" />
-              <div className="flex gap-4">
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </div>
-            </div>
+            ))}
           </div>
         </CardContent>
         <CardFooter>
-          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24 ml-auto" />
         </CardFooter>
       </Card>
     );
@@ -151,231 +171,272 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
     <Card>
       <CardHeader>
         <CardTitle>{t("profile.preferences.title")}</CardTitle>
-        <CardDescription>{t("profile.preferences.subtitle")}</CardDescription>
+        <CardDescription>{t("profile.preferences.description")}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-8">
-        {/* Theme Selection */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Palette className="h-5 w-5 text-muted-foreground" />
-            <h3 className="text-sm font-medium">{t("profile.preferences.theme")}</h3>
-          </div>
-          <RadioGroup 
-            defaultValue={formValues.theme} 
-            value={formValues.theme}
-            onValueChange={handleThemeChange}
-            className="grid grid-cols-3 gap-4"
-          >
-            <div>
-              <RadioGroupItem 
-                value="light" 
-                id="theme-light" 
-                className="peer sr-only" 
-              />
-              <Label
-                htmlFor="theme-light"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-              >
-                <Sun className="h-6 w-6 mb-3" />
-                <span>{t("profile.preferences.light")}</span>
-              </Label>
-            </div>
-            <div>
-              <RadioGroupItem 
-                value="dark" 
-                id="theme-dark" 
-                className="peer sr-only" 
-              />
-              <Label
-                htmlFor="theme-dark"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-              >
-                <Moon className="h-6 w-6 mb-3" />
-                <span>{t("profile.preferences.dark")}</span>
-              </Label>
-            </div>
-            <div>
-              <RadioGroupItem 
-                value="system" 
-                id="theme-system" 
-                className="peer sr-only" 
-              />
-              <Label
-                htmlFor="theme-system"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-              >
-                <Monitor className="h-6 w-6 mb-3" />
-                <span>{t("profile.preferences.system")}</span>
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        {/* Layout Selection */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <LayoutGrid className="h-5 w-5 text-muted-foreground" />
-            <h3 className="text-sm font-medium">{t("profile.preferences.layout")}</h3>
-          </div>
-          <RadioGroup 
-            defaultValue={formValues.layout} 
-            value={formValues.layout}
-            onValueChange={handleLayoutChange}
-            className="grid grid-cols-2 gap-4"
-          >
-            <div>
-              <RadioGroupItem 
-                value="default" 
-                id="layout-default" 
-                className="peer sr-only" 
-              />
-              <Label
-                htmlFor="layout-default"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full"
-              >
-                <div className="w-full h-20 flex flex-col border rounded mb-2 p-1">
-                  <div className="bg-muted/40 h-4 w-full mb-1 rounded"></div>
-                  <div className="flex-1 grid grid-cols-3 gap-1">
-                    <div className="bg-muted/40 rounded"></div>
-                    <div className="bg-muted/40 rounded"></div>
-                    <div className="bg-muted/40 rounded"></div>
-                  </div>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">{t("profile.preferences.appearance")}</h3>
+                <Separator />
+                <div className="grid gap-4 md:grid-cols-2 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="theme"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("profile.preferences.theme")}</FormLabel>
+                        <Select 
+                          disabled={isSaving}
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("profile.preferences.selectTheme")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="light">{t("profile.preferences.themes.light")}</SelectItem>
+                            <SelectItem value="dark">{t("profile.preferences.themes.dark")}</SelectItem>
+                            <SelectItem value="system">{t("profile.preferences.themes.system")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          {t("profile.preferences.themeDescription")}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="language"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("profile.preferences.language")}</FormLabel>
+                        <Select 
+                          disabled={isSaving}
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("profile.preferences.selectLanguage")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {availableLanguages.map((language) => (
+                              <SelectItem key={language.value} value={language.value}>
+                                {language.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          {t("profile.preferences.languageDescription")}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <span>{t("profile.preferences.defaultLayout")}</span>
-              </Label>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">{t("profile.preferences.notifications")}</h3>
+                <Separator />
+                <div className="space-y-4 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="notifications.email"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-md border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            {t("profile.preferences.emailNotifications")}
+                          </FormLabel>
+                          <FormDescription>
+                            {t("profile.preferences.emailNotificationsDesc")}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={isSaving}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="notifications.sms"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-md border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            {t("profile.preferences.smsNotifications")}
+                          </FormLabel>
+                          <FormDescription>
+                            {t("profile.preferences.smsNotificationsDesc")}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={isSaving}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="notifications.push"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between rounded-md border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel className="text-base">
+                            {t("profile.preferences.pushNotifications")}
+                          </FormLabel>
+                          <FormDescription>
+                            {t("profile.preferences.pushNotificationsDesc")}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={isSaving}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">{t("profile.preferences.dashboardSettings")}</h3>
+                <Separator />
+                <div className="grid gap-4 md:grid-cols-2 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="dashboardLayout"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("profile.preferences.layout")}</FormLabel>
+                        <Select 
+                          disabled={isSaving}
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("profile.preferences.selectLayout")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="default">{t("profile.preferences.layouts.default")}</SelectItem>
+                            <SelectItem value="compact">{t("profile.preferences.layouts.compact")}</SelectItem>
+                            <SelectItem value="wide">{t("profile.preferences.layouts.wide")}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          {t("profile.preferences.layoutDescription")}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">{t("profile.preferences.regionalization")}</h3>
+                <Separator />
+                <div className="grid gap-4 md:grid-cols-2 mt-4">
+                  <FormField
+                    control={form.control}
+                    name="currency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("profile.preferences.currency")}</FormLabel>
+                        <Select 
+                          disabled={isSaving}
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("profile.preferences.selectCurrency")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {currencies.map((currency) => (
+                              <SelectItem key={currency.value} value={currency.value}>
+                                {currency.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          {t("profile.preferences.currencyDescription")}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="timezone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("profile.preferences.timezone")}</FormLabel>
+                        <Select 
+                          disabled={isSaving}
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("profile.preferences.selectTimezone")} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {timezones.map((timezone) => (
+                              <SelectItem key={timezone.value} value={timezone.value}>
+                                {timezone.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          {t("profile.preferences.timezoneDescription")}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <RadioGroupItem 
-                value="compact" 
-                id="layout-compact" 
-                className="peer sr-only" 
-              />
-              <Label
-                htmlFor="layout-compact"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full"
+            
+            <CardFooter className="flex justify-end gap-2 px-0">
+              <Button
+                type="submit"
+                disabled={isSaving || !form.formState.isDirty}
               >
-                <div className="w-full h-20 flex flex-col border rounded mb-2 p-1">
-                  <div className="bg-muted/40 h-3 w-full mb-1 rounded"></div>
-                  <div className="flex-1 grid grid-cols-4 gap-1">
-                    <div className="bg-muted/40 rounded"></div>
-                    <div className="bg-muted/40 rounded"></div>
-                    <div className="bg-muted/40 rounded"></div>
-                    <div className="bg-muted/40 rounded"></div>
-                  </div>
-                </div>
-                <span>{t("profile.preferences.compactLayout")}</span>
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        {/* Card Density Selection */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Grid3X3 className="h-5 w-5 text-muted-foreground" />
-            <h3 className="text-sm font-medium">{t("profile.preferences.cardDensity")}</h3>
-          </div>
-          <RadioGroup 
-            defaultValue={formValues.cardDensity} 
-            value={formValues.cardDensity}
-            onValueChange={handleDensityChange}
-            className="grid grid-cols-2 gap-4"
-          >
-            <div>
-              <RadioGroupItem 
-                value="comfortable" 
-                id="density-comfortable" 
-                className="peer sr-only" 
-              />
-              <Label
-                htmlFor="density-comfortable"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full"
-              >
-                <div className="w-full h-16 flex flex-col border rounded mb-2 p-2">
-                  <div className="bg-muted/40 h-3 w-3/4 mb-2 rounded"></div>
-                  <div className="bg-muted/40 h-2 w-full mb-1 rounded"></div>
-                  <div className="bg-muted/40 h-2 w-1/2 rounded"></div>
-                </div>
-                <span>{t("profile.preferences.comfortableDensity")}</span>
-              </Label>
-            </div>
-            <div>
-              <RadioGroupItem 
-                value="compact" 
-                id="density-compact" 
-                className="peer sr-only" 
-              />
-              <Label
-                htmlFor="density-compact"
-                className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer h-full"
-              >
-                <div className="w-full h-16 flex flex-col border rounded mb-2 p-1">
-                  <div className="bg-muted/40 h-2 w-3/4 mb-1 rounded"></div>
-                  <div className="bg-muted/40 h-1.5 w-full mb-1 rounded"></div>
-                  <div className="bg-muted/40 h-1.5 w-full mb-1 rounded"></div>
-                  <div className="bg-muted/40 h-1.5 w-1/2 rounded"></div>
-                </div>
-                <span>{t("profile.preferences.compactDensity")}</span>
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        {/* Notification Settings */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-muted-foreground" />
-            <h3 className="text-sm font-medium">{t("profile.preferences.notifications")}</h3>
-          </div>
-          <div className="space-y-3 pt-1">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="notify-email" className="flex-1">
-                <div className="space-y-0.5">
-                  <p>{t("profile.preferences.emailNotifications")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("profile.preferences.emailNotificationsDesc")}
-                  </p>
-                </div>
-              </Label>
-              <Switch
-                id="notify-email"
-                checked={formValues.notifications.email}
-                onCheckedChange={(checked) => handleNotificationChange('email', checked)}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="notify-inapp" className="flex-1">
-                <div className="space-y-0.5">
-                  <p>{t("profile.preferences.inAppNotifications")}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("profile.preferences.inAppNotificationsDesc")}
-                  </p>
-                </div>
-              </Label>
-              <Switch
-                id="notify-inapp"
-                checked={formValues.notifications.inApp}
-                onCheckedChange={(checked) => handleNotificationChange('inApp', checked)}
-              />
-            </div>
-          </div>
-        </div>
+                {isSaving ? t("common.saving") : t("common.saveChanges")}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
       </CardContent>
-      <CardFooter>
-        <Button 
-          onClick={handleSavePreferences}
-          disabled={updatePreferencesMutation.isPending}
-        >
-          {updatePreferencesMutation.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t("common.saving")}
-            </>
-          ) : (
-            t("profile.preferences.savePreferences")
-          )}
-        </Button>
-      </CardFooter>
     </Card>
   );
 }
