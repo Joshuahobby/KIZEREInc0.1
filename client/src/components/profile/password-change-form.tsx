@@ -1,53 +1,60 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+
+// UI Components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
+
+// Define the password schema with validation
+const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1, { message: "Current password is required" }),
+  newPassword: z.string().min(8, { message: "Password must be at least 8 characters" })
+    .regex(/[A-Z]/, { message: "Password must contain at least one uppercase letter" })
+    .regex(/[a-z]/, { message: "Password must contain at least one lowercase letter" })
+    .regex(/[0-9]/, { message: "Password must contain at least one number" })
+    .regex(/[^A-Za-z0-9]/, { message: "Password must contain at least one special character" }),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type PasswordChangeFormValues = z.infer<typeof passwordChangeSchema>;
 
 export function PasswordChangeForm() {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [passwordScore, setPasswordScore] = useState(0);
 
-  // Define the form schema with password validation
-  const passwordFormSchema = z.object({
-    currentPassword: z.string().min(1, t("validation.currentPasswordRequired")),
-    newPassword: z.string().min(8, t("validation.passwordMinLength")),
-    confirmPassword: z.string().min(1, t("validation.confirmPasswordRequired")),
-  }).refine((data) => data.newPassword === data.confirmPassword, {
-    message: t("validation.passwordsDoNotMatch"),
-    path: ["confirmPassword"],
-  });
-
-  type PasswordFormValues = z.infer<typeof passwordFormSchema>;
-
-  // Initialize the form
-  const form = useForm<PasswordFormValues>({
-    resolver: zodResolver(passwordFormSchema),
+  // Set up the form
+  const form = useForm<PasswordChangeFormValues>({
+    resolver: zodResolver(passwordChangeSchema),
     defaultValues: {
       currentPassword: "",
       newPassword: "",
       confirmPassword: "",
-    }
+    },
   });
 
-  // API mutation for changing the password
-  const changePasswordMutation = useMutation({
-    mutationFn: async (values: PasswordFormValues) => {
-      const response = await apiRequest("PUT", "/api/me/password", {
-        currentPassword: values.currentPassword,
-        newPassword: values.newPassword,
+  // Set up mutation for changing password
+  const mutation = useMutation({
+    mutationFn: (data: PasswordChangeFormValues) => {
+      return apiRequest('/api/me/password', {
+        method: 'PUT',
+        body: JSON.stringify({
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }),
       });
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -55,25 +62,43 @@ export function PasswordChangeForm() {
         description: t("profile.security.passwordChangeSuccessDesc"),
       });
       form.reset();
+      setPasswordScore(0);
     },
     onError: (error) => {
+      console.error("Error changing password:", error);
       toast({
         title: t("profile.security.passwordChangeError"),
-        description: error.message || t("profile.security.passwordChangeErrorDesc"),
-        variant: "destructive"
+        description: (error as Error)?.message || t("profile.security.passwordChangeErrorDesc"),
+        variant: "destructive",
       });
-    }
+    },
+    onSettled: () => {
+      setIsSubmitting(false);
+    },
   });
 
-  // Form submission handler
-  const onSubmit = (values: PasswordFormValues) => {
-    changePasswordMutation.mutate(values);
+  // Handle form submission
+  const onSubmit = (data: PasswordChangeFormValues) => {
+    setIsSubmitting(true);
+    mutation.mutate(data);
+  };
+
+  // Evaluate password strength as user types
+  const evaluatePasswordStrength = (password: string) => {
+    let score = 0;
+    
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    
+    setPasswordScore(score);
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        {/* Current Password */}
         <FormField
           control={form.control}
           name="currentPassword"
@@ -81,38 +106,17 @@ export function PasswordChangeForm() {
             <FormItem>
               <FormLabel>{t("profile.security.currentPassword")}</FormLabel>
               <FormControl>
-                <div className="relative">
-                  <Lock className="h-4 w-4 text-muted-foreground absolute left-3 top-3" />
-                  <Input
-                    {...field}
-                    type={showCurrentPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    className="pl-10 pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  >
-                    {showCurrentPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="sr-only">
-                      {showCurrentPassword ? t("common.hidePassword") : t("common.showPassword")}
-                    </span>
-                  </Button>
-                </div>
+                <Input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
-        {/* New Password */}
+        
         <FormField
           control={form.control}
           name="newPassword"
@@ -120,41 +124,22 @@ export function PasswordChangeForm() {
             <FormItem>
               <FormLabel>{t("profile.security.newPassword")}</FormLabel>
               <FormControl>
-                <div className="relative">
-                  <Lock className="h-4 w-4 text-muted-foreground absolute left-3 top-3" />
-                  <Input
-                    {...field}
-                    type={showNewPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    className="pl-10 pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                  >
-                    {showNewPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="sr-only">
-                      {showNewPassword ? t("common.hidePassword") : t("common.showPassword")}
-                    </span>
-                  </Button>
-                </div>
+                <Input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    evaluatePasswordStrength(e.target.value);
+                  }}
+                />
               </FormControl>
-              <FormDescription>
-                {t("profile.security.passwordRequirements")}
-              </FormDescription>
+              <PasswordStrengthIndicator score={passwordScore} maxScore={5} />
               <FormMessage />
             </FormItem>
           )}
         />
-
-        {/* Confirm Password */}
+        
         <FormField
           control={form.control}
           name="confirmPassword"
@@ -162,50 +147,23 @@ export function PasswordChangeForm() {
             <FormItem>
               <FormLabel>{t("profile.security.confirmPassword")}</FormLabel>
               <FormControl>
-                <div className="relative">
-                  <Lock className="h-4 w-4 text-muted-foreground absolute left-3 top-3" />
-                  <Input
-                    {...field}
-                    type={showConfirmPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    className="pl-10 pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                    <span className="sr-only">
-                      {showConfirmPassword ? t("common.hidePassword") : t("common.showPassword")}
-                    </span>
-                  </Button>
-                </div>
+                <Input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  {...field} 
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
+        
         <Button 
           type="submit" 
           className="w-full"
-          disabled={changePasswordMutation.isPending}
+          disabled={isSubmitting || !form.formState.isDirty}
         >
-          {changePasswordMutation.isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t("common.processing")}
-            </>
-          ) : (
-            t("profile.security.changePassword")
-          )}
+          {isSubmitting ? t("common.updating") : t("profile.security.changePassword")}
         </Button>
       </form>
     </Form>

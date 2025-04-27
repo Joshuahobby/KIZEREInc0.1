@@ -125,14 +125,14 @@ export function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem>
                     <Link href="/profile">
-                      <a className="cursor-pointer w-full">{t('profile.title')}</a>
+                      <div className="flex w-full cursor-pointer">{t('profile.title')}</div>
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem>
                     <Link href="/settings">
-                      <a className="cursor-pointer w-full">{t('settings.title')}</a>
+                      <div className="flex w-full cursor-pointer">{t('settings.title')}</div>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

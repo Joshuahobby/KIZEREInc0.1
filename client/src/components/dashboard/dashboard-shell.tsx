@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { cn } from "@/lib/utils";
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -11,10 +10,8 @@ export function DashboardShell({
   className,
 }: DashboardShellProps) {
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
-      <div className={cn("flex-1 container flex flex-col gap-8 py-8", className)}>
-        {children}
-      </div>
+    <div className="flex-1 space-y-6 p-6 md:p-8">
+      {children}
     </div>
   );
 }

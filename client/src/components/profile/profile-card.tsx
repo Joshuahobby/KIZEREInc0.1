@@ -1,120 +1,113 @@
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { User } from "@shared/schema"; // Import User type
-import { Edit, Mail, Phone, Calendar, ShieldCheck } from "lucide-react";
+import { User } from "@/types/user";
+import { Edit, User as UserIcon, Phone, Mail, Calendar, Building } from "lucide-react";
 
 interface ProfileCardProps {
   user: User;
-  onEdit: () => void;
+  onEdit?: () => void;
 }
 
 export function ProfileCard({ user, onEdit }: ProfileCardProps) {
   const { t } = useTranslation();
 
-  // Helper function to generate initials from user's name
-  const getInitials = (name: string) => {
-    if (!name) return "??";
-    return name.split(" ")
-      .map(part => part.charAt(0).toUpperCase())
-      .slice(0, 2)
-      .join("");
-  };
-
-  // Format date
+  // Format the date for display
   const formatDate = (dateString: string) => {
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString();
-    } catch (e) {
-      return dateString || 'Unknown date';
+      return format(new Date(dateString), "PPP");
+    } catch (error) {
+      return dateString;
     }
+  };
+  
+  // Get the initials from the user's name
+  const getInitials = (name: string) => {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="pb-4">
-        <div className="flex flex-col md:flex-row gap-4 items-center md:items-start">
+    <Card>
+      <CardHeader className="relative pb-8">
+        <div className="absolute top-8 right-8">
+          <Badge variant="outline" className="font-medium capitalize">
+            {user.role}
+          </Badge>
+        </div>
+        <div className="flex flex-col items-center space-y-3">
           <Avatar className="h-24 w-24">
-            <AvatarImage src={user.avatarUrl || ""} alt={user.fullName} />
-            <AvatarFallback className="text-2xl">
-              {getInitials(user.fullName)}
+            <AvatarImage 
+              src={user.avatarUrl || ""} 
+              alt={user.fullName || ""} 
+            />
+            <AvatarFallback className="text-xl">
+              {getInitials(user.fullName || "")}
             </AvatarFallback>
           </Avatar>
-          <div className="space-y-1 text-center md:text-left flex-1">
+          <div className="space-y-1 text-center">
             <CardTitle className="text-2xl">{user.fullName}</CardTitle>
-            <div className="text-muted-foreground">{user.username}</div>
-            <div className="flex items-center justify-center md:justify-start mt-2 gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {user.role}
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                {t("profile.memberSince")} {formatDate(user.createdAt)}
-              </Badge>
-            </div>
+            <CardDescription>
+              {t('profile.joinedOn', { date: formatDate(user.createdAt) })}
+            </CardDescription>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onEdit} 
-            className="hidden md:flex items-center gap-2"
-          >
-            <Edit className="h-4 w-4" />
-            {t("profile.editProfile")}
-          </Button>
         </div>
       </CardHeader>
-      <Separator />
-      <CardContent className="pt-6">
-        <div className="grid gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-10">
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                {t("profile.contactInfo")}
-              </h3>
-              
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{user.email || t("common.notProvided")}</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{user.phoneNumber || t("common.notProvided")}</span>
-              </div>
+      <CardContent className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">
+              {t('profile.username')}
             </div>
-            
-            <div className="space-y-3">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                {t("profile.accountInfo")}
-              </h3>
-              
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-                <span>{t("profile.role")}: {user.role}</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                <span>{t("profile.memberSince")}: {formatDate(user.createdAt)}</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <UserIcon className="h-4 w-4 text-muted-foreground" />
+              <span>{user.username}</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">
+              {t('profile.email')}
+            </div>
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-muted-foreground" />
+              <span>{user.email}</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">
+              {t('profile.phone')}
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span>{user.phoneNumber || t('profile.notProvided')}</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="text-sm font-medium text-muted-foreground">
+              {t('profile.memberSince')}
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>{formatDate(user.createdAt)}</span>
             </div>
           </div>
         </div>
       </CardContent>
-      <CardFooter className="md:hidden">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onEdit} 
-          className="w-full flex items-center gap-2 justify-center"
-        >
-          <Edit className="h-4 w-4" />
-          {t("profile.editProfile")}
-        </Button>
+      <CardFooter className="flex justify-end">
+        {onEdit && (
+          <Button variant="outline" onClick={onEdit} className="flex items-center gap-2">
+            <Edit className="h-4 w-4" />
+            {t('profile.editProfile')}
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );
