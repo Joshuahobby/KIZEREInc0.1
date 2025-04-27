@@ -1,0 +1,224 @@
+/**
+ * Centralized API service layer for the KIZERE platform
+ * This module provides a unified interface for all API interactions
+ */
+
+import { queryClient, apiRequest } from "./queryClient";
+import { toast } from "@/hooks/use-toast";
+
+interface ApiError {
+  status: number;
+  message: string;
+  details?: any;
+}
+
+interface ApiOptions {
+  /**
+   * When true, automatically show a toast notification on error
+   */
+  showErrorToast?: boolean;
+  /**
+   * Use this to abort the request when needed
+   */
+  signal?: AbortSignal;
+  /**
+   * Additional fetch options
+   */
+  fetchOptions?: RequestInit;
+}
+
+/**
+ * Default API options
+ */
+const defaultApiOptions: ApiOptions = {
+  showErrorToast: true,
+};
+
+/**
+ * Format error message based on the API response
+ */
+function formatErrorMessage(error: any): string {
+  if (typeof error === 'string') return error;
+  if (error?.message) return error.message;
+  return 'An unexpected error occurred. Please try again.';
+}
+
+/**
+ * Generic GET request with type safety
+ */
+export async function apiGet<T>(endpoint: string, options: ApiOptions = defaultApiOptions): Promise<T | null> {
+  try {
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      credentials: 'include',
+      signal: options.signal,
+      ...options.fetchOptions,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      const error: ApiError = {
+        status: response.status,
+        message: errorData.message || `Error: ${response.status} ${response.statusText}`,
+        details: errorData,
+      };
+
+      throw error;
+    }
+
+    return await response.json();
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      // Request was aborted, handle silently
+      return null;
+    }
+
+    if (options.showErrorToast) {
+      toast({
+        title: "Request Failed",
+        description: formatErrorMessage(error),
+        variant: "destructive",
+      });
+    }
+    console.error(`API GET error for ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Generic POST request with type safety
+ */
+export async function apiPost<T, D = any>(
+  endpoint: string, 
+  data: D, 
+  options: ApiOptions = defaultApiOptions
+): Promise<T | null> {
+  try {
+    const response = await apiRequest('POST', endpoint, data);
+    return await response.json();
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      // Request was aborted, handle silently
+      return null;
+    }
+
+    if (options.showErrorToast) {
+      toast({
+        title: "Request Failed",
+        description: formatErrorMessage(error),
+        variant: "destructive",
+      });
+    }
+    console.error(`API POST error for ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Generic PUT request with type safety
+ */
+export async function apiPut<T, D = any>(
+  endpoint: string, 
+  data: D, 
+  options: ApiOptions = defaultApiOptions
+): Promise<T | null> {
+  try {
+    const response = await apiRequest('PUT', endpoint, data);
+    return await response.json();
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      // Request was aborted, handle silently
+      return null;
+    }
+
+    if (options.showErrorToast) {
+      toast({
+        title: "Update Failed",
+        description: formatErrorMessage(error),
+        variant: "destructive",
+      });
+    }
+    console.error(`API PUT error for ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Generic DELETE request with type safety
+ */
+export async function apiDelete<T>(
+  endpoint: string, 
+  options: ApiOptions = defaultApiOptions
+): Promise<T | null> {
+  try {
+    const response = await apiRequest('DELETE', endpoint);
+    return await response.json();
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      // Request was aborted, handle silently
+      return null;
+    }
+
+    if (options.showErrorToast) {
+      toast({
+        title: "Delete Failed",
+        description: formatErrorMessage(error),
+        variant: "destructive",
+      });
+    }
+    console.error(`API DELETE error for ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Generic method to invalidate queries
+ */
+export function invalidateQueries(queryKey: string | string[]): void {
+  const key = Array.isArray(queryKey) ? queryKey : [queryKey];
+  queryClient.invalidateQueries({ queryKey: key });
+}
+
+/**
+ * Specialized API functions for different areas of the application
+ */
+
+// User-related API calls
+export const userApi = {
+  getCurrentUser: () => apiGet('/api/user'),
+  getUsers: () => apiGet('/api/users'),
+  getUserById: (id: number) => apiGet(`/api/users/${id}`),
+  updateUser: (id: number, data: any) => apiPut(`/api/users/${id}`, data),
+};
+
+// Item-related API calls
+export const itemApi = {
+  getItems: () => apiGet('/api/items'),
+  getItemById: (id: number) => apiGet(`/api/items/${id}`),
+  createItem: (data: any) => apiPost('/api/items', data),
+  updateItem: (id: number, data: any) => apiPut(`/api/items/${id}`, data),
+  deleteItem: (id: number) => apiDelete(`/api/items/${id}`),
+};
+
+// Report-related API calls
+export const reportApi = {
+  getReports: () => apiGet('/api/reports'),
+  getReportById: (id: number) => apiGet(`/api/reports/${id}`),
+  createReport: (data: any) => apiPost('/api/reports', data),
+  updateReport: (id: number, data: any) => apiPut(`/api/reports/${id}`, data),
+};
+
+// Payment-related API calls
+export const paymentApi = {
+  getPayments: () => apiGet('/api/payments'),
+  getPaymentById: (id: number) => apiGet(`/api/payments/${id}`),
+  initiatePayment: (data: any) => apiPost('/api/payments/initiate', data),
+  confirmPayment: (reference: string) => apiPost(`/api/payments/confirm`, { reference }),
+};
+
+// Admin-related API calls
+export const adminApi = {
+  getDashboardStats: () => apiGet('/api/admin/stats'),
+  getSystemStatus: () => apiGet('/api/admin/system-status'),
+  getActivityLog: () => apiGet('/api/admin/activity-log'),
+};

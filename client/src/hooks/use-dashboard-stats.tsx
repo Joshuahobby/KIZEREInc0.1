@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { adminApi } from "@/lib/api";
 
 // Default values for stats
 const defaultStats = {
@@ -62,30 +62,18 @@ export interface DashboardStats {
   };
 }
 
+/**
+ * Hook for fetching dashboard statistics
+ * Uses the centralized API service layer
+ */
 export function useDashboardStats() {
-  const { toast } = useToast();
-  
   const { data, isLoading, isError, error, refetch } = useQuery<DashboardStats>({
     queryKey: ['/api/admin/stats'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/stats');
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || `Error fetching dashboard stats: ${response.status}`);
-      }
-      return response.json();
+      const result = await adminApi.getDashboardStats();
+      return result as DashboardStats;
     },
     retry: 1,
-    // Using onSettled instead of onError is more compatible with TanStack Query v5
-    onSettled: (data, error) => {
-      if (error) {
-        toast({
-          title: "Failed to load dashboard statistics",
-          description: (error as Error).message || "Please try again or contact support if the problem persists.",
-          variant: "destructive",
-        });
-      }
-    },
   });
 
   // Fall back to default stats if data is undefined
