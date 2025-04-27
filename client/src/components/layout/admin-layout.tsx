@@ -441,16 +441,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">
-                    <a className="w-full cursor-pointer">Profile</a>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings">
-                    <a className="w-full cursor-pointer">Settings</a>
-                  </Link>
-                </DropdownMenuItem>
+                <Link href="/profile">
+                  <DropdownMenuItem>
+                    Profile
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/settings">
+                  <DropdownMenuItem>
+                    Settings
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-red-600 cursor-pointer"
