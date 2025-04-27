@@ -1,0 +1,106 @@
+**Developer Task: Profile & User Account Management 🛠️**
+
+---
+
+### 🎯 Objective  
+Kick off the Command Center implementation by building out **User Profile** and **Account Management & Customization** features. This will establish the core user context, preferences, and theming needed for the rest of the dashboard.
+
+---
+
+## 1. Audit & Scaffold
+
+1. **Inventory Existing Profile Code**  
+   - Locate any “Profile” or “Account” components/routes in the codebase.  
+   - Note what functionality currently exists (view-only, edit form, avatar upload, permissions UI, etc.).  
+   - Identify gaps versus the design spec.
+
+2. **API Endpoints**  
+   - Ensure you have:  
+     - `GET /api/me` – fetch current user’s profile  
+     - `PUT /api/me` – update profile fields (name, email, avatar URL, etc.)  
+     - `GET /api/me/permissions` – fetch available actions and roles  
+     - `GET /api/me/preferences` & `PUT /api/me/preferences` – manage customization (theme, layout, favorites)
+
+3. **Routing & Guards**  
+   - Create or verify the `/profile` route under the Dashboard layout.  
+   - Protect it via authentication guard; redirect unauthenticated users to login.
+
+---
+
+## 2. Profile View & Edit
+
+1. **Profile Display**  
+   - Build a `<ProfileCard>` component showing:  
+     - Avatar (with placeholder/fallback)  
+     - Full name, email, role(s)  
+     - “Edit Profile” button  
+
+2. **Edit Profile Form**  
+   - Open a modal or dedicated edit page when “Edit Profile” is clicked.  
+   - Form fields: Name, Email, Upload Avatar, Change Password (optional section).  
+   - Use **React Hook Form** + **Yup** for validation.  
+   - On submit:  
+     - Call `PUT /api/me`  
+     - Show success/error toast  
+     - Refresh `GET /api/me` data  
+
+3. **Avatar Upload**  
+   - Integrate a file input or drag-and-drop.  
+   - Upload to `/api/uploads/avatar` (or S3 presigned URL).  
+   - Show progress bar and update avatar preview on success.
+
+---
+
+## 3. Permissions & Role Management
+
+1. **Permissions Panel**  
+   - Fetch `GET /api/me/permissions`.  
+   - List out allowed actions (e.g. `can_create_user`, `can_view_reports`, etc.).  
+   - Display as toggles or pills; read-only for now (admin can’t change their own perms).
+
+2. **Role Display**  
+   - If user has multiple roles (e.g. “Admin”, “Agent”, “Subscriber”), display all.  
+   - Provide a tooltip or “Details” link explaining each role’s scope.
+
+---
+
+## 4. User Preferences & Customization
+
+1. **Theme & Layout**  
+   - Under `/profile/preferences` or sidebar section, add options for:  
+     - Theme: Light / Dark / System  
+     - Default Dashboard Layout: Grid / List  
+     - Card Density: Comfortable / Compact  
+
+2. **Favorite Widgets & Layout Persistence**  
+   - Allow users to “★ Favorite” any dashboard card.  
+   - Store favorites in `PUT /api/me/preferences` under `widgetFavorites: []`.  
+   - On dashboard load, read `GET /api/me/preferences` and reorder/highlight accordingly.  
+   - Persist card collapse/expand state and column order.
+
+3. **Notifications Settings** (Optional for MVP)  
+   - Let users toggle email/WebSocket notification types under Preferences.  
+   - Save via `PUT /api/me/preferences.notifications`.
+
+---
+
+## 5. Testing & Documentation
+
+- **Unit Tests**  
+  - Cover form validation, API error handling, and preference state logic.
+
+- **Integration Tests**  
+  - Simulate full profile edit flow, avatar upload, and theme toggle.
+
+- **Storybook Stories**  
+  - `<ProfileCard>`: default, loading, error.  
+  - `<ProfileEditForm>`: valid, invalid, network error.  
+  - `<PreferencesPanel>`: all theme states.
+
+- **Docs**  
+  - Update README with new endpoints and environment variables (e.g. upload bucket).  
+  - Add usage notes for Profile-related hooks (`useCurrentUser()`, `usePreferences()`).
+
+---
+
+🚀 **Next Step:** Share your PR containing the Profile view/edit and Preferences panel. Once merged, we’ll have a solid user context foundation to build the rest of the Command Center. Good luck!
