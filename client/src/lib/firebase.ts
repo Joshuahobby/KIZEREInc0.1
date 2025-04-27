@@ -128,17 +128,53 @@ export async function signInWithGoogle(redirectUrl?: string) {
     console.log('[Firebase] Using popup authentication as requested');
     
     try {
-      // Open popup with proper configuration
+      // Configure the popup to be centered and properly sized
+      const width = 500;
+      const height = 600;
+      const left = window.innerWidth / 2 - width / 2;
+      const top = window.innerHeight / 2 - height / 2;
+      
+      // Firebase uses a specific popup method, but we can customize some aspects
+      auth.tenantId = null; // Ensure no tenant ID is set to prevent conflicts
+      
+      // Add custom settings to the provider
+      googleProvider.setCustomParameters({
+        prompt: 'select_account',
+        login_hint: localStorage.getItem('last_email') || '',
+        // Additional properties to make popup more reliable
+        authType: 'signIn',
+        state: state,
+        // App specific settings
+        app_display: 'popup',
+        display: 'popup',
+        // This ensures we're using the right domain
+        auth_domain: firebaseConfig.authDomain
+      });
+      
+      // Try the popup sign-in with enhanced error handling
+      console.log('[Firebase] Opening authentication popup', {
+        timestamp: new Date().toISOString(),
+        provider: 'google.com',
+        popup_settings: {width, height, top, left}
+      });
+      
+      // Open popup in a user interaction handler to avoid popup blockers
       const result = await signInWithPopup(auth, googleProvider);
       
       // Extract auth data
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const user = result.user;
       
+      // Save email for future login hint
+      if (user?.email) {
+        localStorage.setItem('last_email', user.email);
+      }
+      
       console.log('[Firebase] Popup authentication successful', { 
         email: user.email,
         hasUid: !!user.uid,
-        hasToken: !!credential?.accessToken
+        hasToken: !!credential?.accessToken,
+        displayName: user.displayName
       });
       
       // Return auth result
@@ -153,7 +189,15 @@ export async function signInWithGoogle(redirectUrl?: string) {
       
       // Special handling for popup closed errors
       if (popupError.code === 'auth/popup-closed-by-user') {
-        console.warn('[Firebase] Authentication popup was closed');
+        console.warn('[Firebase] Authentication popup was closed by user or blocked');
+        // We'll throw a more informative error
+        throw new Error('Authentication window was closed. Please ensure popups are allowed for this site and try again.');
+      }
+      
+      // Better error for unauthorized domains
+      if (popupError.code === 'auth/unauthorized-domain') {
+        console.error('[Firebase] Domain not authorized in Firebase console:', window.location.origin);
+        throw new Error(`Authentication failed: This domain (${window.location.hostname}) is not authorized in Firebase console`);
       }
       
       throw popupError;

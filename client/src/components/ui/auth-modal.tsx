@@ -188,6 +188,13 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       
       console.log("[AuthModal] Starting Google sign-in with redirect to:", redirectUrl);
       
+      // Display a helpful message to the user about popup authentication
+      toast({
+        title: "Google Authentication",
+        description: "A popup window will open for authentication. Please ensure popups are allowed for this site.",
+        duration: 5000,
+      });
+      
       // Use the auth hook's loginWithGoogle method with our redirect URL
       // This will open a popup to Google auth
       await auth.loginWithGoogle(redirectUrl);
@@ -196,11 +203,33 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       onClose();
     } catch (error: any) {
       console.error("[AuthModal] Google sign-in failed:", error);
+      
+      // Determine specific error message type
+      let errorTitle = "Sign in failed";
+      let errorMessage = error?.message || "Failed to authenticate with Google";
+      
+      // Handle specific error cases
+      if (error?.code === 'auth/popup-closed-by-user' || errorMessage.includes('popup')) {
+        errorTitle = "Authentication Window Closed";
+        errorMessage = "The authentication window was closed before completion. Please ensure popups are allowed for this site and try again.";
+      } else if (error?.code === 'auth/unauthorized-domain') {
+        errorTitle = "Domain Not Authorized";
+        errorMessage = "This domain is not authorized in Firebase. Please contact the administrator.";
+      } else if (error?.code === 'auth/network-request-failed') {
+        errorTitle = "Network Error";
+        errorMessage = "A network error occurred. Please check your internet connection and try again.";
+      } else if (error?.code === 'auth/internal-error') {
+        errorTitle = "Authentication Error";
+        errorMessage = "An internal error occurred. This is likely a temporary issue, please try again.";
+      }
+      
       toast({
-        title: "Sign in failed",
-        description: error?.message || "Failed to authenticate with Google",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
+        duration: 8000,
       });
+      
       setGoogleLoading(false);
     }
   };

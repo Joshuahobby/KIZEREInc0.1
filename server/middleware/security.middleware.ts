@@ -75,20 +75,29 @@ export function setupSecurityMiddleware(app: Express) {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://apis.google.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://*.firebaseapp.com", "https://*.gstatic.com", "https://accounts.google.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+        imgSrc: ["'self'", "data:", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com"],
         connectSrc: ["'self'", 
           "https://*.googleapis.com", 
           "https://*.firebaseio.com",
           "https://*.firebaseapp.com",
-          "wss://*.firebaseio.com"
-        ]
+          "wss://*.firebaseio.com",
+          "https://accounts.google.com",
+          "https://identitytoolkit.googleapis.com"
+        ],
+        frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com"],
+        formAction: ["'self'", "https://accounts.google.com"],
+        childSrc: ["'self'", "blob:", "https://*.firebaseapp.com", "https://accounts.google.com"]
       }
     },
     // Disable HSTS in development
-    hsts: process.env.NODE_ENV === 'production'
+    hsts: process.env.NODE_ENV === 'production',
+    // Allow Replit iframe embedding
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
   
   // Prevent XSS attacks
