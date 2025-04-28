@@ -1955,6 +1955,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin API: Create new item
+  app.post("/api/admin/items", requireAdmin, async (req, res) => {
+    try {
+      const { name, category, description, ownerId, status, estimatedValue, lastKnownLocation, serialNumber, modelNumber } = req.body;
+      
+      // Validate required fields
+      if (!name || !category) {
+        return res.status(400).json({ message: "Item name and category are required" });
+      }
+      
+      // Generate a unique identifier for the item
+      const uniqueIdentifier = `KZ-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`.toUpperCase();
+      
+      // Determine the userId - either from ownerId parameter or assign to the admin
+      const userId = ownerId ? parseInt(ownerId) : req.user!.id;
+      
+      // Create item object
+      const itemData = {
+        userId,
+        name,
+        category,
+        uniqueIdentifier,
+        description: description || "",
+        status: status || "Registered",
+        location: lastKnownLocation || "",
+        details: {
+          estimatedValue: estimatedValue ? parseFloat(estimatedValue.toString()) : null,
+          serialNumber: serialNumber || null,
+          modelNumber: modelNumber || null,
+          registeredBy: req.user!.id,
+          registrationMethod: "admin"
+        },
+        imageUrls: []
+      };
+      
+      // Create the item
+      const newItem = await storage.createItem(itemData);
+      
+      // Log the admin action
+      await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'item_create',
+        targetUserId: userId,
+        newState: newItem,
+        reason: "Item created by administrator"
+      });
+      
+      // Create a notification for the item owner if it's a different user
+      if (userId !== req.user!.id) {
+        await storage.createNotification({
+          userId,
+          title: "New Item Registered",
+          message: `An administrator has registered a new item "${name}" on your behalf`,
+          type: 'item_registered',
+          isRead: false
+        });
+      }
+      
+      res.status(201).json({ 
+        success: true, 
+        message: "Item created successfully", 
+        item: newItem 
+      });
+    } catch (error) {
+      logger.error('Error creating item', { error });
+      res.status(500).json({ 
+        success: false,
+        message: "Failed to create item",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   // Admin API: Get report statistics
   app.get("/api/admin/reports/stats", requireAdmin, async (req, res) => {
     try {
