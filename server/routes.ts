@@ -1147,7 +1147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.post("/api/admin/payment-packages/:id/set-default", requireAuth, requireAdmin, async (req, res) => {
+  app.patch("/api/admin/payment-packages/:id/default", requireAuth, requireAdmin, async (req, res) => {
     try {
       const packageId = parseInt(req.params.id);
       if (isNaN(packageId)) {
@@ -1173,6 +1173,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedPackage);
     } catch (error: any) {
       console.error('Error setting default payment package', { error });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Update payment package status
+  app.patch("/api/admin/payment-packages/:id/status", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const packageId = parseInt(req.params.id);
+      if (isNaN(packageId)) {
+        return res.status(400).json({ error: "Invalid package ID" });
+      }
+      
+      const { status } = req.body;
+      if (!status || !['active', 'inactive', 'archived'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status value" });
+      }
+      
+      const packageData = await storage.getPaymentPackage(packageId);
+      if (!packageData) {
+        return res.status(404).json({ error: "Payment package not found" });
+      }
+      
+      const updatedPackage = await storage.updatePaymentPackage(packageId, { status });
+      
+      // Log admin action
+      await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'update',
+        entityType: 'payment_package',
+        entityId: packageId,
+        details: `Updated payment package status to ${status}: ${packageData.name}`
+      });
+      
+      res.json(updatedPackage);
+    } catch (error: any) {
+      console.error('Error updating payment package status', { error });
       res.status(500).json({ error: error.message });
     }
   });
