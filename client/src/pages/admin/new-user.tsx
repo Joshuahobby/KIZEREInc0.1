@@ -121,10 +121,16 @@ export default function NewUserPage() {
         title="Add New User"
         description="Create a new user account"
         actions={
-          <Button variant="outline" onClick={() => navigate("/admin/users")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to User Management
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/admin/command-center")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Command Center
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/admin/users")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to User Management
+            </Button>
+          </div>
         }
       />
 

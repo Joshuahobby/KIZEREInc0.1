@@ -17,7 +17,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
 
 interface UserResponse {
@@ -208,10 +208,16 @@ export default function UserManagementPage() {
         title="User Management"
         description="View and manage all users in the system"
         actions={
-          <Button onClick={() => navigate("/admin/users/new")}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add User
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/admin/command-center")}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Command Center
+            </Button>
+            <Button onClick={() => navigate("/admin/users/new")}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </div>
         }
       />
       
