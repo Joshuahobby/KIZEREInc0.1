@@ -1,0 +1,1262 @@
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin/
+[HTTP/1.1 200 OK 2116ms]
+
+GET
+https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700&display=swap
+[HTTP/2 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@vite/client
+[HTTP/1.1 200 OK 1136ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@react-refresh
+[HTTP/1.1 304 Not Modified 638ms]
+
+GET
+https://replit.com/public/js/replit-dev-banner.js
+CSP
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/main.tsx?v=tSggnJQQfTPcr48hiuELo
+[HTTP/1.1 200 OK 354ms]
+
+Loading failed for the <script> with source “https://replit.com/public/js/replit-dev-banner.js”. admin:107:92
+Content-Security-Policy: The page’s settings blocked a script (script-src-elem) at https://replit.com/public/js/replit-dev-banner.js from being executed because it violates the following directive: “script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com https://*.gstatic.com https://accounts.google.com” admin
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=fadd4a34
+[HTTP/1.1 200 OK 615ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-dom_client.js?v=fadd4a34
+[HTTP/1.1 200 OK 395ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=fadd4a34
+[HTTP/1.1 200 OK 3044ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx
+[HTTP/1.1 200 OK 2823ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/queryClient.ts?v=tSggnJQQfTPcr48hiuELo
+[HTTP/1.1 200 OK 2566ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/toaster.tsx
+[HTTP/1.1 200 OK 938ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/App.tsx?v=tSggnJQQfTPcr48hiuELo
+[HTTP/1.1 200 OK 1085ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/index.css?v=tSggnJQQfTPcr48hiuELo
+[HTTP/1.1 200 OK 1418ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-QCHXOAYK.js?v=fadd4a34
+[HTTP/1.1 200 OK 1780ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WOOG5QLI.js?v=fadd4a34
+[HTTP/1.1 200 OK 1635ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=fadd4a34
+[HTTP/1.1 200 OK 2140ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/vite/dist/client/env.mjs
+[HTTP/1.1 200 OK 1451ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-toast.ts
+[HTTP/1.1 200 OK 1290ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/toast.tsx
+[HTTP/1.1 200 OK 1442ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fadd4a34
+[HTTP/1.1 200 OK 1391ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/tooltip.tsx
+[HTTP/1.1 304 Not Modified 1796ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/protected-route.tsx
+[HTTP/1.1 200 OK 1412ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/not-found.tsx
+[HTTP/1.1 200 OK 1284ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/unified-dashboard.tsx
+[HTTP/1.1 200 OK 1840ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/item-registration.tsx
+[HTTP/1.1 200 OK 1869ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/my-items.tsx
+[HTTP/1.1 304 Not Modified 2124ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/search.tsx
+[HTTP/1.1 200 OK 1732ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/lost-found.tsx
+[HTTP/1.1 200 OK 1972ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/user-management.tsx
+[HTTP/1.1 200 OK 2167ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/user-management.tsx
+[HTTP/1.1 304 Not Modified 2458ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/new-user.tsx
+[HTTP/1.1 304 Not Modified 2600ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/item-management.tsx
+[HTTP/1.1 200 OK 2286ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/item-detail.tsx
+[HTTP/1.1 200 OK 2618ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/new-item.tsx
+[HTTP/1.1 200 OK 2446ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/landing-page.tsx
+[HTTP/1.1 304 Not Modified 2930ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/auth-callback.tsx
+[HTTP/1.1 304 Not Modified 3108ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/payment-status.tsx
+[HTTP/1.1 304 Not Modified 3459ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/payment-history.tsx
+[HTTP/1.1 200 OK 2323ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/payment-test.tsx
+[HTTP/1.1 304 Not Modified 3274ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/payment-dashboard.tsx
+[HTTP/1.1 304 Not Modified 3273ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/dashboard.tsx
+[HTTP/1.1 200 OK 2894ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/dashboard-new.tsx
+[HTTP/1.1 304 Not Modified 3330ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/command-center.tsx
+[HTTP/1.1 200 OK 2933ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/profile.tsx
+[HTTP/1.1 304 Not Modified 3437ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/LanguageContext.tsx
+[HTTP/1.1 200 OK 2778ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/error-boundary.tsx
+[HTTP/1.1 200 OK 3011ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react.js?v=fadd4a34
+[HTTP/1.1 200 OK 3177ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/services/auth.service.ts
+[HTTP/1.1 304 Not Modified 2892ms]
+
+[vite] connecting... client:495:9
+GET
+wss://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/?token=WeynQWG19ajI
+[HTTP/1.1 101 Switching Protocols 3909ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-KBTYAULA.js?v=fadd4a34
+[HTTP/1.1 200 OK 2982ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-toast.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/class-variance-authority.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/lucide-react.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/utils.ts
+[HTTP/1.1 200 OK 2818ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-ZJGUFWDC.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-YJYX7EAP.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5Q5YC75F.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-THUXUCPX.js?v=fadd4a34
+[HTTP/1.1 200 OK 3055ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-U7P2NEEE.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx
+[HTTP/1.1 200 OK 3045ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layout/header.tsx
+[HTTP/1.1 200 OK 2757ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layout/footer.tsx
+[HTTP/1.1 200 OK 3044ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/button.tsx
+[HTTP/1.1 200 OK 3281ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/input.tsx
+[HTTP/1.1 200 OK 3310ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx
+[HTTP/1.1 200 OK 3310ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/date-fns.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6PJ6ZD5Z.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=fadd4a34
+[HTTP/1.1 200 OK 3562ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-dashboard-data.tsx
+[HTTP/1.1 200 OK 3544ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/framer-motion.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/skeleton.tsx
+[HTTP/1.1 200 OK 3715ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/tabs.tsx
+[HTTP/1.1 200 OK 3752ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/stats-card.tsx
+[HTTP/1.1 200 OK 3739ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/activity-timeline.tsx
+[HTTP/1.1 200 OK 3883ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/notification-center.tsx
+[HTTP/1.1 200 OK 4000ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/payment-history-card.tsx
+[HTTP/1.1 200 OK 4066ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/items-table.tsx
+[HTTP/1.1 200 OK 4220ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/quick-actions-panel.tsx
+[HTTP/1.1 200 OK 4281ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/global-search.tsx
+[HTTP/1.1 200 OK 4279ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/logger.ts
+[HTTP/1.1 304 Not Modified 4506ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/table.tsx
+[HTTP/1.1 200 OK 4412ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/badge.tsx
+[HTTP/1.1 200 OK 4520ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/payment-analytics-chart-fixed.tsx
+[HTTP/1.1 200 OK 4609ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/payment-status-chart.tsx
+[HTTP/1.1 304 Not Modified 4796ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/payment-type-chart.tsx
+[HTTP/1.1 304 Not Modified 4563ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/recent-transactions.tsx
+[HTTP/1.1 304 Not Modified 4713ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-hook-form.js?v=fadd4a34
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@hookform_resolvers_zod.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/queryClient.ts
+[HTTP/1.1 200 OK 5016ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/zod.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/form.tsx
+[HTTP/1.1 200 OK 5008ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/textarea.tsx
+[HTTP/1.1 200 OK 5070ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-dropzone.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layout/index.ts
+[HTTP/1.1 200 OK 5089ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/alert.tsx
+[HTTP/1.1 200 OK 5222ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/dialog.tsx
+[HTTP/1.1 304 Not Modified 5226ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-WGQNECLP.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4WIBLOZU.js?v=fadd4a34
+[HTTP/1.1 200 OK 5484ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6WBQ3PW6.js?v=fadd4a34
+[HTTP/1.1 200 OK 5461ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/index.ts
+[HTTP/1.1 200 OK 5475ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-page-header.tsx
+[HTTP/1.1 200 OK 5509ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/user-management/UserFilters.tsx
+[HTTP/1.1 200 OK 5857ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/user-management/UserTable.tsx
+[HTTP/1.1 200 OK 5696ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/label.tsx
+[HTTP/1.1 200 OK 5941ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/alert-dialog.tsx
+[HTTP/1.1 200 OK 5955ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/shared/schema.ts
+[HTTP/1.1 200 OK 5997ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/query-client.ts
+[HTTP/1.1 200 OK 5986ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layouts/command-center-layout.tsx
+[HTTP/1.1 200 OK 6152ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/data-table.tsx
+[HTTP/1.1 304 Not Modified 6053ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/dropdown-menu.tsx
+[HTTP/1.1 304 Not Modified 6155ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/empty-state.tsx
+[HTTP/1.1 304 Not Modified 6157ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/services/payment.service.ts
+[HTTP/1.1 304 Not Modified 6411ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/user-management/user-filters.tsx
+[HTTP/1.1 304 Not Modified 6127ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/user-management/user-table.tsx
+[HTTP/1.1 304 Not Modified 6223ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/user-management/user-activity-timeline.tsx
+[HTTP/1.1 304 Not Modified 6271ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/user-management/user-status-history.tsx
+[HTTP/1.1 304 Not Modified 6286ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/user-management/user-warnings.tsx
+[HTTP/1.1 304 Not Modified 6440ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/user-management/user-verification-documents.tsx
+[HTTP/1.1 200 OK 6528ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/avatar.tsx
+[HTTP/1.1 200 OK 6686ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/locales/en.ts
+[HTTP/1.1 304 Not Modified 6267ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/locales/fr.ts
+[HTTP/1.1 304 Not Modified 6518ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/locales/rw.json?import
+[HTTP/1.1 304 Not Modified 6312ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/item-stats-chart.tsx
+[HTTP/1.1 200 OK 6649ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/user-stats-chart.tsx
+[HTTP/1.1 200 OK 6692ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-dashboard-stats.tsx
+[HTTP/1.1 200 OK 6731ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-system-status.tsx
+[HTTP/1.1 304 Not Modified 6477ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-activity-feed.tsx
+[HTTP/1.1 304 Not Modified 6674ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-wrapper.tsx
+[HTTP/1.1 304 Not Modified 6999ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/metrics-dashboard.tsx
+[HTTP/1.1 200 OK 6900ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/revenue-chart.tsx
+[HTTP/1.1 200 OK 7047ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/settings-panel.tsx
+[HTTP/1.1 200 OK 7114ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/user-role-distribution.tsx
+[HTTP/1.1 200 OK 7170ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/theme-toggle.tsx
+[HTTP/1.1 200 OK 7228ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/language-switcher-custom.tsx
+[HTTP/1.1 200 OK 7459ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/auth-modal.tsx
+[HTTP/1.1 304 Not Modified 7356ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/assets/crowd.jpg?import
+[HTTP/1.1 200 OK 7537ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/firebase.ts
+[HTTP/1.1 200 OK 7540ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/config/payment.config.ts
+[HTTP/1.1 304 Not Modified 7186ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layout/admin-layout.tsx
+[HTTP/1.1 200 OK 579ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/item-category-chart.tsx
+[HTTP/1.1 304 Not Modified 7160ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/customizable-dashboard.tsx
+[HTTP/1.1 304 Not Modified 7401ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/contextual-sidebar.tsx
+[HTTP/1.1 200 OK 778ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/expandable-detail-view.tsx
+[HTTP/1.1 200 OK 7515ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/quick-action-menu.tsx
+[HTTP/1.1 304 Not Modified 7841ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/metrics-card.tsx
+[HTTP/1.1 200 OK 7643ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/activity-feed.tsx
+[HTTP/1.1 200 OK 7717ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/enhanced-payment-analytics.tsx
+[HTTP/1.1 200 OK 7714ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/system-status.tsx
+[HTTP/1.1 200 OK 7813ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/data-table-dashboard.tsx
+[HTTP/1.1 200 OK 7972ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-i18next.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-header.tsx
+[HTTP/1.1 304 Not Modified 335ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-shell.tsx
+[HTTP/1.1 304 Not Modified 7879ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/profile/profile-card.tsx
+[HTTP/1.1 304 Not Modified 7948ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/profile/profile-edit-form.tsx
+[HTTP/1.1 304 Not Modified 8047ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/profile/password-change-form.tsx
+[HTTP/1.1 304 Not Modified 8066ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/profile/user-permissions-panel.tsx
+[HTTP/1.1 304 Not Modified 8201ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/profile/user-preferences-form.tsx
+[HTTP/1.1 200 OK 8179ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/sheet.tsx
+[HTTP/1.1 200 OK 548ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/separator.tsx
+[HTTP/1.1 200 OK 8046ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/collapsible.tsx
+[HTTP/1.1 200 OK 8123ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/clsx.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/tailwind-merge.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/scroll-area.tsx
+[HTTP/1.1 200 OK 569ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/avatar-with-initials.tsx
+[HTTP/1.1 200 OK 568ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-5G5AH7KW.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TY5OFM22.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TR2GJLES.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-scroll-area.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-6ZMM2PAV.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-4RO2SXZU.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+[vite] connected. client:618:15
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-slot.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-43G6IMPT.js?v=fadd4a34
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-G2DSZ377.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-RKDPARZB.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=fadd4a34
+[HTTP/1.1 200 OK 6523ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/command.tsx
+[HTTP/1.1 200 OK 5962ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-debounce.ts
+[HTTP/1.1 200 OK 6066ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/recharts.js?v=fadd4a34
+[HTTP/1.1 200 OK 6690ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layout/page-layout.tsx
+[HTTP/1.1 200 OK 5484ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/pagination.tsx
+[HTTP/1.1 200 OK 5009ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/popover.tsx
+[HTTP/1.1 200 OK 5117ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/calendar.tsx
+[HTTP/1.1 200 OK 5200ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-label.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-alert-dialog.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/drizzle-orm_pg-core.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/drizzle-zod.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-S4QZGJXL.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/axios.js?v=fadd4a34
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-table.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-dropdown-menu.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-3ZPV4RPI.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-avatar.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/api.ts
+[HTTP/1.1 200 OK 3442ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/context/dashboard-context.tsx
+[HTTP/1.1 200 OK 3543ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/switch.tsx
+[HTTP/1.1 200 OK 3401ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/slider.tsx
+[HTTP/1.1 200 OK 3401ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-icons_si.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/models/auth.model.ts
+[HTTP/1.1 200 OK 3305ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/password-strength-indicator.tsx
+[HTTP/1.1 200 OK 3444ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/firebase_app.js?v=fadd4a34
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/firebase_auth.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-BYJYLGTN.js?v=fadd4a34
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_core.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_sortable.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_modifiers.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/draggable-card.tsx
+[HTTP/1.1 200 OK 2784ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-AW7FROCU.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-UQV5W6QC.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/progress.tsx
+[HTTP/1.1 200 OK 2744ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-separator.js?v=fadd4a34
+[HTTP/1.1 200 OK 2113ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-collapsible.js?v=fadd4a34
+[HTTP/1.1 200 OK 2029ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/cmdk.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-popover.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/react-day-picker.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-switch.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-slider.js?v=fadd4a34
+[HTTP/1.1 200 OK 0ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@dnd-kit_utilities.js?v=fadd4a34
+[HTTP/1.1 200 OK 564ms]
+
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-progress.js?v=fadd4a34
+[HTTP/1.1 200 OK 549ms]
+
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools chunk-RPCDYKBN.js:21551:25
+[Firebase] Using Firebase authDomain: kizere-99ac2.firebaseapp.com firebase.ts:22:11
+[Firebase] Current origin: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev firebase.ts:23:11
+[Firebase] Checking configuration variables: 
+Object { hasApiKey: true, hasProjectId: true, hasAppId: true, authDomain: "kizere-99ac2.firebaseapp.com" }
+firebase.ts:37:11
+[Firebase] Configuration validation passed firebase.ts:49:11
+[Firebase] Successfully initialized Firebase app firebase.ts:55:11
+Error in parsing value for ‘-webkit-text-size-adjust’.  Declaration dropped. admin:141:29
+Unknown property ‘-moz-osx-font-smoothing’.  Declaration dropped. admin:511:27
+Unknown property ‘-moz-column-gap’.  Declaration dropped. admin:1750:19
+Unknown property ‘-moz-column-gap’.  Declaration dropped. admin:1754:19
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/user
+[HTTP/1.1 401 Unauthorized 362ms]
+
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/user
+[HTTP/1.1 401 Unauthorized 505ms]
+
+[Firebase] Checking for redirect result... firebase.ts:137:13
+[Firebase] Auth context from localStorage: 
+Object { hasState: true, hasRedirect: true, savedTimestamp: "2025-04-27T12:10:34.600Z", savedOrigin: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", savedDomain: "5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", currentUrl: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin/" }
+firebase.ts:151:13
+[Firebase] Getting redirect result from auth instance firebase.ts:162:13
+[Firebase] Running on Replit domain firebase.ts:164:13
+XHRPOST
+https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o
+[HTTP/2 200  1889ms]
+
+[useAuth] No server session found, status: 401 use-auth.tsx:47:21
+[Firebase] Checking for redirect result... firebase.ts:137:13
+[Firebase] Auth context from localStorage: 
+Object { hasState: true, hasRedirect: true, savedTimestamp: "2025-04-27T12:10:34.600Z", savedOrigin: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", savedDomain: "5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", currentUrl: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin/" }
+firebase.ts:151:13
+[Firebase] Getting redirect result from auth instance firebase.ts:162:13
+[Firebase] Running on Replit domain firebase.ts:164:13
+[useAuth] No server session found, status: 401 use-auth.tsx:47:21
+[Firebase] Checking for redirect result... firebase.ts:137:13
+[Firebase] Auth context from localStorage: 
+Object { hasState: true, hasRedirect: true, savedTimestamp: "2025-04-27T12:10:34.600Z", savedOrigin: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", savedDomain: "5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", currentUrl: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin/" }
+firebase.ts:151:13
+[Firebase] Getting redirect result from auth instance firebase.ts:162:13
+[Firebase] Running on Replit domain firebase.ts:164:13
+GET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/favicon.ico
+
+[Firebase] No redirect result found firebase.ts:206:13
+[Firebase] User is already logged in: 
+Object { email: "kizereinc@gmail.com", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", displayName: "KIZERE Inc." }
+firebase.ts:209:15
+[Firebase] No redirect result found firebase.ts:206:13
+[Firebase] User is already logged in: 
+Object { email: "kizereinc@gmail.com", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", displayName: "KIZERE Inc." }
+firebase.ts:209:15
+[Firebase] No redirect result found firebase.ts:206:13
+[Firebase] User is already logged in: 
+Object { email: "kizereinc@gmail.com", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", displayName: "KIZERE Inc." }
+firebase.ts:209:15
+XHRPOST
+https://securetoken.googleapis.com/v1/token?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o
+[HTTP/2 200  372ms]
+
+XHRPOST
+https://securetoken.googleapis.com/v1/token?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o
+[HTTP/2 200  970ms]
+
+XHRPOST
+https://securetoken.googleapis.com/v1/token?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o
+[HTTP/2 200  577ms]
+
+[App] Successfully handled Firebase redirect result App.tsx:58:21
+[useAuth] Processing Firebase redirect result: 
+Object { success: true, user: {…}, token: null, idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjNmOWEwNTBkYzRhZTgyOGMyODcxYzMyNTYzYzk5ZDUwMjc3ODRiZTUiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiS0laRVJFIEluYy4iLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jTHVUY2REaWlWY3R4Y1JmbjlSbjlsdm5MNnpaYVp4dzc1OGoyRnVkMC1CZXYwb2l3PXM5Ni1jIiwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL2tpemVyZS05OWFjMiIsImF1ZCI6ImtpemVyZS05OWFjMiIsImF1dGhfdGltZSI6MTc0NTc1NTg1NSwidXNlcl9pZCI6InVrVktQM3d3bTNnOHVoeGs0Z1NyMDRPNmpFZTIiLCJzdWIiOiJ1a1ZLUDN3d20zZzh1aHhrNGdTcjA0TzZqRWUyIiwiaWF0IjoxNzQ1ODE2NjE5LCJleHAiOjE3NDU4MjAyMTksImVtYWlsIjoia2l6ZXJlaW5jQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7Imdvb2dsZS5jb20iOlsiMTExNjMxMjU2NzIzMDE5ODYxNzYyIl0sImVtYWlsIjpbImtpemVyZWluY0BnbWFpbC5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJnb29nbGUuY29tIn19.a6fq7GnTCHVxOLYUcigcSmC2_xeWlQ2r4BoKQeXliVRo6ZNrbfDEAxBm1nOb78aThKDF-_bPFlozbksJGrF-Ph8rBzEoet70PLyEltqvys7Xb-x6JorovhPJlDu4jFZiE4TdG4BOXrFcQLAUiP6JzPgEleUjYpyI9vpGZaKDPZse2-fliFEGLkt5F4utbLKfzUeXjX2VUrSKBk8GtLOf2rhzayoLkxxtMwus7cZX9EW02v4GARUGiyWaEnKNiQ4_FlYgonv-HxWEyPT-MD7LCEYZo_ZHv5oUcuQwg_ChjZsdPJczcsYYk6ynp3MTguMtZQMtYkrDXc24EJ_ovmeqMw", alreadyLoggedIn: true }
+use-auth.tsx:56:21
+XHRPOST
+https://securetoken.googleapis.com/v1/token?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o
+[HTTP/2 200  484ms]
+
+[useAuth] Processing Firebase redirect result: 
+Object { success: true, user: {…}, token: null, idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjNmOWEwNTBkYzRhZTgyOGMyODcxYzMyNTYzYzk5ZDUwMjc3ODRiZTUiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiS0laRVJFIEluYy4iLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jTHVUY2REaWlWY3R4Y1JmbjlSbjlsdm5MNnpaYVp4dzc1OGoyRnVkMC1CZXYwb2l3PXM5Ni1jIiwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL2tpemVyZS05OWFjMiIsImF1ZCI6ImtpemVyZS05OWFjMiIsImF1dGhfdGltZSI6MTc0NTc1NTg1NSwidXNlcl9pZCI6InVrVktQM3d3bTNnOHVoeGs0Z1NyMDRPNmpFZTIiLCJzdWIiOiJ1a1ZLUDN3d20zZzh1aHhrNGdTcjA0TzZqRWUyIiwiaWF0IjoxNzQ1ODE2NjE5LCJleHAiOjE3NDU4MjAyMTksImVtYWlsIjoia2l6ZXJlaW5jQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7Imdvb2dsZS5jb20iOlsiMTExNjMxMjU2NzIzMDE5ODYxNzYyIl0sImVtYWlsIjpbImtpemVyZWluY0BnbWFpbC5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJnb29nbGUuY29tIn19.a6fq7GnTCHVxOLYUcigcSmC2_xeWlQ2r4BoKQeXliVRo6ZNrbfDEAxBm1nOb78aThKDF-_bPFlozbksJGrF-Ph8rBzEoet70PLyEltqvys7Xb-x6JorovhPJlDu4jFZiE4TdG4BOXrFcQLAUiP6JzPgEleUjYpyI9vpGZaKDPZse2-fliFEGLkt5F4utbLKfzUeXjX2VUrSKBk8GtLOf2rhzayoLkxxtMwus7cZX9EW02v4GARUGiyWaEnKNiQ4_FlYgonv-HxWEyPT-MD7LCEYZo_ZHv5oUcuQwg_ChjZsdPJczcsYYk6ynp3MTguMtZQMtYkrDXc24EJ_ovmeqMw", alreadyLoggedIn: true }
+use-auth.tsx:56:21
+XHRPOST
+https://securetoken.googleapis.com/v1/token?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o
+[HTTP/2 200  445ms]
+
+[useAuth] Successfully retrieved Firebase ID token use-auth.tsx:117:19
+[useAuth] Synchronizing Firebase auth with server with payload: 
+Object { email: "kizereinc@gmail.com", name: "KIZERE Inc.", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", hasToken: true, hasPhotoURL: true }
+use-auth.tsx:139:17
+XHRPOST
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/auth/google
+[HTTP/1.1 200 OK 907ms]
+
+[useAuth] Successfully retrieved Firebase ID token use-auth.tsx:117:19
+[useAuth] Synchronizing Firebase auth with server with payload: 
+Object { email: "kizereinc@gmail.com", name: "KIZERE Inc.", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", hasToken: true, hasPhotoURL: true }
+use-auth.tsx:139:17
+XHRPOST
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/auth/google
+[HTTP/1.1 200 OK 930ms]
+
+[useAuth] Server session created/updated for Firebase user 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:160:21
+[useAuth] Firebase auth state changed - user signed in: kizereinc@gmail.com use-auth.tsx:83:21
+XHRPOST
+https://securetoken.googleapis.com/v1/token?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o
+[HTTP/2 200  575ms]
+
+[useAuth] Server session created/updated for Firebase user 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:160:21
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/admin/stats
+[HTTP/1.1 200 OK 812ms]
+
+[useAuth] Firebase auth state changed - user signed in: kizereinc@gmail.com use-auth.tsx:83:21
+XHRPOST
+https://securetoken.googleapis.com/v1/token?key=AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o
+[HTTP/2 200  408ms]
+
+[useAuth] Successfully retrieved Firebase ID token use-auth.tsx:117:19
+[useAuth] Synchronizing Firebase auth with server with payload: 
+Object { email: "kizereinc@gmail.com", name: "KIZERE Inc.", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", hasToken: true, hasPhotoURL: true }
+use-auth.tsx:139:17
+XHRPOST
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/auth/google
+[HTTP/1.1 200 OK 890ms]
+
+[useAuth] Successfully retrieved Firebase ID token use-auth.tsx:117:19
+[useAuth] Synchronizing Firebase auth with server with payload: 
+Object { email: "kizereinc@gmail.com", name: "KIZERE Inc.", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", hasToken: true, hasPhotoURL: true }
+use-auth.tsx:139:17
+XHRPOST
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/auth/google
+[HTTP/1.1 200 OK 855ms]
+
+[useAuth] Server session created/updated for Firebase user 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:160:21
+[useAuth] Server session created/updated for Firebase user 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:160:21
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/admin/system-status
+[HTTP/1.1 200 OK 943ms]
+
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/admin/activity-log
+[HTTP/1.1 200 OK 898ms]
+
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/admin/activity-log
+[HTTP/1.1 304 Not Modified 898ms]
+
+GET
+https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c
+
+GET
+https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c
+[HTTP/1.1 200 OK 0ms]
+
+Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    SelectItem select.tsx:1241
+    React 17
+    type use-browser-location.js:73
+    navigate use-browser-location.js:49
+    useLocationFromRouter index.js:93
+    ref react-deps.js:38
+    onClick command-center.tsx:195
+    React 23
+    <anonymous> main.tsx:10
+@radix-ui_react-select.js:874:13
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/api/admin/items?page=1&limit=10&search=&category=&status=&sortBy=registeredAt&sortOrder=desc
+[HTTP/1.1 200 OK 2896ms]
+
+Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    SelectItem select.tsx:1241
+    React 17
+    type use-browser-location.js:73
+    navigate use-browser-location.js:49
+    useLocationFromRouter index.js:93
+    ref react-deps.js:38
+    onClick command-center.tsx:195
+    React 23
+    <anonymous> main.tsx:10
+@radix-ui_react-select.js:874:13
+Uncaught Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    SelectItem select.tsx:1241
+    React 18
+    type use-browser-location.js:73
+    navigate use-browser-location.js:49
+    useLocationFromRouter index.js:93
+    ref react-deps.js:38
+    onClick command-center.tsx:195
+    React 23
+    <anonymous> main.tsx:10
+2 @radix-ui_react-select.js:874:13
+The above error occurred in the <SelectItem> component:
+
+SelectItem<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:852:9
+_c11@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx:208:10
+div
+Primitive</Node<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=fadd4a34:42:44
+createSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40
+createSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40
+createCollection/CollectionSlot<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:39:35
+SelectViewport<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:758:56
+div
+createSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40
+createSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40
+createCollection/CollectionSlot<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:39:35
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+SelectContent<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:301:52
+createSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40
+createSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40
+Primitive</Node<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=fadd4a34:42:44
+Portal<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=fadd4a34:260:56
+SelectPortal
+_c7@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx:123:9
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+CollectionProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:29:33
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+Popper@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-G2DSZ377.js?v=fadd4a34:1921:39
+Select@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:103:7
+div
+div
+_c9@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx:114:9
+div
+_c@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx:20:8
+div
+main
+div
+div
+div
+DashboardContent@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-wrapper.tsx:24:26
+DashboardProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/context/dashboard-context.tsx:64:34
+DashboardWrapper@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-wrapper.tsx:139:33
+CommandCenterLayout@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layouts/command-center-layout.tsx:46:36
+AdminItemManagement@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/item-management.tsx:101:20
+AdminItemManagementComponent
+Route@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fadd4a34:323:13
+ProtectedRoute@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/protected-route.tsx:22:31
+Switch@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fadd4a34:379:14
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+TooltipProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=fadd4a34:69:7
+AuthProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:23:29
+LanguageProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/LanguageContext.tsx:41:33
+ErrorBoundary@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/error-boundary.tsx:9:5
+App@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/App.tsx?v=tSggnJQQfTPcr48hiuELo:49:12
+AuthProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:23:29
+V@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=fadd4a34:44:9
+J@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=fadd4a34:42:18
+QueryClientProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=fadd4a34:2804:27
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary. chunk-RPCDYKBN.js:14032:23
+Uncaught error: Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    SelectItem select.tsx:1241
+    React 15
+    type use-browser-location.js:73
+    navigate use-browser-location.js:49
+    useLocationFromRouter index.js:93
+    ref react-deps.js:38
+    onClick command-center.tsx:195
+    React 23
+    <anonymous> main.tsx:10
+ 
+Object { componentStack: "\nSelectItem<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:852:9\n_c11@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx:208:10\ndiv\nPrimitive</Node<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=fadd4a34:42:44\ncreateSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40\ncreateSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40\ncreateCollection/CollectionSlot<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:39:35\nSelectViewport<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:758:56\ndiv\ncreateSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40\ncreateSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40\ncreateCollection/CollectionSlot<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:39:35\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nSelectContent<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:301:52\ncreateSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40\ncreateSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40\nPrimitive</Node<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=fadd4a34:42:44\nPortal<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=fadd4a34:260:56\nSelectPortal\n_c7@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx:123:9\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nCollectionProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:29:33\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nPopper@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-G2DSZ377.js?v=fadd4a34:1921:39\nSelect@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:103:7\ndiv\ndiv\n_c9@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx:114:9\ndiv\n_c@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx:20:8\ndiv\nmain\ndiv\ndiv\ndiv\nDashboardContent@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-wrapper.tsx:24:26\nDashboardProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/context/dashboard-context.tsx:64:34\nDashboardWrapper@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-wrapper.tsx:139:33\nCommandCenterLayout@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layouts/command-center-layout.tsx:46:36\nAdminItemManagement@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/item-management.tsx:101:20\nAdminItemManagementComponent\nRoute@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fadd4a34:323:13\nProtectedRoute@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/protected-route.tsx:22:31\nSwitch@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fadd4a34:379:14\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nTooltipProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=fadd4a34:69:7\nAuthProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:23:29\nLanguageProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/LanguageContext.tsx:41:33\nErrorBoundary@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/error-boundary.tsx:9:5\nApp@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/App.tsx?v=tSggnJQQfTPcr48hiuELo:49:12\nAuthProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:23:29\nV@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=fadd4a34:44:9\nJ@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=fadd4a34:42:18\nQueryClientProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=fadd4a34:2804:27" }
+error-boundary.tsx:31:13
+The above error occurred in the <SelectItem> component:
+
+SelectItem<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:852:9
+_c11@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx:208:10
+div
+Primitive</Node<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=fadd4a34:42:44
+createSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40
+createSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40
+createCollection/CollectionSlot<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:39:35
+SelectViewport<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:758:56
+div
+createSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40
+createSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40
+createCollection/CollectionSlot<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:39:35
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+SelectContent<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:301:52
+createSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40
+createSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40
+Primitive</Node<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=fadd4a34:42:44
+Portal<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=fadd4a34:260:56
+SelectPortal
+_c7@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx:123:9
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+CollectionProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:29:33
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+Popper@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-G2DSZ377.js?v=fadd4a34:1921:39
+Select@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:103:7
+div
+div
+_c9@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx:114:9
+div
+_c@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx:20:8
+div
+main
+div
+div
+div
+DashboardContent@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-wrapper.tsx:24:26
+DashboardProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/context/dashboard-context.tsx:64:34
+DashboardWrapper@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-wrapper.tsx:139:33
+CommandCenterLayout@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layouts/command-center-layout.tsx:46:36
+AdminItemManagement@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/item-management.tsx:101:20
+AdminItemManagementComponent
+Route@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fadd4a34:323:13
+ProtectedRoute@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/protected-route.tsx:22:31
+Switch@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fadd4a34:379:14
+Provider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47
+TooltipProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=fadd4a34:69:7
+AuthProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:23:29
+LanguageProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/LanguageContext.tsx:41:33
+ErrorBoundary@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/error-boundary.tsx:9:5
+App@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/App.tsx?v=tSggnJQQfTPcr48hiuELo:49:12
+AuthProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:23:29
+V@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=fadd4a34:44:9
+J@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=fadd4a34:42:18
+QueryClientProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=fadd4a34:2804:27
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary. chunk-RPCDYKBN.js:14032:23
+Uncaught error: Error: A <Select.Item /> must have a value prop that is not an empty string. This is because the Select value can be set to an empty string to clear the selection and show the placeholder.
+    SelectItem select.tsx:1241
+    React 15
+    type use-browser-location.js:73
+    navigate use-browser-location.js:49
+    useLocationFromRouter index.js:93
+    ref react-deps.js:38
+    onClick command-center.tsx:195
+    React 23
+    <anonymous> main.tsx:10
+ 
+Object { componentStack: "\nSelectItem<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:852:9\n_c11@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx:208:10\ndiv\nPrimitive</Node<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=fadd4a34:42:44\ncreateSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40\ncreateSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40\ncreateCollection/CollectionSlot<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:39:35\nSelectViewport<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:758:56\ndiv\ncreateSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40\ncreateSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40\ncreateCollection/CollectionSlot<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:39:35\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nSelectContent<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:301:52\ncreateSlotClone/SlotClone<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:79:40\ncreateSlot/Slot2<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=fadd4a34:56:40\nPrimitive</Node<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=fadd4a34:42:44\nPortal<@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=fadd4a34:260:56\nSelectPortal\n_c7@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/select.tsx:123:9\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nCollectionProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=fadd4a34:29:33\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nPopper@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-G2DSZ377.js?v=fadd4a34:1921:39\nSelect@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=fadd4a34:103:7\ndiv\ndiv\n_c9@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx:114:9\ndiv\n_c@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/ui/card.tsx:20:8\ndiv\nmain\ndiv\ndiv\ndiv\nDashboardContent@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-wrapper.tsx:24:26\nDashboardProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/context/dashboard-context.tsx:64:34\nDashboardWrapper@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/dashboard/dashboard-wrapper.tsx:139:33\nCommandCenterLayout@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/layouts/command-center-layout.tsx:46:36\nAdminItemManagement@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/pages/admin/item-management.tsx:101:20\nAdminItemManagementComponent\nRoute@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fadd4a34:323:13\nProtectedRoute@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/protected-route.tsx:22:31\nSwitch@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=fadd4a34:379:14\nProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=fadd4a34:38:47\nTooltipProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=fadd4a34:69:7\nAuthProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:23:29\nLanguageProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/lib/i18n/LanguageContext.tsx:41:33\nErrorBoundary@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/components/error-boundary.tsx:9:5\nApp@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/App.tsx?v=tSggnJQQfTPcr48hiuELo:49:12\nAuthProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/src/hooks/use-auth.tsx:23:29\nV@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=fadd4a34:44:9\nJ@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/next-themes.js?v=fadd4a34:42:18\nQueryClientProvider@https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=fadd4a34:2804:27" }
+error-boundary.tsx:31:13
+[useAuth] Unsubscribing from Firebase auth changes use-auth.tsx:221:17
