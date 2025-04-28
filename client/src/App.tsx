@@ -8,6 +8,7 @@ import Search from "@/pages/search";
 import LostFound from "@/pages/lost-found";
 import UserManagement from "@/pages/user-management";
 import AdminUserManagement from "@/pages/admin/user-management";
+import NewUser from "@/pages/admin/new-user";
 import LandingPage from "@/pages/landing-page";
 import AuthCallback from "@/pages/auth-callback";
 import PaymentStatus from "@/pages/payment-status";
