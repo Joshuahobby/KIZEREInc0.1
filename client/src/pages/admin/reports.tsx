@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { adminApi } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
-import CommandCenterLayout from "@/components/layouts/command-center-layout";
+import { CommandCenterLayout } from "@/components/layouts/command-center-layout";
 import {
   Card,
   CardContent,

@@ -22,6 +22,7 @@ import PaymentDashboard from "@/pages/admin/payment-dashboard";
 import AdminDashboardClassic from "@/pages/admin/dashboard";
 import AdminDashboard from "@/pages/admin/dashboard-new";
 import CommandCenter from "@/pages/admin/command-center";
+import AdminReports from "@/pages/admin/reports";
 import ProfilePage from "@/pages/profile";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -97,6 +98,7 @@ function App() {
   const AdminItemManagementComponent = () => <AdminItemManagement />;
   const AdminItemDetailComponent = () => <AdminItemDetail />;
   const NewItemComponent = () => <NewItem />;
+  const AdminReportsComponent = () => <AdminReports />;
   
   return (
     <ErrorBoundary>
@@ -137,6 +139,7 @@ function App() {
               <ProtectedRoute path="/admin/item-management" component={AdminItemManagementComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/item-management/new" component={NewItemComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/item-management/:id" component={AdminItemDetailComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/reports" component={AdminReportsComponent} requiredRole="Admin" />
               
               {/* Profile route */}
               <ProtectedRoute path="/profile" component={ProfilePageComponent} requiredRole="any" />

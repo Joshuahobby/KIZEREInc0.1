@@ -180,7 +180,12 @@ export function CommandCenterLayout({ children }: { children: React.ReactNode })
                     <Package className="mr-2 h-4 w-4" />
                     Items
                   </Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => navigate('/admin/reports')}>
+                  <Button 
+                    variant={location.includes('/admin/reports') ? 'secondary' : 'ghost'} 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate('/admin/reports')}
+                  >
                     <FileText className="mr-2 h-4 w-4" />
                     Reports
                   </Button>
