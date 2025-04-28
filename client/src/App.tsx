@@ -7,6 +7,7 @@ import ItemRegistration from "@/pages/item-registration";
 import Search from "@/pages/search";
 import LostFound from "@/pages/lost-found";
 import UserManagement from "@/pages/user-management";
+import AdminUserManagement from "@/pages/admin/user-management";
 import LandingPage from "@/pages/landing-page";
 import AuthCallback from "@/pages/auth-callback";
 import PaymentStatus from "@/pages/payment-status";
@@ -85,6 +86,7 @@ function App() {
   const CommandCenterComponent = () => <CommandCenter />;
   const PaymentDashboardComponent = () => <PaymentDashboard />;
   const ProfilePageComponent = () => <ProfilePage />;
+  const AdminUserManagementComponent = () => <AdminUserManagement />;
   
   return (
     <ErrorBoundary>
@@ -119,6 +121,7 @@ function App() {
               <ProtectedRoute path="/admin/command-center" component={CommandCenterComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/classic" component={AdminDashboardClassicComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/users" component={AdminUserManagementComponent} requiredRole="Admin" />
               
               {/* Profile route */}
               <ProtectedRoute path="/profile" component={ProfilePageComponent} requiredRole="any" />

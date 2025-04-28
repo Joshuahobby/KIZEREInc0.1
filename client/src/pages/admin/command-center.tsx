@@ -238,9 +238,14 @@ export default function CommandCenter() {
               <div className="px-4">
                 <h2 className="mb-2 text-lg font-semibold tracking-tight">Quick Actions</h2>
                 <div className="space-y-1">
-                  <Button variant="outline" size="sm" className="w-full justify-start">
-                    <Plus className="mr-2 h-4 w-4" />
-                    New User
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={() => navigate('/admin/users')}
+                  >
+                    <Users className="mr-2 h-4 w-4" />
+                    Manage Users
                   </Button>
                   <Button variant="outline" size="sm" className="w-full justify-start">
                     <Plus className="mr-2 h-4 w-4" />
