@@ -4,8 +4,12 @@
  * Mirrors server configuration
  */
 
+import { PaymentType } from "@shared/schema";
+import { PaymentService } from "@/services/payment.service";
+
 /**
- * Fee structure for different payment types
+ * Default fee structure for different payment types
+ * These fees will be used as fallback if no packages are available
  */
 export const PAYMENT_FEES = {
   REGISTRATION: 2000, // Item registration fee in RWF
@@ -23,7 +27,7 @@ export const DEFAULT_CURRENCY = "RWF";
  * @param type The type of payment ('registration' or 'lost_report')
  * @returns The payment amount in the default currency
  */
-export function getPaymentAmount(type: 'registration' | 'lost_report'): number {
+export function getPaymentAmount(type: PaymentType): number {
   switch (type) {
     case 'registration':
       return PAYMENT_FEES.REGISTRATION;
@@ -38,9 +42,11 @@ export function getPaymentAmount(type: 'registration' | 'lost_report'): number {
  * Get payment description based on the payment type
  * 
  * @param type Payment type
+ * @param packageId Optional package ID if a specific package is selected
  * @returns Human-readable description of the payment
  */
-export function getPaymentDescription(type: 'registration' | 'lost_report'): string {
+export function getPaymentDescription(type: PaymentType, packageId?: number): string {
+  // Without a package, use default descriptions
   switch (type) {
     case 'registration':
       return 'Item Registration Fee';
@@ -48,5 +54,21 @@ export function getPaymentDescription(type: 'registration' | 'lost_report'): str
       return 'Lost Item Report Fee';
     default:
       return 'Payment';
+  }
+}
+
+/**
+ * Get the package name for a given package ID
+ * 
+ * @param packageId The package ID
+ * @returns Promise resolving to the package name or a default value
+ */
+export async function getPackageName(packageId: number): Promise<string> {
+  try {
+    const packageData = await PaymentService.getPaymentPackage(packageId);
+    return packageData?.name || 'Payment Package';
+  } catch (error) {
+    console.error("Error fetching package name:", error);
+    return 'Payment Package';
   }
 }
