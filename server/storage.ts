@@ -401,16 +401,16 @@ export class DatabaseStorage implements IStorage {
   }
   
   // User activity logs
-  async getUserActivityLogs(userId: number, page: number, pageSize: number): Promise<{ logs: UserActivityLog[]; total: number }> {
-    // Count total logs
+  async countUserActivityLogs(userId: number): Promise<number> {
     const [totalResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(userActivityLogs)
       .where(eq(userActivityLogs.userId, userId));
     
-    const total = totalResult?.count || 0;
-    
-    // Get paginated logs
+    return Number(totalResult?.count || 0);
+  }
+  
+  async getUserActivityLogs(userId: number, page: number, pageSize: number): Promise<UserActivityLog[]> {
     const offset = (page - 1) * pageSize;
     const logs = await db
       .select()
@@ -420,10 +420,7 @@ export class DatabaseStorage implements IStorage {
       .limit(pageSize)
       .offset(offset);
     
-    return {
-      logs,
-      total: Number(total)
-    };
+    return logs;
   }
   
   async createUserActivityLog(log: InsertUserActivityLog): Promise<UserActivityLog> {
