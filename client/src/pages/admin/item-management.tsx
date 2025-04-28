@@ -340,7 +340,7 @@ export default function AdminItemManagement() {
               <CardTitle>Item Management</CardTitle>
               <CardDescription>View and manage all registered items in the system</CardDescription>
             </div>
-            <Button size="sm" onClick={() => navigate('/admin/new-item')}>
+            <Button size="sm" onClick={() => navigate('/admin/item-management/new')}>
               <Plus className="mr-2 h-4 w-4" />
               Add Item
             </Button>
