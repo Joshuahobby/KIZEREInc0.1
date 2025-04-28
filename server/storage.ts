@@ -398,6 +398,282 @@ export class DatabaseStorage implements IStorage {
       updatedAt: new Date() 
     });
   }
+  
+  // User activity logs
+  async getUserActivityLogs(userId: number, page: number, pageSize: number): Promise<{ logs: UserActivityLog[]; total: number }> {
+    // Count total logs
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(userActivityLogs)
+      .where(eq(userActivityLogs.userId, userId));
+    
+    const total = totalResult?.count || 0;
+    
+    // Get paginated logs
+    const offset = (page - 1) * pageSize;
+    const logs = await db
+      .select()
+      .from(userActivityLogs)
+      .where(eq(userActivityLogs.userId, userId))
+      .orderBy(desc(userActivityLogs.timestamp))
+      .limit(pageSize)
+      .offset(offset);
+    
+    return {
+      logs,
+      total: Number(total)
+    };
+  }
+  
+  async createUserActivityLog(log: InsertUserActivityLog): Promise<UserActivityLog> {
+    const [newLog] = await db
+      .insert(userActivityLogs)
+      .values(log)
+      .returning();
+    return newLog;
+  }
+  
+  // Admin action logs
+  async getAdminActionLogs(filters?: {
+    adminId?: number;
+    targetUserId?: number;
+    action?: string;
+    startDate?: Date;
+    endDate?: Date;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ logs: AdminActionLog[]; total: number }> {
+    const {
+      adminId,
+      targetUserId,
+      action,
+      startDate,
+      endDate,
+      page = 1,
+      pageSize = 10
+    } = filters || {};
+    
+    // Build conditions
+    const conditions: any[] = [];
+    
+    if (adminId) {
+      conditions.push(eq(adminActionLogs.adminId, adminId));
+    }
+    
+    if (targetUserId) {
+      conditions.push(eq(adminActionLogs.targetUserId, targetUserId));
+    }
+    
+    if (action) {
+      conditions.push(eq(adminActionLogs.action, action));
+    }
+    
+    // Add date range filter
+    if (startDate && endDate) {
+      conditions.push(
+        and(
+          sql`${adminActionLogs.timestamp} >= ${startDate}`,
+          sql`${adminActionLogs.timestamp} <= ${endDate}`
+        )
+      );
+    } else if (startDate) {
+      conditions.push(sql`${adminActionLogs.timestamp} >= ${startDate}`);
+    } else if (endDate) {
+      conditions.push(sql`${adminActionLogs.timestamp} <= ${endDate}`);
+    }
+    
+    // Calculate total count
+    const totalQuery = conditions.length > 0
+      ? db.select({ count: sql<number>`count(*)` }).from(adminActionLogs).where(and(...conditions))
+      : db.select({ count: sql<number>`count(*)` }).from(adminActionLogs);
+    
+    const [totalResult] = await totalQuery;
+    const total = totalResult?.count || 0;
+    
+    // Get paginated logs
+    const offset = (page - 1) * pageSize;
+    
+    let query = db.select().from(adminActionLogs);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    query = query
+      .orderBy(desc(adminActionLogs.timestamp))
+      .limit(pageSize)
+      .offset(offset);
+    
+    const logs = await query;
+    
+    return {
+      logs,
+      total: Number(total)
+    };
+  }
+  
+  async createAdminActionLog(log: InsertAdminActionLog): Promise<AdminActionLog> {
+    const [newLog] = await db
+      .insert(adminActionLogs)
+      .values(log)
+      .returning();
+    return newLog;
+  }
+  
+  // Role management
+  async getRole(id: number): Promise<Role | undefined> {
+    const [role] = await db
+      .select()
+      .from(roles)
+      .where(eq(roles.id, id));
+    return role;
+  }
+  
+  async getRoleByName(name: string): Promise<Role | undefined> {
+    const [role] = await db
+      .select()
+      .from(roles)
+      .where(eq(roles.name, name));
+    return role;
+  }
+  
+  async getAllRoles(): Promise<Role[]> {
+    return await db.select().from(roles);
+  }
+  
+  async createRole(role: InsertRole): Promise<Role> {
+    const [newRole] = await db
+      .insert(roles)
+      .values(role)
+      .returning();
+    return newRole;
+  }
+  
+  async updateRole(id: number, roleData: Partial<Role>): Promise<Role | undefined> {
+    const now = new Date();
+    const [updatedRole] = await db
+      .update(roles)
+      .set({
+        ...roleData,
+        updatedAt: now
+      })
+      .where(eq(roles.id, id))
+      .returning();
+    return updatedRole;
+  }
+  
+  async deleteRole(id: number): Promise<boolean> {
+    const result = await db
+      .delete(roles)
+      .where(eq(roles.id, id))
+      .returning({ id: roles.id });
+    return result.length > 0;
+  }
+  
+  // Verification requests
+  async getVerificationRequest(id: number): Promise<VerificationRequest | undefined> {
+    const [request] = await db
+      .select()
+      .from(verificationRequests)
+      .where(eq(verificationRequests.id, id));
+    return request;
+  }
+  
+  async getUserVerificationRequests(userId: number): Promise<VerificationRequest[]> {
+    return await db
+      .select()
+      .from(verificationRequests)
+      .where(eq(verificationRequests.userId, userId))
+      .orderBy(desc(verificationRequests.submittedAt));
+  }
+  
+  async getPendingVerificationRequests(page: number, pageSize: number): Promise<{ requests: VerificationRequest[]; total: number }> {
+    // Count total pending requests
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(verificationRequests)
+      .where(eq(verificationRequests.status, 'pending'));
+    
+    const total = totalResult?.count || 0;
+    
+    // Get paginated pending requests
+    const offset = (page - 1) * pageSize;
+    const requests = await db
+      .select()
+      .from(verificationRequests)
+      .where(eq(verificationRequests.status, 'pending'))
+      .orderBy(desc(verificationRequests.submittedAt))
+      .limit(pageSize)
+      .offset(offset);
+    
+    return {
+      requests,
+      total: Number(total)
+    };
+  }
+  
+  async createVerificationRequest(request: InsertVerificationRequest): Promise<VerificationRequest> {
+    const [newRequest] = await db
+      .insert(verificationRequests)
+      .values({
+        ...request,
+        documentUrls: request.documentUrls || []
+      })
+      .returning();
+    return newRequest;
+  }
+  
+  async updateVerificationRequest(id: number, requestData: Partial<VerificationRequest>): Promise<VerificationRequest | undefined> {
+    const [updatedRequest] = await db
+      .update(verificationRequests)
+      .set(requestData)
+      .where(eq(verificationRequests.id, id))
+      .returning();
+    return updatedRequest;
+  }
+  
+  // Status changes
+  async getUserStatusHistory(userId: number): Promise<StatusChange[]> {
+    return await db
+      .select()
+      .from(statusChanges)
+      .where(eq(statusChanges.userId, userId))
+      .orderBy(desc(statusChanges.timestamp));
+  }
+  
+  async createStatusChange(change: InsertStatusChange): Promise<StatusChange> {
+    const [newChange] = await db
+      .insert(statusChanges)
+      .values(change)
+      .returning();
+    return newChange;
+  }
+  
+  // User warnings
+  async getUserWarnings(userId: number): Promise<UserWarning[]> {
+    return await db
+      .select()
+      .from(userWarnings)
+      .where(eq(userWarnings.userId, userId))
+      .orderBy(desc(userWarnings.issuedAt));
+  }
+  
+  async createUserWarning(warning: InsertUserWarning): Promise<UserWarning> {
+    const [newWarning] = await db
+      .insert(userWarnings)
+      .values(warning)
+      .returning();
+    return newWarning;
+  }
+  
+  async acknowledgeWarning(id: number): Promise<UserWarning | undefined> {
+    const [acknowledgedWarning] = await db
+      .update(userWarnings)
+      .set({ acknowledgedAt: new Date() })
+      .where(eq(userWarnings.id, id))
+      .returning();
+    return acknowledgedWarning;
+  }
 
   // Item methods
   async getItem(id: number): Promise<Item | undefined> {
