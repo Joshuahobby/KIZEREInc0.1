@@ -50,10 +50,10 @@ export default function UserFilters({ onFilterChange }: UserFiltersProps) {
     resolver: zodResolver(filterSchema),
     defaultValues: {
       search: "",
-      role: "",
-      status: "",
-      verificationStatus: "",
-      activityLevel: "",
+      role: "_all_roles",
+      status: "_all_statuses",
+      verificationStatus: "_all_verification_statuses",
+      activityLevel: "_all_activity_levels",
       sortBy: "createdAt",
       sortOrder: "desc",
     },
@@ -66,10 +66,10 @@ export default function UserFilters({ onFilterChange }: UserFiltersProps) {
   function resetFilters() {
     form.reset({
       search: "",
-      role: "",
-      status: "",
-      verificationStatus: "",
-      activityLevel: "",
+      role: "_all_roles",
+      status: "_all_statuses",
+      verificationStatus: "_all_verification_statuses",
+      activityLevel: "_all_activity_levels",
       startDate: undefined,
       endDate: undefined,
       sortBy: "createdAt",
@@ -148,7 +148,7 @@ export default function UserFilters({ onFilterChange }: UserFiltersProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">All Roles</SelectItem>
+                            <SelectItem value="_all_roles">All Roles</SelectItem>
                             {userRoles.map((role) => (
                               <SelectItem key={role} value={role}>
                                 {role}
@@ -177,7 +177,7 @@ export default function UserFilters({ onFilterChange }: UserFiltersProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">All Statuses</SelectItem>
+                            <SelectItem value="_all_statuses">All Statuses</SelectItem>
                             {accountStatuses.map((status) => (
                               <SelectItem key={status} value={status}>
                                 {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -206,7 +206,7 @@ export default function UserFilters({ onFilterChange }: UserFiltersProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">All Verification Statuses</SelectItem>
+                            <SelectItem value="_all_verification_statuses">All Verification Statuses</SelectItem>
                             {verificationStatuses.map((status) => (
                               <SelectItem key={status} value={status}>
                                 {status.replace('_', ' ').split(' ').map(word => 
@@ -237,7 +237,7 @@ export default function UserFilters({ onFilterChange }: UserFiltersProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">All Activity Levels</SelectItem>
+                            <SelectItem value="_all_activity_levels">All Activity Levels</SelectItem>
                             {activityLevels.map((level) => (
                               <SelectItem key={level} value={level}>
                                 {level.charAt(0).toUpperCase() + level.slice(1)}
