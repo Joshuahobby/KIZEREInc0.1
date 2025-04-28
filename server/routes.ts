@@ -1713,7 +1713,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       logger.info('Admin requesting all items with filters');
       
-      // Parse query parameters
+      // Parse query parameters - basic filters
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const sortBy = req.query.sortBy as string || 'registeredAt';
@@ -1721,6 +1721,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const search = req.query.search as string || '';
       const category = req.query.category as string || '';
       const status = req.query.status as string || '';
+      
+      // Parse advanced filter parameters
+      const ownerName = req.query.ownerName as string || '';
+      const serialNumber = req.query.serialNumber as string || '';
+      const location = req.query.location as string || '';
+      
+      // Parse value range filters
+      const minValue = req.query.minValue ? parseFloat(req.query.minValue as string) : undefined;
+      const maxValue = req.query.maxValue ? parseFloat(req.query.maxValue as string) : undefined;
+      
+      // Parse date range filters
+      let registeredAfter: Date | undefined;
+      let registeredBefore: Date | undefined;
+      
+      if (req.query.registeredAfter) {
+        registeredAfter = new Date(req.query.registeredAfter as string);
+      }
+      
+      if (req.query.registeredBefore) {
+        registeredBefore = new Date(req.query.registeredBefore as string);
+      }
+      
+      // Parse report filters
+      const hasReports = req.query.hasReports === 'true';
+      const reportType = (req.query.reportType as string) || undefined;
       
       // Get filtered items
       const result = await storage.getPaginatedItems({
@@ -1730,7 +1755,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sortOrder: sortOrder as 'asc' | 'desc',
         search,
         category,
-        status
+        status,
+        // Advanced filters
+        ownerName,
+        serialNumber,
+        location,
+        minValue,
+        maxValue,
+        registeredAfter,
+        registeredBefore,
+        hasReports,
+        reportType
       });
       
       res.json(result);
@@ -1785,36 +1820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Admin API: Get paginated items with filters
-  app.get("/api/admin/items", requireAdmin, async (req, res) => {
-    try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const search = req.query.search as string || '';
-      const category = req.query.category as string || '';
-      const status = req.query.status as string || '';
-      const sortBy = req.query.sortBy as string || 'registeredAt';
-      const sortOrder = (req.query.sortOrder as string || 'desc') as 'asc' | 'desc';
-      
-      const result = await storage.getPaginatedItems({
-        page,
-        limit,
-        sortBy,
-        sortOrder,
-        search,
-        category,
-        status
-      });
-      
-      res.json(result);
-    } catch (error) {
-      logger.error('Error fetching items', { error });
-      res.status(500).json({ 
-        message: "Failed to fetch items",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
+
   
   // Admin API: Get a specific item by ID with owner and reports
   app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {

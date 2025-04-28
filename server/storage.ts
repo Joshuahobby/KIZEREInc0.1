@@ -780,8 +780,35 @@ export class DatabaseStorage implements IStorage {
     search?: string;
     category?: string;
     status?: string;
+    // Advanced filters
+    ownerName?: string;
+    serialNumber?: string;
+    location?: string;
+    minValue?: number;
+    maxValue?: number;
+    registeredAfter?: Date;
+    registeredBefore?: Date;
+    hasReports?: boolean;
+    reportType?: string;
   }): Promise<{ items: Item[]; total: number; page: number; totalPages: number }> {
-    const { page, limit, sortBy, sortOrder, search, category, status } = options;
+    const { 
+      page, 
+      limit, 
+      sortBy, 
+      sortOrder, 
+      search, 
+      category, 
+      status,
+      ownerName,
+      serialNumber,
+      location,
+      minValue,
+      maxValue,
+      registeredAfter,
+      registeredBefore,
+      hasReports,
+      reportType
+    } = options;
     
     // Calculate offset for pagination
     const offset = (page - 1) * limit;
@@ -808,6 +835,111 @@ export class DatabaseStorage implements IStorage {
     // Add status filter if provided
     if (status) {
       conditions.push(eq(items.status, status));
+    }
+    
+    // Add advanced filter conditions
+    
+    // Filter by serial number
+    if (serialNumber) {
+      conditions.push(
+        sql`${items.details}->>'serialNumber' ILIKE ${`%${serialNumber}%`}`
+      );
+    }
+    
+    // Filter by location
+    if (location) {
+      conditions.push(like(items.location || '', `%${location}%`));
+    }
+    
+    // Filter by value range
+    if (minValue !== undefined) {
+      conditions.push(
+        sql`(${items.details}->>'estimatedValue')::float >= ${minValue}`
+      );
+    }
+    
+    if (maxValue !== undefined) {
+      conditions.push(
+        sql`(${items.details}->>'estimatedValue')::float <= ${maxValue}`
+      );
+    }
+    
+    // Filter by registration date range
+    if (registeredAfter) {
+      conditions.push(
+        sql`${items.registeredAt} >= ${registeredAfter}`
+      );
+    }
+    
+    if (registeredBefore) {
+      conditions.push(
+        sql`${items.registeredAt} <= ${registeredBefore}`
+      );
+    }
+    
+    // Handle owner name filter - need to join with users table
+    if (ownerName) {
+      // We'll handle the owner name filter in a separate query
+      // because it requires a join with the users table
+      const usersWithName = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          or(
+            like(users.fullName, `%${ownerName}%`),
+            like(users.username, `%${ownerName}%`)
+          )
+        );
+      
+      if (usersWithName.length > 0) {
+        const userIds = usersWithName.map(user => user.id);
+        conditions.push(
+          sql`${items.userId} IN (${userIds.join(', ')})`
+        );
+      } else {
+        // If no users match the name search, return no results
+        conditions.push(sql`1 = 0`); // Always false condition
+      }
+    }
+    
+    // Handle report filters
+    if (hasReports) {
+      if (reportType && reportType !== 'any') {
+        // Get items with specific report type
+        const itemsWithReports = await db
+          .select({ id: reports.itemId })
+          .from(reports)
+          .where(
+            and(
+              sql`${reports.itemId} IS NOT NULL`,
+              eq(reports.type, reportType)
+            )
+          );
+        
+        if (itemsWithReports.length > 0) {
+          const itemIds = itemsWithReports.map(item => item.id);
+          conditions.push(
+            sql`${items.id} IN (${itemIds.join(', ')})`
+          );
+        } else {
+          conditions.push(sql`1 = 0`); // Always false condition
+        }
+      } else {
+        // Get items with any report type
+        const itemsWithReports = await db
+          .select({ id: reports.itemId })
+          .from(reports)
+          .where(sql`${reports.itemId} IS NOT NULL`);
+        
+        if (itemsWithReports.length > 0) {
+          const itemIds = itemsWithReports.map(item => item.id);
+          conditions.push(
+            sql`${items.id} IN (${itemIds.join(', ')})`
+          );
+        } else {
+          conditions.push(sql`1 = 0`); // Always false condition
+        }
+      }
     }
     
     // Get total count of matching items
