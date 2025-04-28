@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -11,13 +11,15 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/ui/data-table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 import { 
-  PackageIcon, 
+  Package as PackageIcon, 
   Plus, 
   Search, 
   DollarSign, 
   Calendar,
-  MoreHorizontal
+  MoreHorizontal,
+  AlertCircle
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -28,59 +30,70 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+// Payment package interfaces
+interface PaymentPackage {
+  id: number;
+  name: string;
+  description: string | null;
+  type: string;
+  amount: number | string;
+  currency: string;
+  status: string;
+  isDefault: boolean;
+  features: any;
+  validityDays: number | null;
+  createdBy: number | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+// Formatted package for table display
+interface FormattedPackage {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  duration: number;
+  features: string[];
+  status: string;
+  type: string;
+}
+
 export default function PaymentPackages() {
-  const { user, role } = useAuth();
+  const { user, role, isAuthenticated } = useAuth();
   const isAdmin = role === 'Admin';
   const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [isDirectFetching, setIsDirectFetching] = useState(false);
+  const [directFetchedData, setDirectFetchedData] = useState<PaymentPackage[] | null>(null);
+  const [directFetchError, setDirectFetchError] = useState<string | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const queryClient = useQueryClient();
 
   // Get toast for notifications
   const { toast } = useToast();
   
   // Log authentication state for debugging
-  console.log('Auth state:', { 
-    isAuthenticated: !!user, 
-    userId: user?.id,
-    userRole: role, 
-    isAdmin 
-  });
-  
-  // Use separate states to track API interaction
-  const [authCheckComplete, setAuthCheckComplete] = useState(false);
-  
-  // Check if the user is actually authenticated with the server
   useEffect(() => {
-    if (user?.id) {
-      // Check authentication status
-      fetch('/api/user', { credentials: 'include' })
-        .then(response => {
-          if (response.ok) {
-            console.log('User is authenticated with server');
-            setAuthCheckComplete(true);
-          } else {
-            console.error('Server authentication check failed:', response.status);
-            toast({
-              title: 'Authentication Error',
-              description: 'Your session may have expired. Please refresh the page or login again.',
-              variant: 'destructive',
-            });
-            setAuthCheckComplete(false);
-          }
-        })
-        .catch(error => {
-          console.error('Server authentication check error:', error);
-          setAuthCheckComplete(false);
-        });
-    }
-  }, [user?.id, toast]);
+    console.log('Authentication state:', { 
+      isAuthenticated, 
+      userId: user?.id,
+      userRole: role, 
+      isAdmin 
+    });
+  }, [user, role, isAuthenticated, isAdmin]);
   
-  // Fetch payment packages data
-  const { data: packages, isLoading, error } = useQuery({
+  // Fetch payment packages data using TanStack Query
+  const { 
+    data: packages, 
+    isLoading, 
+    error,
+    refetch 
+  } = useQuery<PaymentPackage[]>({
     queryKey: ['/api/admin/payment-packages'],
-    enabled: !!user?.id && role === 'Admin' && authCheckComplete, // Only fetch if user is admin and auth is verified
-    retry: 2, // Try a couple more times if there's an error
-    retryDelay: 1000, // Wait 1 second between retries
+    enabled: !!user?.id && role === 'Admin',
+    staleTime: 60000, // 1 minute
     // Using on-error callback to show toast notification for errors
     onError: (err) => {
       console.error('Error fetching payment packages:', err);
@@ -89,87 +102,125 @@ export default function PaymentPackages() {
         description: err instanceof Error ? err.message : 'An unknown error occurred',
         variant: 'destructive',
       });
-    }
+      
+      // If TanStack Query fails, try direct fetch as fallback
+      if (!isDirectFetching && !directFetchedData) {
+        fetchDirectly();
+      }
+    },
+    retry: 1
   });
 
-  // Placeholder packages data until API is implemented
-  const placeholderPackages = [
-    {
-      id: 1,
-      name: 'Basic Registration',
-      description: 'Basic item registration package',
-      price: 5.99,
-      duration: 30, // days
-      features: ['Basic registration', 'Email support'],
-      status: 'active',
-    },
-    {
-      id: 2,
-      name: 'Premium Registration',
-      description: 'Premium item registration with enhanced features',
-      price: 19.99,
-      duration: 90, // days
-      features: ['Premium registration', 'Priority support', 'Extended visibility'],
-      status: 'active',
-    },
-    {
-      id: 3,
-      name: 'Lost Item Report',
-      description: 'Package for reporting lost items',
-      price: 9.99,
-      duration: 60, // days
-      features: ['Lost item reporting', 'Email alerts', 'Basic matching'],
-      status: 'active',
-    },
-    {
-      id: 4,
-      name: 'Premium Lost Item',
-      description: 'Advanced lost item reporting with premium features',
-      price: 24.99,
-      duration: 120, // days
-      features: ['Priority lost item reporting', 'SMS alerts', 'Advanced matching', '24/7 support'],
-      status: 'active',
-    },
-    {
-      id: 5,
-      name: 'Enterprise Package',
-      description: 'Complete enterprise solution for organizations',
-      price: 99.99,
-      duration: 365, // days
-      features: ['Unlimited registrations', 'Dedicated support', 'API access', 'Custom branding'],
-      status: 'inactive',
+  // Alternative direct fetch method if the query fails
+  const fetchDirectly = async () => {
+    if (isDirectFetching) return;
+    
+    try {
+      setIsDirectFetching(true);
+      const response = await fetch('/api/admin/payment-packages', {
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch packages: ${response.status} ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Direct fetch successful:', data);
+      setDirectFetchedData(data);
+      setDirectFetchError(null);
+      
+      // Update the query cache with this data
+      queryClient.setQueryData(['/api/admin/payment-packages'], data);
+      
+    } catch (err) {
+      console.error('Direct fetch error:', err);
+      setDirectFetchError(err instanceof Error ? err.message : 'Failed to fetch payment packages');
+    } finally {
+      setIsDirectFetching(false);
     }
-  ];
+  };
+  
+  // Manual retry using direct API fetch
+  const handleRetry = async () => {
+    setIsRetrying(true);
+    try {
+      const data = await apiRequest<PaymentPackage[]>('/api/admin/payment-packages');
+      setDirectFetchedData(data);
+      setDirectFetchError(null);
+      queryClient.setQueryData(['/api/admin/payment-packages'], data);
+      toast({
+        title: 'Success',
+        description: 'Payment packages loaded successfully',
+      });
+    } catch (err) {
+      console.error('Retry error:', err);
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to fetch payment packages',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRetrying(false);
+    }
+  };
 
-  // Use actual data when available, otherwise use placeholder
-  const packagesData = packages || placeholderPackages;
+  // Use directly fetched data or packages from react-query
+  const packagesData = directFetchedData || packages;
 
-  // Map package data to consistent format
-  const formattedPackages = packagesData.map(pkg => {
-    // Handle differences between placeholder data and API data
+  // Format the packages data for display
+  const formatPackageData = (pkg: PaymentPackage): FormattedPackage => {
+    // Process features field - can be array, string, object, or null
+    let featuresArray: string[] = [];
+    
+    if (pkg.features) {
+      if (Array.isArray(pkg.features)) {
+        featuresArray = pkg.features;
+      } else if (typeof pkg.features === 'string') {
+        try {
+          // Try to parse if it's a JSON string
+          const parsed = JSON.parse(pkg.features);
+          featuresArray = Array.isArray(parsed) ? parsed : [String(pkg.features)];
+        } catch {
+          // If not valid JSON, treat as a single feature
+          featuresArray = [pkg.features];
+        }
+      } else if (typeof pkg.features === 'object') {
+        // Handle object format
+        featuresArray = Object.values(pkg.features).map(v => String(v));
+      }
+    }
+    
+    // Ensure we have at least one feature
+    if (featuresArray.length === 0) {
+      featuresArray = ['Basic package'];
+    }
+    
     return {
       id: pkg.id,
       name: pkg.name,
       description: pkg.description || '',
-      // Handle price/amount field name differences
-      price: 'price' in pkg ? pkg.price : ('amount' in pkg ? Number(pkg.amount) : 0),
-      // Handle different duration/validity fields
-      duration: 'duration' in pkg ? pkg.duration : ('validityDays' in pkg ? pkg.validityDays : 30),
-      features: 'features' in pkg 
-        ? (Array.isArray(pkg.features) 
-          ? pkg.features 
-          : (typeof pkg.features === 'object' && pkg.features 
-            ? Object.values(pkg.features) 
-            : ['Basic package'])) 
-        : ['Basic package'],
+      price: typeof pkg.amount === 'string' ? parseFloat(pkg.amount) : Number(pkg.amount),
+      duration: pkg.validityDays || 30,
+      features: featuresArray,
       status: pkg.status,
+      type: pkg.type
     };
-  });
+  };
+
+  // Map package data to consistent format if we have data
+  const formattedPackages: FormattedPackage[] = packagesData 
+    ? packagesData.map(formatPackageData)
+    : [];
   
   // Filter packages based on search and active tab
   const filteredPackages = formattedPackages.filter(pkg => {
     const matchesSearch = pkg.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           pkg.description.toLowerCase().includes(searchQuery.toLowerCase());
+                          pkg.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTab = activeTab === 'all' || pkg.status === activeTab;
     return matchesSearch && matchesTab;
   });
@@ -227,6 +278,18 @@ export default function PaymentPackages() {
       ),
     },
     {
+      accessorKey: 'type',
+      header: 'Type',
+      cell: ({ row }) => {
+        const type = row.original.type;
+        return (
+          <Badge variant="outline" className="bg-primary/10 text-primary">
+            {type === 'registration' ? 'Registration' : 'Lost Report'}
+          </Badge>
+        );
+      },
+    },
+    {
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => {
@@ -276,6 +339,18 @@ export default function PaymentPackages() {
       },
     },
   ];
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h1 className="text-xl font-bold mb-2">Authentication Required</h1>
+          <p className="text-muted-foreground mb-4">Please sign in to access this page.</p>
+          <Button onClick={() => navigate('/login')}>Sign In</Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (
@@ -333,52 +408,79 @@ export default function PaymentPackages() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {isLoading && !directFetchedData ? (
               <div className="space-y-3">
                 <Skeleton className="h-12 w-full" />
                 <Skeleton className="h-12 w-full" />
                 <Skeleton className="h-12 w-full" />
                 <Skeleton className="h-12 w-full" />
               </div>
-            ) : error ? (
-              <div className="text-center py-6 text-red-500">
-                <p>Error loading payment packages: {error instanceof Error ? error.message : 'Unknown error'}</p>
-                <p className="text-sm mt-2">Using placeholder data instead.</p>
+            ) : (error || directFetchError) && !packagesData ? (
+              <div className="text-center py-6">
+                <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-red-500 mb-2">Error Loading Payment Packages</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  {directFetchError || (error instanceof Error ? error.message : 'Unknown error')}
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={handleRetry} 
+                  disabled={isRetrying}
+                >
+                  {isRetrying ? 'Retrying...' : 'Retry Loading Packages'}
+                </Button>
               </div>
-            ) : (
+            ) : filteredPackages.length > 0 ? (
               <DataTable columns={columns} data={filteredPackages} />
+            ) : (
+              <div className="text-center py-10">
+                <PackageIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">No Packages Found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchQuery ? 'No packages match your search criteria.' : 'You haven\'t created any payment packages yet.'}
+                </p>
+                <Button onClick={() => navigate('/admin/payment-packages/new')}>
+                  Create Your First Package
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>
 
-        <div className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Package Statistics</CardTitle>
-              <CardDescription>
-                Overview of package usage and performance
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-primary/5 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Active Packages</h3>
-                  <p className="text-2xl font-bold">
-                    {formattedPackages.filter(pkg => pkg.status === 'active').length}
-                  </p>
+        {packagesData && packagesData.length > 0 && (
+          <div className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Package Statistics</CardTitle>
+                <CardDescription>
+                  Overview of package usage and performance
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-primary/5 p-4 rounded-lg">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Total Packages</h3>
+                    <p className="text-2xl font-bold">
+                      {formattedPackages.length}
+                    </p>
+                  </div>
+                  <div className="bg-primary/5 p-4 rounded-lg">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Active Packages</h3>
+                    <p className="text-2xl font-bold">
+                      {formattedPackages.filter(pkg => pkg.status === 'active').length}
+                    </p>
+                  </div>
+                  <div className="bg-primary/5 p-4 rounded-lg">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Package Types</h3>
+                    <p className="text-2xl font-bold">
+                      {new Set(formattedPackages.map(pkg => pkg.type)).size}
+                    </p>
+                  </div>
                 </div>
-                <div className="bg-primary/5 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Package Revenue</h3>
-                  <p className="text-2xl font-bold">$2,456.78</p>
-                </div>
-                <div className="bg-primary/5 p-4 rounded-lg">
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Most Popular</h3>
-                  <p className="text-2xl font-bold">Premium Registration</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
