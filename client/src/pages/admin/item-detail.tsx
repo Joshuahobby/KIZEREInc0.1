@@ -193,17 +193,19 @@ export default function AdminItemDetail() {
             <CardDescription>View and manage item details</CardDescription>
           </CardHeader>
           <CardContent>
-            <EmptyState
-              title="Invalid Item ID"
-              description="The item ID provided is not valid. Please check the URL and try again."
-              variant="error"
-              icon={<AlertTriangle className="h-12 w-12" />}
-              action={
-                <Button onClick={() => navigate('/admin/item-management')}>
-                  Back to Item Management
-                </Button>
-              }
-            />
+            <div className="w-full">
+              <EmptyState
+                title="Invalid Item ID"
+                description="The item ID provided is not valid. Please check the URL and try again."
+                variant="error"
+                icon={<AlertTriangle className="h-12 w-12" />}
+                action={
+                  <Button onClick={() => navigate('/admin/item-management')}>
+                    Back to Item Management
+                  </Button>
+                }
+              />
+            </div>
           </CardContent>
         </Card>
       </CommandCenter>
@@ -220,17 +222,19 @@ export default function AdminItemDetail() {
             <CardDescription>View and manage item details</CardDescription>
           </CardHeader>
           <CardContent>
-            <EmptyState
-              title="Error loading item"
-              description={error instanceof Error ? error.message : "Failed to load item details"}
-              variant="error"
-              icon={<AlertTriangle className="h-12 w-12" />}
-              action={
-                <Button onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/admin/items/${itemId}`] })}>
-                  Retry
-                </Button>
-              }
-            />
+            <div className="w-full">
+              <EmptyState
+                title="Error loading item"
+                description={error instanceof Error ? error.message : "Failed to load item details"}
+                variant="error"
+                icon={<AlertTriangle className="h-12 w-12" />}
+                action={
+                  <Button onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/admin/items/${itemId}`] })}>
+                    Retry
+                  </Button>
+                }
+              />
+            </div>
           </CardContent>
         </Card>
       </CommandCenter>
@@ -438,12 +442,14 @@ export default function AdminItemDetail() {
                           <ReportCard key={report.id} report={report} />
                         ))}
                         {reports.filter(r => r.type === 'lost').length === 0 && (
-                          <EmptyState
-                            title="No lost reports"
-                            description="This item has no lost reports"
-                            variant="subtle"
-                            size="sm"
-                          />
+                          <div className="w-full">
+                            <EmptyState
+                              title="No lost reports"
+                              description="This item has no lost reports"
+                              variant="subtle"
+                              size="sm"
+                            />
+                          </div>
                         )}
                       </TabsContent>
                       
@@ -452,12 +458,14 @@ export default function AdminItemDetail() {
                           <ReportCard key={report.id} report={report} />
                         ))}
                         {reports.filter(r => r.type === 'found').length === 0 && (
-                          <EmptyState
-                            title="No found reports"
-                            description="This item has no found reports"
-                            variant="subtle"
-                            size="sm"
-                          />
+                          <div className="w-full">
+                            <EmptyState
+                              title="No found reports"
+                              description="This item has no found reports"
+                              variant="subtle"
+                              size="sm"
+                            />
+                          </div>
                         )}
                       </TabsContent>
                     </Tabs>
