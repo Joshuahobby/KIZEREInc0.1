@@ -121,7 +121,7 @@ export function UserFilters({ onFilterChange, onExport }: UserFiltersProps) {
                 <SelectValue placeholder="All roles" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All roles</SelectItem>
+                <SelectItem value="all">All roles</SelectItem>
                 <SelectItem value="Admin">Admin</SelectItem>
                 <SelectItem value="Agent">Agent</SelectItem>
                 <SelectItem value="Subscriber">Subscriber</SelectItem>
@@ -140,7 +140,7 @@ export function UserFilters({ onFilterChange, onExport }: UserFiltersProps) {
                 <SelectValue placeholder="All statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All statuses</SelectItem>
+                <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="suspended">Suspended</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
@@ -160,7 +160,7 @@ export function UserFilters({ onFilterChange, onExport }: UserFiltersProps) {
                 <SelectValue placeholder="Any verification" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any verification</SelectItem>
+                <SelectItem value="all">Any verification</SelectItem>
                 <SelectItem value="verified">Verified</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="rejected">Rejected</SelectItem>
@@ -180,7 +180,7 @@ export function UserFilters({ onFilterChange, onExport }: UserFiltersProps) {
                 <SelectValue placeholder="Any activity" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any activity</SelectItem>
+                <SelectItem value="all">Any activity</SelectItem>
                 <SelectItem value="high">High</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="low">Low</SelectItem>
