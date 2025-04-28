@@ -86,14 +86,7 @@ export default function AdminPaymentDashboard() {
   } = useQuery<RevenueSummary>({
     queryKey: ["/api/admin/payments/summary"],
     queryFn: async () => {
-      const res = await apiRequest({ 
-        url: "/api/admin/payments/summary",
-        method: "GET"
-      });
-      if (!res.ok) {
-        throw new Error("Failed to fetch revenue summary");
-      }
-      return await res.json();
+      return apiRequest("/api/admin/payments/summary");
     },
     enabled: !!isAdmin,
   });
@@ -117,15 +110,7 @@ export default function AdminPaymentDashboard() {
       if (typeFilter && !typeFilter.startsWith("_all_")) params.append("type", typeFilter);
       if (dateRange && dateRange !== "all") params.append("dateRange", dateRange);
       
-      const res = await apiRequest({
-        url: `/api/admin/payments?${params.toString()}`,
-        method: "GET"
-      });
-      if (!res.ok) {
-        throw new Error("Failed to fetch payment transactions");
-      }
-      
-      const data = await res.json();
+      const data = await apiRequest(`/api/admin/payments?${params.toString()}`);
       setTotalPages(Math.ceil(data.total / pageSize));
       return data;
     },

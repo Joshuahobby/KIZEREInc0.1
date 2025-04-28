@@ -189,7 +189,12 @@ export function CommandCenterLayout({ children }: { children: React.ReactNode })
                     <FileText className="mr-2 h-4 w-4" />
                     Reports
                   </Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => navigate('/admin/payments')}>
+                  <Button
+                    variant={location.includes('/admin/payment-dashboard') ? 'secondary' : 'ghost'} 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate('/admin/payment-dashboard')}
+                  >
                     <CreditCard className="mr-2 h-4 w-4" />
                     Payments
                   </Button>
