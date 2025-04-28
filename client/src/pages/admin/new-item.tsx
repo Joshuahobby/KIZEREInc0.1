@@ -53,21 +53,22 @@ export default function NewItem() {
     setIsSubmitting(true);
     try {
       // API call to create the item
-      const response = await apiRequest('/api/admin/items', {
+      const response = await apiRequest({
+        url: '/api/admin/items',
         method: 'POST',
         data,
       });
 
-      if (response.success) {
+      if (response && response.success) {
         toast({
           title: "Item created successfully",
           description: `Item "${data.name}" has been added to the system.`,
         });
 
-        // Navigate to the item management page or to the detail view of the created item
-        navigate(`/admin/items/${response.item.id}`);
+        // Navigate to the item management page
+        navigate('/admin/item-management');
       } else {
-        throw new Error(response.message || "Failed to create item");
+        throw new Error((response && response.message) || "Failed to create item");
       }
     } catch (error) {
       console.error("Error creating item:", error);
