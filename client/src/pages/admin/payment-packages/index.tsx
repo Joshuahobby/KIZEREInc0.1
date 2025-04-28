@@ -46,11 +46,41 @@ export default function PaymentPackages() {
     isAdmin 
   });
   
+  // Use separate states to track API interaction
+  const [authCheckComplete, setAuthCheckComplete] = useState(false);
+  
+  // Check if the user is actually authenticated with the server
+  useEffect(() => {
+    if (user?.id) {
+      // Check authentication status
+      fetch('/api/user', { credentials: 'include' })
+        .then(response => {
+          if (response.ok) {
+            console.log('User is authenticated with server');
+            setAuthCheckComplete(true);
+          } else {
+            console.error('Server authentication check failed:', response.status);
+            toast({
+              title: 'Authentication Error',
+              description: 'Your session may have expired. Please refresh the page or login again.',
+              variant: 'destructive',
+            });
+            setAuthCheckComplete(false);
+          }
+        })
+        .catch(error => {
+          console.error('Server authentication check error:', error);
+          setAuthCheckComplete(false);
+        });
+    }
+  }, [user?.id, toast]);
+  
   // Fetch payment packages data
   const { data: packages, isLoading, error } = useQuery({
     queryKey: ['/api/admin/payment-packages'],
-    enabled: !!user?.id && role === 'Admin', // Only fetch if user is admin
-    retry: 1, // Try once more if there's an error
+    enabled: !!user?.id && role === 'Admin' && authCheckComplete, // Only fetch if user is admin and auth is verified
+    retry: 2, // Try a couple more times if there's an error
+    retryDelay: 1000, // Wait 1 second between retries
     // Using on-error callback to show toast notification for errors
     onError: (err) => {
       console.error('Error fetching payment packages:', err);
