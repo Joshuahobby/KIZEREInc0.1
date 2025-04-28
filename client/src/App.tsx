@@ -136,7 +136,7 @@ function App() {
               <ProtectedRoute path="/admin/users/new" component={NewUserComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/item-management" component={AdminItemManagementComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/item-management/new" component={NewItemComponent} requiredRole="Admin" />
-              <ProtectedRoute path="/admin/items/:id" component={AdminItemDetailComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/item-management/:id" component={AdminItemDetailComponent} requiredRole="Admin" />
               
               {/* Profile route */}
               <ProtectedRoute path="/profile" component={ProfilePageComponent} requiredRole="any" />

@@ -4,7 +4,7 @@ import { useParams, useLocation } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/query-client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import CommandCenter from '@/pages/admin/command-center';
+import { CommandCenterLayout } from '@/components/layouts/command-center-layout';
 import { format } from 'date-fns';
 
 // UI Components

@@ -264,7 +264,7 @@ export default function AdminItemManagement() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate(`/admin/items/${item.id}`)}>
+              <DropdownMenuItem onClick={() => navigate(`/admin/item-management/${item.id}`)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
