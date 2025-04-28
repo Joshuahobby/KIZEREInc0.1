@@ -317,8 +317,6 @@ router.post("/users", async (req: any, res) => {
       status: status || 'active',
       verificationStatus: verificationStatus || 'pending',
       warningCount: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
       activityLevel: 'low'
     });
     
@@ -339,11 +337,21 @@ router.post("/users", async (req: any, res) => {
       reason: `User created by admin ${adminId}`
     });
     
-    // Remove the password from the response
-    const userResponse = { ...newUser };
-    delete userResponse.password;
+    // Create a clean response object without the password
+    const userResponse = {
+      id: newUser.id,
+      fullName: newUser.fullName,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role,
+      status: newUser.status,
+      verificationStatus: newUser.verificationStatus,
+      phoneNumber: newUser.phoneNumber,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt
+    };
     
-    res.status(201).json(userResponse);
+    res.status(201).json({ user: userResponse, success: true });
   } catch (error) {
     logger.error("Error creating new user:", error);
     res.status(500).json({ 

@@ -51,20 +51,48 @@ export default function NewUserPage() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (values: CreateUserFormValues) => {
-      const response = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(values),
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to create user");
+      try {
+        const response = await fetch("/api/admin/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(values),
+        });
+        
+        // Check if the response is ok
+        if (!response.ok) {
+          const errorText = await response.text();
+          let errorMessage = "Failed to create user";
+          
+          try {
+            // Try to parse as JSON
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.message || errorMessage;
+          } catch (parseError) {
+            // If parsing fails, use the raw text
+            errorMessage = errorText || errorMessage;
+          }
+          
+          throw new Error(errorMessage);
+        }
+        
+        // Try to parse the success response
+        const responseText = await response.text();
+        if (!responseText) {
+          return { success: true };
+        }
+        
+        try {
+          return JSON.parse(responseText);
+        } catch (parseError) {
+          // If JSON parsing fails, return a success object
+          return { success: true };
+        }
+      } catch (error) {
+        console.error("Error creating user:", error);
+        throw error;
       }
-      
-      return response.json();
     },
     onSuccess: () => {
       toast({
