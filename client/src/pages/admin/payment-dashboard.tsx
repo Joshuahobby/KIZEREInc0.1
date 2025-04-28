@@ -68,8 +68,8 @@ export default function AdminPaymentDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | null>(null);
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>("_all_statuses");
+  const [typeFilter, setTypeFilter] = useState<string>("_all_types");
   const [dateRange, setDateRange] = useState<string>("all");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -110,8 +110,8 @@ export default function AdminPaymentDashboard() {
       params.append("pageSize", pageSize.toString());
       
       if (searchTerm) params.append("search", searchTerm);
-      if (statusFilter) params.append("status", statusFilter);
-      if (typeFilter) params.append("type", typeFilter);
+      if (statusFilter && !statusFilter.startsWith("_all_")) params.append("status", statusFilter);
+      if (typeFilter && !typeFilter.startsWith("_all_")) params.append("type", typeFilter);
       if (dateRange && dateRange !== "all") params.append("dateRange", dateRange);
       
       const res = await apiRequest("GET", `/api/admin/payments?${params.toString()}`);
@@ -176,8 +176,8 @@ export default function AdminPaymentDashboard() {
       // Build query parameters for export (all data, not just current page)
       const params = new URLSearchParams();
       if (searchTerm) params.append("search", searchTerm);
-      if (statusFilter) params.append("status", statusFilter);
-      if (typeFilter) params.append("type", typeFilter);
+      if (statusFilter && !statusFilter.startsWith("_all_")) params.append("status", statusFilter);
+      if (typeFilter && !typeFilter.startsWith("_all_")) params.append("type", typeFilter);
       if (dateRange && dateRange !== "all") params.append("dateRange", dateRange);
       
       const res = await apiRequest("GET", `/api/admin/payments/export?${params.toString()}`);
@@ -244,8 +244,8 @@ export default function AdminPaymentDashboard() {
   // Function to clear all filters
   const clearFilters = () => {
     setSearchTerm("");
-    setStatusFilter(null);
-    setTypeFilter(null);
+    setStatusFilter("_all_statuses");
+    setTypeFilter("_all_types");
     setDateRange("all");
     setPage(1);
   };
@@ -421,14 +421,14 @@ export default function AdminPaymentDashboard() {
                   <div className="flex flex-wrap gap-2">
                     {/* Status filter */}
                     <Select
-                      value={statusFilter || ""}
-                      onValueChange={(value) => setStatusFilter(value || null)}
+                      value={statusFilter}
+                      onValueChange={(value) => setStatusFilter(value)}
                     >
                       <SelectTrigger className="w-[160px]">
                         <SelectValue placeholder="Status: All" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Status: All</SelectItem>
+                        <SelectItem value="_all_statuses">Status: All</SelectItem>
                         <SelectItem value="successful">Successful</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="failed">Failed</SelectItem>
@@ -439,14 +439,14 @@ export default function AdminPaymentDashboard() {
                     
                     {/* Type filter */}
                     <Select
-                      value={typeFilter || ""}
-                      onValueChange={(value) => setTypeFilter(value || null)}
+                      value={typeFilter}
+                      onValueChange={(value) => setTypeFilter(value)}
                     >
                       <SelectTrigger className="w-[160px]">
                         <SelectValue placeholder="Type: All" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Type: All</SelectItem>
+                        <SelectItem value="_all_types">Type: All</SelectItem>
                         <SelectItem value="registration">Registration</SelectItem>
                         <SelectItem value="lost_report">Lost Report</SelectItem>
                       </SelectContent>
