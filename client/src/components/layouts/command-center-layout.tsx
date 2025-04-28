@@ -198,6 +198,15 @@ export function CommandCenterLayout({ children }: { children: React.ReactNode })
                     <CreditCard className="mr-2 h-4 w-4" />
                     Payments
                   </Button>
+                  <Button
+                    variant={location.includes('/admin/payment-packages') ? 'secondary' : 'ghost'} 
+                    size="sm" 
+                    className="w-full justify-start" 
+                    onClick={() => navigate('/admin/payment-packages')}
+                  >
+                    <Package className="mr-2 h-4 w-4" />
+                    Payment Packages
+                  </Button>
                   <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => navigate('/admin/analytics')}>
                     <BarChart3 className="mr-2 h-4 w-4" />
                     Analytics

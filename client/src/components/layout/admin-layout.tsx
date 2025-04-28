@@ -192,6 +192,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           icon: <CreditCard className="h-5 w-5" />,
         },
         {
+          title: "Payment Packages",
+          href: "/admin/payment-packages",
+          icon: <Package className="h-5 w-5" />,
+        },
+        {
           title: "Transactions",
           href: "/admin/transactions",
           icon: <FileText className="h-5 w-5" />,
