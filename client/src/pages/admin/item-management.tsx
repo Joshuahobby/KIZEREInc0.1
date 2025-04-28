@@ -28,7 +28,8 @@ import {
   Package,
   SlidersHorizontal,
   FileSpreadsheet,
-  AlertTriangle
+  AlertTriangle,
+  Plus
 } from 'lucide-react';
 import { 
   DropdownMenu,
@@ -339,8 +340,9 @@ export default function AdminItemManagement() {
               <CardTitle>Item Management</CardTitle>
               <CardDescription>View and manage all registered items in the system</CardDescription>
             </div>
-            <Button size="sm" onClick={() => navigate('/register-item')}>
-              Register New Item
+            <Button size="sm" onClick={() => navigate('/admin/new-item')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Item
             </Button>
           </CardHeader>
           
