@@ -7,6 +7,25 @@ import { useToast } from '@/hooks/use-toast';
 import { CommandCenterLayout } from '@/components/layouts/command-center-layout';
 import { format } from 'date-fns';
 
+// Define interfaces for type safety
+interface Report {
+  id: number;
+  title: string;
+  type: 'lost' | 'found';
+  status: string;
+  date?: string;
+  location?: string;
+  description?: string;
+  reward?: string;
+  contactInfo?: string;
+  reporter?: {
+    id: number;
+    name: string;
+    contact?: string;
+    avatarUrl?: string;
+  };
+}
+
 // UI Components
 import {
   AlertTriangle,
@@ -427,21 +446,21 @@ export default function AdminItemDetail() {
                     <Tabs defaultValue="all">
                       <TabsList className="mb-2">
                         <TabsTrigger value="all">All Reports ({reports.length})</TabsTrigger>
-                        <TabsTrigger value="lost">Lost Reports ({reports.filter(r => r.type === 'lost').length})</TabsTrigger>
-                        <TabsTrigger value="found">Found Reports ({reports.filter(r => r.type === 'found').length})</TabsTrigger>
+                        <TabsTrigger value="lost">Lost Reports ({reports.filter((r: Report) => r.type === 'lost').length})</TabsTrigger>
+                        <TabsTrigger value="found">Found Reports ({reports.filter((r: Report) => r.type === 'found').length})</TabsTrigger>
                       </TabsList>
                       
                       <TabsContent value="all" className="space-y-2">
-                        {reports.map((report) => (
+                        {reports.map((report: Report) => (
                           <ReportCard key={report.id} report={report} />
                         ))}
                       </TabsContent>
                       
                       <TabsContent value="lost" className="space-y-2">
-                        {reports.filter(r => r.type === 'lost').map((report) => (
+                        {reports.filter((r: Report) => r.type === 'lost').map((report: Report) => (
                           <ReportCard key={report.id} report={report} />
                         ))}
-                        {reports.filter(r => r.type === 'lost').length === 0 && (
+                        {reports.filter((r: Report) => r.type === 'lost').length === 0 && (
                           <div className="w-full">
                             <EmptyState
                               title="No lost reports"
@@ -454,10 +473,10 @@ export default function AdminItemDetail() {
                       </TabsContent>
                       
                       <TabsContent value="found" className="space-y-2">
-                        {reports.filter(r => r.type === 'found').map((report) => (
+                        {reports.filter((r: Report) => r.type === 'found').map((report: Report) => (
                           <ReportCard key={report.id} report={report} />
                         ))}
-                        {reports.filter(r => r.type === 'found').length === 0 && (
+                        {reports.filter((r: Report) => r.type === 'found').length === 0 && (
                           <div className="w-full">
                             <EmptyState
                               title="No found reports"
@@ -598,7 +617,7 @@ export default function AdminItemDetail() {
 }
 
 // Report card component for displaying reports
-function ReportCard({ report }: { report: any }) {
+function ReportCard({ report }: { report: Report }) {
   return (
     <Card>
       <CardHeader className="py-3">
