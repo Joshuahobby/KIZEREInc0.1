@@ -266,7 +266,7 @@ router.post("/users/:id/warnings", async (req: any, res) => {
     await storage.createAdminActionLog({
       adminId,
       targetUserId: userId,
-      action: `Issued warning: ${warningType}`,
+      action: `user_warning`,
       previousState: { warningCount: user.warningCount || 0 },
       newState: { warningCount: (user.warningCount || 0) + 1 },
       reason: message
@@ -276,6 +276,80 @@ router.post("/users/:id/warnings", async (req: any, res) => {
   } catch (error) {
     logger.error("Error creating user warning:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Create new user
+router.post("/users", async (req: any, res) => {
+  try {
+    const { fullName, email, username, password, role, phoneNumber, status, verificationStatus } = req.body;
+    const adminId = req.user?.id;
+    
+    if (!adminId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Check if username already exists
+    const existingUserByUsername = await storage.getUserByUsername(username);
+    if (existingUserByUsername) {
+      return res.status(400).json({ message: "Username already exists" });
+    }
+    
+    // Check if email already exists
+    const existingUserByEmail = await storage.getUserByEmail(email);
+    if (existingUserByEmail) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+    
+    // Hash the password
+    const bcrypt = require('bcrypt');
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    
+    // Create the new user
+    const newUser = await storage.createUser({
+      fullName,
+      username,
+      email,
+      role: role || 'Subscriber',
+      password: hashedPassword,
+      phoneNumber: phoneNumber || null,
+      status: status || 'active',
+      verificationStatus: verificationStatus || 'pending',
+      warningCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      activityLevel: 'low'
+    });
+    
+    // Log admin action
+    await storage.createAdminActionLog({
+      adminId,
+      targetUserId: newUser.id,
+      action: `user_create`,
+      previousState: null,
+      newState: { 
+        fullName, 
+        username, 
+        email, 
+        role: role || 'Subscriber',
+        status: status || 'active',
+        verificationStatus: verificationStatus || 'pending'
+      },
+      reason: `User created by admin ${adminId}`
+    });
+    
+    // Remove the password from the response
+    const userResponse = { ...newUser };
+    delete userResponse.password;
+    
+    res.status(201).json(userResponse);
+  } catch (error) {
+    logger.error("Error creating new user:", error);
+    res.status(500).json({ 
+      message: "Failed to create user", 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    });
   }
 });
 

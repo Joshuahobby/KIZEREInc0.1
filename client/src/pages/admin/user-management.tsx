@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Loader2, UserPlus } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface UserResponse {
   users: User[];
@@ -28,6 +29,7 @@ interface UserResponse {
 export default function UserManagementPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
   
   // State
   const [currentPage, setCurrentPage] = useState(1);
@@ -206,7 +208,7 @@ export default function UserManagementPage() {
         title="User Management"
         description="View and manage all users in the system"
         actions={
-          <Button>
+          <Button onClick={() => navigate("/admin/users/new")}>
             <UserPlus className="mr-2 h-4 w-4" />
             Add User
           </Button>

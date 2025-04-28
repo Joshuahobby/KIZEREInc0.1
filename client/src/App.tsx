@@ -88,6 +88,7 @@ function App() {
   const PaymentDashboardComponent = () => <PaymentDashboard />;
   const ProfilePageComponent = () => <ProfilePage />;
   const AdminUserManagementComponent = () => <AdminUserManagement />;
+  const NewUserComponent = () => <NewUser />;
   
   return (
     <ErrorBoundary>
@@ -123,6 +124,7 @@ function App() {
               <ProtectedRoute path="/admin/classic" component={AdminDashboardClassicComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/users" component={AdminUserManagementComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/users/new" component={NewUserComponent} requiredRole="Admin" />
               
               {/* Profile route */}
               <ProtectedRoute path="/profile" component={ProfilePageComponent} requiredRole="any" />
