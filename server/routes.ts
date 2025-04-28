@@ -77,9 +77,15 @@ function requireAdmin(req: Request, res: Response, next: Function) {
   next();
 }
 
+// Import admin routes
+import adminUsersRoutes from './routes/admin-users';
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
+  
+  // Register admin routes
+  app.use('/api/admin', requireAdmin, adminUsersRoutes);
 
   // Google Authentication Status endpoint
   app.get("/api/auth/google/status", (req, res) => {
