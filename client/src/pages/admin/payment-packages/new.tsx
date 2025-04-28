@@ -41,7 +41,7 @@ const packageSchema = z.object({
   ),
   features: z.array(z.string()).min(1, 'At least one feature is required'),
   isActive: z.boolean().default(true),
-  packageType: z.enum(['registration', 'report', 'enterprise']),
+  packageType: z.enum(['registration', 'lost_report']),
   priority: z.enum(['low', 'medium', 'high']).default('medium'),
 });
 
