@@ -137,15 +137,9 @@ export default function AdminPaymentDashboard() {
     }
     
     try {
-      const res = await apiRequest({
-        url: `/api/admin/payments/refund/${transactionId}`,
+      await apiRequest(`/api/admin/payments/refund/${transactionId}`, {
         method: "POST"
       });
-      
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to process refund");
-      }
       
       toast({
         title: "Refund processed",
@@ -174,9 +168,10 @@ export default function AdminPaymentDashboard() {
       if (typeFilter && !typeFilter.startsWith("_all_")) params.append("type", typeFilter);
       if (dateRange && dateRange !== "all") params.append("dateRange", dateRange);
       
-      const res = await apiRequest({
-        url: `/api/admin/payments/export?${params.toString()}`,
-        method: "GET"
+      // We need to handle this differently as we need text data, not JSON
+      const res = await fetch(`/api/admin/payments/export?${params.toString()}`, {
+        method: "GET",
+        credentials: "include"
       });
       
       if (!res.ok) {
