@@ -10,7 +10,9 @@ import {
   Settings,
   FileEdit,
   BookOpen,
-  Zap
+  Zap,
+  CreditCard,
+  DollarSign
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';

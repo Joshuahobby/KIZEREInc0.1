@@ -238,6 +238,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { title: "Items", href: "/admin/items", icon: <Database className="h-5 w-5" /> },
     { title: "Matches", href: "/admin/matches", icon: <Star className="h-5 w-5" /> },
     { title: "Payments", href: "/admin/payment-dashboard", icon: <CreditCard className="h-5 w-5" /> },
+    { title: "Packages", href: "/admin/payment-packages", icon: <Package className="h-5 w-5" /> },
   ];
 
   // Toggle category open/closed state

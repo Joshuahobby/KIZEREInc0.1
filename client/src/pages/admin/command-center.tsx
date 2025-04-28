@@ -200,9 +200,13 @@ export default function CommandCenter() {
                     <FileText className="mr-2 h-4 w-4" />
                     Reports
                   </Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => navigate('/admin/payments')}>
+                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => navigate('/admin/payment-dashboard')}>
                     <CreditCard className="mr-2 h-4 w-4" />
                     Payments
+                  </Button>
+                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => navigate('/admin/payment-packages')}>
+                    <Package className="mr-2 h-4 w-4" />
+                    Payment Packages
                   </Button>
                   <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => navigate('/admin/analytics')}>
                     <BarChart3 className="mr-2 h-4 w-4" />
@@ -258,6 +262,15 @@ export default function CommandCenter() {
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     New Item
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={() => navigate('/admin/payment-packages/new')}
+                  >
+                    <Package className="mr-2 h-4 w-4" />
+                    New Payment Package
                   </Button>
                   <Button variant="outline" size="sm" className="w-full justify-start">
                     <Download className="mr-2 h-4 w-4" />
