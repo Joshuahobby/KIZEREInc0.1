@@ -51,6 +51,7 @@ export interface IStorage {
   createUserActivityLog(log: InsertUserActivityLog): Promise<UserActivityLog>;
   
   // Admin action logs
+  getRecentAdminActions(limit?: number): Promise<AdminActionLog[]>;
   getAdminActionLogs(filters?: {
     adminId?: number;
     targetUserId?: number;
@@ -433,6 +434,14 @@ export class DatabaseStorage implements IStorage {
     return newLog;
   }
   
+  // Admin action logs
+  async getRecentAdminActions(limit: number = 20): Promise<AdminActionLog[]> {
+    return await db.select()
+      .from(adminActionLogs)
+      .orderBy(desc(adminActionLogs.timestamp))
+      .limit(limit);
+  }
+
   // Admin action logs
   async getAdminActionLogs(filters?: {
     adminId?: number;

@@ -1843,7 +1843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
       
       // Sample active issues (empty for now)
-      const issues = [];
+      const issues: any[] = [];
       
       // Calculate health score (percentage of services that are operational)
       const operationalServices = services.filter(s => s.status === 'operational').length;
@@ -1875,24 +1875,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const adminActions = await storage.getRecentAdminActions(20);
       
       // Transform admin actions into activity events
-      const events = adminActions.map(action => ({
-        id: action.id.toString(),
-        type: action.actionType === 'warning' ? 'warning' : 
-              action.actionType === 'alert' ? 'alert' : 
-              action.actionType === 'status_change' && action.details.status === 'active' ? 'success' : 'info',
-        category: action.entityType === 'user' ? 'users' :
-                 action.entityType === 'item' ? 'items' :
-                 action.entityType === 'report' ? 'reports' :
-                 action.entityType === 'payment' ? 'revenue' : 'system',
-        title: action.actionDescription,
-        message: action.details?.message || `Admin ${action.adminId} performed ${action.actionType} on ${action.entityType} ${action.entityId}`,
-        time: new Date(action.timestamp).toISOString(),
-        userId: action.entityType === 'user' ? Number(action.entityId) : undefined,
-        itemId: action.entityType === 'item' ? Number(action.entityId) : undefined,
-        reportId: action.entityType === 'report' ? Number(action.entityId) : undefined,
-        paymentId: action.entityType === 'payment' ? Number(action.entityId) : undefined,
-        metadata: action.details
-      }));
+      const events = adminActions.map(action => {
+        // Extract entity information from action
+        const actionParts = action.action.split('_');
+        const entityType = actionParts[0]; // e.g., 'user', 'item', 'report'
+        const actionType = actionParts[1] || 'edit'; // e.g., 'edit', 'suspend', 'delete'
+        
+        // Determine event type
+        let eventType = 'info';
+        if (actionType === 'warning' || actionType === 'suspend') eventType = 'warning';
+        if (actionType === 'alert' || actionType === 'delete') eventType = 'alert';
+        if (actionType === 'activate' || actionType === 'approve') eventType = 'success';
+        
+        // Determine category based on entity type
+        let category = 'system';
+        if (entityType === 'user') category = 'users';
+        if (entityType === 'item') category = 'items';
+        if (entityType === 'report') category = 'reports';
+        if (entityType === 'payment') category = 'revenue';
+        
+        // Parse previous and new state if available
+        const previousState = action.previousState as any || {};
+        const newState = action.newState as any || {};
+        
+        // Generate title and message
+        const title = `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} ${actionType}`;
+        const message = action.reason || 
+                      `Admin ${action.adminId} performed ${actionType} on ${entityType} ${action.targetUserId || ''}`;
+        
+        // Determine related IDs
+        const userId = entityType === 'user' ? action.targetUserId : undefined;
+        
+        return {
+          id: action.id.toString(),
+          type: eventType,
+          category,
+          title,
+          message,
+          time: new Date(action.timestamp).toISOString(),
+          userId,
+          metadata: {
+            previousState,
+            newState,
+            reason: action.reason
+          }
+        };
+      });
       
       res.json(events);
     } catch (error) {
