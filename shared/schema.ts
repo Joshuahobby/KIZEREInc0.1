@@ -398,7 +398,9 @@ export const initiatePaymentSchema = z.object({
   type: z.enum(paymentTypes, {
     errorMap: () => ({ message: "Payment type must be either 'registration' or 'lost_report'" })
   }),
+  packageId: z.number().optional(),
   itemId: z.number().optional(),
   reportId: z.number().optional(),
+  redirectUrl: z.string().optional(),
   metadata: z.record(z.any()).optional()
 });

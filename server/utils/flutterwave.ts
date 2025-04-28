@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { z } from 'zod';
 import { createLogger } from './logger';
-import { PAYMENT_FEES as CONFIG_PAYMENT_FEES, getPaymentAmount as configGetPaymentAmount } from '../config/payment.config';
+import { DEFAULT_PAYMENT_FEES, getPaymentAmount as configGetPaymentAmount } from '../config/payment.config';
 
 const logger = createLogger('FlutterwaveUtils');
 
@@ -20,7 +20,7 @@ try {
 }
 
 // Use centralized payment fee structure
-export const PAYMENT_FEES = CONFIG_PAYMENT_FEES;
+export const PAYMENT_FEES = DEFAULT_PAYMENT_FEES;
 
 // Types for Flutterwave response
 export interface FlutterwavePaymentResponse {
@@ -44,6 +44,7 @@ export interface FlutterwavePaymentResponse {
       phone_number?: string;
     };
     created_at: string;
+    link?: string; // Payment link used for redirecting users
   };
 }
 
@@ -249,7 +250,7 @@ export async function initializePayment(paymentData: PaymentInitialization): Pro
  * @param paymentType The type of payment ('registration' or 'lost_report')
  * @returns The payment amount in the default currency
  */
-export function getPaymentAmount(paymentType: 'registration' | 'lost_report'): number {
+export async function getPaymentAmount(paymentType: 'registration' | 'lost_report'): Promise<number> {
   // Use the centralized config function
   return configGetPaymentAmount(paymentType);
 }

@@ -26,6 +26,7 @@ export interface PaymentInitializationRequest {
   userId: number;
   type: PaymentType;
   amount?: number;
+  packageId?: number;
   itemId?: number;
   reportId?: number;
   redirectUrl?: string;
@@ -76,8 +77,41 @@ export class PaymentService {
         throw new Error('User not found');
       }
       
-      // Determine payment amount (use provided amount or default based on type)
-      const amount = paymentData.amount || getPaymentAmount(paymentData.type);
+      let packageData = null;
+      let amount: number;
+      
+      // If package ID is provided, get the package details
+      if (paymentData.packageId) {
+        packageData = await storage.getPaymentPackage(paymentData.packageId);
+        if (!packageData) {
+          logger.warn('Package not found for payment initialization', { packageId: paymentData.packageId });
+          throw new Error('Payment package not found');
+        }
+        
+        // Ensure package type matches payment type
+        if (packageData.type !== paymentData.type) {
+          logger.warn('Package type does not match payment type', { 
+            packageType: packageData.type, 
+            paymentType: paymentData.type 
+          });
+          throw new Error('Invalid package for this payment type');
+        }
+        
+        // Ensure package is active
+        if (packageData.status !== 'active') {
+          logger.warn('Package is not active', { packageId: paymentData.packageId });
+          throw new Error('Selected package is not available');
+        }
+        
+        // Use package amount
+        amount = Number(packageData.amount);
+      } else if (paymentData.amount) {
+        // Explicit amount provided (for example custom payment)
+        amount = paymentData.amount;
+      } else {
+        // Use default amount for this payment type
+        amount = await getPaymentAmount(paymentData.type);
+      }
       
       // Generate transaction reference
       const transactionRef = generateTransactionReference();
@@ -94,8 +128,15 @@ export class PaymentService {
         status: 'pending',
         transactionRef,
         itemId: paymentData.itemId,
-        reportId: paymentData.reportId
+        reportId: paymentData.reportId,
+        packageId: packageData?.id
       });
+      
+      // Get payment description based on package or type
+      const description = await getPaymentDescription(
+        paymentData.type,
+        packageData?.id
+      );
       
       // Initialize payment with Flutterwave
       const flutterwaveResponse = await initializePayment({
@@ -110,12 +151,13 @@ export class PaymentService {
         },
         customizations: {
           title: 'KIZERE Platform',
-          description: getPaymentDescription(paymentData.type)
+          description
         },
         meta: {
           payment_id: paymentRecord.id,
           user_id: user.id,
-          payment_type: paymentData.type
+          payment_type: paymentData.type,
+          package_id: packageData?.id
         }
       });
       
@@ -127,7 +169,8 @@ export class PaymentService {
       logger.info('Payment initialized successfully', { 
         paymentId: paymentRecord.id, 
         transactionRef,
-        amount
+        amount,
+        packageId: packageData?.id
       });
       
       return {

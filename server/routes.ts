@@ -9,10 +9,14 @@ import {
   insertItemSchema, 
   insertReportSchema, 
   insertNotificationSchema,
+  insertPaymentPackageSchema,
   userRoles,
   initiatePaymentSchema,
   items,
-  reports
+  reports,
+  PaymentType,
+  PaymentStatus,
+  PaymentPackage
 } from "@shared/schema";
 import { 
   generateTransactionReference, 
@@ -960,84 +964,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate input
       const validatedData = initiatePaymentSchema.parse(req.body);
       
-      // Get payment amount based on type if not explicitly provided
-      let amount = validatedData.amount;
-      
-      if (!amount) {
-        // If amount not provided, get the default amount for this payment type
-        amount = getPaymentAmount(validatedData.type);
-        
-        // Log for debugging
-        console.log(`Using default amount for ${validatedData.type}: ${amount} ${DEFAULT_CURRENCY}`);
-        
-        // Make sure we have a valid amount
-        if (!amount || amount <= 0) {
-          throw new Error(`Invalid payment amount for ${validatedData.type}`);
-        }
-      }
-      
-      // Generate a unique transaction reference
-      const transactionRef = generateTransactionReference();
-      
       // Get user information
       const user = req.user!;
       
-      // Create a payment record in pending status
-      const payment = await storage.createPayment({
+      // Use the Payment Service to initialize payment
+      const result = await PaymentService.initializePayment({
         userId: user.id,
-        amount: amount.toString(),
-        currency: DEFAULT_CURRENCY,
         type: validatedData.type,
-        status: "pending",
-        transactionRef,
-        itemId: validatedData.itemId || null,
-        reportId: validatedData.reportId || null,
-        metadata: validatedData.metadata || null
+        amount: validatedData.amount,
+        packageId: validatedData.packageId,
+        itemId: validatedData.itemId || undefined,
+        reportId: validatedData.reportId || undefined,
+        redirectUrl: validatedData.redirectUrl
       });
       
-      // Base redirect URL - the frontend will handle success/failure
-      // Use the request origin or a default host
-      const baseUrl = req.headers.origin || 
-                     (process.env.NODE_ENV === 'production' 
-                      ? 'https://kizere.replit.app' 
-                      : 'http://localhost:5000');
-      
-      const redirectUrl = `${baseUrl}/payment-status`;
-      
-      // Initialize payment with Flutterwave
-      const flutterwavePayment = await initializePayment({
-        amount,
-        currency: DEFAULT_CURRENCY,
-        tx_ref: transactionRef,
-        redirect_url: redirectUrl,
-        customer: {
-          email: user.email,
-          phone_number: user.phoneNumber || undefined,
-          name: user.fullName || user.username
-        },
-        customizations: {
-          title: "KIZERE Payment",
-          description: `Payment for ${validatedData.type === 'registration' ? 'item registration' : 'lost item report'}`,
-          logo: "https://kizere.rw/logo.png" // Replace with your actual logo URL
-        },
-        meta: {
-          paymentId: payment.id,
-          ...validatedData.metadata
-        }
-      });
-      
-      // Return necessary data to the client
-      res.status(200).json({
-        paymentId: payment.id,
-        transactionRef,
-        amount,
-        currency: DEFAULT_CURRENCY,
-        // Extract payment link from Flutterwave response
-        paymentUrl: flutterwavePayment.data && typeof flutterwavePayment.data === 'object' 
-          ? (flutterwavePayment.data as any).link || null 
-          : null,
-        redirectUrl
-      });
+      // Return the payment initialization result
+      res.json(result);
     } catch (error) {
       console.error("Payment initialization error:", error);
       res.status(500).json({ 
@@ -1047,6 +989,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Payment package routes
+  app.get("/api/payment-packages", requireAuth, async (req, res) => {
+    try {
+      const includeInactive = req.query.includeInactive === 'true';
+      const packages = await storage.getAllPaymentPackages(includeInactive);
+      res.json(packages);
+    } catch (error: any) {
+      console.error('Error getting payment packages', { error });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.get("/api/payment-packages/:id", requireAuth, async (req, res) => {
+    try {
+      const packageId = parseInt(req.params.id);
+      if (isNaN(packageId)) {
+        return res.status(400).json({ error: "Invalid package ID" });
+      }
+      
+      const packageData = await storage.getPaymentPackage(packageId);
+      if (!packageData) {
+        return res.status(404).json({ error: "Payment package not found" });
+      }
+      
+      res.json(packageData);
+    } catch (error: any) {
+      console.error('Error getting payment package', { error });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.get("/api/payment-packages/type/:type", requireAuth, async (req, res) => {
+    try {
+      const type = req.params.type as PaymentType;
+      const onlyActive = req.query.onlyActive !== 'false';
+      
+      if (!type || !["registration", "lost_report"].includes(type)) {
+        return res.status(400).json({ error: "Invalid payment type" });
+      }
+      
+      const packages = await storage.getPaymentPackageByType(type, onlyActive);
+      res.json(packages);
+    } catch (error: any) {
+      console.error('Error getting payment packages by type', { error });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Admin payment package routes
+  app.post("/api/admin/payment-packages", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      // Validate request body
+      const validationResult = insertPaymentPackageSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid package data", 
+          details: validationResult.error.errors 
+        });
+      }
+      
+      const packageData = validationResult.data;
+      const newPackage = await storage.createPaymentPackage(packageData);
+      
+      // Log admin action
+      await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'create',
+        entityType: 'payment_package',
+        entityId: newPackage.id,
+        details: `Created new payment package: ${newPackage.name}`
+      });
+      
+      res.status(201).json(newPackage);
+    } catch (error: any) {
+      console.error('Error creating payment package', { error });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.patch("/api/admin/payment-packages/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const packageId = parseInt(req.params.id);
+      if (isNaN(packageId)) {
+        return res.status(400).json({ error: "Invalid package ID" });
+      }
+      
+      const packageData = await storage.getPaymentPackage(packageId);
+      if (!packageData) {
+        return res.status(404).json({ error: "Payment package not found" });
+      }
+      
+      // Allow partial updates
+      const updates: Partial<PaymentPackage> = {};
+      
+      // Only allow certain fields to be updated
+      const allowedUpdates = [
+        'name', 'description', 'amount', 'isDefault', 'status', 'features'
+      ];
+      
+      allowedUpdates.forEach(field => {
+        if (field in req.body) {
+          // @ts-ignore
+          updates[field] = req.body[field];
+        }
+      });
+      
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+      
+      const updatedPackage = await storage.updatePaymentPackage(packageId, updates);
+      
+      // Log admin action
+      await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'update',
+        entityType: 'payment_package',
+        entityId: packageId,
+        details: `Updated payment package: ${packageData.name}`
+      });
+      
+      res.json(updatedPackage);
+    } catch (error: any) {
+      console.error('Error updating payment package', { error });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.delete("/api/admin/payment-packages/:id", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const packageId = parseInt(req.params.id);
+      if (isNaN(packageId)) {
+        return res.status(400).json({ error: "Invalid package ID" });
+      }
+      
+      const packageData = await storage.getPaymentPackage(packageId);
+      if (!packageData) {
+        return res.status(404).json({ error: "Payment package not found" });
+      }
+      
+      const result = await storage.deletePaymentPackage(packageId);
+      
+      // Log admin action
+      await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'delete',
+        entityType: 'payment_package',
+        entityId: packageId,
+        details: `Deleted payment package: ${packageData.name}`
+      });
+      
+      res.json({ success: result });
+    } catch (error: any) {
+      console.error('Error deleting payment package', { error });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  app.post("/api/admin/payment-packages/:id/set-default", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const packageId = parseInt(req.params.id);
+      if (isNaN(packageId)) {
+        return res.status(400).json({ error: "Invalid package ID" });
+      }
+      
+      const packageData = await storage.getPaymentPackage(packageId);
+      if (!packageData) {
+        return res.status(404).json({ error: "Payment package not found" });
+      }
+      
+      const updatedPackage = await storage.setDefaultPaymentPackage(packageId);
+      
+      // Log admin action
+      await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'update',
+        entityType: 'payment_package',
+        entityId: packageId,
+        details: `Set payment package as default: ${packageData.name}`
+      });
+      
+      res.json(updatedPackage);
+    } catch (error: any) {
+      console.error('Error setting default payment package', { error });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
   // Payment verification endpoint
   app.get("/api/payments/verify/:reference", requireAuth, async (req, res) => {
     try {
