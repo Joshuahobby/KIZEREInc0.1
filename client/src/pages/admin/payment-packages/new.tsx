@@ -75,8 +75,8 @@ export default function NewPaymentPackage() {
 
   // Create the mutation for submitting the form
   const createPackageMutation = useMutation({
-    mutationFn: (data: PackageFormValues) => {
-      return apiRequest('POST', '/api/admin/payment-packages', data);
+    mutationFn: (data: any) => {
+      return apiRequest<any>('/api/admin/payment-packages', { method: 'POST', data });
     },
     onSuccess: () => {
       toast({
@@ -87,6 +87,7 @@ export default function NewPaymentPackage() {
       window.location.href = '/admin/payment-packages';
     },
     onError: (error: any) => {
+      console.error('Error creating payment package:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to create payment package. Please try again.',
@@ -99,7 +100,22 @@ export default function NewPaymentPackage() {
   const onSubmit = (data: PackageFormValues) => {
     // Filter out any empty feature strings
     data.features = data.features.filter(feature => feature.trim() !== '');
-    createPackageMutation.mutate(data);
+    
+    // Map form fields to the expected server format
+    const serverData = {
+      name: data.name,
+      description: data.description,
+      type: data.packageType, // Map packageType to type as expected by server
+      amount: data.price,     // Map price to amount as expected by server
+      validityDays: data.duration, // Map duration to validityDays
+      status: data.isActive ? 'active' : 'inactive',
+      features: data.features,
+      isDefault: false, // Default to false, can be set later
+      currency: 'RWF'   // Default currency
+    };
+    
+    console.log('Submitting payment package data:', serverData);
+    createPackageMutation.mutate(serverData);
   };
 
   // Helper function to add a new feature field
@@ -195,15 +211,9 @@ export default function NewPaymentPackage() {
                               </label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="report" id="report" />
-                              <label htmlFor="report" className="text-sm font-medium">
-                                Report Package
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="enterprise" id="enterprise" />
-                              <label htmlFor="enterprise" className="text-sm font-medium">
-                                Enterprise Package
+                              <RadioGroupItem value="lost_report" id="lost_report" />
+                              <label htmlFor="lost_report" className="text-sm font-medium">
+                                Lost Report Package
                               </label>
                             </div>
                           </RadioGroup>
