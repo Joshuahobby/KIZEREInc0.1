@@ -86,7 +86,10 @@ export default function AdminPaymentDashboard() {
   } = useQuery<RevenueSummary>({
     queryKey: ["/api/admin/payments/summary"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/payments/summary");
+      const res = await apiRequest({ 
+        url: "/api/admin/payments/summary",
+        method: "GET"
+      });
       if (!res.ok) {
         throw new Error("Failed to fetch revenue summary");
       }
@@ -114,7 +117,10 @@ export default function AdminPaymentDashboard() {
       if (typeFilter && !typeFilter.startsWith("_all_")) params.append("type", typeFilter);
       if (dateRange && dateRange !== "all") params.append("dateRange", dateRange);
       
-      const res = await apiRequest("GET", `/api/admin/payments?${params.toString()}`);
+      const res = await apiRequest({
+        url: `/api/admin/payments?${params.toString()}`,
+        method: "GET"
+      });
       if (!res.ok) {
         throw new Error("Failed to fetch payment transactions");
       }
@@ -146,7 +152,10 @@ export default function AdminPaymentDashboard() {
     }
     
     try {
-      const res = await apiRequest("POST", `/api/admin/payments/refund/${transactionId}`);
+      const res = await apiRequest({
+        url: `/api/admin/payments/refund/${transactionId}`,
+        method: "POST"
+      });
       
       if (!res.ok) {
         const errorData = await res.json();
@@ -180,7 +189,10 @@ export default function AdminPaymentDashboard() {
       if (typeFilter && !typeFilter.startsWith("_all_")) params.append("type", typeFilter);
       if (dateRange && dateRange !== "all") params.append("dateRange", dateRange);
       
-      const res = await apiRequest("GET", `/api/admin/payments/export?${params.toString()}`);
+      const res = await apiRequest({
+        url: `/api/admin/payments/export?${params.toString()}`,
+        method: "GET"
+      });
       
       if (!res.ok) {
         throw new Error("Failed to export payment data");
