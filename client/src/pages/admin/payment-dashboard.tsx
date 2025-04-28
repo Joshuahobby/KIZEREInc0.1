@@ -464,7 +464,7 @@ export default function AdminPaymentDashboard() {
                     </Select>
 
                     {/* Clear Filters */}
-                    {(searchTerm || statusFilter || typeFilter || dateRange !== "all") && (
+                    {(searchTerm || statusFilter !== "_all_statuses" || typeFilter !== "_all_types" || dateRange !== "all") && (
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -498,7 +498,7 @@ export default function AdminPaymentDashboard() {
                   <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-1">No transactions found</h3>
                   <p className="text-sm text-muted-foreground max-w-md">
-                    {searchTerm || statusFilter || typeFilter || dateRange !== "all" 
+                    {searchTerm || statusFilter !== "_all_statuses" || typeFilter !== "_all_types" || dateRange !== "all" 
                       ? "Try adjusting your search filters to find what you're looking for."
                       : "There are no payment transactions recorded in the system yet."}
                   </p>
@@ -508,52 +508,54 @@ export default function AdminPaymentDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Transaction ID</TableHead>
+                        <TableHead>ID</TableHead>
                         <TableHead>User</TableHead>
-                        <TableHead>Type</TableHead>
                         <TableHead>Amount</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Date</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paymentsData?.transactions.map((transaction) => (
+                      {paymentsData.transactions.map((transaction) => (
                         <TableRow key={transaction.id}>
-                          <TableCell className="font-medium">
+                          <TableCell className="font-mono text-xs">
                             {transaction.transactionRef}
                           </TableCell>
                           <TableCell>{transaction.username}</TableCell>
-                          <TableCell>{getPaymentTypeDisplay(transaction.type)}</TableCell>
                           <TableCell>
-                            {transaction.amount} {transaction.currency}
+                            {Number(transaction.amount).toLocaleString()} {transaction.currency}
+                          </TableCell>
+                          <TableCell>
+                            {getPaymentTypeDisplay(transaction.type)}
                           </TableCell>
                           <TableCell>
                             <Badge variant={getStatusBadgeVariant(transaction.status)}>
                               {transaction.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-sm">
                             {formatDate(transaction.paymentDate || transaction.createdAt)}
                           </TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0">
-                                  <span className="sr-only">Open menu</span>
+                                <Button variant="ghost" size="icon">
                                   <MoreHorizontal className="h-4 w-4" />
+                                  <span className="sr-only">Open menu</span>
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem 
-                                  onClick={() => window.open(`/payment-status?tx_ref=${transaction.transactionRef}`, '_blank')}
+                                <DropdownMenuItem
+                                  onClick={() => window.open(`/admin/payments/${transaction.id}`, "_blank")}
                                 >
                                   View details
                                 </DropdownMenuItem>
                                 {transaction.status === "successful" && (
                                   <DropdownMenuItem 
+                                    className="text-red-600 focus:text-red-600" 
                                     onClick={() => handleRefund(transaction.id, transaction.transactionRef)}
-                                    className="text-red-600"
                                   >
                                     Process refund
                                   </DropdownMenuItem>
@@ -564,36 +566,38 @@ export default function AdminPaymentDashboard() {
                         </TableRow>
                       ))}
                     </TableBody>
-                    <TableFooter>
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-right">
-                          <div className="flex items-center justify-between">
-                            <div className="text-sm text-muted-foreground">
-                              Showing {Math.min((page - 1) * pageSize + 1, paymentsData?.total || 0)} to {Math.min(page * pageSize, paymentsData?.total || 0)} of {paymentsData?.total || 0} transactions
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(Math.max(1, page - 1))}
-                                disabled={page === 1}
-                              >
-                                Previous
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setPage(Math.min(totalPages, page + 1))}
-                                disabled={page === totalPages}
-                              >
-                                Next
-                              </Button>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    </TableFooter>
                   </Table>
+                </div>
+              )}
+              
+              {/* Pagination */}
+              {!isPaymentsLoading && paymentsData?.transactions.length > 0 && (
+                <div className="flex items-center justify-between space-x-2 py-4">
+                  <div className="text-sm text-muted-foreground">
+                    Showing <span className="font-medium">{paymentsData.transactions.length}</span>{" "}
+                    of <span className="font-medium">{paymentsData.total}</span> transactions
+                  </div>
+                  
+                  {totalPages > 1 && (
+                    <div className="space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                        disabled={page === 1}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                        disabled={page === totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
