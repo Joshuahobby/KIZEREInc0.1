@@ -93,8 +93,8 @@ export default function AdminItemManagement() {
 
   // State for filters and pagination
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
-  const [status, setStatus] = useState('');
+  const [category, setCategory] = useState('_all_categories');
+  const [status, setStatus] = useState('_all_statuses');
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [sortBy, setSortBy] = useState('registeredAt');
@@ -366,7 +366,7 @@ export default function AdminItemManagement() {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="_all_categories">All Categories</SelectItem>
                   <SelectItem value="electronics">Electronics</SelectItem>
                   <SelectItem value="documents">Documents</SelectItem>
                   <SelectItem value="clothing">Clothing</SelectItem>
@@ -381,7 +381,7 @@ export default function AdminItemManagement() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="_all_statuses">All Statuses</SelectItem>
                   <SelectItem value="Registered">Registered</SelectItem>
                   <SelectItem value="Lost">Lost</SelectItem>
                   <SelectItem value="Found">Found</SelectItem>
@@ -417,8 +417,8 @@ export default function AdminItemManagement() {
                 size="icon"
                 onClick={() => {
                   setSearch('');
-                  setCategory('');
-                  setStatus('');
+                  setCategory('_all_categories');
+                  setStatus('_all_statuses');
                   setSortBy('registeredAt');
                   setSortOrder('desc');
                 }}
