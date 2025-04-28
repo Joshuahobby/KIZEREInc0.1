@@ -766,14 +766,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create a new report object with the required data
       const reportData = {
         userId: req.user!.id,
-        type: req.body.type || 'lost', // Default to 'lost' if missing
+        type: (req.body.type || 'lost') as 'lost' | 'found', // Default to 'lost' if missing
         title: req.body.title || 'Untitled Report', // Default title if missing
         description: req.body.description || 'No description provided', // Default description
         location: req.body.location || 'Unknown location', // Default location
         date: reportDate,
         contactInfo: req.body.contactInfo || null,
         itemId: req.body.itemId || null,
-        status: 'Open'
+        status: 'Open' as 'Open' | 'In_Progress' | 'Resolved' | 'Closed'
       };
 
       console.log("Processed report data:", reportData);
@@ -2037,30 +2037,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin API: Get report statistics
   app.get("/api/admin/reports/stats", requireAdmin, async (req, res) => {
     try {
-      // Get lost and found reports using storage interface
-      const lostReports = await storage.getLostReports();
-      const foundReports = await storage.getFoundReports();
-      const allReports = [...lostReports, ...foundReports];
+      logger.info('Admin requesting report statistics');
       
-      // Count open reports
-      const openReports = allReports.filter((report) => report.status === 'Open').length;
+      // Get comprehensive report statistics
+      const reportStats = await storage.getReportStats();
       
-      // Calculate change from last week (dummy calculation for now)
-      const changeLastWeek = -8; // This would normally be calculated from historical data
-      
-      // Return the statistics
-      res.json({
-        openReports,
-        changeLastWeek,
-        totalReports: allReports.length,
-        lostReports: lostReports.length,
-        foundReports: foundReports.length,
-        resolvedReports: allReports.filter((report) => report.status === 'Resolved').length
-      });
+      res.json(reportStats);
     } catch (error) {
-      console.error("Report statistics error:", error);
+      logger.error("Report statistics error:", error);
       res.status(500).json({ 
         message: "Failed to fetch report statistics",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Get filtered reports
+  app.get("/api/admin/reports", requireAdmin, async (req, res) => {
+    try {
+      logger.info('Admin requesting reports with filters');
+      
+      // Extract query parameters
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string;
+      const type = req.query.type as string;
+      const status = req.query.status as string;
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      const itemId = req.query.itemId ? parseInt(req.query.itemId as string) : undefined;
+      const location = req.query.location as string;
+      const sortBy = req.query.sortBy as string || 'reportedAt';
+      const sortOrder = (req.query.sortOrder as 'asc' | 'desc') || 'desc';
+      
+      // Parse date range if provided
+      let dateRange = null;
+      if (req.query.startDate && req.query.endDate) {
+        dateRange = {
+          start: new Date(req.query.startDate as string),
+          end: new Date(req.query.endDate as string)
+        };
+      }
+      
+      // Get reports with filters
+      const result = await storage.getReportsWithFilters({
+        page,
+        limit,
+        search,
+        type,
+        status,
+        userId,
+        itemId,
+        location,
+        dateRange,
+        sortBy,
+        sortOrder
+      });
+      
+      res.json(result);
+    } catch (error) {
+      logger.error("Error fetching reports with filters:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch reports",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Get report details
+  app.get("/api/admin/reports/:id", requireAdmin, async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      if (isNaN(reportId)) {
+        return res.status(400).json({ message: "Invalid report ID" });
+      }
+      
+      // Get report with related data
+      const reportData = await storage.getReportWithRelatedData(reportId);
+      
+      if (!reportData.report) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+      
+      res.json(reportData);
+    } catch (error) {
+      logger.error("Error fetching report details:", error);
+      res.status(500).json({ 
+        message: "Failed to fetch report details",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Update report status
+  app.patch("/api/admin/reports/:id/status", requireAdmin, async (req, res) => {
+    try {
+      const reportId = parseInt(req.params.id);
+      if (isNaN(reportId)) {
+        return res.status(400).json({ message: "Invalid report ID" });
+      }
+      
+      const { status, notes } = req.body;
+      
+      // Validate status
+      if (!status || !['Open', 'In_Progress', 'Resolved', 'Closed'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      
+      // Get existing report
+      const report = await storage.getReport(reportId);
+      if (!report) {
+        return res.status(404).json({ message: "Report not found" });
+      }
+      
+      // Update report status
+      const updatedReport = await storage.updateReport(reportId, { 
+        status: status as any
+      });
+      
+      // Create notification for the report owner
+      await storage.createNotification({
+        userId: report.userId,
+        title: `Report Status Updated: ${status}`,
+        message: notes || `Your report "${report.title}" status has been updated to ${status}.`,
+        type: 'report',
+        isRead: false,
+        relatedReportId: reportId
+      });
+      
+      // Log the admin action
+      await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'report_status_update',
+        targetUserId: report.userId,
+        previousState: { status: report.status },
+        newState: { status },
+        reason: notes || `Updated report status to ${status}`
+      });
+      
+      res.json({
+        message: "Report status updated successfully",
+        report: updatedReport
+      });
+    } catch (error) {
+      logger.error("Error updating report status:", error);
+      res.status(500).json({ 
+        message: "Failed to update report status",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Export reports to CSV
+  app.get("/api/admin/reports/export/csv", requireAdmin, async (req, res) => {
+    try {
+      logger.info('Admin exporting reports to CSV');
+      
+      // Generate CSV content
+      const csvContent = await storage.generateReportCSV();
+      
+      // Set headers for CSV download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="reports-export-${new Date().toISOString().split('T')[0]}.csv"`);
+      
+      // Send CSV content
+      res.send(csvContent);
+    } catch (error) {
+      logger.error("Error exporting reports to CSV:", error);
+      res.status(500).json({ 
+        message: "Failed to export reports",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }

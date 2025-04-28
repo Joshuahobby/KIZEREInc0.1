@@ -208,4 +208,33 @@ export const adminApi = {
   getDashboardStats: () => apiGet('/api/admin/stats'),
   getSystemStatus: () => apiGet('/api/admin/system-status'),
   getActivityLog: () => apiGet('/api/admin/activity-log'),
+  
+  // Admin report management
+  getReportStats: () => apiGet('/api/admin/reports/stats'),
+  getReports: (params = {}) => {
+    const queryParams = new URLSearchParams();
+    
+    // Add all params to the query string
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value.toString());
+      }
+    });
+    
+    const queryString = queryParams.toString();
+    return apiGet(`/api/admin/reports${queryString ? `?${queryString}` : ''}`);
+  },
+  getReportById: (id: number) => apiGet(`/api/admin/reports/${id}`),
+  updateReportStatus: (id: number, data: { status: string; notes?: string }) => 
+    apiPut(`/api/admin/reports/${id}/status`, data),
+  exportReportsCsv: () => {
+    // Create a link and trigger download
+    const link = document.createElement('a');
+    link.href = `/api/admin/reports/export/csv`;
+    link.setAttribute('download', `reports-export-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    return Promise.resolve(true);
+  }
 };
