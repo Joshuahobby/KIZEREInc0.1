@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/ui/data-table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 import { 
   PackageIcon, 
   Plus, 
@@ -34,11 +35,23 @@ export default function PaymentPackages() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
 
+  // Get toast for notifications
+  const { toast } = useToast();
+  
   // Fetch payment packages data
   const { data: packages, isLoading, error } = useQuery({
     queryKey: ['/api/admin/payment-packages'],
     enabled: !!user?.id && role === 'Admin', // Only fetch if user is admin
     retry: false, // Don't retry on error
+    // Using on-error callback to show toast notification for errors
+    onError: (err) => {
+      console.error('Error fetching payment packages:', err);
+      toast({
+        title: 'Error loading payment packages',
+        description: err instanceof Error ? err.message : 'An unknown error occurred',
+        variant: 'destructive',
+      });
+    }
   });
 
   // Placeholder packages data until API is implemented
