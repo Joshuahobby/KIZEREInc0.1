@@ -525,9 +525,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  // Ensure role is explicitly exposed from the user object
+  // This is used for admin access control throughout the app
+  const userRole = user?.role || null;
+  
+  // Log authentication state for debugging
+  useEffect(() => {
+    if (user) {
+      console.log('[useAuth] Current authentication state:', { 
+        userId: user.id,
+        userEmail: user.email,
+        userRole,
+        isAuthenticated: !!user 
+      });
+    }
+  }, [user, userRole]);
+  
   const value = {
     user,
-    role: user?.role || null,
+    role: userRole,
     isAuthenticated: !!user,
     isLoading,
     error,

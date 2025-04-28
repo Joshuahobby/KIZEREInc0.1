@@ -144,8 +144,30 @@ export default function PaymentPackages() {
   // Use actual data when available, otherwise use placeholder
   const packagesData = packages || placeholderPackages;
 
+  // Map package data to consistent format
+  const formattedPackages = packagesData.map(pkg => {
+    // Handle differences between placeholder data and API data
+    return {
+      id: pkg.id,
+      name: pkg.name,
+      description: pkg.description || '',
+      // Handle price/amount field name differences
+      price: 'price' in pkg ? pkg.price : ('amount' in pkg ? Number(pkg.amount) : 0),
+      // Handle different duration/validity fields
+      duration: 'duration' in pkg ? pkg.duration : ('validityDays' in pkg ? pkg.validityDays : 30),
+      features: 'features' in pkg 
+        ? (Array.isArray(pkg.features) 
+          ? pkg.features 
+          : (typeof pkg.features === 'object' && pkg.features 
+            ? Object.values(pkg.features) 
+            : ['Basic package'])) 
+        : ['Basic package'],
+      status: pkg.status,
+    };
+  });
+  
   // Filter packages based on search and active tab
-  const filteredPackages = packagesData.filter(pkg => {
+  const filteredPackages = formattedPackages.filter(pkg => {
     const matchesSearch = pkg.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            pkg.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTab = activeTab === 'all' || pkg.status === activeTab;
@@ -342,7 +364,7 @@ export default function PaymentPackages() {
                 <div className="bg-primary/5 p-4 rounded-lg">
                   <h3 className="text-sm font-medium text-muted-foreground mb-2">Active Packages</h3>
                   <p className="text-2xl font-bold">
-                    {packagesData.filter(pkg => pkg.status === 'active').length}
+                    {formattedPackages.filter(pkg => pkg.status === 'active').length}
                   </p>
                 </div>
                 <div className="bg-primary/5 p-4 rounded-lg">
