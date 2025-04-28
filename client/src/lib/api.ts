@@ -48,25 +48,7 @@ function formatErrorMessage(error: any): string {
  */
 export async function apiGet<T>(endpoint: string, options: ApiOptions = defaultApiOptions): Promise<T | null> {
   try {
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      credentials: 'include',
-      signal: options.signal,
-      ...options.fetchOptions,
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: response.statusText }));
-      const error: ApiError = {
-        status: response.status,
-        message: errorData.message || `Error: ${response.status} ${response.statusText}`,
-        details: errorData,
-      };
-
-      throw error;
-    }
-
-    return await response.json();
+    return await apiRequest<T>(endpoint);
   } catch (error: any) {
     if (error.name === 'AbortError') {
       // Request was aborted, handle silently
@@ -94,8 +76,10 @@ export async function apiPost<T, D = any>(
   options: ApiOptions = defaultApiOptions
 ): Promise<T | null> {
   try {
-    const response = await apiRequest('POST', endpoint, data);
-    return await response.json();
+    return await apiRequest<T>(endpoint, {
+      method: 'POST',
+      data
+    });
   } catch (error: any) {
     if (error.name === 'AbortError') {
       // Request was aborted, handle silently
@@ -123,8 +107,10 @@ export async function apiPut<T, D = any>(
   options: ApiOptions = defaultApiOptions
 ): Promise<T | null> {
   try {
-    const response = await apiRequest('PUT', endpoint, data);
-    return await response.json();
+    return await apiRequest<T>(endpoint, {
+      method: 'PUT',
+      data
+    });
   } catch (error: any) {
     if (error.name === 'AbortError') {
       // Request was aborted, handle silently
@@ -151,8 +137,9 @@ export async function apiDelete<T>(
   options: ApiOptions = defaultApiOptions
 ): Promise<T | null> {
   try {
-    const response = await apiRequest('DELETE', endpoint);
-    return await response.json();
+    return await apiRequest<T>(endpoint, {
+      method: 'DELETE'
+    });
   } catch (error: any) {
     if (error.name === 'AbortError') {
       // Request was aborted, handle silently
