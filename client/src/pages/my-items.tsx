@@ -31,8 +31,8 @@ import {
   PlusCircle, Search, Package, AlertTriangle, CheckCircle, X, Eye, 
   Edit, ArrowUpDown, Calendar, Tag, MapPin, ArrowRight, Loader2 
 } from "lucide-react";
-import { PageLayout } from "@/components/layout/page-layout";
-import { EmptyState } from "@/components/ui/empty-state";
+import { PageLayout } from "@/components/layout";
+import { EmptyState, ItemSkeleton } from "@/components/ui";
 import { 
   Select, 
   SelectContent, 
@@ -168,11 +168,20 @@ export default function MyItemsPage() {
     return (
       <PageLayout>
         <div className="container max-w-6xl mx-auto py-8">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <Loader2 className="h-10 w-10 animate-spin mx-auto text-sky-500" />
-              <p className="mt-4 text-lg text-muted-foreground">Loading your items...</p>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Items</h1>
+              <p className="text-muted-foreground mt-1">Manage your registered possessions</p>
             </div>
+            <div className="h-10 w-32">
+              <div className="bg-gray-200 dark:bg-gray-700 rounded-md h-full animate-pulse"></div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <ItemSkeleton key={i} />
+            ))}
           </div>
         </div>
       </PageLayout>
@@ -184,14 +193,15 @@ export default function MyItemsPage() {
       <PageLayout>
         <div className="container max-w-6xl mx-auto py-8">
           <EmptyState 
-            icon={<X className="h-10 w-10 text-destructive" />}
+            icon={<X className="h-10 w-10 text-red-500" />}
             title="Failed to load items"
             description="We couldn't load your registered items. Please try again later."
             action={
-              <Button onClick={() => window.location.reload()}>
+              <Button onClick={() => window.location.reload()} className="bg-red-500 hover:bg-red-600">
                 Try Again
               </Button>
             }
+            variant="error"
           />
         </div>
       </PageLayout>
@@ -325,17 +335,18 @@ function ItemsGrid({ items, onReportLost, onViewItem }: ItemsGridProps) {
   if (items.length === 0) {
     return (
       <EmptyState 
-        icon={<Package className="h-10 w-10 text-muted-foreground" />}
+        icon={<Package className="h-10 w-10 text-sky-500" />}
         title="No items found"
         description="You don't have any items matching your filters."
         action={
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild className="border-sky-500 text-sky-500 hover:bg-sky-50 hover:text-sky-600">
             <Link href="/register-item">
               <PlusCircle className="mr-2 h-4 w-4" />
               Register New Item
             </Link>
           </Button>
         }
+        variant="default"
       />
     );
   }

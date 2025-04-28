@@ -37,7 +37,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "@/hooks/use-toast";
 import { useDropzone } from "react-dropzone";
 import { Upload, X, Camera, Info, ArrowRight } from "lucide-react";
-import { PageLayout } from "@/components/layout/page-layout";
+import { PageLayout } from "@/components/layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/use-auth";
