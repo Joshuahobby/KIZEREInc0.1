@@ -6,6 +6,7 @@ import { AuthService } from "@/services/auth.service";
 
 export interface AuthContextType {
   user: User | null;
+  role: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
@@ -526,6 +527,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const value = {
     user,
+    role: user?.role || null,
     isAuthenticated: !!user,
     isLoading,
     error,
