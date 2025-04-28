@@ -48,7 +48,8 @@ const packageSchema = z.object({
 type PackageFormValues = z.infer<typeof packageSchema>;
 
 export default function NewPaymentPackage() {
-  const { user, isAdmin } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === 'Admin';
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();

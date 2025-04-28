@@ -28,7 +28,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function PaymentPackages() {
-  const { user, isAdmin } = useAuth();
+  const { user, role } = useAuth();
+  const isAdmin = role === 'Admin';
   const [, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
