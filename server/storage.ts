@@ -11,7 +11,8 @@ import {
   verificationRequests, type VerificationRequest, type InsertVerificationRequest,
   statusChanges, type StatusChange, type InsertStatusChange,
   userWarnings, type UserWarning, type InsertUserWarning,
-  type AccountStatus, type VerificationStatus, type ActivityLevel
+  paymentPackages, type PaymentPackage, type InsertPaymentPackage,
+  type AccountStatus, type VerificationStatus, type ActivityLevel, type PaymentType
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, or, desc, sql } from "drizzle-orm";
@@ -137,6 +138,16 @@ export interface IStorage {
   updatePaymentMethod(id: number, paymentMethod: Partial<PaymentMethod>): Promise<PaymentMethod | undefined>;
   deletePaymentMethod(id: number): Promise<boolean>;
   setDefaultPaymentMethod(userId: number, paymentMethodId: number): Promise<void>;
+  
+  // Payment packages
+  getPaymentPackage(id: number): Promise<PaymentPackage | undefined>;
+  getPaymentPackageByType(type: PaymentType, onlyActive?: boolean): Promise<PaymentPackage[]>;
+  getDefaultPackageByType(type: PaymentType): Promise<PaymentPackage | undefined>;
+  createPaymentPackage(paymentPackage: InsertPaymentPackage): Promise<PaymentPackage>;
+  updatePaymentPackage(id: number, paymentPackage: Partial<PaymentPackage>): Promise<PaymentPackage | undefined>;
+  deletePaymentPackage(id: number): Promise<boolean>;
+  setDefaultPaymentPackage(id: number): Promise<PaymentPackage | undefined>;
+  getAllPaymentPackages(includeInactive?: boolean): Promise<PaymentPackage[]>;
 
   // Session management
   sessionStore: session.Store;
@@ -1504,6 +1515,146 @@ export class DatabaseStorage implements IStorage {
         eq(paymentMethods.id, paymentMethodId),
         eq(paymentMethods.userId, userId)
       ));
+  }
+  
+  // Payment Package methods
+  async getPaymentPackage(id: number): Promise<PaymentPackage | undefined> {
+    const [package_] = await db
+      .select()
+      .from(paymentPackages)
+      .where(eq(paymentPackages.id, id));
+    return package_;
+  }
+
+  async getPaymentPackageByType(type: PaymentType, onlyActive: boolean = true): Promise<PaymentPackage[]> {
+    let query = db
+      .select()
+      .from(paymentPackages)
+      .where(eq(paymentPackages.type, type));
+    
+    if (onlyActive) {
+      query = query.where(eq(paymentPackages.status, 'active'));
+    }
+    
+    return await query.orderBy(desc(paymentPackages.isDefault));
+  }
+
+  async getDefaultPackageByType(type: PaymentType): Promise<PaymentPackage | undefined> {
+    const [package_] = await db
+      .select()
+      .from(paymentPackages)
+      .where(and(
+        eq(paymentPackages.type, type),
+        eq(paymentPackages.isDefault, true),
+        eq(paymentPackages.status, 'active')
+      ));
+    return package_;
+  }
+
+  async createPaymentPackage(paymentPackage: InsertPaymentPackage): Promise<PaymentPackage> {
+    // If this is the first package of this type, make it default
+    const existingPackages = await this.getPaymentPackageByType(paymentPackage.type, false);
+    
+    if (existingPackages.length === 0) {
+      paymentPackage.isDefault = true;
+    }
+    
+    // If marking this package as default, unset default for other packages of same type
+    if (paymentPackage.isDefault) {
+      await db
+        .update(paymentPackages)
+        .set({ isDefault: false })
+        .where(eq(paymentPackages.type, paymentPackage.type));
+    }
+    
+    const [newPackage] = await db
+      .insert(paymentPackages)
+      .values(paymentPackage)
+      .returning();
+    return newPackage;
+  }
+
+  async updatePaymentPackage(id: number, packageData: Partial<PaymentPackage>): Promise<PaymentPackage | undefined> {
+    const package_ = await this.getPaymentPackage(id);
+    if (!package_) {
+      return undefined;
+    }
+    
+    // If updating to make this default, unset default flag on other packages
+    if (packageData.isDefault) {
+      await db
+        .update(paymentPackages)
+        .set({ isDefault: false })
+        .where(and(
+          eq(paymentPackages.type, package_.type),
+          not(eq(paymentPackages.id, id))
+        ));
+    }
+    
+    const [updatedPackage] = await db
+      .update(paymentPackages)
+      .set({
+        ...packageData,
+        updatedAt: new Date()
+      })
+      .where(eq(paymentPackages.id, id))
+      .returning();
+    return updatedPackage;
+  }
+
+  async deletePaymentPackage(id: number): Promise<boolean> {
+    const package_ = await this.getPaymentPackage(id);
+    if (!package_) {
+      return false;
+    }
+    
+    // If deleting default package, make another package the default
+    if (package_.isDefault) {
+      const [newDefault] = await db
+        .select()
+        .from(paymentPackages)
+        .where(and(
+          eq(paymentPackages.type, package_.type),
+          not(eq(paymentPackages.id, id)),
+          eq(paymentPackages.status, 'active')
+        ))
+        .limit(1);
+        
+      if (newDefault) {
+        await this.setDefaultPaymentPackage(newDefault.id);
+      }
+    }
+    
+    const result = await db
+      .delete(paymentPackages)
+      .where(eq(paymentPackages.id, id));
+    return result.rowCount > 0;
+  }
+
+  async setDefaultPaymentPackage(id: number): Promise<PaymentPackage | undefined> {
+    const package_ = await this.getPaymentPackage(id);
+    if (!package_) {
+      return undefined;
+    }
+    
+    // Set all packages of same type to non-default
+    await db
+      .update(paymentPackages)
+      .set({ isDefault: false })
+      .where(eq(paymentPackages.type, package_.type));
+    
+    // Set this package as default
+    return this.updatePaymentPackage(id, { isDefault: true });
+  }
+
+  async getAllPaymentPackages(includeInactive: boolean = false): Promise<PaymentPackage[]> {
+    let query = db.select().from(paymentPackages);
+    
+    if (!includeInactive) {
+      query = query.where(eq(paymentPackages.status, 'active'));
+    }
+    
+    return await query.orderBy(sql`${paymentPackages.type} asc, ${paymentPackages.isDefault} desc`);
   }
 }
 
