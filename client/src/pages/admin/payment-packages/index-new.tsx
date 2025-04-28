@@ -222,10 +222,10 @@ export default function PaymentPackages() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigate(`/admin/payment-packages/${row.original.id}`)}>
+              <DropdownMenuItem onClick={() => window.location.href = `/admin/payment-packages/${row.original.id}`}>
                 View details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate(`/admin/payment-packages/edit/${row.original.id}`)}>
+              <DropdownMenuItem onClick={() => window.location.href = `/admin/payment-packages/edit/${row.original.id}`}>
                 Edit package
               </DropdownMenuItem>
               <DropdownMenuSeparator />
@@ -249,7 +249,7 @@ export default function PaymentPackages() {
         <div className="text-center">
           <h1 className="text-xl font-bold mb-2">Authentication Required</h1>
           <p className="text-muted-foreground mb-4">Please sign in to access this page.</p>
-          <Button onClick={() => navigate('/login')}>Sign In</Button>
+          <Button onClick={() => window.location.href = '/login'}>Sign In</Button>
         </div>
       </div>
     );
@@ -276,7 +276,7 @@ export default function PaymentPackages() {
           </div>
           <Button 
             className="mt-4 md:mt-0" 
-            onClick={() => navigate('/admin/payment-packages/new')}
+            onClick={() => window.location.href = '/admin/payment-packages/new'}
           >
             <Plus className="mr-2 h-4 w-4" />
             Create Package
@@ -341,7 +341,7 @@ export default function PaymentPackages() {
                 <p className="text-muted-foreground mb-4">
                   {searchQuery ? 'No packages match your search criteria.' : 'You haven\'t created any payment packages yet.'}
                 </p>
-                <Button onClick={() => navigate('/admin/payment-packages/new')}>
+                <Button onClick={() => window.location.href = '/admin/payment-packages/new'}>
                   Create Your First Package
                 </Button>
               </div>
