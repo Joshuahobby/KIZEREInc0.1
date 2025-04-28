@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { storage } from '../storage';
 import { createLogger } from '../utils/logger';
+import * as bcrypt from 'bcrypt';
 
 // Create logger for admin user routes
 const logger = createLogger('AdminUsers');
@@ -302,7 +303,6 @@ router.post("/users", async (req: any, res) => {
     }
     
     // Hash the password
-    const bcrypt = require('bcrypt');
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
