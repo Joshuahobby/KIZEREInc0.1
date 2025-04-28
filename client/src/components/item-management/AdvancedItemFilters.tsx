@@ -62,7 +62,7 @@ const filterSchema = z.object({
 });
 
 // Define the form values type
-type FilterFormValues = z.infer<typeof filterSchema>;
+export type FilterFormValues = z.infer<typeof filterSchema>;
 
 // Define the component props
 interface AdvancedItemFiltersProps {

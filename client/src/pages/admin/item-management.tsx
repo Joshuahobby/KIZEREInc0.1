@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/query-client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { CommandCenterLayout } from '@/components/layouts/command-center-layout';
+import { AdvancedItemFilters } from '@/components/item-management/AdvancedItemFilters';
+import { FilterFormValues } from '@/components/item-management/AdvancedItemFilters';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -99,6 +101,10 @@ export default function AdminItemManagement() {
   const [limit] = useState(10);
   const [sortBy, setSortBy] = useState('registeredAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  // Advanced filter states
+  const [advancedFilters, setAdvancedFilters] = useState<FilterFormValues>({});
+  const [activeAdvancedFilters, setActiveAdvancedFilters] = useState(0);
 
   // Delete and status change modals
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
@@ -108,12 +114,72 @@ export default function AdminItemManagement() {
   const [statusNotes, setStatusNotes] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
 
+  // Handle advanced filter changes
+  const handleAdvancedFilterChange = (filters: FilterFormValues) => {
+    // Count number of active filters
+    const filterCount = Object.entries(filters).filter(([key, value]) => {
+      if (value === undefined || value === null || value === '') return false;
+      if (typeof value === 'boolean' && !value) return false;
+      if (typeof value === 'string' && value.trim() === '') return false;
+      return true;
+    }).length;
+    
+    setAdvancedFilters(filters);
+    setActiveAdvancedFilters(filterCount);
+    setPage(1); // Reset to first page when filters change
+  };
+  
+  // Clear all advanced filters
+  const clearAdvancedFilters = () => {
+    setAdvancedFilters({});
+    setActiveAdvancedFilters(0);
+  };
+  
+  // Build query parameters including advanced filters
+  const queryParams = useMemo(() => {
+    let params = new URLSearchParams();
+    
+    // Basic filters
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    params.append('search', search);
+    if (category !== '_all_categories') params.append('category', category);
+    if (status !== '_all_statuses') params.append('status', status);
+    params.append('sortBy', sortBy);
+    params.append('sortOrder', sortOrder);
+    
+    // Advanced filters
+    if (advancedFilters.ownerName) params.append('ownerName', advancedFilters.ownerName);
+    if (advancedFilters.serialNumber) params.append('serialNumber', advancedFilters.serialNumber);
+    if (advancedFilters.minValue) params.append('minValue', advancedFilters.minValue);
+    if (advancedFilters.maxValue) params.append('maxValue', advancedFilters.maxValue);
+    if (advancedFilters.location) params.append('location', advancedFilters.location);
+    
+    // Date filters need special handling to convert to ISO strings
+    if (advancedFilters.registeredAfter) {
+      params.append('registeredAfter', advancedFilters.registeredAfter.toISOString());
+    }
+    if (advancedFilters.registeredBefore) {
+      params.append('registeredBefore', advancedFilters.registeredBefore.toISOString());
+    }
+    
+    // Report filters
+    if (advancedFilters.hasReports) {
+      params.append('hasReports', 'true');
+      if (advancedFilters.reportType && advancedFilters.reportType !== 'any') {
+        params.append('reportType', advancedFilters.reportType);
+      }
+    }
+    
+    return params.toString();
+  }, [page, limit, search, category, status, sortBy, sortOrder, advancedFilters]);
+
   // Fetch items data with filters
   const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/admin/items', page, limit, search, category, status, sortBy, sortOrder],
+    queryKey: ['/api/admin/items', queryParams],
     queryFn: () => 
       apiRequest({
-        url: `/api/admin/items?page=${page}&limit=${limit}&search=${search}&category=${category}&status=${status}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
+        url: `/api/admin/items?${queryParams}`,
       }),
   });
 
@@ -412,6 +478,12 @@ export default function AdminItemManagement() {
                 </DropdownMenuContent>
               </DropdownMenu>
               
+              <AdvancedItemFilters 
+                onFilterChange={handleAdvancedFilterChange} 
+                onClearFilters={clearAdvancedFilters}
+                activeFilters={activeAdvancedFilters}
+              />
+              
               <Button 
                 variant="outline" 
                 size="icon"
@@ -421,6 +493,7 @@ export default function AdminItemManagement() {
                   setStatus('_all_statuses');
                   setSortBy('registeredAt');
                   setSortOrder('desc');
+                  clearAdvancedFilters();
                 }}
               >
                 &times;
