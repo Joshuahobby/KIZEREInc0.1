@@ -1785,6 +1785,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin API: Get paginated items with filters
+  app.get("/api/admin/items", requireAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string || '';
+      const category = req.query.category as string || '';
+      const status = req.query.status as string || '';
+      const sortBy = req.query.sortBy as string || 'registeredAt';
+      const sortOrder = (req.query.sortOrder as string || 'desc') as 'asc' | 'desc';
+      
+      const result = await storage.getPaginatedItems({
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+        search,
+        category,
+        status
+      });
+      
+      res.json(result);
+    } catch (error) {
+      logger.error('Error fetching items', { error });
+      res.status(500).json({ 
+        message: "Failed to fetch items",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Get a specific item by ID with owner and reports
+  app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      
+      if (isNaN(itemId)) {
+        return res.status(400).json({ message: "Invalid item ID" });
+      }
+      
+      // Get the item
+      const item = await storage.getItem(itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      // Get the owner
+      const owner = await storage.getUser(item.userId);
+      
+      // Get associated reports
+      const reports = await storage.getItemReports(itemId);
+      
+      res.json({
+        item,
+        owner,
+        reports
+      });
+    } catch (error) {
+      logger.error('Error fetching item details', { error });
+      res.status(500).json({ 
+        message: "Failed to fetch item details",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
   // Admin API: Update item status
   app.patch("/api/admin/items/:id/status", requireAdmin, async (req, res) => {
     try {

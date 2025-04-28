@@ -1,44 +1,43 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
+import { apiRequest, queryClient } from '@/lib/query-client';
 import { useAuth } from '@/hooks/use-auth';
-import { AdminLayout } from '@/components/layout/admin-layout';
-import { apiRequest } from '@/lib/query-client';
-import { motion } from 'framer-motion';
-import { EmptyState } from '@/components/ui/empty-state';
-import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import CommandCenter from '@/pages/admin/command-center';
+import { format } from 'date-fns';
+
+// UI Components
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Calendar,
+  FileSpreadsheet,
+  Gift,
+  Info,
+  MapPin,
+  Package,
+  Phone,
+  Tag,
+  Trash2,
+  UserCircle,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { EmptyState } from '@/components/ui/empty-state';
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
 } from '@/components/ui/dialog';
-import {
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -47,639 +46,494 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  Package,
-  ArrowLeft,
-  User,
-  AlertTriangle,
-  RefreshCw,
-  Trash2,
-  Pencil,
-  FileText,
-  Clock,
-  Calendar,
-  MapPin,
-  Tag,
-  Info,
-  Shield,
-  ChevronRight,
-  Image,
-  ClipboardCheck,
-  CheckCircle,
-  XCircle,
-} from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Item status badge component
-const ItemStatusBadge = ({ status }: { status: string }) => {
-  let variant = 'default';
-  
+// Item status badge color mapping
+const getStatusColor = (status: string) => {
   switch (status) {
     case 'Registered':
-      variant = 'default';
-      break;
+      return 'bg-blue-500/10 text-blue-500 border-blue-200';
     case 'Lost':
-      variant = 'destructive';
-      break;
+      return 'bg-red-500/10 text-red-500 border-red-200';
     case 'Found':
-      variant = 'success';
-      break;
+      return 'bg-green-500/10 text-green-500 border-green-200';
     case 'Recovered':
-      variant = 'success';
-      break;
+      return 'bg-purple-500/10 text-purple-500 border-purple-200';
     case 'Archived':
-      variant = 'outline';
-      break;
+      return 'bg-gray-500/10 text-gray-500 border-gray-200';
     default:
-      variant = 'default';
+      return 'bg-gray-100 text-gray-800';
   }
-  
-  return <Badge variant={variant as any}>{status}</Badge>;
 };
 
-// Report status badge component
-const ReportStatusBadge = ({ status }: { status: string }) => {
-  let variant = 'default';
-  
-  switch (status) {
-    case 'Open':
-      variant = 'default';
-      break;
-    case 'In_Progress':
-      variant = 'warning';
-      break;
-    case 'Resolved':
-      variant = 'success';
-      break;
-    case 'Closed':
-      variant = 'outline';
-      break;
-    default:
-      variant = 'default';
+// Format dates with proper handling of invalid dates
+const formatDate = (dateString: string | null | undefined) => {
+  if (!dateString) return 'N/A';
+  try {
+    return format(new Date(dateString), 'MMMM d, yyyy');
+  } catch (e) {
+    return 'Invalid date';
   }
-  
-  return <Badge variant={variant as any}>{status.replace('_', ' ')}</Badge>;
+};
+
+// Get the owner initials from a name
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
 };
 
 export default function AdminItemDetail() {
-  const { id } = useParams();
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { id } = useParams<{ id: string }>();
+  const itemId = parseInt(id);
   const { user } = useAuth();
-  
-  // Dialog states
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
+
+  // Status change and delete dialogs
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [statusNotes, setStatusNotes] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
-  
+
   // Fetch item details
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['/api/admin/items', id],
-    queryFn: () => apiRequest(`/api/admin/items/${id}`),
-    enabled: !!id,
+  const { data, isLoading, error } = useQuery({
+    queryKey: [`/api/admin/items/${itemId}`],
+    queryFn: () => apiRequest(`/api/admin/items/${itemId}`),
+    enabled: !isNaN(itemId),
   });
-  
-  // Extract data
-  const item = data?.item;
-  const owner = data?.owner;
-  const reports = data?.reports || [];
-  
-  // Mutation for updating item status
-  const updateItemStatusMutation = useMutation({
-    mutationFn: (data: { status: string, notes?: string }) => 
-      apiRequest({
-        url: `/api/admin/items/${id}/status`,
+
+  // Handle status change
+  const handleStatusChange = async () => {
+    if (!data?.item || !newStatus) return;
+    
+    try {
+      await apiRequest({
+        url: `/api/admin/items/${itemId}/status`,
         method: 'PATCH',
-        data: { 
-          status: data.status,
-          notes: data.notes
+        data: {
+          status: newStatus,
+          notes: statusNotes
         }
-      }),
-    onSuccess: () => {
+      });
+      
+      // Show success toast
       toast({
         title: 'Status updated',
-        description: 'The item status has been successfully updated.',
+        description: `Item ${data.item.name} status has been updated to ${newStatus}`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/items'] });
+      
+      // Close dialog and reset state
       setStatusDialogOpen(false);
       setNewStatus('');
       setStatusNotes('');
-      refetch();
-    },
-    onError: (err: any) => {
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/items/${itemId}`] });
+    } catch (error) {
+      console.error('Failed to update status:', error);
       toast({
-        title: 'Error',
-        description: err.message || 'Failed to update item status.',
         variant: 'destructive',
+        title: 'Failed to update status',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
       });
-    },
-  });
-  
-  // Mutation for deleting an item
-  const deleteItemMutation = useMutation({
-    mutationFn: (reason?: string) => 
-      apiRequest({
-        url: `/api/admin/items/${id}`,
+    }
+  };
+
+  // Handle item deletion
+  const handleDelete = async () => {
+    if (!data?.item) return;
+    
+    try {
+      await apiRequest({
+        url: `/api/admin/items/${itemId}`,
         method: 'DELETE',
-        data: { reason }
-      }),
-    onSuccess: () => {
+        data: {
+          reason: deleteReason
+        }
+      });
+      
+      // Show success toast
       toast({
         title: 'Item deleted',
-        description: 'The item has been successfully deleted.',
+        description: `Item ${data.item.name} has been deleted successfully`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/items'] });
-      setDeleteDialogOpen(false);
+      
+      // Navigate back to item management
       navigate('/admin/item-management');
-    },
-    onError: (err: any) => {
+    } catch (error) {
+      console.error('Failed to delete item:', error);
       toast({
-        title: 'Error',
-        description: err.message || 'Failed to delete item.',
         variant: 'destructive',
+        title: 'Failed to delete item',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
       });
-    },
-  });
-  
-  // Handle status update
-  const handleStatusUpdate = () => {
-    if (!newStatus) return;
-    
-    updateItemStatusMutation.mutate({
-      status: newStatus,
-      notes: statusNotes
-    });
+    }
   };
-  
-  // Handle item deletion
-  const handleItemDelete = () => {
-    deleteItemMutation.mutate(deleteReason);
+
+  // Open the status change dialog
+  const openStatusDialog = (status: string) => {
+    setNewStatus(status);
+    setStatusDialogOpen(true);
   };
-  
-  // Render loading state
-  if (isLoading) {
+
+  // Show error state if item ID is invalid
+  if (isNaN(itemId)) {
     return (
-      <AdminLayout>
-        <div className="container py-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/item-management')}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <Skeleton className="h-8 w-64" />
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <Skeleton className="h-64 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-            <div className="space-y-6">
-              <Skeleton className="h-64 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          </div>
-        </div>
-      </AdminLayout>
+      <CommandCenter>
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Item Details</CardTitle>
+            <CardDescription>View and manage item details</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmptyState
+              title="Invalid Item ID"
+              description="The item ID provided is not valid. Please check the URL and try again."
+              variant="error"
+              icon={<AlertTriangle className="h-12 w-12" />}
+              action={
+                <Button onClick={() => navigate('/admin/item-management')}>
+                  Back to Item Management
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
+      </CommandCenter>
     );
   }
-  
-  // Render error state
-  if (isError) {
+
+  // Show error state if loading failed
+  if (error) {
     return (
-      <AdminLayout>
-        <div className="container py-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/item-management')}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl font-bold">Item Details</h1>
-          </div>
-          
-          <EmptyState
-            icon={<AlertTriangle className="h-10 w-10 text-destructive" />}
-            title="Error loading item details"
-            description={error instanceof Error ? error.message : "Failed to load item details"}
-            action={
-              <Button onClick={() => refetch()}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Try again
-              </Button>
-            }
-            variant="error"
-          />
-        </div>
-      </AdminLayout>
+      <CommandCenter>
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Item Details</CardTitle>
+            <CardDescription>View and manage item details</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmptyState
+              title="Error loading item"
+              description={error instanceof Error ? error.message : "Failed to load item details"}
+              variant="error"
+              icon={<AlertTriangle className="h-12 w-12" />}
+              action={
+                <Button onClick={() => queryClient.invalidateQueries({ queryKey: [`/api/admin/items/${itemId}`] })}>
+                  Retry
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
+      </CommandCenter>
     );
   }
-  
-  // Render not found state
-  if (!item) {
-    return (
-      <AdminLayout>
-        <div className="container py-6">
-          <div className="flex items-center gap-2 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/item-management')}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <h1 className="text-2xl font-bold">Item Details</h1>
-          </div>
-          
-          <EmptyState
-            icon={<Package className="h-10 w-10 text-muted-foreground" />}
-            title="Item not found"
-            description="The item you're looking for doesn't exist or has been deleted"
-            action={
-              <Button variant="default" onClick={() => navigate('/admin/item-management')}>
-                Return to Item Management
-              </Button>
-            }
-          />
-        </div>
-      </AdminLayout>
-    );
-  }
-  
+
+  // Item details and owner info from the fetched data
+  const item = data?.item;
+  const owner = data?.owner;
+  const reports = data?.reports || [];
+
   return (
-    <AdminLayout>
-      <div className="container py-6">
-        {/* Header */}
-        <div className="flex flex-wrap items-center gap-2 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/item-management')}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold truncate">{item.name}</h1>
-          <ItemStatusBadge status={item.status} />
-        </div>
-        
-        {/* Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main content area */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Item details card */}
+    <CommandCenter>
+      <div className="col-span-4 space-y-6">
+        {/* Back button */}
+        <Button
+          variant="outline"
+          className="mb-4"
+          onClick={() => navigate('/admin/item-management')}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Item Management
+        </Button>
+
+        {isLoading ? (
+          // Loading skeleton state
+          <div className="space-y-4">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="space-y-1">
-                  <CardTitle className="text-xl">Item Information</CardTitle>
-                  <CardDescription>Details about the item and its registration</CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setNewStatus(item.status);
-                      setStatusDialogOpen(true);
-                    }}
-                  >
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Update Status
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm"
-                    onClick={() => setDeleteDialogOpen(true)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                </div>
+              <CardHeader>
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-4 w-1/4" />
               </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-10">
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-muted-foreground">Name</Label>
-                      <p className="font-medium">{item.name}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Category</Label>
-                      <p className="font-medium capitalize">{item.category}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Unique Identifier</Label>
-                      <p className="font-medium">{item.uniqueIdentifier}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="text-muted-foreground">Registration Date</Label>
-                      <p className="font-medium">{new Date(item.registeredAt).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Last Updated</Label>
-                      <p className="font-medium">{new Date(item.updatedAt).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <Label className="text-muted-foreground">Location</Label>
-                      <p className="font-medium">{item.location || 'Not specified'}</p>
-                    </div>
-                  </div>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-24 rounded-full" />
                 </div>
-                
-                <div className="mt-6">
-                  <Label className="text-muted-foreground">Description</Label>
-                  <p className="mt-1">{item.description || 'No description provided'}</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
                 </div>
-                
-                {/* Item details display */}
-                {item.details && Object.keys(item.details).length > 0 && (
-                  <div className="mt-6">
-                    <Label className="text-muted-foreground mb-2 block">Additional Details</Label>
-                    <div className="bg-muted/50 p-4 rounded-md">
-                      <pre className="text-sm whitespace-pre-wrap">
-                        {JSON.stringify(item.details, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                )}
               </CardContent>
             </Card>
             
-            {/* Item images */}
-            {item.imageUrls && item.imageUrls.length > 0 && (
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xl">Images</CardTitle>
-                  <CardDescription>Photos of the item</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {item.imageUrls.map((url: string, index: number) => (
-                      <div key={index} className="relative aspect-square rounded-md overflow-hidden border">
-                        <img 
-                          src={url} 
-                          alt={`${item.name} - image ${index + 1}`} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* Associated reports */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Associated Reports</CardTitle>
-                <CardDescription>Lost and found reports related to this item</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6">
-                {reports.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {reports.map((report: any) => (
-                        <TableRow key={report.id}>
-                          <TableCell className="font-mono text-xs">#{report.id}</TableCell>
-                          <TableCell>
-                            <Badge variant={report.type === 'lost' ? 'destructive' : 'success'} className="capitalize">
-                              {report.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">{report.title}</TableCell>
-                          <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <ReportStatusBadge status={report.status} />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="text-center py-8">
-                    <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No reports associated with this item</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-40 w-full" />
+            </div>
           </div>
-          
-          {/* Sidebar content area */}
-          <div className="space-y-6">
-            {/* Owner information */}
+        ) : (
+          <>
+            {/* Main Item Details */}
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
-                  Owner Information
-                </CardTitle>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{item?.name}</CardTitle>
+                    <CardDescription>Item #{item?.id}</CardDescription>
+                  </div>
+                  <Badge variant="outline" className={getStatusColor(item?.status)}>
+                    {item?.status}
+                  </Badge>
+                </div>
               </CardHeader>
-              <CardContent className="pt-6">
-                {owner ? (
+              
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left column - Basic info */}
                   <div className="space-y-4">
-                    <div className="flex items-center gap-4">
-                      {owner.avatarUrl ? (
-                        <img
-                          src={owner.avatarUrl}
-                          alt={owner.fullName}
-                          className="h-14 w-14 rounded-full"
-                        />
-                      ) : (
-                        <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center">
-                          <User className="h-8 w-8 text-primary/80" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="font-medium text-lg">{owner.fullName}</h3>
-                        <p className="text-sm text-muted-foreground">{owner.email}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Role</span>
-                        <span className="text-sm font-medium">{owner.role}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Status</span>
-                        <Badge variant={owner.status === 'active' ? 'success' : 'outline'} className="capitalize">
-                          {owner.status}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Phone</span>
-                        <span className="text-sm font-medium">{owner.phoneNumber || 'Not provided'}</span>
-                      </div>
-                    </div>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      onClick={() => navigate(`/admin/users/${owner.id}`)}
-                    >
-                      View User Profile
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <User className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-muted-foreground">Owner information not available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            
-            {/* Item Status Card */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="h-4 w-4" />
-                  Status Timeline
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="relative border-l-2 border-muted pl-6 pb-2 space-y-6">
-                  {/* This would ideally be populated from a status history array */}
-                  {/* For now we'll create a simplified version */}
-                  <div className="relative">
-                    <div className="absolute -left-[25px] w-4 h-4 rounded-full bg-primary"></div>
                     <div>
-                      <p className="font-medium">Item Registered</p>
-                      <time className="text-sm text-muted-foreground">{new Date(item.registeredAt).toLocaleString()}</time>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Basic Information</h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center gap-2">
+                          <Tag className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">Category:</span>
+                        </div>
+                        <span className="text-sm font-medium capitalize">{item?.category || 'N/A'}</span>
+                        
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">Registered:</span>
+                        </div>
+                        <span className="text-sm font-medium">{formatDate(item?.registeredAt)}</span>
+                        
+                        <div className="flex items-center gap-2">
+                          <Gift className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">Value:</span>
+                        </div>
+                        <span className="text-sm font-medium">
+                          {item?.estimatedValue ? `$${item.estimatedValue.toFixed(2)}` : 'N/A'}
+                        </span>
+                        
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm">Location:</span>
+                        </div>
+                        <span className="text-sm font-medium">
+                          {item?.lastKnownLocation || 'Not specified'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
+                      <p className="text-sm">
+                        {item?.description || 'No description provided'}
+                      </p>
                     </div>
                   </div>
                   
-                  {item.status !== 'Registered' && (
-                    <div className="relative">
-                      <div className="absolute -left-[25px] w-4 h-4 rounded-full bg-primary"></div>
-                      <div>
-                        <p className="font-medium">Changed to {item.status}</p>
-                        <time className="text-sm text-muted-foreground">{new Date(item.updatedAt).toLocaleString()}</time>
+                  {/* Right column - Owner info */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Owner Information</h3>
+                    
+                    {owner ? (
+                      <div className="border rounded-lg p-4 space-y-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            {owner.avatarUrl ? (
+                              <AvatarImage src={owner.avatarUrl} alt={owner.fullName || owner.username} />
+                            ) : null}
+                            <AvatarFallback>{getInitials(owner.fullName || owner.username)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{owner.fullName || owner.username}</p>
+                            <p className="text-sm text-muted-foreground">{owner.email}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <span>Phone:</span>
+                          </div>
+                          <span className="font-medium">{owner.phoneNumber || 'Not provided'}</span>
+                          
+                          <div className="flex items-center gap-2">
+                            <UserCircle className="h-4 w-4 text-muted-foreground" />
+                            <span>User ID:</span>
+                          </div>
+                          <span className="font-medium">{owner.id}</span>
+                          
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="h-4 py-0">Status</Badge>
+                          </div>
+                          <span className="font-medium capitalize">{owner.status}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="w-full">
+                        <EmptyState
+                          title="Owner information unavailable"
+                          description="Owner details could not be retrieved or do not exist"
+                          variant="warning"
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Item identifiers section */}
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground mb-2">Item Identifiers</h3>
+                      <div className="border rounded-lg p-3 space-y-2">
+                        {item?.serialNumber && (
+                          <div className="grid grid-cols-2 text-sm">
+                            <span className="text-muted-foreground">Serial Number:</span>
+                            <span className="font-medium font-mono">{item.serialNumber}</span>
+                          </div>
+                        )}
+                        
+                        {item?.modelNumber && (
+                          <div className="grid grid-cols-2 text-sm">
+                            <span className="text-muted-foreground">Model Number:</span>
+                            <span className="font-medium font-mono">{item.modelNumber}</span>
+                          </div>
+                        )}
+                        
+                        {!item?.serialNumber && !item?.modelNumber && (
+                          <p className="text-sm text-muted-foreground">No unique identifiers provided</p>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
+                
+                {/* Reports section with tabs */}
+                {reports.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Related Reports</h3>
+                    <Tabs defaultValue="all">
+                      <TabsList className="mb-2">
+                        <TabsTrigger value="all">All Reports ({reports.length})</TabsTrigger>
+                        <TabsTrigger value="lost">Lost Reports ({reports.filter(r => r.type === 'lost').length})</TabsTrigger>
+                        <TabsTrigger value="found">Found Reports ({reports.filter(r => r.type === 'found').length})</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="all" className="space-y-2">
+                        {reports.map((report) => (
+                          <ReportCard key={report.id} report={report} />
+                        ))}
+                      </TabsContent>
+                      
+                      <TabsContent value="lost" className="space-y-2">
+                        {reports.filter(r => r.type === 'lost').map((report) => (
+                          <ReportCard key={report.id} report={report} />
+                        ))}
+                        {reports.filter(r => r.type === 'lost').length === 0 && (
+                          <EmptyState
+                            title="No lost reports"
+                            description="This item has no lost reports"
+                            variant="subtle"
+                            size="sm"
+                          />
+                        )}
+                      </TabsContent>
+                      
+                      <TabsContent value="found" className="space-y-2">
+                        {reports.filter(r => r.type === 'found').map((report) => (
+                          <ReportCard key={report.id} report={report} />
+                        ))}
+                        {reports.filter(r => r.type === 'found').length === 0 && (
+                          <EmptyState
+                            title="No found reports"
+                            description="This item has no found reports"
+                            variant="subtle"
+                            size="sm"
+                          />
+                        )}
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                )}
               </CardContent>
-            </Card>
-            
-            {/* Quick Actions Card */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-4 w-4" />
-                  Admin Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6 space-y-2">
+              
+              <CardFooter className="flex justify-between">
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => openStatusDialog('Registered')}>
+                    <Package className="mr-2 h-4 w-4 text-blue-500" />
+                    Mark as Registered
+                  </Button>
+                  <Button variant="outline" onClick={() => openStatusDialog('Lost')}>
+                    <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
+                    Mark as Lost
+                  </Button>
+                  <Button variant="outline" onClick={() => openStatusDialog('Found')}>
+                    <Info className="mr-2 h-4 w-4 text-green-500" />
+                    Mark as Found
+                  </Button>
+                  <Button variant="outline" onClick={() => openStatusDialog('Recovered')}>
+                    <Package className="mr-2 h-4 w-4 text-purple-500" />
+                    Mark as Recovered
+                  </Button>
+                  <Button variant="outline" onClick={() => openStatusDialog('Archived')}>
+                    <FileSpreadsheet className="mr-2 h-4 w-4 text-gray-500" />
+                    Archive
+                  </Button>
+                </div>
+                
                 <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => window.navigator.clipboard.writeText(item.uniqueIdentifier)}
-                >
-                  <ClipboardCheck className="h-4 w-4 mr-2" />
-                  Copy Unique Identifier
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setNewStatus('Lost');
-                    setStatusDialogOpen(true);
-                  }}
-                >
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Mark as Lost
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setNewStatus('Found');
-                    setStatusDialogOpen(true);
-                  }}
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Mark as Found
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setNewStatus('Recovered');
-                    setStatusDialogOpen(true);
-                  }}
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Mark as Recovered
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setNewStatus('Archived');
-                    setStatusDialogOpen(true);
-                  }}
-                >
-                  <XCircle className="h-4 w-4 mr-2" />
-                  Archive Item
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="w-full justify-start"
+                  variant="destructive" 
                   onClick={() => setDeleteDialogOpen(true)}
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
+                  <Trash2 className="mr-2 h-4 w-4" />
                   Delete Item
                 </Button>
-              </CardContent>
+              </CardFooter>
             </Card>
-          </div>
-        </div>
+          </>
+        )}
       </div>
-      
+
       {/* Status Update Dialog */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Update Item Status</DialogTitle>
             <DialogDescription>
-              Change the status of "{item.name}" to reflect its current state.
+              Change the status of "{item?.name}" to {newStatus}.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="status" className="text-right">
-                Status
-              </Label>
-              <Select value={newStatus} onValueChange={setNewStatus} defaultValue={item.status}>
-                <SelectTrigger id="status" className="col-span-3">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Registered">Registered</SelectItem>
-                  <SelectItem value="Lost">Lost</SelectItem>
-                  <SelectItem value="Found">Found</SelectItem>
-                  <SelectItem value="Recovered">Recovered</SelectItem>
-                  <SelectItem value="Archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium">Current Status:</span>
+              <Badge variant="outline" className={getStatusColor(item?.status)}>
+                {item?.status}
+              </Badge>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="notes" className="text-right">
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium">New Status:</span>
+              <Badge variant="outline" className={getStatusColor(newStatus)}>
+                {newStatus}
+              </Badge>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="notes" className="text-sm font-medium">
                 Notes
-              </Label>
+              </label>
               <Textarea
                 id="notes"
-                placeholder="Reason for status change (optional)"
-                className="col-span-3"
+                placeholder="Add notes about this status change (optional)"
                 value={statusNotes}
                 onChange={(e) => setStatusNotes(e.target.value)}
               />
@@ -690,60 +544,103 @@ export default function AdminItemDetail() {
             <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleStatusUpdate} 
-              disabled={updateItemStatusMutation.isPending || !newStatus || newStatus === item.status}
-            >
-              {updateItemStatusMutation.isPending && (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button onClick={handleStatusChange}>
               Update Status
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you want to delete this item?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the item 
-              "{item.name}" and remove it from our servers.
+              This action cannot be undone. This will permanently delete the item
+              "{item?.name}" from the system and notify the owner.
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="reason" className="text-right">
-                Reason
-              </Label>
-              <Textarea
-                id="reason"
-                placeholder="Reason for deletion (optional)"
-                className="col-span-3"
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-              />
-            </div>
+          <div className="space-y-2 py-4">
+            <label htmlFor="deleteReason" className="text-sm font-medium">
+              Reason for deletion
+            </label>
+            <Textarea
+              id="deleteReason"
+              placeholder="Please provide a reason for deleting this item"
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+            />
           </div>
           
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={handleItemDelete}
-              disabled={deleteItemMutation.isPending}
-              className="bg-red-600 hover:bg-red-700"
+              onClick={handleDelete}
+              className="bg-red-600 text-white hover:bg-red-700"
             >
-              {deleteItemMutation.isPending && (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Delete Item
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+    </CommandCenter>
+  );
+}
+
+// Report card component for displaying reports
+function ReportCard({ report }: { report: any }) {
+  return (
+    <Card>
+      <CardHeader className="py-3">
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle className="text-base">{report.title}</CardTitle>
+            <CardDescription>Report #{report.id}</CardDescription>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Badge variant={report.type === 'lost' ? 'destructive' : 'default'}>
+              {report.type === 'lost' ? 'Lost' : 'Found'}
+            </Badge>
+            <Badge variant="outline" className="capitalize">
+              {report.status}
+            </Badge>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="py-2">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Date:</span>
+          </div>
+          <span>{formatDate(report.date)}</span>
+          
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Location:</span>
+          </div>
+          <span>{report.location || 'Not specified'}</span>
+          
+          <div className="col-span-2">
+            <span className="text-muted-foreground">Description:</span>
+            <p className="mt-1">{report.description || 'No description provided'}</p>
+          </div>
+          
+          {report.contactInfo && (
+            <>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Contact Info:</span>
+              </div>
+              <span>{report.contactInfo}</span>
+            </>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

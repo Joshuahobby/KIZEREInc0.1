@@ -1,105 +1,96 @@
-import React, { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react';
+import { PackageX, Search, AlertCircle, Info } from 'lucide-react';
+import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
-interface EmptyStateProps {
-  icon: ReactNode;
+const emptyStateVariants = cva(
+  "flex flex-col items-center justify-center text-center p-8 rounded-lg",
+  {
+    variants: {
+      variant: {
+        default: "bg-background border border-dashed",
+        subtle: "bg-muted/20",
+        bordered: "border border-border",
+        error: "bg-destructive/10 border border-destructive/20",
+        warning: "bg-warning/10 border border-warning/20",
+        success: "bg-success/10 border border-success/20",
+      },
+      size: {
+        default: "p-8 gap-4",
+        sm: "p-4 gap-2",
+        lg: "p-12 gap-6",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
+
+export interface EmptyStateProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof emptyStateVariants> {
   title: string;
-  description: string;
-  action?: ReactNode;
-  className?: string;
-  variant?: 'default' | 'info' | 'success' | 'warning' | 'error';
-  size?: 'default' | 'large' | 'compact';
-  centered?: boolean;
+  description?: string;
+  icon?: React.ReactNode;
+  action?: React.ReactNode;
 }
 
 export function EmptyState({
-  icon,
   title,
   description,
+  icon,
   action,
+  variant,
+  size,
   className,
-  variant = 'default',
-  size = 'default',
-  centered = true
+  ...props
 }: EmptyStateProps) {
-  // Variant-based styling
-  const getVariantClasses = () => {
+  // Default icon based on variant
+  const defaultIcon = () => {
     switch (variant) {
-      case 'info':
-        return 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800';
-      case 'success':
-        return 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800';
-      case 'warning':
-        return 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800';
       case 'error':
-        return 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800';
+        return <AlertCircle className="h-12 w-12 text-destructive" />;
+      case 'warning':
+        return <AlertCircle className="h-12 w-12 text-warning" />;
+      case 'success':
+        return <Info className="h-12 w-12 text-success" />;
+      case 'default':
       default:
-        return 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800';
+        return <PackageX className="h-12 w-12 text-muted-foreground" />;
     }
   };
 
-  // Size-based styling
-  const getSizeClasses = () => {
+  // Adjust icon size based on the size prop
+  const getIconSize = () => {
     switch (size) {
-      case 'large':
-        return 'p-8 md:p-10';
-      case 'compact':
-        return 'p-4';
+      case 'sm':
+        return 'h-8 w-8';
+      case 'lg':
+        return 'h-16 w-16';
       default:
-        return 'p-6 md:p-8';
+        return 'h-12 w-12';
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className={cn(
-        'border rounded-lg shadow-sm',
-        getVariantClasses(),
-        getSizeClasses(),
-        centered && 'flex flex-col items-center justify-center text-center',
-        className
-      )}
+    <div
+      className={cn(emptyStateVariants({ variant, size }), className)}
+      {...props}
     >
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.2, duration: 0.3 }}
-        className="mb-4"
-      >
-        {icon}
-      </motion.div>
-      
-      <motion.h3
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.3 }}
-        className="text-xl font-semibold mb-2"
-      >
-        {title}
-      </motion.h3>
-      
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.3 }}
-        className="text-muted-foreground mb-6 max-w-md"
-      >
-        {description}
-      </motion.p>
-      
-      {action && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.3 }}
-        >
-          {action}
-        </motion.div>
+      {icon ? (
+        <div className={getIconSize()}>{icon}</div>
+      ) : (
+        defaultIcon()
       )}
-    </motion.div>
+      <div className="space-y-2">
+        <h3 className="font-semibold tracking-tight">{title}</h3>
+        {description && (
+          <p className="text-sm text-muted-foreground">{description}</p>
+        )}
+      </div>
+      {action && <div className="mt-4">{action}</div>}
+    </div>
   );
 }

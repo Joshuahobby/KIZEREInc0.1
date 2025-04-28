@@ -1,54 +1,52 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
+import { useQuery } from '@tanstack/react-query';
+import { Link, useLocation } from 'wouter';
+import { apiRequest, queryClient } from '@/lib/query-client';
 import { useAuth } from '@/hooks/use-auth';
-import { AdminLayout } from '@/components/layout/admin-layout';
-import { apiRequest } from '@/lib/query-client';
-import { motion } from 'framer-motion';
-import { EmptyState } from '@/components/ui/empty-state';
-import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import CommandCenter from '@/pages/admin/command-center';
+
+// UI Components
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Select, 
-  SelectContent, 
-  SelectGroup, 
-  SelectItem, 
-  SelectLabel, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { DataTable } from '@/components/ui/data-table';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  TableCaption,
-} from '@/components/ui/table';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Pagination } from '@/components/ui/pagination';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { DataTable } from '@/components/ui/data-table';
+import { format } from 'date-fns';
+import {
+  Pencil,
+  Trash2,
+  Search,
+  Filter,
+  Package,
+  SlidersHorizontal,
+  FileSpreadsheet,
+  AlertTriangle
+} from 'lucide-react';
+import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+import { EmptyState } from '@/components/ui/empty-state';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
 } from '@/components/ui/dialog';
-import {
+import { 
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -57,524 +55,331 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Package,
-  PlusCircle,
-  Search,
-  Filter,
-  MoreVertical,
-  Eye,
-  Pencil,
-  Trash2,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Clock,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-} from 'lucide-react';
 
-// Item status badge component
-const ItemStatusBadge = ({ status }: { status: string }) => {
-  let variant = 'default';
-  
+// Item status badge color mapping
+const getStatusColor = (status: string) => {
   switch (status) {
     case 'Registered':
-      variant = 'default';
-      break;
+      return 'bg-blue-500/10 text-blue-500 border-blue-200';
     case 'Lost':
-      variant = 'destructive';
-      break;
+      return 'bg-red-500/10 text-red-500 border-red-200';
     case 'Found':
-      variant = 'success';
-      break;
+      return 'bg-green-500/10 text-green-500 border-green-200';
     case 'Recovered':
-      variant = 'success';
-      break;
+      return 'bg-purple-500/10 text-purple-500 border-purple-200';
     case 'Archived':
-      variant = 'outline';
-      break;
+      return 'bg-gray-500/10 text-gray-500 border-gray-200';
     default:
-      variant = 'default';
+      return 'bg-gray-100 text-gray-800';
   }
-  
-  return <Badge variant={variant as any}>{status}</Badge>;
 };
 
-// Item management page
+// Date formatter helper
+const formatDate = (dateString: string) => {
+  try {
+    return format(new Date(dateString), 'MMM d, yyyy');
+  } catch (e) {
+    return 'Invalid date';
+  }
+};
+
 export default function AdminItemManagement() {
   const { user } = useAuth();
-  const [, navigate] = useLocation();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  
+  const [, navigate] = useLocation();
+
   // State for filters and pagination
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [limit] = useState(10);
   const [sortBy, setSortBy] = useState('registeredAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  
-  // State for dialogs
+
+  // Delete and status change modals
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [newStatus, setNewStatus] = useState('');
   const [statusNotes, setStatusNotes] = useState('');
   const [deleteReason, setDeleteReason] = useState('');
-  
-  // Fetch items data with pagination, filtering, and sorting
-  const {
-    data: itemsData,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['/api/admin/items', page, pageSize, search, category, status, sortBy, sortOrder],
-    queryFn: () => apiRequest(`/api/admin/items?page=${page}&limit=${pageSize}&search=${search}&category=${category}&status=${status}&sortBy=${sortBy}&sortOrder=${sortOrder}`),
-  });
-  
-  // Mutation for updating item status
-  const updateItemStatusMutation = useMutation({
-    mutationFn: (data: { itemId: number, status: string, notes?: string }) => 
+
+  // Fetch items data with filters
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['/api/admin/items', page, limit, search, category, status, sortBy, sortOrder],
+    queryFn: () => 
       apiRequest({
-        url: `/api/admin/items/${data.itemId}/status`,
-        method: 'PATCH',
-        data: { 
-          status: data.status,
-          notes: data.notes
-        }
+        url: `/api/admin/items?page=${page}&limit=${limit}&search=${search}&category=${category}&status=${status}&sortBy=${sortBy}&sortOrder=${sortOrder}`,
       }),
-    onSuccess: () => {
+  });
+
+  // Handle status change
+  const handleStatusChange = async () => {
+    if (!selectedItem || !newStatus) return;
+    
+    try {
+      await apiRequest({
+        url: `/api/admin/items/${selectedItem.id}/status`,
+        method: 'PATCH',
+        data: {
+          status: newStatus,
+          notes: statusNotes
+        }
+      });
+      
+      // Show success toast
       toast({
         title: 'Status updated',
-        description: 'The item status has been successfully updated.',
+        description: `Item ${selectedItem.name} status has been updated to ${newStatus}`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/items'] });
+      
+      // Close dialog and reset state
       setStatusDialogOpen(false);
       setSelectedItem(null);
       setNewStatus('');
       setStatusNotes('');
-    },
-    onError: (err: any) => {
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/items'] });
+    } catch (error) {
+      console.error('Failed to update status:', error);
       toast({
-        title: 'Error',
-        description: err.message || 'Failed to update item status.',
         variant: 'destructive',
+        title: 'Failed to update status',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
       });
-    },
-  });
-  
-  // Mutation for deleting an item
-  const deleteItemMutation = useMutation({
-    mutationFn: (data: { itemId: number, reason?: string }) => 
-      apiRequest({
-        url: `/api/admin/items/${data.itemId}`,
+    }
+  };
+
+  // Handle item deletion
+  const handleDelete = async () => {
+    if (!selectedItem) return;
+    
+    try {
+      await apiRequest({
+        url: `/api/admin/items/${selectedItem.id}`,
         method: 'DELETE',
-        data: { reason: data.reason }
-      }),
-    onSuccess: () => {
+        data: {
+          reason: deleteReason
+        }
+      });
+      
+      // Show success toast
       toast({
         title: 'Item deleted',
-        description: 'The item has been successfully deleted.',
+        description: `Item ${selectedItem.name} has been deleted successfully`,
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/items'] });
+      
+      // Close dialog and reset state
       setDeleteDialogOpen(false);
       setSelectedItem(null);
       setDeleteReason('');
-    },
-    onError: (err: any) => {
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/items'] });
+    } catch (error) {
+      console.error('Failed to delete item:', error);
       toast({
-        title: 'Error',
-        description: err.message || 'Failed to delete item.',
         variant: 'destructive',
+        title: 'Failed to delete item',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
       });
-    },
-  });
-  
-  // Handle status update
-  const handleStatusUpdate = () => {
-    if (!selectedItem || !newStatus) return;
-    
-    updateItemStatusMutation.mutate({
-      itemId: selectedItem.id,
-      status: newStatus,
-      notes: statusNotes
-    });
-  };
-  
-  // Handle item deletion
-  const handleItemDelete = () => {
-    if (!selectedItem) return;
-    
-    deleteItemMutation.mutate({
-      itemId: selectedItem.id,
-      reason: deleteReason
-    });
-  };
-  
-  // Handle sort toggle
-  const toggleSort = (field: string) => {
-    if (sortBy === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(field);
-      setSortOrder('desc');
     }
   };
+
+  // Open the status change dialog
+  const openStatusDialog = (item: any, status: string) => {
+    setSelectedItem(item);
+    setNewStatus(status);
+    setStatusDialogOpen(true);
+  };
   
-  // Columns for the data table
+  // Open the delete confirmation dialog
+  const openDeleteDialog = (item: any) => {
+    setSelectedItem(item);
+    setDeleteDialogOpen(true);
+  };
+
+  // Table columns definition
   const columns = [
     {
-      header: "ID",
-      accessorKey: "id",
-      cell: ({ row }: any) => <span className="text-xs font-mono">#{row.original.id}</span>
+      accessorKey: 'id',
+      header: 'ID',
+      cell: ({ row }: any) => <span className="font-mono text-xs">{row.getValue('id')}</span>,
     },
     {
-      header: ({ column }: any) => (
-        <Button
-          variant="ghost"
-          onClick={() => toggleSort('name')}
-          className="-ml-4 h-8"
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      accessorKey: "name",
+      accessorKey: 'name',
+      header: 'Item Name',
       cell: ({ row }: any) => (
-        <div>
-          <div className="font-medium">{row.original.name}</div>
-          <div className="text-xs text-muted-foreground">{row.original.uniqueIdentifier}</div>
+        <div className="font-medium truncate max-w-[180px]" title={row.getValue('name')}>
+          <Link 
+            href={`/admin/items/${row.getValue('id')}`} 
+            className="hover:text-primary hover:underline"
+          >
+            {row.getValue('name')}
+          </Link>
         </div>
-      )
+      ),
     },
     {
-      header: ({ column }: any) => (
-        <Button
-          variant="ghost"
-          onClick={() => toggleSort('category')}
-          className="-ml-4 h-8"
-        >
-          Category
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      accessorKey: "category",
+      accessorKey: 'category',
+      header: 'Category',
       cell: ({ row }: any) => (
-        <div className="capitalize">{row.original.category}</div>
-      )
+        <Badge variant="outline" className="capitalize">
+          {row.getValue('category')}
+        </Badge>
+      ),
     },
     {
-      header: ({ column }: any) => (
-        <Button
-          variant="ghost"
-          onClick={() => toggleSort('status')}
-          className="-ml-4 h-8"
-        >
-          Status
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      accessorKey: "status",
-      cell: ({ row }: any) => <ItemStatusBadge status={row.original.status} />
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }: any) => {
+        const status = row.getValue('status');
+        return (
+          <Badge variant="outline" className={getStatusColor(status as string)}>
+            {status}
+          </Badge>
+        );
+      },
     },
     {
-      header: ({ column }: any) => (
-        <Button
-          variant="ghost"
-          onClick={() => toggleSort('registeredAt')}
-          className="-ml-4 h-8"
-        >
-          Registered
-          <ArrowUpDown className="ml-2 h-3 w-3" />
-        </Button>
-      ),
-      accessorKey: "registeredAt",
-      cell: ({ row }: any) => (
-        <div className="text-sm">
-          {new Date(row.original.registeredAt).toLocaleDateString()}
-        </div>
-      )
+      accessorKey: 'registeredAt',
+      header: 'Registered',
+      cell: ({ row }: any) => formatDate(row.getValue('registeredAt')),
     },
     {
-      id: "actions",
-      cell: ({ row }: any) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigate(`/admin/items/${row.original.id}`)}>
-              <Eye className="h-4 w-4 mr-2" />
-              View details
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => {
-              setSelectedItem(row.original);
-              setNewStatus(row.original.status);
-              setStatusDialogOpen(true);
-            }}>
-              <Pencil className="h-4 w-4 mr-2" />
-              Update status
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="text-destructive focus:text-destructive"
-              onClick={() => {
-                setSelectedItem(row.original);
-                setDeleteDialogOpen(true);
-              }}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete item
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }: any) => {
+        const item = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate(`/admin/items/${item.id}`)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => openStatusDialog(item, 'Registered')}>
+                <Package className="mr-2 h-4 w-4 text-blue-500" />
+                Mark as Registered
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openStatusDialog(item, 'Lost')}>
+                <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
+                Mark as Lost
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openStatusDialog(item, 'Found')}>
+                <Package className="mr-2 h-4 w-4 text-green-500" />
+                Mark as Found
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openStatusDialog(item, 'Recovered')}>
+                <Package className="mr-2 h-4 w-4 text-purple-500" />
+                Mark as Recovered
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openStatusDialog(item, 'Archived')}>
+                <FileSpreadsheet className="mr-2 h-4 w-4 text-gray-500" />
+                Archive Item
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => openDeleteDialog(item)}
+                className="text-red-600 focus:text-red-600"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Item
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
   ];
-  
-  // Render loading state
-  if (isLoading) {
+
+  // If error occurred
+  if (error) {
     return (
-      <AdminLayout>
-        <div className="container py-6">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Item Management</h1>
-          </div>
-          
-          <div className="space-y-4">
-            <Skeleton className="h-12 w-full" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-            <div className="rounded-md border">
-              <Skeleton className="h-[400px] w-full" />
-            </div>
-            <Skeleton className="h-10 w-full max-w-[200px] mx-auto" />
-          </div>
-        </div>
-      </AdminLayout>
+      <CommandCenter>
+        <Card className="col-span-4">
+          <CardHeader>
+            <CardTitle>Item Management</CardTitle>
+            <CardDescription>View and manage all registered items</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmptyState
+              title="Error loading items"
+              description={error instanceof Error ? error.message : "Failed to load items data"}
+              variant="error"
+              icon={<AlertTriangle className="h-12 w-12" />}
+              action={
+                <Button onClick={() => queryClient.invalidateQueries({ queryKey: ['/api/admin/items'] })}>
+                  Retry
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
+      </CommandCenter>
     );
   }
-  
-  // Render error state
-  if (isError) {
-    return (
-      <AdminLayout>
-        <div className="container py-6">
-          <EmptyState
-            icon={<AlertTriangle className="h-10 w-10 text-destructive" />}
-            title="Error loading items"
-            description={error instanceof Error ? error.message : "Failed to load items data"}
-            action={
-              <Button onClick={() => refetch()}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Try again
-              </Button>
-            }
-            variant="error"
-          />
-        </div>
-      </AdminLayout>
-    );
-  }
-  
-  // Determine if there are no items or no matching search results
-  const hasItems = itemsData && itemsData.items && itemsData.items.length > 0;
-  const hasNoMatchingResults = search || category || status;
-  
+
   return (
-    <AdminLayout>
-      <div className="container py-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <h1 className="text-2xl font-bold">Item Management</h1>
-          <Button onClick={() => navigate('/admin/items/new')}>
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Add New Item
-          </Button>
-        </div>
-        
-        {/* Filters */}
-        <div className="mb-6 space-y-4">
-          <div className="flex items-center">
-            <Filter className="h-4 w-4 mr-2" />
-            <h2 className="text-sm font-medium">Filters</h2>
-          </div>
+    <CommandCenter>
+      <div className="col-span-4 space-y-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <div>
+              <CardTitle>Item Management</CardTitle>
+              <CardDescription>View and manage all registered items in the system</CardDescription>
+            </div>
+            <Button size="sm" onClick={() => navigate('/register-item')}>
+              Register New Item
+            </Button>
+          </CardHeader>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, ID or description..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-9"
-              />
-            </div>
-            
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
-                <SelectItem value="Electronics">Electronics</SelectItem>
-                <SelectItem value="Jewelry">Jewelry</SelectItem>
-                <SelectItem value="Documents">Documents</SelectItem>
-                <SelectItem value="Accessories">Accessories</SelectItem>
-                <SelectItem value="Clothing">Clothing</SelectItem>
-                <SelectItem value="Bags">Bags</SelectItem>
-                <SelectItem value="Keys">Keys</SelectItem>
-                <SelectItem value="Wallets">Wallets</SelectItem>
-                <SelectItem value="Phones">Phones</SelectItem>
-                <SelectItem value="Computers">Computers</SelectItem>
-                <SelectItem value="Transportation">Transportation</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="h-9">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
-                <SelectItem value="Registered">Registered</SelectItem>
-                <SelectItem value="Lost">Lost</SelectItem>
-                <SelectItem value="Found">Found</SelectItem>
-                <SelectItem value="Recovered">Recovered</SelectItem>
-                <SelectItem value="Archived">Archived</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        {/* Results */}
-        {!hasItems ? (
-          <EmptyState
-            icon={<Package className="h-10 w-10 text-primary/70" />}
-            title={hasNoMatchingResults ? "No matching items found" : "No items registered yet"}
-            description={
-              hasNoMatchingResults
-                ? "Try adjusting your search filters to find what you're looking for"
-                : "Items registered on the platform will appear here"
-            }
-            action={
-              hasNoMatchingResults ? (
-                <Button variant="outline" onClick={() => {
-                  setSearch('');
-                  setCategory('');
-                  setStatus('');
-                }}>
-                  Clear filters
-                </Button>
-              ) : (
-                <Button onClick={() => navigate('/admin/items/new')}>
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  Add First Item
-                </Button>
-              )
-            }
-          />
-        ) : (
-          <>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {columns.map((column) => (
-                      <TableHead key={column.accessorKey || column.id}>
-                        {column.header && typeof column.header === 'function'
-                          ? column.header({ column })
-                          : column.header}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {itemsData.items.map((item: any) => (
-                    <TableRow key={item.id}>
-                      {columns.map((column) => (
-                        <TableCell key={column.accessorKey || column.id}>
-                          {column.cell && typeof column.cell === 'function'
-                            ? column.cell({ row: { original: item } })
-                            : item[column.accessorKey as string]}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            
-            {/* Pagination */}
-            <div className="flex items-center justify-between space-x-2 py-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {((page - 1) * pageSize) + 1}-
-                {Math.min(page * pageSize, itemsData.total)} of {itemsData.total} items
+          <CardContent>
+            {/* Filters */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              <div className="flex-1 min-w-[200px]">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 opacity-50" />
+                  <Input
+                    placeholder="Search items..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="max-w-full pl-9"
+                  />
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.min(itemsData.totalPages, p + 1))}
-                  disabled={page === itemsData.totalPages}
-                >
-                  Next
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-      
-      {/* Status Update Dialog */}
-      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Update Item Status</DialogTitle>
-            <DialogDescription>
-              Change the status of "{selectedItem?.name}" to reflect its current state.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="status" className="text-right">
-                Status
-              </Label>
-              <Select value={newStatus} onValueChange={setNewStatus} defaultValue={selectedItem?.status}>
-                <SelectTrigger id="status" className="col-span-3">
-                  <SelectValue placeholder="Select status" />
+              
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="electronics">Electronics</SelectItem>
+                  <SelectItem value="documents">Documents</SelectItem>
+                  <SelectItem value="clothing">Clothing</SelectItem>
+                  <SelectItem value="jewelry">Jewelry</SelectItem>
+                  <SelectItem value="accessories">Accessories</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Statuses</SelectItem>
                   <SelectItem value="Registered">Registered</SelectItem>
                   <SelectItem value="Lost">Lost</SelectItem>
                   <SelectItem value="Found">Found</SelectItem>
@@ -582,15 +387,97 @@ export default function AdminItemManagement() {
                   <SelectItem value="Archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => { setSortBy('registeredAt'); setSortOrder('desc'); }}>
+                    Newest First
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setSortBy('registeredAt'); setSortOrder('asc'); }}>
+                    Oldest First
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setSortBy('name'); setSortOrder('asc'); }}>
+                    Name (A-Z)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => { setSortBy('name'); setSortOrder('desc'); }}>
+                    Name (Z-A)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={() => {
+                  setSearch('');
+                  setCategory('');
+                  setStatus('');
+                  setSortBy('registeredAt');
+                  setSortOrder('desc');
+                }}
+              >
+                &times;
+              </Button>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="notes" className="text-right">
+
+            {/* Items Table */}
+            <DataTable
+              columns={columns}
+              data={data?.items || []}
+              isLoading={isLoading}
+              emptyState={{
+                title: "No items found",
+                description: "No items match your current filters. Try adjusting your search criteria.",
+                icon: <Package className="h-12 w-12" />
+              }}
+              pagination={{
+                pageIndex: page - 1,
+                pageSize: limit,
+                pageCount: data?.totalPages || 1,
+                onPageChange: (newPage) => setPage(newPage + 1)
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Status Update Dialog */}
+      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Update Item Status</DialogTitle>
+            <DialogDescription>
+              Change the status of "{selectedItem?.name}" to {newStatus}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium">Current Status:</span>
+              <Badge variant="outline" className={getStatusColor(selectedItem?.status)}>
+                {selectedItem?.status}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium">New Status:</span>
+              <Badge variant="outline" className={getStatusColor(newStatus)}>
+                {newStatus}
+              </Badge>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="notes" className="text-sm font-medium">
                 Notes
-              </Label>
+              </label>
               <Textarea
                 id="notes"
-                placeholder="Reason for status change (optional)"
-                className="col-span-3"
+                placeholder="Add notes about this status change (optional)"
                 value={statusNotes}
                 onChange={(e) => setStatusNotes(e.target.value)}
               />
@@ -601,60 +488,47 @@ export default function AdminItemManagement() {
             <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleStatusUpdate} 
-              disabled={updateItemStatusMutation.isPending || !newStatus || newStatus === selectedItem?.status}
-            >
-              {updateItemStatusMutation.isPending && (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button onClick={handleStatusChange}>
               Update Status
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure you want to delete this item?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the item 
-              "{selectedItem?.name}" and remove it from our servers.
+              This action cannot be undone. This will permanently delete the item
+              "{selectedItem?.name}" from the system and notify the owner.
             </AlertDialogDescription>
           </AlertDialogHeader>
           
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="reason" className="text-right">
-                Reason
-              </Label>
-              <Textarea
-                id="reason"
-                placeholder="Reason for deletion (optional)"
-                className="col-span-3"
-                value={deleteReason}
-                onChange={(e) => setDeleteReason(e.target.value)}
-              />
-            </div>
+          <div className="space-y-2 py-4">
+            <label htmlFor="deleteReason" className="text-sm font-medium">
+              Reason for deletion
+            </label>
+            <Textarea
+              id="deleteReason"
+              placeholder="Please provide a reason for deleting this item"
+              value={deleteReason}
+              onChange={(e) => setDeleteReason(e.target.value)}
+            />
           </div>
           
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={handleItemDelete}
-              disabled={deleteItemMutation.isPending}
-              className="bg-red-600 hover:bg-red-700"
+              onClick={handleDelete}
+              className="bg-red-600 text-white hover:bg-red-700"
             >
-              {deleteItemMutation.isPending && (
-                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Delete Item
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+    </CommandCenter>
   );
 }
