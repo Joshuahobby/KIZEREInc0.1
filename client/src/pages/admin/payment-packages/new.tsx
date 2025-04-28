@@ -25,7 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
-import { Package, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { PackageIcon, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 // Define the form schema
 const packageSchema = z.object({
@@ -414,7 +414,7 @@ export default function NewPaymentPackage() {
                         </>
                       ) : (
                         <>
-                          <Package className="mr-2 h-4 w-4" />
+                          <PackageIcon className="mr-2 h-4 w-4" />
                           Create Package
                         </>
                       )}

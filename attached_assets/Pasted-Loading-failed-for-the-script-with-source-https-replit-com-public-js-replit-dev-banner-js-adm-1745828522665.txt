@@ -1,0 +1,45 @@
+Loading failed for the <script> with source “https://replit.com/public/js/replit-dev-banner.js”. admin:107:92
+Content-Security-Policy: The page’s settings blocked a script (script-src-elem) at https://replit.com/public/js/replit-dev-banner.js from being executed because it violates the following directive: “script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com https://*.gstatic.com https://accounts.google.com” admin
+[vite] connecting... client:495:9
+[vite] connected. client:618:15
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools chunk-RPCDYKBN.js:21551:25
+[Firebase] Using Firebase authDomain: kizere-99ac2.firebaseapp.com firebase.ts:22:11
+[Firebase] Current origin: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev firebase.ts:23:11
+[Firebase] Checking configuration variables: 
+Object { hasApiKey: true, hasProjectId: true, hasAppId: true, authDomain: "kizere-99ac2.firebaseapp.com" }
+firebase.ts:37:11
+[Firebase] Configuration validation passed firebase.ts:49:11
+[Firebase] Successfully initialized Firebase app firebase.ts:55:11
+Error in parsing value for ‘-webkit-text-size-adjust’.  Declaration dropped. admin:141:29
+Unknown property ‘-moz-osx-font-smoothing’.  Declaration dropped. admin:511:27
+Unknown property ‘-moz-column-gap’.  Declaration dropped. admin:1774:19
+Unknown property ‘-moz-column-gap’.  Declaration dropped. admin:1778:19
+[Firebase] Checking for redirect result... firebase.ts:137:13
+[Firebase] Auth context from localStorage: 
+Object { hasState: true, hasRedirect: true, savedTimestamp: "2025-04-27T12:10:34.600Z", savedOrigin: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", savedDomain: "5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", currentUrl: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin" }
+firebase.ts:151:13
+[Firebase] Getting redirect result from auth instance firebase.ts:162:13
+[Firebase] Running on Replit domain firebase.ts:164:13
+[useAuth] User authenticated from session 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:42:23
+[useAuth] User authenticated from session 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:42:23
+[Firebase] No redirect result found firebase.ts:206:13
+[Firebase] User is already logged in: 
+Object { email: "kizereinc@gmail.com", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", displayName: "KIZERE Inc." }
+firebase.ts:209:15
+[App] Successfully handled Firebase redirect result App.tsx:61:21
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin/GET
+[HTTP/1.1 200 OK 636ms]
+
+GET
+https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c
+[HTTP/2 200  0ms]
+
+XHRGET
+https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin/GET
+[HTTP/1.1 200 OK 626ms]
+
