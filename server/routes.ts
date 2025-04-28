@@ -2042,6 +2042,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get comprehensive report statistics
       const reportStats = await storage.getReportStats();
       
+      // Log the output to debug
+      logger.info('Report statistics result:', { reportStats });
+      
       res.json(reportStats);
     } catch (error) {
       logger.error("Report statistics error:", error);
