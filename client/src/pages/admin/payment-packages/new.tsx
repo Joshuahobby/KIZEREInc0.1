@@ -84,7 +84,7 @@ export default function NewPaymentPackage() {
         description: 'The payment package has been created successfully.',
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/payment-packages'] });
-      navigate('/admin/payment-packages');
+      window.location.href = '/admin/payment-packages';
     },
     onError: (error: any) => {
       toast({
@@ -136,7 +136,7 @@ export default function NewPaymentPackage() {
         <div className="flex items-center mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/admin/payment-packages')}
+            onClick={() => window.location.href = '/admin/payment-packages'}
             className="mr-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -403,7 +403,7 @@ export default function NewPaymentPackage() {
 
                 <CardFooter className="flex justify-end px-0 pt-2">
                   <div className="flex gap-2">
-                    <Button variant="outline" type="button" onClick={() => navigate('/admin/payment-packages')}>
+                    <Button variant="outline" type="button" onClick={() => window.location.href = '/admin/payment-packages'}>
                       Cancel
                     </Button>
                     <Button type="submit" disabled={createPackageMutation.isPending}>
