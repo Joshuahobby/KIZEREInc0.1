@@ -11,7 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/ui/data-table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { 
-  Package, 
+  PackageIcon, 
   Plus, 
   Search, 
   DollarSign, 
@@ -108,7 +108,7 @@ export default function PaymentPackages() {
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-            <Package className="h-4 w-4 text-primary" />
+            <PackageIcon className="h-4 w-4 text-primary" />
           </div>
           <div className="font-medium">{row.original.name}</div>
         </div>

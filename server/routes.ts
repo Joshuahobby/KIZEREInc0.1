@@ -1038,6 +1038,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Admin payment package routes
+  app.get("/api/admin/payment-packages", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const includeInactive = req.query.includeInactive === 'true';
+      const packages = await storage.getAllPaymentPackages(includeInactive);
+      res.json(packages);
+    } catch (error: any) {
+      console.error('Error getting admin payment packages', { error });
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
   app.post("/api/admin/payment-packages", requireAuth, requireAdmin, async (req, res) => {
     try {
       // Validate request body
