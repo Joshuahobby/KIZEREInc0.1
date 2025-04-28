@@ -43,6 +43,9 @@ export const paymentStatuses = ['pending', 'successful', 'failed', 'cancelled'] 
 // Define payment types
 export const paymentTypes = ['registration', 'lost_report'] as const;
 
+// Define package status
+export const packageStatuses = ['active', 'inactive', 'archived'] as const;
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -224,6 +227,23 @@ export const userWarnings = pgTable("user_warnings", {
   expiresAt: timestamp("expires_at"),
 });
 
+// Payment packages
+export const paymentPackages = pgTable("payment_packages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  type: text("type").notNull(), // 'registration' or 'lost_report'
+  amount: numeric("amount").notNull(),
+  currency: text("currency").notNull().default('RWF'),
+  status: text("status").notNull().default('active'),
+  isDefault: boolean("is_default").default(false),
+  features: json("features"), // Array of package features/benefits
+  validityDays: integer("validity_days"), // Optional validity period in days
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Zod schemas for input validation
 
 // User schemas
@@ -315,6 +335,21 @@ export const insertUserWarningSchema = createInsertSchema(userWarnings).omit({
   id: true, issuedAt: true, acknowledgedAt: true, expiresAt: true 
 });
 
+// Payment package schema
+export const insertPaymentPackageSchema = createInsertSchema(paymentPackages).omit({
+  id: true, createdAt: true, updatedAt: true
+}).extend({
+  type: z.enum(paymentTypes, {
+    errorMap: () => ({ message: "Package type must be either 'registration' or 'lost_report'" })
+  }),
+  status: z.enum(packageStatuses, {
+    errorMap: () => ({ message: "Package status must be valid" })
+  }).default('active'),
+  name: z.string().min(3, "Package name must be at least 3 characters"),
+  amount: z.number().positive("Amount must be positive"),
+  features: z.array(z.string()).optional().default([])
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertItem = z.infer<typeof insertItemSchema>;
@@ -328,6 +363,7 @@ export type InsertRole = z.infer<typeof insertRoleSchema>;
 export type InsertVerificationRequest = z.infer<typeof insertVerificationRequestSchema>;
 export type InsertStatusChange = z.infer<typeof insertStatusChangeSchema>;
 export type InsertUserWarning = z.infer<typeof insertUserWarningSchema>;
+export type InsertPaymentPackage = z.infer<typeof insertPaymentPackageSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Item = typeof items.$inferSelect;
@@ -341,6 +377,7 @@ export type Role = typeof roles.$inferSelect;
 export type VerificationRequest = typeof verificationRequests.$inferSelect;
 export type StatusChange = typeof statusChanges.$inferSelect;
 export type UserWarning = typeof userWarnings.$inferSelect;
+export type PaymentPackage = typeof paymentPackages.$inferSelect;
 
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type UserRole = typeof userRoles[number];
@@ -353,6 +390,7 @@ export type ReportStatus = typeof reportStatuses[number];
 export type PermissionType = typeof permissionTypes[number];
 export type PaymentStatus = typeof paymentStatuses[number];
 export type PaymentType = typeof paymentTypes[number];
+export type PackageStatus = typeof packageStatuses[number];
 
 // Payment validation schemas
 export const initiatePaymentSchema = z.object({
