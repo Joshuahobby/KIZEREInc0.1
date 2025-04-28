@@ -38,7 +38,7 @@ import { Loader2, Search, Download, MoreHorizontal, RefreshCw, AlertCircle, Cale
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { DEFAULT_CURRENCY } from "@/config/payment.config";
-import { AdminLayout } from "@/components/layout/admin-layout";
+import { CommandCenterLayout } from "@/components/layouts/command-center-layout";
 
 // Placeholder for real data fetching
 interface PaymentTransaction {
@@ -245,7 +245,7 @@ export default function AdminPaymentDashboard() {
   // If user is not admin, show access denied
   if (!isAdmin) {
     return (
-      <AdminLayout>
+      <CommandCenterLayout>
         <div className="max-w-5xl mx-auto px-4 py-10">
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-10">
@@ -257,12 +257,12 @@ export default function AdminPaymentDashboard() {
             </CardContent>
           </Card>
         </div>
-      </AdminLayout>
+      </CommandCenterLayout>
     );
   }
 
   return (
-    <AdminLayout>
+    <CommandCenterLayout>
       <div className="container py-8">
         <div className="flex flex-col space-y-8">
           <div>
@@ -600,6 +600,6 @@ export default function AdminPaymentDashboard() {
           </Card>
         </div>
       </div>
-    </AdminLayout>
+    </CommandCenterLayout>
   );
 }
