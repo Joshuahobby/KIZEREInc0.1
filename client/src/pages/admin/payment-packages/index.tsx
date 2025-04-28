@@ -37,7 +37,8 @@ export default function PaymentPackages() {
   // Fetch payment packages data
   const { data: packages, isLoading, error } = useQuery({
     queryKey: ['/api/admin/payment-packages'],
-    enabled: !!user?.id,
+    enabled: !!user?.id && role === 'Admin', // Only fetch if user is admin
+    retry: false, // Don't retry on error
   });
 
   // Placeholder packages data until API is implemented
@@ -268,7 +269,8 @@ export default function PaymentPackages() {
               </div>
             ) : error ? (
               <div className="text-center py-6 text-red-500">
-                <p>Error loading payment packages. Please try again.</p>
+                <p>Error loading payment packages: {error instanceof Error ? error.message : 'Unknown error'}</p>
+                <p className="text-sm mt-2">Using placeholder data instead.</p>
               </div>
             ) : (
               <DataTable columns={columns} data={filteredPackages} />
