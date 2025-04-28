@@ -2442,38 +2442,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Admin API: Create a new payment package
-  app.post("/api/admin/payment-packages", requireAdmin, async (req, res) => {
-    try {
-      if (!req.user || !req.user.id) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      logger.info('Admin creating new payment package');
-      
-      // Extract package data from request body
-      const packageData = {
-        ...req.body,
-        createdBy: req.user.id,
-        status: req.body.status || 'active',
-        isDefault: req.body.isDefault || false
-      };
-      
-      // Create new payment package
-      const newPackage = await storage.createPaymentPackage(packageData);
-      
-      logger.info(`Successfully created payment package with ID: ${newPackage.id}`);
-      
-      // Return new payment package
-      res.status(201).json(newPackage);
-    } catch (error) {
-      logger.error("Error creating payment package:", error);
-      res.status(500).json({ 
-        message: "Failed to create payment package",
-        error: error instanceof Error ? error.message : "Unknown error"
-      });
-    }
-  });
+  // This route has been removed to fix the duplicate route issue
+  // The equivalent functionality is already implemented at line ~1052
   
   // Admin API: Update a payment package
   app.put("/api/admin/payment-packages/:id", requireAdmin, async (req, res) => {
