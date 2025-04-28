@@ -4,7 +4,7 @@ import { Link, useLocation } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/query-client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
-import CommandCenter from '@/pages/admin/command-center';
+import { CommandCenterLayout } from '@/components/layouts/command-center-layout';
 
 // UI Components
 import { Button } from '@/components/ui/button';
@@ -307,7 +307,7 @@ export default function AdminItemManagement() {
   // If error occurred
   if (error) {
     return (
-      <CommandCenter>
+      <CommandCenterLayout>
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Item Management</CardTitle>
@@ -327,12 +327,12 @@ export default function AdminItemManagement() {
             />
           </CardContent>
         </Card>
-      </CommandCenter>
+      </CommandCenterLayout>
     );
   }
 
   return (
-    <CommandCenter>
+    <CommandCenterLayout>
       <div className="col-span-4 space-y-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -531,6 +531,6 @@ export default function AdminItemManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </CommandCenter>
+    </CommandCenterLayout>
   );
 }

@@ -62,8 +62,11 @@ import {
 /**
  * KIZERE Command Center - Main Dashboard Component
  * Implements Phase 1 & 2 of the implementation plan
+ * 
+ * NOTE: For pages that need to be wrapped in the command center layout,
+ * use the CommandCenterLayout component imported from '@/components/layouts/command-center-layout'
  */
-export default function CommandCenter({ children }: { children?: React.ReactNode }) {
+export default function CommandCenter() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
@@ -267,12 +270,7 @@ export default function CommandCenter({ children }: { children?: React.ReactNode
           
           {/* Main content */}
           <main className="flex-1 overflow-auto p-4 md:p-6">
-            {children ? (
-              // If children are provided, render them instead of dashboard content
-              children
-            ) : (
-              // Default dashboard content
-              <div className="grid gap-6">
+            <div className="grid gap-6">
               {/* Welcome Message */}
               <div className="flex flex-col md:flex-row justify-between gap-4 px-2">
                 <div>
@@ -463,7 +461,6 @@ export default function CommandCenter({ children }: { children?: React.ReactNode
                 </Card>
               </div>
             </div>
-            )}
           </main>
         </div>
       </div>

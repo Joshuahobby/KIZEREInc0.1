@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/query-client";
-import CommandCenter from "@/pages/admin/command-center";
+import { CommandCenterLayout } from "@/components/layouts/command-center-layout";
 
 // Define form schema
 const itemFormSchema = z.object({
@@ -83,7 +83,7 @@ export default function NewItem() {
   }
 
   return (
-    <CommandCenter>
+    <CommandCenterLayout>
       <div className="col-span-4 space-y-6">
         <Button
           variant="outline"
@@ -307,6 +307,6 @@ export default function NewItem() {
           </CardContent>
         </Card>
       </div>
-    </CommandCenter>
+    </CommandCenterLayout>
   );
 }
