@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import UnifiedDashboard from "@/pages/unified-dashboard";
 import ItemRegistration from "@/pages/item-registration";
+import MyItems from "@/pages/my-items";
 import Search from "@/pages/search";
 import LostFound from "@/pages/lost-found";
 import UserManagement from "@/pages/user-management";

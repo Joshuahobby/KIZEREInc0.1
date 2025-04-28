@@ -1,632 +1,243 @@
-import React, { useState, useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
-import { useLocation } from "wouter";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
-import { useToast } from "@/hooks/use-toast";
-import { insertItemSchema } from "@shared/schema";
+import { Link, useLocation } from "wouter";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { getCurrentUser } from "@/lib/firebase";
-import { InitializePaymentResponse } from "@/models/payment.model";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { z } from "zod";
 
-// UI Components
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+// Item categories
+const itemCategories = [
+  'Electronics', 'Jewelry', 'Documents', 'Accessories', 
+  'Clothing', 'Bags', 'Keys', 'Wallets', 'Phones', 
+  'Computers', 'Transportation', 'Other'
+] as const;
 
-// Item Registration Components
-import { BatchImageUpload } from "@/components/item-registration/batch-image-upload";
-import { OwnershipChain } from "@/components/item-registration/ownership-chain";
-import { QRCodeGenerator } from "@/components/item-registration/qr-code-generator";
-import { SmartIDRecognizer } from "@/components/item-registration/smart-id-recognizer";
-
-// Icons
-import { 
-  AlertCircle,
-  ArrowRight, 
-  Camera, 
-  CheckCircle2, 
-  ClipboardCheck, 
-  FileText,
-  Info,
-  Loader2, 
-  Package2, 
-  QrCode, 
-  RotateCcw, 
-  SaveIcon, 
-  Send, 
-  ShieldCheck
-} from "lucide-react";
-
-// Define category options
-const CATEGORY_OPTIONS = [
-  { value: "electronics", label: "Electronics" },
-  { value: "documents", label: "Documents" },
-  { value: "jewelry", label: "Jewelry" },
-  { value: "clothing", label: "Clothing" },
-  { value: "accessories", label: "Accessories" },
-  { value: "bags", label: "Bags" },
-  { value: "other", label: "Other" },
-];
-
-// Define subcategory options based on main category
-const SUBCATEGORY_OPTIONS = {
-  electronics: [
-    { value: "phone", label: "Phone" },
-    { value: "laptop", label: "Laptop" },
-    { value: "tablet", label: "Tablet" },
-    { value: "camera", label: "Camera" },
-    { value: "headphones", label: "Headphones" },
-    { value: "other", label: "Other" },
-  ],
-  documents: [
-    { value: "id_card", label: "ID Card" },
-    { value: "passport", label: "Passport" },
-    { value: "driver_license", label: "Driver's License" },
-    { value: "certificate", label: "Certificate" },
-    { value: "other", label: "Other" },
-  ],
-  jewelry: [
-    { value: "ring", label: "Ring" },
-    { value: "necklace", label: "Necklace" },
-    { value: "bracelet", label: "Bracelet" },
-    { value: "watch", label: "Watch" },
-    { value: "other", label: "Other" },
-  ],
-  clothing: [
-    { value: "shirt", label: "Shirt" },
-    { value: "pants", label: "Pants" },
-    { value: "dress", label: "Dress" },
-    { value: "jacket", label: "Jacket" },
-    { value: "shoes", label: "Shoes" },
-    { value: "other", label: "Other" },
-  ],
-  accessories: [
-    { value: "hat", label: "Hat" },
-    { value: "glasses", label: "Glasses" },
-    { value: "scarf", label: "Scarf" },
-    { value: "gloves", label: "Gloves" },
-    { value: "other", label: "Other" },
-  ],
-  bags: [
-    { value: "backpack", label: "Backpack" },
-    { value: "handbag", label: "Handbag" },
-    { value: "wallet", label: "Wallet" },
-    { value: "suitcase", label: "Suitcase" },
-    { value: "other", label: "Other" },
-  ],
-  other: [
-    { value: "other", label: "Other" },
-  ],
-};
-
-// Extend the item schema with form-specific validations
-const itemRegistrationSchema = insertItemSchema.extend({
-  subCategory: z.string().optional()
+// Item validation schema
+const itemRegistrationSchema = z.object({
+  name: z.string().min(2, "Item name must be at least 2 characters"),
+  category: z.enum(itemCategories, {
+    errorMap: () => ({ message: "Please select a valid category" })
+  }),
+  uniqueIdentifier: z.string().min(3, "Unique identifier must be at least 3 characters"),
+  description: z.string().min(10, "Please provide a detailed description").max(500, "Description is too long"),
+  location: z.string().min(2, "Location is required").optional(),
+  status: z.string().default('Registered'),
+  imageUrls: z.array(z.string()).optional().default([]),
+  details: z.record(z.any()).optional()
 });
 
-// Type definition for form values
-type ItemRegistrationValues = z.infer<typeof itemRegistrationSchema>;
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
+import { useDropzone } from "react-dropzone";
+import { Upload, X, Camera, Info, ArrowRight } from "lucide-react";
+import { PageLayout } from "@/components/layout/page-layout";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/hooks/use-auth";
 
-// Type definition for ownership documents
-interface OwnershipDocument {
-  id: string;
-  type: string;
-  file: File;
-  url?: string;
-  date?: string;
-  description?: string;
-}
+type FormValues = z.infer<typeof itemRegistrationSchema>;
 
-export default function ItemRegistration() {
-  const { t } = useLanguage();
-  const { toast } = useToast();
-  const [, navigate] = useLocation();
-  
-  // State for tracking the form steps and file uploads
-  const [isLoading, setIsLoading] = useState(false);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+export default function ItemRegistrationPage() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [ownershipDocuments, setOwnershipDocuments] = useState<OwnershipDocument[]>([]);
-  const [generatedQRCode, setGeneratedQRCode] = useState<string | null>(null);
-  const [detectedIdentifier, setDetectedIdentifier] = useState<string | null>(null);
-  const [registrationComplete, setRegistrationComplete] = useState(false);
-  const [registeredItemId, setRegisteredItemId] = useState<number | null>(null);
-  
-  // Initialize form with default values
-  const form = useForm<ItemRegistrationValues>({
+  const [errors, setErrors] = useState<string[]>([]);
+  const { user } = useAuth();
+  const [, navigate] = useLocation();
+  const queryClient = useQueryClient();
+
+  const defaultValues: Partial<FormValues> = {
+    name: "",
+    category: "Electronics",
+    uniqueIdentifier: "",
+    description: "",
+    location: "",
+    status: "Registered",
+    imageUrls: [],
+    details: {}
+  };
+
+  const form = useForm<FormValues>({
     resolver: zodResolver(itemRegistrationSchema),
-    defaultValues: {
-      name: "",
-      category: "",
-      subCategory: "",
-      uniqueIdentifier: "",
-      description: "",
-      status: "registered",
-      imageUrls: [],
-      details: {},
-      location: "",
-      userId: 0
-    }
+    defaultValues,
+    mode: "onChange"
   });
-  
-  // Watch for form value changes
-  const watchedValues = useWatch({
-    control: form.control,
-    name: ["category", "name", "description", "uniqueIdentifier"]
-  });
-  
-  // Set user ID when component mounts
-  useEffect(() => {
-    const user = getCurrentUser();
-    if (user) {
-      form.setValue("userId", parseInt(user.uid) || 1); // Fallback to 1 if uid is not a number
-    } else {
-      // Handle case where user is not logged in
-      toast({
-        title: "Authentication required",
-        description: "You need to be logged in to register an item.",
-        variant: "destructive"
-      });
-      navigate("/login");
-    }
-  }, []);
-  
-  // Item registration mutation
-  const registerItem = useMutation({
-    mutationFn: async (data: ItemRegistrationValues) => {
-      setIsLoading(true);
+
+  // Set up image dropzone
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif']
+    },
+    maxFiles: 5,
+    onDrop: (acceptedFiles) => {
+      // For a real implementation, we would upload these to a server/storage
+      // For now we'll just create object URLs for preview
+      const newFiles = acceptedFiles.filter(file => 
+        !uploadedFiles.some(existingFile => existingFile.name === file.name && existingFile.size === file.size)
+      );
       
-      try {
-        // First, upload images if any
-        if (imageFiles.length > 0) {
-          const formData = new FormData();
-          imageFiles.forEach((file) => {
-            formData.append("files", file);
-          });
-          
-          const uploadResponse = await fetch("/api/upload", {
-            method: "POST",
-            body: formData,
-          });
-          
-          if (!uploadResponse.ok) {
-            throw new Error("Failed to upload images");
-          }
-          
-          const { urls } = await uploadResponse.json();
-          setImageUrls(urls);
-          data.imageUrls = urls;
-        }
-        
-        // Then, upload ownership documents if any
-        if (ownershipDocuments.length > 0) {
-          const docFormData = new FormData();
-          ownershipDocuments.forEach((doc) => {
-            docFormData.append("files", doc.file);
-            docFormData.append("documentTypes", doc.type);
-            if (doc.date) docFormData.append("dates", doc.date);
-            if (doc.description) docFormData.append("descriptions", doc.description);
-          });
-          
-          const docUploadResponse = await fetch("/api/upload/documents", {
-            method: "POST",
-            body: docFormData,
-          });
-          
-          if (!docUploadResponse.ok) {
-            throw new Error("Failed to upload documents");
-          }
-          
-          const { documents } = await docUploadResponse.json();
-          // Store document references in the item details
-          data.details = {
-            ...data.details,
-            ownershipDocuments: documents
-          };
-        }
-        
-        // Store subcategory in details
-        if (data.subCategory) {
-          data.details = {
-            ...data.details,
-            subCategory: data.subCategory
-          };
-          // Remove subCategory as it's not part of the item schema
-          delete (data as any).subCategory;
-        }
-        
-        // Finally, register the item
-        const response = await apiRequest("/api/items", {
-          method: "POST",
-          data,
+      if (uploadedFiles.length + newFiles.length > 5) {
+        toast({
+          title: "Maximum images exceeded",
+          description: "You can only upload up to 5 images per item.",
+          variant: "destructive"
         });
-        
-        setRegisteredItemId(response.itemId);
-        setRegistrationComplete(true);
-        
-        // Redirect to payment if needed
-        if (response.requiresPayment) {
-          const paymentResponse = await apiRequest<InitializePaymentResponse>("/api/payments/initialize", {
-            method: "POST",
-            data: {
-              itemId: response.itemId,
-              amount: response.registrationFee,
-              type: "registration"
-            },
-          });
-          
-          if (paymentResponse.redirectUrl) {
-            window.location.href = paymentResponse.redirectUrl;
-          }
-        }
-        
-        return response;
-      } catch (error) {
-        console.error("Error registering item:", error);
-        throw error;
-      } finally {
-        setIsLoading(false);
+        return;
       }
+      
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+      
+      const newUrls = newFiles.map(file => URL.createObjectURL(file));
+      setImageUrls(prev => [...prev, ...newUrls]);
+      
+      // Update the form value
+      form.setValue("imageUrls", [...imageUrls, ...newUrls], { shouldValidate: true });
+    }
+  });
+
+  const removeImage = (index: number) => {
+    const newFiles = [...uploadedFiles];
+    const newUrls = [...imageUrls];
+    
+    // Revoke the object URL to prevent memory leaks
+    URL.revokeObjectURL(newUrls[index]);
+    
+    newFiles.splice(index, 1);
+    newUrls.splice(index, 1);
+    
+    setUploadedFiles(newFiles);
+    setImageUrls(newUrls);
+    form.setValue("imageUrls", newUrls, { shouldValidate: true });
+  };
+
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      imageUrls.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
+
+  const mutation = useMutation({
+    mutationFn: (data: FormValues) => {
+      // In a real implementation, we would upload images and get URLs first
+      // For this demo, we'll just pass the local URLs directly
+      return apiRequest({
+        url: "/api/items",
+        method: "POST",
+        data: {
+          ...data,
+          userId: user?.id, // Ensure user ID is included
+        }
+      });
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/items"] });
       toast({
-        title: t("item_register_success"),
-        description: "Your item has been registered successfully",
+        title: "Item registered successfully!",
+        description: "Your item has been registered in our system.",
       });
+      navigate("/dashboard/items");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Registration failed",
-        description: error instanceof Error ? error.message : "An unknown error occurred",
+        description: error.message || "There was an error registering your item. Please try again.",
         variant: "destructive"
       });
+      setIsSubmitting(false);
     }
   });
-  
-  // Form submission handler
-  const onSubmit = (data: ItemRegistrationValues) => {
-    registerItem.mutate(data);
-  };
-  
-  // Handler for smart ID recognition results
-  const handleIdentifierDetected = (identifier: string) => {
-    setDetectedIdentifier(identifier);
-    form.setValue("uniqueIdentifier", identifier);
-  };
-  
-  // Handler for batch image upload
-  const handleImagesChange = (files: File[]) => {
-    setImageFiles(files);
-    // Create temporary URLs for preview
-    const urls = files.map(file => URL.createObjectURL(file));
-    setImageUrls(urls);
-  };
-  
-  // Handler for ownership documents
-  const handleDocumentsChange = (documents: OwnershipDocument[]) => {
-    setOwnershipDocuments(documents);
-  };
-  
-  // Handler for QR code generation (called after item is registered)
-  const handleQRCodeGenerated = (svgString: string) => {
-    setGeneratedQRCode(svgString);
-  };
-  
-  // Calculate form completion percentage
-  const calculateProgress = () => {
-    const requiredFields = ["name", "category", "uniqueIdentifier"];
-    const filledFields = requiredFields.filter(field => !!form.getValues(field as any));
+
+  const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
+    setErrors([]);
     
-    // Add points for images
-    const hasImages = imageFiles.length > 0;
-    
-    // Calculate percentage
-    return Math.round(((filledFields.length + (hasImages ? 1 : 0)) / (requiredFields.length + 1)) * 100);
-  };
-  
-  // Get appropriate form fields based on category
-  const getCategorySpecificFields = () => {
-    const category = form.watch("category");
-    
-    switch (category) {
-      case "electronics":
-        return (
-          <>
-            <FormField
-              control={form.control}
-              name="uniqueIdentifier"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("item_serial_number")}</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g. SN12345678" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="details.brand"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("item_brand")}</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g. Samsung, Apple" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="details.model"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("item_model")}</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g. iPhone 13, Galaxy S21" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="details.color"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t("item_color")}</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g. Black, Silver" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="pt-4">
-              <SmartIDRecognizer onIdentifierDetected={handleIdentifierDetected} />
-            </div>
-          </>
-        );
-      
-      case "documents":
-        return (
-          <>
-            <FormField
-              control={form.control}
-              name="uniqueIdentifier"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Document Number</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g. ID12345678" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="details.issueDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Issue Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="details.expiryDate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expiry Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        );
-      
-      case "jewelry":
-        return (
-          <>
-            <FormField
-              control={form.control}
-              name="uniqueIdentifier"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Serial Number</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g. SN12345678 (if any)" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="details.material"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Material</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="e.g. Gold, Silver, Platinum" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="details.weight"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Weight (grams)</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} placeholder="e.g. 12.5" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        );
-      
-      default:
-        return (
-          <FormField
-            control={form.control}
-            name="uniqueIdentifier"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Unique Identifier</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Any unique identifier for this item" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        );
+    // Validate images
+    if (imageUrls.length === 0) {
+      setErrors(prev => [...prev, "Please upload at least one image of your item"]);
+      setIsSubmitting(false);
+      return;
     }
+    
+    // In a real app, we would upload images to storage and get permanent URLs
+    // For this demo, we'll use the object URLs directly
+    
+    mutation.mutate(data);
   };
-  
-  // Render Success View after registration
-  const renderSuccessView = () => (
-    <div className="flex flex-col items-center justify-center py-10 space-y-6">
-      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100">
-        <CheckCircle2 className="w-8 h-8 text-green-600" />
-      </div>
-      <h2 className="text-2xl font-bold text-center">Registration Complete!</h2>
-      <p className="text-center text-muted-foreground max-w-md">
-        Your item has been successfully registered. You can now generate a QR code for easy identification.
-      </p>
-      
-      {registeredItemId && (
-        <Card className="w-full max-w-lg">
-          <CardContent className="p-6">
-            <QRCodeGenerator 
-              itemId={registeredItemId} 
-              itemName={form.getValues("name")}
-              onQRCodeGenerated={handleQRCodeGenerated}
-            />
-          </CardContent>
-        </Card>
-      )}
-      
-      <div className="flex space-x-4">
-        <Button onClick={() => navigate("/dashboard")} variant="outline">
-          Go to Dashboard
-        </Button>
-        <Button onClick={() => {
-          setRegistrationComplete(false);
-          form.reset();
-          setImageFiles([]);
-          setImageUrls([]);
-          setOwnershipDocuments([]);
-          setGeneratedQRCode(null);
-          setDetectedIdentifier(null);
-        }}>
-          Register Another Item
-        </Button>
-      </div>
-    </div>
-  );
-  
-  // Render main form
-  const renderRegistrationForm = () => (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-          {/* Form sections on the left */}
-          <div className="space-y-6 md:col-span-2">
-            <Accordion type="single" collapsible defaultValue="basic-info" className="w-full">
-              {/* Basic Information Section */}
-              <AccordionItem value="basic-info" className="border rounded-lg">
-                <AccordionTrigger className="px-4 py-2 hover:bg-muted/50">
-                  <div className="flex items-center space-x-2">
-                    <Package2 className="w-5 h-5" />
-                    <span className="font-medium">{t("item_basic_info")}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-2 space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t("item_name")}</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Enter item name" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+  return (
+    <PageLayout>
+      <div className="container max-w-4xl mx-auto py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="shadow-lg border-t-4 border-t-sky-500">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl font-bold text-center">Register Your Item</CardTitle>
+              <CardDescription className="text-center">
+                Secure your valuable possessions by registering them in our system
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {errors.length > 0 && (
+                <Alert variant="destructive" className="mb-6">
+                  <Info className="h-4 w-4" />
+                  <AlertTitle>Errors</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc pl-5">
+                      {errors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Item Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Laptop, Watch, etc." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
                     <FormField
                       control={form.control}
                       name="category"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t("item_category")}</FormLabel>
-                          <Select
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              // Reset subcategory when category changes
-                              form.setValue("subCategory", "");
-                            }}
-                            value={field.value}
+                          <FormLabel>Category</FormLabel>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="Select category" />
+                                <SelectValue placeholder="Select a category" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {CATEGORY_OPTIONS.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
+                              {itemCategories.map(category => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -635,49 +246,48 @@ export default function ItemRegistration() {
                         </FormItem>
                       )}
                     />
-                    
-                    {form.watch("category") && (
-                      <FormField
-                        control={form.control}
-                        name="subCategory"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("item_subcategory")}</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select subcategory" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {SUBCATEGORY_OPTIONS[form.watch("category") as keyof typeof SUBCATEGORY_OPTIONS]?.map((option) => (
-                                  <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
                   </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="uniqueIdentifier"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Unique Identifier
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-4 w-4 ml-2 inline cursor-help text-muted-foreground" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-xs">Serial number, IMEI, or any other unique identifier for your item</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </FormLabel>
+                        <FormControl>
+                          <Input placeholder="Serial number, IMEI, etc." {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          This helps identify your item uniquely in case it's lost
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
                   <FormField
                     control={form.control}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("item_description")}</FormLabel>
+                        <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea
-                            {...field}
-                            placeholder="Describe the item, including any distinguishing features"
-                            className="min-h-[100px]"
+                          <Textarea 
+                            placeholder="Provide a detailed description of your item including color, size, brand, distinguishing marks, etc."
+                            className="min-h-[120px]"
+                            {...field} 
                           />
                         </FormControl>
                         <FormMessage />
@@ -690,218 +300,97 @@ export default function ItemRegistration() {
                     name="location"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("item_location")}</FormLabel>
+                        <FormLabel>Current Location</FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Current location of the item"
-                          />
+                          <Input placeholder="Where is this item usually kept?" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Item Details Section */}
-              <AccordionItem value="details" className="border rounded-lg">
-                <AccordionTrigger className="px-4 py-2 hover:bg-muted/50">
-                  <div className="flex items-center space-x-2">
-                    <FileText className="w-5 h-5" />
-                    <span className="font-medium">{t("item_details")}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-2 space-y-4">
-                  {/* Render fields based on selected category */}
-                  {getCategorySpecificFields()}
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Images Section */}
-              <AccordionItem value="images" className="border rounded-lg">
-                <AccordionTrigger className="px-4 py-2 hover:bg-muted/50">
-                  <div className="flex items-center space-x-2">
-                    <Camera className="w-5 h-5" />
-                    <span className="font-medium">{t("item_images")}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-2">
-                  <BatchImageUpload
-                    onChange={handleImagesChange}
-                    maxFiles={5}
-                    acceptedFileTypes={["image/jpeg", "image/png", "image/webp"]}
-                    maxFileSizeMB={5}
-                  />
-                </AccordionContent>
-              </AccordionItem>
-              
-              {/* Ownership Documents Section */}
-              <AccordionItem value="documents" className="border rounded-lg">
-                <AccordionTrigger className="px-4 py-2 hover:bg-muted/50">
-                  <div className="flex items-center space-x-2">
-                    <ClipboardCheck className="w-5 h-5" />
-                    <span className="font-medium">{t("ownership_title")}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-2">
-                  <OwnershipChain onChange={handleDocumentsChange} />
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            
-            <div className="flex justify-end">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="w-full sm:w-auto"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    Register Item <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-          
-          {/* Live preview on the right */}
-          <div className="md:col-span-1">
-            <div className="sticky top-20 space-y-6">
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="mb-2 font-medium flex items-center">
-                    <Info className="w-4 h-4 mr-2" />
-                    Registration Progress
-                  </h3>
-                  <Progress value={calculateProgress()} className="h-2 mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {calculateProgress()}% complete
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="mb-3 font-medium">Item Preview</h3>
                   
-                  <div className="space-y-3">
-                    {/* Item Images */}
-                    {imageUrls.length > 0 && (
-                      <div className="relative aspect-video overflow-hidden rounded-md bg-muted">
-                        <img
-                          src={imageUrls[0]}
-                          alt="Item preview"
-                          className="object-cover w-full h-full"
-                        />
-                        {imageUrls.length > 1 && (
-                          <div className="absolute top-2 right-2 bg-background/80 text-foreground rounded-md px-2 py-1 text-xs">
-                            +{imageUrls.length - 1} more
-                          </div>
-                        )}
+                  <div className="space-y-4">
+                    <FormLabel>Item Images</FormLabel>
+                    <div 
+                      {...getRootProps()} 
+                      className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+                        isDragActive 
+                          ? "border-primary bg-primary/5" 
+                          : "border-muted-foreground/25 hover:border-primary/50"
+                      }`}
+                    >
+                      <input {...getInputProps()} />
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <Upload className="h-10 w-10 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Drag & drop images here, or click to select files
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Upload up to 5 clear images of your item from different angles
+                        </p>
                       </div>
-                    )}
-                    
-                    {/* Item details */}
-                    <div className="space-y-2">
-                      <h4 className="font-medium">
-                        {watchedValues.name || "Unnamed Item"}
-                      </h4>
-                      
-                      {watchedValues.category && (
-                        <p className="text-sm">
-                          <span className="text-muted-foreground">Category: </span>
-                          <span className="font-medium capitalize">{watchedValues.category}</span>
-                          {form.watch("subCategory") && (
-                            <> / <span className="capitalize">{form.watch("subCategory")}</span></>
-                          )}
-                        </p>
-                      )}
-                      
-                      {watchedValues.uniqueIdentifier && (
-                        <p className="text-sm">
-                          <span className="text-muted-foreground">ID: </span>
-                          <span className="font-medium">{watchedValues.uniqueIdentifier}</span>
-                        </p>
-                      )}
-                      
-                      {watchedValues.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-3">
-                          {watchedValues.description}
-                        </p>
-                      )}
                     </div>
                     
-                    {/* Ownership Documents */}
-                    {ownershipDocuments.length > 0 && (
-                      <div className="border-t pt-2 mt-2">
-                        <p className="text-sm font-medium mb-1">Ownership Documents</p>
-                        <ul className="text-xs space-y-1">
-                          {ownershipDocuments.map((doc) => (
-                            <li key={doc.id} className="flex items-center">
-                              <ShieldCheck className="w-3 h-3 mr-1 text-green-600" />
-                              {doc.type}
-                            </li>
-                          ))}
-                        </ul>
+                    {imageUrls.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-4">
+                        {imageUrls.map((url, index) => (
+                          <div key={index} className="relative group">
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.2 }}
+                              className="relative aspect-square rounded-md overflow-hidden border border-muted"
+                            >
+                              <img 
+                                src={url} 
+                                alt={`Item preview ${index + 1}`} 
+                                className="object-cover w-full h-full"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => removeImage(index)}
+                                className="absolute top-1 right-1 bg-black/70 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="h-4 w-4 text-white" />
+                              </button>
+                            </motion.div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
-                </CardContent>
-              </Card>
-              
-              {/* Tips Card */}
-              <Card>
-                <CardContent className="p-4">
-                  <h3 className="mb-2 font-medium flex items-center">
-                    <Info className="w-4 h-4 mr-2" />
-                    Tips
-                  </h3>
-                  <ul className="text-sm space-y-1 text-muted-foreground">
-                    <li>• Add clear photos from multiple angles</li>
-                    <li>• Include any unique identifiers or serial numbers</li>
-                    <li>• Upload ownership proof documents if available</li>
-                    <li>• Be specific in your description</li>
-                  </ul>
-                </CardContent>
-              </Card>
-              
-              {/* Smart ID detection result */}
-              {detectedIdentifier && (
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertTitle>Identifier Detected</AlertTitle>
-                  <AlertDescription>
-                    Successfully detected: <span className="font-medium">{detectedIdentifier}</span>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </div>
-        </div>
-      </form>
-    </Form>
-  );
-  
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-1 container max-w-7xl py-8 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">{t("item_register_title")}</h1>
-          <p className="text-muted-foreground">
-            Register your item for safekeeping and recovery in case it gets lost
-          </p>
-        </div>
-        
-        {registrationComplete ? renderSuccessView() : renderRegistrationForm()}
-      </main>
-      <Footer />
-    </div>
+                  
+                  <motion.div
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-sky-500 hover:bg-sky-600"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <div className="flex items-center">
+                          <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-opacity-50 border-t-transparent rounded-full" />
+                          Registering...
+                        </div>
+                      ) : (
+                        <div className="flex items-center">
+                          Register Item
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </div>
+                      )}
+                    </Button>
+                  </motion.div>
+                </form>
+              </Form>
+            </CardContent>
+            <CardFooter className="flex justify-center text-sm text-muted-foreground">
+              <p>Your items are secure and only accessible to you and authorized personnel</p>
+            </CardFooter>
+          </Card>
+        </motion.div>
+      </div>
+    </PageLayout>
   );
 }

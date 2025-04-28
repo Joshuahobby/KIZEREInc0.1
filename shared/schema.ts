@@ -14,6 +14,19 @@ export const verificationStatuses = ['pending', 'in_review', 'approved', 'reject
 // Define activity levels
 export const activityLevels = ['high', 'medium', 'low', 'inactive'] as const;
 
+// Define item categories
+export const itemCategories = [
+  'Electronics', 'Jewelry', 'Documents', 'Accessories', 
+  'Clothing', 'Bags', 'Keys', 'Wallets', 'Phones', 
+  'Computers', 'Transportation', 'Other'
+] as const;
+
+// Define item statuses
+export const itemStatuses = ['Registered', 'Lost', 'Found', 'Recovered', 'Archived'] as const;
+
+// Define report statuses
+export const reportStatuses = ['Open', 'In_Progress', 'Resolved', 'Closed'] as const;
+
 // Define permission types
 export const permissionTypes = [
   'user_view', 'user_edit', 'user_delete', 'user_verify',
@@ -221,10 +234,57 @@ export const userLoginSchema = z.object({
 });
 
 // Item schemas
-export const insertItemSchema = createInsertSchema(items).omit({ id: true, registeredAt: true, updatedAt: true });
+export const insertItemSchema = createInsertSchema(items)
+  .omit({ id: true, registeredAt: true, updatedAt: true })
+  .extend({
+    category: z.enum(itemCategories, {
+      errorMap: () => ({ message: "Please select a valid category for this item" })
+    }),
+    status: z.enum(itemStatuses, {
+      errorMap: () => ({ message: "Item status must be valid" })
+    }).default('Registered'),
+    imageUrls: z.array(z.string().url("Must be a valid URL")).optional().default([])
+  });
+
+// Extended item schema for item registration form with validation
+export const itemRegistrationSchema = insertItemSchema.extend({
+  name: z.string().min(2, "Item name must be at least 2 characters"),
+  category: z.enum(itemCategories, {
+    errorMap: () => ({ message: "Please select a valid category" })
+  }),
+  uniqueIdentifier: z.string().min(3, "Unique identifier must be at least 3 characters"),
+  description: z.string().min(10, "Please provide a detailed description").max(500, "Description is too long"),
+  location: z.string().min(2, "Location is required").optional(),
+  details: z.record(z.any()).optional()
+});
 
 // Report schemas
-export const insertReportSchema = createInsertSchema(reports).omit({ id: true, reportedAt: true });
+export const insertReportSchema = createInsertSchema(reports)
+  .omit({ id: true, reportedAt: true })
+  .extend({
+    type: z.enum(['lost', 'found'], {
+      errorMap: () => ({ message: "Report type must be either 'lost' or 'found'" })
+    }),
+    status: z.enum(reportStatuses, {
+      errorMap: () => ({ message: "Report status must be valid" })
+    }).default('Open'),
+    date: z.coerce.date({
+      errorMap: () => ({ message: "Please enter a valid date" })
+    }),
+    location: z.string().min(3, "Please provide a specific location"),
+    description: z.string().min(10, "Please provide a detailed description").max(500, "Description is too long")
+  });
+
+// Extended schema for lost item report form with validation
+export const lostItemReportSchema = insertReportSchema.extend({
+  title: z.string().min(5, "Title must be at least 5 characters"),
+  contactInfo: z.string().min(5, "Please provide contact information").optional()
+});
+
+// Extended schema for found item report form
+export const foundItemReportSchema = insertReportSchema.extend({
+  title: z.string().min(5, "Title must be at least 5 characters")
+});
 
 // Notification schemas
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
@@ -287,6 +347,9 @@ export type UserRole = typeof userRoles[number];
 export type AccountStatus = typeof accountStatuses[number];
 export type VerificationStatus = typeof verificationStatuses[number];
 export type ActivityLevel = typeof activityLevels[number];
+export type ItemCategory = typeof itemCategories[number];
+export type ItemStatus = typeof itemStatuses[number];
+export type ReportStatus = typeof reportStatuses[number];
 export type PermissionType = typeof permissionTypes[number];
 export type PaymentStatus = typeof paymentStatuses[number];
 export type PaymentType = typeof paymentTypes[number];
