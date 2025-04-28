@@ -3,7 +3,26 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Define allowed user roles
-export const userRoles = ['Admin', 'Agent', 'Subscriber'] as const;
+export const userRoles = ['Admin', 'Agent', 'Moderator', 'Subscriber'] as const;
+
+// Define account statuses
+export const accountStatuses = ['active', 'pending', 'suspended', 'inactive', 'banned'] as const;
+
+// Define verification statuses
+export const verificationStatuses = ['pending', 'in_review', 'approved', 'rejected', 'expired'] as const;
+
+// Define activity levels
+export const activityLevels = ['high', 'medium', 'low', 'inactive'] as const;
+
+// Define permission types
+export const permissionTypes = [
+  'user_view', 'user_edit', 'user_delete', 'user_verify',
+  'item_view', 'item_edit', 'item_delete', 'item_approve',
+  'report_view', 'report_edit', 'report_delete', 'report_resolve',
+  'payment_view', 'payment_process', 'payment_refund',
+  'dashboard_view', 'dashboard_export', 'dashboard_admin',
+  'system_settings'
+] as const;
 
 // Define payment statuses
 export const paymentStatuses = ['pending', 'successful', 'failed', 'cancelled'] as const;
@@ -21,7 +40,25 @@ export const users = pgTable("users", {
   phoneNumber: text("phone_number"),
   role: text("role").notNull().default('Subscriber'),
   avatarUrl: text("avatar_url"),
+  status: text("status").notNull().default('active'),
+  verificationStatus: text("verification_status").default('pending'),
+  activityLevel: text("activity_level").default('medium'),
+  lastLogin: timestamp("last_login"),
+  address: text("address"),
+  city: text("city"),
+  country: text("country"),
+  postalCode: text("postal_code"),
+  bio: text("bio"),
+  preferences: json("preferences"),
+  customPermissions: json("custom_permissions"),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  recoveryEmail: text("recovery_email"),
+  notes: text("admin_notes"),
+  warningCount: integer("warning_count").default(0),
+  suspensionHistory: json("suspension_history"),
+  verificationDocuments: json("verification_documents"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Item registration table
@@ -99,6 +136,81 @@ export const paymentMethods = pgTable("payment_methods", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// User activity audit log
+export const userActivityLogs = pgTable("user_activity_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  action: text("action").notNull(), // e.g., 'login', 'item_registration', 'report_filed'
+  details: json("details"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+// Admin actions audit log
+export const adminActionLogs = pgTable("admin_action_logs", {
+  id: serial("id").primaryKey(),
+  adminId: integer("admin_id").notNull().references(() => users.id),
+  targetUserId: integer("target_user_id").references(() => users.id),
+  action: text("action").notNull(), // e.g., 'user_edit', 'role_change', 'account_suspension'
+  previousState: json("previous_state"),
+  newState: json("new_state"),
+  reason: text("reason"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+// Custom roles for more granular permissions
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  isSystem: boolean("is_system").default(false),
+  permissions: json("permissions").notNull(),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// User verification documents and process
+export const verificationRequests = pgTable("verification_requests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // e.g., 'identity', 'address', 'business'
+  status: text("status").notNull().default('pending'),
+  documentUrls: text("document_urls").array(),
+  notes: text("notes"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
+  reviewedAt: timestamp("reviewed_at"),
+  expiresAt: timestamp("expires_at"),
+});
+
+// Status change history
+export const statusChanges = pgTable("status_changes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  previousStatus: text("previous_status").notNull(),
+  newStatus: text("new_status").notNull(),
+  reason: text("reason"),
+  changedBy: integer("changed_by").references(() => users.id),
+  expirationDate: timestamp("expiration_date"), // For temporary status changes
+  notes: text("notes"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
+
+// User warnings
+export const userWarnings = pgTable("user_warnings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  warningType: text("warning_type").notNull(), // e.g., 'policy_violation', 'inappropriate_content'
+  severity: text("severity").notNull(), // e.g., 'low', 'medium', 'high'
+  message: text("message").notNull(),
+  issuedBy: integer("issued_by").references(() => users.id),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  issuedAt: timestamp("issued_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at"),
+});
+
 // Zod schemas for input validation
 
 // User schemas
@@ -131,6 +243,18 @@ export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit
   createdAt: true
 });
 
+// Create insert schemas for new tables
+export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs).omit({ id: true, timestamp: true });
+export const insertAdminActionLogSchema = createInsertSchema(adminActionLogs).omit({ id: true, timestamp: true });
+export const insertRoleSchema = createInsertSchema(roles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertVerificationRequestSchema = createInsertSchema(verificationRequests).omit({ 
+  id: true, submittedAt: true, reviewedAt: true, expiresAt: true 
+});
+export const insertStatusChangeSchema = createInsertSchema(statusChanges).omit({ id: true, timestamp: true });
+export const insertUserWarningSchema = createInsertSchema(userWarnings).omit({ 
+  id: true, issuedAt: true, acknowledgedAt: true, expiresAt: true 
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertItem = z.infer<typeof insertItemSchema>;
@@ -138,14 +262,32 @@ export type InsertReport = z.infer<typeof insertReportSchema>;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
+export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
+export type InsertAdminActionLog = z.infer<typeof insertAdminActionLogSchema>;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type InsertVerificationRequest = z.infer<typeof insertVerificationRequestSchema>;
+export type InsertStatusChange = z.infer<typeof insertStatusChangeSchema>;
+export type InsertUserWarning = z.infer<typeof insertUserWarningSchema>;
+
 export type User = typeof users.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type Report = typeof reports.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
 export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type UserActivityLog = typeof userActivityLogs.$inferSelect;
+export type AdminActionLog = typeof adminActionLogs.$inferSelect;
+export type Role = typeof roles.$inferSelect;
+export type VerificationRequest = typeof verificationRequests.$inferSelect;
+export type StatusChange = typeof statusChanges.$inferSelect;
+export type UserWarning = typeof userWarnings.$inferSelect;
+
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type UserRole = typeof userRoles[number];
+export type AccountStatus = typeof accountStatuses[number];
+export type VerificationStatus = typeof verificationStatuses[number];
+export type ActivityLevel = typeof activityLevels[number];
+export type PermissionType = typeof permissionTypes[number];
 export type PaymentStatus = typeof paymentStatuses[number];
 export type PaymentType = typeof paymentTypes[number];
 

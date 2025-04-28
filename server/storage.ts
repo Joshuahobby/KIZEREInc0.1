@@ -4,7 +4,14 @@ import {
   reports, type Report, type InsertReport,
   notifications, type Notification, type InsertNotification,
   payments, type Payment, type InsertPayment,
-  paymentMethods, type PaymentMethod, type InsertPaymentMethod
+  paymentMethods, type PaymentMethod, type InsertPaymentMethod,
+  userActivityLogs, type UserActivityLog, type InsertUserActivityLog,
+  adminActionLogs, type AdminActionLog, type InsertAdminActionLog,
+  roles, type Role, type InsertRole,
+  verificationRequests, type VerificationRequest, type InsertVerificationRequest,
+  statusChanges, type StatusChange, type InsertStatusChange,
+  userWarnings, type UserWarning, type InsertUserWarning,
+  type AccountStatus, type VerificationStatus, type ActivityLevel
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, like, and, or, desc, sql } from "drizzle-orm";
@@ -21,6 +28,63 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
+  getUsersWithFilters(options: {
+    page: number;
+    pageSize: number;
+    search?: string;
+    role?: string;
+    status?: string;
+    verificationStatus?: string;
+    activityLevel?: string;
+    startDate?: Date;
+    endDate?: Date;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{ users: User[]; total: number }>;
+  exportUsers(format: 'csv' | 'excel', filters?: any): Promise<string>;
+  updateUserStatus(userId: number, status: AccountStatus, reason?: string, expirationDate?: Date): Promise<StatusChange>;
+  updateUserRole(userId: number, role: string): Promise<User | undefined>;
+  updateUserVerificationStatus(userId: number, status: VerificationStatus): Promise<User | undefined>;
+  
+  // User activity logs
+  getUserActivityLogs(userId: number, page: number, pageSize: number): Promise<{ logs: UserActivityLog[]; total: number }>;
+  createUserActivityLog(log: InsertUserActivityLog): Promise<UserActivityLog>;
+  
+  // Admin action logs
+  getAdminActionLogs(filters?: {
+    adminId?: number;
+    targetUserId?: number;
+    action?: string;
+    startDate?: Date;
+    endDate?: Date;
+    page?: number;
+    pageSize?: number;
+  }): Promise<{ logs: AdminActionLog[]; total: number }>;
+  createAdminActionLog(log: InsertAdminActionLog): Promise<AdminActionLog>;
+
+  // Role management
+  getRole(id: number): Promise<Role | undefined>;
+  getRoleByName(name: string): Promise<Role | undefined>;
+  getAllRoles(): Promise<Role[]>;
+  createRole(role: InsertRole): Promise<Role>;
+  updateRole(id: number, role: Partial<Role>): Promise<Role | undefined>;
+  deleteRole(id: number): Promise<boolean>;
+  
+  // Verification requests
+  getVerificationRequest(id: number): Promise<VerificationRequest | undefined>;
+  getUserVerificationRequests(userId: number): Promise<VerificationRequest[]>;
+  getPendingVerificationRequests(page: number, pageSize: number): Promise<{ requests: VerificationRequest[]; total: number }>;
+  createVerificationRequest(request: InsertVerificationRequest): Promise<VerificationRequest>;
+  updateVerificationRequest(id: number, request: Partial<VerificationRequest>): Promise<VerificationRequest | undefined>;
+  
+  // Status changes
+  getUserStatusHistory(userId: number): Promise<StatusChange[]>;
+  createStatusChange(change: InsertStatusChange): Promise<StatusChange>;
+  
+  // User warnings
+  getUserWarnings(userId: number): Promise<UserWarning[]>;
+  createUserWarning(warning: InsertUserWarning): Promise<UserWarning>;
+  acknowledgeWarning(id: number): Promise<UserWarning | undefined>;
   
   // Item methods
   getItem(id: number): Promise<Item | undefined>;
@@ -120,6 +184,219 @@ export class DatabaseStorage implements IStorage {
 
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+  
+  async getUsersWithFilters(options: {
+    page: number;
+    pageSize: number;
+    search?: string;
+    role?: string;
+    status?: string;
+    verificationStatus?: string;
+    activityLevel?: string;
+    startDate?: Date;
+    endDate?: Date;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{ users: User[]; total: number }> {
+    const {
+      page,
+      pageSize,
+      search,
+      role,
+      status,
+      verificationStatus,
+      activityLevel,
+      startDate,
+      endDate,
+      sortBy = 'createdAt',
+      sortOrder = 'desc'
+    } = options;
+
+    // Build conditions array
+    const conditions: any[] = [];
+    
+    // Add search condition
+    if (search) {
+      conditions.push(
+        or(
+          like(users.fullName, `%${search}%`),
+          like(users.username, `%${search}%`),
+          like(users.email, `%${search}%`),
+          like(users.phoneNumber || '', `%${search}%`)
+        )
+      );
+    }
+    
+    // Add role filter
+    if (role) {
+      conditions.push(eq(users.role, role));
+    }
+    
+    // Add status filter
+    if (status) {
+      conditions.push(eq(users.status, status));
+    }
+    
+    // Add verification status filter
+    if (verificationStatus) {
+      conditions.push(eq(users.verificationStatus, verificationStatus));
+    }
+    
+    // Add activity level filter
+    if (activityLevel) {
+      conditions.push(eq(users.activityLevel, activityLevel));
+    }
+    
+    // Add date range filter
+    if (startDate && endDate) {
+      conditions.push(
+        and(
+          sql`${users.createdAt} >= ${startDate}`,
+          sql`${users.createdAt} <= ${endDate}`
+        )
+      );
+    } else if (startDate) {
+      conditions.push(sql`${users.createdAt} >= ${startDate}`);
+    } else if (endDate) {
+      conditions.push(sql`${users.createdAt} <= ${endDate}`);
+    }
+    
+    // Calculate total count
+    const totalQuery = conditions.length > 0
+      ? db.select({ count: sql<number>`count(*)` }).from(users).where(and(...conditions))
+      : db.select({ count: sql<number>`count(*)` }).from(users);
+    
+    const [totalResult] = await totalQuery;
+    const total = totalResult?.count || 0;
+    
+    // Get paginated users with sorting
+    const offset = (page - 1) * pageSize;
+    
+    let query = db.select().from(users);
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    // Apply sorting
+    if (sortBy && sortOrder) {
+      const column = users[sortBy as keyof typeof users];
+      if (column) {
+        query = sortOrder === 'asc'
+          ? query.orderBy(sql`${column} asc`)
+          : query.orderBy(sql`${column} desc`);
+      } else {
+        // Default sort by createdAt if column doesn't exist
+        query = sortOrder === 'asc'
+          ? query.orderBy(sql`${users.createdAt} asc`)
+          : query.orderBy(sql`${users.createdAt} desc`);
+      }
+    } else {
+      // Default sort by createdAt desc
+      query = query.orderBy(desc(users.createdAt));
+    }
+    
+    // Apply pagination
+    query = query.limit(pageSize).offset(offset);
+    
+    const usersList = await query;
+    
+    return {
+      users: usersList,
+      total: Number(total)
+    };
+  }
+  
+  async exportUsers(format: 'csv' | 'excel', filters?: any): Promise<string> {
+    // Retrieve users based on filters
+    let usersList: User[] = [];
+    
+    if (filters) {
+      const { users } = await this.getUsersWithFilters({
+        page: 1,
+        pageSize: 1000, // Get a larger batch for export
+        ...filters
+      });
+      usersList = users;
+    } else {
+      usersList = await this.getAllUsers();
+    }
+    
+    // Format the data based on the requested format
+    if (format === 'csv') {
+      const headers = ['ID', 'Full Name', 'Username', 'Email', 'Phone Number', 'Role', 'Status', 'Verification Status', 'Created At', 'Last Login'];
+      
+      const rows = usersList.map(user => [
+        user.id.toString(),
+        user.fullName,
+        user.username,
+        user.email,
+        user.phoneNumber || '',
+        user.role,
+        user.status || 'active',
+        user.verificationStatus || 'pending',
+        user.createdAt.toISOString(),
+        user.lastLogin ? user.lastLogin.toISOString() : ''
+      ]);
+      
+      // Generate CSV content
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+      
+      return csvContent;
+    } else if (format === 'excel') {
+      // For simplicity, we'll return the same format as CSV
+      // In a real application, you would use a library like ExcelJS to generate a proper Excel file
+      return this.exportUsers('csv', filters);
+    }
+    
+    throw new Error('Unsupported export format');
+  }
+  
+  async updateUserStatus(userId: number, status: AccountStatus, reason?: string, expirationDate?: Date): Promise<StatusChange> {
+    // Get current user status
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    const previousStatus = user.status || 'active';
+    
+    // Update user status
+    await this.updateUser(userId, { 
+      status, 
+      updatedAt: new Date() 
+    });
+    
+    // Create status change record
+    const statusChange: InsertStatusChange = {
+      userId,
+      previousStatus,
+      newStatus: status,
+      reason: reason || null,
+      changedBy: null, // This should be set by the API with the current admin ID
+      expirationDate: expirationDate || null,
+      notes: null
+    };
+    
+    return await this.createStatusChange(statusChange);
+  }
+  
+  async updateUserRole(userId: number, role: string): Promise<User | undefined> {
+    return await this.updateUser(userId, { 
+      role,
+      updatedAt: new Date() 
+    });
+  }
+  
+  async updateUserVerificationStatus(userId: number, status: VerificationStatus): Promise<User | undefined> {
+    return await this.updateUser(userId, { 
+      verificationStatus: status,
+      updatedAt: new Date() 
+    });
   }
 
   // Item methods
