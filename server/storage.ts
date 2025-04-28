@@ -1057,6 +1057,247 @@ export class DatabaseStorage implements IStorage {
   async getFoundReports(): Promise<Report[]> {
     return await db.select().from(reports).where(eq(reports.type, 'found'));
   }
+  
+  async getAllReports(): Promise<Report[]> {
+    return await db
+      .select()
+      .from(reports)
+      .orderBy(desc(reports.reportedAt));
+  }
+  
+  async getReportStats(): Promise<{
+    totalReports: number;
+    lostReports: number;
+    foundReports: number;
+    openReports: number;
+    inProgressReports: number;
+    resolvedReports: number;
+    closedReports: number;
+    reportsThisWeek: number;
+    reportsThisMonth: number;
+  }> {
+    // Get all reports
+    const allReports = await this.getAllReports();
+    
+    // Calculate date thresholds
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+    
+    // Return the statistics
+    return {
+      totalReports: allReports.length,
+      lostReports: allReports.filter(report => report.type === 'lost').length,
+      foundReports: allReports.filter(report => report.type === 'found').length,
+      openReports: allReports.filter(report => report.status === 'Open').length,
+      inProgressReports: allReports.filter(report => report.status === 'In_Progress').length,
+      resolvedReports: allReports.filter(report => report.status === 'Resolved').length,
+      closedReports: allReports.filter(report => report.status === 'Closed').length,
+      reportsThisWeek: allReports.filter(report => new Date(report.reportedAt) >= oneWeekAgo).length,
+      reportsThisMonth: allReports.filter(report => new Date(report.reportedAt) >= oneMonthAgo).length
+    };
+  }
+  
+  async getReportsWithFilters(options: {
+    page: number;
+    limit: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+    search?: string;
+    type?: string;
+    status?: string;
+    dateRange?: { start: Date; end: Date } | null;
+    userId?: number;
+    itemId?: number;
+    location?: string;
+  }): Promise<{ reports: Report[]; total: number; page: number; totalPages: number }> {
+    const { 
+      page, 
+      limit, 
+      sortBy = 'reportedAt', 
+      sortOrder = 'desc', 
+      search,
+      type,
+      status,
+      dateRange,
+      userId,
+      itemId,
+      location
+    } = options;
+    
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+    
+    // Build conditions array for filtering
+    const conditions = [];
+    
+    // Add search condition if provided
+    if (search) {
+      conditions.push(
+        or(
+          like(reports.title, `%${search}%`),
+          like(reports.description, `%${search}%`)
+        )
+      );
+    }
+    
+    // Add type filter if provided
+    if (type) {
+      conditions.push(eq(reports.type, type));
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      conditions.push(eq(reports.status, status));
+    }
+    
+    // Add date range filter if provided
+    if (dateRange) {
+      conditions.push(
+        and(
+          sql`${reports.date} >= ${dateRange.start}`,
+          sql`${reports.date} <= ${dateRange.end}`
+        )
+      );
+    }
+    
+    // Add user filter if provided
+    if (userId) {
+      conditions.push(eq(reports.userId, userId));
+    }
+    
+    // Add item filter if provided
+    if (itemId) {
+      conditions.push(eq(reports.itemId, itemId));
+    }
+    
+    // Add location filter if provided
+    if (location) {
+      conditions.push(like(reports.location, `%${location}%`));
+    }
+    
+    // Get total count of matching reports
+    const countResult = await db
+      .select({ count: sql`count(*)::int` })
+      .from(reports)
+      .where(conditions.length ? and(...conditions) : undefined);
+    
+    const total = countResult[0].count;
+    
+    // Calculate total pages
+    const totalPages = Math.ceil(total / limit);
+    
+    // Get sorted and paginated reports
+    let query = db
+      .select()
+      .from(reports)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .limit(limit)
+      .offset(offset);
+    
+    // Apply sorting
+    if (sortBy === 'reportedAt') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(reports.reportedAt))
+        : query.orderBy(desc(reports.reportedAt));
+    } else if (sortBy === 'date') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(reports.date))
+        : query.orderBy(desc(reports.date));
+    } else if (sortBy === 'title') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(reports.title))
+        : query.orderBy(desc(reports.title));
+    } else if (sortBy === 'status') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(reports.status))
+        : query.orderBy(desc(reports.status));
+    } else if (sortBy === 'type') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(reports.type))
+        : query.orderBy(desc(reports.type));
+    } else {
+      // Default sort by reportedAt desc
+      query = query.orderBy(desc(reports.reportedAt));
+    }
+    
+    const result = await query;
+    
+    return {
+      reports: result,
+      total,
+      page,
+      totalPages
+    };
+  }
+  
+  async getReportWithRelatedData(id: number): Promise<{
+    report: Report | undefined;
+    user?: User;
+    item?: Item;
+  }> {
+    const report = await this.getReport(id);
+    
+    if (!report) {
+      return { report: undefined };
+    }
+    
+    // Get user who created the report
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, report.userId));
+    
+    // Get item if associated
+    let item = undefined;
+    if (report.itemId) {
+      [item] = await db
+        .select()
+        .from(items)
+        .where(eq(items.id, report.itemId));
+    }
+    
+    return {
+      report,
+      user,
+      item
+    };
+  }
+  
+  async generateReportCSV(): Promise<string> {
+    const allReports = await this.getAllReports();
+    
+    // Define CSV headers
+    const csvHeaders = [
+      'ID', 'Type', 'Title', 'Description', 'Location', 'Date', 
+      'Status', 'User ID', 'Item ID', 'Contact Info', 'Reported At'
+    ];
+    
+    // Convert reports to CSV format
+    const csvRows = allReports.map(report => [
+      report.id,
+      report.type,
+      `"${report.title.replace(/"/g, '""')}"`,
+      `"${report.description.replace(/"/g, '""')}"`,
+      `"${report.location.replace(/"/g, '""')}"`,
+      new Date(report.date).toISOString().split('T')[0],
+      report.status,
+      report.userId,
+      report.itemId || '',
+      report.contactInfo ? `"${report.contactInfo.replace(/"/g, '""')}"` : '',
+      new Date(report.reportedAt).toISOString()
+    ]);
+    
+    // Combine headers and rows
+    const csvContent = [
+      csvHeaders.join(','),
+      ...csvRows.map(row => row.join(','))
+    ].join('\n');
+    
+    return csvContent;
+  }
 
   // Notification methods
   async getNotification(id: number): Promise<Notification | undefined> {
