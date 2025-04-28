@@ -1796,7 +1796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { status, notes } = req.body;
       
-      if (!status || !itemStatuses.includes(status as any)) {
+      if (!status || !["Registered", "Lost", "Found", "Recovered", "Archived"].includes(status)) {
         return res.status(400).json({ message: "Invalid status value" });
       }
       
@@ -1863,13 +1863,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log the admin action
       await storage.createAdminActionLog({
         adminId: req.user!.id,
-        actionType: 'item_delete',
-        details: {
-          itemId,
-          itemData,
-          reason: req.body.reason || "No reason provided"
-        },
-        timestamp: new Date()
+        action: 'item_delete',
+        targetUserId: item.userId,
+        previousState: itemData,
+        reason: req.body.reason || "No reason provided"
       });
       
       // Create a notification for the item owner

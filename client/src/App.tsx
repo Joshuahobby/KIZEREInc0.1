@@ -10,6 +10,8 @@ import LostFound from "@/pages/lost-found";
 import UserManagement from "@/pages/user-management";
 import AdminUserManagement from "@/pages/admin/user-management";
 import NewUser from "@/pages/admin/new-user";
+import AdminItemManagement from "@/pages/admin/item-management";
+import AdminItemDetail from "@/pages/admin/item-detail";
 import LandingPage from "@/pages/landing-page";
 import AuthCallback from "@/pages/auth-callback";
 import PaymentStatus from "@/pages/payment-status";
@@ -91,6 +93,8 @@ function App() {
   const ProfilePageComponent = () => <ProfilePage />;
   const AdminUserManagementComponent = () => <AdminUserManagement />;
   const NewUserComponent = () => <NewUser />;
+  const AdminItemManagementComponent = () => <AdminItemManagement />;
+  const AdminItemDetailComponent = () => <AdminItemDetail />;
   
   return (
     <ErrorBoundary>
@@ -128,6 +132,8 @@ function App() {
               <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/users" component={AdminUserManagementComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/users/new" component={NewUserComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/item-management" component={AdminItemManagementComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/items/:id" component={AdminItemDetailComponent} requiredRole="Admin" />
               
               {/* Profile route */}
               <ProtectedRoute path="/profile" component={ProfilePageComponent} requiredRole="any" />
