@@ -12,6 +12,7 @@ import AdminUserManagement from "@/pages/admin/user-management";
 import NewUser from "@/pages/admin/new-user";
 import AdminItemManagement from "@/pages/admin/item-management";
 import AdminItemDetail from "@/pages/admin/item-detail";
+import NewItem from "@/pages/admin/new-item";
 import LandingPage from "@/pages/landing-page";
 import AuthCallback from "@/pages/auth-callback";
 import PaymentStatus from "@/pages/payment-status";
@@ -95,6 +96,7 @@ function App() {
   const NewUserComponent = () => <NewUser />;
   const AdminItemManagementComponent = () => <AdminItemManagement />;
   const AdminItemDetailComponent = () => <AdminItemDetail />;
+  const NewItemComponent = () => <NewItem />;
   
   return (
     <ErrorBoundary>
@@ -133,6 +135,7 @@ function App() {
               <ProtectedRoute path="/admin/users" component={AdminUserManagementComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/users/new" component={NewUserComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/item-management" component={AdminItemManagementComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/item-management/new" component={NewItemComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/items/:id" component={AdminItemDetailComponent} requiredRole="Admin" />
               
               {/* Profile route */}

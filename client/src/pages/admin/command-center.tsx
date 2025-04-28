@@ -189,7 +189,7 @@ export default function CommandCenter() {
                     <Users className="mr-2 h-4 w-4" />
                     Users
                   </Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => navigate('/admin/items')}>
+                  <Button variant="ghost" size="sm" className="w-full justify-start" onClick={() => navigate('/admin/item-management')}>
                     <Package className="mr-2 h-4 w-4" />
                     Items
                   </Button>
@@ -247,7 +247,12 @@ export default function CommandCenter() {
                     <Users className="mr-2 h-4 w-4" />
                     Manage Users
                   </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={() => navigate('/admin/item-management/new')}
+                  >
                     <Plus className="mr-2 h-4 w-4" />
                     New Item
                   </Button>
