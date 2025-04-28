@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { InitializePaymentRequest, PaymentService } from "@/services/payment.service";
+import { PaymentPackageSelector } from "./payment-package-selector";
 
 interface PaymentModalProps {
   open: boolean;
@@ -35,6 +36,13 @@ export function PaymentModal({
   const [transactionRef, setTransactionRef] = useState<string | null>(null);
   const [paymentWindow, setPaymentWindow] = useState<Window | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<{id: number, amount: number} | null>(null);
+  const [showPackageSelector, setShowPackageSelector] = useState(true);
+
+  // Handle package selection
+  const handlePackageSelect = (packageId: number, amount: number) => {
+    setSelectedPackage({ id: packageId, amount });
+  };
 
   // Function to initialize payment
   const initializePayment = async () => {
@@ -49,7 +57,16 @@ export function PaymentModal({
 
     try {
       setIsInitializing(true);
-      const response = await PaymentService.initializePayment(paymentDetails);
+      setShowPackageSelector(false);
+      
+      // Use selectedPackage amount if available, otherwise use the default amount
+      const requestDetails = {
+        ...paymentDetails,
+        amount: selectedPackage ? selectedPackage.amount : paymentDetails.amount,
+        packageId: selectedPackage?.id
+      };
+      
+      const response = await PaymentService.initializePayment(requestDetails);
       setPaymentUrl(response.paymentUrl);
       setTransactionRef(response.transactionRef);
     } catch (error) {
@@ -58,6 +75,8 @@ export function PaymentModal({
         description: error instanceof Error ? error.message : "An error occurred",
         variant: "destructive"
       });
+      // Show package selector again on error
+      setShowPackageSelector(true);
     } finally {
       setIsInitializing(false);
     }
@@ -136,17 +155,44 @@ export function PaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={`${showPackageSelector ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
         <DialogHeader>
           <DialogTitle>Payment for {paymentDetails.type === 'registration' ? 'Item Registration' : 'Lost Item Report'}</DialogTitle>
           <DialogDescription>
-            You are about to make a payment of {paymentDetails.amount} RWF. 
-            Please complete the payment process to continue.
+            {selectedPackage ? (
+              `You are about to make a payment of ${selectedPackage.amount} RWF.`
+            ) : (
+              `Select a payment package to continue.`
+            )}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex items-center justify-center p-4">
-          {isInitializing ? (
+        <div className="p-4">
+          {showPackageSelector && !paymentUrl ? (
+            <div className="mb-4">
+              <PaymentPackageSelector 
+                paymentType={paymentDetails.type}
+                onSelectPackage={handlePackageSelect}
+                selectedPackageId={selectedPackage?.id}
+              />
+              
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={initializePayment}
+                  disabled={!selectedPackage || isInitializing}
+                >
+                  {isInitializing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Continue to Payment"
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : isInitializing ? (
             <div className="flex flex-col items-center gap-2">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <p className="text-sm text-muted-foreground">Initializing payment...</p>

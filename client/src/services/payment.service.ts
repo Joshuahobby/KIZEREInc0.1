@@ -1,6 +1,7 @@
 import { apiRequest } from "@/lib/queryClient";
 import { PaymentType } from "@shared/schema";
 import { getPaymentAmount, DEFAULT_CURRENCY } from "@/config/payment.config";
+import { PaymentPackage } from "@/components/payment/payment-package-selector";
 
 /**
  * Request interface for payment initialization
@@ -10,6 +11,7 @@ export interface InitializePaymentRequest {
   amount?: number; // Optional, server will use default if not provided
   itemId?: number;
   reportId?: number;
+  packageId?: number; // Optional, reference to the selected payment package
   redirectUrl?: string; // Optional, will use default if not provided
 }
 
@@ -169,5 +171,76 @@ export class PaymentService {
   static getPaymentAmount(type: PaymentType): number {
     // Use the centralized payment configuration
     return getPaymentAmount(type);
+  }
+
+  /**
+   * Get all payment packages
+   * 
+   * @param includeInactive Whether to include inactive packages
+   * @returns Array of payment packages
+   */
+  static async getPaymentPackages(includeInactive = false): Promise<PaymentPackage[]> {
+    try {
+      const response = await apiRequest("GET", `/api/payment-packages?includeInactive=${includeInactive}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch payment packages");
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error("Payment packages fetch error:", error);
+      throw error instanceof Error ? error : new Error("Failed to fetch payment packages");
+    }
+  }
+
+  /**
+   * Get payment packages by type
+   * 
+   * @param type The payment type
+   * @param onlyActive Whether to include only active packages
+   * @returns Array of payment packages for the specified type
+   */
+  static async getPaymentPackagesByType(type: PaymentType, onlyActive = true): Promise<PaymentPackage[]> {
+    try {
+      const response = await apiRequest("GET", `/api/payment-packages/type/${type}?onlyActive=${onlyActive}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch payment packages");
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`Payment packages fetch error for type ${type}:`, error);
+      throw error instanceof Error ? error : new Error(`Failed to fetch payment packages for type ${type}`);
+    }
+  }
+
+  /**
+   * Get a payment package by ID
+   * 
+   * @param packageId The package ID
+   * @returns The payment package or null if not found
+   */
+  static async getPaymentPackage(packageId: number): Promise<PaymentPackage | null> {
+    try {
+      const response = await apiRequest("GET", `/api/payment-packages/${packageId}`);
+      
+      if (response.status === 404) {
+        return null;
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch payment package");
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`Payment package fetch error for ID ${packageId}:`, error);
+      throw error instanceof Error ? error : new Error(`Failed to fetch payment package with ID ${packageId}`);
+    }
   }
 }
