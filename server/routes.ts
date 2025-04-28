@@ -1708,6 +1708,189 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin API: Get all items with filtering, sorting, and pagination
+  app.get("/api/admin/items", requireAdmin, async (req, res) => {
+    try {
+      logger.info('Admin requesting all items with filters');
+      
+      // Parse query parameters
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const sortBy = req.query.sortBy as string || 'registeredAt';
+      const sortOrder = req.query.sortOrder as string || 'desc';
+      const search = req.query.search as string || '';
+      const category = req.query.category as string || '';
+      const status = req.query.status as string || '';
+      
+      // Get filtered items
+      const result = await storage.getPaginatedItems({
+        page,
+        limit,
+        sortBy,
+        sortOrder: sortOrder as 'asc' | 'desc',
+        search,
+        category,
+        status
+      });
+      
+      res.json(result);
+    } catch (error) {
+      logger.error('Error fetching admin items list', { error });
+      res.status(500).json({ 
+        message: "Failed to fetch items",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Get a specific item by ID
+  app.get("/api/admin/items/:id", requireAdmin, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      
+      if (isNaN(itemId)) {
+        return res.status(400).json({ message: "Invalid item ID" });
+      }
+      
+      const item = await storage.getItem(itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      // Get the owner information
+      const owner = await storage.getUser(item.userId);
+      
+      // Get related reports for this item
+      const reports = await storage.getItemReports(itemId);
+      
+      res.json({
+        item,
+        owner: owner ? {
+          id: owner.id,
+          fullName: owner.fullName,
+          email: owner.email,
+          phoneNumber: owner.phoneNumber,
+          role: owner.role,
+          status: owner.status
+        } : null,
+        reports
+      });
+    } catch (error) {
+      logger.error('Error fetching item details', { error });
+      res.status(500).json({ 
+        message: "Failed to fetch item details",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Update item status
+  app.patch("/api/admin/items/:id/status", requireAdmin, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      
+      if (isNaN(itemId)) {
+        return res.status(400).json({ message: "Invalid item ID" });
+      }
+      
+      const { status, notes } = req.body;
+      
+      if (!status || !itemStatuses.includes(status as any)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      
+      const item = await storage.getItem(itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      // Update the item status
+      const updatedItem = await storage.updateItem(itemId, { status });
+      
+      // Log the admin action
+      await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'item_status_update',
+        targetUserId: item.userId,
+        previousState: { status: item.status },
+        newState: { status },
+        reason: notes
+      });
+      
+      // Create a notification for the item owner
+      await storage.createNotification({
+        userId: item.userId,
+        title: "Item Status Update",
+        message: `Your item "${item.name}" status has been updated to ${status}`,
+        type: 'item_status_update',
+        isRead: false,
+        relatedItemId: itemId
+      });
+      
+      res.json(updatedItem);
+    } catch (error) {
+      logger.error('Error updating item status', { error });
+      res.status(500).json({ 
+        message: "Failed to update item status",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Delete an item
+  app.delete("/api/admin/items/:id", requireAdmin, async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      
+      if (isNaN(itemId)) {
+        return res.status(400).json({ message: "Invalid item ID" });
+      }
+      
+      const item = await storage.getItem(itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      // Store item data for logging before deletion
+      const itemData = { ...item };
+      
+      // Delete the item
+      await storage.deleteItem(itemId);
+      
+      // Log the admin action
+      await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        actionType: 'item_delete',
+        details: {
+          itemId,
+          itemData,
+          reason: req.body.reason || "No reason provided"
+        },
+        timestamp: new Date()
+      });
+      
+      // Create a notification for the item owner
+      await storage.createNotification({
+        userId: item.userId,
+        title: "Item Deleted",
+        message: `Your item "${item.name}" has been deleted by an administrator`,
+        type: 'item_deleted',
+        isRead: false
+      });
+      
+      res.json({ success: true, message: "Item successfully deleted" });
+    } catch (error) {
+      logger.error('Error deleting item', { error });
+      res.status(500).json({ 
+        message: "Failed to delete item",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
   // Admin API: Get report statistics
   app.get("/api/admin/reports/stats", requireAdmin, async (req, res) => {
     try {

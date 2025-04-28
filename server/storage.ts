@@ -771,6 +771,125 @@ export class DatabaseStorage implements IStorage {
   async getAllItems(): Promise<Item[]> {
     return await db.select().from(items);
   }
+  
+  async getPaginatedItems(options: {
+    page: number;
+    limit: number;
+    sortBy: string;
+    sortOrder: 'asc' | 'desc';
+    search?: string;
+    category?: string;
+    status?: string;
+  }): Promise<{ items: Item[]; total: number; page: number; totalPages: number }> {
+    const { page, limit, sortBy, sortOrder, search, category, status } = options;
+    
+    // Calculate offset for pagination
+    const offset = (page - 1) * limit;
+    
+    // Build conditions array for filtering
+    const conditions = [];
+    
+    // Add search condition if provided
+    if (search) {
+      conditions.push(
+        or(
+          like(items.name, `%${search}%`),
+          like(items.description || '', `%${search}%`),
+          like(items.uniqueIdentifier, `%${search}%`)
+        )
+      );
+    }
+    
+    // Add category filter if provided
+    if (category) {
+      conditions.push(eq(items.category, category));
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      conditions.push(eq(items.status, status));
+    }
+    
+    // Get total count of matching items
+    const countResult = await db
+      .select({ count: sql`count(*)::int` })
+      .from(items)
+      .where(conditions.length ? and(...conditions) : undefined);
+      
+    const total = countResult[0].count;
+    
+    // Calculate total pages
+    const totalPages = Math.ceil(total / limit);
+    
+    // Get sorted and paginated items
+    let query = db
+      .select()
+      .from(items)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .limit(limit)
+      .offset(offset);
+      
+    // Apply sorting
+    if (sortBy === 'registeredAt') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(items.registeredAt))
+        : query.orderBy(desc(items.registeredAt));
+    } else if (sortBy === 'updatedAt') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(items.updatedAt))
+        : query.orderBy(desc(items.updatedAt));
+    } else if (sortBy === 'name') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(items.name))
+        : query.orderBy(desc(items.name));
+    } else if (sortBy === 'category') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(items.category))
+        : query.orderBy(desc(items.category));
+    } else if (sortBy === 'status') {
+      query = sortOrder === 'asc' 
+        ? query.orderBy(asc(items.status))
+        : query.orderBy(desc(items.status));
+    } else {
+      // Default sort by registeredAt desc
+      query = query.orderBy(desc(items.registeredAt));
+    }
+    
+    const result = await query;
+    
+    return {
+      items: result,
+      total,
+      page,
+      totalPages
+    };
+  }
+  
+  async getItemReports(itemId: number): Promise<Report[]> {
+    return await db
+      .select()
+      .from(reports)
+      .where(eq(reports.itemId, itemId));
+  }
+  
+  async updateItem(id: number, data: Partial<Omit<Item, 'id'>>): Promise<Item | undefined> {
+    const [updatedItem] = await db
+      .update(items)
+      .set({
+        ...data,
+        updatedAt: new Date()
+      })
+      .where(eq(items.id, id))
+      .returning();
+      
+    return updatedItem;
+  }
+  
+  async deleteItem(id: number): Promise<void> {
+    await db
+      .delete(items)
+      .where(eq(items.id, id));
+  }
 
   // Report methods
   async getReport(id: number): Promise<Report | undefined> {
