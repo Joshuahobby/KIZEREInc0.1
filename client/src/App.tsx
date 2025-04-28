@@ -26,6 +26,7 @@ import AdminReports from "@/pages/admin/reports";
 import PaymentPackages from "@/pages/admin/payment-packages";
 import PaymentPackagesNew from "@/pages/admin/payment-packages/index-new";
 import NewPaymentPackage from "@/pages/admin/payment-packages/new";
+import CreatePackage from "@/pages/admin/payment-packages/create-package";
 import ProfilePage from "@/pages/profile";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -98,6 +99,7 @@ function App() {
   const PaymentPackagesComponent = () => <PaymentPackages />;
   const PaymentPackagesNewComponent = () => <PaymentPackagesNew />;
   const NewPaymentPackageComponent = () => <NewPaymentPackage />;
+  const CreatePackageComponent = () => <CreatePackage />;
   const ProfilePageComponent = () => <ProfilePage />;
   const AdminUserManagementComponent = () => <AdminUserManagement />;
   const NewUserComponent = () => <NewUser />;
@@ -142,6 +144,7 @@ function App() {
               <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboardComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-packages" component={PaymentPackagesComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-packages/new" component={NewPaymentPackageComponent} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/payment-packages/create" component={CreatePackageComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/payment-packages-new" component={PaymentPackagesNewComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/users" component={AdminUserManagementComponent} requiredRole="Admin" />
               <ProtectedRoute path="/admin/users/new" component={NewUserComponent} requiredRole="Admin" />
