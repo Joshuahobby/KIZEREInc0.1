@@ -1,24 +1,12 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useToast } from '@/hooks/use-toast';
-
-// UI Components
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Separator } from '@/components/ui/separator';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -28,55 +16,54 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Loader2, ArrowLeft, Save, X } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 
-// Icons
-import {
-  ArrowLeft,
-  PackageIcon,
-  Plus,
-  Trash2,
-} from 'lucide-react';
-
-// Define the schema for the payment package form
+// Define Zod schema for form validation
 const packageSchema = z.object({
-  name: z.string().min(3, {
-    message: 'Package name must be at least 3 characters.',
-  }),
-  description: z.string().min(10, {
-    message: 'Description must be at least 10 characters.',
-  }),
-  price: z.number().min(0, {
-    message: 'Price must be a positive number.',
-  }),
-  duration: z.number().min(1, {
-    message: 'Duration must be at least 1 day.',
-  }),
-  features: z.array(z.string()).min(1, {
-    message: 'At least one feature is required.',
-  }),
-  isActive: z.boolean(),
-  packageType: z.enum(['registration', 'report', 'enterprise']),
-  priority: z.enum(['low', 'medium', 'high']),
+  name: z.string().min(3, { message: "Name must be at least 3 characters" }),
+  description: z.string().optional(),
+  type: z.enum(['registration', 'lost_report']),
+  amount: z.string()
+    .refine(val => !isNaN(parseFloat(val)), { message: "Amount must be a valid number" })
+    .refine(val => parseFloat(val) > 0, { message: "Amount must be greater than 0" }),
+  currency: z.string().min(1, { message: "Currency is required" }),
+  validityDays: z.string()
+    .refine(val => !isNaN(parseInt(val)), { message: "Validity days must be a valid number" })
+    .refine(val => parseInt(val) >= 0, { message: "Validity days must be 0 or greater" })
+    .optional(),
+  isDefault: z.boolean().default(false),
+  features: z.array(z.string()).optional(),
+  status: z.enum(['active', 'inactive']).default('active'),
 });
 
-// Define the type for form values based on the schema
+// Infer the type from our schema
 type PackageFormValues = z.infer<typeof packageSchema>;
 
-// Make a simple API request function
+// Helper function for API requests
 async function apiRequest(method: string, url: string, data?: any) {
   const response = await fetch(url, {
     method,
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: data ? JSON.stringify(data) : undefined,
-    credentials: 'include'
   });
 
   if (!response.ok) {
     const errorText = await response.text();
     try {
-      const errorJson = JSON.parse(errorText);
-      throw new Error(errorJson.message || 'An error occurred');
+      // Try to parse as JSON
+      const errorData = JSON.parse(errorText);
+      throw new Error(errorData.message || 'An error occurred');
     } catch (e) {
+      // If not JSON, use text directly
       throw new Error(errorText || 'An error occurred');
     }
   }
@@ -85,369 +72,430 @@ async function apiRequest(method: string, url: string, data?: any) {
 }
 
 export default function CreatePaymentPackage() {
+  const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [features, setFeatures] = useState<string[]>(["Basic registration"]);
+  const [featureInput, setFeatureInput] = useState("");
 
   // Define default values for the form
   const defaultValues: PackageFormValues = {
-    name: '',
-    description: '',
-    price: 0,
-    duration: 30,
-    features: [''],
-    isActive: true,
-    packageType: 'registration',
-    priority: 'medium',
+    name: "",
+    description: "",
+    type: "registration",
+    amount: "0",
+    currency: "USD",
+    validityDays: "365",
+    isDefault: false,
+    features: features,
+    status: "active",
   };
 
   // Initialize the form
   const form = useForm<PackageFormValues>({
     resolver: zodResolver(packageSchema),
     defaultValues,
-    mode: 'onChange',
   });
 
-  // Helper function to add a new feature field
-  const addFeature = () => {
-    const currentFeatures = form.getValues('features');
-    form.setValue('features', [...currentFeatures, '']);
-  };
-
-  // Helper function to remove a feature field
-  const removeFeature = (index: number) => {
-    const currentFeatures = form.getValues('features');
-    if (currentFeatures.length > 1) {
-      form.setValue(
-        'features',
-        currentFeatures.filter((_, i) => i !== index)
-      );
-    }
-  };
-
-  // Handle form submission
-  const onSubmit = async (data: PackageFormValues) => {
-    try {
-      setIsSubmitting(true);
+  // Create mutation
+  const mutation = useMutation({
+    mutationFn: async (data: PackageFormValues) => {
+      // Convert numeric string values to numbers
+      const payload = {
+        ...data,
+        amount: parseFloat(data.amount),
+        validityDays: data.validityDays ? parseInt(data.validityDays) : undefined,
+        createdBy: user?.id,
+      };
       
-      // Filter out any empty feature strings
-      data.features = data.features.filter(feature => feature.trim() !== '');
-      
-      await apiRequest('POST', '/api/admin/payment-packages', data);
-      
+      const response = await apiRequest('POST', '/api/admin/payment-packages', payload);
+      return response.json();
+    },
+    onSuccess: () => {
       toast({
-        title: 'Package Created',
-        description: 'The payment package has been created successfully.',
+        title: "Success",
+        description: "Payment package created successfully",
+        variant: "default",
       });
-      
-      // Navigate back to packages list using direct window location change
+      // Redirect back to packages list
       window.location.href = '/admin/payment-packages';
-    } catch (error: any) {
+    },
+    onError: (error: Error) => {
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to create payment package. Please try again.',
-        variant: 'destructive',
+        title: "Error creating package",
+        description: error.message,
+        variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
+    },
+  });
+
+  // Form submission handler
+  const onSubmit = async (data: PackageFormValues) => {
+    // Add the current features to the data
+    data.features = features;
+    await mutation.mutate(data);
+  };
+
+  // Handle adding a new feature
+  const addFeature = () => {
+    if (featureInput.trim() && !features.includes(featureInput.trim())) {
+      setFeatures([...features, featureInput.trim()]);
+      setFeatureInput("");
     }
   };
+
+  // Handle removing a feature
+  const removeFeature = (feature: string) => {
+    setFeatures(features.filter(f => f !== feature));
+  };
+
+  // Access denied state
+  if (!isAuthenticated || user?.role !== 'Admin') {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h1 className="text-xl font-bold mb-2">Authentication Required</h1>
+          <p className="mb-4">You must be logged in as an administrator to access this page.</p>
+          <Button onClick={() => window.location.href = '/login'}>
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-6 px-4 md:px-6">
-        <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => window.location.href = '/admin/payment-packages'}
-            className="mr-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Create Payment Package</h1>
-            <p className="text-muted-foreground">Create a new payment package for your platform</p>
-          </div>
+    <div className="container mx-auto py-8 px-4">
+      <div className="mb-8">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/admin">Dashboard</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/admin/payment-packages">Payment Packages</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink>Create Package</BreadcrumbLink>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Create Payment Package</h1>
+          <p className="text-muted-foreground">
+            Configure a new payment package for your platform
+          </p>
         </div>
+        <Button 
+          variant="outline" 
+          onClick={() => window.location.href = '/admin/payment-packages'}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Packages
+        </Button>
+      </div>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Package Information</CardTitle>
-            <CardDescription>
-              Define the basic information for this payment package
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Package Name</FormLabel>
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Package Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Package Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Premium Registration" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        A descriptive name for this payment package
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Package Type</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
                         <FormControl>
-                          <Input placeholder="e.g. Premium Registration" {...field} />
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select package type" />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormDescription>
-                          A clear, descriptive name for the package
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <SelectContent>
+                          <SelectItem value="registration">Item Registration</SelectItem>
+                          <SelectItem value="lost_report">Lost Item Report</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        The type of service this package is for
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                  <FormField
-                    control={form.control}
-                    name="packageType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Package Type</FormLabel>
+                <FormField
+                  control={form.control}
+                  name="amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Package Price</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          step="0.01" 
+                          placeholder="19.99" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        The price for this package (numeric value only)
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Currency</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
                         <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex flex-col space-y-1"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="registration" id="registration" />
-                              <label htmlFor="registration" className="text-sm font-medium">
-                                Registration Package
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="report" id="report" />
-                              <label htmlFor="report" className="text-sm font-medium">
-                                Report Package
-                              </label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="enterprise" id="enterprise" />
-                              <label htmlFor="enterprise" className="text-sm font-medium">
-                                Enterprise Package
-                              </label>
-                            </div>
-                          </RadioGroup>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select currency" />
+                          </SelectTrigger>
                         </FormControl>
-                        <FormDescription>
-                          The category this package belongs to
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                        <SelectContent>
+                          <SelectItem value="USD">USD - US Dollar</SelectItem>
+                          <SelectItem value="EUR">EUR - Euro</SelectItem>
+                          <SelectItem value="GBP">GBP - British Pound</SelectItem>
+                          <SelectItem value="NGN">NGN - Nigerian Naira</SelectItem>
+                          <SelectItem value="KES">KES - Kenyan Shilling</SelectItem>
+                          <SelectItem value="GHS">GHS - Ghanaian Cedi</SelectItem>
+                          <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Currency for package pricing
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
+                <FormField
+                  control={form.control}
+                  name="validityDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Validity (Days)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          placeholder="365" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        How many days this package remains valid
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Whether this package is available for purchase
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="isDefault"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Default Package</FormLabel>
+                        <FormDescription>
+                          Make this the default package for this type
+                        </FormDescription>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="md:col-span-2">
                   <FormField
                     control={form.control}
                     name="description"
                     render={({ field }) => (
-                      <FormItem className="md:col-span-2">
+                      <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea
-                            placeholder="Describe what this package offers..."
-                            className="min-h-[100px]"
-                            {...field}
+                          <Textarea 
+                            placeholder="Describe package benefits and features..." 
+                            className="min-h-24"
+                            {...field} 
                           />
                         </FormControl>
                         <FormDescription>
-                          A detailed description of the package benefits
+                          Detailed description of what this package includes
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
+              </div>
 
-                <Separator />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="price"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Price (USD)</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                              $
-                            </span>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              placeholder="19.99"
-                              className="pl-7"
-                              {...field}
-                              onChange={(e) => field.onChange(e.target.value === '' ? 0 : parseFloat(e.target.value))}
-                            />
-                          </div>
-                        </FormControl>
-                        <FormDescription>
-                          The price for this package in USD
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="duration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Duration (Days)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="1"
-                            placeholder="30"
-                            {...field}
-                            onChange={(e) => field.onChange(e.target.value === '' ? 30 : parseInt(e.target.value, 10))}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          How long this package is valid for
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <div className="border rounded-lg p-4 space-y-4">
+                <div>
+                  <FormLabel>Package Features</FormLabel>
+                  <FormDescription>
+                    Add key features that will be displayed to users
+                  </FormDescription>
                 </div>
 
-                <Separator />
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="e.g., Priority support"
+                    value={featureInput}
+                    onChange={(e) => setFeatureInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addFeature();
+                      }
+                    }}
+                    className="flex-1"
+                  />
+                  <Button type="button" onClick={addFeature}>
+                    Add
+                  </Button>
+                </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-base font-medium">Package Features</h3>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={addFeature}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add Feature
-                    </Button>
-                  </div>
-                  <div className="space-y-3">
-                    {form.watch('features').map((_, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <FormField
-                          control={form.control}
-                          name={`features.${index}`}
-                          render={({ field }) => (
-                            <FormItem className="flex-1 mb-0">
-                              <FormControl>
-                                <Input 
-                                  placeholder={`Feature ${index + 1}`} 
-                                  {...field} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeFeature(index)}
-                          disabled={form.watch('features').length <= 1}
-                        >
-                          <Trash2 className="h-4 w-4 text-muted-foreground" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="isActive"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between p-4 border rounded-lg">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Active Status</FormLabel>
-                          <FormDescription>
-                            Make this package available immediately
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="priority"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Priority Level</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex space-x-4"
+                  {features.length > 0 ? (
+                    <ul className="space-y-2">
+                      {features.map((feature, index) => (
+                        <li key={index} className="flex items-center justify-between bg-muted/40 p-2 rounded">
+                          <span>{feature}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFeature(feature)}
                           >
-                            <div className="flex items-center space-x-1">
-                              <RadioGroupItem value="low" id="low" />
-                              <label htmlFor="low" className="text-sm">Low</label>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <RadioGroupItem value="medium" id="medium" />
-                              <label htmlFor="medium" className="text-sm">Medium</label>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <RadioGroupItem value="high" id="high" />
-                              <label htmlFor="high" className="text-sm">High</label>
-                            </div>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormDescription>
-                          Set the priority level for this package
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="text-center p-4 border border-dashed rounded-md text-muted-foreground">
+                      No features added yet
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                <CardFooter className="flex justify-end px-0 pt-2">
-                  <div className="flex gap-2">
-                    <Button variant="outline" type="button" onClick={() => window.location.href = '/admin/payment-packages'}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" disabled={isSubmitting}>
-                      {isSubmitting ? (
-                        <>
-                          <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full"></div>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <PackageIcon className="mr-2 h-4 w-4" />
-                          Create Package
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </CardFooter>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => window.location.href = '/admin/payment-packages'}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={mutation.isPending}
+                >
+                  {mutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Save Package
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {mutation.isError && (
+                <Alert variant="destructive" className="mt-4">
+                  <AlertTitle>Error</AlertTitle>
+                  <AlertDescription>
+                    {mutation.error instanceof Error ? mutation.error.message : 'An unknown error occurred'}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -276,7 +276,7 @@ export default function PaymentPackages() {
           </div>
           <Button 
             className="mt-4 md:mt-0" 
-            onClick={() => window.location.href = '/admin/payment-packages/new'}
+            onClick={() => window.location.href = '/admin/payment-packages/create'}
           >
             <Plus className="mr-2 h-4 w-4" />
             Create Package
@@ -341,7 +341,7 @@ export default function PaymentPackages() {
                 <p className="text-muted-foreground mb-4">
                   {searchQuery ? 'No packages match your search criteria.' : 'You haven\'t created any payment packages yet.'}
                 </p>
-                <Button onClick={() => window.location.href = '/admin/payment-packages/new'}>
+                <Button onClick={() => window.location.href = '/admin/payment-packages/create'}>
                   Create Your First Package
                 </Button>
               </div>
