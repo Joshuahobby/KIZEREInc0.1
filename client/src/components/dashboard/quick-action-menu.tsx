@@ -62,6 +62,18 @@ export function QuickActionMenu({
       onClick: () => navigate('/admin/reports/new')
     },
     {
+      icon: <DollarSign className="h-4 w-4" />,
+      label: 'New Package',
+      description: 'Create a payment package',
+      onClick: () => navigate('/admin/payment-packages/new')
+    },
+    {
+      icon: <CreditCard className="h-4 w-4" />,
+      label: 'Payments',
+      description: 'View payment dashboard',
+      onClick: () => navigate('/admin/payment-dashboard')
+    },
+    {
       icon: <BarChart3 className="h-4 w-4" />,
       label: 'Analytics',
       description: 'View system analytics',

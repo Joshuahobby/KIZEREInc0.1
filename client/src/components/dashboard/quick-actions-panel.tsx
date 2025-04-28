@@ -19,7 +19,9 @@ import {
   Smartphone,
   Bookmark,
   Upload,
-  Download
+  Download,
+  Package,
+  CreditCard
 } from "lucide-react";
 
 interface QuickActionItemProps {
@@ -137,6 +139,13 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       description: "Monitor transactions and revenue",
       href: "/admin/payment-dashboard",
       color: "green"
+    },
+    {
+      icon: <Package className="h-5 w-5 text-blue-600" />,
+      title: "Payment Packages",
+      description: "Manage payment packages",
+      href: "/admin/payment-packages",
+      color: "blue"
     },
     {
       icon: <Settings className="h-5 w-5 text-amber-600" />,
