@@ -361,4 +361,160 @@ router.post("/users", async (req: any, res) => {
   }
 });
 
+// Get user activity logs
+router.get("/users/:id/activity", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 20;
+    
+    // Get user activity logs with pagination
+    const logs = await storage.getUserActivityLogs(userId, page, pageSize);
+    const total = await storage.countUserActivityLogs(userId);
+    
+    res.json({
+      logs,
+      total,
+      pages: Math.ceil(total / pageSize),
+      page
+    });
+  } catch (error) {
+    logger.error("Error getting user activity logs:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Get user status history
+router.get("/users/:id/status-history", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    // Get user status history
+    const statusChanges = await storage.getUserStatusHistory(userId);
+    
+    res.json(statusChanges);
+  } catch (error) {
+    logger.error("Error getting user status history:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Get user warnings
+router.get("/users/:id/warnings", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    // Get user warnings
+    const warnings = await storage.getUserWarnings(userId);
+    
+    res.json(warnings);
+  } catch (error) {
+    logger.error("Error getting user warnings:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Get user verification requests
+router.get("/users/:id/verification-requests", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    
+    // Get user verification requests
+    const requests = await storage.getUserVerificationRequests(userId);
+    
+    res.json(requests);
+  } catch (error) {
+    logger.error("Error getting user verification requests:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Update verification request status
+router.patch("/verification-requests/:id", async (req: any, res) => {
+  try {
+    const requestId = parseInt(req.params.id);
+    const { status, notes } = req.body;
+    const adminId = req.user?.id;
+    
+    if (!adminId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Update verification request
+    const updatedRequest = await storage.updateVerificationRequest(requestId, {
+      status,
+      notes,
+      reviewedBy: adminId,
+      reviewedAt: new Date()
+    });
+    
+    if (!updatedRequest) {
+      return res.status(404).json({ message: "Verification request not found" });
+    }
+    
+    // If verification is approved, update user verification status
+    if (status === 'approved') {
+      await storage.updateUserVerificationStatus(updatedRequest.userId, 'verified');
+      
+      // Log admin action
+      await storage.createAdminActionLog({
+        adminId,
+        targetUserId: updatedRequest.userId,
+        action: 'user_verify',
+        previousState: { verificationStatus: 'pending' },
+        newState: { verificationStatus: 'verified' },
+        reason: notes
+      });
+    }
+    
+    res.json({ success: true, request: updatedRequest });
+  } catch (error) {
+    logger.error("Error updating verification request:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Create verification request
+router.post("/users/:id/verification-requests", async (req: any, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const { type, documentUrls, notes } = req.body;
+    const adminId = req.user?.id;
+    
+    if (!adminId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Verify user exists
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Create verification request
+    const request = await storage.createVerificationRequest({
+      userId,
+      type,
+      status: 'pending',
+      documentUrls,
+      notes
+    });
+    
+    // Log admin action
+    await storage.createAdminActionLog({
+      adminId,
+      targetUserId: userId,
+      action: 'verification_request',
+      previousState: null,
+      newState: { verificationStatus: 'pending', type },
+      reason: notes
+    });
+    
+    res.status(201).json({ success: true, request });
+  } catch (error) {
+    logger.error("Error creating verification request:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 export default router;

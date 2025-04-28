@@ -13,6 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { UserFilters, type UserFilters as UserFiltersType } from "@/components/user-management/user-filters";
 import { UserTable, type User } from "@/components/user-management/user-table";
+import { UserActivityTimeline } from "@/components/user-management/user-activity-timeline";
+import { UserStatusHistory } from "@/components/user-management/user-status-history";
+import { UserWarnings } from "@/components/user-management/user-warnings";
+import { UserVerificationDocuments } from "@/components/user-management/user-verification-documents";
 import { apiRequest } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -288,7 +292,7 @@ export default function UserManagementPage() {
       {/* User Detail Dialog */}
       {selectedUser && (
         <Dialog open={showUserDetail} onOpenChange={setShowUserDetail}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>User Details</DialogTitle>
               <DialogDescription>
@@ -296,57 +300,95 @@ export default function UserManagementPage() {
               </DialogDescription>
             </DialogHeader>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Full Name</h3>
-                  <p className="mt-1">{selectedUser.fullName}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
-                  <p className="mt-1">{selectedUser.email}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Role</h3>
-                  <p className="mt-1">{selectedUser.role}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
-                  <p className="mt-1">{selectedUser.status}</p>
-                </div>
-              </div>
+            <Tabs defaultValue="profile" className="mt-4">
+              <TabsList className="grid grid-cols-4">
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="status">Status History</TabsTrigger>
+                <TabsTrigger value="verification">Verification</TabsTrigger>
+              </TabsList>
               
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Verification Status</h3>
-                  <p className="mt-1">{selectedUser.verificationStatus}</p>
+              <TabsContent value="profile" className="mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Full Name</h3>
+                      <p className="mt-1">{selectedUser.fullName}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
+                      <p className="mt-1">{selectedUser.email}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Username</h3>
+                      <p className="mt-1">{selectedUser.username || 'Not set'}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Role</h3>
+                      <p className="mt-1">{selectedUser.role}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
+                      <p className="mt-1">{selectedUser.status}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Verification Status</h3>
+                      <p className="mt-1">{selectedUser.verificationStatus}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Registered On</h3>
+                      <p className="mt-1">{format(new Date(selectedUser.createdAt), 'PPP')}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Last Login</h3>
+                      <p className="mt-1">
+                        {selectedUser.lastLogin
+                          ? format(new Date(selectedUser.lastLogin), 'PPP')
+                          : "Never logged in"}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Activity Level</h3>
+                      <p className="mt-1">{selectedUser.activityLevel || 'Unknown'}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-muted-foreground">Warning Count</h3>
+                      <p className="mt-1">{selectedUser.warningCount}</p>
+                    </div>
+                  </div>
                 </div>
                 
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Registered On</h3>
-                  <p className="mt-1">{format(new Date(selectedUser.createdAt), 'PPP')}</p>
+                {/* User Warnings section */}
+                <div className="mt-6">
+                  <UserWarnings userId={selectedUser.id} />
                 </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Last Login</h3>
-                  <p className="mt-1">
-                    {selectedUser.lastLogin
-                      ? format(new Date(selectedUser.lastLogin), 'PPP')
-                      : "Never logged in"}
-                  </p>
-                </div>
-                
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground">Warning Count</h3>
-                  <p className="mt-1">{selectedUser.warningCount}</p>
-                </div>
-              </div>
-            </div>
+              </TabsContent>
+              
+              <TabsContent value="activity" className="mt-4">
+                <UserActivityTimeline userId={selectedUser.id} />
+              </TabsContent>
+              
+              <TabsContent value="status" className="mt-4">
+                <UserStatusHistory userId={selectedUser.id} />
+              </TabsContent>
+              
+              <TabsContent value="verification" className="mt-4">
+                <UserVerificationDocuments userId={selectedUser.id} />
+              </TabsContent>
+            </Tabs>
             
-            <DialogFooter className="flex justify-between sm:justify-between">
+            <DialogFooter className="flex justify-between sm:justify-between mt-6">
               <Button variant="outline" onClick={() => handleEditUser(selectedUser)}>
                 Edit User
               </Button>
