@@ -77,6 +77,7 @@ function App() {
   // Create safe component wrappers to ensure JSX Elements are always returned
   const UnifiedDashboardComponent = () => <UnifiedDashboard />;
   const ItemRegistrationComponent = () => <ItemRegistration />;
+  const MyItemsComponent = () => <MyItems />;
   const SearchComponent = () => <Search />;
   const LostFoundComponent = () => <LostFound />;
   const UserManagementComponent = () => <UserManagement />;
@@ -108,6 +109,7 @@ function App() {
               {/* Role-restricted routes */}
               <ProtectedRoute path="/dashboard" component={UnifiedDashboardComponent} requiredRole="any" />
               <ProtectedRoute path="/register-item" component={ItemRegistrationComponent} requiredRole="any" />
+              <ProtectedRoute path="/my-items" component={MyItemsComponent} requiredRole="any" />
               <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
               <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />
               <ProtectedRoute path="/lost-found/report" component={LostFoundComponent} requiredRole="any" />
