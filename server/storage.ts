@@ -47,7 +47,8 @@ export interface IStorage {
   updateUserVerificationStatus(userId: number, status: VerificationStatus): Promise<User | undefined>;
   
   // User activity logs
-  getUserActivityLogs(userId: number, page: number, pageSize: number): Promise<{ logs: UserActivityLog[]; total: number }>;
+  getUserActivityLogs(userId: number, page: number, pageSize: number): Promise<UserActivityLog[]>;
+  countUserActivityLogs(userId: number): Promise<number>;
   createUserActivityLog(log: InsertUserActivityLog): Promise<UserActivityLog>;
   
   // Admin action logs
