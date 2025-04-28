@@ -186,7 +186,7 @@ export default function AdminItemDetail() {
   // Show error state if item ID is invalid
   if (isNaN(itemId)) {
     return (
-      <CommandCenter>
+      <CommandCenterLayout>
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Item Details</CardTitle>
@@ -208,14 +208,14 @@ export default function AdminItemDetail() {
             </div>
           </CardContent>
         </Card>
-      </CommandCenter>
+      </CommandCenterLayout>
     );
   }
 
   // Show error state if loading failed
   if (error) {
     return (
-      <CommandCenter>
+      <CommandCenterLayout>
         <Card className="col-span-4">
           <CardHeader>
             <CardTitle>Item Details</CardTitle>
@@ -237,7 +237,7 @@ export default function AdminItemDetail() {
             </div>
           </CardContent>
         </Card>
-      </CommandCenter>
+      </CommandCenterLayout>
     );
   }
 
@@ -247,7 +247,7 @@ export default function AdminItemDetail() {
   const reports = data?.reports || [];
 
   return (
-    <CommandCenter>
+    <CommandCenterLayout>
       <div className="col-span-4 space-y-6">
         {/* Back button */}
         <Button
@@ -593,7 +593,7 @@ export default function AdminItemDetail() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </CommandCenter>
+    </CommandCenterLayout>
   );
 }
 
