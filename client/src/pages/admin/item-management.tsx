@@ -102,7 +102,17 @@ export default function AdminItemManagement() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // Advanced filter states
-  const [advancedFilters, setAdvancedFilters] = useState<FilterFormValues>({});
+  const [advancedFilters, setAdvancedFilters] = useState<FilterFormValues>({
+    ownerName: '',
+    serialNumber: '',
+    minValue: '',
+    maxValue: '',
+    registeredAfter: undefined,
+    registeredBefore: undefined,
+    location: '',
+    hasReports: false,
+    reportType: 'any',
+  });
   const [activeAdvancedFilters, setActiveAdvancedFilters] = useState(0);
 
   // Delete and status change modals
@@ -123,6 +133,8 @@ export default function AdminItemManagement() {
       return true;
     }).length;
     
+    console.log('Applied filters:', filters, 'Active count:', filterCount);
+    
     setAdvancedFilters(filters);
     setActiveAdvancedFilters(filterCount);
     setPage(1); // Reset to first page when filters change
@@ -130,7 +142,17 @@ export default function AdminItemManagement() {
   
   // Clear all advanced filters
   const clearAdvancedFilters = () => {
-    setAdvancedFilters({});
+    setAdvancedFilters({
+      ownerName: '',
+      serialNumber: '',
+      minValue: '',
+      maxValue: '',
+      registeredAfter: undefined,
+      registeredBefore: undefined,
+      location: '',
+      hasReports: false,
+      reportType: 'any',
+    });
     setActiveAdvancedFilters(0);
   };
   

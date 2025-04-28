@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, CheckIcon, Search, XCircle } from 'lucide-react';
+import { CalendarIcon, Filter, Search, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -47,10 +47,7 @@ import { cn } from '@/lib/utils';
 
 // Define the filter schema
 const filterSchema = z.object({
-  search: z.string().optional(),
   ownerName: z.string().optional(),
-  category: z.string().optional(),
-  status: z.string().optional(),
   serialNumber: z.string().optional(),
   minValue: z.string().optional(), // Will be parsed to number during filter application
   maxValue: z.string().optional(), // Will be parsed to number during filter application
@@ -80,10 +77,7 @@ export function AdvancedItemFilters({
 
   // Default form values
   const defaultValues: Partial<FilterFormValues> = {
-    search: '',
     ownerName: '',
-    category: '',
-    status: '',
     serialNumber: '',
     minValue: '',
     maxValue: '',
@@ -100,13 +94,13 @@ export function AdvancedItemFilters({
     defaultValues,
   });
 
-  // Handle form submission
+  // Submit handler
   function onSubmit(data: FilterFormValues) {
     onFilterChange(data);
     setOpen(false);
   }
 
-  // Reset form and filters
+  // Clear all filters
   function handleReset() {
     form.reset(defaultValues);
     onClearFilters();
@@ -115,334 +109,262 @@ export function AdvancedItemFilters({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" className="relative gap-1">
-          <Search className="h-4 w-4 mr-1" />
-          Advanced Search
+        <Button variant="outline" size="icon" className="relative">
+          <Filter className="h-4 w-4" />
           {activeFilters > 0 && (
-            <Badge variant="secondary" className="ml-1 px-1.5 h-5 min-w-5 rounded-full">
+            <Badge 
+              variant="secondary" 
+              className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+            >
               {activeFilters}
             </Badge>
           )}
         </Button>
       </SheetTrigger>
-      
-      <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>Advanced Item Search</SheetTitle>
+          <SheetTitle>Advanced Filters</SheetTitle>
           <SheetDescription>
-            Use the filters below to narrow down your search for specific items
+            Apply detailed filters to find specific items in your inventory.
           </SheetDescription>
         </SheetHeader>
         
-        <div className="py-4">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-6">
+            {/* Owner Name */}
+            <FormField
+              control={form.control}
+              name="ownerName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Owner Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Search by owner name" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Filter items by the name of the owner
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Serial Number */}
+            <FormField
+              control={form.control}
+              name="serialNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Serial Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter serial number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Value Range */}
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="search"
+                name="minValue"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Item Name or Description</FormLabel>
+                    <FormLabel>Min Value ($)</FormLabel>
                     <FormControl>
-                      <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search by name or description..." className="pl-8" {...field} />
-                      </div>
+                      <Input 
+                        type="number" 
+                        placeholder="0" 
+                        {...field} 
+                        min="0"
+                      />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="maxValue"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Value ($)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        placeholder="Any" 
+                        {...field} 
+                        min="0"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Date Range */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="registeredAfter"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>From Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Any start date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="registeredBefore"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>To Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Any end date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {/* Location */}
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter location" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {/* Has Reports */}
+            <FormField
+              control={form.control}
+              name="hasReports"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Has Reports</FormLabel>
                     <FormDescription>
-                      Search by item name, description, or identifier
+                      Only show items that have associated reports
                     </FormDescription>
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="ownerName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Owner Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Owner's name..." {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="serialNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Serial Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Serial/model number..." {...field} />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Category</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="">All Categories</SelectItem>
-                          <SelectItem value="electronics">Electronics</SelectItem>
-                          <SelectItem value="documents">Documents</SelectItem>
-                          <SelectItem value="clothing">Clothing</SelectItem>
-                          <SelectItem value="jewelry">Jewelry</SelectItem>
-                          <SelectItem value="accessories">Accessories</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="">All Statuses</SelectItem>
-                          <SelectItem value="Registered">Registered</SelectItem>
-                          <SelectItem value="Lost">Lost</SelectItem>
-                          <SelectItem value="Found">Found</SelectItem>
-                          <SelectItem value="Recovered">Recovered</SelectItem>
-                          <SelectItem value="Archived">Archived</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <Separator />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="minValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Min Value ($)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="0" 
-                          placeholder="Minimum value" 
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="maxValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Max Value ($)</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="0" 
-                          placeholder="Maximum value" 
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="registeredAfter"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Registered After</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="registeredBefore"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Registered Before</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
+                  </div>
+                </FormItem>
+              )}
+            />
+            
+            {/* Report Type - Only show if hasReports is checked */}
+            {form.watch('hasReports') && (
               <FormField
                 control={form.control}
-                name="location"
+                name="reportType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Known Location</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Location..." {...field} />
-                    </FormControl>
+                    <FormLabel>Report Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      value={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select report type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="any">Any Report Type</SelectItem>
+                        <SelectItem value="lost">Lost Reports</SelectItem>
+                        <SelectItem value="found">Found Reports</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <Separator />
-              
-              <div className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="hasReports"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 py-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Has Reports</FormLabel>
-                        <FormDescription>
-                          Show only items with associated reports
-                        </FormDescription>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                
-                {form.watch('hasReports') && (
-                  <FormField
-                    control={form.control}
-                    name="reportType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Report Type</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Report type" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="any">Any Reports</SelectItem>
-                            <SelectItem value="lost">Lost Reports</SelectItem>
-                            <SelectItem value="found">Found Reports</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormItem>
-                    )}
-                  />
-                )}
-              </div>
-              
-              <SheetFooter className="flex justify-between gap-2 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={handleReset}
-                >
-                  <XCircle className="mr-2 h-4 w-4" />
-                  Reset All Filters
-                </Button>
-                <Button type="submit">
-                  <CheckIcon className="mr-2 h-4 w-4" />
-                  Apply Filters
-                </Button>
-              </SheetFooter>
-            </form>
-          </Form>
-        </div>
+            )}
+            
+            <SheetFooter className="flex gap-2 sm:justify-end pt-4">
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={handleReset}
+              >
+                Reset Filters
+              </Button>
+              <Button type="submit">Apply Filters</Button>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );
