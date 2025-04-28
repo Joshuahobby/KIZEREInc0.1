@@ -2390,6 +2390,184 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin API: Get all payment packages
+  app.get("/api/admin/payment-packages", requireAdmin, async (req, res) => {
+    try {
+      logger.info('Admin retrieving all payment packages');
+      
+      // Get include inactive parameter from query string
+      const includeInactive = req.query.includeInactive === 'true';
+      
+      // Get all payment packages
+      const paymentPackages = await storage.getAllPaymentPackages(includeInactive);
+      
+      logger.info(`Successfully retrieved ${paymentPackages.length} payment packages`);
+      
+      // Return payment packages
+      res.json(paymentPackages);
+    } catch (error) {
+      logger.error("Error retrieving payment packages:", error);
+      res.status(500).json({ 
+        message: "Failed to retrieve payment packages",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Get a specific payment package
+  app.get("/api/admin/payment-packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment package ID" });
+      }
+      
+      logger.info(`Admin retrieving payment package with ID: ${id}`);
+      
+      // Get payment package
+      const paymentPackage = await storage.getPaymentPackage(id);
+      
+      if (!paymentPackage) {
+        return res.status(404).json({ message: "Payment package not found" });
+      }
+      
+      // Return payment package
+      res.json(paymentPackage);
+    } catch (error) {
+      logger.error(`Error retrieving payment package:`, error);
+      res.status(500).json({ 
+        message: "Failed to retrieve payment package",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Create a new payment package
+  app.post("/api/admin/payment-packages", requireAdmin, async (req, res) => {
+    try {
+      if (!req.user || !req.user.id) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      logger.info('Admin creating new payment package');
+      
+      // Extract package data from request body
+      const packageData = {
+        ...req.body,
+        createdBy: req.user.id,
+        status: req.body.status || 'active',
+        isDefault: req.body.isDefault || false
+      };
+      
+      // Create new payment package
+      const newPackage = await storage.createPaymentPackage(packageData);
+      
+      logger.info(`Successfully created payment package with ID: ${newPackage.id}`);
+      
+      // Return new payment package
+      res.status(201).json(newPackage);
+    } catch (error) {
+      logger.error("Error creating payment package:", error);
+      res.status(500).json({ 
+        message: "Failed to create payment package",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Update a payment package
+  app.put("/api/admin/payment-packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment package ID" });
+      }
+      
+      logger.info(`Admin updating payment package with ID: ${id}`);
+      
+      // Extract update data from request body
+      const updateData = req.body;
+      
+      // Update payment package
+      const updatedPackage = await storage.updatePaymentPackage(id, updateData);
+      
+      if (!updatedPackage) {
+        return res.status(404).json({ message: "Payment package not found" });
+      }
+      
+      logger.info(`Successfully updated payment package with ID: ${id}`);
+      
+      // Return updated payment package
+      res.json(updatedPackage);
+    } catch (error) {
+      logger.error(`Error updating payment package:`, error);
+      res.status(500).json({ 
+        message: "Failed to update payment package",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Delete a payment package
+  app.delete("/api/admin/payment-packages/:id", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment package ID" });
+      }
+      
+      logger.info(`Admin deleting payment package with ID: ${id}`);
+      
+      // Delete payment package
+      const success = await storage.deletePaymentPackage(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Payment package not found or could not be deleted" });
+      }
+      
+      logger.info(`Successfully deleted payment package with ID: ${id}`);
+      
+      // Return success message
+      res.json({ message: "Payment package deleted successfully" });
+    } catch (error) {
+      logger.error(`Error deleting payment package:`, error);
+      res.status(500).json({ 
+        message: "Failed to delete payment package",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
+  // Admin API: Set a payment package as default for its type
+  app.post("/api/admin/payment-packages/:id/set-default", requireAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid payment package ID" });
+      }
+      
+      logger.info(`Admin setting payment package ${id} as default`);
+      
+      // Set as default
+      const updatedPackage = await storage.setDefaultPaymentPackage(id);
+      
+      if (!updatedPackage) {
+        return res.status(404).json({ message: "Payment package not found" });
+      }
+      
+      logger.info(`Successfully set payment package ${id} as default for type ${updatedPackage.type}`);
+      
+      // Return updated payment package
+      res.json(updatedPackage);
+    } catch (error) {
+      logger.error(`Error setting payment package as default:`, error);
+      res.status(500).json({ 
+        message: "Failed to set payment package as default",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+  
   // Admin API: Get payment summary statistics
   app.get("/api/admin/payments/summary", requireAdmin, async (req, res) => {
     try {
