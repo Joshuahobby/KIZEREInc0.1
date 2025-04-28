@@ -58,7 +58,7 @@ export default function NewPaymentPackage() {
   const defaultValues: Partial<PackageFormValues> = {
     name: '',
     description: '',
-    price: undefined,
+    price: 0,
     duration: 30,
     features: [''],
     isActive: true,
@@ -259,7 +259,7 @@ export default function NewPaymentPackage() {
                               placeholder="19.99"
                               className="pl-7"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                              onChange={(e) => field.onChange(e.target.value === '' ? 0 : parseFloat(e.target.value))}
                             />
                           </div>
                         </FormControl>
@@ -283,7 +283,7 @@ export default function NewPaymentPackage() {
                             min="1"
                             placeholder="30"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+                            onChange={(e) => field.onChange(e.target.value === '' ? 30 : parseInt(e.target.value, 10))}
                           />
                         </FormControl>
                         <FormDescription>
