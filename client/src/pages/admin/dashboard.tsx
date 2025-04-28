@@ -112,21 +112,21 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto">
+    <div className="w-full overflow-x-hidden">
       {/* Header section */}
-      <div className="flex justify-between items-center bg-gray-900 py-4 sticky top-0 z-10 border-b border-gray-800 mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-900 py-4 px-4 sticky top-0 z-10 border-b border-gray-800 mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-white">KIZERE Command Center</h1>
+          <h1 className="text-xl md:text-2xl font-semibold text-white">KIZERE Command Center</h1>
           <p className="text-sm text-gray-400">
             Comprehensive platform management and analytics
           </p>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="relative w-64">
+        <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input 
-              className="pl-8 h-9 bg-gray-800 border-gray-700 text-gray-300" 
+              className="pl-8 h-9 bg-gray-800 border-gray-700 text-gray-300 w-full" 
               placeholder="Search across platform..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
           </div>
           
           <Select defaultValue={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[160px] h-9 bg-gray-800 border-gray-700 text-gray-300">
+            <SelectTrigger className="w-full md:w-[160px] h-9 bg-gray-800 border-gray-700 text-gray-300">
               <Calendar className="mr-2 h-4 w-4 text-[#00BFFF]" />
               <SelectValue placeholder="Select range">
                 {timeRange === "24h" ? "Last 24 Hours" : 
@@ -152,18 +152,20 @@ export default function AdminDashboard() {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" size="icon" className="h-9 w-9 border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          
-          <Button variant="outline" size="icon" className="h-9 w-9 relative border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700">
-            <Bell className="h-4 w-4" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
-          </Button>
-          
-          <div className="flex items-center gap-2 border-l border-gray-700 pl-4">
-            <div className="h-8 w-8 rounded-full bg-[#00BFFF]/20 flex items-center justify-center text-[#00BFFF] font-medium">
-              {user?.fullName?.charAt(0) || 'A'}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" className="h-9 w-9 border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700" onClick={() => refetch()}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            
+            <Button variant="outline" size="icon" className="h-9 w-9 relative border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700">
+              <Bell className="h-4 w-4" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+            </Button>
+            
+            <div className="flex items-center gap-2 border-l border-gray-700 pl-2 md:pl-4">
+              <div className="h-8 w-8 rounded-full bg-[#00BFFF]/20 flex items-center justify-center text-[#00BFFF] font-medium">
+                {user?.fullName?.charAt(0) || 'A'}
+              </div>
             </div>
           </div>
         </div>
@@ -183,9 +185,9 @@ export default function AdminDashboard() {
           </Button>
         </div>
       ) : (
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-12 gap-4 px-4 md:px-6">
           {/* Main content area - 9 columns */}
-          <div className="col-span-12 lg:col-span-9 space-y-6">
+          <div className="col-span-12 lg:col-span-8 xl:col-span-9 space-y-4 md:space-y-6">
             {/* Key metrics section */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Card className="overflow-hidden bg-gray-800 border-gray-700 shadow-lg hover:shadow-xl transition-shadow">
@@ -483,7 +485,7 @@ export default function AdminDashboard() {
           </div>
           
           {/* Right sidebar - 3 columns */}
-          <div className="col-span-12 lg:col-span-3 space-y-6">
+          <div className="col-span-12 lg:col-span-4 xl:col-span-3 space-y-4 md:space-y-6">
             {/* Quick actions */}
             <Card className="bg-gray-800 border-gray-700 shadow-lg hover:shadow-xl transition-shadow">
               <CardHeader className="p-4 pb-2">
@@ -516,7 +518,7 @@ export default function AdminDashboard() {
                 </div>
               </CardHeader>
               <CardContent className="p-4 pt-0">
-                <div className="flex gap-1 mt-2 mb-3">
+                <div className="flex flex-wrap gap-1 mt-2 mb-3">
                   <Badge 
                     variant={activeInsightCategory === 'all' ? 'default' : 'outline'}
                     className={`cursor-pointer ${activeInsightCategory === 'all' ? 'bg-[#00BFFF] hover:bg-[#00BFFF]/90' : 'text-gray-300 border-gray-600'}`}
@@ -555,17 +557,17 @@ export default function AdminDashboard() {
                       insight.type === 'success' ? 'bg-green-500/10 border-green-500' :
                       'bg-[#00BFFF]/10 border-[#00BFFF]'
                     }`}>
-                      <div className="flex justify-between items-start">
-                        <div className="flex gap-2">
-                          {insight.type === 'alert' && <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5" />}
-                          {insight.type === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-400 mt-0.5" />}
-                          {insight.type === 'success' && <CheckCircle className="h-4 w-4 text-green-400 mt-0.5" />}
-                          {insight.type === 'info' && <Inbox className="h-4 w-4 text-[#00BFFF] mt-0.5" />}
-                          <p className="font-medium text-white">{insight.title}</p>
+                      <div className="flex flex-col sm:flex-row justify-between items-start">
+                        <div className="flex gap-2 mb-1 sm:mb-0">
+                          {insight.type === 'alert' && <AlertTriangle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />}
+                          {insight.type === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-400 mt-0.5 flex-shrink-0" />}
+                          {insight.type === 'success' && <CheckCircle className="h-4 w-4 text-green-400 mt-0.5 flex-shrink-0" />}
+                          {insight.type === 'info' && <Inbox className="h-4 w-4 text-[#00BFFF] mt-0.5 flex-shrink-0" />}
+                          <p className="font-medium text-white break-words">{insight.title}</p>
                         </div>
-                        <span className="text-xs text-gray-400">{insight.time}</span>
+                        <span className="text-xs text-gray-400 sm:ml-2">{insight.time}</span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-1 ml-6">{insight.message}</p>
+                      <p className="text-xs text-gray-400 mt-1 ml-6 break-words">{insight.message}</p>
                     </div>
                   ))}
                 </div>
@@ -579,44 +581,44 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent className="p-4 pt-2">
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <div className="flex flex-wrap justify-between items-center gap-1">
+                    <div className="flex items-center min-w-[120px]">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
                       <span className="text-sm text-gray-300">API Services</span>
                     </div>
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Operational</span>
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full whitespace-nowrap">Operational</span>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <div className="flex flex-wrap justify-between items-center gap-1">
+                    <div className="flex items-center min-w-[120px]">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
                       <span className="text-sm text-gray-300">Database</span>
                     </div>
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Operational</span>
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full whitespace-nowrap">Operational</span>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <div className="flex flex-wrap justify-between items-center gap-1">
+                    <div className="flex items-center min-w-[120px]">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
                       <span className="text-sm text-gray-300">Authentication</span>
                     </div>
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Operational</span>
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full whitespace-nowrap">Operational</span>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                  <div className="flex flex-wrap justify-between items-center gap-1">
+                    <div className="flex items-center min-w-[120px]">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2 flex-shrink-0"></div>
                       <span className="text-sm text-gray-300">Payment Services</span>
                     </div>
-                    <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">Partial Outage</span>
+                    <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full whitespace-nowrap">Partial Outage</span>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <div className="flex flex-wrap justify-between items-center gap-1">
+                    <div className="flex items-center min-w-[120px]">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
                       <span className="text-sm text-gray-300">Storage Services</span>
                     </div>
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Operational</span>
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full whitespace-nowrap">Operational</span>
                   </div>
                 </div>
                 
