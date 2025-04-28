@@ -1,0 +1,175 @@
+Loading failed for the <script> with source “https://replit.com/public/js/replit-dev-banner.js”. users:107:92
+Content-Security-Policy: The page’s settings blocked a script (script-src-elem) at https://replit.com/public/js/replit-dev-banner.js from being executed because it violates the following directive: “script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://*.firebaseapp.com https://*.gstatic.com https://accounts.google.com” users
+[vite] connecting... client:495:9
+[vite] connected. client:618:15
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools chunk-XQLYTHWV.js:21551:25
+[Firebase] Using Firebase authDomain: kizere-99ac2.firebaseapp.com firebase.ts:22:11
+[Firebase] Current origin: https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev firebase.ts:23:11
+[Firebase] Checking configuration variables: 
+Object { hasApiKey: true, hasProjectId: true, hasAppId: true, authDomain: "kizere-99ac2.firebaseapp.com" }
+firebase.ts:37:11
+[Firebase] Configuration validation passed firebase.ts:49:11
+[Firebase] Successfully initialized Firebase app firebase.ts:55:11
+[Firebase] Checking for redirect result... firebase.ts:137:13
+[Firebase] Auth context from localStorage: 
+Object { hasState: true, hasRedirect: true, savedTimestamp: "2025-04-27T12:10:34.600Z", savedOrigin: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", savedDomain: "5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", currentUrl: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin/users" }
+firebase.ts:151:13
+[Firebase] Getting redirect result from auth instance firebase.ts:162:13
+[Firebase] Running on Replit domain firebase.ts:164:13
+[useAuth] No server session found, status: 401 use-auth.tsx:47:21
+[Firebase] Checking for redirect result... firebase.ts:137:13
+[Firebase] Auth context from localStorage: 
+Object { hasState: true, hasRedirect: true, savedTimestamp: "2025-04-27T12:10:34.600Z", savedOrigin: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", savedDomain: "5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", currentUrl: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin/users" }
+firebase.ts:151:13
+[Firebase] Getting redirect result from auth instance firebase.ts:162:13
+[Firebase] Running on Replit domain firebase.ts:164:13
+[useAuth] No server session found, status: 401 use-auth.tsx:47:21
+[Firebase] Checking for redirect result... firebase.ts:137:13
+[Firebase] Auth context from localStorage: 
+Object { hasState: true, hasRedirect: true, savedTimestamp: "2025-04-27T12:10:34.600Z", savedOrigin: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", savedDomain: "5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev", currentUrl: "https://5097124f-8536-4f65-9a52-9721d50b9792-00-1ybjunf1u2977.worf.replit.dev/admin/users" }
+firebase.ts:151:13
+[Firebase] Getting redirect result from auth instance firebase.ts:162:13
+[Firebase] Running on Replit domain firebase.ts:164:13
+[Firebase] No redirect result found firebase.ts:206:13
+[Firebase] User is already logged in: 
+Object { email: "kizereinc@gmail.com", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", displayName: "KIZERE Inc." }
+firebase.ts:209:15
+[Firebase] No redirect result found firebase.ts:206:13
+[Firebase] User is already logged in: 
+Object { email: "kizereinc@gmail.com", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", displayName: "KIZERE Inc." }
+firebase.ts:209:15
+[Firebase] No redirect result found firebase.ts:206:13
+[Firebase] User is already logged in: 
+Object { email: "kizereinc@gmail.com", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", displayName: "KIZERE Inc." }
+firebase.ts:209:15
+[App] Successfully handled Firebase redirect result App.tsx:53:21
+[useAuth] Processing Firebase redirect result: 
+Object { success: true, user: {…}, token: null, idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjkwOTg1NzhjNDg4MWRjMDVlYmYxOWExNWJhMjJkOGZkMWFiMzRjOGEiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiS0laRVJFIEluYy4iLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jTHVUY2REaWlWY3R4Y1JmbjlSbjlsdm5MNnpaYVp4dzc1OGoyRnVkMC1CZXYwb2l3PXM5Ni1jIiwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL2tpemVyZS05OWFjMiIsImF1ZCI6ImtpemVyZS05OWFjMiIsImF1dGhfdGltZSI6MTc0NTc1NTg1NSwidXNlcl9pZCI6InVrVktQM3d3bTNnOHVoeGs0Z1NyMDRPNmpFZTIiLCJzdWIiOiJ1a1ZLUDN3d20zZzh1aHhrNGdTcjA0TzZqRWUyIiwiaWF0IjoxNzQ1ODA2NjA4LCJleHAiOjE3NDU4MTAyMDgsImVtYWlsIjoia2l6ZXJlaW5jQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7Imdvb2dsZS5jb20iOlsiMTExNjMxMjU2NzIzMDE5ODYxNzYyIl0sImVtYWlsIjpbImtpemVyZWluY0BnbWFpbC5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJnb29nbGUuY29tIn19.lCw4gg_ScdEZL_uTVQCo5EMbbIBP06nuII656F1QwDN-ks2kGTNxyDz-vKIOYfLO_Yj1u2io_MgMyEE1Vmp9WkBgmtkuQcOZA4bFYRSETmj2jvwYWkQDtOcBe2702xqMW0ajG3N0epvfndFO2F4T1vIHwyC0QdfblQFSwScZY9GDk-XCSOVQxW_aQfnksJ0q0B8iwZMBdhRIEYMI4m0Nab6nDeNAvGfB74KinpkhiQLuO_W45-RvHBol_u1RoPe5CANqQqW8izIwY7frsUrVByCWL57Hvmitp-0fM6u0A1_IzDAQE81kwe1UlkuRIQnbgH-WD_k5iTVPL0XLAX-1Mw", alreadyLoggedIn: true }
+use-auth.tsx:56:21
+[useAuth] Processing Firebase redirect result: 
+Object { success: true, user: {…}, token: null, idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjkwOTg1NzhjNDg4MWRjMDVlYmYxOWExNWJhMjJkOGZkMWFiMzRjOGEiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiS0laRVJFIEluYy4iLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jTHVUY2REaWlWY3R4Y1JmbjlSbjlsdm5MNnpaYVp4dzc1OGoyRnVkMC1CZXYwb2l3PXM5Ni1jIiwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL2tpemVyZS05OWFjMiIsImF1ZCI6ImtpemVyZS05OWFjMiIsImF1dGhfdGltZSI6MTc0NTc1NTg1NSwidXNlcl9pZCI6InVrVktQM3d3bTNnOHVoeGs0Z1NyMDRPNmpFZTIiLCJzdWIiOiJ1a1ZLUDN3d20zZzh1aHhrNGdTcjA0TzZqRWUyIiwiaWF0IjoxNzQ1ODA2NjA4LCJleHAiOjE3NDU4MTAyMDgsImVtYWlsIjoia2l6ZXJlaW5jQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7Imdvb2dsZS5jb20iOlsiMTExNjMxMjU2NzIzMDE5ODYxNzYyIl0sImVtYWlsIjpbImtpemVyZWluY0BnbWFpbC5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJnb29nbGUuY29tIn19.lCw4gg_ScdEZL_uTVQCo5EMbbIBP06nuII656F1QwDN-ks2kGTNxyDz-vKIOYfLO_Yj1u2io_MgMyEE1Vmp9WkBgmtkuQcOZA4bFYRSETmj2jvwYWkQDtOcBe2702xqMW0ajG3N0epvfndFO2F4T1vIHwyC0QdfblQFSwScZY9GDk-XCSOVQxW_aQfnksJ0q0B8iwZMBdhRIEYMI4m0Nab6nDeNAvGfB74KinpkhiQLuO_W45-RvHBol_u1RoPe5CANqQqW8izIwY7frsUrVByCWL57Hvmitp-0fM6u0A1_IzDAQE81kwe1UlkuRIQnbgH-WD_k5iTVPL0XLAX-1Mw", alreadyLoggedIn: true }
+use-auth.tsx:56:21
+[useAuth] Successfully retrieved Firebase ID token use-auth.tsx:117:19
+[useAuth] Synchronizing Firebase auth with server with payload: 
+Object { email: "kizereinc@gmail.com", name: "KIZERE Inc.", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", hasToken: true, hasPhotoURL: true }
+use-auth.tsx:139:17
+[useAuth] Successfully retrieved Firebase ID token use-auth.tsx:117:19
+[useAuth] Synchronizing Firebase auth with server with payload: 
+Object { email: "kizereinc@gmail.com", name: "KIZERE Inc.", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", hasToken: true, hasPhotoURL: true }
+use-auth.tsx:139:17
+[useAuth] Server session created/updated for Firebase user 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:160:21
+[useAuth] Firebase auth state changed - user signed in: kizereinc@gmail.com use-auth.tsx:83:21
+[useAuth] Server session created/updated for Firebase user 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:160:21
+[useAuth] Firebase auth state changed - user signed in: kizereinc@gmail.com use-auth.tsx:83:21
+[useAuth] Successfully retrieved Firebase ID token use-auth.tsx:117:19
+[useAuth] Synchronizing Firebase auth with server with payload: 
+Object { email: "kizereinc@gmail.com", name: "KIZERE Inc.", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", hasToken: true, hasPhotoURL: true }
+use-auth.tsx:139:17
+[useAuth] Successfully retrieved Firebase ID token use-auth.tsx:117:19
+[useAuth] Synchronizing Firebase auth with server with payload: 
+Object { email: "kizereinc@gmail.com", name: "KIZERE Inc.", uid: "ukVKP3wwm3g8uhxk4gSr04O6jEe2", hasToken: true, hasPhotoURL: true }
+use-auth.tsx:139:17
+[useAuth] Server session created/updated for Firebase user 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:160:21
+[useAuth] Server session created/updated for Firebase user 
+Object { id: 5, fullName: "KIZERE Inc.", username: "kizereinc@gmail.com", email: "kizereinc@gmail.com", phoneNumber: null, role: "Admin", avatarUrl: "https://lh3.googleusercontent.com/a/ACg8ocLuTcdDiiVctxcRfn9Rn9lvnL6zZaZxw758j2Fud0-Bev0oiw=s96-c", status: "active", verificationStatus: "pending", activityLevel: "medium", … }
+use-auth.tsx:160:21
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] invalidate /src/hooks/use-dashboard-stats.tsx: Could not Fast Refresh ("useDashboardStats" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports client:64:27
+[vite] hot updated: /src/hooks/use-dashboard-stats.tsx client:223:19
+[vite] invalidate /src/hooks/use-activity-feed.tsx: Could not Fast Refresh ("useActivityFeed" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports client:64:27
+[vite] hot updated: /src/hooks/use-activity-feed.tsx client:223:19
+[vite] invalidate /src/hooks/use-system-status.tsx: Could not Fast Refresh ("useSystemStatus" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports client:64:27
+[vite] hot updated: /src/hooks/use-system-status.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] hot updated: /src/pages/admin/command-center.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/dashboard-wrapper.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] hot updated: /src/pages/admin/command-center.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/dashboard-wrapper.tsx client:223:19
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:40:13
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] hot updated: /src/pages/admin/command-center.tsx client:223:19
+[vite] hot updated: /src/pages/admin/dashboard.tsx client:223:19
+[vite] hot updated: /src/pages/admin/dashboard-new.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/dashboard-wrapper.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/metrics-dashboard.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] invalidate /src/hooks/use-dashboard-stats.tsx: Could not Fast Refresh ("useDashboardStats" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports client:64:27
+[vite] hot updated: /src/hooks/use-dashboard-stats.tsx client:223:19
+[vite] invalidate /src/hooks/use-activity-feed.tsx: Could not Fast Refresh ("useActivityFeed" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports client:64:27
+[vite] hot updated: /src/hooks/use-activity-feed.tsx client:223:19
+[vite] invalidate /src/hooks/use-system-status.tsx: Could not Fast Refresh ("useSystemStatus" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports client:64:27
+[vite] hot updated: /src/hooks/use-system-status.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] hot updated: /src/pages/admin/command-center.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/dashboard-wrapper.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] hot updated: /src/pages/admin/command-center.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/dashboard-wrapper.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] hot updated: /src/pages/admin/command-center.tsx client:223:19
+[vite] hot updated: /src/pages/admin/dashboard.tsx client:223:19
+[vite] hot updated: /src/pages/admin/dashboard-new.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/dashboard-wrapper.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/metrics-dashboard.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] invalidate /src/hooks/use-dashboard-stats.tsx: Could not Fast Refresh ("useDashboardStats" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports client:64:27
+[vite] hot updated: /src/hooks/use-dashboard-stats.tsx client:223:19
+[vite] invalidate /src/hooks/use-activity-feed.tsx: Could not Fast Refresh ("useActivityFeed" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports client:64:27
+[vite] hot updated: /src/hooks/use-activity-feed.tsx client:223:19
+[vite] invalidate /src/hooks/use-system-status.tsx: Could not Fast Refresh ("useSystemStatus" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports client:64:27
+[vite] hot updated: /src/hooks/use-system-status.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] hot updated: /src/pages/admin/command-center.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/dashboard-wrapper.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] hot updated: /src/pages/admin/command-center.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/dashboard-wrapper.tsx client:223:19
+[vite] hot updated: /src/index.css?v=GM-mMtiIjrX2AebRDHNyW client:223:19
+[vite] hot updated: /src/pages/admin/command-center.tsx client:223:19
+[vite] hot updated: /src/pages/admin/dashboard.tsx client:223:19
+[vite] hot updated: /src/pages/admin/dashboard-new.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/dashboard-wrapper.tsx client:223:19
+[vite] hot updated: /src/components/dashboard/metrics-dashboard.tsx client:223:19
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/activity-log: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+API GET error for /api/admin/system-status: SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data api.ts:25:13
+Error in parsing value for ‘-webkit-text-size-adjust’.  Declaration dropped. users:141:29
+Unknown property ‘-moz-osx-font-smoothing’.  Declaration dropped. users:511:27
+Unknown property ‘-moz-column-gap’.  Declaration dropped. users:1728:19
+Unknown property ‘-moz-column-gap’.  Declaration dropped. users:1732:19
