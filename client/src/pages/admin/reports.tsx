@@ -406,7 +406,9 @@ export default function AdminReportsPage() {
   
   // Handle filter changes
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    // Convert the special "all" filter values to empty string for the API
+    const apiValue = value === 'all_types' || value === 'all_statuses' ? "" : value;
+    setFilters(prev => ({ ...prev, [key]: apiValue }));
     // Reset to first page when filters change
     setPage(1);
   };
@@ -541,7 +543,7 @@ export default function AdminReportsPage() {
                   <SelectValue placeholder="Report Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all_types">All Types</SelectItem>
                   <SelectItem value="lost">Lost</SelectItem>
                   <SelectItem value="found">Found</SelectItem>
                 </SelectContent>
@@ -555,7 +557,7 @@ export default function AdminReportsPage() {
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all_statuses">All Statuses</SelectItem>
                   <SelectItem value="Open">Open</SelectItem>
                   <SelectItem value="In_Progress">In Progress</SelectItem>
                   <SelectItem value="Resolved">Resolved</SelectItem>
