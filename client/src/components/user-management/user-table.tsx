@@ -134,7 +134,7 @@ export function UserTable({
       case 'inactive':
         return <Badge variant="outline">Inactive</Badge>;
       case 'pending':
-        return <Badge variant="warning">Pending</Badge>;
+        return <Badge variant="secondary">Pending</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -143,9 +143,9 @@ export function UserTable({
   const getVerificationBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case 'verified':
-        return <Badge variant="success" className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>;
+        return <Badge variant="default" className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>;
       case 'pending':
-        return <Badge variant="warning" className="flex items-center gap-1"><ShieldAlert className="h-3 w-3" /> Pending</Badge>;
+        return <Badge variant="secondary" className="flex items-center gap-1"><ShieldAlert className="h-3 w-3" /> Pending</Badge>;
       case 'rejected':
         return <Badge variant="destructive" className="flex items-center gap-1"><ShieldX className="h-3 w-3" /> Rejected</Badge>;
       case 'unverified':
