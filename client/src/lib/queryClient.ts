@@ -2,8 +2,24 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = res.statusText;
+    
+    try {
+      // First try to parse as JSON
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const jsonData = await res.json();
+        errorMessage = jsonData.message || jsonData.error || JSON.stringify(jsonData);
+      } else {
+        // If not JSON, try to get as text
+        errorMessage = await res.text();
+      }
+    } catch (err) {
+      console.error('Error parsing error response:', err);
+      // Keep original status text if parsing fails
+    }
+    
+    throw new Error(`${res.status}: ${errorMessage}`);
   }
 }
 
@@ -34,16 +50,42 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
+    try {
+      console.log(`Making request to: ${queryKey[0]}`);
+      const res = await fetch(queryKey[0] as string, {
+        credentials: "include",
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+      console.log(`Response status for ${queryKey[0]}: ${res.status}`);
+      
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        console.log(`Returning null for 401 response to ${queryKey[0]}`);
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      
+      // Check if response body is empty
+      const contentLength = res.headers.get('content-length');
+      if (contentLength === '0') {
+        console.log(`Empty response body for ${queryKey[0]}`);
+        return null;
+      }
+      
+      // Check content type
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.warn(`Non-JSON response for ${queryKey[0]}: ${contentType}`);
+        const text = await res.text();
+        console.log(`Response text: ${text}`);
+        throw new Error(`Expected JSON response but got: ${contentType}`);
+      }
+      
+      return await res.json();
+    } catch (error) {
+      console.error(`Error fetching ${queryKey[0]}:`, error);
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({

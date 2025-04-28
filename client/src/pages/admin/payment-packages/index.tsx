@@ -38,11 +38,19 @@ export default function PaymentPackages() {
   // Get toast for notifications
   const { toast } = useToast();
   
+  // Log authentication state for debugging
+  console.log('Auth state:', { 
+    isAuthenticated: !!user, 
+    userId: user?.id,
+    userRole: role, 
+    isAdmin 
+  });
+  
   // Fetch payment packages data
   const { data: packages, isLoading, error } = useQuery({
     queryKey: ['/api/admin/payment-packages'],
     enabled: !!user?.id && role === 'Admin', // Only fetch if user is admin
-    retry: false, // Don't retry on error
+    retry: 1, // Try once more if there's an error
     // Using on-error callback to show toast notification for errors
     onError: (err) => {
       console.error('Error fetching payment packages:', err);
