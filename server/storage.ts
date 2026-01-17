@@ -15,7 +15,7 @@ import {
   type AccountStatus, type VerificationStatus, type ActivityLevel, type PaymentType
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, like, and, or, desc, sql } from "drizzle-orm";
+import { eq, like, and, or, desc, asc, not, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -280,13 +280,13 @@ export class DatabaseStorage implements IStorage {
       ? db.select({ count: sql<number>`count(*)` }).from(users).where(and(...conditions))
       : db.select({ count: sql<number>`count(*)` }).from(users);
     
-    const [totalResult] = await totalQuery;
-    const total = totalResult?.count || 0;
+    const totalResult = await totalQuery;
+    const count = totalResult[0]?.count || 0;
     
     // Get paginated users with sorting
     const offset = (page - 1) * pageSize;
     
-    let query = db.select().from(users);
+    let query: any = db.select().from(users);
     
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
@@ -297,13 +297,13 @@ export class DatabaseStorage implements IStorage {
       const column = users[sortBy as keyof typeof users];
       if (column) {
         query = sortOrder === 'asc'
-          ? query.orderBy(sql`${column} asc`)
-          : query.orderBy(sql`${column} desc`);
+          ? query.orderBy(asc(column))
+          : query.orderBy(desc(column));
       } else {
         // Default sort by createdAt if column doesn't exist
         query = sortOrder === 'asc'
-          ? query.orderBy(sql`${users.createdAt} asc`)
-          : query.orderBy(sql`${users.createdAt} desc`);
+          ? query.orderBy(asc(users.createdAt))
+          : query.orderBy(desc(users.createdAt));
       }
     } else {
       // Default sort by createdAt desc
@@ -317,7 +317,7 @@ export class DatabaseStorage implements IStorage {
     
     return {
       users: usersList,
-      total: Number(total)
+      total: Number(count)
     };
   }
   
@@ -505,13 +505,13 @@ export class DatabaseStorage implements IStorage {
       ? db.select({ count: sql<number>`count(*)` }).from(adminActionLogs).where(and(...conditions))
       : db.select({ count: sql<number>`count(*)` }).from(adminActionLogs);
     
-    const [totalResult] = await totalQuery;
-    const total = totalResult?.count || 0;
+    const totalResult = await totalQuery;
+    const count = totalResult[0]?.count || 0;
     
     // Get paginated logs
     const offset = (page - 1) * pageSize;
     
-    let query = db.select().from(adminActionLogs);
+    let query: any = db.select().from(adminActionLogs);
     
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
@@ -526,7 +526,7 @@ export class DatabaseStorage implements IStorage {
     
     return {
       logs,
-      total: Number(total)
+      total: Number(count)
     };
   }
   
@@ -607,12 +607,12 @@ export class DatabaseStorage implements IStorage {
   
   async getPendingVerificationRequests(page: number, pageSize: number): Promise<{ requests: VerificationRequest[]; total: number }> {
     // Count total pending requests
-    const [totalResult] = await db
+    const totalResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(verificationRequests)
       .where(eq(verificationRequests.status, 'pending'));
     
-    const total = totalResult?.count || 0;
+    const count = totalResult[0]?.count || 0;
     
     // Get paginated pending requests
     const offset = (page - 1) * pageSize;
@@ -626,7 +626,7 @@ export class DatabaseStorage implements IStorage {
     
     return {
       requests,
-      total: Number(total)
+      total: Number(count)
     };
   }
   
@@ -959,13 +959,13 @@ export class DatabaseStorage implements IStorage {
       .from(items)
       .where(conditions.length ? and(...conditions) : undefined);
       
-    const total = countResult[0].count;
+    const total = Number(countResult[0].count);
     
     // Calculate total pages
     const totalPages = Math.ceil(total / limit);
     
     // Get sorted and paginated items
-    let query = db
+    let query: any = db
       .select()
       .from(items)
       .where(conditions.length ? and(...conditions) : undefined)
@@ -1002,7 +1002,7 @@ export class DatabaseStorage implements IStorage {
     
     return {
       items: result,
-      total,
+      total: Number(total),
       page,
       totalPages
     };
@@ -1013,25 +1013,6 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(reports)
       .where(eq(reports.itemId, itemId));
-  }
-  
-  async updateItem(id: number, data: Partial<Omit<Item, 'id'>>): Promise<Item | undefined> {
-    const [updatedItem] = await db
-      .update(items)
-      .set({
-        ...data,
-        updatedAt: new Date()
-      })
-      .where(eq(items.id, id))
-      .returning();
-      
-    return updatedItem;
-  }
-  
-  async deleteItem(id: number): Promise<void> {
-    await db
-      .delete(items)
-      .where(eq(items.id, id));
   }
 
   // Report methods
@@ -1445,7 +1426,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Get total count with filters
-    let query = db.select().from(payments);
+    let query: any = db.select().from(payments);
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
@@ -1462,7 +1443,7 @@ export class DatabaseStorage implements IStorage {
     
     return {
       payments: paymentsResult,
-      total
+      total: Number(total)
     };
   }
 
@@ -1527,7 +1508,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPaymentPackageByType(type: PaymentType, onlyActive: boolean = true): Promise<PaymentPackage[]> {
-    let query = db
+    let query: any = db
       .select()
       .from(paymentPackages)
       .where(eq(paymentPackages.type, type));
@@ -1569,7 +1550,10 @@ export class DatabaseStorage implements IStorage {
     
     const [newPackage] = await db
       .insert(paymentPackages)
-      .values(paymentPackage)
+      .values({
+        ...paymentPackage,
+        amount: paymentPackage.amount.toString() as any
+      })
       .returning();
     return newPackage;
   }
@@ -1628,7 +1612,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .delete(paymentPackages)
       .where(eq(paymentPackages.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async setDefaultPaymentPackage(id: number): Promise<PaymentPackage | undefined> {
@@ -1648,13 +1632,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllPaymentPackages(includeInactive: boolean = false): Promise<PaymentPackage[]> {
-    let query = db.select().from(paymentPackages);
+    let query: any = db.select().from(paymentPackages);
     
     if (!includeInactive) {
       query = query.where(eq(paymentPackages.status, 'active'));
     }
     
-    return await query.orderBy(sql`${paymentPackages.type} asc, ${paymentPackages.isDefault} desc`);
+    return await query.orderBy(asc(paymentPackages.type), desc(paymentPackages.isDefault));
   }
 }
 

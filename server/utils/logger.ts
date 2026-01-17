@@ -24,20 +24,38 @@ export function createLogger(moduleName: string): Logger {
   return {
     debug: (message: string, meta?: any) => {
       if (process.env.NODE_ENV !== 'production') {
-        console.debug(`[${new Date().toISOString()}] [DEBUG] [${moduleName}]`, message, meta || '');
+        if (meta !== undefined) {
+          console.debug(`[${new Date().toISOString()}] [DEBUG] [${moduleName}]`, message, meta);
+        } else {
+          console.debug(`[${new Date().toISOString()}] [DEBUG] [${moduleName}]`, message);
+        }
       }
     },
     
     info: (message: string, meta?: any) => {
-      console.info(`[${new Date().toISOString()}] [INFO] [${moduleName}]`, message, meta || '');
+      if (meta !== undefined) {
+        console.info(`[${new Date().toISOString()}] [INFO] [${moduleName}]`, message, meta);
+      } else {
+        console.info(`[${new Date().toISOString()}] [INFO] [${moduleName}]`, message);
+      }
     },
     
     warn: (message: string, meta?: any) => {
-      console.warn(`[${new Date().toISOString()}] [WARN] [${moduleName}]`, message, meta || '');
+      if (meta !== undefined) {
+        console.warn(`[${new Date().toISOString()}] [WARN] [${moduleName}]`, message, meta);
+      } else {
+        console.warn(`[${new Date().toISOString()}] [WARN] [${moduleName}]`, message);
+      }
     },
     
     error: (message: string, meta?: any) => {
-      console.error(`[${new Date().toISOString()}] [ERROR] [${moduleName}]`, message, meta || '');
+      if (meta !== undefined) {
+        // If meta is an error, try to pass its message or string representation to avoid util.inspect issues
+        const safeMeta = (meta instanceof Error) ? { message: meta.message, stack: meta.stack } : meta;
+        console.error(`[${new Date().toISOString()}] [ERROR] [${moduleName}]`, message, safeMeta);
+      } else {
+        console.error(`[${new Date().toISOString()}] [ERROR] [${moduleName}]`, message);
+      }
     }
   };
 }

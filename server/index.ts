@@ -47,7 +47,7 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
+const startServer = async () => {
   const server = await registerRoutes(app);
 
   // Global error handler using centralized error handler
@@ -73,15 +73,21 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+  // Only listen if not in a serverless environment
+  if (process.env.NODE_ENV !== "production" || process.env.VERCEL !== "1") {
+    const port = 5000;
+    server.listen(port, "0.0.0.0", () => {
+      log(`serving on port ${port}`);
+    });
+  }
+  
+  return server;
+};
+
+// Start the server
+startServer().catch((err) => {
+  logger.error("Failed to start server", { error: err.message, stack: err.stack });
+  process.exit(1);
+});
+
+export default app;

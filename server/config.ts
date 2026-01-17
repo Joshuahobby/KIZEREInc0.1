@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
+import dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Generate a secure session secret if one isn't provided
 // This is only used in development and is recreated on each server restart

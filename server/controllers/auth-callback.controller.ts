@@ -85,7 +85,6 @@ export class AuthCallbackController {
       
       // Get Firebase configuration from environment
       const firebaseProjectId = process.env.VITE_FIREBASE_PROJECT_ID;
-      const firebaseApiKey = process.env.VITE_FIREBASE_API_KEY;
       
       // Create OAuth client ID from project ID
       const clientId = `${firebaseProjectId}.apps.googleusercontent.com`;
