@@ -1308,9 +1308,6 @@ export default function EnhancedRegisterItem() {
                                   )}
                                 />
                               </div>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
                               {/* Electronic device fields */}
                               {form.getValues("category") === "Electronics" && (
                                 <>

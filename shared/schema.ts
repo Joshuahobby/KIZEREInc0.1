@@ -137,6 +137,7 @@ export const payments = pgTable("payments", {
   paymentDate: timestamp("payment_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   metadata: json("metadata"),
+  packageId: integer("package_id").references(() => paymentPackages.id),
 });
 
 // Payment methods (saved for future use)
@@ -172,6 +173,8 @@ export const adminActionLogs = pgTable("admin_action_logs", {
   previousState: json("previous_state"),
   newState: json("new_state"),
   reason: text("reason"),
+  entityType: text("entity_type"),
+  entityId: integer("entity_id"),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 

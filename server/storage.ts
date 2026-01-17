@@ -297,8 +297,8 @@ export class DatabaseStorage implements IStorage {
       const column = users[sortBy as keyof typeof users];
       if (column) {
         query = sortOrder === 'asc'
-          ? query.orderBy(asc(column))
-          : query.orderBy(desc(column));
+          ? query.orderBy(asc(column as any))
+          : query.orderBy(desc(column as any));
       } else {
         // Default sort by createdAt if column doesn't exist
         query = sortOrder === 'asc'
@@ -521,11 +521,11 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(adminActionLogs.timestamp))
       .limit(pageSize)
       .offset(offset);
-    
-    const logs = await query;
+      
+    const results = await query;
     
     return {
-      logs,
+      logs: results,
       total: Number(count)
     };
   }
@@ -1172,17 +1172,17 @@ export class DatabaseStorage implements IStorage {
     
     // Get total count of matching reports
     const countResult = await db
-      .select({ count: sql`count(*)::int` })
+      .select({ count: sql<number>`count(*)::int` })
       .from(reports)
       .where(conditions.length ? and(...conditions) : undefined);
     
-    const total = countResult[0].count;
+    const total = Number(countResult[0]?.count || 0);
     
     // Calculate total pages
     const totalPages = Math.ceil(total / limit);
     
     // Get sorted and paginated reports
-    let query = db
+    let query: any = db
       .select()
       .from(reports)
       .where(conditions.length ? and(...conditions) : undefined)

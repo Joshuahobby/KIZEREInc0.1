@@ -2,7 +2,7 @@ import { useContext, createContext, useState, useEffect, ReactNode } from 'react
 
 type Language = 'en' | 'fr' | 'rw' | 'sw';
 
-type TranslationContext = {
+type TranslationContextType = {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string, params?: Record<string, string>) => string;
@@ -10,7 +10,7 @@ type TranslationContext = {
 };
 
 // Create the context
-const TranslationContext = createContext<TranslationContext | null>(null);
+const TranslationContext = createContext<TranslationContextType | null>(null);
 
 // Base translations
 const translations: Record<Language, Record<string, string>> = {
@@ -229,7 +229,7 @@ export function TranslationProvider({ children }: { children: ReactNode }): JSX.
     return translation;
   };
 
-  const value: TranslationContext = {
+  const value: TranslationContextType = {
     language,
     setLanguage: handleLanguageChange,
     t: translate,

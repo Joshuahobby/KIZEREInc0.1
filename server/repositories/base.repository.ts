@@ -10,7 +10,7 @@ import { eq, and, SQL, sql } from 'drizzle-orm';
 const logger = createLogger('BaseRepository');
 
 /**
- * Base repository with generic CRUD operations
+ * Base repository// This will be decided after inspection
  */
 export abstract class BaseRepository<T, InsertT, IdType = number> {
   constructor(
@@ -120,7 +120,7 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
       const [result] = await db
         .insert(this.table)
         .values(data as any)
-        .returning();
+        .returning() as any[];
       
       logger.info(`Created ${this.tableName} successfully`, { id: result.id });
       return result as T;
@@ -196,7 +196,7 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
    */
   async count(conditions?: SQL[]): Promise<number> {
     try {
-      let queryBuilder = db
+      let queryBuilder: any = db
         .select({ count: sql<number>`count(*)::int` })
         .from(this.table);
       

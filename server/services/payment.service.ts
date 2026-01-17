@@ -122,7 +122,7 @@ export class PaymentService {
       // Create payment record in database
       const paymentRecord = await storage.createPayment({
         userId: paymentData.userId,
-        amount,
+        amount: amount.toString(),
         currency: DEFAULT_CURRENCY,
         type: paymentData.type,
         status: 'pending',
@@ -278,7 +278,7 @@ export class PaymentService {
           
           // If verification failed, return current status
           return {
-            status: payment.status,
+            status: payment.status as any,
             message: 'Unable to verify payment status',
             transactionRef
           };
