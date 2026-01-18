@@ -1968,6 +1968,8 @@ export default function EnhancedRegisterItem() {
                                           type="file"
                                           accept="image/png,image/jpeg,image/jpg,image/gif"
                                           className="hidden"
+                                          title="Upload item images"
+                                          aria-label="Upload item images"
                                           onChange={handleFileInputChange('itemImages')}
                                         />
                                         <Button
@@ -2055,6 +2057,8 @@ export default function EnhancedRegisterItem() {
                                       type="file"
                                       accept="image/png,image/jpeg,image/jpg,image/gif"
                                       className="hidden"
+                                      title="Upload receipt image"
+                                      aria-label="Upload receipt image"
                                       onChange={handleFileInputChange('receiptImage')}
                                     />
                                     <Button
@@ -2088,6 +2092,8 @@ export default function EnhancedRegisterItem() {
                                         type="file"
                                         accept="image/png,image/jpeg,image/jpg,image/gif,.pdf"
                                         className="hidden"
+                                        title="Upload warranty document"
+                                        aria-label="Upload warranty document"
                                         onChange={handleFileInputChange('warrantyDocument')}
                                       />
                                       <Button
@@ -2198,6 +2204,8 @@ export default function EnhancedRegisterItem() {
                                           type="file"
                                           accept="image/png,image/jpeg,image/jpg,image/gif,.pdf"
                                           className="hidden"
+                                          title="Upload ownership proof"
+                                          aria-label="Upload ownership proof"
                                           onChange={handleFileInputChange('ownershipProof')}
                                         />
                                         <Button
