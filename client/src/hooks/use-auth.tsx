@@ -212,6 +212,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Try to parse error as JSON
             const errorData = await response.json();
             errorMessage = errorData.message || errorMessage;
+            
+            // Log full debug details if available
+            console.error("[useAuth] Full server error details:", errorData);
+            if (errorData.debug_error) {
+              console.error("[useAuth] DEBUG ERROR:", errorData.debug_error);
+            }
+            if (errorData.details) {
+              console.error("[useAuth] DEBUG STACK:", errorData.details);
+            }
           } catch (jsonError) {
             // If not JSON, try to get as text
             try {
@@ -406,6 +415,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             });
           } else {
             console.error("[useAuth] Failed to synchronize popup auth with server:", response.status);
+            // Try to parse error details from response
+            try {
+              const errorData = await response.json();
+              console.error("[useAuth] Server error details:", errorData);
+              if (errorData.debug_error) {
+                console.error("[useAuth] DEBUG ERROR:", errorData.debug_error);
+              }
+              if (errorData.details) {
+                console.error("[useAuth] DEBUG STACK:", errorData.details);
+              }
+            } catch (e) {
+              console.error("[useAuth] Failed to parse server error response", e);
+            }
             throw new Error("Failed to create server session");
           }
         } else {
