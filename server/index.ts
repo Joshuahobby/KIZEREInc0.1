@@ -1,7 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { serveStatic, log } from "./static";
 import { createLogger } from "./utils/logger";
 import { setupSecurityMiddleware } from "./middleware/security.middleware";
 import { handleRequestError } from "./utils/error-handler";
@@ -66,6 +66,7 @@ export const startServer = async () => {
   });
 
   if (app.get("env") === "development") {
+    const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
     serveStatic(app);

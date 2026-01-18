@@ -23,7 +23,7 @@ The project follows a modern architecture with clear separation of concerns:
 - **Backend**: Express.js, PostgreSQL, Drizzle ORM
 - **Authentication**: Firebase Auth with custom session management
 - **Security**: Helmet, express-rate-limit, CSRF protection, content sanitization
-- **Infrastructure**: Replit for hosting and deployment
+- **Infrastructure**: vercel or netlify or firebase for hosting and deployment
 
 ## Architecture
 
