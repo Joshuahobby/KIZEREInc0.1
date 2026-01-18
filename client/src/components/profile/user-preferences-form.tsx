@@ -109,7 +109,10 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
   // Set up mutation for updating preferences
   const mutation = useMutation({
     mutationFn: (data: PreferencesFormValues) => {
-      return apiRequest('PUT', '/api/me/preferences', data);
+      return apiRequest('/api/me/preferences', {
+        method: 'PUT',
+        data
+      });
     },
     onSuccess: () => {
       toast({

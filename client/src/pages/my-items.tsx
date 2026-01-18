@@ -154,7 +154,7 @@ export default function MyItemsPage() {
   }) || [];
   
   // Get unique categories from items for the filter dropdown
-  const uniqueCategories = items ? [...new Set(items.map(item => item.category))] : [];
+  const uniqueCategories = items ? Array.from(new Set(items.map(item => item.category))) : [];
   
   const handleReportLost = (itemId: number) => {
     navigate(`/report-lost/${itemId}`);

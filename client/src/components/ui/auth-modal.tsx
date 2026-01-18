@@ -73,13 +73,15 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     // Provide default values to prevent render errors
     auth = {
       user: null,
+      role: null,
       isAuthenticated: false,
       isLoading: false,
       error: null,
-      login: async () => { throw new Error("Auth context not available") },
+      loginMutation: { mutateAsync: async () => {} },
+      registerMutation: { mutateAsync: async () => {} },
+      logoutMutation: { mutateAsync: async () => {} },
       loginWithGoogle: async () => { throw new Error("Auth context not available") },
       signOut: async () => { throw new Error("Auth context not available") },
-      signup: async () => { throw new Error("Auth context not available") }
     };
   }
   
@@ -125,7 +127,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       const loginData = AuthModel.prepareLoginData(data);
       
       // Use the login method from useAuth hook
-      await auth.login(loginData.username, loginData.password);
+      await auth.loginMutation.mutateAsync({
+        username: loginData.username,
+        password: loginData.password
+      });
       
       toast({
         title: "Welcome back!",
@@ -153,7 +158,11 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       const registerData = AuthModel.prepareRegisterData(data);
       
       // Use the signup method from useAuth hook
-      await auth.signup(registerData.username, registerData.password, registerData.fullName);
+      await auth.registerMutation.mutateAsync({
+        username: registerData.username,
+        password: registerData.password,
+        fullName: registerData.fullName
+      });
       
       toast({
         title: "Account created!",

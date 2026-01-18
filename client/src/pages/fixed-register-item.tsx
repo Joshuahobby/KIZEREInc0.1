@@ -70,6 +70,8 @@ const formSchema = insertItemSchema.extend({
   name: z.string().min(2, { message: "Item name is too short" }).max(100),
   description: z.string().optional(),
   uniqueIdentifier: z.string().min(4, { message: "Identifier must be at least 4 characters" }),
+  // Add subCategory for UI logic
+  subCategory: z.string().optional(),
   // We'll handle file validation separately
 });
 
@@ -142,7 +144,7 @@ export default function RegisterItem() {
       subCategory: "",
       uniqueIdentifier: "",
       description: "",
-      status: "active",
+      status: "Registered",
     },
     mode: "onChange",
   });

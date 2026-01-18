@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { adminApi } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { CommandCenterLayout } from "@/components/layouts/command-center-layout";
 import {
   Card,
@@ -39,7 +40,7 @@ import {
   User,
   Tag
 } from "lucide-react";
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -47,10 +48,33 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -58,7 +82,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { format } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   DropdownMenu,
@@ -66,8 +89,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { toast } from "@/hooks/use-toast";
-import { Textarea } from "@/components/ui/textarea";
 
 // Stats Card component for the dashboard
 const StatCard = ({ title, value, icon, className = "", color = "blue" }: { 
@@ -160,9 +181,17 @@ const ReportStatusChangeDialog = ({ isOpen, onClose, report, onStatusChange }: {
   report: any;
   onStatusChange: () => void;
 }) => {
-  const [status, setStatus] = useState(report?.status || "Open");
+  const { toast } = useToast();
+  const [status, setStatus] = useState<string>(report?.status || "Open");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Sync status if report changes
+  useEffect(() => {
+    if (report?.status) {
+      setStatus(report.status);
+    }
+  }, [report]);
   
   const handleSubmit = async () => {
     if (!report || !status) return;
@@ -252,10 +281,11 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
   onClose: () => void;
   reportId: number | null;
 }) => {
+  const { toast } = useToast();
   const { data: reportData, isLoading } = useQuery({
     queryKey: [`/api/admin/reports/${reportId}`],
-    queryFn: () => adminApi.getReportById(reportId),
-    enabled: isOpen && !!reportId,
+    queryFn: () => reportId ? adminApi.getReportById(reportId) : Promise.resolve(null),
+    enabled: isOpen && reportId !== null,
   });
   
   const formatDate = (dateString: any) => {
@@ -283,29 +313,29 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
           <ScrollArea className="h-[60vh]">
             <div className="space-y-6">
               <div className="flex flex-col space-y-1.5">
-                <h2 className="text-xl font-semibold text-primary">{reportData?.report?.title}</h2>
+                <h2 className="text-xl font-semibold text-primary">{(reportData as any)?.report?.title}</h2>
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                   <Calendar className="h-4 w-4" />
-                  <span>Report Date: {formatDate(reportData?.report?.date)}</span>
+                  <span>Report Date: {formatDate((reportData as any)?.report?.date)}</span>
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                   <Map className="h-4 w-4" />
-                  <span>Location: {reportData?.report?.location}</span>
+                  <span>Location: {(reportData as any)?.report?.location}</span>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <StatusBadge status={reportData?.report?.status} />
-                  <TypeBadge type={reportData?.report?.type} />
+                  {(reportData as any)?.report?.status && <StatusBadge status={(reportData as any).report.status} />}
+                  {(reportData as any)?.report?.type && <TypeBadge type={(reportData as any).report.type} />}
                 </div>
               </div>
               
               <div className="space-y-2">
                 <h3 className="text-sm font-medium">Description</h3>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                  {reportData?.report?.description}
+                  {(reportData as any)?.report?.description}
                 </p>
               </div>
               
-              {reportData?.item && (
+              {(reportData as any)?.item && (
                 <div className="space-y-2 border-t pt-4">
                   <h3 className="text-sm font-medium flex items-center">
                     <Tag className="h-4 w-4 mr-1" />
@@ -314,30 +344,30 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
                   <div className="bg-secondary/30 p-3 rounded-md">
                     <div className="flex justify-between">
                       <div>
-                        <p className="font-medium">{reportData.item.name}</p>
-                        <p className="text-xs text-muted-foreground">Category: {reportData.item.category}</p>
-                        <p className="text-xs text-muted-foreground">ID: {reportData.item.uniqueIdentifier}</p>
+                        <p className="font-medium">{(reportData as any)?.item?.name}</p>
+                        <p className="text-xs text-muted-foreground">Category: {(reportData as any)?.item?.category}</p>
+                        <p className="text-xs text-muted-foreground">ID: {(reportData as any)?.item?.uniqueIdentifier}</p>
                       </div>
-                      <Badge variant={reportData.item.status === 'Registered' ? 'outline' : 'secondary'}>
-                        {reportData.item.status}
+                      <Badge variant={(reportData as any)?.item?.status === 'Registered' ? 'outline' : 'secondary'}>
+                        {(reportData as any)?.item?.status}
                       </Badge>
                     </div>
                   </div>
                 </div>
               )}
               
-              {reportData?.user && (
+              {(reportData as any)?.user && (
                 <div className="space-y-2 border-t pt-4">
                   <h3 className="text-sm font-medium flex items-center">
                     <User className="h-4 w-4 mr-1" />
                     Report Owner
                   </h3>
                   <div className="bg-secondary/30 p-3 rounded-md">
-                    <p className="font-medium">{reportData.user.fullName}</p>
-                    <p className="text-xs text-muted-foreground">{reportData.user.email}</p>
-                    {reportData.user.phoneNumber && (
-                      <p className="text-xs text-muted-foreground">Phone: {reportData.user.phoneNumber}</p>
-                    )}
+                  <p className="font-medium">{(reportData as any)?.user?.fullName}</p>
+                  <p className="text-xs text-muted-foreground">{(reportData as any)?.user?.email}</p>
+                  {(reportData as any)?.user?.phoneNumber && (
+                    <p className="text-xs text-muted-foreground">Phone: {(reportData as any)?.user?.phoneNumber}</p>
+                  )}
                   </div>
                 </div>
               )}
@@ -345,7 +375,7 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
               <div className="space-y-2 border-t pt-4">
                 <h3 className="text-sm font-medium">Contact Information</h3>
                 <p className="text-sm text-muted-foreground">
-                  {reportData?.report?.contactInfo || "No contact information provided"}
+                  {(reportData as any)?.report?.contactInfo || "No contact information provided"}
                 </p>
               </div>
               
@@ -354,7 +384,7 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                    <span className="text-sm">Reported on {formatDate(reportData?.report?.reportedAt)}</span>
+                    <span className="text-sm">Reported on {formatDate((reportData as any)?.report?.reportedAt)}</span>
                   </div>
                   {/* Add more timeline entries here as needed */}
                 </div>
@@ -371,9 +401,10 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
   );
 };
 
-export default function AdminReportsPage() {
+export default function AdminReports() {
   const { user } = useAuth();
   const [location, navigate] = useLocation();
+  const { toast } = useToast();
   
   // Filters and search state
   const [search, setSearch] = useState("");
@@ -416,7 +447,7 @@ export default function AdminReportsPage() {
       limit: pageSize,
       search,
       ...filters
-    }),
+    }) as any,
   });
   
   // Handle filter changes
@@ -448,17 +479,18 @@ export default function AdminReportsPage() {
     toast({
       title: "Export started",
       description: "Your report data export has been initiated.",
+      variant: "default",
     });
   };
   
   // Handle status update dialog
-  const openStatusDialog = (report) => {
+  const openStatusDialog = (report: any) => {
     setSelectedReport(report);
     setIsStatusDialogOpen(true);
   };
   
   // Handle report detail dialog
-  const openDetailDialog = (report) => {
+  const openDetailDialog = (report: any) => {
     setSelectedReport(report);
     setIsDetailDialogOpen(true);
   };
@@ -497,28 +529,28 @@ export default function AdminReportsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
           title="Total Reports"
-          value={isLoadingStats ? "—" : reportStats?.totalReports || 0}
+          value={isLoadingStats ? "—" : (reportStats as any)?.totalReports || 0}
           icon={<FileText className="h-5 w-5" />}
           color="blue"
         />
         
         <StatCard
           title="Lost Reports"
-          value={isLoadingStats ? "—" : reportStats?.lostReports || 0}
+          value={isLoadingStats ? "—" : (reportStats as any)?.lostReports || 0}
           icon={<AlertCircle className="h-5 w-5" />}
           color="red"
         />
         
         <StatCard
           title="Found Reports"
-          value={isLoadingStats ? "—" : reportStats?.foundReports || 0}
+          value={isLoadingStats ? "—" : (reportStats as any)?.foundReports || 0}
           icon={<CheckCircle2 className="h-5 w-5" />}
           color="green"
         />
         
         <StatCard
           title="Open Reports"
-          value={isLoadingStats ? "—" : reportStats?.openReports || 0}
+          value={isLoadingStats ? "—" : (reportStats as any)?.openReports || 0}
           icon={<AlertCircle className="h-5 w-5" />}
           color="amber"
         />
@@ -626,7 +658,7 @@ export default function AdminReportsPage() {
                         <td className="p-4 text-right"><Skeleton className="h-4 w-16 ml-auto" /></td>
                       </tr>
                     ))
-                  ) : reportData?.reports?.length === 0 ? (
+                  ) : ((reportData as any)?.reports || []).length === 0 ? (
                     <tr className="border-t">
                       <td colSpan={6} className="py-8 text-center text-muted-foreground">
                         <div className="flex flex-col items-center justify-center">
@@ -642,7 +674,7 @@ export default function AdminReportsPage() {
                       </td>
                     </tr>
                   ) : (
-                    reportData?.reports?.map((report: any) => (
+                    ((reportData as any)?.reports || []).map((report: any) => (
                       <tr key={report.id} className="border-t">
                         <td className="p-4 font-medium">{report.title}</td>
                         <td className="p-4">
@@ -689,10 +721,10 @@ export default function AdminReportsPage() {
           </div>
           
           {/* Pagination */}
-          {reportData && reportData.totalPages > 0 && (
+          {reportData && (reportData as any).totalPages > 0 && (
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-muted-foreground">
-                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, reportData.total)} of {reportData.total} reports
+                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, (reportData as any).total)} of {(reportData as any).total} reports
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -704,13 +736,13 @@ export default function AdminReportsPage() {
                   Previous
                 </Button>
                 <div className="text-sm font-medium">
-                  Page {page} of {reportData.totalPages}
+                  Page {page} of {(reportData as any).totalPages}
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(p => Math.min(reportData.totalPages, p + 1))}
-                  disabled={page === reportData.totalPages || isLoadingReports}
+                  onClick={() => setPage(p => Math.min((reportData as any).totalPages, p + 1))}
+                  disabled={page === (reportData as any).totalPages || isLoadingReports}
                 >
                   Next
                 </Button>
@@ -734,17 +766,17 @@ export default function AdminReportsPage() {
             </TabsList>
             <TabsContent value="new" className="space-y-4 mt-4">
               <p className="text-sm text-muted-foreground">
-                {isLoadingStats ? "Loading..." : `There are ${reportStats?.reportsThisWeek || 0} new reports this week.`}
+                {isLoadingStats ? "Loading..." : `There are ${(reportStats as any)?.reportsThisWeek || 0} new reports this week.`}
               </p>
             </TabsContent>
             <TabsContent value="progress" className="space-y-4 mt-4">
               <p className="text-sm text-muted-foreground">
-                {isLoadingStats ? "Loading..." : `There are currently ${reportStats?.inProgressReports || 0} reports being processed.`}
+                {isLoadingStats ? "Loading..." : `There are currently ${(reportStats as any)?.inProgressReports || 0} reports being processed.`}
               </p>
             </TabsContent>
             <TabsContent value="resolved" className="space-y-4 mt-4">
               <p className="text-sm text-muted-foreground">
-                {isLoadingStats ? "Loading..." : `${reportStats?.resolvedReports || 0} reports have been successfully resolved.`}
+                {isLoadingStats ? "Loading..." : `${(reportStats as any)?.resolvedReports || 0} reports have been successfully resolved.`}
               </p>
             </TabsContent>
           </Tabs>
@@ -764,7 +796,7 @@ export default function AdminReportsPage() {
           <ReportDetailDialog
             isOpen={isDetailDialogOpen}
             onClose={() => setIsDetailDialogOpen(false)}
-            reportId={selectedReport.id}
+            reportId={(selectedReport as any).id}
           />
         </>
       )}

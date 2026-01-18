@@ -371,8 +371,8 @@ export default function RegisterItem() {
         imageUrls: data.imageUrls || [],
       };
       
-      const res = await apiRequest("POST", "/api/items", itemData);
-      return await res.json();
+      const res = await apiRequest("/api/items", { method: "POST", data: itemData });
+      return res;
     },
     onSuccess: async (item) => {
       // Invalidate and refetch items query to update the list

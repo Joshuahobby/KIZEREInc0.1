@@ -66,16 +66,10 @@ export function OwnershipTransferDialog({
   // Transfer mutation
   const transferMutation = useMutation({
     mutationFn: async (data: TransferFormValues) => {
-      const response = await apiRequest("POST", `/api/items/${itemId}/transfer`, {
-        recipientEmail: data.recipientEmail,
+      return await apiRequest(`/api/items/${itemId}/transfer`, {
+        method: "POST",
+        data: { recipientEmail: data.recipientEmail },
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to transfer ownership");
-      }
-      
-      return await response.json();
     },
     onSuccess: () => {
       setTransferStep('success');

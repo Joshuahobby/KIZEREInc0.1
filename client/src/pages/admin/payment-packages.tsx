@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -36,7 +36,7 @@ const packageFormSchema = z.object({
   }),
   amount: z.coerce.number().positive("Amount must be a positive number"),
   currency: z.string().default("RWF"),
-  features: z.string().transform(str => str.split('\n').filter(s => s.trim().length > 0)),
+  features: z.string(),
   isDefault: z.boolean().default(false),
   status: z.enum(["active", "inactive", "archived"], {
     required_error: "Status is required"
@@ -64,7 +64,7 @@ export default function AdminPaymentPackagesPage() {
       type: "registration" as PaymentType,
       amount: 0,
       currency: "RWF",
-      features: [],
+      features: "",
       isDefault: false,
       status: "active",
       validityDays: 0
@@ -80,7 +80,7 @@ export default function AdminPaymentPackagesPage() {
       type: "registration" as PaymentType,
       amount: 0,
       currency: "RWF",
-      features: [],
+      features: "",
       isDefault: false,
       status: "active",
       validityDays: 0
@@ -106,8 +106,13 @@ export default function AdminPaymentPackagesPage() {
 
   // Create a new payment package
   const createPackageMutation = useMutation({
-    mutationFn: (data: PackageFormValues) => 
-      apiRequest('/api/admin/payment-packages', { method: 'POST', data }),
+    mutationFn: (data: PackageFormValues) => {
+      const payload = {
+        ...data,
+        features: data.features.split('\n').filter(s => s.trim().length > 0)
+      };
+      return apiRequest('/api/admin/payment-packages', { method: 'POST', data: payload });
+    },
     onSuccess: () => {
       toast({
         title: "Package created",
@@ -128,8 +133,13 @@ export default function AdminPaymentPackagesPage() {
 
   // Update a payment package
   const updatePackageMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: PackageFormValues }) =>
-      apiRequest(`/api/admin/payment-packages/${id}`, { method: 'PATCH', data }),
+    mutationFn: ({ id, data }: { id: number, data: PackageFormValues }) => {
+      const payload = {
+        ...data,
+        features: data.features.split('\n').filter(s => s.trim().length > 0)
+      };
+      return apiRequest(`/api/admin/payment-packages/${id}`, { method: 'PATCH', data: payload });
+    },
     onSuccess: () => {
       toast({
         title: "Package updated",
@@ -386,11 +396,11 @@ export default function AdminPaymentPackagesPage() {
           </DialogHeader>
 
           <Form {...createForm}>
-            <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+            <form onSubmit={createForm.handleSubmit(onCreateSubmit as any)} className="space-y-4">
               <ScrollArea className="max-h-[60vh]">
                 <div className="space-y-4 pr-4">
                   <FormField
-                    control={createForm.control}
+                    control={createForm.control as any}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
@@ -407,7 +417,7 @@ export default function AdminPaymentPackagesPage() {
                   />
 
                   <FormField
-                    control={createForm.control}
+                    control={createForm.control as any}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
@@ -428,7 +438,7 @@ export default function AdminPaymentPackagesPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
-                      control={createForm.control}
+                      control={createForm.control as any}
                       name="type"
                       render={({ field }) => (
                         <FormItem>
@@ -456,7 +466,7 @@ export default function AdminPaymentPackagesPage() {
                     />
 
                     <FormField
-                      control={createForm.control}
+                      control={createForm.control as any}
                       name="status"
                       render={({ field }) => (
                         <FormItem>
@@ -487,7 +497,7 @@ export default function AdminPaymentPackagesPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
-                      control={createForm.control}
+                      control={createForm.control as any}
                       name="amount"
                       render={({ field }) => (
                         <FormItem>
@@ -504,7 +514,7 @@ export default function AdminPaymentPackagesPage() {
                     />
 
                     <FormField
-                      control={createForm.control}
+                      control={createForm.control as any}
                       name="currency"
                       render={({ field }) => (
                         <FormItem>
@@ -522,7 +532,7 @@ export default function AdminPaymentPackagesPage() {
                   </div>
 
                   <FormField
-                    control={createForm.control}
+                    control={createForm.control as any}
                     name="features"
                     render={({ field }) => (
                       <FormItem>
@@ -546,7 +556,7 @@ Priority processing"
                   />
 
                   <FormField
-                    control={createForm.control}
+                    control={createForm.control as any}
                     name="validityDays"
                     render={({ field }) => (
                       <FormItem>
@@ -563,7 +573,7 @@ Priority processing"
                   />
 
                   <FormField
-                    control={createForm.control}
+                    control={createForm.control as any}
                     name="isDefault"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -616,11 +626,11 @@ Priority processing"
           </DialogHeader>
 
           <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+            <form onSubmit={editForm.handleSubmit(onEditSubmit as any)} className="space-y-4">
               <ScrollArea className="max-h-[60vh]">
                 <div className="space-y-4 pr-4">
                   <FormField
-                    control={editForm.control}
+                    control={editForm.control as any}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
@@ -637,7 +647,7 @@ Priority processing"
                   />
 
                   <FormField
-                    control={editForm.control}
+                    control={editForm.control as any}
                     name="description"
                     render={({ field }) => (
                       <FormItem>
@@ -658,7 +668,7 @@ Priority processing"
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
-                      control={editForm.control}
+                      control={editForm.control as any}
                       name="type"
                       render={({ field }) => (
                         <FormItem>
@@ -686,7 +696,7 @@ Priority processing"
                     />
 
                     <FormField
-                      control={editForm.control}
+                      control={editForm.control as any}
                       name="status"
                       render={({ field }) => (
                         <FormItem>
@@ -717,7 +727,7 @@ Priority processing"
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FormField
-                      control={editForm.control}
+                      control={editForm.control as any}
                       name="amount"
                       render={({ field }) => (
                         <FormItem>
@@ -734,7 +744,7 @@ Priority processing"
                     />
 
                     <FormField
-                      control={editForm.control}
+                      control={editForm.control as any}
                       name="currency"
                       render={({ field }) => (
                         <FormItem>
@@ -752,7 +762,7 @@ Priority processing"
                   </div>
 
                   <FormField
-                    control={editForm.control}
+                    control={editForm.control as any}
                     name="features"
                     render={({ field }) => (
                       <FormItem>
@@ -776,7 +786,7 @@ Priority processing"
                   />
 
                   <FormField
-                    control={editForm.control}
+                    control={editForm.control as any}
                     name="validityDays"
                     render={({ field }) => (
                       <FormItem>
@@ -793,7 +803,7 @@ Priority processing"
                   />
 
                   <FormField
-                    control={editForm.control}
+                    control={editForm.control as any}
                     name="isDefault"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">

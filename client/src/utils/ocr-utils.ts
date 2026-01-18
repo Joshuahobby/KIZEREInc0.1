@@ -44,14 +44,11 @@ export async function extractTextFromImage(
   imageFile: File,
   options: OCROptions = DEFAULT_OPTIONS
 ): Promise<string> {
-  const worker = await createWorker({
+  const worker = await createWorker(options.language || 'eng', 1, {
     logger: m => console.log(m),
   });
   
   try {
-    await worker.loadLanguage(options.language || DEFAULT_OPTIONS.language || 'eng');
-    await worker.initialize(options.language || DEFAULT_OPTIONS.language || 'eng');
-    
     // Set additional options
     if (options.whitelist || DEFAULT_OPTIONS.whitelist) {
       await worker.setParameters({
@@ -69,7 +66,7 @@ export async function extractTextFromImage(
     
     // Process the image
     const recognizePromise = worker.recognize(imageFile);
-    const result = await Promise.race([recognizePromise, timeoutPromise]);
+    const result = (await Promise.race([recognizePromise, timeoutPromise])) as any;
     
     await worker.terminate();
     return result.data.text;
@@ -96,7 +93,7 @@ export function extractIdentifiers(text: string): string[] {
   
   // Combine all matches and remove duplicates
   const allMatches = [...imeiMatches, ...serialMatches, ...idMatches];
-  return [...new Set(allMatches)];
+  return Array.from(new Set(allMatches));
 }
 
 /**

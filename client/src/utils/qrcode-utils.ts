@@ -157,7 +157,7 @@ export async function generateQRCodeCanvas(
   
   try {
     // Generate QR code
-    return await QRCode.toCanvas(canvas, text, qrOptions);
+    await QRCode.toCanvas(canvas, text, qrOptions);
   } catch (error) {
     console.error('Error generating QR code on canvas:', error);
     throw error;

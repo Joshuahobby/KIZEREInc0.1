@@ -48,9 +48,12 @@ export function PasswordChangeForm() {
   // Set up mutation for changing password
   const mutation = useMutation({
     mutationFn: (data: PasswordChangeFormValues) => {
-      return apiRequest('PUT', '/api/me/password', {
-        currentPassword: data.currentPassword,
-        newPassword: data.newPassword,
+      return apiRequest('/api/me/password', {
+        method: 'PUT',
+        data: {
+          currentPassword: data.currentPassword,
+          newPassword: data.newPassword,
+        }
       });
     },
     onSuccess: () => {

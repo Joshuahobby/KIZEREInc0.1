@@ -68,15 +68,7 @@ export class PaymentService {
   static async initializePayment(paymentDetails: InitializePaymentRequest): Promise<InitializePaymentResponse> {
     try {
       console.log("Initializing payment with details:", paymentDetails);
-      const response = await apiRequest("/api/payments/initialize", { method: "POST", data: paymentDetails });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Payment initialization failed with response:", errorData);
-        throw new Error(errorData.message || "Failed to initialize payment");
-      }
-      
-      const responseData = await response.json();
+      const responseData = await apiRequest("/api/payments/initialize", { method: "POST", data: paymentDetails });
       console.log("Payment initialization successful:", responseData);
       return responseData;
     } catch (error) {
@@ -93,14 +85,7 @@ export class PaymentService {
    */
   static async verifyPayment(transactionRef: string): Promise<VerifyPaymentResponse> {
     try {
-      const response = await apiRequest(`/api/payments/verify/${transactionRef}`, { method: "GET" });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to verify payment");
-      }
-      
-      return await response.json();
+      return await apiRequest(`/api/payments/verify/${transactionRef}`, { method: "GET" });
     } catch (error) {
       console.error("Payment verification error:", error);
       throw error instanceof Error ? error : new Error("Failed to verify payment");
@@ -116,24 +101,13 @@ export class PaymentService {
     try {
       // First try /api/payments/history endpoint
       try {
-        const response = await apiRequest("/api/payments/history", { method: "GET" });
-        
-        if (response.ok) {
-          return await response.json();
-        }
+        return await apiRequest("/api/payments/history", { method: "GET" });
       } catch (innerError) {
         console.warn("Could not fetch from /api/payments/history, trying /api/payments", innerError);
       }
       
       // Fall back to /api/payments endpoint
-      const response = await apiRequest("/api/payments", { method: "GET" });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch payment history");
-      }
-      
-      return await response.json();
+      return await apiRequest("/api/payments", { method: "GET" });
     } catch (error) {
       console.error("Payment history fetch error:", error);
       throw error instanceof Error ? error : new Error("Failed to fetch payment history");
@@ -148,14 +122,7 @@ export class PaymentService {
    */
   static async getPaymentStatus(transactionRef: string): Promise<PaymentHistoryItem> {
     try {
-      const response = await apiRequest(`/api/payments/status/${transactionRef}`, { method: "GET" });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch payment status");
-      }
-      
-      return await response.json();
+      return await apiRequest(`/api/payments/status/${transactionRef}`, { method: "GET" });
     } catch (error) {
       console.error("Payment status fetch error:", error);
       throw error instanceof Error ? error : new Error("Failed to fetch payment status");
@@ -181,14 +148,7 @@ export class PaymentService {
    */
   static async getPaymentPackages(includeInactive = false): Promise<PaymentPackage[]> {
     try {
-      const response = await apiRequest(`/api/payment-packages?includeInactive=${includeInactive}`, { method: "GET" });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch payment packages");
-      }
-      
-      return await response.json();
+      return await apiRequest(`/api/payment-packages?includeInactive=${includeInactive}`, { method: "GET" });
     } catch (error) {
       console.error("Payment packages fetch error:", error);
       throw error instanceof Error ? error : new Error("Failed to fetch payment packages");
@@ -204,14 +164,7 @@ export class PaymentService {
    */
   static async getPaymentPackagesByType(type: PaymentType, onlyActive = true): Promise<PaymentPackage[]> {
     try {
-      const response = await apiRequest(`/api/payment-packages/type/${type}?onlyActive=${onlyActive}`, { method: "GET" });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch payment packages");
-      }
-      
-      return await response.json();
+      return await apiRequest(`/api/payment-packages/type/${type}?onlyActive=${onlyActive}`, { method: "GET" });
     } catch (error) {
       console.error(`Payment packages fetch error for type ${type}:`, error);
       throw error instanceof Error ? error : new Error(`Failed to fetch payment packages for type ${type}`);
@@ -226,19 +179,11 @@ export class PaymentService {
    */
   static async getPaymentPackage(packageId: number): Promise<PaymentPackage | null> {
     try {
-      const response = await apiRequest(`/api/payment-packages/${packageId}`, { method: "GET" });
-      
-      if (response.status === 404) {
+      return await apiRequest(`/api/payment-packages/${packageId}`, { method: "GET" });
+    } catch (error: any) {
+      if (error.message && error.message.includes("404")) {
         return null;
       }
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch payment package");
-      }
-      
-      return await response.json();
-    } catch (error) {
       console.error(`Payment package fetch error for ID ${packageId}:`, error);
       throw error instanceof Error ? error : new Error(`Failed to fetch payment package with ID ${packageId}`);
     }

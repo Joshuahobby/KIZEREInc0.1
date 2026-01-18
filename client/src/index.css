@@ -38,6 +38,14 @@
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
   --ring: 195 100% 50%;
+  /* Sidebar variables */
+  --sidebar-width: 16rem;
+  --sidebar-width-icon: 3rem;
+  
+  /* Skeleton variables */
+  --skeleton-width: 100%;
+  --skeleton-height: 1rem;
+
   --radius: 0.5rem;
 }
 

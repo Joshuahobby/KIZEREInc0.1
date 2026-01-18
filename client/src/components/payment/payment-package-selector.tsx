@@ -44,12 +44,7 @@ export function PaymentPackageSelector({
   const { data: packages, isLoading, error } = useQuery({
     queryKey: ['/api/payment-packages/type', paymentType],
     queryFn: async () => {
-      const response = await apiRequest('GET', `/api/payment-packages/type/${paymentType}`);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to fetch payment packages');
-      }
-      return response.json() as Promise<PaymentPackage[]>;
+      return await apiRequest<PaymentPackage[]>(`/api/payment-packages/type/${paymentType}`);
     }
   });
 

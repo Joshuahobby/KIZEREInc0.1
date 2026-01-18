@@ -14,6 +14,7 @@ export interface AuthContextType {
   error: string | null;
   loginMutation: any; // Using any for simplicity with mutations
   registerMutation: any;
+  logoutMutation: any;
   loginWithGoogle: (redirectUrl?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -288,6 +289,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const logoutMutation = useMutation({
+    mutationFn: signOut,
+  });
+
   const value = {
     user,
     role: user?.role || null,
@@ -296,6 +301,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     error,
     loginMutation,
     registerMutation,
+    logoutMutation,
     loginWithGoogle,
     signOut,
   };

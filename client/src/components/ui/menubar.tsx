@@ -81,7 +81,7 @@ const MenubarSubTrigger = React.forwardRef<
     )}
     {...props}
   >
-    {children}
+    {children as any}
     <ChevronRight className="ml-auto h-4 w-4" />
   </MenubarPrimitive.SubTrigger>
 ))
@@ -163,7 +163,7 @@ const MenubarCheckboxItem = React.forwardRef<
         <Check className="h-4 w-4" />
       </MenubarPrimitive.ItemIndicator>
     </span>
-    {children}
+    {children as any}
   </MenubarPrimitive.CheckboxItem>
 ))
 MenubarCheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName
@@ -185,7 +185,7 @@ const MenubarRadioItem = React.forwardRef<
         <Circle className="h-2 w-2 fill-current" />
       </MenubarPrimitive.ItemIndicator>
     </span>
-    {children}
+    {children as any}
   </MenubarPrimitive.RadioItem>
 ))
 MenubarRadioItem.displayName = MenubarPrimitive.RadioItem.displayName

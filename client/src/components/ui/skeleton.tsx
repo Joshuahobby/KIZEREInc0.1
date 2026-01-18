@@ -1,8 +1,7 @@
-import React from 'react';
 import { motion } from 'framer-motion';
+import { cn } from "@/lib/utils";
 
-interface SkeletonProps {
-  className?: string;
+interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'rectangular' | 'circular' | 'text';
   width?: number | string;
   height?: number | string;
@@ -14,7 +13,9 @@ export function Skeleton({
   variant = 'rectangular',
   width,
   height,
-  animate = true
+  animate = true,
+  style,
+  ...props
 }: SkeletonProps) {
   const baseClasses = 'bg-gray-200 dark:bg-gray-700 relative overflow-hidden';
   
@@ -36,8 +37,8 @@ export function Skeleton({
   
   return (
     <div
-      className={`${baseClasses} ${getVariantClasses()} ${className}`}
-      style={styles}
+      className={cn(baseClasses, getVariantClasses(), className)}
+      {...props}
     >
       {animate && (
         <motion.div

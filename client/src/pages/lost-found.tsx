@@ -82,8 +82,7 @@ export default function LostFound() {
   // Mutation for creating a report
   const reportMutation = useMutation({
     mutationFn: async (data: ReportFormValues) => {
-      const res = await apiRequest("POST", "/api/reports", data);
-      return res.json();
+      return await apiRequest("/api/reports", { method: "POST", data });
     },
     onSuccess: () => {
       // Invalidate and refetch reports

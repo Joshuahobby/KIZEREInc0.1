@@ -25,7 +25,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   // Mark notification as read
   const markAsRead = async (id: number) => {
     try {
-      await apiRequest('PATCH', `/api/notifications/${id}`, { isRead: true });
+      await apiRequest(`/api/notifications/${id}`, { method: 'PATCH', data: { isRead: true } });
       // Update cache to reflect the change
       // This would typically be handled by react-query's mutation API
     } catch (error) {

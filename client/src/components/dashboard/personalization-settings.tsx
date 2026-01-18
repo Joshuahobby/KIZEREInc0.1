@@ -53,8 +53,8 @@ export const PersonalizationSettings = ({
   // Save preferences mutation
   const savePreferencesMutation = useMutation({
     mutationFn: async (data: UserPreferences) => {
-      const res = await apiRequest("POST", "/api/user/preferences", data);
-      return res.json();
+      const res = await apiRequest("/api/user/preferences", { method: "POST", data });
+      return res;
     },
     onSuccess: () => {
       // Invalidate and refetch user data

@@ -56,7 +56,10 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
   // Set up mutation for updating profile
   const mutation = useMutation({
     mutationFn: (data: ProfileFormValues) => {
-      return apiRequest("PUT", `/api/me`, data);
+      return apiRequest(`/api/me`, {
+        method: "PUT",
+        data
+      });
     },
     onSuccess: () => {
       onSuccess();

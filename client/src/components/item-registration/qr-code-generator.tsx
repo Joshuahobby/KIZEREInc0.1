@@ -48,11 +48,13 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
     
     const generateQR = async () => {
       try {
-        await QRCode.toCanvas(canvasRef.current, qrValue, {
-          width: qrOptions.width,
-          margin: qrOptions.margin,
-          color: qrOptions.color,
-        });
+        if (canvasRef.current) {
+          await QRCode.toCanvas(canvasRef.current, qrValue, {
+            width: qrOptions.width,
+            margin: qrOptions.margin,
+            color: qrOptions.color,
+          });
+        }
       } catch (error) {
         console.error('Error generating QR code:', error);
         toast({

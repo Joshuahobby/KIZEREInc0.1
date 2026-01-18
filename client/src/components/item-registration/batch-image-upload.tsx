@@ -138,7 +138,7 @@ export function BatchImageUpload({
     
     // Show any errors
     if (errors.length > 0) {
-      const uniqueErrors = [...new Set(errors)];
+      const uniqueErrors = Array.from(new Set(errors));
       uniqueErrors.forEach(error => {
         toast({
           title: t('error_title'),

@@ -132,12 +132,12 @@ export default function ProfilePage() {
           <TabsContent value="profile" className="space-y-4 mt-6">
             {isEditingProfile ? (
               <ProfileEditForm 
-                user={user} 
+                user={user as any} 
                 onCancel={handleCancelEdit}
                 onSuccess={handleProfileUpdated}
               />
             ) : (
-              <ProfileCard user={user} onEdit={handleEditProfile} />
+              <ProfileCard user={user as any} onEdit={handleEditProfile} />
             )}
           </TabsContent>
 
@@ -182,8 +182,8 @@ export default function ProfilePage() {
           {/* Permissions Tab */}
           <TabsContent value="permissions" className="space-y-4 mt-6">
             <UserPermissionsPanel 
-              userRole={user.role} 
-              permissions={permissionsData && typeof permissionsData === 'object' && 'permissions' in permissionsData ? permissionsData.permissions : []} 
+              userRole={user.role as any} 
+              permissions={(permissionsData as any)?.permissions || []} 
               isLoading={permissionsLoading}
             />
           </TabsContent>

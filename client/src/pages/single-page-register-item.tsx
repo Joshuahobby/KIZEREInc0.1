@@ -44,7 +44,7 @@ import {
   Camera,
   Image,
   Save,
-  BarcodeScan,
+  Barcode,
   Info,
   Upload,
   Calendar,
@@ -282,8 +282,8 @@ export default function SinglePageRegisterItem() {
         imageUrls: data.images || [],
       };
       
-      const res = await apiRequest("POST", "/api/items", itemData);
-      return await res.json();
+      const res = await apiRequest("/api/items", { method: "POST", data: itemData });
+      return res;
     },
     onSuccess: async (data) => {
       // Initialize payment after item registration
@@ -293,7 +293,7 @@ export default function SinglePageRegisterItem() {
           itemId: data.id,
           amount: 2000, // Fixed amount for item registration (500 RWF)
           currency: DEFAULT_CURRENCY,
-          paymentType: "registration",
+          type: "registration" as const,
         };
         
         const paymentResponse = await PaymentService.initializePayment(payload);
@@ -693,7 +693,7 @@ export default function SinglePageRegisterItem() {
                                           className="rounded-l-none border-l-0"
                                           disabled={true} // Disabled for demo
                                         >
-                                          <BarcodeScan className="h-4 w-4" />
+                                          <Barcode className="h-4 w-4" />
                                         </Button>
                                       </div>
                                       <FormMessage />

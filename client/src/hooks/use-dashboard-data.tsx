@@ -86,8 +86,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
   const { data: items, isLoading: itemsLoading } = useQuery({
     queryKey: ['/api/items'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/items');
-      return await res.json() as Item[];
+      return await apiRequest('/api/items');
     },
     refetchInterval: refreshInterval
   });
@@ -95,8 +94,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
   const { data: reports, isLoading: reportsLoading } = useQuery({
     queryKey: ['/api/reports'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/reports');
-      return await res.json() as Report[];
+      return await apiRequest('/api/reports');
     },
     refetchInterval: refreshInterval
   });
@@ -104,8 +102,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
   const { data: notifications, isLoading: notificationsLoading } = useQuery({
     queryKey: ['/api/notifications'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/notifications');
-      return await res.json() as Notification[];
+      return await apiRequest('/api/notifications');
     },
     refetchInterval: refreshInterval
   });
@@ -113,8 +110,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
   const { data: payments, isLoading: paymentsLoading } = useQuery({
     queryKey: ['/api/payments'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/payment-history');
-      return await res.json() as Payment[];
+      return await apiRequest('/api/payment-history');
     },
     refetchInterval: refreshInterval
   });
@@ -124,8 +120,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     queryKey: ['/api/users'],
     queryFn: async () => {
       if (!isAdmin) return null;
-      const res = await apiRequest('GET', '/api/users');
-      return await res.json();
+      return await apiRequest('/api/users');
     },
     enabled: isAdmin,
     refetchInterval: isAdmin ? refreshInterval : false
@@ -135,8 +130,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     queryKey: ['/api/admin/payments/summary'],
     queryFn: async () => {
       if (!isAdmin) return null;
-      const res = await apiRequest('GET', '/api/admin/payments/summary');
-      return await res.json();
+      return await apiRequest('/api/admin/payments/summary');
     },
     enabled: isAdmin,
     refetchInterval: isAdmin ? refreshInterval : false
@@ -147,13 +141,10 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     queryKey: ['/api/reports/all'],
     queryFn: async () => {
       if (!isAgent && !isAdmin) return null;
-      const lostRes = await apiRequest('GET', '/api/reports?type=lost');
-      const foundRes = await apiRequest('GET', '/api/reports?type=found');
+      const lostReports = await apiRequest('/api/reports?type=lost');
+      const foundReports = await apiRequest('/api/reports?type=found');
       
-      const lostReports = await lostRes.json();
-      const foundReports = await foundRes.json();
-      
-      return [...lostReports, ...foundReports];
+      return [...(lostReports as any[]), ...(foundReports as any[])];
     },
     enabled: isAgent || isAdmin,
     refetchInterval: (isAgent || isAdmin) ? refreshInterval : false
@@ -164,8 +155,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     queryKey: ['/api/dashboard/stats'],
     queryFn: async () => {
       if (!user) return null;
-      const res = await apiRequest('GET', '/api/dashboard/stats');
-      return await res.json();
+      return await apiRequest('/api/dashboard/stats');
     },
     enabled: !!user,
     refetchInterval: refreshInterval
@@ -198,17 +188,17 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     }
 
     const totalItems = items.length;
-    const totalLostReports = reports.filter(r => r.type === 'lost').length;
-    const totalFoundReports = reports.filter(r => r.type === 'found').length;
-    const totalSpent = payments.reduce((total, payment) => 
+    const totalLostReports = reports.filter((r: Report) => r.type === 'lost').length;
+    const totalFoundReports = reports.filter((r: Report) => r.type === 'found').length;
+    const totalSpent = payments.reduce((total: number, payment: Payment) => 
       payment.status === 'successful' ? total + parseFloat(payment.amount as string) : total, 0);
     
     const sortedItems = [...items].sort((a, b) => 
       new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
     const recentlyAddedItems = sortedItems.slice(0, 5);
     
-    const pendingPayments = payments.filter(p => p.status === 'pending').length;
-    const unreadNotifications = notifications.filter(n => !n.isRead).length;
+    const pendingPayments = payments.filter((p: Payment) => p.status === 'pending').length;
+    const unreadNotifications = notifications.filter((n: Notification) => !n.isRead).length;
 
     return {
       totalItems,
@@ -243,10 +233,10 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
         percentChange: 0
       },
       reportBreakdown: {
-        lost: reports ? reports.filter(r => r.type === 'lost').length : 0,
-        found: reports ? reports.filter(r => r.type === 'found').length : 0,
-        resolved: reports ? reports.filter(r => r.status === 'Resolved').length : 0,
-        pending: reports ? reports.filter(r => r.status === 'Open').length : 0
+        lost: reports ? reports.filter((r: Report) => r.type === 'lost').length : 0,
+        found: reports ? reports.filter((r: Report) => r.type === 'found').length : 0,
+        resolved: reports ? reports.filter((r: Report) => r.status === 'Resolved').length : 0,
+        pending: reports ? reports.filter((r: Report) => r.status === 'Open').length : 0
       },
       userRoleDistribution: [
         { role: 'Admin', count: allUsers.filter((u: any) => u.role === 'Admin').length },

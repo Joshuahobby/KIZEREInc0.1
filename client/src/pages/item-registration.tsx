@@ -128,8 +128,7 @@ export default function ItemRegistrationPage() {
     mutationFn: (data: FormValues) => {
       // In a real implementation, we would upload images and get URLs first
       // For this demo, we'll just pass the local URLs directly
-      return apiRequest({
-        url: "/api/items",
+      return apiRequest("/api/items", {
         method: "POST",
         data: {
           ...data,
@@ -350,6 +349,8 @@ export default function ItemRegistrationPage() {
                                 type="button"
                                 onClick={() => removeImage(index)}
                                 className="absolute top-1 right-1 bg-black/70 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                title="Remove image"
+                                aria-label="Remove image"
                               >
                                 <X className="h-4 w-4 text-white" />
                               </button>
