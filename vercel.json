@@ -2,12 +2,16 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/(api|auth)/?(.*)",
+      "source": "/api/(.*)",
       "destination": "/api/index.ts"
     },
     {
-      "source": "/((?!assets/|.*\\..*).*)",
+      "source": "/auth/(.*)",
       "destination": "/api/index.ts"
+    },
+    {
+      "source": "/((?!api|auth|assets|.*\\..*).*)",
+      "destination": "/index.html"
     }
   ]
 }
