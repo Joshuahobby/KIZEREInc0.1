@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import crypto from "crypto";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { z } from "zod";
@@ -229,22 +230,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         try {
           // Create secure random password that won't be used for login
-          const securePassword = `firebase_${uid}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-          const hashedPassword = await hashPassword(securePassword);
+          // We pass it PLAIN to UserService.createUser so it can be validated and then hashed by Repository
+          const securePassword = `FirebaseAuth_${uid}_${crypto.randomBytes(4).toString('hex')}!`;
           
           user = await UserService.createUser({
             fullName: name,
             username: email, // Use email as username for Google Auth users initially
             email: email,
-            password: hashedPassword,
+            password: securePassword,
             phoneNumber: null,
             role: 'Subscriber',
             avatarUrl: photoURL || null
           });
           logger.info('Created new user from Firebase auth', { userId: user.id, email });
-        } catch (createError) {
-          logger.error('Failed to create user from Firebase auth', { error: createError, email });
-          return res.status(500).json({ message: "Failed to create user account" });
+        } catch (createError: any) {
+          logger.error('Failed to create user from Firebase auth', { 
+            error: createError.message, 
+            stack: createError.stack,
+            email 
+          });
+          return res.status(500).json({ 
+            message: "Failed to create user account",
+            details: createError.message
+          });
         }
       } else {
          // Update avatar if changed

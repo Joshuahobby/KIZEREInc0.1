@@ -4,7 +4,7 @@
  */
 import { User, InsertUser } from '@shared/schema';
 import { createLogger } from '../utils/logger';
-import { validatePasswordStrength } from '../utils/auth';
+import { validatePasswordStrength } from '../utils/auth-crypto';
 import { DatabaseError, NotFoundError, ValidationError } from '../utils/error-handler';
 import { userRepository } from '../repositories/user.repository';
 

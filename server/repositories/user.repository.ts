@@ -4,7 +4,7 @@
  */
 import { BaseRepository } from './base.repository';
 import { users, User, InsertUser } from '@shared/schema';
-import { hashPassword } from '../utils/auth';
+import { hashPassword } from '../utils/auth-crypto';
 import { db } from '../db';
 import { eq, or, like } from 'drizzle-orm';
 import { createLogger } from '../utils/logger';

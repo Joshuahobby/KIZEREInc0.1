@@ -1,14 +1,8 @@
 import { Request, Response } from 'express';
 import { createLogger } from '../utils/logger';
 import axios from 'axios';
-import * as bcrypt from 'bcrypt';
 import { storage } from '../storage';
-
-// Function to hash password with bcrypt
-async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 10;
-  return await bcrypt.hash(password, saltRounds);
-}
+import { hashPassword } from '../utils/auth-crypto';
 
 const logger = createLogger('AuthCallbackController');
 
@@ -136,7 +130,7 @@ export class AuthCallbackController {
         // Create a new user with the data from Google
         try {
           // Generate a secure random password that won't be used for login
-          const securePassword = `oauth_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+          const securePassword = `OAuthUser_${Date.now()}_${Math.random().toString(36).substring(2)}!`;
           const hashedPass = await hashPassword(securePassword);
           
           user = await storage.createUser({
