@@ -1,21 +1,16 @@
 import { initializeApp } from "firebase/app";
 import { 
   getAuth, 
-  signInWithRedirect, 
   signInWithPopup,
   GoogleAuthProvider, 
   signOut, 
   onAuthStateChanged, 
   getRedirectResult,
   User,
-  Auth,
-  initializeAuth, 
-  indexedDBLocalPersistence, 
-  browserLocalPersistence, 
-  inMemoryPersistence
+  Auth
 } from "firebase/auth";
 
-// Firebase configuration using environment variables or direct values
+// Firebase configuration using environment variables
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAXjspxGQjoot80eXL8_61oZC-swpqG-9o",
   authDomain: "kizere-99ac2.firebaseapp.com",
@@ -25,30 +20,6 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:222601639458:web:9fe0224b8ca6968064fc7b",
   measurementId: "G-WZX1SN8XWS"
 };
-
-// Add a custom auth domain for development - use the current hostname
-// This helps when the Firebase console doesn't have the Replit domain in the authorized domains
-try {
-  // Always override the authDomain with the current origin to ensure
-  // the authentication flow works in development environments
-  const currentOrigin = window.location.origin;
-  const currentHostname = window.location.hostname;
-  
-  // We must use the actual authDomain from Firebase console for popup auth to work
-  // Just keeping the original authDomain from our config
-  console.log(`[Firebase] Using Firebase authDomain: ${firebaseConfig.authDomain}`);
-  console.log(`[Firebase] Current origin: ${currentOrigin}`);
-  
-  // We need to prevent the browser from accidentally using an unregistered domain
-  // for the redirect, so we force the redirect domain to be the same as the current origin
-  if (typeof window !== 'undefined' && window.location) {
-    // This will be used later when configuring the GoogleAuthProvider
-    localStorage.setItem('firebase_auth_domain', window.location.host);
-    localStorage.setItem('firebase_auth_origin', window.location.origin);
-  }
-} catch (error) {
-  console.warn('[Firebase] Failed to set custom auth domain:', error);
-}
 
 // Validate Firebase config with detailed logging
 const validateFirebaseConfig = () => {
@@ -79,121 +50,38 @@ const validateFirebaseConfig = () => {
 // Validate before initializing
 validateFirebaseConfig();
 
-// Initialize Firebase
-let app;
-try {
-  app = initializeApp(firebaseConfig);
-  console.log('[Firebase] Successfully initialized Firebase app');
-} catch (error) {
-  console.error('[Firebase] Error initializing Firebase app:', error);
-  throw error;
-}
+// Initialize Firebase app
+const app = initializeApp(firebaseConfig);
+console.log('[Firebase] Successfully initialized Firebase app');
 
-// Initialize Auth with persistence fallback
-// This is critical for iframes/previews where IndexedDB might be blocked
-
-let auth: Auth;
-try {
-  // Try to initialize with robust persistence chain
-  auth = initializeAuth(app, {
-    persistence: [browserLocalPersistence, indexedDBLocalPersistence, inMemoryPersistence]
-  });
-} catch (error: any) {
-  if (error.code === 'auth/already-initialized') {
-    auth = getAuth(app);
-  } else {
-    console.warn('[Firebase] Failed to initialize custom auth, falling back to default:', error);
-    auth = getAuth(app);
-  }
-}
+// Initialize Auth
+const auth = getAuth(app);
 
 // Google provider for authentication
 const googleProvider = new GoogleAuthProvider();
 
 /**
- * Initiates Google sign-in with popup method only as requested
- * @param redirectUrl Optional URL to redirect after successful authentication
- * @returns A promise that resolves when authentication is complete
+ * Initiates Google sign-in with popup method
  */
 export async function signInWithGoogle(redirectUrl?: string) {
   try {
-    // Reset the auth instance if needed
-    if (auth.currentUser) {
-      console.log('[Firebase] Existing user found, signing out before new sign in');
-      await signOut(auth).catch(e => console.warn('[Firebase] Pre-signIn signOut error:', e));
+    console.log('[Firebase] Starting Google sign-in with popup');
+    const result = await signInWithPopup(auth, googleProvider);
+    const credential = GoogleAuthProvider.credentialFromResult(result);
+    const user = result.user;
+    
+    if (user?.email) {
+      localStorage.setItem('last_email', user.email);
     }
     
-    // Add scopes
-    googleProvider.addScope('profile');
-    googleProvider.addScope('email');
-    
-    // Create CSRF protection state
-    const state = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-    localStorage.setItem('firebase_auth_state', state);
-    
-    // Store redirect URL and metadata
-    if (redirectUrl) {
-      localStorage.setItem('firebase_auth_redirect', redirectUrl);
-    }
-    localStorage.setItem('firebase_auth_timestamp', Date.now().toString());
-    localStorage.setItem('firebase_auth_origin', window.location.origin);
-    
-    // Set custom parameters - this helps with the auth flow
-    googleProvider.setCustomParameters({
-      prompt: 'select_account',
-      state
-    });
-    
-    // Always use popup authentication as requested by the user
-    console.log('[Firebase] Using popup authentication as requested');
-    
-    try {
-      // Open popup for authentication
-      const result = await signInWithPopup(auth, googleProvider);
-      
-      // Extract auth data
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const user = result.user;
-      
-      // Save email for future login hint
-      if (user?.email) {
-        localStorage.setItem('last_email', user.email);
-      }
-      
-      console.log('[Firebase] Popup authentication successful', { 
-        email: user.email,
-        hasUid: !!user.uid,
-        hasToken: !!credential?.accessToken,
-        displayName: user.displayName
-      });
-      
-      // Return auth result
-      return {
-        success: true,
-        user,
-        credential,
-        method: 'popup'
-      };
-    } catch (popupError: any) {
-      console.error('[Firebase] Popup auth error:', popupError.code || 'unknown', popupError.message);
-      
-      // Special handling for popup closed errors
-      if (popupError.code === 'auth/popup-closed-by-user') {
-        console.warn('[Firebase] Authentication popup was closed by user or blocked');
-        // We'll throw a more informative error
-        throw new Error('Authentication window was closed. Please ensure popups are allowed for this site and try again.');
-      }
-      
-      // Better error for unauthorized domains
-      if (popupError.code === 'auth/unauthorized-domain') {
-        console.error('[Firebase] Domain not authorized in Firebase console:', window.location.origin);
-        throw new Error(`Authentication failed: This domain (${window.location.hostname}) is not authorized in Firebase console`);
-      }
-      
-      throw popupError;
-    }
+    return {
+      success: true,
+      user,
+      credential,
+      method: "popup"
+    };
   } catch (error: any) {
-    console.error('[Firebase] Sign-in error:', error.message || 'Unknown error');
+    console.error('[Firebase] Sign-in error:', error);
     throw error;
   }
 }
@@ -252,18 +140,11 @@ export async function handleRedirectResult() {
     
     // Retrieve the authentication context from localStorage
     // This is used for debugging and to ensure the redirect flow works correctly
-    const savedState = localStorage.getItem('firebase_auth_state');
+    // Retrieve the authentication context from localStorage if available
     const savedRedirect = localStorage.getItem('firebase_auth_redirect');
-    const savedTimestamp = localStorage.getItem('firebase_auth_timestamp');
-    const savedOrigin = localStorage.getItem('firebase_auth_origin');
-    const savedDomain = localStorage.getItem('firebase_auth_domain');
     
-    console.log('[Firebase] Auth context from localStorage:', {
-      hasState: !!savedState,
+    console.log('[Firebase] Redirect context:', {
       hasRedirect: !!savedRedirect,
-      savedTimestamp: savedTimestamp ? new Date(parseInt(savedTimestamp)).toISOString() : null,
-      savedOrigin,
-      savedDomain,
       currentUrl: window.location.href,
     });
     
