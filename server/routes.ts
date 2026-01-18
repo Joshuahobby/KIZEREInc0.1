@@ -111,14 +111,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Run a simple query to check connection
       await db.execute(sql`SELECT 1`);
       
+      // Check if users table exists
+      let tableStatus = "unknown";
+      try {
+        await db.execute(sql`SELECT count(*) FROM users`);
+        tableStatus = "exists";
+      } catch (e) {
+        tableStatus = "missing_or_error";
+        logger.error("Health check table verification failed", { error: e });
+      }
+
       res.json({
         status: "ok",
         database: "connected",
+        tables: {
+          users: tableStatus
+        },
         timestamp: new Date().toISOString(),
         env: {
           node_env: process.env.NODE_ENV,
           vercel: process.env.VERCEL,
-          has_db_url: !!process.env.DATABASE_URL
+          has_db_url: !!process.env.DATABASE_URL,
+          has_firebase_service_account: !!process.env.FIREBASE_SERVICE_ACCOUNT
         }
       });
     } catch (error: any) {
