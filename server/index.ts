@@ -65,7 +65,9 @@ export const startServer = async () => {
     handleRequestError(err, res);
   });
 
-  if (app.get("env") === "development") {
+  // Explicitly check if running on Vercel to avoid loading Vite
+  const isVercel = process.env.VERCEL === "1";
+  if (app.get("env") === "development" && !isVercel) {
     const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
