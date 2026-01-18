@@ -4,33 +4,68 @@ import { createLogger } from './logger';
 
 const logger = createLogger('FirebaseAdmin');
 
+// Flag to track if Firebase Admin is properly initialized for token verification
+let isInitializedForTokenVerification = false;
+
 // Initialize the app if it hasn't been initialized already
 if (!admin.apps.length) {
   try {
     // Check if Firebase project ID is available
     const projectId = env.VITE_FIREBASE_PROJECT_ID;
     
-    if (!projectId) {
+    // Check for service account credentials (required for production token verification)
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+    
+    if (serviceAccountJson) {
+      try {
+        // Parse and use service account credentials
+        const serviceAccount = JSON.parse(serviceAccountJson);
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+          projectId: serviceAccount.project_id || projectId,
+        });
+        isInitializedForTokenVerification = true;
+        logger.info('Firebase Admin SDK initialized with service account credentials');
+      } catch (parseError) {
+        logger.error('Failed to parse FIREBASE_SERVICE_ACCOUNT JSON', { parseError });
+        // Fall back to minimal initialization
+        if (projectId) {
+          admin.initializeApp({ projectId });
+        } else {
+          admin.initializeApp();
+        }
+      }
+    } else if (!projectId) {
       logger.warn('Firebase Project ID not found in environment variables. Using fallback initialization.');
-      // Fallback initialization - will work for basic token validation but with limited features
+      logger.warn('Token verification will NOT work without FIREBASE_SERVICE_ACCOUNT credentials');
+      // Fallback initialization - will NOT work for token validation
       admin.initializeApp();
     } else {
-      // Initialize with minimal configuration for token verification
-      // For production, use a service account key file
+      // Initialize with minimal configuration - token verification may not work
       admin.initializeApp({
         projectId: projectId,
       });
+      logger.info('Firebase Admin SDK initialized with projectId only');
+      logger.warn('Token verification may fail without FIREBASE_SERVICE_ACCOUNT credentials in production');
     }
     
-    logger.info('Firebase Admin SDK initialized successfully');
-    logger.info('Current Firebase Admin configuration:', { 
+    logger.info('Firebase Admin SDK initialization complete', { 
       projectId,
-      hasApiKey: !!env.VITE_FIREBASE_API_KEY,
-      authDomain: projectId ? `${projectId}.firebaseapp.com` : undefined
+      hasServiceAccount: !!serviceAccountJson,
+      canVerifyTokens: isInitializedForTokenVerification,
+      nodeEnv: process.env.NODE_ENV
     });
   } catch (error) {
     logger.error('Error initializing Firebase Admin SDK', { error });
   }
+}
+
+/**
+ * Check if Firebase Admin can verify tokens
+ * This requires service account credentials to be present
+ */
+export function canVerifyTokens(): boolean {
+  return isInitializedForTokenVerification;
 }
 
 /**
@@ -59,6 +94,13 @@ function isReplitEnvironment(): boolean {
 export async function verifyFirebaseToken(idToken: string) {
   // Check if running in Replit dev environment
   const isReplit = isReplitEnvironment();
+  
+  // If we don't have service account credentials, skip verification
+  if (!isInitializedForTokenVerification && process.env.NODE_ENV === 'production') {
+    logger.warn('Skipping token verification - no service account credentials available');
+    logger.warn('For secure production use, set FIREBASE_SERVICE_ACCOUNT environment variable');
+    return null;
+  }
   
   try {
     // Validate input

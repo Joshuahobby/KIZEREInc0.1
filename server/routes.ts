@@ -159,10 +159,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (token) {
         try {
           // Direct import of admin module
-          const admin = await import('./utils/firebase-admin');
+          const adminModule = await import('./utils/firebase-admin');
           
-          // Verify token directly with admin auth
-          const decodedToken = await admin.default.auth().verifyIdToken(token)
+          // Check if we can actually verify tokens (requires service account)
+          if (adminModule.canVerifyTokens()) {
+            // Verify token directly with admin auth
+            const decodedToken = await adminModule.default.auth().verifyIdToken(token)
             .catch(error => {
               logger.error('Token verification failed:', { 
                 error, 
@@ -178,6 +180,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             logger.info('Firebase token successfully verified', { uid });
           } else if (decodedToken) {
             logger.warn('Token UID mismatch', { tokenUid: decodedToken.uid, providedUid: uid });
+          }
+          } else {
+            // No service account - skip verification with warning
+            logger.warn('Token verification skipped - no FIREBASE_SERVICE_ACCOUNT credentials');
           }
         } catch (tokenError) {
           // Log error with more details for debugging
