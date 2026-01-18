@@ -6,7 +6,8 @@ import { nanoid } from "nanoid";
 
 export async function setupVite(app: Express, server: Server) {
   const { createServer: createViteServer, createLogger } = await import("vite");
-  const viteConfig = (await import("../vite.config")).default;
+  const viteConfigPath = "../vite.config";
+  const viteConfig = (await import(viteConfigPath)).default;
   const viteLogger = createLogger();
 
   const serverOptions = {
