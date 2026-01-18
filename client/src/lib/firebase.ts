@@ -98,7 +98,7 @@ let auth: Auth;
 try {
   // Try to initialize with robust persistence chain
   auth = initializeAuth(app, {
-    persistence: [indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence]
+    persistence: [browserLocalPersistence, indexedDBLocalPersistence, inMemoryPersistence]
   });
 } catch (error: any) {
   if (error.code === 'auth/already-initialized') {
