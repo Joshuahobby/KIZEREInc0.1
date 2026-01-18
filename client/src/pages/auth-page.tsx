@@ -29,6 +29,7 @@ import {
   AlertCircle,
   CheckCircle2
 } from "lucide-react";
+import { SiGoogle } from "react-icons/si";
 import { AuthModel } from "@/models/auth.model";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
 
@@ -40,8 +41,8 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>("login");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string } | null>(null);
-  const { user, loginMutation, registerMutation } = useAuth();
+  const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string; score: number } | null>(null);
+  const { user, loginMutation, registerMutation, loginWithGoogle, isLoading: authLoading } = useAuth();
   const [location, navigate] = useLocation();
 
   // Redirect if already logged in
@@ -177,7 +178,7 @@ export default function AuthPage() {
             >
               <motion.div className="flex items-start" variants={featureItem}>
                 <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                  <Database className="h-5 w-5" />
+                   <Database className="h-5 w-5" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-base font-medium text-foreground">Secure Registration</h3>
@@ -313,6 +314,26 @@ export default function AuthPage() {
                             "Sign In"
                           )}
                         </Button>
+
+                        <div className="relative my-6">
+                          <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-border/60"></span>
+                          </div>
+                          <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                          </div>
+                        </div>
+
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="w-full h-12 border-border/60 hover:bg-muted/50 transition-all duration-300"
+                          onClick={() => loginWithGoogle()}
+                          disabled={authLoading || loginMutation.isPending}
+                        >
+                          <SiGoogle className="mr-3 h-4 w-4 text-[#4285F4]" />
+                          Sign in with Google
+                        </Button>
                       </form>
                     </Form>
                   </TabsContent>
@@ -425,7 +446,7 @@ export default function AuthPage() {
                                   </div>
                                 </FormControl>
                                 <FormMessage />
-                                <PasswordStrengthIndicator passwordStrength={passwordStrength} />
+                                <PasswordStrengthIndicator score={passwordStrength?.score || 0} maxScore={5} />
                               </FormItem>
                             )}
                           />

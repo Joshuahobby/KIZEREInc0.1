@@ -45,17 +45,9 @@ import {
 import { UserService } from "./services/user.service";
 import { PaymentService } from "./services/payment.service";
 import { dashboardService, DashboardService } from "./services/dashboard.service";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
+import { hashPassword, comparePasswords } from "./utils/auth-crypto";
 
-const scryptAsync = promisify(scrypt);
 
-// We need hashPassword function in this file for Google auth simulation
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
 
 // Create logger for routes
 const logger = createLogger('Routes');
@@ -167,9 +159,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Google Authentication with Firebase token verification
+  const googleAuthSchema = z.object({
+    email: z.string().email(),
+    name: z.string(),
+    uid: z.string(),
+    token: z.string().optional(),
+    photoURL: z.string().optional().nullable()
+  });
+
   app.post("/api/auth/google", async (req, res) => {
     try {
-      const { email, name, uid, token, photoURL } = req.body;
+      const validationResult = googleAuthSchema.safeParse(req.body);
+      
+      if (!validationResult.success) {
+        logger.warn('Google auth validation failed', { errors: validationResult.error.errors });
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: validationResult.error.errors 
+        });
+      }
+
+      const { email, name, uid, token, photoURL } = validationResult.data;
       const origin = req.headers.origin;
       const referer = req.headers.referer;
       const isReplitEnvironment = 
@@ -177,90 +187,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (referer && (referer.includes('replit') || referer.includes('repl.co')));
       
       logger.info('Google auth request details', {
-        hasEmail: !!email,
-        hasName: !!name,
-        hasUid: !!uid,
+        email,
         hasToken: !!token,
-        origin,
-        referer,
         isReplitEnvironment
       });
       
-      if (!email || !name || !uid) {
-        logger.warn('Google auth missing required fields', { 
-          hasEmail: !!email,
-          hasName: !!name, 
-          hasUid: !!uid
-        });
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-      
-      console.log("Processing Google authentication for:", email);
-      
-      // For development or Replit environment, we can proceed without strict token verification
+      // Token Verification Logic
       let tokenVerified = false;
       
-      // Only verify token if it's provided
       if (token) {
         try {
-          // Direct import of admin module
           const adminModule = await import('./utils/firebase-admin');
-          
-          // Check if we can actually verify tokens (requires service account)
           if (adminModule.canVerifyTokens()) {
-            // Verify token directly with admin auth
-            const decodedToken = await adminModule.default.auth().verifyIdToken(token)
-            .catch(error => {
-              logger.error('Token verification failed:', { 
-                error, 
-                errorMessage: error.message,
-                tokenLength: token ? token.length : 0
-              });
-              return null;
-            });
-          
-          // If token verification succeeds, ensure UID matches
-          if (decodedToken && decodedToken.uid === uid) {
-            tokenVerified = true;
-            logger.info('Firebase token successfully verified', { uid });
-          } else if (decodedToken) {
-            logger.warn('Token UID mismatch', { tokenUid: decodedToken.uid, providedUid: uid });
-          }
+            const decodedToken = await adminModule.default.auth().verifyIdToken(token);
+            if (decodedToken && decodedToken.uid === uid) {
+              tokenVerified = true;
+              logger.info('Firebase token successfully verified', { uid });
+            } else {
+              logger.warn('Token UID mismatch or invalid', { tokenUid: decodedToken?.uid, providedUid: uid });
+              if (process.env.NODE_ENV === 'production') {
+                 return res.status(401).json({ message: "Invalid authentication token" });
+              }
+            }
           } else {
-            // No service account - skip verification with warning
             logger.warn('Token verification skipped - no FIREBASE_SERVICE_ACCOUNT credentials');
           }
-        } catch (tokenError) {
-          // Log error with more details for debugging
-          const errorMessage = tokenError instanceof Error ? tokenError.message : 'Unknown error';
-          logger.error('Token verification error', { 
-            errorMessage,
-            errorStack: tokenError instanceof Error ? tokenError.stack : 'No stack trace',
-            error: tokenError
-          });
-          
-          // For Replit dev environments, proceed even with token errors
-          if (isReplitEnvironment || process.env.NODE_ENV !== 'production') {
-            logger.info('Development/Replit environment: proceeding without token verification');
-          } else if (process.env.NODE_ENV === 'production') {
-            // In production, we'd normally reject invalid tokens
-            // But we'll proceed with a warning for now
-            logger.warn('Proceeding without token verification in production environment');
-          }
+        } catch (tokenError: any) {
+           logger.error('Token verification error', { error: tokenError.message });
+           if (process.env.NODE_ENV === 'production' && !isReplitEnvironment) {
+             return res.status(401).json({ message: "Failed to verify authentication token" });
+           }
         }
-      } else {
-        logger.warn('No token provided for verification');
-        // For Replit environment, allow authentication without token
-        if (isReplitEnvironment) {
-          logger.info('Replit environment: proceeding without token');
-        }
+      } else if (process.env.NODE_ENV === 'production' && !isReplitEnvironment) {
+          // In strict production (non-Replit), require a token
+          return res.status(401).json({ message: "Authentication token is required" });
       }
-      
-      // Check if user exists using UserService
+
+      // Find or Create User
       let user = await UserService.getUserByEmail(email);
       
       if (!user) {
-        // Create a new user if not found
         try {
           // Create secure random password that won't be used for login
           const securePassword = `firebase_${uid}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
@@ -268,11 +234,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           user = await UserService.createUser({
             fullName: name,
-            username: email,
+            username: email, // Use email as username for Google Auth users initially
             email: email,
-            password: hashedPassword, // This password is not used for login, only Firebase auth
+            password: hashedPassword,
             phoneNumber: null,
-            role: 'Subscriber', // Default role for new users
+            role: 'Subscriber',
             avatarUrl: photoURL || null
           });
           logger.info('Created new user from Firebase auth', { userId: user.id, email });
@@ -280,50 +246,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
           logger.error('Failed to create user from Firebase auth', { error: createError, email });
           return res.status(500).json({ message: "Failed to create user account" });
         }
+      } else {
+         // Update avatar if changed
+         if (photoURL && user.avatarUrl !== photoURL) {
+            try {
+              await UserService.updateUser(user.id, { avatarUrl: photoURL });
+            } catch (e) { /* ignore avatar update error */ }
+         }
       }
-      
-      // Update avatar URL if provided and different from what's stored
-      if (user && photoURL && (!user.avatarUrl || user.avatarUrl !== photoURL)) {
-        try {
-          const updatedUser = await UserService.updateUser(user.id, { avatarUrl: photoURL });
-          if (updatedUser) {
-            user = updatedUser;
-            logger.info('Updated user avatar from Firebase auth', { userId: user.id });
-          }
-        } catch (updateError) {
-          logger.warn('Failed to update user avatar', { userId: user.id, error: updateError });
-          // Non-critical error, continue with login
-        }
-      }
-      
-      // Log in the user
+
       if (!user) {
-        logger.error('User is undefined after creation/lookup', { email });
-        return res.status(500).json({ message: "Authentication failed" });
+         return res.status(500).json({ message: "User retrieval failed" });
       }
-      
+
+      // Initial login establishes the session in memory/store
       req.login(user, (err) => {
         if (err) {
-          logger.error('Login error', { userId: user.id, error: err });
-          return res.status(500).json({ message: "Authentication failed" });
+          logger.error('Passport login error', { userId: user!.id, error: err });
+          return res.status(500).json({ message: "Login session creation failed" });
         }
-        
-        // Return user data without password
-        const { password, ...userData } = user;
-        return res.status(200).json(userData);
+
+        // CRITICAL: Explicitly save the session before responding
+        // This ensures the session is written to the store (e.g. Postgres) 
+        // before the Vercel serverless function freezes/terminates.
+        req.session.save((saveErr) => {
+          if (saveErr) {
+             logger.error('Session save error', { error: saveErr });
+             return res.status(500).json({ message: "Failed to save session" });
+          }
+          
+          logger.info('Session saved successfully', { userId: user!.id, sessionId: req.sessionID });
+          
+          const { password, ...userData } = user!;
+          return res.status(200).json(userData);
+        });
       });
+
     } catch (error: any) {
-      logger.error('Firebase auth error', { 
-        error, 
+      logger.error('Firebase auth critical error', { 
         message: error.message, 
         stack: error.stack 
       });
       
-      // Return specific error message for debugging
       res.status(500).json({ 
-        message: "Authentication failed", 
-        debug_error: error.message,
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        message: "Internal authentication error", 
+        debug_error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   });

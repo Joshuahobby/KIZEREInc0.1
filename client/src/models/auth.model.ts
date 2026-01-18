@@ -33,10 +33,12 @@ class AuthModelClass {
     password: z.string().min(1, "Password is required"),
   });
 
-  // Simplified Registration Schema
+  // Registration Schema matched with UI
   static registerSchema = z.object({
     fullName: z.string().min(3, "Full name must be at least 3 characters"),
-    username: this.usernameValidator,
+    username: z.string().min(3, "Username must be at least 3 characters"),
+    email: z.string().email("Invalid email address"),
+    phoneNumber: z.string().optional(),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm password is required"),
     role: z.enum(['Admin', 'Agent', 'Subscriber']).optional(),
@@ -65,15 +67,26 @@ class AuthModelClass {
   static prepareRegisterData(registerData: z.infer<typeof this.registerSchema>): InsertUser {
     const { confirmPassword, ...userData } = registerData;
     
-    // Check if username is an email or phone number
-    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.username);
-    
     return {
       ...userData,
-      email: isEmail ? userData.username : `${userData.username}@kizere.user`, // Generate an email if username is a phone
-      phoneNumber: !isEmail ? userData.username : null, // Set phoneNumber if username is a phone
-      role: userData.role || 'Subscriber' // Use provided role or default to Subscriber
+      phoneNumber: userData.phoneNumber || null,
+      role: userData.role || 'Subscriber'
     };
+  }
+
+  /**
+   * Evaluate password strength and return a score (0-5)
+   * @param password - Password to evaluate
+   * @returns Score from 0 to 5
+   */
+  static evaluatePasswordStrength(password: string): number {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[a-z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+    return score;
   }
 
   /**
@@ -81,28 +94,14 @@ class AuthModelClass {
    * @param password - Password to validate
    * @returns Object with validation result and message
    */
-  static validatePasswordStrength(password: string): { isStrong: boolean; message: string } {
-    if (password.length < 8) {
-      return { isStrong: false, message: 'Password should be at least 8 characters' };
+  static validatePasswordStrength(password: string): { isStrong: boolean; message: string; score: number } {
+    const score = this.evaluatePasswordStrength(password);
+    
+    if (score < 3) {
+      return { isStrong: false, message: 'Weak password', score };
     }
     
-    if (!/[A-Z]/.test(password)) {
-      return { isStrong: false, message: 'Password should include at least one uppercase letter' };
-    }
-    
-    if (!/[a-z]/.test(password)) {
-      return { isStrong: false, message: 'Password should include at least one lowercase letter' };
-    }
-    
-    if (!/[0-9]/.test(password)) {
-      return { isStrong: false, message: 'Password should include at least one number' };
-    }
-    
-    if (!/[^A-Za-z0-9]/.test(password)) {
-      return { isStrong: false, message: 'Password should include at least one special character' };
-    }
-    
-    return { isStrong: true, message: 'Strong password' };
+    return { isStrong: true, message: 'Strong password', score };
   }
 
   /**
