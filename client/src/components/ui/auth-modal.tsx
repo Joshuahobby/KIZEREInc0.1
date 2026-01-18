@@ -60,7 +60,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   const [activeTab, setActiveTab] = useState<"login" | "register">(defaultTab);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string } | null>(null);
+  const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string; score: number } | null>(null);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
@@ -481,7 +481,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                             </div>
                           </FormControl>
                           <FormMessage />
-                          <PasswordStrengthIndicator passwordStrength={passwordStrength} />
+                          <PasswordStrengthIndicator score={passwordStrength?.score || 0} maxScore={5} />
                         </FormItem>
                       )}
                     />

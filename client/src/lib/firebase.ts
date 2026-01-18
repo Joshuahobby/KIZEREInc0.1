@@ -7,7 +7,12 @@ import {
   signOut, 
   onAuthStateChanged, 
   getRedirectResult,
-  User 
+  User,
+  Auth,
+  initializeAuth, 
+  indexedDBLocalPersistence, 
+  browserLocalPersistence, 
+  inMemoryPersistence
 } from "firebase/auth";
 
 // Firebase configuration using environment variables or direct values
@@ -86,13 +91,6 @@ try {
 
 // Initialize Auth with persistence fallback
 // This is critical for iframes/previews where IndexedDB might be blocked
-import { 
-  Auth,
-  initializeAuth, 
-  indexedDBLocalPersistence, 
-  browserLocalPersistence, 
-  inMemoryPersistence 
-} from 'firebase/auth';
 
 let auth: Auth;
 try {
