@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { AuthModal } from "@/components/ui/auth-modal";
 import { AuthService } from "@/services/auth.service";
 import crowdImage from "../assets/crowd.jpg";
+import mobileMockupImage from "../assets/mobile-mockup.png";
 import { 
   Shield, 
   Search, 
@@ -957,7 +958,7 @@ export default function LandingPage() {
                 <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/30 rounded-full filter blur-3xl opacity-30"></div>
                 <div className="relative z-10">
                   <img 
-                    src="https://i.ibb.co/QdQDwVC/mobile-mockup.png" 
+                    src={mobileMockupImage} 
                     alt="KIZERE Mobile App" 
                     className="max-w-full h-auto drop-shadow-2xl"
                   />
