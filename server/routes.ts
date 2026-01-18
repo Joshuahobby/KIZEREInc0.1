@@ -100,6 +100,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       user: req.isAuthenticated() ? req.user : null
     });
   });
+
+  // Health check endpoint for debugging Vercel 500 errors
+  app.get("/api/health", async (req, res) => {
+    try {
+      // Test database connection
+      const { db } = await import("./db");
+      const { sql } = await import("drizzle-orm");
+      
+      // Run a simple query to check connection
+      await db.execute(sql`SELECT 1`);
+      
+      res.json({
+        status: "ok",
+        database: "connected",
+        timestamp: new Date().toISOString(),
+        env: {
+          node_env: process.env.NODE_ENV,
+          vercel: process.env.VERCEL,
+          has_db_url: !!process.env.DATABASE_URL
+        }
+      });
+    } catch (error: any) {
+      console.error("Health check failed:", error);
+      res.status(500).json({
+        status: "error",
+        message: "Health check failed",
+        error: error.message,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined
+      });
+    }
+  });
   
   // GET endpoint to initiate the Firebase-based Google authentication
   // We don't need this endpoint since we use Firebase redirect flow for Google authentication
@@ -267,9 +298,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { password, ...userData } = user;
         return res.status(200).json(userData);
       });
-    } catch (error) {
-      logger.error('Firebase auth error', { error });
-      res.status(500).json({ message: "Authentication failed" });
+    } catch (error: any) {
+      logger.error('Firebase auth error', { 
+        error, 
+        message: error.message, 
+        stack: error.stack 
+      });
+      
+      // Return specific error message for debugging
+      res.status(500).json({ 
+        message: "Authentication failed", 
+        debug_error: error.message,
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
     }
   });
   
