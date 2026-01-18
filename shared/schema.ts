@@ -175,6 +175,7 @@ export const adminActionLogs = pgTable("admin_action_logs", {
   reason: text("reason"),
   entityType: text("entity_type"),
   entityId: integer("entity_id"),
+  details: text("details"),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
