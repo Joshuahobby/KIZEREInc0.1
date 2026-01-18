@@ -518,7 +518,7 @@ export default function AdminPaymentDashboard() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {paymentsData.transactions.map((transaction) => (
+                      {paymentsData?.transactions.map((transaction) => (
                         <TableRow key={transaction.id}>
                           <TableCell className="font-mono text-xs">
                             {transaction.transactionRef}
@@ -571,11 +571,11 @@ export default function AdminPaymentDashboard() {
               )}
               
               {/* Pagination */}
-              {!isPaymentsLoading && paymentsData?.transactions.length > 0 && (
+              {!isPaymentsLoading && (paymentsData?.transactions?.length ?? 0) > 0 && (
                 <div className="flex items-center justify-between space-x-2 py-4">
                   <div className="text-sm text-muted-foreground">
-                    Showing <span className="font-medium">{paymentsData.transactions.length}</span>{" "}
-                    of <span className="font-medium">{paymentsData.total}</span> transactions
+                    Showing <span className="font-medium">{paymentsData?.transactions?.length ?? 0}</span>{" "}
+                    of <span className="font-medium">{paymentsData?.total ?? 0}</span> transactions
                   </div>
                   
                   {totalPages > 1 && (

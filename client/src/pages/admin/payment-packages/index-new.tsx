@@ -128,11 +128,11 @@ export default function PaymentPackages() {
   });
 
   // Table columns
-  const columns = [
+  const columns: any[] = [
     {
       accessorKey: 'name',
       header: 'Package Name',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: { original: FormattedPackage } }) => (
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
             <Package className="h-4 w-4 text-primary" />
@@ -144,7 +144,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'price',
       header: 'Price',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: { original: FormattedPackage } }) => (
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
           <span>{row.original.price.toFixed(2)} {row.original.currency}</span>
@@ -154,7 +154,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'duration',
       header: 'Duration',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: { original: FormattedPackage } }) => (
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <span>{row.original.duration} days</span>
@@ -164,7 +164,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'features',
       header: 'Features',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: { original: FormattedPackage } }) => (
         <div className="flex flex-wrap gap-1">
           {row.original.features.slice(0, 2).map((feature, index) => (
             <Badge key={index} variant="outline" className="bg-primary/5">
@@ -182,7 +182,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'type',
       header: 'Type',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: { original: FormattedPackage } }) => {
         const type = row.original.type;
         return (
           <Badge variant="outline" className="bg-primary/10 text-primary">
@@ -194,7 +194,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: { original: FormattedPackage } }) => {
         const status = row.original.status;
         return (
           <Badge
@@ -211,7 +211,7 @@ export default function PaymentPackages() {
     },
     {
       id: 'actions',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: { original: FormattedPackage } }) => {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

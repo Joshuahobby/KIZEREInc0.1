@@ -10,6 +10,7 @@ import { insertItemSchema } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { InitializePaymentResponse } from "@/models/payment.model";
 import { cn } from "@/lib/utils";
+import { OwnershipDocument as OwnershipDoc } from "@/components/item-registration/ownership-chain";
 
 // UI Components
 import {
@@ -58,11 +59,10 @@ import {
 } from "lucide-react";
 
 // Our custom components for new features
-import { SmartIdRecognizer } from "@/components/item-registration/smart-id-recognizer";
+import { SmartIDRecognizer } from "@/components/item-registration/smart-id-recognizer";
 import { BatchImageUpload } from "@/components/item-registration/batch-image-upload";
 import { OwnershipChain } from "@/components/item-registration/ownership-chain";
-import { QrCodeGenerator } from "@/components/item-registration/qr-code-generator";
-import { OwnershipDocument } from "@/utils/ownership-utils";
+import { QRCodeGenerator } from "@/components/item-registration/qr-code-generator";
 
 // Form validation schema based on the shared schema
 const formSchema = insertItemSchema.extend({
@@ -125,7 +125,7 @@ export default function RegisterItem() {
   // Form state
   const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info"]);
   const [itemImages, setItemImages] = useState<File[]>([]);
-  const [ownershipDocuments, setOwnershipDocuments] = useState<OwnershipDocument[]>([]);
+  const [ownershipDocuments, setOwnershipDocuments] = useState<OwnershipDoc[]>([]);
   const [completion, setCompletion] = useState(0);
   const [paymentRef, setPaymentRef] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
@@ -138,7 +138,7 @@ export default function RegisterItem() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
-      category: "",
+      category: "Other" as any,
       subCategory: "",
       uniqueIdentifier: "",
       description: "",
@@ -168,7 +168,7 @@ export default function RegisterItem() {
   
   // Helper function to check if a section is complete
   const isSectionComplete = (
-    values: typeof watchedValues, 
+    values: any, 
     section: string
   ): boolean => {
     switch (section) {
@@ -206,9 +206,9 @@ export default function RegisterItem() {
   
   // Calculate overall completion percentage
   function calculateCompletion(
-    values: typeof watchedValues,
+    values: any,
     images: File[],
-    documents: OwnershipDocument[]
+    documents: OwnershipDoc[]
   ): number {
     let totalFields = 0;
     let completedFields = 0;
@@ -254,11 +254,13 @@ export default function RegisterItem() {
         });
         
         // Upload images
-        const uploadResponse = await apiRequest<{ urls: string[] }>('/api/upload/images', {
+        const uploadRes = await fetch('/api/upload/images', {
           method: 'POST',
           body: formData,
-          // Don't set Content-Type header, browser will set it with boundary
         });
+        
+        if (!uploadRes.ok) throw new Error("Failed to upload images");
+        const uploadResponse = await uploadRes.json();
         
         imageUrls = uploadResponse.urls;
       }
@@ -271,20 +273,21 @@ export default function RegisterItem() {
         ownershipDocuments.forEach((doc, index) => {
           formData.append('documents', doc.file);
           formData.append(`documentInfo${index}`, JSON.stringify({
-            type: doc.type,
-            date: doc.date.toISOString(),
+            type: 'ownership_document',
+            title: doc.title,
+            date: doc.date,
             description: doc.description
           }));
         });
         
         // Upload documents
-        const uploadResponse = await apiRequest<{ documents: { type: string; url: string; date: string; description: string }[] }>(
-          '/api/upload/documents', 
-          {
-            method: 'POST',
-            body: formData,
-          }
-        );
+        const uploadRes = await fetch('/api/upload/documents', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!uploadRes.ok) throw new Error("Failed to upload documents");
+        const uploadResponse = await uploadRes.json();
         
         documentUrls = uploadResponse.documents;
       }
@@ -292,22 +295,20 @@ export default function RegisterItem() {
       // Step 3: Register the item with image and document URLs
       const registrationResponse = await apiRequest<{ itemId: number }>('/api/items', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        data: {
           ...data,
           images: imageUrls,
           documents: documentUrls,
-        }),
+        },
       });
       
       // Step 4: Initialize payment for the registration
       const payment = await apiRequest<InitializePaymentResponse>('/api/payments/initialize', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        data: {
           type: 'registration',
           itemId: registrationResponse.itemId,
-        }),
+        },
       });
       
       setPaymentRef(payment.transactionRef);
@@ -517,8 +518,7 @@ export default function RegisterItem() {
                                           </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                          {form.getValues("category") && 
-                                            subCategories[form.getValues("category") as keyof typeof subCategories]?.map((subCategory) => (
+                                          {form.getValues("category") && (subCategories as any)[form.getValues("category")]?.map((subCategory: string) => (
                                               <SelectItem key={subCategory} value={subCategory}>
                                                 {subCategory}
                                               </SelectItem>
@@ -554,10 +554,9 @@ export default function RegisterItem() {
                                       </FormControl>
                                       <FormMessage />
                                       <div className="mt-2">
-                                        <SmartIdRecognizer 
-                                          onDetect={handleIdentifierDetected}
-                                          onSelectIdentifier={handleIdentifierDetected}
-                                        />
+                                        <SmartIDRecognizer 
+                                           onIdentifierSelected={handleIdentifierDetected}
+                                         />
                                       </div>
                                     </FormItem>
                                   )}
@@ -627,10 +626,10 @@ export default function RegisterItem() {
                                 Add multiple photos of your item from different angles. Clear photos help with identification.
                               </p>
                               
-                              <BatchImageUpload 
-                                onChange={setItemImages}
-                                maxFiles={5}
-                              />
+                               <BatchImageUpload 
+                                 onImagesChange={setItemImages}
+                                 maxFiles={5}
+                               />
                             </div>
                           </AccordionContent>
                         </AccordionItem>
@@ -671,9 +670,9 @@ export default function RegisterItem() {
                                 Upload documents that prove your ownership, such as receipts, warranties, or certificates.
                               </p>
                               
-                              <OwnershipChain 
-                                onChange={setOwnershipDocuments}
-                              />
+                               <OwnershipChain 
+                                 onDocumentsChange={setOwnershipDocuments}
+                               />
                             </div>
                           </AccordionContent>
                         </AccordionItem>
@@ -705,9 +704,10 @@ export default function RegisterItem() {
                                 This can be printed and attached to your item for easy identification.
                               </p>
                               
-                              <QrCodeGenerator
-                                itemName={watchedValues.name || "Your Item"}
-                              />
+                               <QRCodeGenerator
+                                 itemIdentifier={watchedValues.uniqueIdentifier || "PENDING"}
+                                 itemName={watchedValues.name || "Your Item"}
+                               />
                             </div>
                           </AccordionContent>
                         </AccordionItem>

@@ -53,6 +53,8 @@ export default function UserManagementPage() {
     activityLevel: "",
     sortBy: "createdAt",
     sortOrder: "desc" as "asc" | "desc",
+    startDate: undefined as Date | undefined,
+    endDate: undefined as Date | undefined,
   });
 
   // Selected user for editing
@@ -99,10 +101,10 @@ export default function UserManagementPage() {
         ...(filters.endDate && { endDate: filters.endDate.toISOString() }),
       });
 
-      const response = await apiRequest<{ users: User[]; total: number }>({
-        url: `/api/admin/users?${queryParams.toString()}`,
-        method: "GET",
-      });
+      const response = await apiRequest<{ users: User[]; total: number }>(
+        `/api/admin/users?${queryParams.toString()}`,
+        { method: "GET" }
+      );
 
       return response;
     },
@@ -119,11 +121,10 @@ export default function UserManagementPage() {
       status: string;
       reason?: string;
     }) => {
-      return apiRequest<{ success: boolean }>({
-        url: `/api/admin/users/${userId}/status`,
-        method: "PATCH",
-        data: { status, reason },
-      });
+      return apiRequest<{ success: boolean }>(
+        `/api/admin/users/${userId}/status`,
+        { method: "PATCH", data: { status, reason } }
+      );
     },
     onSuccess: () => {
       toast({
@@ -146,11 +147,10 @@ export default function UserManagementPage() {
   // Mutation for updating user role
   const updateUserRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: number; role: string }) => {
-      return apiRequest<{ success: boolean }>({
-        url: `/api/admin/users/${userId}/role`,
-        method: "PATCH",
-        data: { role },
-      });
+      return apiRequest<{ success: boolean }>(
+        `/api/admin/users/${userId}/role`,
+        { method: "PATCH", data: { role } }
+      );
     },
     onSuccess: () => {
       toast({

@@ -47,12 +47,14 @@ app.use((req, res, next) => {
   next();
 });
 
-const startServer = async () => {
+// Export app and server for Vercel
+let serverPromise: Promise<any> | null = null;
+
+export const startServer = async () => {
   const server = await registerRoutes(app);
 
   // Global error handler using centralized error handler
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
-    // Log the original error for debugging
     logger.error('Global error handler caught an error', {
       path: req.path,
       method: req.method,
@@ -60,13 +62,9 @@ const startServer = async () => {
       stack: err.stack
     });
     
-    // Use our centralized error handler to format the response
     handleRequestError(err, res);
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (app.get("env") === "development") {
     await setupVite(app, server);
   } else {
@@ -75,7 +73,7 @@ const startServer = async () => {
 
   // Only listen if not in a serverless environment
   if (process.env.NODE_ENV !== "production" || process.env.VERCEL !== "1") {
-    const port = 5000;
+    const port = parseInt(process.env.PORT || "5000", 10);
     server.listen(port, "0.0.0.0", () => {
       log(`serving on port ${port}`);
     });
@@ -84,10 +82,15 @@ const startServer = async () => {
   return server;
 };
 
-// Start the server
-startServer().catch((err) => {
+// Start the server initialization
+serverPromise = startServer().catch((err) => {
   logger.error("Failed to start server", { error: err.message, stack: err.stack });
-  process.exit(1);
+  // Don't exit in Vercel, just let the promise reject
+  if (process.env.VERCEL !== "1") {
+    process.exit(1);
+  }
+  throw err;
 });
 
+export { app, serverPromise };
 export default app;

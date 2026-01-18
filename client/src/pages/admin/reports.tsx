@@ -70,8 +70,14 @@ import { toast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 
 // Stats Card component for the dashboard
-const StatCard = ({ title, value, icon, className = "", color = "blue" }) => {
-  const colorMap = {
+const StatCard = ({ title, value, icon, className = "", color = "blue" }: { 
+  title: string; 
+  value: string | number; 
+  icon: React.ReactNode; 
+  className?: string; 
+  color?: string;
+}) => {
+  const colorMap: Record<string, { bg: string; text: string; border: string }> = {
     blue: {
       bg: "bg-blue-50 dark:bg-blue-950/30",
       text: "text-blue-600 dark:text-blue-400",
@@ -94,7 +100,7 @@ const StatCard = ({ title, value, icon, className = "", color = "blue" }) => {
     },
   };
   
-  const colors = colorMap[color] || colorMap.blue;
+  const colors = colorMap[color as keyof typeof colorMap] || colorMap.blue;
   
   return (
     <Card className={`shadow-sm hover:shadow transition-shadow ${colors.border} ${className}`}>
@@ -114,7 +120,7 @@ const StatCard = ({ title, value, icon, className = "", color = "blue" }) => {
 };
 
 // Status badge component for report status
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({ status }: { status: string }) => {
   const statusStyles = {
     Open: { color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300", icon: <AlertCircle className="h-3 w-3 mr-1" /> },
     In_Progress: { color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300", icon: <Clock className="h-3 w-3 mr-1" /> },
@@ -122,7 +128,7 @@ const StatusBadge = ({ status }) => {
     Closed: { color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300", icon: <FileText className="h-3 w-3 mr-1" /> }
   };
   
-  const style = statusStyles[status] || statusStyles.Open;
+  const style = (statusStyles as any)[status] || statusStyles.Open;
   
   return (
     <Badge variant="outline" className={`flex items-center ${style.color}`}>
@@ -133,13 +139,13 @@ const StatusBadge = ({ status }) => {
 };
 
 // Type badge component for report type
-const TypeBadge = ({ type }) => {
+const TypeBadge = ({ type }: { type: string }) => {
   const typeStyles = {
     lost: { color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300", label: "Lost" },
     found: { color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300", label: "Found" }
   };
   
-  const style = typeStyles[type] || typeStyles.lost;
+  const style = (typeStyles as any)[type] || typeStyles.lost;
   
   return (
     <Badge variant="outline" className={style.color}>
@@ -148,7 +154,12 @@ const TypeBadge = ({ type }) => {
   );
 };
 
-const ReportStatusChangeDialog = ({ isOpen, onClose, report, onStatusChange }) => {
+const ReportStatusChangeDialog = ({ isOpen, onClose, report, onStatusChange }: {
+  isOpen: boolean;
+  onClose: () => void;
+  report: any;
+  onStatusChange: () => void;
+}) => {
   const [status, setStatus] = useState(report?.status || "Open");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -236,14 +247,18 @@ const ReportStatusChangeDialog = ({ isOpen, onClose, report, onStatusChange }) =
   );
 };
 
-const ReportDetailDialog = ({ isOpen, onClose, reportId }) => {
+const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
+  isOpen: boolean;
+  onClose: () => void;
+  reportId: number | null;
+}) => {
   const { data: reportData, isLoading } = useQuery({
     queryKey: [`/api/admin/reports/${reportId}`],
     queryFn: () => adminApi.getReportById(reportId),
     enabled: isOpen && !!reportId,
   });
   
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: any) => {
     try {
       return format(new Date(dateString), 'PPP');
     } catch (e) {
@@ -405,7 +420,7 @@ export default function AdminReportsPage() {
   });
   
   // Handle filter changes
-  const handleFilterChange = (key, value) => {
+  const handleFilterChange = (key: string, value: string) => {
     // Convert the special "all" filter values to empty string for the API
     const apiValue = value === 'all_types' || value === 'all_statuses' ? "" : value;
     setFilters(prev => ({ ...prev, [key]: apiValue }));
@@ -627,7 +642,7 @@ export default function AdminReportsPage() {
                       </td>
                     </tr>
                   ) : (
-                    reportData?.reports?.map(report => (
+                    reportData?.reports?.map((report: any) => (
                       <tr key={report.id} className="border-t">
                         <td className="p-4 font-medium">{report.title}</td>
                         <td className="p-4">

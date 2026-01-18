@@ -94,12 +94,16 @@ export default function PaymentPackages() {
     queryKey: ['/api/admin/payment-packages'],
     enabled: !!user?.id && role === 'Admin',
     staleTime: 60000, // 1 minute
-    // Using on-error callback to show toast notification for errors
-    onError: (err) => {
-      console.error('Error fetching payment packages:', err);
+    retry: 1
+  });
+
+  // Handle errors for the query
+  useEffect(() => {
+    if (error) {
+      console.error('Error fetching payment packages:', error);
       toast({
         title: 'Error loading payment packages',
-        description: err instanceof Error ? err.message : 'An unknown error occurred',
+        description: error instanceof Error ? error.message : 'An unknown error occurred',
         variant: 'destructive',
       });
       
@@ -107,9 +111,8 @@ export default function PaymentPackages() {
       if (!isDirectFetching && !directFetchedData) {
         fetchDirectly();
       }
-    },
-    retry: 1
-  });
+    }
+  }, [error, isDirectFetching, directFetchedData]);
 
   // Alternative direct fetch method if the query fails
   const fetchDirectly = async () => {
@@ -226,11 +229,11 @@ export default function PaymentPackages() {
   });
 
   // Columns for the data table
-  const columns = [
+  const columns: any[] = [
     {
       accessorKey: 'name',
       header: 'Package Name',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: { original: FormattedPackage } }) => (
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
             <PackageIcon className="h-4 w-4 text-primary" />
@@ -242,7 +245,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'price',
       header: 'Price',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: { original: FormattedPackage } }) => (
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
           <span>${row.original.price.toFixed(2)}</span>
@@ -252,7 +255,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'duration',
       header: 'Duration',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: { original: FormattedPackage } }) => (
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-muted-foreground" />
           <span>{row.original.duration} days</span>
@@ -262,7 +265,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'features',
       header: 'Features',
-      cell: ({ row }) => (
+      cell: ({ row }: { row: { original: FormattedPackage } }) => (
         <div className="flex flex-wrap gap-1">
           {row.original.features.slice(0, 2).map((feature, index) => (
             <Badge key={index} variant="outline" className="bg-primary/5">
@@ -280,7 +283,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'type',
       header: 'Type',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: { original: FormattedPackage } }) => {
         const type = row.original.type;
         return (
           <Badge variant="outline" className="bg-primary/10 text-primary">
@@ -292,7 +295,7 @@ export default function PaymentPackages() {
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: { original: FormattedPackage } }) => {
         const status = row.original.status;
         return (
           <Badge
@@ -309,7 +312,7 @@ export default function PaymentPackages() {
     },
     {
       id: 'actions',
-      cell: ({ row }) => {
+      cell: ({ row }: { row: { original: FormattedPackage } }) => {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

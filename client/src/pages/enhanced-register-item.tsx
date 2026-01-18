@@ -516,8 +516,8 @@ export default function EnhancedRegisterItem() {
         imageUrls: data.imageUrls || [],
       };
       
-      const res = await apiRequest("POST", "/api/items", itemData);
-      return await res.json();
+      const item = await apiRequest<any>("/api/items", { method: "POST", data: itemData });
+      return item;
     },
     onSuccess: async (item) => {
       // Invalidate and refetch items query to update the list

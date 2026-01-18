@@ -113,7 +113,7 @@ export class MemoryCache<T = any> {
     const now = Date.now();
     let expiredCount = 0;
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.expiresAt < now) {
         this.cache.delete(key);
         expiredCount++;
@@ -132,7 +132,7 @@ export class MemoryCache<T = any> {
     let oldestKey: string | null = null;
     let oldestTime = Infinity;
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.expiresAt < oldestTime) {
         oldestTime = entry.expiresAt;
         oldestKey = key;

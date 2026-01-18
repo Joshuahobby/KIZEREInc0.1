@@ -88,28 +88,26 @@ export default function AdminPaymentPackagesPage() {
   });
 
   // Load payment packages
-  const { data: packages, isLoading, error } = useQuery({
+  const { data: packages, isLoading, error } = useQuery<PaymentPackage[]>({
     queryKey: ['/api/admin/payment-packages'],
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/payment-packages?includeInactive=true');
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch payment packages');
-      }
-      return response.json() as Promise<PaymentPackage[]>;
-    }
+    queryFn: () => apiRequest<PaymentPackage[]>('/api/admin/payment-packages?includeInactive=true'),
   });
+
+  // Handle errors for the query
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error loading payment packages",
+        description: error instanceof Error ? error.message : 'An error occurred while loading payment packages',
+        variant: "destructive"
+      });
+    }
+  }, [error]);
 
   // Create a new payment package
   const createPackageMutation = useMutation({
-    mutationFn: async (data: PackageFormValues) => {
-      const response = await apiRequest('POST', '/api/admin/payment-packages', data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create payment package');
-      }
-      return await response.json();
-    },
+    mutationFn: (data: PackageFormValues) => 
+      apiRequest('/api/admin/payment-packages', { method: 'POST', data }),
     onSuccess: () => {
       toast({
         title: "Package created",
@@ -130,14 +128,8 @@ export default function AdminPaymentPackagesPage() {
 
   // Update a payment package
   const updatePackageMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: PackageFormValues }) => {
-      const response = await apiRequest('PATCH', `/api/admin/payment-packages/${id}`, data);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update payment package');
-      }
-      return await response.json();
-    },
+    mutationFn: ({ id, data }: { id: number, data: PackageFormValues }) =>
+      apiRequest(`/api/admin/payment-packages/${id}`, { method: 'PATCH', data }),
     onSuccess: () => {
       toast({
         title: "Package updated",
@@ -157,14 +149,8 @@ export default function AdminPaymentPackagesPage() {
 
   // Delete a payment package
   const deletePackageMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/admin/payment-packages/${id}`);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete payment package');
-      }
-      return await response.json();
-    },
+    mutationFn: (id: number) =>
+      apiRequest(`/api/admin/payment-packages/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       toast({
         title: "Package deleted",
@@ -185,14 +171,8 @@ export default function AdminPaymentPackagesPage() {
 
   // Change package status
   const updatePackageStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: number, status: 'active' | 'inactive' | 'archived' }) => {
-      const response = await apiRequest('PATCH', `/api/admin/payment-packages/${id}/status`, { status });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update package status');
-      }
-      return await response.json();
-    },
+    mutationFn: ({ id, status }: { id: number, status: 'active' | 'inactive' | 'archived' }) =>
+      apiRequest(`/api/admin/payment-packages/${id}/status`, { method: 'PATCH', data: { status } }),
     onSuccess: () => {
       toast({
         title: "Status updated",
@@ -211,14 +191,8 @@ export default function AdminPaymentPackagesPage() {
 
   // Set default package
   const setDefaultPackageMutation = useMutation({
-    mutationFn: async ({ id, type }: { id: number, type: PaymentType }) => {
-      const response = await apiRequest('PATCH', `/api/admin/payment-packages/${id}/default`, { isDefault: true });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to set as default package');
-      }
-      return await response.json();
-    },
+    mutationFn: ({ id, type }: { id: number, type: PaymentType }) =>
+      apiRequest(`/api/admin/payment-packages/${id}/default`, { method: 'PATCH', data: { isDefault: true } }),
     onSuccess: () => {
       toast({
         title: "Default package updated",

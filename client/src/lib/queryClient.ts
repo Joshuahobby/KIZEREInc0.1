@@ -4,6 +4,12 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 let authCheckPending = false;
 let authCheckPromise: Promise<void> | null = null;
 
+declare global {
+  interface Window {
+    firebase?: any;
+  }
+}
+
 /**
  * Checks that the user is authenticated with the server
  * This creates/refreshes a session if a Firebase token is available
@@ -121,7 +127,7 @@ export async function apiRequest<T = any>(
   if (url.startsWith('/api/admin')) {
     try {
       await ensureAuthenticated();
-    } catch (error) {
+    } catch (error: any) {
       console.error('[apiRequest] Authentication failed for admin request:', error);
       throw new Error(`Authentication required for ${url}: ${error.message}`);
     }
@@ -153,7 +159,7 @@ export const getQueryFn: <T>(options: {
     if (url.startsWith('/api/admin')) {
       try {
         await ensureAuthenticated();
-      } catch (error) {
+      } catch (error: any) {
         console.error('[getQueryFn] Authentication failed for admin request:', error);
         if (unauthorizedBehavior === "returnNull") {
           return null;

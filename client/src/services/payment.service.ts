@@ -68,7 +68,7 @@ export class PaymentService {
   static async initializePayment(paymentDetails: InitializePaymentRequest): Promise<InitializePaymentResponse> {
     try {
       console.log("Initializing payment with details:", paymentDetails);
-      const response = await apiRequest("POST", "/api/payments/initialize", paymentDetails);
+      const response = await apiRequest("/api/payments/initialize", { method: "POST", data: paymentDetails });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -93,7 +93,7 @@ export class PaymentService {
    */
   static async verifyPayment(transactionRef: string): Promise<VerifyPaymentResponse> {
     try {
-      const response = await apiRequest("GET", `/api/payments/verify/${transactionRef}`);
+      const response = await apiRequest(`/api/payments/verify/${transactionRef}`, { method: "GET" });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -116,7 +116,7 @@ export class PaymentService {
     try {
       // First try /api/payments/history endpoint
       try {
-        const response = await apiRequest("GET", "/api/payments/history");
+        const response = await apiRequest("/api/payments/history", { method: "GET" });
         
         if (response.ok) {
           return await response.json();
@@ -126,7 +126,7 @@ export class PaymentService {
       }
       
       // Fall back to /api/payments endpoint
-      const response = await apiRequest("GET", "/api/payments");
+      const response = await apiRequest("/api/payments", { method: "GET" });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -148,7 +148,7 @@ export class PaymentService {
    */
   static async getPaymentStatus(transactionRef: string): Promise<PaymentHistoryItem> {
     try {
-      const response = await apiRequest("GET", `/api/payments/status/${transactionRef}`);
+      const response = await apiRequest(`/api/payments/status/${transactionRef}`, { method: "GET" });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -181,7 +181,7 @@ export class PaymentService {
    */
   static async getPaymentPackages(includeInactive = false): Promise<PaymentPackage[]> {
     try {
-      const response = await apiRequest("GET", `/api/payment-packages?includeInactive=${includeInactive}`);
+      const response = await apiRequest(`/api/payment-packages?includeInactive=${includeInactive}`, { method: "GET" });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -204,7 +204,7 @@ export class PaymentService {
    */
   static async getPaymentPackagesByType(type: PaymentType, onlyActive = true): Promise<PaymentPackage[]> {
     try {
-      const response = await apiRequest("GET", `/api/payment-packages/type/${type}?onlyActive=${onlyActive}`);
+      const response = await apiRequest(`/api/payment-packages/type/${type}?onlyActive=${onlyActive}`, { method: "GET" });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -226,7 +226,7 @@ export class PaymentService {
    */
   static async getPaymentPackage(packageId: number): Promise<PaymentPackage | null> {
     try {
-      const response = await apiRequest("GET", `/api/payment-packages/${packageId}`);
+      const response = await apiRequest(`/api/payment-packages/${packageId}`, { method: "GET" });
       
       if (response.status === 404) {
         return null;
