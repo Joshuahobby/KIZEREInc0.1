@@ -107,9 +107,31 @@ function App() {
   const AdminItemDetailComponent = () => <AdminItemDetail />;
   const NewItemComponent = () => <NewItem />;
   const AdminReportsComponent = () => <AdminReports />;
-  
+
+  // Detect if running in an iframe (like Replit/Stackblitz preview)
+  // This often breaks Google Auth due to third-party cookie blocking
+  const IframeWarning = () => {
+    const isIframe = window.self !== window.top;
+    if (!isIframe) return null;
+
+    return (
+      <div className="fixed top-0 left-0 right-0 z-[100] bg-orange-500 text-white p-2 text-center text-sm font-medium shadow-md">
+        ⚠️ You are running in a preview/iframe window. Google Login may fail.
+        <a 
+          href={window.location.href} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="underline ml-2 font-bold hover:text-orange-100"
+        >
+          Open in New Tab
+        </a>
+      </div>
+    );
+  };
+
   return (
     <ErrorBoundary>
+      <IframeWarning />
       <LanguageProvider defaultLanguage="en">
         <AuthProvider>
           <TooltipProvider>

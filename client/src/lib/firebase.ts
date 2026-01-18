@@ -84,8 +84,30 @@ try {
   throw error;
 }
 
-// Initialize Auth
-const auth = getAuth(app);
+// Initialize Auth with persistence fallback
+// This is critical for iframes/previews where IndexedDB might be blocked
+import { 
+  Auth,
+  initializeAuth, 
+  indexedDBLocalPersistence, 
+  browserLocalPersistence, 
+  inMemoryPersistence 
+} from 'firebase/auth';
+
+let auth: Auth;
+try {
+  // Try to initialize with robust persistence chain
+  auth = initializeAuth(app, {
+    persistence: [indexedDBLocalPersistence, browserLocalPersistence, inMemoryPersistence]
+  });
+} catch (error: any) {
+  if (error.code === 'auth/already-initialized') {
+    auth = getAuth(app);
+  } else {
+    console.warn('[Firebase] Failed to initialize custom auth, falling back to default:', error);
+    auth = getAuth(app);
+  }
+}
 
 // Google provider for authentication
 const googleProvider = new GoogleAuthProvider();
