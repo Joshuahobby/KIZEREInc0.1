@@ -430,6 +430,39 @@ router.get("/users/:id/verification-requests", async (req, res) => {
   }
 });
 
+// Get all verification requests (with pagination support)
+router.get("/verification-requests", async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 10;
+    
+    // Get pending verification requests
+    const result = await storage.getPendingVerificationRequests(page, pageSize);
+    
+    res.json(result);
+  } catch (error) {
+    logger.error("Error getting all verification requests:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Get single verification request
+router.get("/verification-requests/:id", async (req, res) => {
+  try {
+    const requestId = parseInt(req.params.id);
+    const request = await storage.getVerificationRequest(requestId);
+    
+    if (!request) {
+      return res.status(404).json({ message: "Verification request not found" });
+    }
+    
+    res.json(request);
+  } catch (error) {
+    logger.error("Error getting verification request:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 // Update verification request status
 router.patch("/verification-requests/:id", async (req: any, res) => {
   try {

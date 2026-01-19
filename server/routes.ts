@@ -47,6 +47,7 @@ import { UserService } from "./services/user.service";
 import { PaymentService } from "./services/payment.service";
 import { dashboardService, DashboardService } from "./services/dashboard.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
+import { ReportMatchingService } from "./services/report-matching.service";
 
 
 
@@ -874,6 +875,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newReport = await storage.createReport(reportData);
       
       console.log("Report created successfully:", newReport);
+      
+      // Asynchronously find potential matches without blocking the response
+      ReportMatchingService.findMatches(newReport).catch(err => {
+        logger.error('Background match scan failed', { error: err, reportId: newReport.id });
+      });
       
       // Return success response
       res.status(201).json(newReport);
