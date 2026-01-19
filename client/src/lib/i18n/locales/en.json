@@ -33,6 +33,11 @@
     "signIn": "Sign In",
     "signOut": "Sign Out",
     "register": "Register",
+    "login": "Login",
+    "getStarted": "Get Started",
+    "logout": "Logout",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
     "signOutSuccess": "Signed out successfully",
     "signOutSuccessDescription": "You have been signed out of your account",
     "signOutError": "Sign out error",
@@ -50,6 +55,148 @@
     "termsOfService": "Terms of Service",
     "cookies": "Cookies",
     "allRightsReserved": "All rights reserved."
+  },
+  "landing": {
+    "nav": {
+      "features": "Features",
+      "howItWorks": "How It Works",
+      "testimonials": "Testimonials"
+    },
+    "trustedUsers": "Trusted by thousands of users",
+    "heroTitle1": "Secure Digital Protection",
+    "heroTitle2": "For Your Valuable Items",
+    "heroSubtitle": "Register, protect and easily recover your items with our comprehensive digital platform.",
+    "registerNow": "Register Now",
+    "learnMore": "Learn More",
+    "secure": "Secure & Private",
+    "digitalCertificates": "Digital Certificates",
+    "itemRegistration": "Item Registration",
+    "registered": "Registered",
+    "demoItem": {
+      "name": "Samsung Galaxy S22",
+      "serial": "SN: GHXK29803MVXA",
+      "date": "Registered: April 25, 2025",
+      "certificate": "Digital Certificate"
+    },
+    "powerfulFeatures": "Powerful Features",
+    "completeSolution": "Complete Solution for",
+    "itemManagement": "Item Management",
+    "kizereProvides": "KIZERE provides a comprehensive platform for registering, protecting, and recovering your valuable items.",
+    "feature1Title": "Smart ID Recognition",
+    "feature1Desc": "Our advanced OCR technology automatically detects serial numbers, IMEI, and other identifiers from images.",
+    "feature2Title": "Ownership Verification Chain",
+    "feature2Desc": "Upload and manage documents that verify the ownership history of your items for greater security.",
+    "feature3Title": "QR Code Generation",
+    "feature3Desc": "Generate custom QR codes for your items that can be printed and attached for easy recovery.",
+    "feature4Title": "Batch Image Upload",
+    "feature4Desc": "Upload and arrange multiple images of your items with an intuitive drag-and-drop interface.",
+    "feature5Title": "Item Analytics",
+    "feature5Desc": "Get detailed statistics about your registered items and recovery success rates.",
+    "feature6Title": "Global Recovery Network",
+    "feature6Desc": "Access to our worldwide network of agents to help recover your lost items quickly.",
+    "learnMoreAction": "Learn More",
+    "startToday": "Start Today",
+    "readyToSecure": "Ready to Secure Your Valuables?",
+    "joinThousands": "Join thousands of satisfied users protecting their items with KIZERE",
+    "createFreeAccount": "Create Free Account",
+    "noCardRequired": "No credit card required",
+    "statItems": "Items Registered",
+    "statRecoveries": "Items Recovered",
+    "statUsers": "Active Users",
+    "statSatisfaction": "Satisfaction Rate",
+    "howItWorks": {
+      "simpleProcess": "Simple Process",
+      "sectionTitle": "How It Works",
+      "description": "Our platform makes it easy to register your items and secure them with digital certificates. Follow these simple steps:",
+      "communityDesc": "Join thousands of users protecting their valuables with KIZERE",
+      "step1Title": "Register Your Item",
+      "step1Desc": "Upload details and photos of your item with our easy-to-use registration form.",
+      "step2Title": "Generate Digital Certificate",
+      "step2Desc": "Receive a secure digital certificate that proves your ownership.",
+      "step3Title": "Print QR Code Tags",
+      "step3Desc": "Attach QR code tags to your items for easy identification and recovery.",
+      "step4Title": "Quick Recovery Process",
+      "step4Desc": "If your item is lost, the finder can scan the QR code to initiate the recovery process."
+    },
+    "testimonials": {
+      "sectionTitle": "User Testimonials",
+      "mainTitle": "What Our Users Say",
+      "subtitle": "Hear from people who have successfully protected and recovered their valuable items.",
+      "testimonial1": {
+        "name": "James M.",
+        "location": "Kigali, Rwanda",
+        "quote": "I lost my laptop at the airport, but thanks to KIZERE, it was returned to me within 24 hours. The QR code system works amazingly well!"
+      },
+      "testimonial2": {
+        "name": "Francine N.",
+        "location": "Musanze, Rwanda",
+        "quote": "The registration process was so simple, and I love the peace of mind knowing all my valuables are protected with digital certificates."
+      },
+      "testimonial3": {
+        "name": "Robert K.",
+        "location": "Huye, Rwanda",
+        "quote": "When my phone was lost, the finder scanned the QR code, and I was notified immediately. This service is truly a game-changer!"
+      },
+      "viewMore": "View More Testimonials"
+    },
+    "mobileApp": {
+      "sectionTitle": "Mobile Access",
+      "mainTitle": "KIZERE on Your Mobile Device",
+      "description": "Access your items, manage certificates, and respond to lost & found alerts from anywhere with our mobile app.",
+      "features": {
+        "feature1": "Instant notifications when your lost item is found",
+        "feature2": "Scan QR codes directly from the app",
+        "feature3": "Offline access to your digital certificates",
+        "feature4": "Secure biometric authentication"
+      },
+      "downloadOn": "Download on",
+      "appStore": "App Store",
+      "getItOn": "Get it on",
+      "googlePlay": "Google Play"
+    },
+    "faq": {
+      "sectionTitle": "Questions & Answers",
+      "mainTitle": "Frequently Asked Questions",
+      "description": "Find answers to commonly asked questions about our service.",
+      "questions": {
+        "security": {
+          "question": "How secure is my data on KIZERE?",
+          "answer": "We use industry-standard encryption protocols to protect your data. All personal information and item details are encrypted both in transit and at rest, and we regularly perform security audits to ensure your data remains safe."
+        },
+        "items": {
+          "question": "What types of items can I register?",
+          "answer": "You can register almost any valuable item including electronics, jewelry, documents, accessories, and more. Our system is particularly effective for items with unique identifiers like serial numbers, IMEI numbers, or other distinguishing characteristics."
+        },
+        "lostFound": {
+          "question": "How does the lost and found process work?",
+          "answer": "When someone finds your item, they can scan the QR code attached to it. This notifies you immediately and provides the finder with instructions on how to safely return your item to you, while protecting your privacy."
+        },
+        "limits": {
+          "question": "Is there a limit to how many items I can register?",
+          "answer": "Basic accounts can register up to 5 items. Premium subscribers can register unlimited items and access additional features like priority support and enhanced recovery services."
+        }
+      },
+      "contactUs": "Can't find your answer? Contact our support team."
+    },
+    "footerDescription": "KIZERE is a comprehensive platform for item registration, lost and found reporting, and ownership management with a focus on security and efficiency.",
+    "footer": {
+      "quickLinks": "Quick Links",
+      "home": "Home",
+      "features": "Features",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "resources": "Resources",
+      "blog": "Blog",
+      "documentation": "Documentation",
+      "community": "Community",
+      "tutorials": "Tutorials",
+      "contact": "Contact Us",
+      "location": "Kigali, Rwanda",
+      "copyright": "© 2025 KIZERE. All rights reserved.",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service",
+      "cookiePolicy": "Cookie Policy"
+    }
   },
   "notifications": {
     "itemMatched": "Item Match Found",

@@ -22,6 +22,7 @@ const languageNames: Record<Language, { name: string; nativeName: string }> = {
   en: { name: 'English', nativeName: 'English' },
   fr: { name: 'French', nativeName: 'Français' },
   rw: { name: 'Kinyarwanda', nativeName: 'Kinyarwanda' },
+  sw: { name: 'Swahili', nativeName: 'Kiswahili' },
 };
 
 export function LanguageSwitcher({ 
@@ -56,7 +57,7 @@ export function LanguageSwitcher({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuLabel>{t('settings_language')}</DropdownMenuLabel>
+        <DropdownMenuLabel>{t('common.language')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {availableLanguages.map((lang) => (
           <DropdownMenuItem 
