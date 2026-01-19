@@ -110,7 +110,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
   const { data: payments, isLoading: paymentsLoading } = useQuery({
     queryKey: ['/api/payments'],
     queryFn: async () => {
-      return await apiRequest('/api/payment-history');
+      return await apiRequest('/api/payments/history');
     },
     refetchInterval: refreshInterval
   });

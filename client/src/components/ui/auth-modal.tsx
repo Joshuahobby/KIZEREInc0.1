@@ -225,6 +225,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[480px] md:max-w-[900px] p-0 rounded-2xl overflow-hidden max-h-[95vh] overflow-y-auto border-0 shadow-2xl bg-gradient-to-br from-background via-background to-muted/30">
+        <DialogTitle className="sr-only">Authentication</DialogTitle>
+        <DialogDescription className="sr-only">
+          {activeTab === "login" ? "Login to your account" : "Create a new account"}
+        </DialogDescription>
         {/* Decorative background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />

@@ -1,4 +1,5 @@
-import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Progress } from "@/components/ui/progress";
 
 interface PasswordStrengthIndicatorProps {
   score: number;
@@ -6,7 +7,7 @@ interface PasswordStrengthIndicatorProps {
 }
 
 export function PasswordStrengthIndicator({ score, maxScore }: PasswordStrengthIndicatorProps) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   
   // Calculate the strength percentage
   const strengthPercentage = (score / maxScore) * 100;
@@ -37,12 +38,11 @@ export function PasswordStrengthIndicator({ score, maxScore }: PasswordStrengthI
   
   return (
     <div className="space-y-1 mt-1">
-      <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
-        <div 
-          className={`h-full ${strengthColor} transition-all duration-300 ease-in-out`} 
-          style={{ width: `${strengthPercentage}%` }}
-        />
-      </div>
+      <Progress 
+        value={strengthPercentage} 
+        className="h-1" 
+        indicatorClassName={strengthColor}
+      />
       <p className="text-xs text-muted-foreground">
         {t(`profile.security.passwordStrength.${strengthLevel}`)}
       </p>

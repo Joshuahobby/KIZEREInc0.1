@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -36,7 +36,7 @@ import { UserPermissionsPanel } from "@/components/profile/user-permissions-pane
 import { UserPreferencesForm } from "@/components/profile/user-preferences-form";
 
 export default function ProfilePage() {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("profile");
