@@ -21,6 +21,7 @@
     "lostIt": "J'ai Perdu",
     "foundIt": "J'ai Trouvé",
     "registerItem": "Enregistrer un Objet",
+    "registerItems": "Enregistrer des Objets",
     "userManagement": "Gestion des Utilisateurs"
   },
   "auth": {
