@@ -32,7 +32,7 @@ interface LanguageContextType {
   language: Language;
   translations: Record<Language, any>;
   setLanguage: (language: Language) => void;
-  t: (key: string, options?: Record<string, any>) => string;
+  t: (key: string, optionsOrDefault?: Record<string, any> | string, defaultValue?: string) => string;
   getLanguages: () => { code: Language; name: string }[];
 }
 
@@ -40,7 +40,9 @@ const LanguageContext = createContext<LanguageContextType>({
   language: DEFAULT_LANGUAGE,
   translations,
   setLanguage: () => {},
-  t: (key: string) => key,
+  t: (key: string, optionsOrDefault?: Record<string, any> | string, defaultValue?: string) => {
+    return typeof optionsOrDefault === 'string' ? optionsOrDefault : key;
+  },
   getLanguages: () => [],
 });
 
@@ -71,10 +73,14 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   }, []);
 
   // Translation function
-  const t = (key: string, options?: Record<string, any>): string => {
+  const t = (key: string, optionsOrDefault?: Record<string, any> | string, defaultValue?: string): string => {
     // Split the key by periods to traverse the translations object
     const keys = key.split(".");
     
+    // Determine if second arg is options or a default value string
+    const options = typeof optionsOrDefault === 'object' ? optionsOrDefault : undefined;
+    const finalDefaultValue = typeof optionsOrDefault === 'string' ? optionsOrDefault : defaultValue;
+
     // Get the current language's translations or default to empty object
     const currentTranslations = translations[language] || {};
     
@@ -87,11 +93,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       value = keys.reduce((obj, k) => (obj && obj[k] !== undefined ? obj[k] : undefined), defaultTranslations as any);
     }
     
-    // If still not found, return the key itself
+    // If still not found, return the default value or the key itself
     if (value === undefined) {
+      if (finalDefaultValue) return finalDefaultValue;
+      
       console.warn(`Translation key not found: ${key}`, {
         language,
-        availableKeys: Object.keys(currentTranslations).join(', '),
         path: keys.join('.')
       });
       return key;
@@ -101,9 +108,12 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     if (options && typeof value === "string") {
       Object.entries(options).forEach(([paramKey, paramValue]) => {
         // Support both {name} and {{name}} formats for parameter replacement
+        // Escape special characters in paramKey for RegExp
+        const escapedKey = paramKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const replacement = String(paramValue);
         value = (value as string)
-          .replace(new RegExp(`{${paramKey}}`, "g"), String(paramValue))
-          .replace(new RegExp(`{{${paramKey}}}`, "g"), String(paramValue));
+          .replace(new RegExp(`{${escapedKey}}`, "g"), replacement)
+          .replace(new RegExp(`{{${escapedKey}}}`, "g"), replacement);
       });
     }
     

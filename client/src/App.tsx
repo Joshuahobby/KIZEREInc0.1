@@ -28,6 +28,7 @@ import PaymentPackagesNew from "@/pages/admin/payment-packages/index-new";
 import NewPaymentPackage from "@/pages/admin/payment-packages/new";
 import CreatePackage from "@/pages/admin/payment-packages/create-package";
 import ProfilePage from "@/pages/profile";
+import IdentityVerification from "@/pages/identity-verification";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { useEffect } from "react";
@@ -101,6 +102,7 @@ function App() {
   const NewPaymentPackageComponent = () => <NewPaymentPackage />;
   const CreatePackageComponent = () => <CreatePackage />;
   const ProfilePageComponent = () => <ProfilePage />;
+  const IdentityVerificationComponent = () => <IdentityVerification />;
   const AdminUserManagementComponent = () => <AdminUserManagement />;
   const NewUserComponent = () => <NewUser />;
   const AdminItemManagementComponent = () => <AdminItemManagement />;
@@ -177,6 +179,7 @@ function App() {
               
               {/* Profile route */}
               <ProtectedRoute path="/profile" component={ProfilePageComponent} requiredRole="any" />
+              <ProtectedRoute path="/identity-verification" component={IdentityVerificationComponent} requiredRole="any" />
               
               {/* 404 route */}
               <Route component={NotFound} />

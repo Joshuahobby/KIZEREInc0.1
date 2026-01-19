@@ -53,26 +53,38 @@ import { hashPassword, comparePasswords } from "./utils/auth-crypto";
 // Create logger for routes
 const logger = createLogger('Routes');
 
-// Middleware to check authentication
-function requireAuth(req: Request, res: Response, next: Function) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Authentication required" });
-  }
-  next();
+// Middleware to check authentication and roles
+function requireRole(roles: string[] | 'any') {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    if (roles === 'any') {
+      return next();
+    }
+    
+    if (!req.user || !roles.includes(req.user.role)) {
+      logger.warn('Access denied: insufficient permissions', { 
+        userId: req.user?.id, 
+        userRole: req.user?.role, 
+        requiredRoles: roles,
+        path: req.path
+      });
+      return res.status(403).json({ 
+        message: "Insufficient permissions",
+        required: roles
+      });
+    }
+    
+    next();
+  };
 }
 
-// Middleware to check admin role
-function requireAdmin(req: Request, res: Response, next: Function) {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ message: "Authentication required" });
-  }
-  
-  if (req.user && req.user!.role !== 'Admin') {
-    return res.status(403).json({ message: "Admin access required" });
-  }
-  
-  next();
-}
+// Simplified aliases for common uses
+const requireAuth = requireRole('any');
+const requireAdmin = requireRole(['Admin']);
+const requireAdminOrAgent = requireRole(['Admin', 'Agent']);
 
 // Import admin routes
 import adminUsersRoutes from './routes/admin-users';
@@ -567,6 +579,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       logger.error('Error updating user preferences', { error, userId: req.user?.id });
       res.status(500).json({ message: "Failed to update user preferences" });
+    }
+  });
+
+  // User Verification Requests API
+  app.get("/api/me/verification-requests", requireAuth, async (req, res) => {
+    try {
+      const requests = await storage.getUserVerificationRequests(req.user!.id);
+      res.json(requests);
+    } catch (error) {
+      logger.error('Error fetching verification requests', { error, userId: req.user?.id });
+      res.status(500).json({ message: "Failed to fetch verification requests" });
+    }
+  });
+
+  app.post("/api/me/verification-requests", requireAuth, async (req, res) => {
+    try {
+      const { type, documentUrls, notes } = req.body;
+      
+      if (!type || !documentUrls || !Array.isArray(documentUrls) || documentUrls.length === 0) {
+        return res.status(400).json({ message: "Invalid request data. Type and at least one document URL are required." });
+      }
+
+      const request = await storage.createVerificationRequest({
+        userId: req.user!.id,
+        type,
+        status: 'pending',
+        documentUrls,
+        notes: notes || null
+      });
+
+      // Update user status if it was not already in review
+      if (req.user!.verificationStatus !== 'approved') {
+        await storage.updateUser(req.user!.id, { verificationStatus: 'pending' });
+      }
+
+      logger.info('User submitted verification request', { userId: req.user!.id, requestId: request.id });
+      res.status(201).json(request);
+    } catch (error) {
+      logger.error('Error creating verification request', { error, userId: req.user?.id });
+      res.status(500).json({ message: "Failed to submit verification request" });
     }
   });
 

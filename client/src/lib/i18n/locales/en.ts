@@ -165,6 +165,15 @@ export default {
   item_register_error: 'Failed to register item',
   item_register_payment: 'Registration Payment',
   item_register_fee: 'Registration Fee',
+  item_registration_summary: 'Registration Summary',
+  item_progress: 'Progress',
+  item_fee_description: 'Initial registration & global database entry fee.',
+  item_ssl_secured: 'SSL Secured Transaction',
+  item_verified_certificate: 'Verified Ownership Certificate',
+  item_qr_preview: 'QR Preview',
+  item_detected_id: 'ID Detected',
+  item_detected_id_desc: 'Detected unique identifier: {{id}}',
+  item_draft_saved: 'Draft Saved',
   
   // Smart ID Recognition
   smart_id_title: 'Smart ID Recognition',
@@ -311,6 +320,28 @@ export default {
   payment_error: 'Payment failed',
   payment_processing: 'Processing payment...',
   payment_receipt: 'Payment Receipt',
+  
+  // Identity Verification
+  verification_title: 'Identity Verification',
+  verification_subtitle: 'Verify your identity to increase trust and unlock premium features.',
+  verification_status_verified: 'Verified Account',
+  verification_in_progress_title: 'Verification in Progress',
+  verification_in_progress_desc: 'Your request is currently being reviewed by our team. You\'ll be notified via email once completed.',
+  verification_complete_title: 'Verification Complete',
+  verification_complete_desc: 'Congratulations! Your identity has been verified.',
+  verification_submit_new: 'Submit New Documents',
+  verification_submit_title: 'Submit New Request',
+  verification_submit_desc: 'Select a document type and upload clear photos.',
+  verification_upload_label: 'Upload Documents (Max 3)',
+  verification_why_title: 'Why verify?',
+  verification_trust_title: 'Trust',
+  verification_trust_desc: 'Verified users have higher credibility when transferring ownership.',
+  verification_premium_title: 'Premium Features',
+  verification_premium_desc: 'Unlock higher registration limits and premium item labels.',
+  verification_security_title: 'Security',
+  verification_security_desc: 'Protect your account against unauthorized ownership claims.',
+  verification_history_title: 'Recent History',
+  verification_no_history: 'No previous requests found.',
   
   // Form Validations
   validation_required: 'This field is required',
@@ -546,7 +577,11 @@ export default {
     notifications: 'Notifications',
     new: 'New',
     ago: 'hours ago',
-    viewAll: 'View All'
+    viewAll: 'View All',
+    register_item: 'Register Your Item',
+    complete_registration: 'Complete Registration',
+    processing: 'Processing...',
+    save_draft: 'Save Draft',
   },
   
   // Auth

@@ -1,395 +1,557 @@
-import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, useLocation } from "wouter";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { motion } from "framer-motion";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Loader2, 
+  Check, 
+  CreditCard, 
+  Save,
+  Upload,
+  Camera,
+  Calendar,
+  Info,
+  X,
+  Image as ImageIcon,
+  Clipboard,
+  CheckCircle,
+  ArrowRight,
+  RefreshCw,
+  Barcode,
+  AlertCircle,
+  Fingerprint,
+  FileImage,
+  FileStack,
+  QrCode
+} from "lucide-react";
 
-// Item categories
-const itemCategories = [
-  'Electronics', 'Jewelry', 'Documents', 'Accessories', 
-  'Clothing', 'Bags', 'Keys', 'Wallets', 'Phones', 
-  'Computers', 'Transportation', 'Other'
-] as const;
-
-// Item validation schema
-const itemRegistrationSchema = z.object({
-  name: z.string().min(2, "Item name must be at least 2 characters"),
-  category: z.enum(itemCategories, {
-    errorMap: () => ({ message: "Please select a valid category" })
-  }),
-  uniqueIdentifier: z.string().min(3, "Unique identifier must be at least 3 characters"),
-  description: z.string().min(10, "Please provide a detailed description").max(500, "Description is too long"),
-  location: z.string().min(2, "Location is required").optional(),
-  status: z.string().default('Registered'),
-  imageUrls: z.array(z.string()).optional().default([]),
-  details: z.record(z.any()).optional()
-});
-
+// UI Components
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { useDropzone } from "react-dropzone";
-import { Upload, X, Camera, Info, ArrowRight } from "lucide-react";
-import { PageLayout } from "@/components/layout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/use-auth";
 
-type FormValues = z.infer<typeof itemRegistrationSchema>;
+// Hooks & Libs
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { PaymentService } from "@/services/payment.service";
+import { DEFAULT_CURRENCY } from "@/config/payment.config";
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { PageLayout } from "@/components/layout/index";
+
+// Custom Registration Components
+import { SmartIDRecognizer } from "@/components/item-registration/smart-id-recognizer";
+import { BatchImageUpload } from "@/components/item-registration/batch-image-upload";
+import { OwnershipChain, OwnershipDocument as OwnershipDoc } from "@/components/item-registration/ownership-chain";
+import { QRCodeGenerator } from "@/components/item-registration/qr-code-generator";
+
+// Schema & Constants
+import { insertItemSchema } from "@shared/schema";
+
+const categories = [
+  "Electronics",
+  "Documents",
+  "Jewelry",
+  "Accessories",
+  "Clothing",
+  "Bags",
+  "Keys",
+  "Wallets",
+  "Transportation",
+  "Other"
+];
+
+const subCategories: Record<string, string[]> = {
+  Electronics: ["Smartphone", "Laptop", "Camera", "Tablet", "Smartwatch", "Headphones", "Other"],
+  Documents: ["ID Card", "Passport", "Driver's License", "Certificate", "Other"],
+  Jewelry: ["Ring", "Necklace", "Bracelet", "Watch", "Other"],
+  Accessories: ["Watch", "Bag", "Wallet", "Glasses", "Other"],
+  Clothing: ["Outerwear", "Formal", "Casual", "Sports", "Other"],
+  Transportation: ["Bicycle", "Motorcycle", "Car", "Other"],
+  Other: ["Miscellaneous"]
+};
+
+const formSchema = insertItemSchema.extend({
+  subCategory: z.string().optional(),
+  // Ensure name and uniqueIdentifier meet minimum lengths for better data quality
+  name: z.string().min(2, "Item name must be at least 2 characters"),
+  uniqueIdentifier: z.string().min(3, "Identifier must be at least 3 characters"),
+  description: z.string().min(10, "Please provide a more detailed description").optional(),
+});
+
+type ItemRegistrationValues = z.infer<typeof formSchema>;
 
 export default function ItemRegistrationPage() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [errors, setErrors] = useState<string[]>([]);
+  const { t } = useLanguage();
+  const { toast } = useToast();
   const { user } = useAuth();
-  const [, navigate] = useLocation();
+  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  
+  // UI State
+  const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info"]);
+  const [itemImages, setItemImages] = useState<File[]>([]);
+  const [ownershipDocuments, setOwnershipDocuments] = useState<OwnershipDoc[]>([]);
+  const [completion, setCompletion] = useState(0);
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
+  const [autoSaving, setAutoSaving] = useState(false);
 
-  const defaultValues: Partial<FormValues> = {
-    name: "",
-    category: "Electronics",
-    uniqueIdentifier: "",
-    description: "",
-    location: "",
-    status: "Registered",
-    imageUrls: [],
-    details: {}
-  };
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(itemRegistrationSchema),
-    defaultValues,
-    mode: "onChange"
-  });
-
-  // Set up image dropzone
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.gif']
+  // Form initialization
+  const form = useForm<ItemRegistrationValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      category: "Other" as any,
+      subCategory: "",
+      uniqueIdentifier: "",
+      description: "",
+      status: "Registered",
+      imageUrls: [],
+      details: {},
     },
-    maxFiles: 5,
-    onDrop: (acceptedFiles) => {
-      // For a real implementation, we would upload these to a server/storage
-      // For now we'll just create object URLs for preview
-      const newFiles = acceptedFiles.filter(file => 
-        !uploadedFiles.some(existingFile => existingFile.name === file.name && existingFile.size === file.size)
-      );
-      
-      if (uploadedFiles.length + newFiles.length > 5) {
-        toast({
-          title: "Maximum images exceeded",
-          description: "You can only upload up to 5 images per item.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      setUploadedFiles(prev => [...prev, ...newFiles]);
-      
-      const newUrls = newFiles.map(file => URL.createObjectURL(file));
-      setImageUrls(prev => [...prev, ...newUrls]);
-      
-      // Update the form value
-      form.setValue("imageUrls", [...imageUrls, ...newUrls], { shouldValidate: true });
-    }
+    mode: "onChange",
   });
 
-  const removeImage = (index: number) => {
-    const newFiles = [...uploadedFiles];
-    const newUrls = [...imageUrls];
-    
-    // Revoke the object URL to prevent memory leaks
-    URL.revokeObjectURL(newUrls[index]);
-    
-    newFiles.splice(index, 1);
-    newUrls.splice(index, 1);
-    
-    setUploadedFiles(newFiles);
-    setImageUrls(newUrls);
-    form.setValue("imageUrls", newUrls, { shouldValidate: true });
-  };
+  const watchedValues = form.watch();
 
-  // Cleanup object URLs on unmount
+  // Load draft from localStorage on mount
   useEffect(() => {
-    return () => {
-      imageUrls.forEach(url => URL.revokeObjectURL(url));
-    };
+    const savedDraft = localStorage.getItem('itemRegistrationDraft');
+    if (savedDraft) {
+      try {
+        const parsed = JSON.parse(savedDraft);
+        // Reset form with saved values if they exist
+        Object.entries(parsed).forEach(([key, value]) => {
+          if (value) form.setValue(key as any, value);
+        });
+      } catch (e) {
+        console.error("Failed to load draft", e);
+      }
+    }
   }, []);
 
-  const mutation = useMutation({
-    mutationFn: (data: FormValues) => {
-      // In a real implementation, we would upload images and get URLs first
-      // For this demo, we'll just pass the local URLs directly
-      return apiRequest("/api/items", {
-        method: "POST",
+  // Calculate completion percentage
+  useEffect(() => {
+    let totalFields = 6;
+    let completedFields = 0;
+    
+    if (watchedValues.name) completedFields++;
+    if (watchedValues.category) completedFields++;
+    if (watchedValues.uniqueIdentifier) completedFields++;
+    if (watchedValues.description && watchedValues.description.length >= 10) completedFields++;
+    if (itemImages.length > 0) completedFields++;
+    if (ownershipDocuments.length > 0) completedFields++;
+    
+    setCompletion(Math.round((completedFields / totalFields) * 100));
+  }, [watchedValues, itemImages, ownershipDocuments]);
+
+  // Auto-save draft
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (form.formState.isDirty) {
+        setAutoSaving(true);
+        localStorage.setItem('itemRegistrationDraft', JSON.stringify(watchedValues));
+        setTimeout(() => setAutoSaving(false), 1000);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [watchedValues, form.formState.isDirty]);
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => 
+      prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
+    );
+  };
+
+  const isSectionComplete = (section: string): boolean => {
+    switch (section) {
+      case "basic-info":
+        return !!watchedValues.name && !!watchedValues.category && !!watchedValues.uniqueIdentifier;
+      case "media":
+        return itemImages.length > 0;
+      case "ownership":
+        return ownershipDocuments.length > 0;
+      default:
+        return false;
+    }
+  };
+
+  const getSectionIcon = (section: string, index: number) => {
+    if (isSectionComplete(section)) {
+      return <Check className="h-4 w-4 text-green-500" />;
+    }
+    return <span className="text-xs font-bold">{index}</span>;
+  };
+
+  // OCR/Smart ID detection handler
+  const handleIdentifierDetected = (value: string) => {
+    form.setValue("uniqueIdentifier", value, { shouldValidate: true });
+    toast({
+      title: "ID Detected",
+      description: `Detected unique identifier: ${value}`,
+    });
+  };
+
+  const registerMutation = useMutation({
+    mutationFn: async (data: ItemRegistrationValues) => {
+      // 1. Upload images
+      let uploadedImageUrls: string[] = [];
+      if (itemImages.length > 0) {
+        const formData = new FormData();
+        itemImages.forEach(file => formData.append('images', file));
+        const uploadRes = await fetch('/api/upload/images', { method: 'POST', body: formData });
+        if (!uploadRes.ok) throw new Error("Failed to upload images");
+        const { urls } = await uploadRes.json();
+        uploadedImageUrls = urls;
+      }
+
+      // 2. Upload ownership documents
+      let uploadedDocUrls: any[] = [];
+      if (ownershipDocuments.length > 0) {
+        const formData = new FormData();
+        ownershipDocuments.forEach((doc, i) => {
+          formData.append('documents', doc.file);
+          formData.append(`documentInfo${i}`, JSON.stringify({
+            title: doc.title,
+            date: doc.date,
+            description: doc.description
+          }));
+        });
+        const docRes = await fetch('/api/upload/documents', { method: 'POST', body: formData });
+        if (!docRes.ok) throw new Error("Failed to upload documents");
+        const { documents } = await docRes.json();
+        uploadedDocUrls = documents;
+      }
+
+      // 3. Register Item
+      const itemResponse = await apiRequest<any>('/api/items', {
+        method: 'POST',
         data: {
           ...data,
-          userId: user?.id, // Ensure user ID is included
+          imageUrls: uploadedImageUrls,
+          details: {
+            ...(data.details as any),
+            subCategory: data.subCategory,
+            ownershipDocuments: uploadedDocUrls
+          }
         }
       });
+
+      // 4. Initialize Payment
+      setPaymentStatus("pending");
+      const paymentResponse = await PaymentService.initializePayment({
+        type: "registration",
+        itemId: itemResponse.id
+      });
+
+      return { item: itemResponse, payment: paymentResponse };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/items"] });
+      localStorage.removeItem('itemRegistrationDraft');
+      
       toast({
-        title: "Item registered successfully!",
-        description: "Your item has been registered in our system.",
+        title: "Item Registered",
+        description: "Redirecting to payment...",
       });
-      navigate("/dashboard/items");
+
+      if (data.payment.paymentUrl) {
+        window.location.href = data.payment.paymentUrl;
+      } else {
+        setLocation("/dashboard");
+      }
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
+      setPaymentStatus("error");
       toast({
-        title: "Registration failed",
-        description: error.message || "There was an error registering your item. Please try again.",
-        variant: "destructive"
+        title: "Registration Failed",
+        description: error.message || "Failed to register item. Please try again.",
+        variant: "destructive",
       });
-      setIsSubmitting(false);
     }
   });
 
-  const onSubmit = async (data: FormValues) => {
-    setIsSubmitting(true);
-    setErrors([]);
-    
-    // Validate images
-    if (imageUrls.length === 0) {
-      setErrors(prev => [...prev, "Please upload at least one image of your item"]);
-      setIsSubmitting(false);
-      return;
-    }
-    
-    // In a real app, we would upload images to storage and get permanent URLs
-    // For this demo, we'll use the object URLs directly
-    
-    mutation.mutate(data);
+  const onSubmit = (data: ItemRegistrationValues) => {
+    registerMutation.mutate(data);
   };
 
   return (
     <PageLayout>
-      <div className="container max-w-4xl mx-auto py-8">
+      <div className="container max-w-5xl mx-auto py-8 px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          className="space-y-6"
         >
-          <Card className="shadow-lg border-t-4 border-t-sky-500">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-center">Register Your Item</CardTitle>
-              <CardDescription className="text-center">
-                Secure your valuable possessions by registering them in our system
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {errors.length > 0 && (
-                <Alert variant="destructive" className="mb-6">
-                  <Info className="h-4 w-4" />
-                  <AlertTitle>Errors</AlertTitle>
-                  <AlertDescription>
-                    <ul className="list-disc pl-5">
-                      {errors.map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              )}
-              
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
+                {t('common.register_item')}
+              </h1>
+              <p className="text-neutral-500 mt-2">
+                {t('landing.heroSubtitle')}
+              </p>
+            </div>
+            {autoSaving && (
+              <div className="flex items-center text-xs text-neutral-400 bg-neutral-50 px-3 py-1 rounded-full border">
+                <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
+                {t('item_draft_saved')}
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-24">
+            {/* Left: Form Content */}
+            <div className="lg:col-span-2 space-y-6">
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Item Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Laptop, Watch, etc." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {itemCategories.map(category => (
-                                <SelectItem key={category} value={category}>
-                                  {category}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={form.control}
-                    name="uniqueIdentifier"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>
-                          Unique Identifier
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="h-4 w-4 ml-2 inline cursor-help text-muted-foreground" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="max-w-xs">Serial number, IMEI, or any other unique identifier for your item</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </FormLabel>
-                        <FormControl>
-                          <Input placeholder="Serial number, IMEI, etc." {...field} />
-                        </FormControl>
-                        <FormDescription>
-                          This helps identify your item uniquely in case it's lost
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Description</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Provide a detailed description of your item including color, size, brand, distinguishing marks, etc."
-                            className="min-h-[120px]"
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="location"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Current Location</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Where is this item usually kept?" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="space-y-4">
-                    <FormLabel>Item Images</FormLabel>
-                    <div 
-                      {...getRootProps()} 
-                      className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
-                        isDragActive 
-                          ? "border-primary bg-primary/5" 
-                          : "border-muted-foreground/25 hover:border-primary/50"
-                      }`}
-                    >
-                      <input {...getInputProps()} />
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <Upload className="h-10 w-10 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">
-                          Drag & drop images here, or click to select files
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Upload up to 5 clear images of your item from different angles
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {imageUrls.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mt-4">
-                        {imageUrls.map((url, index) => (
-                          <div key={index} className="relative group">
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.2 }}
-                              className="relative aspect-square rounded-md overflow-hidden border border-muted"
-                            >
-                              <img 
-                                src={url} 
-                                alt={`Item preview ${index + 1}`} 
-                                className="object-cover w-full h-full"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => removeImage(index)}
-                                className="absolute top-1 right-1 bg-black/70 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                title="Remove image"
-                                aria-label="Remove image"
-                              >
-                                <X className="h-4 w-4 text-white" />
-                              </button>
-                            </motion.div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <motion.div
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
+                  <Accordion
+                    type="multiple"
+                    value={expandedSections}
+                    onValueChange={setExpandedSections}
+                    className="space-y-4"
                   >
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-sky-500 hover:bg-sky-600"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <div className="flex items-center">
-                          <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-opacity-50 border-t-transparent rounded-full" />
-                          Registering...
+                    {/* Step 1: Basic Info & OCR */}
+                    <AccordionItem value="basic-info" className="border rounded-xl bg-white overflow-hidden shadow-sm">
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-neutral-50/50">
+                        <div className="flex items-center space-x-3">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors",
+                            isSectionComplete("basic-info") ? "bg-green-500 border-green-500 text-white" : "border-neutral-200"
+                          )}>
+                            {getSectionIcon("basic-info", 1)}
+                          </div>
+                          <span className="font-semibold text-lg text-neutral-800">{t('report_item_details')}</span>
                         </div>
-                      ) : (
-                        <div className="flex items-center">
-                          Register Item
-                          <ArrowRight className="ml-2 h-4 w-4" />
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 py-4 space-y-6 border-t bg-neutral-50/30">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('item_name')} <span className="text-red-500">*</span></FormLabel>
+                                <FormControl>
+                                  <Input placeholder="e.g. MacBook Pro M2, Rolex Datejust" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('item_category')} <span className="text-red-500">*</span></FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder={t('filter')} />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {categories.map(c => (
+                                      <SelectItem key={c} value={c}>
+                                        {t(`item_category_${c.toLowerCase()}`, c)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </div>
-                      )}
-                    </Button>
-                  </motion.div>
+
+                        <FormField
+                          control={form.control}
+                          name="uniqueIdentifier"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('item_uuid')} <span className="text-red-500">*</span></FormLabel>
+                              <div className="space-y-3">
+                                <FormControl>
+                                  <div className="relative">
+                                    <Input placeholder="IMEI, Serial Number, or Document ID" {...field} />
+                                    <Fingerprint className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                                  </div>
+                                </FormControl>
+                                <FormDescription>{t('item_registration_description', 'This identifier is used to verify ownership globally.')}</FormDescription>
+                                <FormMessage />
+                                
+                                <div className="p-4 bg-white border rounded-lg border-neutral-100 shadow-sm">
+                                  <SmartIDRecognizer onIdentifierSelected={handleIdentifierDetected} />
+                                </div>
+                              </div>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('item_description')}</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Provide distinguishable features (scratches, repairs, markings)..." 
+                                  className="min-h-[100px]"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {/* Step 2: Media */}
+                    <AccordionItem value="media" className="border rounded-xl bg-white overflow-hidden shadow-sm">
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-neutral-50/50">
+                        <div className="flex items-center space-x-3">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors",
+                            isSectionComplete("media") ? "bg-green-500 border-green-500 text-white" : "border-neutral-200"
+                          )}>
+                            {getSectionIcon("media", 2)}
+                          </div>
+                          <span className="font-semibold text-lg text-neutral-800">{t('item_images')}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 py-4 space-y-4 border-t bg-neutral-50/30">
+                        <BatchImageUpload onImagesChange={setItemImages} maxFiles={5} />
+                      </AccordionContent>
+                    </AccordionItem>
+
+                    {/* Step 3: Ownership */}
+                    <AccordionItem value="ownership" className="border rounded-xl bg-white overflow-hidden shadow-sm">
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-neutral-50/50">
+                        <div className="flex items-center space-x-3">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors",
+                            isSectionComplete("ownership") ? "bg-green-500 border-green-500 text-white" : "border-neutral-200"
+                          )}>
+                            {getSectionIcon("ownership", 3)}
+                          </div>
+                          <span className="font-semibold text-lg text-neutral-800">{t('ownership_title')}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 py-4 space-y-4 border-t bg-neutral-50/30">
+                        <OwnershipChain onDocumentsChange={setOwnershipDocuments} />
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </form>
               </Form>
-            </CardContent>
-            <CardFooter className="flex justify-center text-sm text-muted-foreground">
-              <p>Your items are secure and only accessible to you and authorized personnel</p>
-            </CardFooter>
-          </Card>
+            </div>
+
+            {/* Right: Summary & Action Sidebar */}
+            <div className="space-y-6">
+              <Card className="sticky top-24 border-neutral-200 shadow-lg overflow-hidden">
+                <CardHeader className="bg-neutral-900 text-white">
+                  <CardTitle className="text-lg">{t('item_registration_summary')}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-neutral-500">{t('item_progress')}</span>
+                      <span className="font-medium">{completion}%</span>
+                    </div>
+                    <Progress value={completion} className="h-1.5" />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-sm py-2 border-b">
+                      <span className="text-neutral-500">{t('item_name')}</span>
+                      <span className="font-medium truncate max-w-[120px]">{watchedValues.name || "-"}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm py-2 border-b">
+                      <span className="text-neutral-500">{t('item_category')}</span>
+                      <span className="font-medium text-sky-600">{t(`item_category_${watchedValues.category?.toLowerCase()}`, watchedValues.category) || "-"}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm py-2 border-b">
+                      <span className="text-neutral-500">{t('item_images')}</span>
+                      <span className="font-medium">{itemImages.length} uploaded</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">{t('item_register_fee')}</span>
+                      <span className="text-lg font-bold text-amber-900">2,000 RWF</span>
+                    </div>
+                    <p className="text-[10px] text-amber-700">{t('item_fee_description')}</p>
+                  </div>
+
+                  <Button 
+                    className="w-full h-12 text-lg font-bold shadow-md bg-neutral-900 hover:bg-neutral-800"
+                    disabled={completion < 80 || registerMutation.isPending}
+                    onClick={form.handleSubmit(onSubmit)}
+                  >
+                    {registerMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        {t('common.processing')}
+                      </>
+                    ) : (
+                      <>
+                        {t('common.complete_registration')}
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+                <CardFooter className="px-6 py-4 bg-neutral-50 border-t flex flex-col gap-2">
+                   <div className="flex items-center text-xs text-neutral-500">
+                     <CheckCircle className="h-3 w-3 mr-2 text-green-500" />
+                     {t('item_ssl_secured')}
+                   </div>
+                   <div className="flex items-center text-xs text-neutral-500">
+                     <CheckCircle className="h-3 w-3 mr-2 text-green-500" />
+                     {t('item_verified_certificate')}
+                   </div>
+                </CardFooter>
+              </Card>
+              {/* QR Code Preview (Only shown if at least identifier is present) */}
+              {watchedValues.uniqueIdentifier && (
+                <Card className="border-dashed border-2 bg-neutral-50/50">
+                  <CardContent className="p-6">
+                    <h3 className="text-sm font-bold mb-4 flex items-center">
+                      <QrCode className="h-4 w-4 mr-2" />
+                      {t('item_qr_preview')}
+                    </h3>
+                    <QRCodeGenerator 
+                      itemIdentifier={watchedValues.uniqueIdentifier} 
+                      itemName={watchedValues.name || "Pending Registration"}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
         </motion.div>
       </div>
     </PageLayout>

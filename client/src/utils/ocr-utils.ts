@@ -19,19 +19,21 @@ const DEFAULT_OPTIONS: OCROptions = {
 };
 
 /**
- * Pattern for detecting IMEIs (15-16 digits)
+ * Pattern for detecting IMEIs (15 digits, often separated by dashes or dots)
+ * More robust pattern that handles common separators
  */
-const IMEI_PATTERN = /\b\d{15,16}\b/g;
+const IMEI_PATTERN = /\b\d{2}[-\.\s]?\d{6}[-\.\s]?\d{6}[-\.\s]?\d{1}\b/g;
 
 /**
- * Pattern for detecting serial numbers (alphanumeric with common formats)
+ * Pattern for detecting serial numbers (alphanumeric, often starts with S/N or Serial)
  */
-const SERIAL_PATTERN = /\b[A-Z0-9]{6,20}\b/g;
+const SERIAL_PATTERN = /\b(?:S\/N|SN|SERIAL)?[:\s-]*([A-Z0-9]{6,20})\b/gi;
 
 /**
- * Pattern for matching document IDs with common formats
+ * Pattern for matching document IDs (National ID, Passport)
+ * Added support for Rwandan ID (16 digits) and common international passport formats
  */
-const ID_PATTERN = /\b(?:[A-Z]{1,3}[0-9]{5,12})|(?:[0-9]{5,12}[A-Z]{1,3})\b/g;
+const ID_PATTERN = /\b(?:[12]\d{15})|(?:[A-Z]{1,2}\d{6,9})\b/g;
 
 /**
  * Process an image with OCR to extract text
