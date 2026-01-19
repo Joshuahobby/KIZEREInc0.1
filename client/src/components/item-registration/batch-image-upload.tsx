@@ -20,17 +20,17 @@ function SortableItem({ id, url, file, onRemove }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 10 : 1,
-  };
+    '--dnd-transform': CSS.Transform.toString(transform),
+    '--dnd-transition': transition,
+    '--dnd-opacity': isDragging ? '0.5' : '1',
+    '--dnd-z-index': isDragging ? '10' : '1',
+  } as React.CSSProperties;
   
   return (
     <div 
       ref={setNodeRef} 
       style={style} 
-      className="relative group p-2 border border-dashed rounded-md hover:border-primary/50 transition-colors"
+      className="relative group p-2 border border-dashed rounded-md hover:border-primary/50 transition-colors [transform:var(--dnd-transform)] [transition:var(--dnd-transition)] [opacity:var(--dnd-opacity)] [z-index:var(--dnd-z-index)]"
     >
       <div className="relative aspect-square overflow-hidden rounded-md">
         <img src={url} alt={file.name} className="object-cover w-full h-full" />
@@ -258,6 +258,8 @@ export function BatchImageUpload({
             className="hidden"
             ref={fileInputRef}
             disabled={isUploading || images.length >= maxFiles}
+            title={t('batch_upload_title')}
+            aria-label={t('batch_upload_title')}
           />
           
           {isUploading ? (

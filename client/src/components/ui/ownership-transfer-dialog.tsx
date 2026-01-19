@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Send, Shield, CheckCircle2 } from "lucide-react";
 
 // Schema for transfer form
@@ -162,11 +163,9 @@ export function OwnershipTransferDialog({
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0 pt-2">
                         <FormControl>
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 mt-1"
+                          <Checkbox
                             checked={field.value}
-                            onChange={field.onChange}
+                            onCheckedChange={field.onChange}
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
