@@ -91,7 +91,7 @@
   }
   
   .yellow-button {
-    @apply bg-[var(--yellow-accent)] hover:bg-[var(--yellow-hover)] text-black font-medium px-6 py-3 rounded-md transition-all shadow-md hover:shadow-lg;
+    @apply bg-[var(--yellow-accent)] hover:bg-[var(--yellow-hover)] text-neutral-900 font-semibold px-6 py-3 rounded-md transition-all shadow-md hover:shadow-lg;
   }
   
   .hero-section {

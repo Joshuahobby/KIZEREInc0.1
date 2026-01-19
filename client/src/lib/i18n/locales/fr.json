@@ -18,6 +18,8 @@
     "dashboard": "Tableau de Bord",
     "registeredItems": "Mes Objets",
     "lostFound": "Objets Perdus & Trouvés",
+    "lostIt": "J'ai Perdu",
+    "foundIt": "J'ai Trouvé",
     "registerItem": "Enregistrer un Objet",
     "userManagement": "Gestion des Utilisateurs"
   },

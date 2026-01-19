@@ -22,7 +22,9 @@ import {
   Lock,
   BarChart2,
   MessageCircle,
-  ArrowRight
+  ArrowRight,
+  Menu,
+  X
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -31,6 +33,7 @@ export default function LandingPage() {
   const [_, navigate] = useLocation();
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const currentDate = new Date();
   const formattedDate = new Intl.DateTimeFormat('en-US', { 
     year: 'numeric', 
@@ -151,22 +154,83 @@ export default function LandingPage() {
             >
               <ThemeToggle />
               <LanguageSwitcher variant="minimal" />
-              <button 
-                onClick={() => openAuthModal("login")} 
-                className="font-medium text-foreground/80 hover:text-primary transition-colors"
-              >
-                {t('auth.login')}
-              </button>
               <Button 
                 onClick={() => openAuthModal("register")}
-                className="shadow-md hover:shadow-lg transition-shadow"
+                className="shadow-md hover:shadow-lg transition-all rounded-full px-6 font-semibold hidden md:inline-flex"
                 size="sm"
               >
-                {t('auth.getStarted')}
+                {t('auth.getStarted') || "Get Started"}
+              </Button>
+              
+              {/* Mobile menu button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden rounded-full"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
               </Button>
             </motion.div>
           </div>
         </div>
+        
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-border bg-background">
+            <div className="px-4 py-4 space-y-3">
+              <a 
+                href="#features" 
+                className="block py-2 text-foreground/70 hover:text-primary transition-colors font-medium"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileMenuOpen(false);
+                  document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {t('landing.nav.features')}
+              </a>
+              <a 
+                href="#how-it-works" 
+                className="block py-2 text-foreground/70 hover:text-primary transition-colors font-medium"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileMenuOpen(false);
+                  document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {t('landing.nav.howItWorks')}
+              </a>
+              <a 
+                href="#testimonials" 
+                className="block py-2 text-foreground/70 hover:text-primary transition-colors font-medium"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileMenuOpen(false);
+                  document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                {t('landing.nav.testimonials')}
+              </a>
+              <div className="pt-3 border-t border-border">
+                <Button 
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openAuthModal("register");
+                  }}
+                  className="w-full shadow-md hover:shadow-lg transition-all rounded-full font-semibold"
+                  size="sm"
+                >
+                  {t('auth.getStarted') || "Get Started"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Hero Section */}

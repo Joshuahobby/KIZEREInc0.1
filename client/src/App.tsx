@@ -150,7 +150,7 @@ function App() {
               <ProtectedRoute path="/dashboard" component={UnifiedDashboardComponent} requiredRole="any" />
               <ProtectedRoute path="/register-item" component={ItemRegistrationComponent} requiredRole="any" />
               <ProtectedRoute path="/my-items" component={MyItemsComponent} requiredRole="any" />
-              <ProtectedRoute path="/search" component={SearchComponent} requiredRole="any" />
+              <Route path="/search" component={SearchComponent} />
               <ProtectedRoute path="/lost-found" component={LostFoundComponent} requiredRole="any" />
               <ProtectedRoute path="/lost-found/report" component={LostFoundComponent} requiredRole="any" />
               <ProtectedRoute path="/lost-found/report/:type" component={LostFoundComponent} requiredRole="any" />

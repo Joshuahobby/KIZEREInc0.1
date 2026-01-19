@@ -16,6 +16,8 @@
     "contact": "Contact",
     "dashboard": "Dashboard",
     "register": "Register Item",
+    "lostIt": "Lost It",
+    "foundIt": "Found It",
     "search": "Search",
     "lostFound": "Lost & Found",
     "admin": "Admin",
@@ -285,5 +287,20 @@
     "reward": "Reward (Optional)",
     "reportDate": "Report Date",
     "status": "Status"
+  },
+  "profile": {
+    "title": "Profile",
+    "security": {
+      "passwordStrength": {
+        "weak": "Weak",
+        "fair": "Fair",
+        "good": "Good",
+        "strong": "Strong",
+        "veryStrong": "Very Strong"
+      }
+    }
+  },
+  "settings": {
+    "title": "Settings"
   }
 }
