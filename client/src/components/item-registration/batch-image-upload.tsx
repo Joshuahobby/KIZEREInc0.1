@@ -18,18 +18,26 @@ interface SortableItemProps {
 // The sortable thumbnail component
 function SortableItem({ id, url, file, onRemove }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  
-  const style = {
-    '--dnd-transform': CSS.Transform.toString(transform),
-    '--dnd-transition': transition,
-    '--dnd-opacity': isDragging ? '0.5' : '1',
-    '--dnd-z-index': isDragging ? '10' : '1',
-  } as React.CSSProperties;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Use a cumulative ref for both DnD and our manual style updates
+  const setCombinedRef = useCallback((node: HTMLDivElement | null) => {
+    setNodeRef(node);
+    (containerRef as any).current = node;
+  }, [setNodeRef]);
+
+  React.useLayoutEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.style.setProperty('--dnd-transform', CSS.Transform.toString(transform) || 'none');
+      containerRef.current.style.setProperty('--dnd-transition', transition || 'none');
+      containerRef.current.style.setProperty('--dnd-opacity', isDragging ? '0.5' : '1');
+      containerRef.current.style.setProperty('--dnd-z-index', isDragging ? '10' : '1');
+    }
+  }, [transform, transition, isDragging]);
   
   return (
     <div 
-      ref={setNodeRef} 
-      style={style} 
+      ref={setCombinedRef} 
       className="relative group p-2 border border-dashed rounded-md hover:border-primary/50 transition-colors [transform:var(--dnd-transform)] [transition:var(--dnd-transition)] [opacity:var(--dnd-opacity)] [z-index:var(--dnd-z-index)]"
     >
       <div className="relative aspect-square overflow-hidden rounded-md">
