@@ -170,7 +170,11 @@
     "quickActions": "Vitendo vya Haraka",
     "registerNewItem": "Sajili Kitu Kipya",
     "viewAllItems": "Tazama Vitu Vyote",
-    "reportLostItem": "Ripoti Kitu Kilichopotea"
+    "reportLostItem": "Ripoti Kitu Kilichopotea",
+    "payments": {
+      "title": "Historia ya Malipo",
+      "description": "Tazama miamala yako ya malipo"
+    }
   },
   "items": {
     "registerNewItem": "Sajili Kitu Kipya",
