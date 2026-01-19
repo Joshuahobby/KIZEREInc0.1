@@ -22,6 +22,7 @@
     "foundIt": "J'ai Trouvé",
     "registerItem": "Enregistrer un Objet",
     "registerItems": "Enregistrer des Objets",
+    "myItems": "Mes Objets",
     "userManagement": "Gestion des Utilisateurs"
   },
   "auth": {

@@ -31,20 +31,35 @@ export function Header() {
     icon?: any;
   };
 
-  // Base navigation visible to everyone
-  const navigation: NavItem[] = [
-    { name: t('nav.home'), href: "/" },
-    { name: t('nav.search'), href: "/search", icon: Search },
-    { name: t('nav.lostIt'), href: "/lost-found/report/lost" },
-    { name: t('nav.foundIt'), href: "/lost-found/report/found" },
-    { name: t('nav.lostFound'), href: "/lost-found" },
-  ];
+  const getDashboardPath = (): string => {
+    if (!user) return "/dashboard";
+    switch (user.role) {
+      case "Admin": return "/admin";
+      case "Agent": return "/lost-found";
+      default: return "/dashboard";
+    }
+  };
 
-  // Specific actions for authenticated users (only shown prominently or in mobile)
-  const authActions: NavItem[] = [
-    { name: t('nav.dashboard'), href: "/", icon: LayoutDashboard },
-    { name: t('nav.registerItems'), href: "/register", icon: PlusCircle },
-  ];
+  // Dynamic navigation based on auth state
+  const navigation: NavItem[] = isAuthenticated 
+    ? [
+        { name: t('nav.dashboard'), href: getDashboardPath(), icon: LayoutDashboard },
+        { name: t('nav.myItems'), href: "/my-items" }, 
+        { name: t('nav.lostFound'), href: "/lost-found" },
+        { name: t('nav.search'), href: "/search", icon: Search },
+        { name: t('nav.registerItems'), href: "/register-item", icon: PlusCircle },
+      ]
+    : [
+        { name: t('nav.home'), href: "/" },
+        { name: t('nav.features'), href: "/#features" },
+        { name: t('nav.search'), href: "/search", icon: Search },
+      ];
+
+  if (isAdmin) {
+    navigation.push({ name: t('nav.userManagement'), href: "/user-management" });
+  }
+
+  const authActions: NavItem[] = []; // Deprecated, kept empty for safety
 
   const handleLogout = () => {
     signOut();
@@ -54,15 +69,6 @@ export function Header() {
     if (path === "/" && location === "/") return true;
     if (path !== "/" && location.startsWith(path)) return true;
     return false;
-  };
-  
-  const getDashboardPath = (): string => {
-    if (!user) return "/dashboard";
-    switch (user.role) {
-      case "Admin": return "/admin";
-      case "Agent": return "/lost-found";
-      default: return "/dashboard";
-    }
   };
 
   return (
@@ -93,29 +99,7 @@ export function Header() {
                 </Link>
               ))}
               
-              {isAuthenticated && (
-                <Link href="/register">
-                  <a className={`${
-                      isActive("/register")
-                        ? "border-primary-500 text-neutral-900"
-                        : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
-                    } inline-flex items-center px-2 pt-1 border-b-2 text-sm font-medium transition-colors`}>
-                    {t('nav.registerItems')}
-                  </a>
-                </Link>
-              )}
-
-              {isAdmin && (
-                <Link href="/user-management">
-                  <a className={`${
-                      isActive("/user-management")
-                        ? "border-primary-500 text-neutral-900"
-                        : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
-                    } inline-flex items-center px-2 pt-1 border-b-2 text-sm font-medium transition-colors ml-4`}>
-                    {t('nav.userManagement')}
-                  </a>
-                </Link>
-              )}
+              {/* Actions removed (merged into main navigation) */}
             </nav>
           </div>
 
@@ -211,34 +195,7 @@ export function Header() {
               </a>
             </Link>
           ))}
-          {isAuthenticated && authActions.map((item) => (
-            <Link key={item.name} href={item.href}>
-              <a
-                className={`${
-                  isActive(item.href)
-                    ? "bg-primary-50 border-primary-500 text-primary-700"
-                    : "border-transparent text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700"
-                } block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-all`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </a>
-            </Link>
-          ))}
-          {isAdmin && (
-            <Link href="/user-management">
-              <a
-                className={`${
-                  isActive("/user-management")
-                    ? "bg-primary-50 border-primary-500 text-primary-700"
-                    : "border-transparent text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700"
-                } block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-all`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {t('nav.userManagement')}
-              </a>
-            </Link>
-          )}
+          {/* Auth actions and Admin links merged into main navigation loop */}
         </div>
         <div className="pt-4 pb-3 border-t border-neutral-100 px-4">
           <div className="flex items-center justify-between">
