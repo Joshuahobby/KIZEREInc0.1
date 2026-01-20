@@ -14,11 +14,11 @@ import {
   paymentPackages, type PaymentPackage, type InsertPaymentPackage,
   type AccountStatus, type VerificationStatus, type ActivityLevel, type PaymentType
 } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, like, and, or, desc, asc, not, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
-import { pool } from "./db";
+import MemoryStoreFactory from "memorystore";
 
 // Storage interface
 export interface IStorage {
@@ -158,11 +158,18 @@ export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    const PostgresSessionStore = connectPg(session);
-    this.sessionStore = new PostgresSessionStore({ 
-      pool, 
-      createTableIfMissing: true 
-    });
+    if (process.env.NODE_ENV === "production") {
+      const PostgresSessionStore = connectPg(session);
+      this.sessionStore = new PostgresSessionStore({ 
+        pool, 
+        createTableIfMissing: true 
+      });
+    } else {
+      const MemoryStore = MemoryStoreFactory(session);
+      this.sessionStore = new MemoryStore({
+        checkPeriod: 86400000 // prune expired entries every 24h
+      });
+    }
   }
 
   // User methods

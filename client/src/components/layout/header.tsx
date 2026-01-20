@@ -86,16 +86,16 @@ export function Header() {
             {/* Desktop Navigation - Hidden on mobile */}
             <nav className="hidden md:flex md:space-x-4">
               {navigation.map((item) => (
-                <Link key={item.name} href={item.href}>
-                  <a
-                    className={`${
-                      isActive(item.href)
-                        ? "border-primary-500 text-neutral-900"
-                        : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
-                    } inline-flex items-center px-2 pt-1 border-b-2 text-sm font-medium transition-colors`}
-                  >
-                    {item.name}
-                  </a>
+                <Link 
+                  key={item.name} 
+                  href={item.href}
+                  className={`${
+                    isActive(item.href)
+                      ? "border-primary-500 text-neutral-900"
+                      : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
+                  } inline-flex items-center px-2 pt-1 border-b-2 text-sm font-medium transition-colors`}
+                >
+                  {item.name}
                 </Link>
               ))}
               
@@ -182,17 +182,17 @@ export function Header() {
       <div className={`${mobileMenuOpen ? "block" : "hidden"} md:hidden border-t border-neutral-100 bg-white`}>
         <div className="pt-2 pb-3 space-y-1">
           {navigation.map((item) => (
-            <Link key={item.name} href={item.href}>
-              <a
-                className={`${
-                  isActive(item.href)
-                    ? "bg-primary-50 border-primary-500 text-primary-700"
-                    : "border-transparent text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700"
-                } block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-all`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.name}
-              </a>
+            <Link 
+              key={item.name} 
+              href={item.href}
+              className={`${
+                isActive(item.href)
+                  ? "bg-primary-50 border-primary-500 text-primary-700"
+                  : "border-transparent text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700"
+              } block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-all cursor-pointer`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {item.name}
             </Link>
           ))}
           {/* Auth actions and Admin links merged into main navigation loop */}

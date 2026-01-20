@@ -75,28 +75,31 @@ export function setupSecurityMiddleware(app: Express) {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://*.firebaseapp.com", "https://*.gstatic.com", "https://accounts.google.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://*.firebaseapp.com", "https://*.gstatic.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        imgSrc: ["'self'", "data:", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com"],
+        imgSrc: ["'self'", "data:", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com"],
         connectSrc: ["'self'", 
           "https://*.googleapis.com", 
           "https://*.firebaseio.com",
           "https://*.firebaseapp.com",
           "wss://*.firebaseio.com",
           "https://accounts.google.com",
-          "https://identitytoolkit.googleapis.com"
+          "https://identitytoolkit.googleapis.com",
+          "https://replit.com",
+          "https://*.replit.com",
+          "wss://*.replit.com"
         ],
-        frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com"],
+        frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         formAction: ["'self'", "https://accounts.google.com"],
-        childSrc: ["'self'", "blob:", "https://*.firebaseapp.com", "https://accounts.google.com"]
+        childSrc: ["'self'", "blob:", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com"]
       }
     },
     // Disable HSTS in development
     hsts: process.env.NODE_ENV === 'production',
     // Allow Replit iframe embedding
     crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: false,
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
   

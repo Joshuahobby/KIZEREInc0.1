@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, Link } from "wouter";
-import { useAuth, AuthProvider } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
@@ -47,14 +47,8 @@ export default function LandingPage() {
     setAuthModalOpen(true);
   };
 
-  // If user is already authenticated, redirect to the appropriate dashboard based on role
-  useEffect(() => {
-    if (user) {
-      const dashboardPath = AuthService.getDashboardPathByRole(user.role);
-      console.log("Landing Page: User authenticated, redirecting to", dashboardPath);
-      window.location.href = dashboardPath; // Use direct location change instead of wouter navigation
-    }
-  }, [user]);
+
+
 
   // Animation variants
   const containerVariants = {
@@ -81,14 +75,12 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Auth Modal wrapped with its own AuthProvider */}
-      <AuthProvider>
-        <AuthModal 
-          isOpen={authModalOpen} 
-          onClose={() => setAuthModalOpen(false)}
-          defaultTab={authModalTab}
-        />
-      </AuthProvider>
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={authModalOpen} 
+        onClose={() => setAuthModalOpen(false)}
+        defaultTab={authModalTab}
+      />
       
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border transition-all duration-200">

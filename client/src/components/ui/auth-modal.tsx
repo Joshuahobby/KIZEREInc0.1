@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { SiGoogle } from "react-icons/si";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   Eye, 
   EyeOff, 
@@ -362,256 +362,238 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                 </TabsTrigger>
               </TabsList>
               
-              <AnimatePresence mode="wait">
-                {/* Login Form */}
-                <TabsContent value="login" className="mt-0">
-                  <motion.div
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Form {...loginForm}>
-                      <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
-                        <FormField
-                          control={loginForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-medium">Username / Phone / Email</FormLabel>
-                              <FormControl>
-                                <div className="relative group">
-                                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                  <Input 
-                                    className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                    placeholder="Enter your username or email" 
-                                    {...field} 
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
+              <TabsContent value="login" className="mt-0">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
+                    <FormField
+                      control={loginForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium">Username / Phone / Email</FormLabel>
+                          <FormControl>
+                            <div className="relative group">
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                              <Input 
+                                className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
+                                placeholder="Enter your username or email" 
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium">Password</FormLabel>
+                          <FormControl>
+                            <div className="relative group">
+                              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                              <Input 
+                                className="pl-10 pr-12 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
+                                type={showPassword ? "text" : "password"} 
+                                placeholder="Enter your password" 
+                                {...field} 
+                              />
+                              <button 
+                                type="button"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                                onClick={() => setShowPassword(!showPassword)}
+                              >
+                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                              </button>
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex justify-between items-center text-sm">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="rounded border-muted-foreground/30 h-4 w-4 text-primary focus:ring-primary/20"
                         />
+                        <span className="text-muted-foreground">Remember me</span>
+                      </label>
+                      <a href="#" className="text-primary hover:text-primary/80 font-medium transition-colors">
+                        Forgot password?
+                      </a>
+                    </div>
 
-                        <FormField
-                          control={loginForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-medium">Password</FormLabel>
-                              <FormControl>
-                                <div className="relative group">
-                                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                  <Input 
-                                    className="pl-10 pr-12 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                    type={showPassword ? "text" : "password"} 
-                                    placeholder="Enter your password" 
-                                    {...field} 
-                                  />
-                                  <button 
-                                    type="button"
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                  >
-                                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                  </button>
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300" 
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Signing in...
+                        </>
+                      ) : (
+                        <>
+                          Sign In
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+                
+              <TabsContent value="register" className="mt-0">
+                <Form {...registerForm}>
+                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                    <FormField
+                      control={registerForm.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium">Full Name</FormLabel>
+                          <FormControl>
+                            <div className="relative group">
+                              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                              <Input 
+                                className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
+                                placeholder="Enter your full name" 
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                        <div className="flex justify-between items-center text-sm">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input 
-                              type="checkbox" 
-                              className="rounded border-muted-foreground/30 h-4 w-4 text-primary focus:ring-primary/20"
-                            />
-                            <span className="text-muted-foreground">Remember me</span>
-                          </label>
-                          <a href="#" className="text-primary hover:text-primary/80 font-medium transition-colors">
-                            Forgot password?
-                          </a>
-                        </div>
+                    <FormField
+                      control={registerForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium">Phone or Email</FormLabel>
+                          <FormControl>
+                            <div className="relative group">
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                              <Input 
+                                className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
+                                placeholder="+250 xxx xxx xxx or email" 
+                                {...field} 
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                        <Button 
-                          type="submit" 
-                          className="w-full h-12 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300" 
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                              Signing in...
-                            </>
-                          ) : (
-                            <>
-                              Sign In
-                              <ArrowRight className="ml-2 h-5 w-5" />
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    </Form>
-                  </motion.div>
-                </TabsContent>
-                  
-                {/* Registration Form */}
-                <TabsContent value="register" className="mt-0">
-                  <motion.div
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <Form {...registerForm}>
-                      <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="fullName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-medium">Full Name</FormLabel>
-                              <FormControl>
-                                <div className="relative group">
-                                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                  <Input 
-                                    className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                    placeholder="Enter your full name" 
-                                    {...field} 
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Password</FormLabel>
+                            <FormControl>
+                              <div className="relative group">
+                                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                <Input 
+                                  className="pl-10 pr-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
+                                  type={showPassword ? "text" : "password"} 
+                                  placeholder="Create password" 
+                                  {...field} 
+                                  onChange={(e) => {
+                                    field.onChange(e);
+                                    if (e.target.value) {
+                                      setPasswordStrength(AuthModel.validatePasswordStrength(e.target.value));
+                                    } else {
+                                      setPasswordStrength(null);
+                                    }
+                                  }}
+                                />
+                                <button 
+                                  type="button"
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                  onClick={() => setShowPassword(!showPassword)}
+                                >
+                                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <FormField
-                          control={registerForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-medium">Phone or Email</FormLabel>
-                              <FormControl>
-                                <div className="relative group">
-                                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                  <Input 
-                                    className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                    placeholder="+250 xxx xxx xxx or email" 
-                                    {...field} 
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <FormField
+                        control={registerForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
+                            <FormControl>
+                              <div className="relative group">
+                                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                <Input 
+                                  className="pl-10 pr-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
+                                  type={showConfirmPassword ? "text" : "password"} 
+                                  placeholder="Confirm password" 
+                                  {...field} 
+                                />
+                                <button 
+                                  type="button"
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                >
+                                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <PasswordStrengthIndicator score={passwordStrength?.score || 0} maxScore={5} />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <FormField
-                            control={registerForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-sm font-medium">Password</FormLabel>
-                                <FormControl>
-                                  <div className="relative group">
-                                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                    <Input 
-                                      className="pl-10 pr-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                      type={showPassword ? "text" : "password"} 
-                                      placeholder="Create password" 
-                                      {...field} 
-                                      onChange={(e) => {
-                                        field.onChange(e);
-                                        if (e.target.value) {
-                                          setPasswordStrength(AuthModel.validatePasswordStrength(e.target.value));
-                                        } else {
-                                          setPasswordStrength(null);
-                                        }
-                                      }}
-                                    />
-                                    <button 
-                                      type="button"
-                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                      onClick={() => setShowPassword(!showPassword)}
-                                    >
-                                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
+                    <label className="flex items-start gap-2 cursor-pointer text-sm">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-muted-foreground/30 h-4 w-4 text-primary focus:ring-primary/20 mt-0.5"
+                      />
+                      <span className="text-muted-foreground leading-tight">
+                        I agree to the <a href="#" className="text-primary hover:underline font-medium">Terms of Service</a> and <a href="#" className="text-primary hover:underline font-medium">Privacy Policy</a>
+                      </span>
+                    </label>
 
-                          <FormField
-                            control={registerForm.control}
-                            name="confirmPassword"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-sm font-medium">Confirm Password</FormLabel>
-                                <FormControl>
-                                  <div className="relative group">
-                                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                    <Input 
-                                      className="pl-10 pr-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                      type={showConfirmPassword ? "text" : "password"} 
-                                      placeholder="Confirm password" 
-                                      {...field} 
-                                    />
-                                    <button 
-                                      type="button"
-                                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    >
-                                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
-                        <PasswordStrengthIndicator score={passwordStrength?.score || 0} maxScore={5} />
-
-                        <label className="flex items-start gap-2 cursor-pointer text-sm">
-                          <input 
-                            type="checkbox" 
-                            className="rounded border-muted-foreground/30 h-4 w-4 text-primary focus:ring-primary/20 mt-0.5"
-                          />
-                          <span className="text-muted-foreground leading-tight">
-                            I agree to the <a href="#" className="text-primary hover:underline font-medium">Terms of Service</a> and <a href="#" className="text-primary hover:underline font-medium">Privacy Policy</a>
-                          </span>
-                        </label>
-
-                        <Button 
-                          type="submit" 
-                          className="w-full h-12 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300" 
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                              Creating account...
-                            </>
-                          ) : (
-                            <>
-                              Create Account
-                              <ArrowRight className="ml-2 h-5 w-5" />
-                            </>
-                          )}
-                        </Button>
-                      </form>
-                    </Form>
-                  </motion.div>
-                </TabsContent>
-              </AnimatePresence>
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300" 
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        <>
+                          Create Account
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
             </Tabs>
           </div>
         </div>

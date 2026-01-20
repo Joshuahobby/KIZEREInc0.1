@@ -76,12 +76,10 @@ export function Header() {
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <Link href="/">
             <a className="flex items-center gap-2">
               <Logo className="h-8 w-8" />
               <span className="text-xl font-bold">KIZERE</span>
             </a>
-          </Link>
         </div>
 
         {/* Desktop Navigation */}

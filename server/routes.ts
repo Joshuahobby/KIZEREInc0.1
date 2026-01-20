@@ -2935,6 +2935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Unified admin dashboard statistics endpoint
   app.get("/api/admin/stats", requireAdmin, async (req, res) => {
     try {
+      console.log('[ADMIN STATS] Starting to fetch unified dashboard statistics...');
       logger.info('Admin requesting unified dashboard statistics');
       
       // Get all users
@@ -2984,10 +2985,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      logger.error('Error fetching unified admin stats', { error });
+      logger.error('Error fetching unified admin stats', { 
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       res.status(500).json({ 
         message: "Failed to fetch admin dashboard statistics",
-        error: error instanceof Error ? error.message : "Unknown error"
+        details: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
