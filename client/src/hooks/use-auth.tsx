@@ -276,6 +276,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       setUser(null);
       setError(null);
+      
+      // Clear all query cache to prevent stale data
+      queryClient.clear();
+      
+      // Clear all local and session storage for a fresh start
+      localStorage.clear();
+      sessionStorage.clear();
+      
       setLocation("/");
       
       toast({

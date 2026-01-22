@@ -6,6 +6,8 @@ import {
   signOut, 
   onAuthStateChanged, 
   getRedirectResult,
+  setPersistence,
+  browserSessionPersistence,
   User,
   Auth
 } from "firebase/auth";
@@ -57,6 +59,16 @@ console.log('[Firebase] Successfully initialized Firebase app');
 // Initialize Auth
 const auth = getAuth(app);
 
+// Set persistence to session (logs out when browser/tab is closed)
+// This addresses the issue where users were auto-logged in 48 hours later
+setPersistence(auth, browserSessionPersistence)
+  .then(() => {
+    console.log('[Firebase] Persistence set to browserSessionPersistence');
+  })
+  .catch((error) => {
+    console.error('[Firebase] Failed to set persistence:', error);
+  });
+
 // Google provider for authentication
 const googleProvider = new GoogleAuthProvider();
 
@@ -94,7 +106,12 @@ export async function logOut() {
   try {
     console.log('[Firebase] Signing out user');
     await signOut(auth);
-    console.log('[Firebase] User signed out successfully');
+    
+    // Explicitly clear auth-related localStorage items
+    localStorage.removeItem('last_email');
+    localStorage.removeItem('firebase_auth_redirect');
+    
+    console.log('[Firebase] User signed out and storage cleared successfully');
     return true;
   } catch (error) {
     console.error('[Firebase] Error signing out:', error);
