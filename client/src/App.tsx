@@ -31,7 +31,7 @@ import ProfilePage from "@/pages/profile";
 import IdentityVerification from "@/pages/identity-verification";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { AuthProvider } from "@/hooks/use-auth";
 
 // Import our new transition components
