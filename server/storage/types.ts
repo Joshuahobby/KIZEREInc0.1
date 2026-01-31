@@ -62,13 +62,6 @@ export interface IStorage {
   updateRole(id: number, role: Partial<Role>): Promise<Role | undefined>;
   deleteRole(id: number): Promise<boolean>;
   
-  // Verification requests
-  getVerificationRequest(id: number): Promise<VerificationRequest | undefined>;
-  getUserVerificationRequests(userId: number): Promise<VerificationRequest[]>;
-  getPendingVerificationRequests(): Promise<(VerificationRequest & { user: User })[]>;
-  createVerificationRequest(request: InsertVerificationRequest): Promise<VerificationRequest>;
-  updateVerificationRequest(id: number, request: Partial<VerificationRequest>): Promise<VerificationRequest | undefined>;
-  
   // Status changes
   getUserStatusHistory(userId: number): Promise<StatusChange[]>;
   createStatusChange(change: InsertStatusChange): Promise<StatusChange>;
@@ -99,6 +92,7 @@ export interface IStorage {
   getReportsWithFilters(options: any): Promise<{ reports: Report[]; total: number; page: number; totalPages: number }>;
   getReportWithRelatedData(id: number): Promise<any>;
   generateReportCSV(): Promise<string>;
+  findPotentialMatches(reportId: number): Promise<any[]>;
   
   // Notification methods
   getNotification(id: number): Promise<Notification | undefined>;

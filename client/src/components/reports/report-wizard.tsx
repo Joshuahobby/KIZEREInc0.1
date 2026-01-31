@@ -59,6 +59,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
       category: "Other",
       description: "",
       location: "",
+      uniqueIdentifier: "",
       date: new Date().toISOString().split("T")[0],
       contactInfo: "",
       status: "Open"
@@ -156,6 +157,20 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                         />
                       </FormControl>
                       <FormDescription>Min 10 characters.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="uniqueIdentifier"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Unique Identifier (Optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Serial Number, IMEI, ID Number" {...field} />
+                      </FormControl>
+                      <FormDescription>Helping us find an exact match faster.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

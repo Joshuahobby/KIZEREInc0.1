@@ -75,11 +75,15 @@ export function setupSecurityMiddleware(app: Express) {
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://apis.google.com", "https://*.firebaseapp.com", "https://*.gstatic.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:", "https://cdn.jsdelivr.net", "https://apis.google.com", "https://*.firebaseapp.com", "https://*.gstatic.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        imgSrc: ["'self'", "data:", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com"],
+        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com"],
         connectSrc: ["'self'", 
+          "blob:",
+          "https://cdn.jsdelivr.net",
+          "https://tessdata.projectnaptha.com",
+          "https://res.cloudinary.com",
           "https://*.googleapis.com", 
           "https://*.firebaseio.com",
           "https://*.firebaseapp.com",
@@ -91,6 +95,7 @@ export function setupSecurityMiddleware(app: Express) {
           "wss://*.replit.com"
         ],
         frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
+        workerSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net"],
         formAction: ["'self'", "https://accounts.google.com"],
         childSrc: ["'self'", "blob:", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com"]
       }
@@ -99,7 +104,7 @@ export function setupSecurityMiddleware(app: Express) {
     hsts: process.env.NODE_ENV === 'production',
     // Allow Replit iframe embedding
     crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    crossOriginOpenerPolicy: { policy: "unsafe-none" },
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
   

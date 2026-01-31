@@ -271,9 +271,8 @@ router.post("/users", async (req, res) => {
 
 router.get("/verification-requests", async (req, res) => {
   try {
-    const page = parseInt(req.query.page as string) || 1;
-    const pageSize = parseInt(req.query.pageSize as string) || 10;
-    const result = await storage.getPendingVerificationRequests(page, pageSize);
+    // Current storage implementation doesn't support pagination for pending requests yet, returns all
+    const result = await storage.getPendingVerificationRequests();
     res.json(result);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -296,12 +295,7 @@ router.patch("/verification-requests/:id", async (req, res) => {
     const { status, notes } = req.body;
     const adminId = req.user!.id;
     
-    const updatedRequest = await storage.updateVerificationRequest(requestId, {
-      status,
-      notes,
-      reviewedBy: adminId,
-      reviewedAt: new Date()
-    });
+    const updatedRequest = await storage.updateVerificationRequestStatus(requestId, status, adminId, notes);
     
     if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
     

@@ -68,6 +68,13 @@ export default function LostFound() {
   });
   const debouncedSearch = useDebounce(searchQuery, 300);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Fetch user's registered items
+  const { data: userItems } = useQuery<any[]>({
+    queryKey: ['/api/items'],
+    enabled: !!user,
+  });
   
   // Get initial type from URL params
   const params = new URLSearchParams(location.split('?')[1]);
@@ -178,9 +185,19 @@ export default function LostFound() {
   });
   
   // Handle dialog open for lost or found items
-  const handleOpenDialog = (type: "lost" | "found") => {
+  const handleOpenDialog = (type: "lost" | "found", prefillData?: any) => {
     setDialogType(type);
-    form.setValue('type', type);
+    form.reset({
+      type: type,
+      title: prefillData?.name || '',
+      category: prefillData?.category || 'Other',
+      description: prefillData?.description || '',
+      location: prefillData?.location || '',
+      date: format(new Date(), 'yyyy-MM-dd'),
+      contactInfo: '',
+      itemId: prefillData?.id || undefined,
+      uniqueIdentifier: prefillData?.uniqueIdentifier || '',
+    } as any);
     setOpenDialog(true);
   };
   
@@ -254,6 +271,60 @@ export default function LostFound() {
                   </Button>
                 </CardContent>
               </Card>
+
+              {/* Report from My Items Card */}
+              {userItems && userItems.length > 0 && (
+                <Card className="flex-1 border-primary/20 bg-primary/5">
+                  <CardContent className="p-6 flex flex-col items-center text-center">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <Plus className="h-10 w-10 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-medium text-neutral-900">Report from My Items</h2>
+                    <p className="mt-2 text-neutral-500 text-sm">Quickly report one of your registered items as lost. Details will be pre-filled.</p>
+                    <div className="mt-6 flex flex-wrap justify-center gap-2">
+                      {userItems.slice(0, 3).map(item => (
+                        <Button 
+                          key={item.id}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenDialog("lost", item)}
+                          className="text-xs"
+                        >
+                          {item.name}
+                        </Button>
+                      ))}
+                      {userItems.length > 3 && (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="link" size="sm" className="text-xs text-primary">
+                              View all {userItems.length} items
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Select an Item to Report</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-2 max-h-[400px] overflow-y-auto p-1">
+                              {userItems.map(item => (
+                                <Button 
+                                  key={item.id}
+                                  variant="ghost"
+                                  className="justify-start h-auto p-4 border border-neutral-100 hover:border-primary/50"
+                                  onClick={() => {
+                                    handleOpenDialog("lost", item);
+                                  }}
+                                >
+                                  <div className="text-left font-medium">{item.name}</div>
+                                </Button>
+                              ))}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
             
             {/* Recent Lost & Found Items */}

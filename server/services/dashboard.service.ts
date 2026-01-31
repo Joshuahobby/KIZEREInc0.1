@@ -1,6 +1,8 @@
 import { storage } from '../storage';
+import { db } from '../db';
+import { sql } from 'drizzle-orm';
 import { createLogger } from '../utils/logger';
-import { UserRole } from '../../shared/schema';
+import { UserRole, moderationReports } from '../../shared/schema';
 
 const logger = createLogger('DashboardService');
 
@@ -233,8 +235,8 @@ export class DashboardService {
       // Count unread notifications
       const unreadNotifications = notifications.filter(n => !n.isRead).length;
       
-      // Return user stats
-      return {
+      // Return stats based on role
+      const stats: any = {
         totalItems,
         totalLostReports,
         totalFoundReports,
@@ -243,6 +245,62 @@ export class DashboardService {
         pendingPayments,
         unreadNotifications
       };
+
+      // Add Admin/Agent/Moderator specific stats if needed
+      if (role === 'Admin' || role === 'Agent' || role === 'Moderator') {
+        const allReports = await storage.getAllReports();
+        stats.allOpenReports = allReports.filter(r => r.status === 'Open').length;
+        
+        if (role === 'Admin' || role === 'Moderator') {
+          // Add moderation stats
+          const [modStats] = await db.select({ 
+            pending: sql<number>`count(*) filter (where status = 'pending')`,
+            total: sql<number>`count(*)`
+          }).from(moderationReports);
+          
+          stats.moderation = {
+            pending: Number(modStats?.pending || 0),
+            total: Number(modStats?.total || 0)
+          };
+        }
+
+        if (role === 'Admin') {
+          const allUsers = await storage.getAllUsers();
+          stats.totalUsers = allUsers.length;
+          stats.pendingVerifications = allUsers.filter(u => u.verificationStatus === 'pending').length;
+        }
+      }
+
+      // Add registration trends for Business or high-volume Subscribers
+      if (role === 'Business' || (role === 'Subscriber' && totalItems >= 5)) {
+        const registrationTrends = [];
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+
+        for (let i = 5; i >= 0; i--) {
+          let month = thisMonth - i;
+          let year = thisYear;
+          if (month < 0) {
+            month += 12;
+            year -= 1;
+          }
+
+          const count = items.filter(item => {
+            const d = new Date(item.registeredAt);
+            return d.getMonth() === month && d.getFullYear() === year;
+          }).length;
+
+          registrationTrends.push({
+            date: `${monthNames[month]}`,
+            count
+          });
+        }
+        stats.registrationTrends = registrationTrends;
+      }
+      
+      return stats;
     } catch (error) {
       logger.error('Error getting user dashboard stats', { error, userId });
       throw error;

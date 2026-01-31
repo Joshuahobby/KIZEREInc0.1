@@ -52,4 +52,37 @@ router.get('/reports', async (req: Request, res: Response) => {
   }
 });
 
+// PATCH /api/moderation/reports/:id - Update report status
+router.patch('/reports/:id', async (req: Request, res: Response) => {
+  try {
+    // Basic admin/moderator check
+    if (req.user?.role !== 'Admin' && req.user?.role !== 'Moderator') {
+       return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const reportId = parseInt(req.params.id);
+    const { status, actionTaken } = req.body;
+
+    const [updatedReport] = await db.update(moderationReports)
+      .set({
+        status,
+        actionTaken,
+        resolvedAt: new Date(),
+        resolvedBy: req.user.id
+      })
+      .where(eq(moderationReports.id, reportId))
+      .returning();
+
+    if (!updatedReport) {
+      return res.status(404).json({ message: 'Report not found' });
+    }
+
+    logger.info('Moderation report updated', { reportId, status });
+    res.json(updatedReport);
+  } catch (error) {
+    logger.error('Failed to update moderation report', { error });
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 export default router;

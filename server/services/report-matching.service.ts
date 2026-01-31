@@ -47,27 +47,31 @@ export class ReportMatchingService {
     }
   }
 
-  /**
-   * Basic scoring logic based on title, description and location
-   */
   private static calculateMatchScore(r1: Report, r2: Report): number {
     let score = 0;
 
-    // 1. Precise Item ID match (highest weight)
+    // 1. Precise Unique Identifier match (Critical)
+    // If both have unique identifiers and they match exactly, it's a near-certain match
+    if (r1.uniqueIdentifier && r2.uniqueIdentifier && 
+        r1.uniqueIdentifier.trim().toLowerCase() === r2.uniqueIdentifier.trim().toLowerCase()) {
+      score += 95;
+    }
+
+    // 2. Precise Item ID match (High weight)
     if (r1.itemId && r2.itemId && r1.itemId === r2.itemId) {
       score += 90;
     }
 
-    // 2. Title keyword overlap
-    const words1 = new Set(r1.title.toLowerCase().split(/\s+/));
-    const words2 = new Set(r2.title.toLowerCase().split(/\s+/));
-    const commonWords = Array.from(words1).filter(w => words2.has(w) && w.length > 3);
+    // 3. Title keyword overlap
+    const words1 = new Set(r1.title.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+    const words2 = new Set(r2.title.toLowerCase().split(/\s+/).filter(w => w.length > 2));
+    const commonWords = Array.from(words1).filter(w => words2.has(w));
     
     if (commonWords.length > 0) {
       score += Math.min(40, commonWords.length * 15);
     }
 
-    // 3. Location overlap
+    // 4. Location overlap
     if (r1.location && r2.location) {
       const loc1 = r1.location.toLowerCase();
       const loc2 = r2.location.toLowerCase();
@@ -76,7 +80,8 @@ export class ReportMatchingService {
       }
     }
 
-    return score;
+    // Cap score at 100
+    return Math.min(100, score);
   }
 
   /**

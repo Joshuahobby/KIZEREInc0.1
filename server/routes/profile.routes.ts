@@ -2,6 +2,7 @@ import { Router } from "express";
 import { storage } from "../storage";
 import { createLogger } from "../utils/logger";
 import { UserService } from "../services/user.service";
+import { comparePasswords } from "../utils/auth-crypto";
 
 const logger = createLogger('ProfileRoutes');
 const router = Router();
@@ -35,6 +36,40 @@ router.put("/", async (req, res) => {
     res.json(userWithoutPassword);
   } catch (error: any) {
     res.status(500).json({ message: "Failed to update user profile" });
+  }
+});
+
+/**
+ * Change user password
+ */
+router.put("/password", async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Current password and new password are required" });
+    }
+    
+    // Get the current user with password
+    const user = await UserService.getUserById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    
+    // Verify current password
+    const isPasswordValid = await comparePasswords(currentPassword, user.password);
+    
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Current password is incorrect" });
+    }
+    
+    // Update with new password
+    await UserService.updateUser(userId, { password: newPassword });
+    
+    logger.info('User changed their password', { userId });
+    res.json({ message: "Password updated successfully" });
+  } catch (error: any) {
+    logger.error('Error changing user password', { error, userId: req.user?.id });
+    res.status(500).json({ message: "Failed to change password" });
   }
 });
 

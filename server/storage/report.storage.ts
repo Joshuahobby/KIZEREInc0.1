@@ -65,20 +65,23 @@ export async function getReportStats(): Promise<any> {
 
 export async function getReportsWithFilters(options: {
   page: number; limit: number; sortBy?: string; sortOrder?: 'asc' | 'desc';
-  search?: string; type?: string; status?: string; dateRange?: { start: Date; end: Date } | null;
-  userId?: number; itemId?: number; location?: string;
+  search?: string; type?: string; status?: string; category?: string;
+  dateRange?: { start: Date; end: Date } | null;
+  userId?: number; itemId?: number; location?: string; uniqueIdentifier?: string;
 }): Promise<{ reports: Report[]; total: number; page: number; totalPages: number }> {
-  const { page, limit, sortBy = 'reportedAt', sortOrder = 'desc', search, type, status, dateRange, userId, itemId, location } = options;
+  const { page, limit, sortBy = 'reportedAt', sortOrder = 'desc', search, type, status, category, dateRange, userId, itemId, location, uniqueIdentifier } = options;
   const offset = (page - 1) * limit;
   const conditions = [];
   
   // Basic filters
   if (type) conditions.push(eq(reports.type, type));
   if (status) conditions.push(eq(reports.status, status));
+  if (category) conditions.push(eq(reports.category, category));
   if (dateRange) conditions.push(and(sql`${reports.date} >= ${dateRange.start}`, sql`${reports.date} <= ${dateRange.end}`));
   if (userId) conditions.push(eq(reports.userId, userId));
   if (itemId) conditions.push(eq(reports.itemId, itemId));
   if (location) conditions.push(like(reports.location, `%${location}%`));
+  if (uniqueIdentifier) conditions.push(eq(reports.uniqueIdentifier, uniqueIdentifier));
   
   // Search logic
   if (search) {
@@ -93,15 +96,34 @@ export async function getReportsWithFilters(options: {
     }
   }
 
-  const countResult = await db.select({ count: sql`count(*)::int` }).from(reports).where(conditions.length ? and(...conditions) : undefined);
+  const countResult = await db.select({ count: sql<number>`count(*)` }).from(reports).where(conditions.length ? and(...conditions) : undefined);
   const total = Number(countResult[0]?.count || 0);
   const totalPages = Math.ceil(total / limit);
   
   // Build main query
-  let querySelection: any = {
-    ...reports,
+  // We list columns explicitly to avoid issues with spreading table objects as selection objects
+  // and to ensure better compatibility with various Drizzle versions.
+  const querySelection = {
+    id: reports.id,
+    userId: reports.userId,
+    itemId: reports.itemId,
+    type: reports.type,
+    category: reports.category,
+    title: reports.title,
+    description: reports.description,
+    location: reports.location,
+    date: reports.date,
+    status: reports.status,
+    contactInfo: reports.contactInfo,
+    receiptNumber: reports.receiptNumber,
+    imageUrls: reports.imageUrls,
+    expirationDate: reports.expirationDate,
+    gracePeriodEnd: reports.gracePeriodEnd,
+    paymentStatus: reports.paymentStatus,
+    uniqueIdentifier: reports.uniqueIdentifier,
+    reportedAt: reports.reportedAt,
     claimCount: sql<number>`count(${claims.id})`.mapWith(Number)
-  };
+  } as any;
 
   // Add relevance score if searching
   if (search) {
@@ -166,4 +188,51 @@ export async function generateReportCSV(): Promise<string> {
     new Date(r.reportedAt).toISOString()
   ]);
   return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+}
+
+export async function findPotentialMatches(reportId: number): Promise<any[]> {
+  const sourceReport = await getReport(reportId);
+  if (!sourceReport) return [];
+
+  const oppositeType = sourceReport.type === 'lost' ? 'found' : 'lost';
+  const category = sourceReport.category;
+  
+  // Get reports of opposite type in the same category
+  const candidates = await db.select()
+    .from(reports)
+    .where(and(
+      eq(reports.type, oppositeType),
+      eq(reports.category, category),
+      eq(reports.status, 'Open')
+    ));
+
+  // Simple keyword matching for relevance
+  const keywords = sourceReport.title.toLowerCase().split(/\s+/).filter(k => k.length > 3);
+  
+  const matches = candidates.map(c => {
+    let score = 0;
+    
+    // Exact Unique Identifier match
+    if (sourceReport.uniqueIdentifier && c.uniqueIdentifier && 
+        sourceReport.uniqueIdentifier.trim().toLowerCase() === c.uniqueIdentifier.trim().toLowerCase()) {
+      score += 95;
+    }
+
+    // Exact Item ID match
+    if (sourceReport.itemId && c.itemId && sourceReport.itemId === c.itemId) {
+      score += 90;
+    }
+
+    const cTitle = c.title.toLowerCase();
+    const cDesc = (c.description || "").toLowerCase();
+    
+    keywords.forEach(kw => {
+      if (cTitle.includes(kw)) score += 5;
+      if (cDesc.includes(kw)) score += 2;
+    });
+
+    return { ...c, matchScore: Math.min(100, score) };
+  });
+
+  return matches.sort((a, b) => b.matchScore - a.matchScore).slice(0, 5);
 }

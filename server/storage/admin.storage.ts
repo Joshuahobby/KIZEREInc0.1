@@ -112,7 +112,7 @@ export async function getPendingVerificationRequests(page: number, pageSize: num
 }
 
 export async function createVerificationRequest(request: InsertVerificationRequest): Promise<VerificationRequest> {
-  const [newRequest] = await db.insert(verificationRequests).values({ ...request, documentUrls: request.documentUrls || [] }).returning();
+  const [newRequest] = await db.insert(verificationRequests).values(request).returning();
   return newRequest;
 }
 

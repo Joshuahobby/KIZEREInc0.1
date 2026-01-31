@@ -66,8 +66,10 @@ import { QRCodeGenerator } from "@/components/item-registration/qr-code-generato
 // Schema & Constants
 import { insertItemSchema } from "@shared/schema";
 
-const categories = [
+const CATEGORIES = [
   "Electronics",
+  "Phones",
+  "Computers",
   "Documents",
   "Jewelry",
   "Accessories",
@@ -79,14 +81,19 @@ const categories = [
   "Other"
 ];
 
-const subCategories: Record<string, string[]> = {
-  Electronics: ["Smartphone", "Laptop", "Camera", "Tablet", "Smartwatch", "Headphones", "Other"],
+const SUB_CATEGORIES: Record<string, string[]> = {
+  Electronics: ["Camera", "Smartwatch", "Headphones", "Other"],
+  Phones: ["Smartphone", "Tablet", "Feature Phone", "Other"],
+  Computers: ["Laptop", "Desktop", "Monitor", "Other"],
   Documents: ["ID Card", "Passport", "Driver's License", "Certificate", "Other"],
   Jewelry: ["Ring", "Necklace", "Bracelet", "Watch", "Other"],
   Accessories: ["Watch", "Bag", "Wallet", "Glasses", "Other"],
   Clothing: ["Outerwear", "Formal", "Casual", "Sports", "Other"],
   Transportation: ["Bicycle", "Motorcycle", "Car", "Other"],
-  Other: ["Miscellaneous"]
+  Bags: ["Other"],
+  Keys: ["Other"],
+  Wallets: ["Other"],
+  Other: ["Other"],
 };
 
 const formSchema = insertItemSchema.extend({
@@ -94,7 +101,9 @@ const formSchema = insertItemSchema.extend({
   // Ensure name and uniqueIdentifier meet minimum lengths for better data quality
   name: z.string().min(2, "Item name must be at least 2 characters"),
   uniqueIdentifier: z.string().min(3, "Identifier must be at least 3 characters"),
-  description: z.string().min(10, "Please provide a more detailed description").optional(),
+  description: z.string().optional().refine(val => !val || val.length >= 10, {
+    message: "Description must be at least 10 characters if provided"
+  }),
 });
 
 type ItemRegistrationValues = z.infer<typeof formSchema>;
@@ -160,6 +169,7 @@ export default function ItemRegistrationPage() {
     if (itemImages.length > 0) completedFields++;
     if (ownershipDocuments.length > 0) completedFields++;
     
+    // Weight essential fields more if needed, but for now just count
     setCompletion(Math.round((completedFields / totalFields) * 100));
   }, [watchedValues, itemImages, ownershipDocuments]);
 
@@ -256,7 +266,7 @@ export default function ItemRegistrationPage() {
       });
 
       // 4. Initialize Payment
-      setPaymentStatus("pending");
+      console.log("[Registration] Initializing payment for item:", itemResponse.id);
       const paymentResponse = await PaymentService.initializePayment({
         type: "registration",
         itemId: itemResponse.id
@@ -313,7 +323,7 @@ export default function ItemRegistrationPage() {
             {autoSaving && (
               <div className="flex items-center text-xs text-neutral-400 bg-neutral-50 px-3 py-1 rounded-full border">
                 <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                {t('item_draft_saved')}
+                {t('registration.item_draft_saved')}
               </div>
             )}
           </div>
@@ -339,7 +349,7 @@ export default function ItemRegistrationPage() {
                           )}>
                             {getSectionIcon("basic-info", 1)}
                           </div>
-                          <span className="font-semibold text-lg text-neutral-800">{t('report_item_details')}</span>
+                          <span className="font-semibold text-lg text-neutral-800">{t('registration.report_item_details')}</span>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-6 py-4 space-y-6 border-t bg-neutral-50/30">
@@ -349,7 +359,7 @@ export default function ItemRegistrationPage() {
                             name="name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t('item_name')} <span className="text-red-500">*</span></FormLabel>
+                                <FormLabel>{t('registration.item_name')} <span className="text-red-500">*</span></FormLabel>
                                 <FormControl>
                                   <Input placeholder="e.g. MacBook Pro M2, Rolex Datejust" {...field} />
                                 </FormControl>
@@ -359,21 +369,53 @@ export default function ItemRegistrationPage() {
                           />
 
                           <FormField
+                          control={form.control}
+                          name="category"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('registration.item_category')} <span className="text-red-500">*</span></FormLabel>
+                              <Select 
+                                onValueChange={(val) => {
+                                  field.onChange(val);
+                                  form.setValue('subCategory', ''); // Reset subcategory on category change
+                                }} 
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder={t('registration.item_category')} />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {CATEGORIES.map((c) => (
+                                    <SelectItem key={c} value={c}>
+                                      {t(`registration.item_category_${c.toLowerCase()}`, c)}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {watchedValues.category && (
+                          <FormField
                             control={form.control}
-                            name="category"
+                            name="subCategory"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t('item_category')} <span className="text-red-500">*</span></FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormLabel>{t('registration.item_subcategory')} <span className="text-red-500">*</span></FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder={t('filter')} />
+                                      <SelectValue placeholder={t('registration.item_subcategory')} />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {categories.map(c => (
-                                      <SelectItem key={c} value={c}>
-                                        {t(`item_category_${c.toLowerCase()}`, c)}
+                                    {SUB_CATEGORIES[watchedValues.category as keyof typeof SUB_CATEGORIES]?.map((sc) => (
+                                      <SelectItem key={sc} value={sc}>
+                                        {t(`registration.item_subcategory_${sc.toLowerCase().replace(/ /g, '_').replace(/'/g, '')}`, sc)}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -382,14 +424,15 @@ export default function ItemRegistrationPage() {
                               </FormItem>
                             )}
                           />
-                        </div>
+                        )}
+                      </div>
 
                         <FormField
                           control={form.control}
                           name="uniqueIdentifier"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('item_uuid')} <span className="text-red-500">*</span></FormLabel>
+                              <FormLabel>{t('registration.item_uuid')} <span className="text-red-500">*</span></FormLabel>
                               <div className="space-y-3">
                                 <FormControl>
                                   <div className="relative">
@@ -397,12 +440,12 @@ export default function ItemRegistrationPage() {
                                     <Fingerprint className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
                                   </div>
                                 </FormControl>
-                                <FormDescription>{t('item_registration_description', 'This identifier is used to verify ownership globally.')}</FormDescription>
+                                <FormDescription>{t('registration.item_registration_description')}</FormDescription>
                                 <FormMessage />
                                 
-                                <div className="p-4 bg-white border rounded-lg border-neutral-100 shadow-sm">
-                                  <SmartIDRecognizer onIdentifierSelected={handleIdentifierDetected} />
-                                </div>
+                                  <div className="p-4 bg-neutral-50/50 border rounded-lg border-neutral-200">
+                                    <SmartIDRecognizer onIdentifierSelected={handleIdentifierDetected} showHeader={false} />
+                                  </div>
                               </div>
                             </FormItem>
                           )}
@@ -413,7 +456,7 @@ export default function ItemRegistrationPage() {
                           name="description"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('item_description')}</FormLabel>
+                              <FormLabel>{t('registration.item_description')}</FormLabel>
                               <FormControl>
                                 <Textarea 
                                   placeholder="Provide distinguishable features (scratches, repairs, markings)..." 
@@ -438,11 +481,11 @@ export default function ItemRegistrationPage() {
                           )}>
                             {getSectionIcon("media", 2)}
                           </div>
-                          <span className="font-semibold text-lg text-neutral-800">{t('item_images')}</span>
+                          <span className="font-semibold text-lg text-neutral-800">{t('registration.item_images')}</span>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-6 py-4 space-y-4 border-t bg-neutral-50/30">
-                        <BatchImageUpload onImagesChange={setItemImages} maxFiles={5} />
+                        <BatchImageUpload onImagesChange={setItemImages} maxFiles={5} showHeader={false} />
                       </AccordionContent>
                     </AccordionItem>
 
@@ -456,11 +499,11 @@ export default function ItemRegistrationPage() {
                           )}>
                             {getSectionIcon("ownership", 3)}
                           </div>
-                          <span className="font-semibold text-lg text-neutral-800">{t('ownership_title')}</span>
+                          <span className="font-semibold text-lg text-neutral-800">{t('registration.ownership_title')}</span>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-6 py-4 space-y-4 border-t bg-neutral-50/30">
-                        <OwnershipChain onDocumentsChange={setOwnershipDocuments} />
+                        <OwnershipChain onDocumentsChange={setOwnershipDocuments} showHeader={false} />
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
@@ -469,15 +512,15 @@ export default function ItemRegistrationPage() {
             </div>
 
             {/* Right: Summary & Action Sidebar */}
-            <div className="space-y-6">
-              <Card className="sticky top-24 border-neutral-200 shadow-lg overflow-hidden">
-                <CardHeader className="bg-neutral-900 text-white">
-                  <CardTitle className="text-lg">{t('item_registration_summary')}</CardTitle>
+            <div className="space-y-6 lg:sticky lg:top-28 self-start z-30">
+              <Card className="border-neutral-200 shadow-xl overflow-hidden shadow-lg">
+                <CardHeader className="bg-neutral-900 text-white py-3 lg:py-4">
+                  <CardTitle className="text-lg">{t('registration.item_registration_summary')}</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-neutral-500">{t('item_progress')}</span>
+                      <span className="text-neutral-500">{t('registration.item_progress')}</span>
                       <span className="font-medium">{completion}%</span>
                     </div>
                     <Progress value={completion} className="h-1.5" />
@@ -485,30 +528,30 @@ export default function ItemRegistrationPage() {
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between text-sm py-2 border-b">
-                      <span className="text-neutral-500">{t('item_name')}</span>
+                      <span className="text-neutral-500">{t('registration.item_name')}</span>
                       <span className="font-medium truncate max-w-[120px]">{watchedValues.name || "-"}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm py-2 border-b">
-                      <span className="text-neutral-500">{t('item_category')}</span>
-                      <span className="font-medium text-sky-600">{t(`item_category_${watchedValues.category?.toLowerCase()}`, watchedValues.category) || "-"}</span>
+                      <span className="text-neutral-500">{t('registration.item_category')}</span>
+                      <span className="font-medium text-sky-600">{t(`registration.item_category_${watchedValues.category?.toLowerCase()}`, watchedValues.category) || "-"}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm py-2 border-b">
-                      <span className="text-neutral-500">{t('item_images')}</span>
+                      <span className="text-neutral-500">{t('registration.item_images')}</span>
                       <span className="font-medium">{itemImages.length} uploaded</span>
                     </div>
                   </div>
 
                   <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">{t('item_register_fee')}</span>
+                      <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">{t('registration.item_register_fee')}</span>
                       <span className="text-lg font-bold text-amber-900">2,000 RWF</span>
                     </div>
-                    <p className="text-[10px] text-amber-700">{t('item_fee_description')}</p>
+                    <p className="text-[10px] text-amber-700">{t('registration.item_fee_description')}</p>
                   </div>
 
                   <Button 
                     className="w-full h-12 text-lg font-bold shadow-md bg-neutral-900 hover:bg-neutral-800"
-                    disabled={completion < 80 || registerMutation.isPending}
+                    disabled={completion < 60 || registerMutation.isPending}
                     onClick={form.handleSubmit(onSubmit)}
                   >
                     {registerMutation.isPending ? (
@@ -527,11 +570,11 @@ export default function ItemRegistrationPage() {
                 <CardFooter className="px-6 py-4 bg-neutral-50 border-t flex flex-col gap-2">
                    <div className="flex items-center text-xs text-neutral-500">
                      <CheckCircle className="h-3 w-3 mr-2 text-green-500" />
-                     {t('item_ssl_secured')}
+                     {t('registration.item_ssl_secured')}
                    </div>
                    <div className="flex items-center text-xs text-neutral-500">
                      <CheckCircle className="h-3 w-3 mr-2 text-green-500" />
-                     {t('item_verified_certificate')}
+                     {t('registration.item_verified_certificate')}
                    </div>
                 </CardFooter>
               </Card>
@@ -541,11 +584,12 @@ export default function ItemRegistrationPage() {
                   <CardContent className="p-6">
                     <h3 className="text-sm font-bold mb-4 flex items-center">
                       <QrCode className="h-4 w-4 mr-2" />
-                      {t('item_qr_preview')}
+                      {t('registration.item_qr_preview')}
                     </h3>
                     <QRCodeGenerator 
                       itemIdentifier={watchedValues.uniqueIdentifier} 
                       itemName={watchedValues.name || "Pending Registration"}
+                      showHeader={false}
                     />
                   </CardContent>
                 </Card>

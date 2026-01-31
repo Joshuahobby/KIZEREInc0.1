@@ -9,14 +9,16 @@ import { ColorPicker } from '@/components/ui/color-picker';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { LuDownload, LuRefreshCw, LuQrCode } from 'react-icons/lu';
+import { cn } from '@/lib/utils';
 import QRCode from 'qrcode';
 
 export interface QRCodeGeneratorProps {
   itemIdentifier: string;
   itemName?: string;
+  showHeader?: boolean;
 }
 
-export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorProps) {
+export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true }: QRCodeGeneratorProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,8 +60,8 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
       } catch (error) {
         console.error('Error generating QR code:', error);
         toast({
-          title: t('error_title'),
-          description: t('qr_generation_error'),
+          title: t('common.error'),
+          description: t('registration.qr_generation_error'),
           variant: 'destructive',
         });
       }
@@ -83,14 +85,14 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
       link.click();
       
       toast({
-        title: t('qr_download_success'),
-        description: t('qr_download_success_desc'),
+        title: t('registration.qr_download_success'),
+        description: t('registration.qr_download_success_desc'),
       });
     } catch (error) {
       console.error('Error downloading QR code:', error);
       toast({
-        title: t('error_title'),
-        description: t('qr_download_error'),
+        title: t('common.error'),
+        description: t('registration.qr_download_error'),
         variant: 'destructive',
       });
     }
@@ -104,17 +106,19 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
     setQRValue(qrUrl);
     
     toast({
-      title: t('qr_refreshed'),
-      description: t('qr_refreshed_desc'),
+      title: t('registration.qr_refreshed'),
+      description: t('registration.qr_refreshed_desc'),
     });
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{t('qr_title')}</CardTitle>
-        <CardDescription>{t('qr_description')}</CardDescription>
-      </CardHeader>
+    <Card className={cn("w-full", !showHeader && "border-0 shadow-none bg-transparent")}>
+      {showHeader && (
+        <CardHeader>
+          <CardTitle>{t('registration.qr_title')}</CardTitle>
+          <CardDescription>{t('registration.qr_description')}</CardDescription>
+        </CardHeader>
+      )}
       <CardContent className="space-y-6">
         <div className="flex flex-col items-center justify-center mb-4">
           <div className="border p-4 rounded-md bg-white">
@@ -130,7 +134,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>{t('qr_size')}</Label>
+            <Label>{t('registration.qr_size')}</Label>
             <Slider
               value={[qrOptions.width]}
               min={100}
@@ -146,7 +150,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
           </div>
           
           <div className="space-y-2">
-            <Label>{t('qr_margin')}</Label>
+            <Label>{t('registration.qr_margin')}</Label>
             <Slider
               value={[qrOptions.margin]}
               min={0}
@@ -163,7 +167,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>{t('qr_dark_color')}</Label>
+              <Label>{t('registration.qr_dark_color')}</Label>
               <ColorPicker
                 color={qrOptions.color.dark}
                 onChange={(color) => setQROptions(prev => ({ 
@@ -174,7 +178,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
             </div>
             
             <div className="space-y-2">
-              <Label>{t('qr_light_color')}</Label>
+              <Label>{t('registration.qr_light_color')}</Label>
               <ColorPicker
                 color={qrOptions.color.light}
                 onChange={(color) => setQROptions(prev => ({ 
@@ -196,7 +200,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
                 }))}
               />
               <Label htmlFor="include-name" className="cursor-pointer">
-                {t('qr_include_name')}
+                {t('registration.qr_include_name')}
               </Label>
             </div>
           )}
@@ -205,11 +209,11 @@ export function QRCodeGenerator({ itemIdentifier, itemName }: QRCodeGeneratorPro
       <CardFooter className="flex justify-between">
         <Button variant="outline" onClick={refreshQRCode}>
           <LuRefreshCw className="mr-2 h-4 w-4" />
-          {t('qr_refresh')}
+          {t('registration.qr_refresh')}
         </Button>
         <Button onClick={downloadQRCode}>
           <LuDownload className="mr-2 h-4 w-4" />
-          {t('qr_download')}
+          {t('registration.qr_download')}
         </Button>
       </CardFooter>
     </Card>

@@ -17,14 +17,23 @@ export async function getUserClaims(userId: number): Promise<Claim[]> {
 
 export async function getClaimsReceived(userId: number): Promise<Claim[]> {
   const result = await db.select({
-    claim: claims
+    id: claims.id,
+    userId: claims.userId,
+    reportId: claims.reportId,
+    description: claims.description,
+    imageUrls: claims.imageUrls,
+    status: claims.status,
+    finderNotes: claims.finderNotes,
+    createdAt: claims.createdAt,
+    updatedAt: claims.updatedAt,
+    verifiedAt: claims.verifiedAt,
   })
-  .from(claims)
-  .innerJoin(reports, eq(claims.reportId, reports.id))
-  .where(eq(reports.userId, userId))
-  .orderBy(desc(claims.createdAt));
+    .from(claims)
+    .innerJoin(reports, eq(claims.reportId, reports.id))
+    .where(eq(reports.userId, userId))
+    .orderBy(desc(claims.createdAt));
   
-  return result.map(r => r.claim);
+  return result;
 }
 
 export async function createClaim(claim: InsertClaim): Promise<Claim> {

@@ -70,7 +70,8 @@ router.get("/my-claims", async (req, res) => {
     const claims = await storage.getUserClaims(req.user!.id);
     res.json(claims);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch your claims" });
+    console.error("DEBUG: /api/claims/my-claims error:", error);
+    res.status(500).json({ message: "Failed to fetch your claims", detail: (error as Error).message });
   }
 });
 
@@ -80,7 +81,8 @@ router.get("/received", async (req, res) => {
     const claims = await storage.getClaimsReceived(req.user!.id);
     res.json(claims);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch received claims" });
+    console.error("DEBUG: /api/claims/received error:", error);
+    res.status(500).json({ message: "Failed to fetch received claims", detail: (error as Error).message });
   }
 });
 

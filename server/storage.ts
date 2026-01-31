@@ -98,6 +98,7 @@ export class DatabaseStorage implements IStorage {
   getFoundReports = reportOps.getFoundReports;
   getAllReports = reportOps.getAllReports;
   getReportStats = reportOps.getReportStats;
+  findPotentialMatches = reportOps.findPotentialMatches;
   getReportsWithFilters = reportOps.getReportsWithFilters;
   getReportWithRelatedData = reportOps.getReportWithRelatedData;
   generateReportCSV = reportOps.generateReportCSV;

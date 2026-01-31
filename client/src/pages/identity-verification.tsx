@@ -287,7 +287,7 @@ export default function IdentityVerificationPage() {
                       {requests?.map((req) => (
                         <div key={req.id} className="flex flex-col p-3 bg-white rounded-lg border shadow-sm">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-bold">{req.type}</span>
+                            <span className="text-xs font-bold">{req.documentType}</span>
                             {getStatusBadge(req.status)}
                           </div>
                           <span className="text-[10px] text-neutral-400">{new Date(req.submittedAt).toLocaleDateString()}</span>

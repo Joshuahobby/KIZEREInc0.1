@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Define allowed user roles
-export const userRoles = ['Admin', 'Agent', 'Moderator', 'Subscriber'] as const;
+export const userRoles = ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business'] as const;
 
 // Define account statuses
 export const accountStatuses = ['active', 'pending', 'suspended', 'inactive', 'banned'] as const;
@@ -109,6 +109,7 @@ export const reports = pgTable("reports", {
   date: timestamp("date").notNull(),
   status: text("status").notNull().default('Open'),
   contactInfo: text("contact_info"),
+  uniqueIdentifier: text("unique_identifier"),
   receiptNumber: text("receipt_number").unique(),
   imageUrls: text("image_urls").array(),
   expirationDate: timestamp("expiration_date"),
@@ -323,6 +324,7 @@ export const insertReportSchema = createInsertSchema(reports)
     category: z.enum(itemCategories, {
       errorMap: () => ({ message: "Please select a valid category for this report" })
     }).default('Other'),
+    uniqueIdentifier: z.string().optional(),
   });
 
 // Extended schema for lost item report form with validation
@@ -463,12 +465,16 @@ export const reportModerationStatuses = ['pending', 'reviewed', 'resolved', 'dis
 
 export const moderationReports = pgTable("moderation_reports", {
   id: serial("id").primaryKey(),
+  reportId: integer("report_id").references(() => reports.id),
   itemId: integer("item_id").references(() => items.id),
   claimId: integer("claim_id").references(() => claims.id),
   reporterEmail: text("reporter_email"),
   reason: text("reason").notNull(),
   description: text("description"),
   status: text("status").notNull().default('pending'),
+  actionTaken: text("action_taken"),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
   reviewedBy: integer("reviewed_by").references(() => users.id),
   reviewedAt: timestamp("reviewed_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

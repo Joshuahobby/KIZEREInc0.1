@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/separator';
 import { LuPlus, LuTrash2, LuArrowDown, LuCalendar, LuLoader } from 'react-icons/lu';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { cn } from '@/lib/utils';
 
 export interface OwnershipDocument {
   id: string;
@@ -19,9 +20,10 @@ export interface OwnershipDocument {
 
 export interface OwnershipChainProps {
   onDocumentsChange: (documents: OwnershipDocument[]) => void;
+  showHeader?: boolean;
 }
 
-export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
+export function OwnershipChain({ onDocumentsChange, showHeader = true }: OwnershipChainProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [documents, setDocuments] = useState<OwnershipDocument[]>([]);
@@ -97,8 +99,8 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
     }
     
     toast({
-      title: t('ownership_document_added'),
-      description: t('ownership_document_added_desc'),
+      title: t('registration.ownership_document_added'),
+      description: t('registration.ownership_document_added_desc'),
     });
   };
   
@@ -109,8 +111,8 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
     onDocumentsChange(updatedDocuments);
     
     toast({
-      title: t('ownership_document_removed'),
-      description: t('ownership_document_removed_desc'),
+      title: t('registration.ownership_document_removed'),
+      description: t('registration.ownership_document_removed_desc'),
     });
   };
   
@@ -126,11 +128,13 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
   };
   
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{t('ownership_title')}</CardTitle>
-        <CardDescription>{t('ownership_description')}</CardDescription>
-      </CardHeader>
+    <Card className={cn("w-full", !showHeader && "border-0 shadow-none bg-transparent")}>
+      {showHeader && (
+        <CardHeader>
+          <CardTitle>{t('registration.ownership_title')}</CardTitle>
+          <CardDescription>{t('registration.ownership_description')}</CardDescription>
+        </CardHeader>
+      )}
       <CardContent className="space-y-5">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
@@ -148,7 +152,7 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
               ) : (
                 <>
                   <LuPlus className="mr-2 h-4 w-4" />
-                  {t('ownership_select_file')}
+                  {t('registration.ownership_select_file')}
                 </>
               )}
             </Button>
@@ -158,6 +162,7 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
               ref={fileInputRef}
               onChange={handleFileChange}
               accept="application/pdf,image/*"
+              aria-label={t('registration.ownership_select_file')}
             />
             {currentDocument.file && (
               <div className="text-sm">
@@ -168,21 +173,21 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="doc-title">{t('ownership_doc_title')} *</Label>
+              <Label htmlFor="doc-title">{t('registration.ownership_doc_title')} *</Label>
               <Input
                 id="doc-title"
-                placeholder={t('ownership_doc_title_placeholder')}
+                placeholder={t('registration.ownership_doc_title_placeholder')}
                 value={currentDocument.title}
                 onChange={(e) => setCurrentDocument(prev => ({ ...prev, title: e.target.value }))}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="doc-date">{t('ownership_doc_date')}</Label>
+              <Label htmlFor="doc-date">{t('registration.ownership_doc_date')}</Label>
               <div className="relative">
                 <Input
                   id="doc-date"
                   type="date"
-                  placeholder={t('ownership_doc_date_placeholder')}
+                  placeholder={t('registration.ownership_doc_date_placeholder')}
                   value={currentDocument.date}
                   onChange={(e) => setCurrentDocument(prev => ({ ...prev, date: e.target.value }))}
                 />
@@ -192,10 +197,10 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="doc-description">{t('ownership_doc_description')}</Label>
+            <Label htmlFor="doc-description">{t('registration.ownership_doc_description')}</Label>
             <Textarea
               id="doc-description"
-              placeholder={t('ownership_doc_description_placeholder')}
+              placeholder={t('registration.ownership_doc_description_placeholder')}
               value={currentDocument.description}
               onChange={(e) => setCurrentDocument(prev => ({ ...prev, description: e.target.value }))}
               rows={3}
@@ -208,7 +213,7 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
             className="w-full"
           >
             <LuPlus className="mr-2 h-4 w-4" />
-            {t('ownership_add_document')}
+            {t('registration.ownership_add_document')}
           </Button>
         </div>
         
@@ -216,7 +221,7 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
           <>
             <Separator />
             <div className="space-y-4">
-              <h3 className="font-medium text-base">{t('ownership_chain_title')}</h3>
+              <h3 className="font-medium text-base">{t('registration.ownership_chain_title')}</h3>
               <div className="space-y-6">
                 {documents.map((doc, index) => (
                   <div key={doc.id} className="relative pl-6 border-l-2 border-dashed pb-6 last:border-0 last:pb-0">
@@ -264,8 +269,8 @@ export function OwnershipChain({ onDocumentsChange }: OwnershipChainProps) {
       <CardFooter className="flex justify-between">
         <div className="text-sm text-muted-foreground">
           {documents.length > 0
-            ? t('ownership_documents_count', { count: documents.length })
-            : t('ownership_no_documents')}
+            ? t('registration.ownership_documents_count', { count: documents.length })
+            : t('registration.ownership_no_documents')}
         </div>
       </CardFooter>
     </Card>

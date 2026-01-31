@@ -15,6 +15,17 @@ export interface DashboardStats {
   recentlyAddedItems: Item[];
   pendingPayments: number;
   unreadNotifications: number;
+  allOpenReports?: number;
+  pendingVerifications?: number;
+  totalUsers?: number;
+  moderation?: {
+    pending: number;
+    total: number;
+  };
+  registrationTrends?: {
+    date: string;
+    count: number;
+  }[];
 }
 
 export interface AdminDashboardStats extends DashboardStats {
