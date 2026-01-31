@@ -86,6 +86,34 @@ export class ReportMatchingService {
     const message = `We found a potential match (${score}%) for your "${report.type === 'lost' ? 'Lost' : 'Found'}" report: ${report.title}`;
     const relatedMessage = `We found a potential match for your "${candidate.type === 'lost' ? 'Lost' : 'Found'}" report: ${candidate.title}`;
 
+    // Get user details for emails
+    const reportOwner = await storage.getUser(report.userId);
+    const candidateOwner = await storage.getUser(candidate.userId);
+
+    if (reportOwner && reportOwner.email) {
+      await import('./email.service').then(service => 
+        service.sendMatchNotificationEmail(
+          reportOwner.email, 
+          reportOwner.fullName, 
+          report.title, 
+          candidate.title, 
+          candidate.id
+        )
+      );
+    }
+
+    if (candidateOwner && candidateOwner.email) {
+      await import('./email.service').then(service => 
+        service.sendMatchNotificationEmail(
+          candidateOwner.email, 
+          candidateOwner.fullName, 
+          candidate.title, 
+          report.title, 
+          report.id
+        )
+      );
+    }
+
     // Notify the user who just created the report
     await storage.createNotification({
       userId: report.userId,

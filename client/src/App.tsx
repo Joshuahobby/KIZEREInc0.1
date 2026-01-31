@@ -35,7 +35,8 @@ const PaymentPackages = lazy(() => import("@/pages/admin/payment-packages"));
 const NewPaymentPackage = lazy(() => import("@/pages/admin/payment-packages/new"));
 const CreatePackage = lazy(() => import("@/pages/admin/payment-packages/create-package"));
 const ProfilePage = lazy(() => import("@/pages/profile"));
-const IdentityVerification = lazy(() => import("@/pages/identity-verification"));
+const IdentityVerification = lazy(() => import("@/pages/verification-page"));
+const AdminVerifications = lazy(() => import("@/pages/admin/verifications"));
 const BlogPage = lazy(() => import("./pages/blog"));
 const DocsPage = lazy(() => import("./pages/docs"));
 const CommunityPage = lazy(() => import("./pages/community"));
@@ -132,6 +133,7 @@ function App() {
                 <ProtectedRoute path="/admin/item-management/new" component={NewItem} requiredRole="Admin" />
                 <ProtectedRoute path="/admin/item-management/:id" component={AdminItemDetail} requiredRole="Admin" />
                 <ProtectedRoute path="/admin/reports" component={AdminReports} requiredRole="Admin" />
+                <ProtectedRoute path="/admin/verifications" component={AdminVerifications} requiredRole="Admin" />
                 
                 {/* Profile route */}
                 <ProtectedRoute path="/profile" component={ProfilePage} requiredRole="any" />

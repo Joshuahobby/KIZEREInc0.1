@@ -65,7 +65,7 @@ export interface IStorage {
   // Verification requests
   getVerificationRequest(id: number): Promise<VerificationRequest | undefined>;
   getUserVerificationRequests(userId: number): Promise<VerificationRequest[]>;
-  getPendingVerificationRequests(page: number, pageSize: number): Promise<{ requests: VerificationRequest[]; total: number }>;
+  getPendingVerificationRequests(): Promise<(VerificationRequest & { user: User })[]>;
   createVerificationRequest(request: InsertVerificationRequest): Promise<VerificationRequest>;
   updateVerificationRequest(id: number, request: Partial<VerificationRequest>): Promise<VerificationRequest | undefined>;
   
@@ -148,6 +148,12 @@ export interface IStorage {
   updatePaymentPackage(id: number, paymentPackage: Partial<PaymentPackage>): Promise<PaymentPackage | undefined>;
   deletePaymentPackage(id: number): Promise<boolean>;
   setDefaultPaymentPackage(id: number): Promise<PaymentPackage | undefined>;
+
+  // Verification methods
+  createVerificationRequest(request: InsertVerificationRequest): Promise<VerificationRequest>;
+  getVerificationRequest(userId: number): Promise<VerificationRequest | undefined>;
+  getPendingVerificationRequests(): Promise<(VerificationRequest & { user: User })[]>;
+  updateVerificationRequestStatus(id: number, status: 'approved' | 'rejected', adminId: number, comment?: string): Promise<VerificationRequest | undefined>;
   getAllPaymentPackages(includeInactive?: boolean): Promise<PaymentPackage[]>;
 
   // Session management

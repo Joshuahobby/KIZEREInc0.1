@@ -72,7 +72,7 @@ export async function getReportsWithFilters(options: {
   const offset = (page - 1) * limit;
   const conditions = [];
   
-  if (search) conditions.push(or(like(reports.title, `%${search}%`), like(reports.description, `%${search}%`)));
+  // Basic filters
   if (type) conditions.push(eq(reports.type, type));
   if (status) conditions.push(eq(reports.status, status));
   if (dateRange) conditions.push(and(sql`${reports.date} >= ${dateRange.start}`, sql`${reports.date} <= ${dateRange.end}`));
@@ -80,16 +80,51 @@ export async function getReportsWithFilters(options: {
   if (itemId) conditions.push(eq(reports.itemId, itemId));
   if (location) conditions.push(like(reports.location, `%${location}%`));
   
+  // Search logic
+  if (search) {
+    if (!location) { 
+      // If we only have search text, use it for title/desc/location
+      const searchLower = `%${search.toLowerCase()}%`;
+      conditions.push(or(
+        like(sql`lower(${reports.title})`, searchLower), 
+        like(sql`lower(${reports.description})`, searchLower),
+        like(sql`lower(${reports.location})`, searchLower)
+      ));
+    }
+  }
+
   const countResult = await db.select({ count: sql`count(*)::int` }).from(reports).where(conditions.length ? and(...conditions) : undefined);
   const total = Number(countResult[0]?.count || 0);
   const totalPages = Math.ceil(total / limit);
   
-  let query: any = db.select({
+  // Build main query
+  let querySelection: any = {
     ...reports,
     claimCount: sql<number>`count(${claims.id})`.mapWith(Number)
-  })
-  .from(reports)
-  .leftJoin(claims, eq(reports.id, claims.reportId));
+  };
+
+  // Add relevance score if searching
+  if (search) {
+    const searchLower = search.toLowerCase();
+    querySelection.relevance = sql<number>`
+      (CASE 
+        WHEN lower(${reports.title}) LIKE ${'%' + searchLower + '%'} THEN 3 
+        ELSE 0 
+      END) +
+      (CASE 
+        WHEN lower(${reports.description}) LIKE ${'%' + searchLower + '%'} THEN 1 
+        ELSE 0 
+      END) +
+      (CASE 
+        WHEN lower(${reports.location}) LIKE ${'%' + searchLower + '%'} THEN 1 
+        ELSE 0 
+      END)
+    `.as('relevance');
+  }
+
+  let query: any = db.select(querySelection)
+    .from(reports)
+    .leftJoin(claims, eq(reports.id, claims.reportId));
 
   if (conditions.length) {
     query = query.where(and(...conditions));
@@ -97,8 +132,15 @@ export async function getReportsWithFilters(options: {
 
   query = query.groupBy(reports.id);
 
-  const column = sortBy ? reports[sortBy as keyof typeof reports] : reports.reportedAt;
-  query = sortOrder === 'asc' ? query.orderBy(asc(column as any)) : query.orderBy(desc(column as any));
+  // Sorting
+  const sortColumn = (sortBy && sortBy in reports) ? reports[sortBy as keyof typeof reports] : reports.reportedAt;
+  
+  if (search) {
+    // If searching, prioritize relevance first, then the requested sort
+    query = query.orderBy(desc(sql`relevance`), sortOrder === 'asc' ? asc(sortColumn as any) : desc(sortColumn as any));
+  } else {
+    query = sortOrder === 'asc' ? query.orderBy(asc(sortColumn as any)) : query.orderBy(desc(sortColumn as any));
+  }
   
   const result = await query.limit(limit).offset(offset);
   

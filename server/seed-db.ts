@@ -49,28 +49,48 @@ async function seed() {
       phoneNumber: "+250788654321",
     }).returning();
 
-    // 4. Seed Payment Packages
+    // 4. Seed Payment Packages (Tiered Structure)
     console.log("Seeding payment packages...");
     await db.insert(paymentPackages).values([
       {
-        name: "Basic Registration",
-        description: "Standard item registration with QR code",
+        name: "Standard",
+        description: "Standard lost item listing (30 days)",
         amount: "1000",
         currency: "RWF",
-        type: "registration",
-        features: ["QR Code", "Ownership Proof"],
+        type: "lost_report",
+        features: ["Basic Listing", "30 Days Visibility", "Email Notifications"],
         status: "active",
-        validityDays: 365
+        validityDays: 30
       },
       {
-        name: "Standard Lost Report",
-        description: "Report a lost item to the community",
+        name: "Premium",
+        description: "High-value items listing with priority support",
         amount: "2000",
         currency: "RWF",
         type: "lost_report",
-        features: ["Auto-matching", "Instant SMS alerts"],
+        features: ["Premium Badge", "Top Search Results", "Priority Support", "60 Days Visibility"],
         status: "active",
-        validityDays: 30
+        validityDays: 60
+      },
+      {
+        name: "Urgent",
+        description: "Urgent listing for immediate attention",
+        amount: "3000",
+        currency: "RWF",
+        type: "lost_report",
+        features: ["Urgent Tag", "Homepage Feature", "Instant Alerts", "90 Days Visibility"],
+        status: "active",
+        validityDays: 90
+      },
+      {
+        name: "Item Registration",
+        description: "Register item ownership with QR code",
+        amount: "1000",
+        currency: "RWF",
+        type: "registration",
+        features: ["QR Code", "Ownership Proof", "Lifetime Registration"],
+        status: "active",
+        validityDays: 3650 // 10 years
       }
     ]);
 

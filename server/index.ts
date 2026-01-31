@@ -1,10 +1,11 @@
 import express, { type Request, Response, NextFunction } from "express";
 import crypto from "crypto";
 import { registerRoutes } from "./routes";
-import { serveStatic, log } from "./static";
+import { serveStatic, log } from "./static"; // Reverted to correct import
 import { createLogger } from "./utils/logger";
 import { setupSecurityMiddleware } from "./middleware/security.middleware";
 import { handleRequestError } from "./utils/error-handler";
+import { startExpirationCron } from "./cron/expiration";
 
 const logger = createLogger('Server');
 const app = express();
@@ -12,6 +13,9 @@ const app = express();
 // Basic middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Start background jobs
+startExpirationCron();
 
 // Apply security middleware before route handlers
 setupSecurityMiddleware(app);

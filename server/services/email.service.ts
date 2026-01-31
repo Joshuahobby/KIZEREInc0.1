@@ -268,4 +268,91 @@ export default {
   sendClaimNotificationEmail,
   sendClaimStatusEmail,
   sendPaymentConfirmationEmail,
+  sendMatchNotificationEmail,
+  sendExpirationEmail,
 };
+
+/**
+ * Send expiration warning email
+ */
+export async function sendExpirationEmail(
+  email: string,
+  userName: string,
+  reportTitle: string,
+  reportId: number,
+  renewalLink: string
+): Promise<boolean> {
+  return sendEmail({
+    to: email,
+    subject: `Action Required: Your Report is Expiring - ${reportTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #f59e0b; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Report Expiring Soon ⏳</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Your report <strong>${reportTitle}</strong> is set to expire soon.
+          </p>
+          <p style="color: #4b5563; line-height: 1.6;">
+            To keep your listing active and visible to the community, please renew it now.
+          </p>
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="margin: 8px 0;"><strong>Status:</strong> Expiring</p>
+            <p style="margin: 8px 0;"><strong>Grace Period:</strong> 7 Days</p>
+          </div>
+          <a href="${renewalLink}" 
+             style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
+            Renew Listing
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>© ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Send match notification email
+ */
+export async function sendMatchNotificationEmail(
+  email: string,
+  userName: string,
+  reportTitle: string,
+  matchTitle: string,
+  matchId: number
+): Promise<boolean> {
+  return sendEmail({
+    to: email,
+    subject: `Potential Match Found! - ${reportTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #8b5cf6; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">We Found a Match! 🎉</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            We have found an item that might match your report <strong>${reportTitle}</strong>.
+          </p>
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="margin: 8px 0;"><strong>Potential Match:</strong> ${matchTitle}</p>
+          </div>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Please click below to view the details and contact the other party if it matches.
+          </p>
+          <a href="${process.env.APP_URL || 'https://kizere.com'}/report/${matchId}" 
+             style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
+            View Match
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>© ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}

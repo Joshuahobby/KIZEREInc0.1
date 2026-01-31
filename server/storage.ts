@@ -10,6 +10,7 @@ import * as reportOps from "./storage/report.storage";
 import * as claimOps from "./storage/claim.storage";
 import * as notificationOps from "./storage/notification.storage";
 import * as paymentOps from "./storage/payment.storage";
+import * as verificationOps from "./storage/verification.storage";
 import { 
   User, InsertUser, Item, InsertItem, Report, InsertReport, 
   Notification, InsertNotification, Payment, InsertPayment,
@@ -69,12 +70,6 @@ export class DatabaseStorage implements IStorage {
   updateRole = adminOps.updateRole;
   deleteRole = adminOps.deleteRole;
   
-  // Verification requests
-  getVerificationRequest = adminOps.getVerificationRequest;
-  getUserVerificationRequests = adminOps.getUserVerificationRequests;
-  getPendingVerificationRequests = adminOps.getPendingVerificationRequests;
-  createVerificationRequest = adminOps.createVerificationRequest;
-  updateVerificationRequest = adminOps.updateVerificationRequest;
   
   // Status changes
   getUserStatusHistory = adminOps.getUserStatusHistory;
@@ -148,6 +143,12 @@ export class DatabaseStorage implements IStorage {
   createPaymentPackage = paymentOps.createPaymentPackage;
   updatePaymentPackage = paymentOps.updatePaymentPackage;
   deletePaymentPackage = paymentOps.deletePaymentPackage;
+
+  // Verification methods
+  createVerificationRequest = verificationOps.createVerificationRequest;
+  getVerificationRequest = verificationOps.getVerificationRequest;
+  getPendingVerificationRequests = verificationOps.getPendingVerificationRequests;
+  updateVerificationRequestStatus = verificationOps.updateVerificationRequestStatus;
   setDefaultPaymentPackage = paymentOps.setDefaultPaymentPackage;
   getAllPaymentPackages = paymentOps.getAllPaymentPackages;
 }

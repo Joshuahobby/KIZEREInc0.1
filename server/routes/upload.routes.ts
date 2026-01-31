@@ -10,7 +10,7 @@ const logger = createLogger('UploadRoutes');
 const storage = multer.memoryStorage();
 const upload = multer({ 
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -53,7 +53,7 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
  * POST /api/upload/multiple
  * Upload multiple images
  */
-router.post('/multiple', upload.array('images', 5), async (req: Request, res: Response) => {
+router.post('/multiple', upload.array('images', 3), async (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];
     

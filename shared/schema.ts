@@ -25,7 +25,7 @@ export const itemCategories = [
 export const itemStatuses = ['Registered', 'Lost', 'Found', 'Recovered', 'Archived'] as const;
 
 // Define report statuses
-export const reportStatuses = ['Open', 'In_Progress', 'Resolved', 'Closed'] as const;
+export const reportStatuses = ['Open', 'In_Progress', 'Resolved', 'Closed', 'Expired'] as const;
 
 // Define permission types
 export const permissionTypes = [
@@ -218,14 +218,14 @@ export const roles = pgTable("roles", {
 export const verificationRequests = pgTable("verification_requests", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  type: text("type").notNull(), // e.g., 'identity', 'address', 'business'
+  documentType: text("document_type").notNull(), // 'nid', 'passport', 'drivers_license'
+  documentUrl: text("document_url").notNull(),
+  selfieUrl: text("selfie_url").notNull(),
   status: text("status").notNull().default('pending'),
-  documentUrls: text("document_urls").array(),
-  notes: text("notes"),
+  adminComment: text("admin_comment"),
   reviewedBy: integer("reviewed_by").references(() => users.id),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   reviewedAt: timestamp("reviewed_at"),
-  expiresAt: timestamp("expires_at"),
 });
 
 // Status change history
@@ -371,7 +371,13 @@ export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs).
 export const insertAdminActionLogSchema = createInsertSchema(adminActionLogs).omit({ id: true, timestamp: true });
 export const insertRoleSchema = createInsertSchema(roles).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertVerificationRequestSchema = createInsertSchema(verificationRequests).omit({ 
-  id: true, submittedAt: true, reviewedAt: true, expiresAt: true 
+  id: true, submittedAt: true, reviewedAt: true, status: true 
+}).extend({
+  documentType: z.enum(['nid', 'passport', 'drivers_license'], {
+    errorMap: () => ({ message: "Please select a valid document type" })
+  }),
+  documentUrl: z.string().url("Document URL is required"),
+  selfieUrl: z.string().url("Selfie URL is required"),
 });
 export const insertStatusChangeSchema = createInsertSchema(statusChanges).omit({ id: true, timestamp: true });
 export const insertUserWarningSchema = createInsertSchema(userWarnings).omit({ 
@@ -450,3 +456,38 @@ export const initiatePaymentSchema = z.object({
   redirectUrl: z.string().optional(),
   metadata: z.record(z.any()).optional()
 });
+
+// Moderation schemas
+export const reportReasons = ['spam', 'scam', 'wrong_category', 'inappropriate', 'fraudulent', 'harassment'] as const;
+export const reportModerationStatuses = ['pending', 'reviewed', 'resolved', 'dismissed'] as const;
+
+export const moderationReports = pgTable("moderation_reports", {
+  id: serial("id").primaryKey(),
+  itemId: integer("item_id").references(() => items.id),
+  claimId: integer("claim_id").references(() => claims.id),
+  reporterEmail: text("reporter_email"),
+  reason: text("reason").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default('pending'),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertModerationReportSchema = createInsertSchema(moderationReports).omit({
+  id: true,
+  createdAt: true,
+  reviewedAt: true,
+  status: true,
+  reviewedBy: true
+}).extend({
+  reason: z.enum(reportReasons, {
+    errorMap: () => ({ message: "Please select a valid report reason" })
+  }),
+  description: z.string().optional(),
+});
+
+export type InsertModerationReport = z.infer<typeof insertModerationReportSchema>;
+export type ModerationReport = typeof moderationReports.$inferSelect;
+export type ReportReason = typeof reportReasons[number];
+export type ModerationStatus = typeof reportModerationStatuses[number];

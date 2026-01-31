@@ -28,32 +28,28 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Settings } from "lucide-react";
 import {
-  LayoutDashboard,
-  Search,
-  ClipboardList,
-  AlertTriangle,
-  CheckCircle2,
-  Bell,
-  BarChart3,
-  Clock,
-  FileText,
-  Users,
-  ShoppingBag,
-  DollarSign,
-  Plus,
-  Loader2,
-  RefreshCw,
-  LogOut,
-  ChevronDown,
-  Settings,
   HelpCircle,
   Filter,
   ArrowDownUp,
   Calendar,
   BellRing,
   User,
-  ShieldCheck
+  ShieldCheck,
+  ShoppingBag,
+  AlertTriangle,
+  CheckCircle2,
+  DollarSign,
+  Users,
+  FileText,
+  ClipboardList,
+  Clock,
+  Search,
+  Bell,
+  Plus,
+  LayoutDashboard,
+  BarChart3
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -276,6 +272,25 @@ export default function UnifiedDashboard() {
                   </Button>
                   
                   <Button 
+                    variant="outline" 
+                    className="w-full justify-start text-left"
+                    onClick={() => navigate('/profile')}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    {t('dashboard.settings')}
+                  </Button>
+
+                  {user?.verificationStatus !== 'approved' && (
+                    <Button 
+                      className="w-full justify-start text-left bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => navigate('/identity-verification')}
+                    >
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      Get Verified
+                    </Button>
+                  )}
+
+                  <Button 
                     className="w-full justify-start" 
                     variant="outline"
                     onClick={() => navigate('/report/new?type=lost')}
@@ -301,7 +316,7 @@ export default function UnifiedDashboard() {
                   <CardTitle className="text-sm font-medium">Notifications</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{notifications.filter(n => !n.read).length}</div>
+                  <div className="text-2xl font-bold">{notifications.filter(n => !n.isRead).length}</div>
                   <p className="text-xs text-muted-foreground">Unread messages</p>
                 </CardContent>
               </Card>
