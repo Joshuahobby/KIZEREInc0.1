@@ -1,6 +1,10 @@
 import { db } from "../db";
 import { eq, like, and, or, desc, asc, sql } from "drizzle-orm";
-import { reports, type Report, type InsertReport, users, items, type User, type Item } from "@shared/schema";
+import { reports, type Report, type InsertReport, users, items, type User, type Item, payments, type Payment, type InsertPayment, 
+  paymentMethods, type PaymentMethod, type InsertPaymentMethod,
+  paymentPackages, type PaymentPackage, type InsertPaymentPackage,
+  type PaymentType, claims
+} from "@shared/schema";
 
 export async function getReport(id: number): Promise<Report | undefined> {
   const [report] = await db.select().from(reports).where(eq(reports.id, id));
@@ -80,15 +84,24 @@ export async function getReportsWithFilters(options: {
   const total = Number(countResult[0]?.count || 0);
   const totalPages = Math.ceil(total / limit);
   
-  let query: any = db.select().from(reports).where(conditions.length ? and(...conditions) : undefined).limit(limit).offset(offset);
-  const column = reports[sortBy as keyof typeof reports];
-  if (column) {
-    query = sortOrder === 'asc' ? query.orderBy(asc(column as any)) : query.orderBy(desc(column as any));
-  } else {
-    query = query.orderBy(desc(reports.reportedAt));
+  let query: any = db.select({
+    ...reports,
+    claimCount: sql<number>`count(${claims.id})`.mapWith(Number)
+  })
+  .from(reports)
+  .leftJoin(claims, eq(reports.id, claims.reportId));
+
+  if (conditions.length) {
+    query = query.where(and(...conditions));
   }
+
+  query = query.groupBy(reports.id);
+
+  const column = sortBy ? reports[sortBy as keyof typeof reports] : reports.reportedAt;
+  query = sortOrder === 'asc' ? query.orderBy(asc(column as any)) : query.orderBy(desc(column as any));
   
-  const result = await query;
+  const result = await query.limit(limit).offset(offset);
+  
   return { reports: result, total, page, totalPages };
 }
 

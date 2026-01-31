@@ -641,6 +641,7 @@ export default function AdminReports() {
                     <th className="h-10 px-4 text-left font-medium">Title</th>
                     <th className="h-10 px-4 text-left font-medium">Type</th>
                     <th className="h-10 px-4 text-left font-medium">Category</th>
+                    <th className="h-10 px-4 text-left font-medium">Claims</th>
                     <th className="h-10 px-4 text-left font-medium">Status</th>
                     <th className="h-10 px-4 text-left font-medium">Location</th>
                     <th className="h-10 px-4 text-left font-medium">Date</th>
@@ -684,6 +685,13 @@ export default function AdminReports() {
                         </td>
                         <td className="p-4">
                           <Badge variant="outline" className="text-xs">{report.category || 'Other'}</Badge>
+                        </td>
+                        <td className="p-4">
+                          {report.claimCount > 0 ? (
+                            <Badge variant="secondary" className="font-mono">{report.claimCount}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
                         </td>
                         <td className="p-4">
                           <StatusBadge status={report.status} />

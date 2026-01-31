@@ -240,20 +240,73 @@ export default function UnifiedDashboard() {
             </motion.div>
           </div>
 
-          {/* Recently Registered Items */}
-          <motion.div variants={itemVariants}>
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>{t('dashboard.recentlyRegisteredItems')}</CardTitle>
-                <CardDescription>
-                  {t('dashboard.recentItemsDescription')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ItemsTable items={userStats.recentlyAddedItems} isLoading={false} />
-              </CardContent>
-            </Card>
-          </motion.div>
+          {/* Quick Actions & Recent Items */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+            <motion.div variants={itemVariants} className="lg:col-span-2">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>{t('dashboard.recentItems')}</CardTitle>
+                  <CardDescription>
+                    {t('dashboard.recentItemsDescription')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ItemsTable items={userStats.recentlyAddedItems} isLoading={false} />
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="space-y-6">
+               {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                   <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setActiveTab('claims')}
+                  >
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    View My Claims
+                    {myClaims.length > 0 && (
+                      <Badge className="ml-auto" variant="secondary">{myClaims.length}</Badge>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => navigate('/report/new?type=lost')}
+                  >
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    Report Lost Item
+                  </Button>
+
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => navigate('/report/new?type=found')}
+                  >
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Report Found Item
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Notifications Summary */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{notifications.filter(n => !n.read).length}</div>
+                  <p className="text-xs text-muted-foreground">Unread messages</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
 
           {/* Payment History */}
           <motion.div variants={itemVariants}>
