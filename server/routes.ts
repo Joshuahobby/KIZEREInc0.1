@@ -95,6 +95,8 @@ import reportRoutes from './routes/report.routes';
 import notificationRoutes from './routes/notification.routes';
 import paymentRoutes from './routes/payment.routes';
 import profileRoutes from './routes/profile.routes';
+import claimRoutes from './routes/claim.routes';
+import uploadRoutes from './routes/upload.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -110,7 +112,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/reports', requireAuth, reportRoutes);
   app.use('/api/notifications', requireAuth, notificationRoutes);
   app.use('/api/payments', requireAuth, paymentRoutes);
+  app.use('/api/claims', requireAuth, claimRoutes);
   app.use('/api/me', requireAuth, profileRoutes);
+  app.use('/api/upload', requireAuth, uploadRoutes);
 
   // Health check endpoint
   app.get("/api/health", async (req, res) => {

@@ -67,8 +67,6 @@ export default function AuthPage() {
     defaultValues: {
       fullName: "",
       username: "",
-      email: "",
-      phoneNumber: "",
       password: "",
       confirmPassword: "",
       role: "Subscriber",
@@ -359,52 +357,16 @@ export default function AuthPage() {
                           )}
                         />
                         
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                          <FormField
-                            control={registerForm.control}
-                            name="username"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-foreground/80">Username</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                                    <Input className="pl-10" placeholder="Choose a username" {...field} />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={registerForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-foreground/80">Email</FormLabel>
-                                <FormControl>
-                                  <div className="relative">
-                                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                                    <Input className="pl-10" placeholder="Enter your email" {...field} />
-                                  </div>
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        
                         <FormField
                           control={registerForm.control}
-                          name="phoneNumber"
+                          name="username"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-foreground/80">Phone Number (Optional)</FormLabel>
+                              <FormLabel className="text-foreground/80">Email or Phone Number</FormLabel>
                               <FormControl>
                                 <div className="relative">
-                                  <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                                  <Input className="pl-10" placeholder="Enter your phone number" {...field} />
+                                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                                  <Input className="pl-10" placeholder="Enter your email or phone (+250...)" {...field} />
                                 </div>
                               </FormControl>
                               <FormMessage />
@@ -481,38 +443,8 @@ export default function AuthPage() {
                           />
                         </div>
                         
-                        <FormField
-                          control={registerForm.control}
-                          name="role"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-foreground/80">Account Type</FormLabel>
-                              <div className="relative">
-                                <Shield className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground z-10" />
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger className="pl-10">
-                                      <SelectValue placeholder="Select account type" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    {userRoles.map((role) => (
-                                      <SelectItem key={role} value={role}>
-                                        <div className="flex items-center">
-                                          {role === "Admin" && <Shield className="mr-2 h-4 w-4" />}
-                                          {role === "Agent" && <CheckCircle2 className="mr-2 h-4 w-4" />}
-                                          {role === "Subscriber" && <User className="mr-2 h-4 w-4" />}
-                                          {role}
-                                        </div>
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        {/* Role is automatically set to Subscriber for public registration */}
+                        {/* Admin and Agent roles can only be assigned by administrators */}
                         
                         <div className="flex items-center space-x-2 mt-2">
                           <input 

@@ -8,6 +8,7 @@ import { User, User as SelectUser } from "@shared/schema";
 import { env } from "./config";
 import { UserService } from "./services/user.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
+import { sendWelcomeEmail } from "./services/email.service";
 
 
 declare global {
@@ -89,11 +90,22 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Email already exists" });
       }
 
-      // Create new user with hashed password
-      const user = await storage.createUser({
+      // SECURITY: Force role to Subscriber for public registration
+      // Admin and Agent roles can only be assigned by existing administrators
+      const safeUserData = {
         ...req.body,
+        role: 'Subscriber', // Always force Subscriber role on public registration
         password: await hashPassword(req.body.password),
-      });
+      };
+
+      // Create new user with forced Subscriber role
+      const user = await storage.createUser(safeUserData);
+
+      // Send welcome email
+      if (user.email) {
+        sendWelcomeEmail(user.email, user.fullName || user.username)
+          .catch(err => console.error('Failed to send welcome email:', err));
+      }
 
       // Strip password from response
       const { password, ...userWithoutPassword } = user;

@@ -12,7 +12,15 @@ export async function getUserReports(userId: number): Promise<Report[]> {
 }
 
 export async function createReport(report: InsertReport): Promise<Report> {
-  const [newReport] = await db.insert(reports).values(report).returning();
+  // Generate unique receipt number (e.g., FND-X1Y2Z or LST-A3B4C)
+  const prefix = report.type === 'found' ? 'FND' : 'LST';
+  const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
+  const receiptNumber = report.receiptNumber || `${prefix}-${randomStr}`;
+
+  const [newReport] = await db.insert(reports).values({
+    ...report,
+    receiptNumber
+  }).returning();
   return newReport;
 }
 

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "../lib/queryClient";
 import { useAuth } from "../hooks/use-auth";
-import { Item, Report, Notification, Payment, UserRole, User } from "../../../shared/schema";
+import { Item, Report, Notification, Payment, UserRole, User, Claim } from "../../../shared/schema";
 import { useMemo } from "react";
 import { createLogger } from "../lib/logger";
 
@@ -68,6 +68,8 @@ export interface DashboardData {
   allReports: Report[];
   notifications: Notification[];
   payments: Payment[];
+  myClaims: Claim[];
+  claimsReceived: Claim[];
   allUsers: any[] | null;
 }
 
@@ -111,6 +113,22 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     queryKey: ['/api/payments'],
     queryFn: async () => {
       return await apiRequest('/api/payments/history');
+    },
+    refetchInterval: refreshInterval
+  });
+  
+  const { data: myClaims, isLoading: myClaimsLoading } = useQuery({
+    queryKey: ['/api/claims/my-claims'],
+    queryFn: async () => {
+      return await apiRequest('/api/claims/my-claims');
+    },
+    refetchInterval: refreshInterval
+  });
+
+  const { data: claimsReceived, isLoading: claimsReceivedLoading } = useQuery({
+    queryKey: ['/api/claims/received'],
+    queryFn: async () => {
+      return await apiRequest('/api/claims/received');
     },
     refetchInterval: refreshInterval
   });
@@ -252,7 +270,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
 
   // Calculate loading state
   const isLoading = itemsLoading || reportsLoading || notificationsLoading || paymentsLoading || 
-    dashboardStatsLoading || (isAdmin && (allUsersLoading || revenueSummaryLoading)) ||
+    dashboardStatsLoading || myClaimsLoading || claimsReceivedLoading || (isAdmin && (allUsersLoading || revenueSummaryLoading)) ||
     ((isAdmin || isAgent) && allReportsLoading);
 
   return {
@@ -267,6 +285,8 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     allReports: (isAdmin || isAgent) ? (allReports || []) : (reports || []),
     notifications: notifications || [],
     payments: payments || [],
+    myClaims: myClaims || [],
+    claimsReceived: claimsReceived || [],
     allUsers: isAdmin ? (allUsers || []) : null
   };
 }

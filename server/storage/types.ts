@@ -6,6 +6,7 @@ import {
   AdminActionLog, InsertAdminActionLog, Role, InsertRole,
   VerificationRequest, InsertVerificationRequest, StatusChange, InsertStatusChange,
   UserWarning, InsertUserWarning, PaymentPackage, InsertPaymentPackage,
+  Claim, InsertClaim,
   AccountStatus, VerificationStatus, PaymentType
 } from "@shared/schema";
 
@@ -90,15 +91,27 @@ export interface IStorage {
   getReport(id: number): Promise<Report | undefined>;
   getUserReports(userId: number): Promise<Report[]>;
   createReport(report: InsertReport): Promise<Report>;
-  updateReport(id: number, report: Partial<Report>): Promise<Report | undefined>;
+  updateReport(id: number, reportData: Partial<Report>): Promise<Report | undefined>;
   getLostReports(): Promise<Report[]>;
   getFoundReports(): Promise<Report[]>;
+  getAllReports(): Promise<Report[]>;
+  getReportStats(): Promise<any>;
+  getReportsWithFilters(options: any): Promise<{ reports: Report[]; total: number; page: number; totalPages: number }>;
+  getReportWithRelatedData(id: number): Promise<any>;
+  generateReportCSV(): Promise<string>;
   
   // Notification methods
   getNotification(id: number): Promise<Notification | undefined>;
   getUserNotifications(userId: number): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
-  markNotificationAsRead(id: number): Promise<Notification | undefined>;
+
+  // Claim methods
+  getClaim(id: number): Promise<Claim | undefined>;
+  getClaimsForReport(reportId: number): Promise<Claim[]>;
+  getUserClaims(userId: number): Promise<Claim[]>;
+  getClaimsReceived(userId: number): Promise<Claim[]>;
+  createClaim(claim: InsertClaim): Promise<Claim>;
+  updateClaim(id: number, claim: Partial<Claim>): Promise<Claim | undefined>;
 
   // Payment methods
   getPayment(id: number): Promise<Payment | undefined>;

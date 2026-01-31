@@ -46,6 +46,9 @@ export const paymentTypes = ['registration', 'lost_report'] as const;
 // Define package status
 export const packageStatuses = ['active', 'inactive', 'archived'] as const;
 
+// Define claim statuses
+export const claimStatuses = ['pending', 'verified', 'rejected', 'resolved'] as const;
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -99,13 +102,33 @@ export const reports = pgTable("reports", {
   userId: integer("user_id").notNull().references(() => users.id),
   itemId: integer("item_id").references(() => items.id),
   type: text("type").notNull(), // 'lost' or 'found'
+  category: text("category").notNull().default('Other'),
   title: text("title").notNull(),
   description: text("description").notNull(),
   location: text("location").notNull(),
   date: timestamp("date").notNull(),
   status: text("status").notNull().default('Open'),
   contactInfo: text("contact_info"),
+  receiptNumber: text("receipt_number").unique(),
+  imageUrls: text("image_urls").array(),
+  expirationDate: timestamp("expiration_date"),
+  gracePeriodEnd: timestamp("grace_period_end"),
+  paymentStatus: text("payment_status").default('pending'),
   reportedAt: timestamp("reported_at").defaultNow().notNull(),
+});
+
+// Claims table
+export const claims = pgTable("claims", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  reportId: integer("report_id").notNull().references(() => reports.id),
+  description: text("description").notNull(),
+  imageUrls: text("image_urls").array(),
+  status: text("status").notNull().default('pending'),
+  finderNotes: text("finder_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  verifiedAt: timestamp("verified_at"),
 });
 
 // Notifications
@@ -296,18 +319,34 @@ export const insertReportSchema = createInsertSchema(reports)
       errorMap: () => ({ message: "Please enter a valid date" })
     }),
     location: z.string().min(3, "Please provide a specific location"),
-    description: z.string().min(10, "Please provide a detailed description").max(500, "Description is too long")
+    description: z.string().min(10, "Please provide a detailed description").max(500, "Description is too long"),
+    category: z.enum(itemCategories, {
+      errorMap: () => ({ message: "Please select a valid category for this report" })
+    }).default('Other'),
   });
 
 // Extended schema for lost item report form with validation
 export const lostItemReportSchema = insertReportSchema.extend({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  contactInfo: z.string().min(5, "Please provide contact information").optional()
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  location: z.string().min(3, "Please specify a location"),
+  category: z.string().default("Other"),
+  contactInfo: z.string().optional(),
 });
 
 // Extended schema for found item report form
 export const foundItemReportSchema = insertReportSchema.extend({
   title: z.string().min(5, "Title must be at least 5 characters")
+});
+
+// Claim schemas
+export const insertClaimSchema = createInsertSchema(claims).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  verifiedAt: true
+}).extend({
+  description: z.string().min(50, "Please provide a detailed description (min 50 characters)"),
+  imageUrls: z.array(z.string().url()).optional().default([])
 });
 
 // Notification schemas
@@ -368,6 +407,7 @@ export type InsertVerificationRequest = z.infer<typeof insertVerificationRequest
 export type InsertStatusChange = z.infer<typeof insertStatusChangeSchema>;
 export type InsertUserWarning = z.infer<typeof insertUserWarningSchema>;
 export type InsertPaymentPackage = z.infer<typeof insertPaymentPackageSchema>;
+export type InsertClaim = z.infer<typeof insertClaimSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Item = typeof items.$inferSelect;
@@ -382,6 +422,7 @@ export type VerificationRequest = typeof verificationRequests.$inferSelect;
 export type StatusChange = typeof statusChanges.$inferSelect;
 export type UserWarning = typeof userWarnings.$inferSelect;
 export type PaymentPackage = typeof paymentPackages.$inferSelect;
+export type Claim = typeof claims.$inferSelect;
 
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type UserRole = typeof userRoles[number];
@@ -395,6 +436,7 @@ export type PermissionType = typeof permissionTypes[number];
 export type PaymentStatus = typeof paymentStatuses[number];
 export type PaymentType = typeof paymentTypes[number];
 export type PackageStatus = typeof packageStatuses[number];
+export type ClaimStatus = typeof claimStatuses[number];
 
 // Payment validation schemas
 export const initiatePaymentSchema = z.object({

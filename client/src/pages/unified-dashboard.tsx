@@ -52,19 +52,25 @@ import {
   ArrowDownUp,
   Calendar,
   BellRing,
-  User
+  User,
+  ShieldCheck
 } from "lucide-react";
+import { format } from "date-fns";
 
 // Import admin-specific components
 import { PaymentAnalyticsChart } from "@/components/dashboard/payment-analytics-chart-fixed";
 import { PaymentStatusChart } from "@/components/dashboard/payment-status-chart";
 import { PaymentTypeChart } from "@/components/dashboard/payment-type-chart";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
+import { ClaimReviewDialog } from "@/components/reports/claim-review-dialog";
+import { Claim } from "@shared/schema";
 
 const logger = createLogger('UnifiedDashboard');
 
 export default function UnifiedDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const { user, signOut } = useAuth();
   const [, navigate] = useLocation();
   const { t } = useLanguage();
@@ -87,7 +93,9 @@ export default function UnifiedDashboard() {
     notifications = [],
     items = [],
     reports = [],
-    allReports = []
+    allReports = [],
+    myClaims = [],
+    claimsReceived = []
   } = dashboardData || {};
 
   // Animate dashboard cards in sequence
@@ -637,6 +645,116 @@ export default function UnifiedDashboard() {
       );
     }
 
+    // Claims tab
+    if (activeTab === "claims") {
+      return (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <div className="grid gap-6 md:grid-cols-2 mb-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <CardTitle>My Claims</CardTitle>
+                </div>
+                <CardDescription>Items you've claimed as yours.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {myClaims.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Claim ID</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {myClaims.map((claim: any) => (
+                        <TableRow key={claim.id}>
+                          <TableCell className="font-mono text-xs">#{claim.id}</TableCell>
+                          <TableCell>
+                            <Badge variant={claim.status === 'pending' ? 'outline' : 'secondary'}>
+                              {claim.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs">{format(new Date(claim.createdAt), 'MMM d, yyyy')}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-10">
+                    <p className="text-muted-foreground italic">You haven't filed any claims yet.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <BellRing className="h-5 w-5 text-primary" />
+                  <CardTitle>Claims Received</CardTitle>
+                </div>
+                <CardDescription>People claiming items you found.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {claimsReceived.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>From</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {claimsReceived.map((claim: any) => (
+                        <TableRow key={claim.id}>
+                          <TableCell className="text-xs">User #{claim.userId}</TableCell>
+                          <TableCell>
+                            <Badge variant={claim.status === 'pending' ? 'outline' : 'secondary'}>
+                              {claim.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => {
+                                setSelectedClaim(claim);
+                                setReviewOpen(true);
+                              }}
+                            >
+                              Review
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-10">
+                    <p className="text-muted-foreground italic">No claims received yet.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          <ClaimReviewDialog 
+            claim={selectedClaim}
+            isOpen={reviewOpen}
+            onClose={() => setReviewOpen(false)}
+          />
+        </motion.div>
+      );
+    }
+
     // Fallback - should never reach here
     return (
       <div className="p-6 text-center">
@@ -667,6 +785,11 @@ export default function UnifiedDashboard() {
         id: "payments",
         label: t('dashboard.tabs.payments'),
         icon: <DollarSign className="h-5 w-5" />
+      },
+      {
+        id: "claims",
+        label: "Claims",
+        icon: <ShieldCheck className="h-5 w-5" />
       }
     ];
 

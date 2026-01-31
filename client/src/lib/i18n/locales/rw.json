@@ -12,7 +12,10 @@
     "settings": "Igenamiterere",
     "logout": "Gusohoka",
     "language": "Ururimi",
-    "returnToHome": "Garuka ku ipaji y'ibanze"
+    "returnToHome": "Garuka ku ipaji y'ibanze",
+    "register_item": "Andika Ikintu",
+    "complete_registration": "Uzuza Kwandikisha",
+    "filter": "Shungura"
   },
   "nav": {
     "home": "Ahabanza",
@@ -306,6 +309,7 @@
     "item_subcategory": "Icyiciro Gitoya",
     "item_description": "Ibisobanuro",
     "item_location": "Aho Cyaherutse Kuboneka",
+    "item_uuid": "Ikiranga Ikintu",
     "item_color": "Ibara",
     "item_tips": "Inama",
     "steps": {

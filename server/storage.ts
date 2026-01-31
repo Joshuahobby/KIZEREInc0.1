@@ -7,6 +7,7 @@ import * as userOps from "./storage/user.storage";
 import * as adminOps from "./storage/admin.storage";
 import * as itemOps from "./storage/item.storage";
 import * as reportOps from "./storage/report.storage";
+import * as claimOps from "./storage/claim.storage";
 import * as notificationOps from "./storage/notification.storage";
 import * as paymentOps from "./storage/payment.storage";
 import { 
@@ -100,6 +101,19 @@ export class DatabaseStorage implements IStorage {
   updateReport = reportOps.updateReport;
   getLostReports = reportOps.getLostReports;
   getFoundReports = reportOps.getFoundReports;
+  getAllReports = reportOps.getAllReports;
+  getReportStats = reportOps.getReportStats;
+  getReportsWithFilters = reportOps.getReportsWithFilters;
+  getReportWithRelatedData = reportOps.getReportWithRelatedData;
+  generateReportCSV = reportOps.generateReportCSV;
+
+  // Claim methods
+  getClaim = claimOps.getClaim;
+  getClaimsForReport = claimOps.getClaimsForReport;
+  getUserClaims = claimOps.getUserClaims;
+  getClaimsReceived = claimOps.getClaimsReceived;
+  createClaim = claimOps.createClaim;
+  updateClaim = claimOps.updateClaim;
   
   // Notification methods
   getNotification = notificationOps.getNotification;

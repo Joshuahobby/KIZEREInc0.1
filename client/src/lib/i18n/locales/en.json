@@ -7,7 +7,10 @@
     "ago": "ago",
     "viewAll": "View All",
     "returnToHome": "Return to Home",
-    "language": "Language"
+    "language": "Language",
+    "register_item": "Register Item",
+    "complete_registration": "Complete Registration",
+    "filter": "Filter"
   },
   "nav": {
     "home": "Home",
@@ -16,6 +19,7 @@
     "contact": "Contact",
     "dashboard": "Dashboard",
     "register": "Register Item",
+    "registerItem": "Register Item",
     "registerItems": "Register Items",
     "myItems": "My Items",
     "lostIt": "Lost It",
@@ -304,6 +308,7 @@
     "item_subcategory": "Sub-category",
     "item_description": "Description",
     "item_location": "Last Known Location",
+    "item_uuid": "Unique Identifier",
     "item_color": "Color",
     "item_tips": "Tips",
     "steps": {

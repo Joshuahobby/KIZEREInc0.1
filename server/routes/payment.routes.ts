@@ -12,6 +12,8 @@ import {
   getPaymentAmount
 } from "../utils/flutterwave";
 import { getPaymentDescription } from "../config/payment.config";
+import { sendPaymentConfirmationEmail } from "../services/email.service";
+import { verifyWebhookSignature, verifyTransaction } from "../utils/flutterwave";
 
 const logger = createLogger('PaymentRoutes');
 const router = Router();
@@ -99,6 +101,48 @@ router.post("/initiate", async (req, res) => {
   } catch (error) {
     logger.error("Payment initiation failed", { error });
     res.status(500).json({ message: "Failed to initiate payment" });
+  }
+});
+
+// Webhook for Flutterwave
+router.post("/webhook", async (req, res) => {
+  try {
+    const signature = req.headers['verif-hash'];
+    if (!signature || !verifyWebhookSignature(signature as string, req.body)) {
+      return res.status(401).json({ message: "Invalid signature" });
+    }
+
+    const { status, txRef, id } = req.body;
+    
+    if (status === 'successful') {
+      const transaction = await verifyTransaction(id.toString());
+      
+      if (transaction.status === 'success') {
+        // Update payment status
+        const payment = await storage.getPaymentByTransactionRef(txRef);
+        if (payment && payment.status !== 'completed') {
+          await storage.updatePayment(payment.id, { status: 'completed' });
+          
+          // Send confirmation email
+          const user = await storage.getUser(payment.userId);
+          if (user?.email) {
+            sendPaymentConfirmationEmail(
+              user.email,
+              user.fullName || user.username,
+              parseFloat(payment.amount),
+              payment.currency,
+              payment.transactionRef,
+              payment.type
+            ).catch(err => logger.error('Failed to send payment email', { error: err }));
+          }
+        }
+      }
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    logger.error("Webhook processing failed", { error });
+    res.sendStatus(500);
   }
 });
 
