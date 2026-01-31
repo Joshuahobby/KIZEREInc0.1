@@ -1,0 +1,105 @@
+import { Router } from "express";
+import { storage } from "../storage";
+import { 
+  insertPaymentPackageSchema,
+  initiatePaymentSchema
+} from "@shared/schema";
+import { z } from "zod";
+import { createLogger } from "../utils/logger";
+import { 
+  generateTransactionReference, 
+  initializePayment,
+  getPaymentAmount
+} from "../utils/flutterwave";
+import { getPaymentDescription } from "../config/payment.config";
+
+const logger = createLogger('PaymentRoutes');
+const router = Router();
+
+const requireRole = (roles: string[]) => (req: any, res: any, next: any) => {
+  if (!req.isAuthenticated()) return res.status(401).json({ message: "Authentication required" });
+  if (!roles.includes(req.user.role)) return res.status(403).json({ message: "Insufficient permissions" });
+  next();
+};
+
+const requireAdmin = requireRole(['Admin']);
+
+
+// Payments & Packages API
+router.get("/packages", async (req, res) => {
+  try {
+    const packages = await storage.getAllPaymentPackages();
+    res.json(packages);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch payment packages" });
+  }
+});
+
+router.post("/packages", requireAdmin, async (req, res) => {
+  try {
+    const validatedData = insertPaymentPackageSchema.parse(req.body);
+    const newPackage = await storage.createPaymentPackage(validatedData);
+    res.status(201).json(newPackage);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: "Validation error", errors: error.errors });
+    }
+    res.status(500).json({ message: "Failed to create package" });
+  }
+});
+
+router.get("/history", async (req, res) => {
+  try {
+    const payments = await storage.getUserPayments(req.user!.id);
+    res.json(payments);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch payment history" });
+  }
+});
+
+router.post("/initiate", async (req, res) => {
+  try {
+    const validatedData = initiatePaymentSchema.parse(req.body);
+    const amount = await getPaymentAmount(validatedData.type as 'registration' | 'lost_report');
+    const txRef = generateTransactionReference();
+    
+    const payment = await storage.createPayment({
+      userId: req.user!.id,
+      amount: amount.toString(),
+      currency: "RWF",
+      status: "pending",
+      transactionRef: txRef,
+      type: validatedData.type,
+      itemId: validatedData.itemId || null,
+      reportId: validatedData.reportId || null,
+      packageId: validatedData.packageId || null,
+      metadata: null
+    });
+
+    const flutterwaveResponse = await initializePayment({
+      amount,
+      currency: "RWF",
+      tx_ref: txRef,
+      redirect_url: validatedData.redirectUrl || `${process.env.APP_URL || 'http://localhost:5000'}/payment-status`,
+      customer: {
+        email: req.user!.email,
+        name: req.user!.fullName || req.user!.username
+      },
+
+      customizations: {
+        title: "KIZERE Inc Payment",
+        description: await getPaymentDescription(validatedData.type)
+      }
+    });
+
+    res.json({
+      payment,
+      checkoutUrl: flutterwaveResponse.data?.link
+    });
+  } catch (error) {
+    logger.error("Payment initiation failed", { error });
+    res.status(500).json({ message: "Failed to initiate payment" });
+  }
+});
+
+export default router;

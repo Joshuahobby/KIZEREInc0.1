@@ -29,7 +29,10 @@
     "profile": "Profile",
     "settings": "Settings",
     "navigation": "Navigation",
-    "account": "Account"
+    "account": "Account",
+    "blog": "Blog",
+    "docs": "Documentation",
+    "community": "Community"
   },
   "auth": {
     "signIn": "Sign In",
@@ -451,5 +454,136 @@
   },
   "settings": {
     "title": "Settings"
+  },
+  "faqs_page": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know about KIZERE",
+    "categories": {
+      "general": "General",
+      "registration": "Item Registration",
+      "lost_found": "Lost & Found",
+      "security": "Security & Privacy",
+      "payments": "Payments"
+    },
+    "questions": {
+      "what_is_kizere": "What is KIZERE?",
+      "what_is_kizere_ans": "KIZERE is Rwanda's first comprehensive digital platform for item registration, lost and found reporting, and ownership management. We help build a culture of trust and security.",
+      "is_it_free": "Is it free to use?",
+      "is_it_free_ans": "Registering a basic account is free. We charge a small fee for item registration (2,000 RWF) to maintain the registry and provide secure identification services.",
+      "how_to_register": "How do I register an item?",
+      "how_to_register_ans": "Simply log in, click 'Register Item', and follow the steps: provide details, upload photos, and verify ownership documents.",
+      "what_is_digital_cert": "What is a Digital Certificate?",
+      "what_is_digital_cert_ans": "It's a secure digital document that proves you are the owner of the item. It includes item details, photos, and a unique identification number.",
+      "what_if_i_lose_it": "What should I do if I lose my item?",
+      "what_if_i_lose_it_ans": "Go to 'Lost & Found', report the item as lost, and provide details about where and when it was last seen. Our network and matching algorithm will help find it.",
+      "is_my_data_safe": "Is my data safe?",
+      "is_my_data_safe_ans": "Yes, we use bank-level encryption and comply with Rwanda's data protection laws to ensure your personal information is secure."
+    },
+    "contact_us_text": "Still have questions? We're here to help you secure what matters most."
+  },
+  "about_page": {
+    "title": "About KIZERE",
+    "mission": "Our Mission",
+    "mission_text": "To build a transparent and trustworthy environment for item ownership and recovery in Rwanda through innovative digital solutions.",
+    "vision": "Our Vision",
+    "vision_text": "To become the standard for ownership verification and lost-item recovery across East Africa.",
+    "story": "The KIZERE Story",
+    "story_text": "Founded in Kigali, KIZERE was born out of the need for a central, reliable system to manage property and facilitate the return of lost items in our growing city."
+  },
+  "contact_page": {
+    "title": "Contact Us",
+    "subtitle": "We're here to help you",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "subject": "Subject",
+      "message": "Message",
+      "send": "Send Message"
+    },
+    "info": {
+      "address": "Kigali, Rwanda",
+      "phone": "+250 7XX XXX XXX",
+      "email": "support@kizere.rw"
+    }
+  },
+  "blog_page": {
+    "title": "KIZERE Blog",
+    "subtitle": "Security tips, success stories, and platform updates",
+    "categories": {
+      "all": "All Posts",
+      "security": "Security",
+      "success": "Success Stories",
+      "news": "News"
+    },
+    "posts": {
+      "post1": {
+        "title": "How to Protect Your Smartphone in Kigali",
+        "excerpt": "Practical tips for keeping your most valuable mobile device secure in our growing city.",
+        "date": "Jan 15, 2026",
+        "category": "Security"
+      },
+      "post2": {
+        "title": "Recovered: A Success Story from Musanze",
+        "excerpt": "How a lost tablet was returned to its rightful owner within 48 hours using KIZERE.",
+        "date": "Jan 10, 2026",
+        "category": "Success Stories"
+      },
+      "post3": {
+        "title": "KIZERE Version 0.1: What's New",
+        "excerpt": "Exploring the new features and improvements in our latest platform update.",
+        "date": "Jan 5, 2026",
+        "category": "News"
+      }
+    },
+    "readMore": "Read More"
+  },
+  "docs_page": {
+    "title": "Documentation",
+    "subtitle": "Guides and resources for using KIZERE",
+    "getting_started": {
+      "title": "Getting Started",
+      "step1": "Creating your account",
+      "step2": "Setting up your profile",
+      "step3": "First item registration"
+    },
+    "guides": {
+      "title": "How-to Guides",
+      "registration": "Detailed guide on item registration",
+      "ownership": "Managing ownership certificates",
+      "lost_found": "Reporting lost and found items",
+      "qr_codes": "How to use KIZERE QR tags"
+    }
+  },
+  "community_page": {
+    "title": "Community",
+    "subtitle": "Building a culture of trust and security together",
+    "network": {
+      "title": "The Trust Network",
+      "description": "KIZERE is more than a platform; it's a community of trust. Our goal is to create a secure environment where lost items find their way home."
+    },
+    "guidelines": {
+      "title": "Community Guidelines",
+      "rule1": "Be honest and transparent in your reports.",
+      "rule2": "Respect the privacy of other users.",
+      "rule3": "Facilitate the return of found items promptly."
+    },
+    "feed": {
+      "title": "Community Stories & Alerts",
+      "filter_all": "All Posts",
+      "filter_success": "Success Stories",
+      "filter_security": "Security Alerts",
+      "filter_tips": "Recovery Tips"
+    },
+    "stats": {
+      "likes": "Likes",
+      "comments": "Comments"
+    },
+    "badges": {
+      "title": "Community Badges",
+      "eagle_eye": "Eagle Eye",
+      "trust_builder": "Trust Builder",
+      "recovery_expert": "Recovery Expert"
+    },
+    "create_post": "Share a Story or Alert"
   }
 }

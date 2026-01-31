@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { AvatarWithInitials } from "@/components/ui/avatar-with-initials";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,24 +10,50 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Menu, X, User, Search, PlusCircle, LayoutDashboard } from "lucide-react";
+import { 
+  Menu, 
+  X, 
+  User, 
+  Search, 
+  PlusCircle, 
+  LayoutDashboard, 
+  Bell, 
+  Package,
+  Settings,
+  Shield,
+  LogOut
+} from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { Logo } from "@/components/ui/logo";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export function Header() {
   const [location] = useLocation();
   const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { t } = useLanguage();
 
   const isAdmin = user?.role === "Admin";
   const isAuthenticated = !!user;
 
+  // Handle scroll events to change header appearance
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   // Define the navigation item type
   type NavItem = {
     name: string;
     href: string;
-    admin?: boolean;
     icon?: any;
   };
 
@@ -44,22 +70,20 @@ export function Header() {
   const navigation: NavItem[] = isAuthenticated 
     ? [
         { name: t('nav.dashboard'), href: getDashboardPath(), icon: LayoutDashboard },
-        { name: t('nav.myItems'), href: "/my-items" }, 
-        { name: t('nav.lostFound'), href: "/lost-found" },
+        { name: t('nav.myItems') || "My Items", href: "/my-items", icon: Package }, 
+        { name: t('nav.lostFound'), href: "/lost-found", icon: Search },
         { name: t('nav.search'), href: "/search", icon: Search },
-        { name: t('nav.registerItems'), href: "/register-item", icon: PlusCircle },
+        { name: t('nav.registerItem') || t('nav.registerItems'), href: "/register-item", icon: PlusCircle },
       ]
     : [
-        { name: t('nav.home'), href: "/" },
-        { name: t('nav.features'), href: "/#features" },
+        { name: t('nav.home'), href: "/", icon: null },
+        { name: t('nav.features'), href: "/#features", icon: null },
         { name: t('nav.search'), href: "/search", icon: Search },
       ];
 
   if (isAdmin) {
-    navigation.push({ name: t('nav.userManagement'), href: "/user-management" });
+    navigation.push({ name: t('nav.userManagement'), href: "/user-management", icon: User });
   }
-
-  const authActions: NavItem[] = []; // Deprecated, kept empty for safety
 
   const handleLogout = () => {
     signOut();
@@ -67,143 +91,198 @@ export function Header() {
 
   const isActive = (path: string) => {
     if (path === "/" && location === "/") return true;
-    if (path !== "/" && location.startsWith(path)) return true;
+    if (path !== "/" && path !== "/#features" && location.startsWith(path)) return true;
     return false;
   };
 
   return (
-    <header className="bg-white border-b border-gray-100 sticky top-0 z-50 overflow-x-hidden">
+    <header 
+      className={cn(
+        "sticky top-0 z-50 w-full transition-all duration-200 border-b",
+        isScrolled 
+          ? "bg-background/80 backdrop-blur-md shadow-sm border-border" 
+          : "bg-background border-transparent"
+      )}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <div className="flex">
+          <div className="flex items-center">
             {/* Logo */}
-            <div className="flex-shrink-0 flex items-center mr-8">
-              <Link href={isAuthenticated ? getDashboardPath() : "/"}>
-                <h1 className="text-2xl font-display font-bold text-primary-600 cursor-pointer tracking-tight">KIZERE</h1>
-              </Link>
-            </div>
+            <Link href={isAuthenticated ? getDashboardPath() : "/"} className="flex items-center gap-2 group">
+              <Logo className="h-8 w-8 transition-transform group-hover:scale-110" />
+              <span className="text-2xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tight">
+                KIZERE
+              </span>
+            </Link>
             
             {/* Desktop Navigation - Hidden on mobile */}
-            <nav className="hidden md:flex md:space-x-4">
+            <nav className="hidden md:flex ml-10 space-x-1">
               {navigation.map((item) => (
                 <Link 
                   key={item.name} 
                   href={item.href}
-                  className={`${
+                  className={cn(
+                    "inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
                     isActive(item.href)
-                      ? "border-primary-500 text-neutral-900"
-                      : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
-                  } inline-flex items-center px-2 pt-1 border-b-2 text-sm font-medium transition-colors`}
+                      ? "text-primary bg-primary/10"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
                 >
                   {item.name}
                 </Link>
               ))}
-              
-              {/* Actions removed (merged into main navigation) */}
             </nav>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Language Switcher grouped in background - hidden on mobile */}
-            <div className="bg-neutral-50 rounded-full px-1 border border-neutral-100 hidden lg:block">
-              <LanguageSwitcher variant="minimal" />
-            </div>
-            
-            <div className="h-6 w-px bg-neutral-200 hidden lg:block mx-1"></div>
-            
-            {isAuthenticated ? (
-              <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Actions grouped together */}
+            <div className="flex items-center gap-1 sm:gap-2 mr-2">
+              <ThemeToggle />
+              
+              <div className="hidden sm:block">
+                <LanguageSwitcher variant="minimal" />
+              </div>
+              
+              {isAuthenticated && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="p-1 h-auto rounded-full hover:bg-neutral-100 transition-all border border-transparent hover:border-neutral-200">
-                      <AvatarWithInitials name={user?.fullName || ''} className="h-9 w-9" />
+                    <Button variant="ghost" size="icon" className="relative group">
+                      <Bell className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      <Badge className="absolute -right-1 -top-1 h-4 min-w-[1rem] px-1 text-[10px] bg-primary flex items-center justify-center">
+                        2
+                      </Badge>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 mt-1 shadow-xl border-neutral-200 rounded-xl p-1">
-                    <div className="px-3 py-2 text-xs font-semibold text-neutral-400 uppercase tracking-widest leading-none mb-1">
-                      {user.fullName}
+                  <DropdownMenuContent align="end" className="w-80 p-0 shadow-xl border-border rounded-xl">
+                    <div className="p-4 border-b flex justify-between items-center bg-muted/50">
+                      <h4 className="font-semibold text-sm">{t('common.notifications') || "Notifications"}</h4>
+                      <Badge variant="secondary" className="text-[10px]">{t('common.new') || "New"}</Badge>
                     </div>
-                    <DropdownMenuSeparator className="mx-1" />
-                    <DropdownMenuItem className="rounded-lg cursor-pointer focus:bg-neutral-50">
-                      <Link href="/profile">
-                        <div className="flex items-center w-full py-1">
-                          <User className="mr-2 h-4 w-4 text-neutral-500" />
-                          <span>{t('profile.title')}</span>
+                    <div className="max-h-80 overflow-y-auto p-2">
+                      <div className="flex gap-3 p-3 rounded-lg hover:bg-accent transition-colors cursor-pointer">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Shield className="h-4 w-4 text-primary" />
                         </div>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="rounded-lg cursor-pointer focus:bg-neutral-50">
-                      <Link href="/settings">
-                        <div className="flex items-center w-full py-1">
-                          <PlusCircle className="mr-2 h-4 w-4 text-neutral-500" />
-                          <span>{t('settings.title')}</span>
+                        <div className="flex-1 space-y-1">
+                          <p className="text-xs font-medium line-clamp-1">{t('notifications.itemMatched') || "Item Matched"}</p>
+                          <p className="text-[10px] text-muted-foreground line-clamp-2">
+                            {t('notifications.itemMatchedDesc') || "A matching item has been found in the system."}
+                          </p>
                         </div>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="mx-1" />
-                    <DropdownMenuItem onClick={handleLogout} className="rounded-lg cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700">
-                      <div className="flex items-center w-full py-1 font-medium">
-                        <X className="mr-2 h-4 w-4" />
-                        {t('auth.logout')}
                       </div>
-                    </DropdownMenuItem>
+                    </div>
+                    <div className="p-2 border-t">
+                      <Button variant="ghost" size="sm" className="w-full text-xs h-8" asChild>
+                        <Link href="/dashboard/notifications">{t('common.viewAll') || "View All"}</Link>
+                      </Button>
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
+              )}
+            </div>
+            
+            <div className="h-6 w-px bg-border hidden sm:block mx-1"></div>
+            
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 overflow-hidden ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
+                    <AvatarWithInitials name={user?.fullName || ''} className="h-full w-full" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-60 p-1 shadow-xl border-border rounded-xl">
+                  <div className="px-3 py-3 border-b mb-1">
+                    <p className="text-sm font-semibold truncate">{user.fullName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email || user.username}</p>
+                  </div>
+                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer focus:bg-accent">
+                    <Link href="/profile" className="flex items-center w-full">
+                      <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <span>{t('profile.title') || "Profile"}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-lg cursor-pointer focus:bg-accent">
+                    <Link href="/settings" className="flex items-center w-full">
+                      <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
+                      <span>{t('settings.title') || "Settings"}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout} 
+                    className="rounded-lg cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive font-medium"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('auth.logout') || "Sign Out"}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <Link href="/auth">
-                <Button className="flex items-center gap-2 rounded-full px-6 shadow-sm hover:shadow transition-all bg-primary-600 hover:bg-primary-700 text-white font-semibold">
-                  <User className="h-4 w-4" />
-                  {t('auth.getStarted') || "Get Started"}
-                </Button>
-              </Link>
+              <Button asChild className="rounded-full px-6 shadow-md hover:shadow-lg transition-all bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-9 text-sm">
+                <Link href="/auth">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>{t('auth.getStarted') || t('auth.signIn') || "Get Started"}</span>
+                  </div>
+                </Link>
+              </Button>
             )}
 
-            {/* Mobile menu button - visible on small screens */}
-            <div className="flex items-center md:hidden">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="rounded-full hover:bg-neutral-100"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                {mobileMenuOpen ? (
-                  <X className="h-6 w-6 text-neutral-500" />
-                ) : (
-                  <Menu className="h-6 w-6 text-neutral-500" />
-                )}
-              </Button>
-            </div>
+            {/* Mobile menu button */}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="md:hidden rounded-full ml-1"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Mobile menu */}
-      <div className={`${mobileMenuOpen ? "block" : "hidden"} md:hidden border-t border-neutral-100 bg-white`}>
-        <div className="pt-2 pb-3 space-y-1">
-          {navigation.map((item) => (
-            <Link 
-              key={item.name} 
-              href={item.href}
-              className={`${
-                isActive(item.href)
-                  ? "bg-primary-50 border-primary-500 text-primary-700"
-                  : "border-transparent text-neutral-500 hover:bg-neutral-50 hover:text-neutral-700"
-              } block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-all cursor-pointer`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {item.name}
-            </Link>
-          ))}
-          {/* Auth actions and Admin links merged into main navigation loop */}
-        </div>
-        <div className="pt-4 pb-3 border-t border-neutral-100 px-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-neutral-500">{t('common.language')}</span>
-            <LanguageSwitcher variant="minimal" />
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-md animate-in slide-in-from-top duration-300">
+          <div className="px-4 py-6 space-y-2">
+            {navigation.map((item) => (
+              <Link 
+                key={item.name} 
+                href={item.href}
+                className={cn(
+                  "flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all",
+                  isActive(item.href)
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.icon && <item.icon className="mr-3 h-5 w-5" />}
+                {item.name}
+              </Link>
+            ))}
+            
+            <div className="pt-4 border-t border-border mt-4 flex flex-col gap-4">
+              <div className="flex items-center justify-between px-4">
+                <span className="text-sm font-medium text-muted-foreground">{t('common.language') || "Language"}</span>
+                <LanguageSwitcher variant="minimal" />
+              </div>
+              
+              {!isAuthenticated && (
+                <Button asChild className="w-full rounded-xl py-6 rounded-full shadow-md bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg">
+                  <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                    {t('auth.getStarted') || "Get Started"}
+                  </Link>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }
