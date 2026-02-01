@@ -105,7 +105,7 @@ export function setupSecurityMiddleware(app: Express) {
     hsts: process.env.NODE_ENV === 'production',
     // Allow Replit iframe embedding
     crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: { policy: "unsafe-none" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
   

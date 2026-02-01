@@ -3,8 +3,26 @@ import { createLogger } from '../utils/logger';
 
 const logger = createLogger('EmailService');
 
-// Initialize Resend client
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-initialized Resend client
+let _resend: Resend | null = null;
+
+function getResendClient(): Resend | null {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    logger.warn('RESEND_API_KEY is missing. Email service will be disabled.');
+    return null;
+  }
+  
+  if (!_resend) {
+    try {
+      _resend = new Resend(apiKey);
+    } catch (error) {
+      logger.error('Failed to initialize Resend client', { error });
+      return null;
+    }
+  }
+  return _resend;
+}
 
 // Default sender email (must be verified in Resend)
 const FROM_EMAIL = process.env.FROM_EMAIL || 'KIZERE <noreply@kizere.com>';
@@ -23,7 +41,13 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
     logger.info('Sending email', { to: options.to, subject: options.subject });
     
-    const result = await resend.emails.send({
+    const client = getResendClient();
+    if (!client) {
+      logger.error('Cannot send email: Resend client not initialized (missing API key)');
+      return false;
+    }
+    
+    const result = await client.emails.send({
       from: FROM_EMAIL,
       to: options.to,
       subject: options.subject,
