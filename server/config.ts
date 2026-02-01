@@ -14,7 +14,8 @@ const devSessionSecret = randomBytes(32).toString('hex');
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.string().transform(val => parseInt(val, 10)).default('5000'),
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  DATABASE_URL: z.string().optional(),
+  POSTGRES_URL: z.string().optional(),
   SESSION_SECRET: z.string().default(devSessionSecret),
   VITE_FIREBASE_API_KEY: z.string().optional(),
   VITE_FIREBASE_APP_ID: z.string().optional(),
@@ -26,17 +27,22 @@ const envResult = envSchema.safeParse(process.env);
 
 if (!envResult.success) {
   console.error('❌ Invalid environment variables:', JSON.stringify(envResult.error.format(), null, 2));
-  
-  // Only exit in production, allow development to continue with warnings
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('Invalid environment variables');
-  } else {
-    console.warn('⚠️ Continuing with default values where possible...');
-  }
 }
 
 // Export the validated environment object
-export const env = envResult.success ? envResult.data : process.env as any;
+// Use POSTGRES_URL as a fallback for DATABASE_URL if available
+const parsedEnv = envResult.success ? envResult.data : process.env as any;
+const finalDatabaseUrl = parsedEnv.DATABASE_URL || parsedEnv.POSTGRES_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+export const env = {
+  ...parsedEnv,
+  DATABASE_URL: finalDatabaseUrl || ''
+};
+
+// Check for missing critical variables
+if (!env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL or POSTGRES_URL is missing! Database connections will fail.');
+}
 
 // Warn about using the auto-generated session secret in production
 if (process.env.NODE_ENV === 'production' && (!process.env.SESSION_SECRET || process.env.SESSION_SECRET === devSessionSecret)) {
