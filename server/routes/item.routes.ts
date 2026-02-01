@@ -42,6 +42,7 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
+  logger.info("Received item registration request", { body: req.body, user: req.user?.id });
   try {
     const validatedData = insertItemSchema.parse({
       ...req.body,
@@ -49,9 +50,12 @@ router.post("/", async (req, res) => {
     });
     
     const newItem = await storage.createItem(validatedData);
+    logger.info("Item created successfully", { itemId: newItem.id });
     res.status(201).json(newItem);
   } catch (error) {
+    logger.error("Failed to create item", { error });
     if (error instanceof z.ZodError) {
+      logger.warn("Validation error details", { errors: error.errors });
       return res.status(400).json({ 
         message: "Validation error", 
         errors: error.errors 

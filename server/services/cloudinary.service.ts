@@ -30,7 +30,7 @@ export async function uploadImage(
 
     const result: UploadApiResponse = await cloudinary.uploader.upload(imageData, {
       folder,
-      resource_type: 'image',
+      resource_type: 'auto',
       transformation: [
         { quality: 'auto:good' },
         { fetch_format: 'auto' }

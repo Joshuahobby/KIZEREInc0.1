@@ -60,6 +60,7 @@ router.get("/history", async (req, res) => {
 });
 
 router.post("/initiate", async (req, res) => {
+  logger.info("Received payment initiation request", { body: req.body, user: req.user?.id });
   try {
     const validatedData = initiatePaymentSchema.parse(req.body);
     const amount = await getPaymentAmount(validatedData.type as 'registration' | 'lost_report');
@@ -94,12 +95,14 @@ router.post("/initiate", async (req, res) => {
       }
     });
 
+    logger.info("Payment initiated successfully", { txRef, checkoutUrl: flutterwaveResponse.data?.link });
+
     res.json({
       payment,
-      checkoutUrl: flutterwaveResponse.data?.link
+      paymentUrl: flutterwaveResponse.data?.link
     });
   } catch (error) {
-    logger.error("Payment initiation failed", { error });
+    logger.error("Payment initiation failed", { error, body: req.body });
     res.status(500).json({ message: "Failed to initiate payment" });
   }
 });

@@ -14,6 +14,7 @@ const AuthCallback = lazy(() => import("@/pages/auth-callback"));
 const UnifiedDashboard = lazy(() => import("@/pages/unified-dashboard"));
 const ItemRegistration = lazy(() => import("@/pages/item-registration"));
 const MyItems = lazy(() => import("@/pages/my-items"));
+const ItemDetail = lazy(() => import("@/pages/item-detail"));
 const Search = lazy(() => import("@/pages/search"));
 const LostFound = lazy(() => import("@/pages/lost-found"));
 const ReportDetailPage = lazy(() => import("@/pages/report-detail"));
@@ -103,6 +104,7 @@ function App() {
                 <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
                 <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
                 <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
+                <ProtectedRoute path="/items/:id" component={ItemDetail} requiredRole="any" />
                 <Route path="/search">
                   <Search />
                 </Route>

@@ -96,7 +96,7 @@ const SUB_CATEGORIES: Record<string, string[]> = {
   Other: ["Other"],
 };
 
-const formSchema = insertItemSchema.extend({
+const formSchema = insertItemSchema.omit({ userId: true }).extend({
   subCategory: z.string().optional(),
   // Ensure name and uniqueIdentifier meet minimum lengths for better data quality
   name: z.string().min(2, "Item name must be at least 2 characters"),
@@ -185,11 +185,23 @@ export default function ItemRegistrationPage() {
     return () => clearTimeout(timer);
   }, [watchedValues, form.formState.isDirty]);
 
+  // Monitor form errors
+  useEffect(() => {
+    if (Object.keys(form.formState.errors).length > 0) {
+      console.warn("[Registration] Form validation errors:", form.formState.errors);
+    }
+  }, [form.formState.errors]);
+
+  useEffect(() => {
+    console.log(`[Registration] Completion: ${completion}%`);
+  }, [completion]);
+
   const toggleSection = (section: string) => {
     setExpandedSections(prev => 
       prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
     );
   };
+
 
   const isSectionComplete = (section: string): boolean => {
     switch (section) {
@@ -222,14 +234,20 @@ export default function ItemRegistrationPage() {
 
   const registerMutation = useMutation({
     mutationFn: async (data: ItemRegistrationValues) => {
+      console.log("[Registration] Starting submission...", data);
       // 1. Upload images
       let uploadedImageUrls: string[] = [];
       if (itemImages.length > 0) {
         const formData = new FormData();
         itemImages.forEach(file => formData.append('images', file));
-        const uploadRes = await fetch('/api/upload/images', { method: 'POST', body: formData });
+        const uploadRes = await fetch('/api/upload/images', { 
+          method: 'POST', 
+          body: formData,
+          credentials: 'include'
+        });
         if (!uploadRes.ok) throw new Error("Failed to upload images");
         const { urls } = await uploadRes.json();
+        console.log("[Registration] Images uploaded:", urls);
         uploadedImageUrls = urls;
       }
 
@@ -245,9 +263,14 @@ export default function ItemRegistrationPage() {
             description: doc.description
           }));
         });
-        const docRes = await fetch('/api/upload/documents', { method: 'POST', body: formData });
+        const docRes = await fetch('/api/upload/documents', { 
+          method: 'POST', 
+          body: formData,
+          credentials: 'include'
+        });
         if (!docRes.ok) throw new Error("Failed to upload documents");
         const { documents } = await docRes.json();
+        console.log("[Registration] Documents uploaded:", documents);
         uploadedDocUrls = documents;
       }
 
@@ -264,6 +287,7 @@ export default function ItemRegistrationPage() {
           }
         }
       });
+      console.log("[Registration] Item created:", itemResponse);
 
       // 4. Initialize Payment
       console.log("[Registration] Initializing payment for item:", itemResponse.id);
@@ -290,6 +314,7 @@ export default function ItemRegistrationPage() {
       }
     },
     onError: (error: Error) => {
+      console.error("[Registration] Mutation error:", error);
       setPaymentStatus("error");
       toast({
         title: "Registration Failed",
@@ -551,8 +576,13 @@ export default function ItemRegistrationPage() {
 
                   <Button 
                     className="w-full h-12 text-lg font-bold shadow-md bg-neutral-900 hover:bg-neutral-800"
-                    disabled={completion < 60 || registerMutation.isPending}
-                    onClick={form.handleSubmit(onSubmit)}
+                    disabled={completion < 40 || registerMutation.isPending}
+                    onClick={() => {
+                      console.log("[Registration] Submit button clicked. Completion:", completion);
+                      form.handleSubmit(onSubmit, (errors) => {
+                        console.error("[Registration] Form submission blocked by validation errors:", errors);
+                      })();
+                    }}
                   >
                     {registerMutation.isPending ? (
                       <>

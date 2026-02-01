@@ -81,6 +81,7 @@ export function setupSecurityMiddleware(app: Express) {
         imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com"],
         connectSrc: ["'self'", 
           "blob:",
+          "data:",
           "https://cdn.jsdelivr.net",
           "https://tessdata.projectnaptha.com",
           "https://res.cloudinary.com",

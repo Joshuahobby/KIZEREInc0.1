@@ -122,7 +122,7 @@ export async function getReportsWithFilters(options: {
     paymentStatus: reports.paymentStatus,
     uniqueIdentifier: reports.uniqueIdentifier,
     reportedAt: reports.reportedAt,
-    claimCount: sql<number>`count(${claims.id})`.mapWith(Number)
+    claimCount: sql<number>`(SELECT count(*) FROM ${claims} WHERE ${claims.reportId} = ${reports.id})`.mapWith(Number)
   } as any;
 
   // Add relevance score if searching
@@ -145,14 +145,11 @@ export async function getReportsWithFilters(options: {
   }
 
   let query: any = db.select(querySelection)
-    .from(reports)
-    .leftJoin(claims, eq(reports.id, claims.reportId));
+    .from(reports);
 
   if (conditions.length) {
     query = query.where(and(...conditions));
   }
-
-  query = query.groupBy(reports.id);
 
   // Sorting
   const sortColumn = (sortBy && sortBy in reports) ? reports[sortBy as keyof typeof reports] : reports.reportedAt;

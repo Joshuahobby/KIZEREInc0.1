@@ -125,19 +125,19 @@ export function BatchImageUpload({
     Array.from(files).forEach(file => {
       // Check if we reached the max number of files
       if (images.length + filesToAdd.length >= maxFiles) {
-        errors.push(t('batch_upload_max_files', { count: maxFiles }));
+        errors.push(t('batchUpload.batch_upload_max_files', { count: maxFiles }));
         return;
       }
       
       // Check file type
       if (!isValidFileType(file)) {
-        errors.push(t('batch_upload_invalid_type'));
+        errors.push(t('batchUpload.batch_upload_invalid_type'));
         return;
       }
       
       // Check file size
       if (!isValidFileSize(file)) {
-        errors.push(t('batch_upload_max_size', { size: maxFileSizeMB }));
+        errors.push(t('batchUpload.batch_upload_max_size', { size: maxFileSizeMB }));
         return;
       }
       
@@ -169,8 +169,8 @@ export function BatchImageUpload({
       onImagesChange(fileObjects);
       
       toast({
-        title: t('batch_upload_success'),
-        description: t('batch_upload_success_desc', { count: filesToAdd.length }),
+        title: t('batchUpload.batch_upload_success'),
+        description: t('batchUpload.batch_upload_success_desc', { count: filesToAdd.length }),
       });
     }
     
@@ -219,8 +219,8 @@ export function BatchImageUpload({
     onImagesChange(fileObjects);
     
     toast({
-      title: t('batch_upload_removed'),
-      description: t('batch_upload_removed_desc'),
+      title: t('batchUpload.batch_upload_removed'),
+      description: t('batchUpload.batch_upload_removed_desc'),
     });
   };
   
@@ -248,8 +248,8 @@ export function BatchImageUpload({
     <Card className={cn("w-full", !showHeader && "border-0 shadow-none bg-transparent")}>
       {showHeader && (
         <CardHeader>
-          <CardTitle>{t('batch_upload_title')}</CardTitle>
-          <CardDescription>{t('batch_upload_description')}</CardDescription>
+          <CardTitle>{t('batchUpload.batch_upload_title')}</CardTitle>
+          <CardDescription>{t('batchUpload.batch_upload_description')}</CardDescription>
         </CardHeader>
       )}
       <CardContent className="space-y-4">
@@ -271,7 +271,7 @@ export function BatchImageUpload({
             className="hidden"
             ref={fileInputRef}
             disabled={isUploading || images.length >= maxFiles}
-            title={t('batch_upload_title')}
+            title={t('batchUpload.batch_upload_title')}
             aria-label={t('batchUpload.batch_upload_title')}
           />
           

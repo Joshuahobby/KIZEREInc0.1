@@ -99,6 +99,7 @@ import claimRoutes from './routes/claim.routes';
 import verificationRoutes from "./routes/verification.routes";
 import uploadRoutes from './routes/upload.routes';
 import moderationRoutes from './routes/moderation.routes';
+import searchRoutes from './routes/search.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -118,6 +119,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/me', requireAuth, profileRoutes);
   app.use('/api/upload', requireAuth, uploadRoutes);
   app.use('/api/moderation', requireAuth, moderationRoutes);
+  app.use('/api/search', requireAuth, searchRoutes);
 
   // Health check endpoint
   app.get("/api/health", async (req, res) => {
@@ -162,6 +164,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/auth/google", async (req, res) => {
+    const { canVerifyTokens, default: firebaseAdmin } = await import('./utils/firebase-admin');
+
     try {
       const validationResult = googleAuthSchema.safeParse(req.body);
       
@@ -191,9 +195,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (token) {
         try {
-          const adminModule = await import('./utils/firebase-admin');
-          if (adminModule.canVerifyTokens()) {
-            const decodedToken = await adminModule.default.auth().verifyIdToken(token);
+          if (canVerifyTokens && typeof canVerifyTokens === 'function' && canVerifyTokens()) {
+            const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
             if (decodedToken && decodedToken.uid === uid) {
               tokenVerified = true;
               logger.info('Firebase token successfully verified', { uid });
