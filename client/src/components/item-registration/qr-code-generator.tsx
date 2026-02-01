@@ -206,12 +206,12 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true }:
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button variant="outline" onClick={refreshQRCode}>
+      <CardFooter className={cn("flex justify-between", !showHeader && "flex-col gap-3")}>
+        <Button variant="outline" onClick={refreshQRCode} className={cn(!showHeader && "w-full")}>
           <LuRefreshCw className="mr-2 h-4 w-4" />
           {t('registration.qr_refresh')}
         </Button>
-        <Button onClick={downloadQRCode}>
+        <Button onClick={downloadQRCode} className={cn(!showHeader && "w-full")}>
           <LuDownload className="mr-2 h-4 w-4" />
           {t('registration.qr_download')}
         </Button>
