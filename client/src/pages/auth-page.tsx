@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
+import { AuthService } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,7 +49,9 @@ export default function AuthPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate("/");
+      // Use role-specific dashboard instead of landing page
+      const dashboardPath = AuthService.getDashboardPathByRole(user.role);
+      navigate(dashboardPath);
     }
   }, [user, navigate]);
 
