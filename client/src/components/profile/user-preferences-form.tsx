@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -50,7 +50,7 @@ interface UserPreferencesFormProps {
 }
 
 export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesFormProps) {
-  const { t, i18n } = useTranslation();
+  const { t, language, setLanguage } = useLanguage();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -94,7 +94,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
     resolver: zodResolver(preferencesFormSchema),
     defaultValues: {
       theme: (preferences?.theme as "light" | "dark" | "system") || "system",
-      language: preferences?.language || i18n.language || "en",
+      language: preferences?.language || language || "en",
       notifications: {
         email: preferences?.notifications?.email ?? true,
         sms: preferences?.notifications?.sms ?? false,
@@ -121,8 +121,8 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
       });
       // Update the language if it was changed
       const newLanguage = form.getValues().language;
-      if (newLanguage !== i18n.language) {
-        i18n.changeLanguage(newLanguage);
+      if (newLanguage !== language) {
+        setLanguage(newLanguage as any);
       }
       // Refresh preferences data
       queryClient.invalidateQueries({ queryKey: ['/api/me/preferences'] });

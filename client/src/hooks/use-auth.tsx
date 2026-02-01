@@ -28,22 +28,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [, setLocation] = useLocation();
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { toast } = useToast();
-  const [syncInProgress, setSyncInProgress] = useState(false);
   const isMounted = useRef(true);
+  
+  // Refs for debouncing and preventing duplicate sync calls
+  const syncInProgressRef = useRef(false);
+  const lastSyncTimeRef = useRef(0);
+  const syncDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingFirebaseUserRef = useRef<any>(null);
+  const SYNC_COOLDOWN_MS = 5000; // 5 second cooldown between syncs
+  const SYNC_DEBOUNCE_MS = 500; // 500ms debounce for rapid calls
 
   useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
+      // Clean up debounce timer on unmount
+      if (syncDebounceTimerRef.current) {
+        clearTimeout(syncDebounceTimerRef.current);
+      }
     };
   }, []);
 
-  const synchronizeWithServer = async (firebaseUser: any) => {
+  // Core sync function - actually performs the server sync
+  const performSync = async (firebaseUser: any) => {
       if (!isMounted.current) return;
-      if (syncInProgress) return; 
+      
+      // Check cooldown - skip if we synced recently
+      const now = Date.now();
+      if (now - lastSyncTimeRef.current < SYNC_COOLDOWN_MS) {
+        console.log("[useAuth] Skipping sync - within cooldown period");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Check if sync is already in progress using ref (instant, no re-render delay)
+      if (syncInProgressRef.current) {
+        console.log("[useAuth] Skipping sync - already in progress");
+        return;
+      }
 
       try {
-        setSyncInProgress(true);
+        syncInProgressRef.current = true;
         const token = await firebaseUser.getIdToken();
         
         const payload = {
@@ -62,6 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
 
         if (res.ok) {
+           lastSyncTimeRef.current = Date.now(); // Update last sync time on success
            const userData = await res.json();
            if (isMounted.current) {
              setUser(userData);
@@ -74,6 +100,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } else {
            const err = await res.json();
            console.error("[useAuth] Session sync failed", err);
+           // If rate limited, respect the retry-after
+           if (res.status === 429 && err.retryAfter) {
+             lastSyncTimeRef.current = Date.now(); // Prevent immediate retry
+             console.log(`[useAuth] Rate limited, retry after ${err.retryAfter}s`);
+           }
            if (isMounted.current) setError(err.message || "Login failed");
         }
 
@@ -81,11 +112,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
          console.error("[useAuth] Sync network error", e);
          if (isMounted.current) setError("Network error during login");
       } finally {
+         syncInProgressRef.current = false;
          if (isMounted.current) {
-            setSyncInProgress(false);
             setIsLoading(false); 
          }
       }
+  };
+
+  // Debounced wrapper - batches rapid calls and only executes the last one
+  const synchronizeWithServer = (firebaseUser: any) => {
+      if (!isMounted.current) return;
+      
+      // Store the pending user
+      pendingFirebaseUserRef.current = firebaseUser;
+      
+      // Clear any existing debounce timer
+      if (syncDebounceTimerRef.current) {
+        clearTimeout(syncDebounceTimerRef.current);
+      }
+      
+      // Set new debounce timer
+      syncDebounceTimerRef.current = setTimeout(() => {
+        const userToSync = pendingFirebaseUserRef.current;
+        pendingFirebaseUserRef.current = null;
+        syncDebounceTimerRef.current = null;
+        
+        if (userToSync && isMounted.current) {
+          performSync(userToSync);
+        }
+      }, SYNC_DEBOUNCE_MS);
   };
 
   // Check if user is already authenticated on mount
@@ -276,6 +331,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       setUser(null);
       setError(null);
+      
+      // Clear all query cache to prevent stale data
+      queryClient.clear();
+      
+      // Clear all local and session storage for a fresh start
+      localStorage.clear();
+      sessionStorage.clear();
+      
       setLocation("/");
       
       toast({

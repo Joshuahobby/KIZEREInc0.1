@@ -6,7 +6,7 @@ A comprehensive digital platform for intelligent item management, focusing on lo
 
 The project follows a modern architecture with clear separation of concerns:
 
-```
+```text
 ├── client/                 # Frontend React application
 ├── server/                 # Backend Express server
 │   ├── middleware/         # Express middleware

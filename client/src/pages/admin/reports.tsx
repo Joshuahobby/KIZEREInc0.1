@@ -640,6 +640,8 @@ export default function AdminReports() {
                   <tr className="bg-secondary/50">
                     <th className="h-10 px-4 text-left font-medium">Title</th>
                     <th className="h-10 px-4 text-left font-medium">Type</th>
+                    <th className="h-10 px-4 text-left font-medium">Category</th>
+                    <th className="h-10 px-4 text-left font-medium">Claims</th>
                     <th className="h-10 px-4 text-left font-medium">Status</th>
                     <th className="h-10 px-4 text-left font-medium">Location</th>
                     <th className="h-10 px-4 text-left font-medium">Date</th>
@@ -652,6 +654,7 @@ export default function AdminReports() {
                       <tr key={i} className="border-t">
                         <td className="p-4"><Skeleton className="h-4 w-32" /></td>
                         <td className="p-4"><Skeleton className="h-4 w-16" /></td>
+                        <td className="p-4"><Skeleton className="h-4 w-16" /></td>
                         <td className="p-4"><Skeleton className="h-4 w-24" /></td>
                         <td className="p-4"><Skeleton className="h-4 w-24" /></td>
                         <td className="p-4"><Skeleton className="h-4 w-24" /></td>
@@ -660,7 +663,7 @@ export default function AdminReports() {
                     ))
                   ) : ((reportData as any)?.reports || []).length === 0 ? (
                     <tr className="border-t">
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="py-8 text-center text-muted-foreground">
                         <div className="flex flex-col items-center justify-center">
                           <FileText className="h-8 w-8 mb-2 text-muted-foreground/60" />
                           <p>No reports found</p>
@@ -679,6 +682,16 @@ export default function AdminReports() {
                         <td className="p-4 font-medium">{report.title}</td>
                         <td className="p-4">
                           <TypeBadge type={report.type} />
+                        </td>
+                        <td className="p-4">
+                          <Badge variant="outline" className="text-xs">{report.category || 'Other'}</Badge>
+                        </td>
+                        <td className="p-4">
+                          {report.claimCount > 0 ? (
+                            <Badge variant="secondary" className="font-mono">{report.claimCount}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">-</span>
+                          )}
                         </td>
                         <td className="p-4">
                           <StatusBadge status={report.status} />

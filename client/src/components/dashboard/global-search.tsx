@@ -113,99 +113,29 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       setIsLoading(true);
       
       try {
-        // Simulate API call with delayed response
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}${activeFilter ? `&status=${activeFilter}` : ''}`);
         
-        // In real implementation, this would be an API call
-        // const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`);
-        // const data = await response.json();
-        
-        // Determine if the query looks like a unique identifier
-        // Determine if the query looks like various types of unique identifiers
-        // Check for IMEI format (15-17 digits)
-        const isImeiFormat = /^\d{15,17}$/.test(debouncedQuery);
-        
-        // Check for document ID formats (alphanumeric with possible separators)
-        const isDocIdFormat = /^[A-Za-z0-9\-\/]{6,}$/.test(debouncedQuery);
-        
-        // Check for UUID format
-        const isUuidFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(debouncedQuery);
-        
-        // Check for serial number format (often starts with SN, S/N or similar)
-        const isSerialNumFormat = /^(SN[-:]?|S\/N:?)?[A-Z0-9\-]{5,}$/i.test(debouncedQuery);
-        
-        // Combined unique ID check
-        const isUniqueIdQuery = isImeiFormat || isDocIdFormat || isUuidFormat || isSerialNumFormat || /^[A-Za-z0-9\-]{6,}$/.test(debouncedQuery);
-        
-        // For now, generate demo results based on the query
-        // In a real implementation, we would search specifically in uniqueId fields
-        const demoResults: SearchResult[] = [
-          {
-            id: '1',
-            type: 'item',
-            title: 'Dell XPS 13 Laptop',
-            description: 'Silver, registered on 2023-10-15',
-            category: 'Electronics',
-            status: 'registered',
-            date: '2023-10-15',
-            url: '/items/1',
-            uniqueId: '358735-92ADKX-4672B'
-          },
-          {
-            id: '2',
-            type: 'item',
-            title: 'National ID Card',
-            description: 'Government issued ID, registered on 2023-12-22',
-            category: 'Documents',
-            status: 'registered',
-            date: '2023-12-22',
-            url: '/items/2',
-            uniqueId: '119874356782'
-          },
-          {
-            id: '3',
-            type: 'item',
-            title: 'iPhone 14 Pro',
-            description: 'Black, 128GB, registered on 2023-09-20',
-            category: 'Electronics',
-            status: 'registered',
-            date: '2023-09-20',
-            url: '/items/3',
-            uniqueId: '352022-11937845-01'
-          },
-          {
-            id: '4',
-            type: 'item',
-            title: 'Samsung Smart TV',
-            description: '55-inch 4K TV, registered on 2023-11-05',
-            category: 'Electronics',
-            status: 'registered',
-            date: '2023-11-05',
-            url: '/items/4',
-            uniqueId: 'SN-XC7992-83A'
-          }
-        ];
-        
-        // First filter by unique ID if it appears to be a unique ID search
-        let filteredResults = demoResults;
-        if (isUniqueIdQuery) {
-          // In a real implementation, we would check if the search exactly or partially matches uniqueId fields
-          filteredResults = demoResults.filter(result => 
-            result.uniqueId && result.uniqueId.toLowerCase().includes(debouncedQuery.toLowerCase())
-          );
+        if (!response.ok) {
+          throw new Error('Search request failed');
         }
         
-        // Then apply type filters if active
-        if (activeFilter) {
-          filteredResults = filteredResults.filter(result => {
-            if (activeFilter === 'items') return result.type === 'item';
-            if (activeFilter === 'reports') return result.type === 'report';
-            if (activeFilter === 'users') return result.type === 'user';
-            return true;
-          });
-        }
+        const data = await response.json();
         
-        setResults(filteredResults);
+        // Map API results to SearchResult interface
+        const mappedResults: SearchResult[] = data.map((item: any) => ({
+          id: String(item.id),
+          type: item.type === 'registered' ? 'item' : 'report',
+          title: item.name || item.title || 'Untitled',
+          description: item.description || '',
+          category: item.category,
+          status: item.status,
+          date: item.registeredAt ? new Date(item.registeredAt).toLocaleDateString() : undefined,
+          imageUrl: (item.imageUrls && item.imageUrls.length > 0) ? item.imageUrls[0] : undefined,
+          url: item.type === 'registered' ? `/items/${item.id}` : `/reports/${item.id}`,
+          uniqueId: item.uniqueIdentifier
+        }));
+        
+        setResults(mappedResults);
       } catch (error) {
         logger.error('Search failed', error);
         setResults([]);
@@ -316,8 +246,13 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
         icon = <Package className="h-3 w-3 mr-1" />;
         break;
       case 'active':
+      case 'lost':
         className = 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
         icon = <AlertTriangle className="h-3 w-3 mr-1" />;
+        break;
+      case 'found':
+        className = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
+        icon = <CheckCircle2 className="h-3 w-3 mr-1" />;
         break;
       case 'resolved':
         className = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';

@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,7 +13,7 @@ interface ProfileCardProps {
 }
 
 export function ProfileCard({ user, onEdit }: ProfileCardProps) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   // Format the date for display
   const formatDate = (dateString: string) => {

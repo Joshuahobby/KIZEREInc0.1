@@ -60,9 +60,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-// TODO: Use translation hook once fully implemented
-// import { useTranslation } from "@/hooks/use-translation";
-const useTranslation = () => ({ t: (key: string) => key });
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+// const useTranslation = () => ({ t: (key: string) => key });
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -78,7 +77,7 @@ interface NavItem {
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
   const { user, signOut } = useAuth();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
     // Default open categories
     Overview: true

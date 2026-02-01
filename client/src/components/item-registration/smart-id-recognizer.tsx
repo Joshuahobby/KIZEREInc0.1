@@ -8,12 +8,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { LuImage, LuLoader, LuSearch, LuX } from 'react-icons/lu';
 import { extractTextFromImage, extractIdentifiers, determineIdentifierType } from '@/utils/ocr-utils';
+import { cn } from '@/lib/utils';
 
 export interface SmartIDRecognizerProps {
   onIdentifierSelected: (identifier: string) => void;
+  showHeader?: boolean;
 }
 
-export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerProps) {
+export function SmartIDRecognizer({ onIdentifierSelected, showHeader = true }: SmartIDRecognizerProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -63,7 +65,7 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
       const identifiers = extractIdentifiers(extractedText);
       
       if (identifiers.length === 0) {
-        setError(t('smart_id_no_identifiers'));
+        setError(t('registration.smart_id_no_identifiers'));
       } else {
         setDetectedIdentifiers(identifiers);
         // If there's only one identifier, select it automatically
@@ -75,8 +77,8 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
       console.error('OCR processing error:', err);
       setError(t('smart_id_processing_error'));
       toast({
-        title: t('error_title'),
-        description: t('smart_id_processing_error'),
+        title: t('common.error'),
+        description: t('registration.smart_id_processing_error'),
         variant: 'destructive',
       });
     } finally {
@@ -106,8 +108,8 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
     
     onIdentifierSelected(selectedIdentifier);
     toast({
-      title: t('smart_id_success'),
-      description: t('smart_id_success_desc'),
+      title: t('registration.smart_id_success'),
+      description: t('registration.smart_id_success_desc'),
     });
     
     // Clean up after successful use
@@ -120,22 +122,24 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
     
     switch (type) {
       case 'imei':
-        return t('smart_id_type_imei');
+        return t('registration.smart_id_type_imei');
       case 'serial':
-        return t('smart_id_type_serial');
+        return t('registration.smart_id_type_serial');
       case 'id':
-        return t('smart_id_type_id');
+        return t('registration.smart_id_type_id');
       default:
-        return t('smart_id_type_unknown');
+        return t('registration.smart_id_type_unknown');
     }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{t('smart_id_title')}</CardTitle>
-        <CardDescription>{t('smart_id_description')}</CardDescription>
-      </CardHeader>
+    <Card className={cn("w-full", !showHeader && "border-0 shadow-none bg-transparent")}>
+      {showHeader && (
+        <CardHeader>
+          <CardTitle>{t('registration.smart_id_title')}</CardTitle>
+          <CardDescription>{t('registration.smart_id_description')}</CardDescription>
+        </CardHeader>
+      )}
       <CardContent className="space-y-4">
         <div className="flex flex-col items-center gap-4">
           <input
@@ -144,6 +148,7 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
             ref={fileInputRef}
             onChange={handleFileChange}
             accept="image/*"
+            aria-label={t('registration.smart_id_select_image')}
           />
           
           {!selectedImage ? (
@@ -153,14 +158,14 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
               className="w-full sm:w-auto"
             >
               <LuImage className="mr-2 h-4 w-4" />
-              {t('smart_id_select_image')}
+              {t('registration.smart_id_select_image')}
             </Button>
           ) : (
             <div className="w-full space-y-4">
               <div className="relative aspect-video w-full max-w-md mx-auto overflow-hidden rounded-md border">
                 <img 
                   src={selectedImage.url} 
-                  alt={t('smart_id_image_alt')} 
+                  alt={t('registration.smart_id_image_alt')} 
                   className="w-full h-full object-contain" 
                 />
                 <Button 
@@ -185,7 +190,7 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
                   ) : (
                     <LuSearch className="mr-2 h-4 w-4" />
                   )}
-                  {t('smart_id_process')}
+                  {t('registration.smart_id_process')}
                 </Button>
                 <Button
                   variant="outline"
@@ -193,14 +198,14 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
                   disabled={isProcessing}
                 >
                   <LuImage className="mr-2 h-4 w-4" />
-                  {t('smart_id_change_image')}
+                  {t('registration.smart_id_change_image')}
                 </Button>
               </div>
               
               {isProcessing && (
                 <div className="flex items-center justify-center py-4">
                   <LuLoader className="mr-2 h-5 w-5 animate-spin" />
-                  <span>{t('smart_id_processing')}</span>
+                  <span>{t('registration.smart_id_processing')}</span>
                 </div>
               )}
               
@@ -215,7 +220,7 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
           {detectedIdentifiers.length > 0 && (
             <div className="space-y-3">
               <Separator />
-              <h3 className="font-medium">{t('smart_id_select_identifier')}:</h3>
+              <h3 className="font-medium">{t('registration.smart_id_select_identifier')}:</h3>
               
               <RadioGroup
                 value={selectedIdentifier}
@@ -239,7 +244,7 @@ export function SmartIDRecognizer({ onIdentifierSelected }: SmartIDRecognizerPro
                 disabled={!selectedIdentifier}
                 className="w-full mt-4"
               >
-                {t('smart_id_use_selected')}
+                {t('registration.smart_id_use_selected')}
               </Button>
             </div>
           )}

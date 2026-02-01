@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,7 @@ export function UserPermissionsPanel({
   permissions = [], 
   isLoading 
 }: UserPermissionsPanelProps) {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
   
   // Group permissions by category
   const groupedPermissions = {

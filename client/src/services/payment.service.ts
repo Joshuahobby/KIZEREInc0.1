@@ -68,7 +68,7 @@ export class PaymentService {
   static async initializePayment(paymentDetails: InitializePaymentRequest): Promise<InitializePaymentResponse> {
     try {
       console.log("Initializing payment with details:", paymentDetails);
-      const responseData = await apiRequest("/api/payments/initialize", { method: "POST", data: paymentDetails });
+      const responseData = await apiRequest("/api/payments/initiate", { method: "POST", data: paymentDetails });
       console.log("Payment initialization successful:", responseData);
       return responseData;
     } catch (error) {

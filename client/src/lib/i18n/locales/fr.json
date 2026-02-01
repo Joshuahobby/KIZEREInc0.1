@@ -181,6 +181,7 @@
       "items": "Objets",
       "reports": "Signalements",
       "payments": "Paiements",
+      "claims": "Réclamations",
       "adminPanel": "Panneau d'Admin",
       "agentConsole": "Console d'Agent"
     },
@@ -192,6 +193,10 @@
     "lostReports": "Signalements de Perte",
     "foundReports": "Objets Trouvés",
     "totalSpent": "Total Dépensé",
+    "recentItems": "Objets Récents",
+    "unreadNotifications": "Notifications Non Lues",
+    "pendingPayments": "Paiements en Attente",
+    "settings": "Paramètres",
     "recentlyRegisteredItems": "Objets Récemment Enregistrés",
     "recentItemsDescription": "Afficher et gérer vos objets enregistrés récemment",
     "viewImplementationPlan": "Voir le Plan d'Implémentation",
@@ -249,6 +254,17 @@
     "copyright": "© 2025 KIZERE. Tous droits réservés.",
     "terms": "Conditions",
     "privacy": "Confidentialité",
-    "contact": "Contact"
-  }
+    "contact": "Contact",
+    "clear_all": "Tout effacer"
+  },
+  "batch_upload_title": "Télécharger des images",
+  "batch_upload_description": "Téléchargez plusieurs images pour votre rapport afin d'aider à identifier l'article.",
+  "drag_images": "Faites glisser et déposez des images ici",
+  "batch_upload_instructions": "Vous pouvez télécharger jusqu'à 5 images (JPG, PNG, WEBP).",
+  "select_images": "Sélectionner des images",
+  "file_types": "Supporté: JPG, PNG, WEBP (Max 5Mo chacun)",
+  "uploaded_images": "Images téléchargées",
+  "add_more_images": "Ajouter plus d'images",
+  "batch_upload_success": "Téléchargement réussi",
+  "batch_upload_success_desc": "Vos images ont été téléchargées avec succès."
 }

@@ -8,6 +8,7 @@ import { User, User as SelectUser } from "@shared/schema";
 import { env } from "./config";
 import { UserService } from "./services/user.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
+import { sendWelcomeEmail } from "./services/email.service";
 
 
 declare global {
@@ -76,7 +77,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  app.post("/api/auth/register", async (req, res, next) => {
     try {
       // Check if username or email already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
@@ -89,11 +90,22 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Email already exists" });
       }
 
-      // Create new user with hashed password
-      const user = await storage.createUser({
+      // SECURITY: Force role to Subscriber for public registration
+      // Admin and Agent roles can only be assigned by existing administrators
+      const safeUserData = {
         ...req.body,
+        role: 'Subscriber', // Always force Subscriber role on public registration
         password: await hashPassword(req.body.password),
-      });
+      };
+
+      // Create new user with forced Subscriber role
+      const user = await storage.createUser(safeUserData);
+
+      // Send welcome email
+      if (user.email) {
+        sendWelcomeEmail(user.email, user.fullName || user.username)
+          .catch(err => console.error('Failed to send welcome email:', err));
+      }
 
       // Strip password from response
       const { password, ...userWithoutPassword } = user;
@@ -108,7 +120,7 @@ export function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
+  app.post("/api/auth/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: User | false, info: any) => {
       if (err) return next(err);
       if (!user) {
@@ -123,15 +135,17 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  app.post("/api/auth/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
-      res.sendStatus(200);
+      res.status(200).json({ message: "Logged out successfully" });
     });
   });
 
   app.get("/api/user", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
     
     try {
       // Use UserService to get fresh user data

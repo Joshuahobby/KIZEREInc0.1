@@ -7,6 +7,7 @@ import { DndContext, DragEndEvent, closestCenter, KeyboardSensor, PointerSensor,
 import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { LuImage, LuUpload, LuX, LuGripVertical, LuTrash2, LuLoader, LuPlus } from 'react-icons/lu';
+import { cn } from '@/lib/utils';
 
 interface SortableItemProps {
   id: string;
@@ -74,13 +75,15 @@ export interface BatchImageUploadProps {
   maxFiles?: number;
   acceptedFileTypes?: string[];
   maxFileSizeMB?: number;
+  showHeader?: boolean;
 }
 
 export function BatchImageUpload({ 
   onImagesChange, 
   maxFiles = 10, 
   acceptedFileTypes = ['image/jpeg', 'image/png', 'image/webp'], 
-  maxFileSizeMB = 5 
+  maxFileSizeMB = 5,
+  showHeader = true
 }: BatchImageUploadProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -122,19 +125,19 @@ export function BatchImageUpload({
     Array.from(files).forEach(file => {
       // Check if we reached the max number of files
       if (images.length + filesToAdd.length >= maxFiles) {
-        errors.push(t('batch_upload_max_files', { count: maxFiles }));
+        errors.push(t('batchUpload.batch_upload_max_files', { count: maxFiles }));
         return;
       }
       
       // Check file type
       if (!isValidFileType(file)) {
-        errors.push(t('batch_upload_invalid_type'));
+        errors.push(t('batchUpload.batch_upload_invalid_type'));
         return;
       }
       
       // Check file size
       if (!isValidFileSize(file)) {
-        errors.push(t('batch_upload_max_size', { size: maxFileSizeMB }));
+        errors.push(t('batchUpload.batch_upload_max_size', { size: maxFileSizeMB }));
         return;
       }
       
@@ -166,8 +169,8 @@ export function BatchImageUpload({
       onImagesChange(fileObjects);
       
       toast({
-        title: t('batch_upload_success'),
-        description: t('batch_upload_success_desc', { count: filesToAdd.length }),
+        title: t('batchUpload.batch_upload_success'),
+        description: t('batchUpload.batch_upload_success_desc', { count: filesToAdd.length }),
       });
     }
     
@@ -216,8 +219,8 @@ export function BatchImageUpload({
     onImagesChange(fileObjects);
     
     toast({
-      title: t('batch_upload_removed'),
-      description: t('batch_upload_removed_desc'),
+      title: t('batchUpload.batch_upload_removed'),
+      description: t('batchUpload.batch_upload_removed_desc'),
     });
   };
   
@@ -242,11 +245,13 @@ export function BatchImageUpload({
   };
   
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>{t('batch_upload_title')}</CardTitle>
-        <CardDescription>{t('batch_upload_description')}</CardDescription>
-      </CardHeader>
+    <Card className={cn("w-full", !showHeader && "border-0 shadow-none bg-transparent")}>
+      {showHeader && (
+        <CardHeader>
+          <CardTitle>{t('batchUpload.batch_upload_title')}</CardTitle>
+          <CardDescription>{t('batchUpload.batch_upload_description')}</CardDescription>
+        </CardHeader>
+      )}
       <CardContent className="space-y-4">
         <div
           onDragOver={handleDragOver}
@@ -266,24 +271,24 @@ export function BatchImageUpload({
             className="hidden"
             ref={fileInputRef}
             disabled={isUploading || images.length >= maxFiles}
-            title={t('batch_upload_title')}
-            aria-label={t('batch_upload_title')}
+            title={t('batchUpload.batch_upload_title')}
+            aria-label={t('batchUpload.batch_upload_title')}
           />
           
           {isUploading ? (
             <div className="flex flex-col items-center">
               <LuLoader className="h-10 w-10 text-muted-foreground animate-spin mb-2" />
-              <p>{t('uploading')}</p>
+              <p>{t('common.uploading')}</p>
             </div>
           ) : (
             <>
               <div className="flex flex-col items-center">
                 <LuImage className="h-10 w-10 text-muted-foreground mb-2" />
                 <div className="text-lg font-medium mb-1">
-                  {isDraggingOver ? t('drop_images') : t('drag_images')}
+                  {isDraggingOver ? t('batchUpload.drag_images') : t('batchUpload.drag_images')}
                 </div>
                 <p className="text-sm text-muted-foreground mb-3 max-w-xs">
-                  {t('batch_upload_instructions', { maxFiles, maxSize: maxFileSizeMB })}
+                  {t('batchUpload.batch_upload_instructions')}
                 </p>
               </div>
               <Button
@@ -292,7 +297,7 @@ export function BatchImageUpload({
                 disabled={images.length >= maxFiles}
               >
                 <LuUpload className="mr-2 h-4 w-4" />
-                {t('select_images')}
+                {t('batchUpload.select_images')}
               </Button>
             </>
           )}
@@ -302,11 +307,11 @@ export function BatchImageUpload({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-medium">
-                {t('uploaded_images', { count: images.length, max: maxFiles })}
+                {t('batchUpload.uploaded_images')}
               </h3>
               {images.length > 1 && (
                 <p className="text-sm text-muted-foreground">
-                  {t('drag_to_reorder')}
+                  {t('batchUpload.drag_to_reorder')}
                 </p>
               )}
             </div>
@@ -335,7 +340,7 @@ export function BatchImageUpload({
                     >
                       <LuPlus className="h-6 w-6 text-muted-foreground mb-2" />
                       <span className="text-xs text-center text-muted-foreground">
-                        {t('add_more_images')}
+                        {t('batchUpload.add_more_images')}
                       </span>
                     </div>
                   )}
@@ -347,7 +352,7 @@ export function BatchImageUpload({
       </CardContent>
       <CardFooter className="flex justify-between">
         <div className="text-sm text-muted-foreground">
-          {t('file_types')}: JPG, PNG, WebP
+          {t('batchUpload.file_types')}
         </div>
         {images.length > 0 && (
           <Button
@@ -361,13 +366,13 @@ export function BatchImageUpload({
               onImagesChange([]);
               
               toast({
-                title: t('batch_upload_cleared'),
-                description: t('batch_upload_cleared_desc'),
+                title: t('batchUpload.batch_upload_cleared'),
+                description: t('batchUpload.batch_upload_cleared_desc'),
               });
             }}
           >
             <LuX className="mr-2 h-4 w-4" />
-            {t('clear_all')}
+            {t('batchUpload.clearAll')}
           </Button>
         )}
       </CardFooter>

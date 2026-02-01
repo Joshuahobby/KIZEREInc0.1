@@ -12,7 +12,10 @@
     "settings": "Igenamiterere",
     "logout": "Gusohoka",
     "language": "Ururimi",
-    "returnToHome": "Garuka ku ipaji y'ibanze"
+    "returnToHome": "Garuka ku ipaji y'ibanze",
+    "register_item": "Andika Ikintu",
+    "complete_registration": "Uzuza Kwandikisha",
+    "filter": "Shungura"
   },
   "nav": {
     "home": "Ahabanza",
@@ -24,7 +27,10 @@
     "registerItem": "Kwandika Ikintu",
     "registerItems": "Kwandika Ibintu",
     "myItems": "Ibintu Byanjye",
-    "userManagement": "Gucunga Abakoresha"
+    "userManagement": "Gucunga Abakoresha",
+    "blog": "Inkuru",
+    "docs": "Inyandiko",
+    "community": "Umuryango"
   },
   "auth": {
     "login": "Kwinjira",
@@ -139,7 +145,7 @@
       "testimonial2": {
         "name": "Florence Nkatha",
         "location": "Mombasa, Kenya",
-        "quote": "Uburyo bwo kwiyandikisha bwari bworoshye cyane! Nanditse ibikoresho byanjye byose by'ikoranabuhanga n'amabuye y'agaciro. Ubu numva nteyukanye kurushaho ibintu byanjye by'agaciro."
+        "quote": "Uburyo bwo kwiyandikisha bwari bworoshye cyane! Nanditse ibikoresho byanjye by'ikoranabuhanga n'amabuye y'agaciro. Ubu numva nteyukanye kurushaho ibintu byanjye by'agaciro."
       },
       "testimonial3": {
         "name": "Robert Kabugi",
@@ -168,20 +174,20 @@
       "description": "Bona ibisubizo ku bibazo bikunze kubazwa ku bijyanye na porogaramu ya KIZERE.",
       "questions": {
         "security": {
-          "question": "Ni gute amakuru yanjye atekanye?",
-          "answer": "Dukoresha uburyo bw'umutekano bwo ku rwego rw'ibanze mu kurinda amakuru yawe. Amakuru yawe abonwa gusa nawe n'abakozi babyemerewe mu gihe cyo kuyagenzura no kugarura ibyangirika."
+          "question": "How secure is my data on KIZERE?",
+          "answer": "We use industry-standard encryption protocols to protect your data. All personal information and item details are encrypted both in transit and at rest, and we regularly perform security audits to ensure your data remains safe."
         },
         "items": {
-          "question": "Ni ibihe bintu nashobora kwandikisha?",
-          "answer": "Ushobora kwandikisha ibintu byose bifite agaciro harimo ibikoresho by'ikoranabuhanga, amabuye y'agaciro, impapuro, ibinyabiziga, ibiruhuko, n'ibindi. Ikintu cyose gifite nomero ikiranga cyangwa ibimenyetso byihariye."
+          "question": "What types of items can I register?",
+          "answer": "You can register almost any valuable item including electronics, jewelry, documents, accessories, and more. Our system is particularly effective for items with unique identifiers like serial numbers, IMEI numbers, or other distinguishing characteristics."
         },
         "lostFound": {
-          "question": "Gute porogaramu yo kumenya ibyabuze n'ibyabonetse ikora?",
-          "answer": "Iyo umenyekanishije ikintu cyabuze, cyandikwa muri databaze yacu. Iyo umuntu abonye ikintu, arashobora kumenyekanisha, sisitemu yacu ikabasha kuhahuriza raporo y'ibyabuze n'iy'ibyabonetse, ikabimenyesha nyiracyo."
+          "question": "How does the lost and found process work?",
+          "answer": "When someone finds your item, they can scan the QR code attached to it. This notifies you immediately and provides the finder with instructions on how to safely return your item to you, while protecting your privacy."
         },
         "limits": {
-          "question": "Ese hari igipimo cy'ibintu namenyekanisha?",
-          "answer": "Konti z'ibanze zishobora kwandikisha ibintu kugeza ku 10. Konti za Premium zifite ubushobozi butagira iherezo bwo kwandikisha n'izindi serivisi nk'inkunga y'ibanze n'isesengura rirambuye."
+          "question": "Is there a limit to how many items I can register?",
+          "answer": "Basic accounts can register up to 5 items. Premium subscribers can register unlimited items and access additional features like priority support and enhanced recovery services."
         }
       },
       "contactUs": "Ufite ibindi bibazo? Twandikire"
@@ -303,6 +309,7 @@
     "item_subcategory": "Icyiciro Gitoya",
     "item_description": "Ibisobanuro",
     "item_location": "Aho Cyaherutse Kuboneka",
+    "item_uuid": "Ikiranga Ikintu",
     "item_color": "Ibara",
     "item_tips": "Inama",
     "steps": {
@@ -361,5 +368,136 @@
     "terms": "Amabwiriza",
     "privacy": "Ibanga",
     "contact": "Twandikire"
+  },
+  "faqs_page": {
+    "title": "Ibibazo Bikunze Kubazwa",
+    "subtitle": "Icyo ari cyo cyose ukeneye kumenya kuri KIZERE",
+    "categories": {
+      "general": "Rusange",
+      "registration": "Kwandikisha Ikintu",
+      "lost_found": "Byabuze & Byabonetse",
+      "security": "Umutekano & Ibanga",
+      "payments": "Ubwishyu"
+    },
+    "questions": {
+      "what_is_kizere": "KIZERE ni iki?",
+      "what_is_kizere_ans": "KIZERE ni urubuga rwa mbere rwuzuye rw'ikoranabuhanga mu Rwanda rwo kwandikisha ibintu, kumenyekanisha ibyabuze n'ibyabonetse, no gucunga uburenganzira bwo gutunga. Dufasha kubaka umuco w'ubwizerane n'umutekano.",
+      "is_it_free": "Ese ni ubuntu gukoresha uru rubuga?",
+      "is_it_free_ans": "Gufungura konti y'ibanze ni ubuntu. Twishyuza amafaranga make yo kwandikisha ikintu (2,000 RWF) kugira ngo tubashe gucunga neza rejisitiri no gutanga serivisi zizewe zo kumenyekanisha ibintu.",
+      "how_to_register": "Nandikisha nte ikintu?",
+      "how_to_register_ans": "Injira muri konti yawe, kanda kuri 'Andika Ikintu', maze ukurikize intambwe: tange amakuru, shyiraho amafoto, maze wemeze inyandiko z'uburenganzira.",
+      "what_is_digital_cert": "Icyemezo cy'ikoranabuhanga (Digital Certificate) ni iki?",
+      "what_is_digital_cert_ans": "Ni inyandiko y'ikoranabuhanga yizewe yerekana ko uri nyir'ikintu. Ikubiyemo amakuru y'ikintu, amafoto, na nomero yihariye ikiranga.",
+      "what_if_i_lose_it": "Nyakora iki iyo mbuze ikintu cyanjye?",
+      "what_if_i_lose_it_ans": "Jya kuri 'Byabuze & Byabonetse', menyekanisha ko ikintu cyawe cyabuze, maze utange amakuru y'aho n'igihe cyaherukaga kuboneka. Umuyoboro wacu n'uburyo bwo guhuza amakuru bizagufasha kukibona.",
+      "is_my_data_safe": "Ese amakuru yanjye arinzwe?",
+      "is_my_data_safe_ans": "Yego, dukoresha uburyo bwo kurinda amakuru bwo ku rwego rwo hejuru kandi twubahiriza amategeko y'u Rwanda ajyanye n'irindwa ry'amakuru bwite."
+    },
+    "contact_us_text": "Ufite ibindi bibazo? Turi hano kugira ngo tugufashe kurinda iby'agaciro byawe."
+  },
+  "about_page": {
+    "title": "Kuri KIZERE",
+    "mission": "Inshingano Zacu",
+    "mission_text": "Kubaka umuco w'ubcyo n'ubwizerane mu gutunga no kugarura ibintu mu Rwanda binyuze mu gisubizo cy'ikoranabuhanga.",
+    "vision": "Icyerekezo Cyacu",
+    "vision_text": "Kuba urwego rw'ikitegererezo mu kwemeza uburenganzira bwo gutunga no kugarura ibintu byabuze muri Afurika y'Iburasirazuba.",
+    "story": "Amateka ya KIZERE",
+    "story_text": "KIZERE yashinzwe i Kigali, ivutse bitewe n'ukeneye rwa sisitemu imwe, yizewe yo gucunga umutungo no gufasha kugarura ibintu byabuze mu mugi wacu ukura vuba."
+  },
+  "contact_page": {
+    "title": "Twandikire",
+    "subtitle": "Turi hano kugira ngo tugufashe",
+    "form": {
+      "name": "Izina",
+      "email": "Imeyili",
+      "subject": "Icyo ushaka",
+      "message": "Ubutumwa",
+      "send": "Ohereza Ubutumwa"
+    },
+    "info": {
+      "address": "Kigali, Rwanda",
+      "phone": "+250 7XX XXX XXX",
+      "email": "support@kizere.rw"
+    }
+  },
+  "blog_page": {
+    "title": "KIZERE Blog",
+    "subtitle": "Inama ku mutekano, ubuhamya, n'amakuru mashya",
+    "categories": {
+      "all": "Inkuru Zose",
+      "security": "Umutekano",
+      "success": "Ubuhamya",
+      "news": "Amakuru"
+    },
+    "posts": {
+      "post1": {
+        "title": "Uburyo bwo kurinda terefone yawe i Kigali",
+        "excerpt": "Inama zifatika zo kugumana terefone yawe mu mutekano mu mugi wacu ukura vuba.",
+        "date": "15 Mutarama, 2026",
+        "category": "Umutekano"
+      },
+      "post2": {
+        "title": "Cyabonetse: Ubuhamya bwavuye i Musanze",
+        "excerpt": "Uburyo mudasobwa yari yabuze yasubijwe nyirayo mu masaha 48 hakoreshejwe KIZERE.",
+        "date": "10 Mutarama, 2026",
+        "category": "Ubuhamya"
+      },
+      "post3": {
+        "title": "KIZERE Version 0.1: Ibishya birimo",
+        "excerpt": "Gusuzuma ibiranga bishya n'iterambere riri mu kuvugurura kwa vuba kw'uru rubuga.",
+        "date": "5 Mutarama, 2026",
+        "category": "Amakuru"
+      }
+    },
+    "readMore": "Soma Birenzeho"
+  },
+  "docs_page": {
+    "title": "Inyandiko",
+    "subtitle": "Amabwiriza n'ibikoresho byo gukoresha KIZERE",
+    "getting_started": {
+      "title": "Gutangira",
+      "step1": "Gufungura konti yawe",
+      "step2": "Kuzuza umwirondoro wawe",
+      "step3": "Kwandikisha ikintu cya mbere"
+    },
+    "guides": {
+      "title": "Amabwiriza y'Imikoreshereze",
+      "registration": "Amabwiriza arambuye yo kwandikisha ikintu",
+      "ownership": "Gucunga ibyemezo by'uburenganzira",
+      "lost_found": "Kumenyekanisha ibyabuze n'ibyabonetse",
+      "qr_codes": "Uburyo bwo gukoresha kode QR za KIZERE"
+    }
+  },
+  "community_page": {
+    "title": "Umuryango",
+    "subtitle": "Kubakira hamwe umuco w'ubwizerane n'umutekano",
+    "network": {
+      "title": "Umuyoboro w'Ubwizerane",
+      "description": "KIZERE ni birenze urubuga; ni umuryango w'ubwizerane. Intego yacu ni ukurema umubano utekanye aho ibyabuze bisubizwa ba nyirabyo."
+    },
+    "guidelines": {
+      "title": "Amabwiriza y'Umuryango",
+      "rule1": "Vugisha ukuri kandi u transparency mu kumenyekanisha kwawe.",
+      "rule2": "Hubahiriza ibanga ry'abandi bakoresha.",
+      "rule3": "Fasha kugarura ibyabonetse vuba."
+    },
+    "feed": {
+      "title": "Inkuru n'Integuza z'Abaturage",
+      "filter_all": "Inkuru Zose",
+      "filter_success": "Success Stories",
+      "filter_security": "Security Alerts",
+      "filter_tips": "Recovery Tips"
+    },
+    "stats": {
+      "likes": "Likes",
+      "comments": "Comments"
+    },
+    "badges": {
+      "title": "Badges z'Ubushongore",
+      "eagle_eye": "Eagle Eye",
+      "trust_builder": "Trust Builder",
+      "recovery_expert": "Recovery Expert"
+    },
+    "create_post": "Sangiza Inkuru cyangwa Integuza"
   }
 }

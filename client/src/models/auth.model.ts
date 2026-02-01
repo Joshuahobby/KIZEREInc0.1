@@ -34,11 +34,17 @@ class AuthModelClass {
   });
 
   // Registration Schema matched with UI
+  // Note: 'username' field accepts either email or phone number
   static registerSchema = z.object({
     fullName: z.string().min(3, "Full name must be at least 3 characters"),
-    username: z.string().min(3, "Username must be at least 3 characters"),
-    email: z.string().email("Invalid email address"),
-    phoneNumber: z.string().optional(),
+    username: z.string().min(3, "Email or phone number is required").refine((value) => {
+      // Accept email or Rwandan phone number
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const rwandaPhoneRegex = /^(\+250|0)?[79][0-9]{8}$/;
+      return emailRegex.test(value) || rwandaPhoneRegex.test(value);
+    }, {
+      message: "Enter a valid email or phone number (+250XXXXXXXXX)",
+    }),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm password is required"),
     role: z.enum(['Admin', 'Agent', 'Subscriber']).optional(),
@@ -65,11 +71,17 @@ class AuthModelClass {
    * @returns Validated registration data for API
    */
   static prepareRegisterData(registerData: z.infer<typeof this.registerSchema>): InsertUser {
-    const { confirmPassword, ...userData } = registerData;
+    const { confirmPassword, username, ...userData } = registerData;
+    
+    // Determine if username is email or phone
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isEmail = emailRegex.test(username);
     
     return {
       ...userData,
-      phoneNumber: userData.phoneNumber || null,
+      username: username, // Keep the original username
+      email: isEmail ? username : `${username.replace(/\D/g, '')}@placeholder.kizere.rw`, // Use email or generate placeholder
+      phoneNumber: !isEmail ? username : null,
       role: userData.role || 'Subscriber'
     };
   }

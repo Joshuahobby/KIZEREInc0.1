@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "../lib/queryClient";
 
 // Locally define types until we fix imports
 type ItemStatus = 'Registered' | 'Lost' | 'Found' | 'Recovered' | 'Archived';
@@ -68,68 +69,10 @@ export default function MyItemsPage() {
   const [currentTab, setCurrentTab] = useState("all");
   
   // Fetch user's items
-  const { data: items, isLoading, error } = useQuery({
-    queryKey: ["/api/user/items", user?.id],
+  const { data: items, isLoading, error } = useQuery<Item[]>({
+    queryKey: ["/api/items"],
     queryFn: async () => {
-      if (!user?.id) return [];
-      
-      // Would normally fetch from the API
-      return [
-        // Example items for development - would be replaced with actual API data
-        {
-          id: 1,
-          userId: user.id,
-          name: "MacBook Pro",
-          category: "Electronics",
-          uniqueIdentifier: "FVFGH3857Q",
-          description: "16-inch 2021 MacBook Pro with M1 Pro chip, 16GB RAM, 512GB SSD",
-          status: "Registered" as ItemStatus,
-          location: "Home office",
-          registeredAt: new Date("2025-03-15"),
-          updatedAt: new Date("2025-03-15"),
-          details: {},
-          imageUrls: [
-            "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=2940&auto=format&fit=crop"
-          ]
-        },
-        {
-          id: 2,
-          userId: user.id,
-          name: "iPhone 14 Pro",
-          category: "Phones",
-          uniqueIdentifier: "IMEI353916108263857",
-          description: "Midnight black iPhone 14 Pro with 256GB storage",
-          status: "Lost" as ItemStatus,
-          location: "Last seen at Central Park",
-          registeredAt: new Date("2025-02-20"),
-          updatedAt: new Date("2025-04-10"),
-          details: {
-            lostDate: "2025-04-10",
-            lostLocation: "Central Park, New York"
-          },
-          imageUrls: [
-            "https://images.unsplash.com/photo-1678911820864-e5f41b77ef47?q=80&w=2942&auto=format&fit=crop"
-          ]
-        },
-        {
-          id: 3,
-          userId: user.id,
-          name: "Sony WH-1000XM5",
-          category: "Electronics",
-          uniqueIdentifier: "SN9753214680",
-          description: "Noise-cancelling headphones, silver color",
-          status: "Recovered" as ItemStatus,
-          location: "Bedroom",
-          registeredAt: new Date("2025-01-05"),
-          updatedAt: new Date("2025-04-15"),
-          details: {
-            recoveredDate: "2025-04-15"
-          },
-          imageUrls: [
-            "https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=2940&auto=format&fit=crop"
-          ]
-        }
-      ] as Item[];
+      return apiRequest('/api/items');
     },
     enabled: !!user?.id
   });

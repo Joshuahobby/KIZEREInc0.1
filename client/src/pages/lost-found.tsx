@@ -27,9 +27,18 @@ import {
   Calendar, 
   Loader2,
   MapPinned,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  Search as SearchIcon
 } from "lucide-react";
+import { ReportWizard } from "@/components/reports/report-wizard";
+import { ReportDetailDialog } from "@/components/reports/report-detail-dialog";
+import { SearchFilters, FilterState } from "@/components/reports/search-filters";
+import { PaymentService } from "@/services/payment.service";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
 import { format } from "date-fns";
+import { useDebounce } from "@/hooks/use-debounce";
 
 // Report form schema
 const reportFormSchema = z.object({
@@ -49,22 +58,54 @@ export default function LostFound() {
   const [location, setLocation] = useLocation();
   const [dialogType, setDialogType] = useState<"lost" | "found" | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<FilterState>({
+    category: "All Categories",
+    location: "All Locations",
+    sortBy: "newest"
+  });
+  const debouncedSearch = useDebounce(searchQuery, 300);
   const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Fetch user's registered items
+  const { data: userItems } = useQuery<any[]>({
+    queryKey: ['/api/items'],
+    enabled: !!user,
+  });
   
   // Get initial type from URL params
   const params = new URLSearchParams(location.split('?')[1]);
   const initialType = params.get('type') || '';
   
-  // Fetch reports based on type
+  // Fetch reports based on type and search
   const { data: reports, isLoading } = useQuery<Report[]>({
-    queryKey: ['/api/reports', { type: initialType }],
+    queryKey: ['/api/reports', { type: initialType, search: debouncedSearch, ...filters }],
     queryFn: async () => {
-      const endpoint = `/api/reports${initialType ? `?type=${initialType}` : ''}`;
+      const params = new URLSearchParams();
+      if (initialType) params.append('type', initialType);
+      if (debouncedSearch) params.append('search', debouncedSearch);
+      if (filters.category !== 'All Categories') params.append('category', filters.category);
+      if (filters.location !== 'All Locations') params.append('location', filters.location);
+      
+      const endpoint = `/api/reports?${params.toString()}`;
       const res = await fetch(endpoint, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch reports');
       return res.json();
     },
   });
+
+  // Sort reports locally
+  const sortedReports = reports ? [...reports].sort((a, b) => {
+    if (filters.sortBy === 'newest') {
+      return new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime();
+    } else if (filters.sortBy === 'oldest') {
+      return new Date(a.reportedAt).getTime() - new Date(b.reportedAt).getTime();
+    }
+    return 0; // relevance (default order from API)
+  }) : [];
   
   // Form for lost/found items
   const form = useForm<ReportFormValues>({
@@ -81,61 +122,88 @@ export default function LostFound() {
   
   // Mutation for creating a report
   const reportMutation = useMutation({
-    mutationFn: async (data: ReportFormValues) => {
-      return await apiRequest("/api/reports", { method: "POST", data });
+    mutationFn: async ({ data, images }: { data: any, images: File[] }) => {
+      // 1. Upload images if any
+      let imageUrls: string[] = [];
+      if (images.length > 0) {
+        const formData = new FormData();
+        images.forEach(img => formData.append('images', img));
+        const uploadRes = await fetch('/api/upload/images', { method: 'POST', body: formData });
+        if (!uploadRes.ok) throw new Error("Image upload failed");
+        const { urls } = await uploadRes.json();
+        imageUrls = urls;
+      }
+      
+      // 2. Create the report
+      const report = await apiRequest<any>("/api/reports", {
+        method: "POST",
+        data: { ...data, imageUrls }
+      });
+      
+      // 3. Handle payment for lost items
+      if (data.type === 'lost') {
+        const payment = await PaymentService.initializePayment({
+          type: "lost_report",
+          reportId: report.id
+        });
+        return { report, payment };
+      }
+      
+      return { report };
     },
-    onSuccess: () => {
+    onSuccess: (res) => {
       // Invalidate and refetch reports
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
       
-      // Show success toast
-      toast({
-        title: `${dialogType === 'lost' ? 'Lost' : 'Found'} item reported successfully`,
-        description: "Your report has been submitted and is now visible to others.",
-      });
+      if (res.payment?.paymentUrl) {
+        toast({
+          title: "Payment Required",
+          description: "Redirecting to secure payment page...",
+        });
+        window.location.href = res.payment.paymentUrl;
+      } else {
+        toast({
+          title: `${dialogType === 'lost' ? 'Lost' : 'Found'} item reported successfully`,
+          description: dialogType === 'found' 
+            ? "Your report is pending admin approval." 
+            : "Your report has been submitted.",
+        });
+        setOpenDialog(false);
+      }
       
-      // Reset form and close dialog
+      // Reset form
       form.reset();
-      setOpenDialog(false);
     },
     onError: (error: Error) => {
       toast({
-        title: "Report submission failed",
-        description: error.message || "Failed to submit report. Please try again.",
+        title: "Submission failed",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     },
   });
   
   // Handle dialog open for lost or found items
-  const handleOpenDialog = (type: "lost" | "found") => {
+  const handleOpenDialog = (type: "lost" | "found", prefillData?: any) => {
     setDialogType(type);
-    form.setValue('type', type);
+    form.reset({
+      type: type,
+      title: prefillData?.name || '',
+      category: prefillData?.category || 'Other',
+      description: prefillData?.description || '',
+      location: prefillData?.location || '',
+      date: format(new Date(), 'yyyy-MM-dd'),
+      contactInfo: '',
+      itemId: prefillData?.id || undefined,
+      uniqueIdentifier: prefillData?.uniqueIdentifier || '',
+    } as any);
     setOpenDialog(true);
   };
   
-  // Handle form submission
-  const onSubmit = (data: ReportFormValues) => {
-    // Create a copy of the data to avoid mutating the original form data
-    const submissionData = { ...data };
-    
-    // Ensure the date is properly formatted as an ISO string
-    if (submissionData.date && typeof submissionData.date === 'string') {
-      try {
-        // If it's already a valid date string, this will work
-        const date = new Date(submissionData.date);
-        if (!isNaN(date.getTime())) {
-          submissionData.date = date.toISOString();
-        }
-      } catch (e) {
-        console.error("Date conversion error:", e);
-        // If there's an error, we'll let the server handle it with defaults
-      }
-    }
-    
-    console.log("Submitting form with data:", submissionData);
-    reportMutation.mutate(submissionData);
+  // Handle form submission from wizard
+  const handleWizardSubmit = (data: any, images: File[]) => {
+    reportMutation.mutate({ data, images });
   };
 
   return (
@@ -145,8 +213,27 @@ export default function LostFound() {
       <main className="flex-grow">
         <div className="py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-display font-semibold text-neutral-900">Lost & Found</h1>
-            <p className="mt-1 text-sm text-neutral-500">Report lost items or register items you've found.</p>
+            <h1 className="text-3xl font-display font-bold text-neutral-900">Lost & Found Hub</h1>
+            <p className="mt-2 text-neutral-500 max-w-2xl">Helping Rwanda reunite people with their lost belongings. Report lost items or register what you've found to help others.</p>
+
+            {/* Search Bar */}
+            <div className="mt-8 relative max-w-xl">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <SearchIcon className="h-5 w-5 text-neutral-400" />
+              </div>
+              <Input
+                type="text"
+                placeholder="Search by keywords (e.g. iPhone, Blue Wallet, Passport)..."
+                className="pl-10 h-12 shadow-sm border-neutral-200 focus:ring-primary focus:border-primary"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="mt-4">
+              <SearchFilters onFiltersChange={setFilters} />
+            </div>
 
             <div className="mt-6 flex flex-col gap-6 md:flex-row md:gap-8">
               {/* Lost Item Card */}
@@ -184,6 +271,60 @@ export default function LostFound() {
                   </Button>
                 </CardContent>
               </Card>
+
+              {/* Report from My Items Card */}
+              {userItems && userItems.length > 0 && (
+                <Card className="flex-1 border-primary/20 bg-primary/5">
+                  <CardContent className="p-6 flex flex-col items-center text-center">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <Plus className="h-10 w-10 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-medium text-neutral-900">Report from My Items</h2>
+                    <p className="mt-2 text-neutral-500 text-sm">Quickly report one of your registered items as lost. Details will be pre-filled.</p>
+                    <div className="mt-6 flex flex-wrap justify-center gap-2">
+                      {userItems.slice(0, 3).map(item => (
+                        <Button 
+                          key={item.id}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenDialog("lost", item)}
+                          className="text-xs"
+                        >
+                          {item.name}
+                        </Button>
+                      ))}
+                      {userItems.length > 3 && (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="link" size="sm" className="text-xs text-primary">
+                              View all {userItems.length} items
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>Select an Item to Report</DialogTitle>
+                            </DialogHeader>
+                            <div className="grid gap-2 max-h-[400px] overflow-y-auto p-1">
+                              {userItems.map(item => (
+                                <Button 
+                                  key={item.id}
+                                  variant="ghost"
+                                  className="justify-start h-auto p-4 border border-neutral-100 hover:border-primary/50"
+                                  onClick={() => {
+                                    handleOpenDialog("lost", item);
+                                  }}
+                                >
+                                  <div className="text-left font-medium">{item.name}</div>
+                                </Button>
+                              ))}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
             
             {/* Recent Lost & Found Items */}
@@ -194,9 +335,9 @@ export default function LostFound() {
                 <div className="mt-4 flex justify-center p-8">
                   <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
                 </div>
-              ) : reports && reports.length > 0 ? (
+              ) : sortedReports && sortedReports.length > 0 ? (
                 <div className="mt-4 grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                  {reports.map((report) => (
+                  {sortedReports.map((report) => (
                     <Card key={report.id} className="overflow-hidden shadow border border-gray-200">
                       <CardContent className="p-0">
                         <div className="p-5">
@@ -223,10 +364,14 @@ export default function LostFound() {
                             </div>
                           </div>
                           <div className="mt-5">
-                            <a href={`#report-details-${report.id}`} className="inline-flex items-center text-sm font-medium text-primary-600 hover:text-primary-500">
+                            <Button 
+                              variant="link" 
+                              className="p-0 h-auto text-primary-600 font-bold hover:text-primary-500"
+                              onClick={() => setLocation(`/report/${report.id}`)}
+                            >
                               View details
                               <ChevronRight className="ml-1 h-4 w-4" />
-                            </a>
+                            </Button>
                           </div>
                         </div>
                       </CardContent>
@@ -255,116 +400,20 @@ export default function LostFound() {
             </DialogTitle>
           </DialogHeader>
           
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Item Name/Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Black Wallet, iPhone 13, etc." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Provide detailed description of the item including any distinguishing features" 
-                        className="min-h-[100px]"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {dialogType === "lost" ? "Where did you lose it?" : "Where did you find it?"}
-                      </FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Kigali Bus Station, Nyamirambo area" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        {dialogType === "lost" ? "When did you lose it?" : "When did you find it?"}
-                      </FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="contactInfo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contact Information</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Phone number or email address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="flex justify-end gap-3 pt-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setOpenDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={reportMutation.isPending}
-                  className={dialogType === "lost" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"}
-                >
-                  {reportMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit Report"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
+          <ReportWizard 
+            type={dialogType || "found"} 
+            onSubmit={handleWizardSubmit} 
+            isSubmitting={reportMutation.isPending} 
+          />
         </DialogContent>
       </Dialog>
       
+      <ReportDetailDialog 
+        report={selectedReport}
+        isOpen={detailOpen}
+        onClose={() => setDetailOpen(false)}
+      />
+
       <Footer />
     </div>
   );

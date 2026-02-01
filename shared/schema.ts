@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Define allowed user roles
-export const userRoles = ['Admin', 'Agent', 'Moderator', 'Subscriber'] as const;
+export const userRoles = ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business'] as const;
 
 // Define account statuses
 export const accountStatuses = ['active', 'pending', 'suspended', 'inactive', 'banned'] as const;
@@ -25,7 +25,7 @@ export const itemCategories = [
 export const itemStatuses = ['Registered', 'Lost', 'Found', 'Recovered', 'Archived'] as const;
 
 // Define report statuses
-export const reportStatuses = ['Open', 'In_Progress', 'Resolved', 'Closed'] as const;
+export const reportStatuses = ['Open', 'In_Progress', 'Resolved', 'Closed', 'Expired'] as const;
 
 // Define permission types
 export const permissionTypes = [
@@ -45,6 +45,9 @@ export const paymentTypes = ['registration', 'lost_report'] as const;
 
 // Define package status
 export const packageStatuses = ['active', 'inactive', 'archived'] as const;
+
+// Define claim statuses
+export const claimStatuses = ['pending', 'verified', 'rejected', 'resolved'] as const;
 
 // User table
 export const users = pgTable("users", {
@@ -99,13 +102,34 @@ export const reports = pgTable("reports", {
   userId: integer("user_id").notNull().references(() => users.id),
   itemId: integer("item_id").references(() => items.id),
   type: text("type").notNull(), // 'lost' or 'found'
+  category: text("category").notNull().default('Other'),
   title: text("title").notNull(),
   description: text("description").notNull(),
   location: text("location").notNull(),
   date: timestamp("date").notNull(),
   status: text("status").notNull().default('Open'),
   contactInfo: text("contact_info"),
+  uniqueIdentifier: text("unique_identifier"),
+  receiptNumber: text("receipt_number").unique(),
+  imageUrls: text("image_urls").array(),
+  expirationDate: timestamp("expiration_date"),
+  gracePeriodEnd: timestamp("grace_period_end"),
+  paymentStatus: text("payment_status").default('pending'),
   reportedAt: timestamp("reported_at").defaultNow().notNull(),
+});
+
+// Claims table
+export const claims = pgTable("claims", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  reportId: integer("report_id").notNull().references(() => reports.id),
+  description: text("description").notNull(),
+  imageUrls: text("image_urls").array(),
+  status: text("status").notNull().default('pending'),
+  finderNotes: text("finder_notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  verifiedAt: timestamp("verified_at"),
 });
 
 // Notifications
@@ -195,14 +219,14 @@ export const roles = pgTable("roles", {
 export const verificationRequests = pgTable("verification_requests", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  type: text("type").notNull(), // e.g., 'identity', 'address', 'business'
+  documentType: text("document_type").notNull(), // 'nid', 'passport', 'drivers_license'
+  documentUrl: text("document_url").notNull(),
+  selfieUrl: text("selfie_url").notNull(),
   status: text("status").notNull().default('pending'),
-  documentUrls: text("document_urls").array(),
-  notes: text("notes"),
+  adminComment: text("admin_comment"),
   reviewedBy: integer("reviewed_by").references(() => users.id),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   reviewedAt: timestamp("reviewed_at"),
-  expiresAt: timestamp("expires_at"),
 });
 
 // Status change history
@@ -296,18 +320,35 @@ export const insertReportSchema = createInsertSchema(reports)
       errorMap: () => ({ message: "Please enter a valid date" })
     }),
     location: z.string().min(3, "Please provide a specific location"),
-    description: z.string().min(10, "Please provide a detailed description").max(500, "Description is too long")
+    description: z.string().min(10, "Please provide a detailed description").max(500, "Description is too long"),
+    category: z.enum(itemCategories, {
+      errorMap: () => ({ message: "Please select a valid category for this report" })
+    }).default('Other'),
+    uniqueIdentifier: z.string().optional(),
   });
 
 // Extended schema for lost item report form with validation
 export const lostItemReportSchema = insertReportSchema.extend({
-  title: z.string().min(5, "Title must be at least 5 characters"),
-  contactInfo: z.string().min(5, "Please provide contact information").optional()
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  location: z.string().min(3, "Please specify a location"),
+  category: z.string().default("Other"),
+  contactInfo: z.string().optional(),
 });
 
 // Extended schema for found item report form
 export const foundItemReportSchema = insertReportSchema.extend({
   title: z.string().min(5, "Title must be at least 5 characters")
+});
+
+// Claim schemas
+export const insertClaimSchema = createInsertSchema(claims).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true,
+  verifiedAt: true
+}).extend({
+  description: z.string().min(50, "Please provide a detailed description (min 50 characters)"),
+  imageUrls: z.array(z.string().url()).optional().default([])
 });
 
 // Notification schemas
@@ -332,7 +373,13 @@ export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs).
 export const insertAdminActionLogSchema = createInsertSchema(adminActionLogs).omit({ id: true, timestamp: true });
 export const insertRoleSchema = createInsertSchema(roles).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertVerificationRequestSchema = createInsertSchema(verificationRequests).omit({ 
-  id: true, submittedAt: true, reviewedAt: true, expiresAt: true 
+  id: true, submittedAt: true, reviewedAt: true, status: true 
+}).extend({
+  documentType: z.enum(['nid', 'passport', 'drivers_license'], {
+    errorMap: () => ({ message: "Please select a valid document type" })
+  }),
+  documentUrl: z.string().url("Document URL is required"),
+  selfieUrl: z.string().url("Selfie URL is required"),
 });
 export const insertStatusChangeSchema = createInsertSchema(statusChanges).omit({ id: true, timestamp: true });
 export const insertUserWarningSchema = createInsertSchema(userWarnings).omit({ 
@@ -368,6 +415,7 @@ export type InsertVerificationRequest = z.infer<typeof insertVerificationRequest
 export type InsertStatusChange = z.infer<typeof insertStatusChangeSchema>;
 export type InsertUserWarning = z.infer<typeof insertUserWarningSchema>;
 export type InsertPaymentPackage = z.infer<typeof insertPaymentPackageSchema>;
+export type InsertClaim = z.infer<typeof insertClaimSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Item = typeof items.$inferSelect;
@@ -382,6 +430,7 @@ export type VerificationRequest = typeof verificationRequests.$inferSelect;
 export type StatusChange = typeof statusChanges.$inferSelect;
 export type UserWarning = typeof userWarnings.$inferSelect;
 export type PaymentPackage = typeof paymentPackages.$inferSelect;
+export type Claim = typeof claims.$inferSelect;
 
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type UserRole = typeof userRoles[number];
@@ -395,6 +444,7 @@ export type PermissionType = typeof permissionTypes[number];
 export type PaymentStatus = typeof paymentStatuses[number];
 export type PaymentType = typeof paymentTypes[number];
 export type PackageStatus = typeof packageStatuses[number];
+export type ClaimStatus = typeof claimStatuses[number];
 
 // Payment validation schemas
 export const initiatePaymentSchema = z.object({
@@ -408,3 +458,42 @@ export const initiatePaymentSchema = z.object({
   redirectUrl: z.string().optional(),
   metadata: z.record(z.any()).optional()
 });
+
+// Moderation schemas
+export const reportReasons = ['spam', 'scam', 'wrong_category', 'inappropriate', 'fraudulent', 'harassment'] as const;
+export const reportModerationStatuses = ['pending', 'reviewed', 'resolved', 'dismissed'] as const;
+
+export const moderationReports = pgTable("moderation_reports", {
+  id: serial("id").primaryKey(),
+  reportId: integer("report_id").references(() => reports.id),
+  itemId: integer("item_id").references(() => items.id),
+  claimId: integer("claim_id").references(() => claims.id),
+  reporterEmail: text("reporter_email"),
+  reason: text("reason").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default('pending'),
+  actionTaken: text("action_taken"),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertModerationReportSchema = createInsertSchema(moderationReports).omit({
+  id: true,
+  createdAt: true,
+  reviewedAt: true,
+  status: true,
+  reviewedBy: true
+}).extend({
+  reason: z.enum(reportReasons, {
+    errorMap: () => ({ message: "Please select a valid report reason" })
+  }),
+  description: z.string().optional(),
+});
+
+export type InsertModerationReport = z.infer<typeof insertModerationReportSchema>;
+export type ModerationReport = typeof moderationReports.$inferSelect;
+export type ReportReason = typeof reportReasons[number];
+export type ModerationStatus = typeof reportModerationStatuses[number];

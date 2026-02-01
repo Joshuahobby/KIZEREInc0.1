@@ -1,0 +1,54 @@
+import { db } from "../db";
+import { reports, users } from "@shared/schema";
+import { eq, and, lte, sql } from "drizzle-orm";
+import { createLogger } from "../utils/logger";
+import { sendExpirationEmail } from "../services/email.service";
+
+const logger = createLogger('ExpirationCron');
+
+export function startExpirationCron() {
+  logger.info("Starting expiration cron job...");
+
+  // Run every hour
+  setInterval(async () => {
+    try {
+      logger.info('Running expiration check...');
+      const now = new Date();
+
+      // Find expired reports
+      const expiredReports = await db.select({
+        report: reports,
+        user: users
+      })
+      .from(reports)
+      .leftJoin(users, eq(reports.userId, users.id))
+      .where(and(
+        eq(reports.status, 'Open'),
+        lte(reports.expirationDate, now)
+      ));
+
+      logger.info(`Found ${expiredReports.length} expired reports`);
+
+      for (const { report, user } of expiredReports) {
+        // Update status to Expired
+        await db.update(reports)
+          .set({ status: 'Expired' })
+          .where(eq(reports.id, report.id));
+
+        // Send notification
+        if (user && user.email) {
+          const renewalLink = `${process.env.APP_URL || 'https://kizere.com'}/renew/${report.id}`;
+          await sendExpirationEmail(
+            user.email,
+            user.fullName,
+            report.title,
+            report.id,
+            renewalLink
+          );
+        }
+      }
+    } catch (error) {
+      logger.error('Error in expiration cron', { error });
+    }
+  }, 1000 * 60 * 60); // 1 hour
+}

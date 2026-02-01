@@ -13,7 +13,7 @@ export function ProtectedRoute({
   requiredRole = 'any',
 }: {
   path: string;
-  component: () => JSX.Element;
+  component: React.ComponentType<any>;
   requiredRole?: RoleRequirement;
 }) {
   const { user, isLoading } = useAuth();
@@ -51,23 +51,43 @@ export function ProtectedRoute({
   };
 
   if (isLoading) {
-    return <Route path={path} component={LoadingComponent} />;
+    return (
+      <Route path={path}>
+        <LoadingComponent />
+      </Route>
+    );
   }
 
   if (!user) {
-    return <Route path={path} component={RedirectToLandingComponent} />;
+    return (
+      <Route path={path}>
+        <RedirectToLandingComponent />
+      </Route>
+    );
   }
 
   // Check if the path is / and redirect to appropriate dashboard by role
   if (path === '/') {
     const RedirectToDashboard = () => <Redirect to={getDashboardByRole(user.role)} />;
-    return <Route path={path} component={RedirectToDashboard} />;
+    return (
+      <Route path={path}>
+        <RedirectToDashboard />
+      </Route>
+    );
   }
 
   // Check role restrictions
   if (!hasRequiredRole(user, requiredRole)) {
-    return <Route path={path} component={UnauthorizedComponent} />;
+    return (
+      <Route path={path}>
+        <UnauthorizedComponent />
+      </Route>
+    );
   }
 
-  return <Route path={path} component={Component} />;
+  return (
+    <Route path={path}>
+      <Component />
+    </Route>
+  );
 }

@@ -28,43 +28,50 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Settings } from "lucide-react";
 import {
-  LayoutDashboard,
-  Search,
-  ClipboardList,
-  AlertTriangle,
-  CheckCircle2,
-  Bell,
-  BarChart3,
-  Clock,
-  FileText,
-  Users,
-  ShoppingBag,
-  DollarSign,
-  Plus,
-  Loader2,
-  RefreshCw,
-  LogOut,
-  ChevronDown,
-  Settings,
   HelpCircle,
   Filter,
   ArrowDownUp,
   Calendar,
   BellRing,
-  User
+  User,
+  ShieldCheck,
+  ShoppingBag,
+  AlertTriangle,
+  CheckCircle2,
+  DollarSign,
+  Users,
+  FileText,
+  ClipboardList,
+  Clock,
+  Search,
+  Bell,
+  Plus,
+  LayoutDashboard,
+  BarChart3
 } from "lucide-react";
+import { format } from "date-fns";
 
 // Import admin-specific components
 import { PaymentAnalyticsChart } from "@/components/dashboard/payment-analytics-chart-fixed";
 import { PaymentStatusChart } from "@/components/dashboard/payment-status-chart";
 import { PaymentTypeChart } from "@/components/dashboard/payment-type-chart";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
+import { ClaimReviewDialog } from "@/components/reports/claim-review-dialog";
+import { Claim } from "@shared/schema";
+import { ModerationQueue } from "@/components/dashboard/moderation-queue";
+import { BusinessInsights } from "@/components/dashboard/business-insights";
+import { VerificationRequestsTable } from "@/components/dashboard/verification-requests-table";
+import { SuggestedMatches } from "@/components/dashboard/suggested-matches";
 
 const logger = createLogger('UnifiedDashboard');
 
 export default function UnifiedDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
+  const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const { user, signOut } = useAuth();
   const [, navigate] = useLocation();
   const { t } = useLanguage();
@@ -87,7 +94,9 @@ export default function UnifiedDashboard() {
     notifications = [],
     items = [],
     reports = [],
-    allReports = []
+    allReports = [],
+    myClaims = [],
+    claimsReceived = []
   } = dashboardData || {};
 
   // Animate dashboard cards in sequence
@@ -209,6 +218,45 @@ export default function UnifiedDashboard() {
             </motion.div>
           </div>
 
+          {/* Role-Specific Stats Row */}
+          {(isAdmin || isAgent) && (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+              {userStats.allOpenReports !== undefined && (
+                <motion.div variants={itemVariants}>
+                  <StatsCard
+                    title="Active Hub Reports"
+                    value={userStats.allOpenReports}
+                    icon={<FileText className="h-5 w-5" />}
+                    iconBgClass="bg-orange-100 dark:bg-orange-900/30"
+                    iconTextClass="text-orange-600 dark:text-orange-400"
+                  />
+                </motion.div>
+              )}
+              {isAdmin && userStats.totalUsers !== undefined && (
+                <motion.div variants={itemVariants}>
+                  <StatsCard
+                    title="Total Platform Users"
+                    value={userStats.totalUsers}
+                    icon={<Users className="h-5 w-5" />}
+                    iconBgClass="bg-indigo-100 dark:bg-indigo-900/30"
+                    iconTextClass="text-indigo-600 dark:text-indigo-400"
+                  />
+                </motion.div>
+              )}
+              {isAdmin && userStats.pendingVerifications !== undefined && (
+                <motion.div variants={itemVariants}>
+                  <StatsCard
+                    title="Pending Verifications"
+                    value={userStats.pendingVerifications}
+                    icon={<ShieldCheck className="h-5 w-5" />}
+                    iconBgClass="bg-cyan-100 dark:bg-cyan-900/30"
+                    iconTextClass="text-cyan-600 dark:text-cyan-400"
+                  />
+                </motion.div>
+              )}
+            </div>
+          )}
+
           {/* Global Search */}
           <motion.div variants={itemVariants} className="mb-6">
             <GlobalSearch onSearch={(query) => logger.info(`Search query: ${query}`)} />
@@ -232,20 +280,92 @@ export default function UnifiedDashboard() {
             </motion.div>
           </div>
 
-          {/* Recently Registered Items */}
-          <motion.div variants={itemVariants}>
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>{t('dashboard.recentlyRegisteredItems')}</CardTitle>
-                <CardDescription>
-                  {t('dashboard.recentItemsDescription')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ItemsTable items={userStats.recentlyAddedItems} isLoading={false} />
-              </CardContent>
-            </Card>
-          </motion.div>
+          {/* Quick Actions & Recent Items */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+            <motion.div variants={itemVariants} className="lg:col-span-2">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle>{t('dashboard.recentItems')}</CardTitle>
+                  <CardDescription>
+                    {t('dashboard.recentItemsDescription')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ItemsTable items={userStats.recentlyAddedItems} isLoading={false} />
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="space-y-6">
+               {/* Quick Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                   <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setActiveTab('claims')}
+                  >
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    View My Claims
+                    {myClaims.length > 0 && (
+                      <Badge className="ml-auto" variant="secondary">{myClaims.length}</Badge>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-start text-left"
+                    onClick={() => navigate('/profile')}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    {t('dashboard.settings')}
+                  </Button>
+
+                  {user?.verificationStatus !== 'approved' && (
+                    <Button 
+                      className="w-full justify-start text-left bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={() => navigate('/identity-verification')}
+                    >
+                      <ShieldCheck className="mr-2 h-4 w-4" />
+                      Get Verified
+                    </Button>
+                  )}
+
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => navigate('/report/new?type=lost')}
+                  >
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    Report Lost Item
+                  </Button>
+
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => navigate('/report/new?type=found')}
+                  >
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Report Found Item
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Notifications Summary */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{notifications.filter(n => !n.isRead).length}</div>
+                  <p className="text-xs text-muted-foreground">Unread messages</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
 
           {/* Payment History */}
           <motion.div variants={itemVariants}>
@@ -392,6 +512,11 @@ export default function UnifiedDashboard() {
               </CardContent>
             </Card>
           </motion.div>
+
+          {/* Verification Requests Management */}
+          <motion.div variants={itemVariants} className="mb-6">
+            <VerificationRequestsTable />
+          </motion.div>
         </motion.div>
       );
     }
@@ -463,7 +588,9 @@ export default function UnifiedDashboard() {
                 <CardDescription>{t('dashboard.agent.reportsDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="all" className="w-full">
+                <div className="grid lg:grid-cols-4 gap-6">
+                  <div className="lg:col-span-3">
+                    <Tabs defaultValue="all" className="w-full">
                   <TabsList className="grid w-full grid-cols-4 mb-4">
                     <TabsTrigger value="all">{t('dashboard.agent.allReports')}</TabsTrigger>
                     <TabsTrigger value="lost">{t('dashboard.agent.lostItems')}</TabsTrigger>
@@ -476,18 +603,22 @@ export default function UnifiedDashboard() {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Report ID</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Location</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Actions</TableHead>
+                            <TableHead>{t('dashboard.table.reportId')}</TableHead>
+                            <TableHead>{t('dashboard.table.type')}</TableHead>
+                            <TableHead>{t('dashboard.table.status')}</TableHead>
+                            <TableHead>{t('dashboard.table.location')}</TableHead>
+                            <TableHead>{t('dashboard.table.date')}</TableHead>
+                            <TableHead>{t('dashboard.table.actions')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {allReports.length > 0 ? (
                             allReports.map((r: any) => (
-                              <TableRow key={r.id}>
+                              <TableRow 
+                                key={r.id}
+                                className={`cursor-pointer transition-colors ${selectedReportId === r.id ? 'bg-primary/5 hover:bg-primary/10' : ''}`}
+                                onClick={() => setSelectedReportId(r.id)}
+                              >
                                 <TableCell>{r.id}</TableCell>
                                 <TableCell>
                                   <Badge variant={r.type === "lost" ? "destructive" : "success"}>
@@ -502,7 +633,16 @@ export default function UnifiedDashboard() {
                                 <TableCell>{r.location}</TableCell>
                                 <TableCell>{new Date(r.reportedAt).toLocaleDateString()}</TableCell>
                                 <TableCell>
-                                  <Button size="sm" variant="outline">View</Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant={selectedReportId === r.id ? "default" : "outline"}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedReportId(r.id);
+                                    }}
+                                  >
+                                    {selectedReportId === r.id ? t('dashboard.table.selected') : t('dashboard.table.match')}
+                                  </Button>
                                 </TableCell>
                               </TableRow>
                             ))
@@ -518,9 +658,14 @@ export default function UnifiedDashboard() {
                     </div>
                   </TabsContent>
                 </Tabs>
-              </CardContent>
-            </Card>
-          </motion.div>
+              </div>
+              <div className="lg:col-span-1">
+                <SuggestedMatches reportId={selectedReportId} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
 
           {/* Quick Actions for Agents */}
           <motion.div variants={itemVariants} className="mb-6">
@@ -637,7 +782,132 @@ export default function UnifiedDashboard() {
       );
     }
 
-    // Fallback - should never reach here
+    // Claims tab
+    if (activeTab === "claims") {
+      return (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <div className="grid gap-6 md:grid-cols-2 mb-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
+                  <CardTitle>My Claims</CardTitle>
+                </div>
+                <CardDescription>Items you've claimed as yours.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {myClaims.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Claim ID</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {myClaims.map((claim: any) => (
+                        <TableRow key={claim.id}>
+                          <TableCell className="font-mono text-xs">#{claim.id}</TableCell>
+                          <TableCell>
+                            <Badge variant={claim.status === 'pending' ? 'outline' : 'secondary'}>
+                              {claim.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-xs">{format(new Date(claim.createdAt), 'MMM d, yyyy')}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-10">
+                    <p className="text-muted-foreground italic">You haven't filed any claims yet.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <BellRing className="h-5 w-5 text-primary" />
+                  <CardTitle>Claims Received</CardTitle>
+                </div>
+                <CardDescription>People claiming items you found.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {claimsReceived.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>From</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {claimsReceived.map((claim: any) => (
+                        <TableRow key={claim.id}>
+                          <TableCell className="text-xs">User #{claim.userId}</TableCell>
+                          <TableCell>
+                            <Badge variant={claim.status === 'pending' ? 'outline' : 'secondary'}>
+                              {claim.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => {
+                                setSelectedClaim(claim);
+                                setReviewOpen(true);
+                              }}
+                            >
+                              Review
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="text-center py-10">
+                    <p className="text-muted-foreground italic">No claims received yet.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          <ClaimReviewDialog 
+            claim={selectedClaim}
+            isOpen={reviewOpen}
+            onClose={() => setReviewOpen(false)}
+          />
+        </motion.div>
+      );
+    }
+
+    if (activeTab === "moderation") {
+      return (
+        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+          <ModerationQueue />
+        </motion.div>
+      );
+    }
+
+    if (activeTab === "business") {
+      return (
+        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+          <BusinessInsights userStats={userStats} />
+        </motion.div>
+      );
+    }
+
     return (
       <div className="p-6 text-center">
         <p>{t('dashboard.selectTab')}</p>
@@ -667,6 +937,11 @@ export default function UnifiedDashboard() {
         id: "payments",
         label: t('dashboard.tabs.payments'),
         icon: <DollarSign className="h-5 w-5" />
+      },
+      {
+        id: "claims",
+        label: t('dashboard.tabs.claims'),
+        icon: <ShieldCheck className="h-5 w-5" />
       }
     ];
 
@@ -685,6 +960,24 @@ export default function UnifiedDashboard() {
         id: "agent",
         label: t('dashboard.tabs.agentConsole'),
         icon: <Search className="h-5 w-5" />
+      });
+    }
+
+    // Add moderation tab for moderators and admins
+    if (isAdmin || user.role === 'Moderator') {
+      tabs.push({
+        id: "moderation",
+        label: "Moderation",
+        icon: <AlertTriangle className="h-5 w-5" />
+      });
+    }
+
+    // Add Business Insights for high-volume users
+    if (userStats.totalItems >= 5 || user.role === 'Subscriber' && userStats.totalSpent > 5000) {
+      tabs.push({
+        id: "business",
+        label: "Business Insights",
+        icon: <BarChart3 className="h-5 w-5" />
       });
     }
 
