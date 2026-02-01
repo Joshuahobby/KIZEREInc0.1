@@ -58,6 +58,11 @@ const logger = createLogger('Routes');
 function requireRole(roles: string[] | 'any') {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.isAuthenticated()) {
+      logger.warn('Authentication required but not present', { 
+        path: req.path,
+        cookies: !!req.headers.cookie,
+        sessionId: req.sessionID
+      });
       return res.status(401).json({ message: "Authentication required" });
     }
     

@@ -59,6 +59,14 @@ console.log('[Firebase] Successfully initialized Firebase app');
 // Initialize Auth
 const auth = getAuth(app);
 
+// Expose firebase on window for QueryClient and other legacy components
+if (typeof window !== 'undefined') {
+  (window as any).firebase = {
+    app,
+    auth: () => auth // Provide a function that returns the auth instance to match legacy usage
+  };
+}
+
 // Set persistence to session (logs out when browser/tab is closed)
 // This addresses the issue where users were auto-logged in 48 hours later
 setPersistence(auth, browserSessionPersistence)

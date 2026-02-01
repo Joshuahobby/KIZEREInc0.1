@@ -3,7 +3,7 @@ import { storage } from '../storage';
 import { createLogger } from '../utils/logger';
 import { hashPassword } from '../utils/auth-crypto';
 import { z } from 'zod';
-import { DashboardService } from '../services/dashboard.service';
+import { dashboardService } from '../services/dashboard.service';
 import { ReportMatchingService } from '../services/report-matching.service';
 
 const logger = createLogger('AdminRoutes');
@@ -548,21 +548,10 @@ router.get("/activity-log", async (req, res) => {
 
 router.get("/stats", async (req, res) => {
   try {
-    const [users, items, lost, found, payments] = await Promise.all([
-      storage.getAllUsers(),
-      storage.getAllItems(),
-      storage.getLostReports(),
-      storage.getFoundReports(),
-      storage.getAllPayments()
-    ]);
-    
-    res.json({
-      totalUsers: users.length,
-      totalItems: items.length,
-      totalReports: lost.length + found.length,
-      totalPayments: payments.length
-    });
+    const stats = await dashboardService.getAdminDetailedStats();
+    res.json(stats);
   } catch (error) {
+    logger.error("Failed to fetch detailed stats:", error);
     res.status(500).json({ message: "Failed to fetch stats" });
   }
 });

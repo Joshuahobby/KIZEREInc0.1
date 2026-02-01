@@ -198,6 +198,67 @@ export class DashboardService {
       throw error;
     }
   }
+
+  /**
+   * Get detailed statistics for the admin dashboard
+   * Matches the DashboardStats interface expected by the client
+   */
+  async getAdminDetailedStats() {
+    try {
+      const [allUsers, allItems, allReports, allPayments] = await Promise.all([
+        storage.getAllUsers(),
+        storage.getAllItems(),
+        storage.getAllReports(),
+        storage.getAllPayments()
+      ]);
+
+      // User stats
+      const totalUsers = allUsers.length;
+      const userStats = {
+        subscriberCount: allUsers.filter(u => u.role === 'Subscriber').length,
+        agentCount: allUsers.filter(u => u.role === 'Agent').length,
+        adminCount: allUsers.filter(u => u.role === 'Admin').length,
+      };
+
+      // Item stats
+      const totalItems = allItems.length;
+      const itemStats = {
+        registeredItems: allItems.filter(i => i.status === 'Registered').length,
+        lostItems: allItems.filter(i => i.status === 'Lost').length,
+        foundItems: allItems.filter(i => i.status === 'Found').length,
+      };
+
+      // Report stats
+      const pendingReports = allReports.filter(r => r.status === 'Open' || r.status === 'In_Progress').length;
+      const reportStats = {
+        lostReportsCount: allReports.filter(r => r.type === 'lost').length,
+        foundReportsCount: allReports.filter(r => r.type === 'found').length,
+        resolvedReportsCount: allReports.filter(r => r.status === 'Resolved').length,
+      };
+
+      // Payment stats
+      const totalPayments = allPayments.length;
+      const paymentStats = {
+        successfulPayments: allPayments.filter(p => p.status === 'successful').length,
+        pendingPayments: allPayments.filter(p => p.status === 'pending').length,
+        failedPayments: allPayments.filter(p => p.status === 'failed').length,
+      };
+
+      return {
+        totalUsers,
+        totalItems,
+        pendingReports,
+        totalPayments,
+        userStats,
+        itemStats,
+        reportStats,
+        paymentStats
+      };
+    } catch (error) {
+      logger.error('Error calculating detailed admin stats', { error });
+      throw error;
+    }
+  }
   
   /**
    * Get role-based dashboard statistics
@@ -273,6 +334,13 @@ export class DashboardService {
           const allUsers = await storage.getAllUsers();
           stats.totalUsers = allUsers.length;
           stats.pendingVerifications = allUsers.filter(u => u.verificationStatus === 'pending').length;
+          
+          // Add detailed counts for frontend compatibility
+          stats.userStats = {
+            subscriberCount: allUsers.filter(u => u.role === 'Subscriber').length,
+            agentCount: allUsers.filter(u => u.role === 'Agent').length,
+            adminCount: allUsers.filter(u => u.role === 'Admin').length,
+          };
         }
       }
 

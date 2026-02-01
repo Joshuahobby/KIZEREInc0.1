@@ -19,20 +19,26 @@ declare global {
 
 
 export function setupAuth(app: Express) {
-  // Always generate a fallback session secret for development
-  // In production, SESSION_SECRET should be set properly
-  const sessionSecret = process.env.SESSION_SECRET || randomBytes(32).toString('hex');
-  console.log("Using session secret:", sessionSecret ? "✓ Session secret available" : "⚠️ No session secret");
+  // SESSION_SECRET is critical for session persistence in serverless environments.
+  // If missing, a new secret is generated on every lambda cold start, logging everyone out.
+  const sessionSecret = process.env.SESSION_SECRET;
+  
+  if (!sessionSecret && env.NODE_ENV === "production") {
+    console.warn("⚠️ WARNING: SESSION_SECRET is not set in production. Sessions will be volatile across serverless instances.");
+  }
+  
+  const finalSecret = sessionSecret || randomBytes(32).toString('hex');
   
   const sessionSettings: session.SessionOptions = {
-    secret: sessionSecret,
+    secret: finalSecret,
     resave: false,
     saveUninitialized: false,
+    name: 'kizere.sid', // Specific name to avoid conflicts
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
       secure: env.NODE_ENV === "production",
-      sameSite: 'lax' // Provides some CSRF protection
+      sameSite: 'lax'
     },
     store: storage.sessionStore,
   };
@@ -113,7 +119,11 @@ export function setupAuth(app: Express) {
       // Log in the new user
       req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json(userWithoutPassword);
+        
+        req.session.save((saveErr) => {
+          if (saveErr) return next(saveErr);
+          res.status(201).json(userWithoutPassword);
+        });
       });
     } catch (error) {
       next(error);
@@ -128,9 +138,13 @@ export function setupAuth(app: Express) {
       }
       req.login(user, (loginErr) => {
         if (loginErr) return next(loginErr);
-        // Strip password from response
-        const { password, ...userWithoutPassword } = user;
-        res.status(200).json(userWithoutPassword);
+        
+        req.session.save((saveErr) => {
+          if (saveErr) return next(saveErr);
+          // Strip password from response
+          const { password, ...userWithoutPassword } = user;
+          res.status(200).json(userWithoutPassword);
+        });
       });
     })(req, res, next);
   });
@@ -138,7 +152,11 @@ export function setupAuth(app: Express) {
   app.post("/api/auth/logout", (req, res, next) => {
     req.logout((err) => {
       if (err) return next(err);
-      res.status(200).json({ message: "Logged out successfully" });
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) return next(destroyErr);
+        res.clearCookie('kizere.sid');
+        res.status(200).json({ message: "Logged out successfully" });
+      });
     });
   });
 
