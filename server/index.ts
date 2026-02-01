@@ -10,6 +10,15 @@ import { startExpirationCron } from "./cron/expiration";
 const logger = createLogger('Server');
 const app = express();
 
+// Handle process-level errors
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', { promise, reason });
+});
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', { error: error.message, stack: error.stack });
+});
+
 // Basic middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -71,6 +80,9 @@ export const startServer = async () => {
 
   // Explicitly check if running on Vercel to avoid loading Vite
   const isVercel = process.env.VERCEL === "1";
+  if (isVercel) {
+    process.env.NODE_ENV = "production";
+  }
   if (app.get("env") === "development" && !isVercel) {
     const { setupVite } = await import("./vite");
     await setupVite(app, server);

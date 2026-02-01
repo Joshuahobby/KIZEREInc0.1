@@ -100,6 +100,7 @@ import verificationRoutes from "./routes/verification.routes";
 import uploadRoutes from './routes/upload.routes';
 import moderationRoutes from './routes/moderation.routes';
 import searchRoutes from './routes/search.routes';
+import dashboardRoutes from './routes/dashboard.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -120,6 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/upload', requireAuth, uploadRoutes);
   app.use('/api/moderation', requireAuth, moderationRoutes);
   app.use('/api/search', requireAuth, searchRoutes);
+  app.use('/api/dashboard', requireAuth, dashboardRoutes);
 
   // Health check endpoint
   app.get("/api/health", async (req, res) => {
@@ -141,6 +143,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       authenticated: req.isAuthenticated(),
       user: req.isAuthenticated() ? req.user : null
     });
+  });
+
+  // Debug ENV presence (names only)
+  app.get("/api/debug-env", (req, res) => {
+    res.json({
+      DATABASE_URL: !!process.env.DATABASE_URL,
+      SESSION_SECRET: !!process.env.SESSION_SECRET,
+      RESEND_API_KEY: !!process.env.RESEND_API_KEY,
+      VITE_FIREBASE_API_KEY: !!process.env.VITE_FIREBASE_API_KEY,
+      FIREBASE_SERVICE_ACCOUNT: !!process.env.FIREBASE_SERVICE_ACCOUNT,
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL: process.env.VERCEL,
+      TIMESTAMP: new Date().toISOString()
+    });
+  });
+
+  // Debug DB connection
+  app.get("/api/debug-db", async (req, res) => {
+    try {
+      const { db } = await import("./db");
+      const { sql } = await import("drizzle-orm");
+      const result = await db.execute(sql`SELECT 1 as connected`);
+      res.json({ status: "success", result, env: process.env.NODE_ENV });
+    } catch (error: any) {
+      logger.error('Debug DB failed', { error: error.message });
+      res.status(500).json({ status: "error", message: error.message });
+    }
   });
 
   // Firebase Google Auth Callback (Keep as is if shared logic is complex)
