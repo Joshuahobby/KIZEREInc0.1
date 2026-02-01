@@ -252,16 +252,21 @@ export class DashboardService {
         stats.allOpenReports = allReports.filter(r => r.status === 'Open').length;
         
         if (role === 'Admin' || role === 'Moderator') {
-          // Add moderation stats
-          const [modStats] = await db.select({ 
-            pending: sql<number>`count(*) filter (where status = 'pending')`,
-            total: sql<number>`count(*)`
-          }).from(moderationReports);
-          
-          stats.moderation = {
-            pending: Number(modStats?.pending || 0),
-            total: Number(modStats?.total || 0)
-          };
+          try {
+            // Add moderation stats
+            const [modStats] = await db.select({ 
+              pending: sql<number>`count(*) filter (where status = 'pending')`,
+              total: sql<number>`count(*)`
+            }).from(moderationReports);
+            
+            stats.moderation = {
+              pending: Number(modStats?.pending || 0),
+              total: Number(modStats?.total || 0)
+            };
+          } catch (modError) {
+            logger.warn('Failed to fetch moderation stats, table might be missing', { error: modError });
+            stats.moderation = { pending: 0, total: 0 };
+          }
         }
 
         if (role === 'Admin') {

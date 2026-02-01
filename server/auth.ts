@@ -161,6 +161,9 @@ export function setupAuth(app: Express) {
     } catch (error) {
       console.error("Error fetching user data:", error);
       // Fallback to session user if service fails
+      if (!req.user) {
+        return res.status(401).json({ message: "Session user missing" });
+      }
       const { password, ...userWithoutPassword } = req.user;
       res.json(userWithoutPassword);
     }
