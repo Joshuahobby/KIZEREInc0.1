@@ -66,6 +66,15 @@ let serverPromise: Promise<any> | null = null;
 export const startServer = async () => {
   const server = await registerRoutes(app);
 
+  // Start background cron jobs
+  try {
+    const { startExpirationCron } = await import("./cron/expiration");
+    startExpirationCron();
+    logger.info("Expiration cron job started");
+  } catch (err) {
+    logger.error("Failed to start expiration cron", { error: err });
+  }
+
   // Global error handler using centralized error handler
   app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
     logger.error('Global error handler caught an error', {

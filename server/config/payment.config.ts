@@ -17,9 +17,35 @@ export const DEFAULT_PAYMENT_FEES = {
 };
 
 /**
+ * Image upload limits based on user role or package
+ */
+export const DEFAULT_UPLOAD_LIMITS = {
+  FREE: 2,
+  PAID: 5,
+  BUSINESS: 10,
+  ADMIN: 20
+};
+
+/**
  * Default currency code
  */
 export const DEFAULT_CURRENCY = "RWF";
+
+/**
+ * Get the image upload limit for a user
+ */
+export function getUploadLimit(user: any): number {
+  if (user.role === 'Admin') return DEFAULT_UPLOAD_LIMITS.ADMIN;
+  if (user.role === 'Business') return DEFAULT_UPLOAD_LIMITS.BUSINESS;
+  
+  // For other users, check if they have a paid package
+  // This is a simplified check - in a real app we might check active subscriptions
+  if (user.role === 'Subscriber') {
+    return DEFAULT_UPLOAD_LIMITS.FREE; // Default for free subscribers
+  }
+  
+  return DEFAULT_UPLOAD_LIMITS.FREE;
+}
 
 /**
  * Get the payment amount based on the payment type

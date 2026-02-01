@@ -2,7 +2,8 @@ import { db } from "../server/db";
 import { 
   users, items, reports, claims, verificationRequests, moderationReports,
   userRoles, itemCategories, reportStatuses, verificationStatuses,
-  claimStatuses
+  claimStatuses, paymentPackages, notifications, payments, 
+  userActivityLogs, adminActionLogs, statusChanges, userWarnings
 } from "../shared/schema";
 import { hashPassword } from "../server/utils/auth-crypto";
 import { sql } from "drizzle-orm";
@@ -11,14 +12,84 @@ async function seed() {
   console.log("🌱 Seeding database with realistic data...");
 
   try {
-    // 1. Clear existing data
+    // 1. Clear existing data (Order matters for foreign keys)
+    console.log("🧹 Clearing existing data...");
     await db.delete(moderationReports);
+    await db.delete(notifications);
     await db.delete(claims);
-    await db.delete(verificationRequests);
+    await db.delete(payments);
     await db.delete(reports);
     await db.delete(items);
+    await db.delete(verificationRequests);
+    await db.delete(userActivityLogs);
+    await db.delete(adminActionLogs);
+    await db.delete(statusChanges);
+    await db.delete(userWarnings);
+    await db.delete(paymentPackages);
     await db.delete(users);
-    console.log("🧹 Cleared existing data");
+    console.log("✅ Cleared existing data");
+
+    // 2. Create Payment Packages (Tiered)
+    console.log("💳 Creating payment packages...");
+    
+    // Lost Report Packages
+    await db.insert(paymentPackages).values([
+      {
+        name: "Standard",
+        description: "Standard report visibility",
+        type: "lost_report",
+        amount: "1000",
+        currency: "RWF",
+        status: "active",
+        isDefault: true,
+        features: ["7 days visibility", "Basic matching", "Email notification"]
+      },
+      {
+        name: "Premium",
+        description: "Enhanced matching and longer duration",
+        type: "lost_report",
+        amount: "3000",
+        currency: "RWF",
+        status: "active",
+        isDefault: false,
+        features: ["30 days visibility", "Priority matching", "WhatsApp alerts", "Ad-free experience"]
+      },
+      {
+        name: "Urgent",
+        description: "Immediate broadcast to all matching users",
+        type: "lost_report",
+        amount: "10000",
+        currency: "RWF",
+        status: "active",
+        isDefault: false,
+        features: ["90 days visibility", "Real-time push broadcasts", "Agent review priority", "Hero section feature"]
+      }
+    ]);
+
+    // Registration Packages
+    await db.insert(paymentPackages).values([
+      {
+        name: "Single Item",
+        description: "Register one valuable item",
+        type: "registration",
+        amount: "2000",
+        currency: "RWF",
+        status: "active",
+        isDefault: true,
+        features: ["Permanent registration", "Digital certificate", "Ownership protection"]
+      },
+      {
+        name: "Family Bundle",
+        description: "Register up to 5 items",
+        type: "registration",
+        amount: "7000",
+        currency: "RWF",
+        status: "active",
+        isDefault: false,
+        features: ["Up to 5 items", "Shared dashboard", "Reduced per-item cost"]
+      }
+    ]);
+    console.log("✅ Created payment packages");
 
     // 2. Create Users
     const password = await hashPassword("Password123!");

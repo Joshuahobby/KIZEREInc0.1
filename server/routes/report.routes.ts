@@ -44,6 +44,15 @@ router.post("/", async (req, res) => {
       userId: req.user!.id
     });
     
+    // Enforce image upload limits
+    const { getUploadLimit } = await import("../config/payment.config");
+    const limit = getUploadLimit(req.user);
+    if (validatedData.imageUrls && validatedData.imageUrls.length > limit) {
+      return res.status(400).json({ 
+        message: `Image upload limit exceeded. Your current limit is ${limit} images.` 
+      });
+    }
+
     const newReport = await storage.createReport(validatedData);
     
 
