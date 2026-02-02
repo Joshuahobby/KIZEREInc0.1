@@ -72,7 +72,7 @@ export function DashboardStyleSwitcher() {
     },
   });
 
-  if (user?.role !== 'Admin') return null;
+  // Removed admin check to enable for all roles
 
   return (
     <DropdownMenu>
@@ -85,6 +85,7 @@ export function DashboardStyleSwitcher() {
               {currentStyle === "standard" && <LayoutDashboard className="h-4 w-4 text-primary" />}
               {currentStyle === "classic" && <Activity className="h-4 w-4 text-emerald-500" />}
               {currentStyle === "command_center" && <Server className="h-4 w-4 text-amber-500" />}
+              {currentStyle === "grid" && <LayoutDashboard className="h-4 w-4 text-blue-500" />}
             </>
           )}
           <span className="hidden md:inline-block">
@@ -113,9 +114,19 @@ export function DashboardStyleSwitcher() {
         <DropdownMenuItem 
           onClick={() => mutation.mutate("command_center")}
           className={currentStyle === "command_center" ? "bg-accent font-medium" : ""}
+          hidden={user?.role !== 'Admin'}
         >
           <Server className="mr-2 h-4 w-4 text-amber-500" />
           <span>{t("dashboard.experience.command_center")}</span>
+        </DropdownMenuItem>
+        
+        <DropdownMenuItem 
+          onClick={() => mutation.mutate("grid")}
+          className={currentStyle === "grid" ? "bg-accent font-medium" : ""}
+          hidden={user?.role === 'Admin'}
+        >
+          <LayoutDashboard className="mr-2 h-4 w-4 text-blue-500" />
+          <span>{t("dashboard.experience.grid")}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

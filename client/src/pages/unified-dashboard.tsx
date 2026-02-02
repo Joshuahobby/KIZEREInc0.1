@@ -65,6 +65,7 @@ import { ModerationQueue } from "@/components/dashboard/moderation-queue";
 import { BusinessInsights } from "@/components/dashboard/business-insights";
 import { VerificationRequestsTable } from "@/components/dashboard/verification-requests-table";
 import { SuggestedMatches } from "@/components/dashboard/suggested-matches";
+import { UserPreferences } from "@shared/schema";
 
 const logger = createLogger('UnifiedDashboard');
 
@@ -101,6 +102,19 @@ export default function UnifiedDashboard() {
     myClaims = [],
     claimsReceived = []
   } = dashboardData || {};
+
+  const dashboardStyle = (user?.preferences as UserPreferences)?.dashboardStyle || 'standard';
+
+  const getStatsGridClass = () => {
+    switch(dashboardStyle) {
+      case 'grid':
+        return 'grid gap-4 md:grid-cols-3 lg:grid-cols-5 mb-6';
+      case 'classic':
+        return 'grid gap-4 md:grid-cols-1 lg:grid-cols-2 mb-6'; // List-like but still cards
+      default:
+        return 'grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6';
+    }
+  };
 
   // Animate dashboard cards in sequence
   const containerVariants = {
@@ -171,7 +185,7 @@ export default function UnifiedDashboard() {
           animate="visible"
         >
           {/* Stats Row */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <div className={getStatsGridClass()}>
             <motion.div variants={itemVariants}>
               <StatsCard
                 title={t('dashboard.registeredItems')}

@@ -238,6 +238,7 @@
       "standard": "Standard",
       "classic": "Classic",
       "command_center": "Command Center",
+      "grid": "Grid",
       "style": "{style} Style",
       "updated": "Dashboard Updated",
       "updatedDesc": "Dashboard experience switched to {style}"
