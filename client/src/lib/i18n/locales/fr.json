@@ -183,7 +183,40 @@
       "payments": "Paiements",
       "claims": "Réclamations",
       "adminPanel": "Panneau d'Admin",
-      "agentConsole": "Console d'Agent"
+      "agentConsole": "Console d'Agent",
+      "moderation": "Modération",
+      "businessInsights": "Aperçus Commerciaux",
+      "admin": "Admin"
+    },
+    "experience": {
+      "title": "Expérience du Tableau de Bord",
+      "standard": "Standard",
+      "classic": "Classique",
+      "command_center": "Centre de Commande",
+      "grid": "Grille",
+      "style": "Style {style}",
+      "updated": "Tableau de Bord Mis à Jour",
+      "updatedDesc": "L'expérience du tableau de bord est passée à {style}"
+    },
+    "matching": {
+      "title": "Correspondances Suggérées",
+      "description": "Candidats pilotés par l'IA pour le rapport sélectionné.",
+      "selectToSee": "Sélectionnez un rapport pour voir les correspondances potentielles.",
+      "noMatches": "Aucune correspondance fiable trouvée.",
+      "foundCount": "{count} Trouvés",
+      "matchScore": "{score}% Correspondance",
+      "inspect": "Inspecter"
+    },
+    "business": {
+      "protectionRate": "Taux de Protection",
+      "itemsWithIds": "Objets avec ID uniques",
+      "assetRetention": "Rétention des Actifs",
+      "avgRecoveryTime": "Temps moyen de récupération",
+      "complianceScore": "Score de Conformité",
+      "inventoryGrowth": "Croissance des Stocks",
+      "inventoryDesc": "Objets enregistrés au cours des 7 derniers jours.",
+      "protectedValueTrend": "Tendance de Valeur Protégée",
+      "protectedValueDesc": "Valeur estimée (UGX) des objets enregistrés."
     },
     "registeredItems": "Objets Enregistrés",
     "recentActivity": "Activité Récente",
@@ -266,5 +299,35 @@
   "uploaded_images": "Images téléchargées",
   "add_more_images": "Ajouter plus d'images",
   "batch_upload_success": "Téléchargement réussi",
-  "batch_upload_success_desc": "Vos images ont été téléchargées avec succès."
+  "batch_upload_success_desc": "Vos images ont été téléchargées avec succès.",
+  "docs_page": {
+    "title": "Documentation",
+    "subtitle": "Guides et ressources pour utiliser KIZERE",
+    "getting_started": {
+      "title": "Commencer",
+      "step1": "Créer votre compte",
+      "step2": "Configurer votre profil",
+      "step3": "Enregistrement du premier objet"
+    },
+    "guides": {
+      "title": "Guides Pratiques",
+      "registration": "Guide détaillé sur l'enregistrement d'objets",
+      "ownership": "Gestion des certificats de propriété",
+      "lost_found": "Signalement d'objets perdus et trouvés",
+      "qr_codes": "Comment utiliser les tags QR KIZERE"
+    },
+    "welcome_title": "Bienvenue sur KIZERE",
+    "welcome_text": "Cette documentation est conçue pour vous aider à tirer le meilleur parti de KIZERE. Que vous soyez un nouvel utilisateur souhaitant enregistrer vos objets de valeur ou un agent aidant à la récupération, vous trouverez tout ce dont vous avez besoin ici.",
+    "tip_title": "Conseil",
+    "tip_text": "Utilisez la barre de recherche en haut pour trouver rapidement des informations sur tout objet enregistré ou sujet d'aide.",
+    "core_concepts": "Concepts Fondamentaux",
+    "concept1_title": "Identité Numérique",
+    "concept1_text": "Chaque objet dans KIZERE a une identité numérique unique qui vous appartient.",
+    "concept2_title": "Réseau de Confiance",
+    "concept2_text": "Notre processus de récupération communautaire aide les objets à retrouver leurs propriétaires.",
+    "quick_start_title": "Guide de Démarrage Rapide",
+    "quick_start_desc": "Passez de zéro à enregistré en moins de 5 minutes.",
+    "security_title": "Sécurité chez KIZERE",
+    "security_desc": "Découvrez comment nous protégeons vos objets et vos données personnelles."
+  }
 }

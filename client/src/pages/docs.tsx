@@ -80,45 +80,45 @@ export default function DocsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
                   <div className="p-6 rounded-2xl bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-all group cursor-pointer">
                     <Rocket className="h-8 w-8 text-primary mb-4" />
-                    <h3 className="text-lg font-bold mb-2">Quick Start Guide</h3>
-                    <p className="text-sm text-muted-foreground">Go from zero to registered in less than 5 minutes.</p>
+                    <h3 className="text-lg font-bold mb-2">{t('docs_page.quick_start_title')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('docs_page.quick_start_desc')}</p>
                   </div>
                   <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/20 hover:bg-blue-500/10 transition-all group cursor-pointer">
                     <Shield className="h-8 w-8 text-blue-500 mb-4" />
-                    <h3 className="text-lg font-bold mb-2">Security at KIZERE</h3>
-                    <p className="text-sm text-muted-foreground">Learn how we protect your items and personal data.</p>
+                    <h3 className="text-lg font-bold mb-2">{t('docs_page.security_title')}</h3>
+                    <p className="text-sm text-muted-foreground">{t('docs_page.security_desc')}</p>
                   </div>
                 </div>
 
                 <article className="prose prose-slate dark:prose-invert max-w-none">
-                  <h2 className="text-2xl font-bold mb-6 border-b pb-2">Welcome to KIZERE</h2>
+                  <h2 className="text-2xl font-bold mb-6 border-b pb-2">{t('docs_page.welcome_title')}</h2>
                   <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-                    This documentation is designed to help you get the most out of KIZERE. Whether you are a first-time user looking to register your valuables or an agent helping with recovery, you'll find everything you need here.
+                    {t('docs_page.welcome_text')}
                   </p>
                   
                   <div className="bg-muted/50 p-6 rounded-xl border border-border mb-8">
                     <h4 className="font-bold flex items-center gap-2 mb-2 italic">
-                      <Search className="h-4 w-4" /> Tip
+                      <Search className="h-4 w-4" /> {t('docs_page.tip_title')}
                     </h4>
                     <p className="text-sm text-muted-foreground">
-                      Use the search bar at the top of the header to quickly find information about any registered item or help topic.
+                      {t('docs_page.tip_text')}
                     </p>
                   </div>
 
-                  <h3 className="text-xl font-bold mb-4">Core Concepts</h3>
+                  <h3 className="text-xl font-bold mb-4">{t('docs_page.core_concepts')}</h3>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
                       <div className="h-6 w-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold mt-1">1</div>
                       <div>
-                        <h4 className="font-bold">Digital Identity</h4>
-                        <p className="text-muted-foreground text-sm">Every item in KIZERE has a unique digital identity that belongs to you.</p>
+                        <h4 className="font-bold">{t('docs_page.concept1_title')}</h4>
+                        <p className="text-muted-foreground text-sm">{t('docs_page.concept1_text')}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <div className="h-6 w-6 rounded-full bg-primary/20 text-primary flex items-center justify-center text-xs font-bold mt-1">2</div>
                       <div>
-                        <h4 className="font-bold">Trust Network</h4>
-                        <p className="text-muted-foreground text-sm">Our community-driven recovery process helps items find their owners.</p>
+                        <h4 className="font-bold">{t('docs_page.concept2_title')}</h4>
+                        <p className="text-muted-foreground text-sm">{t('docs_page.concept2_text')}</p>
                       </div>
                     </div>
                   </div>

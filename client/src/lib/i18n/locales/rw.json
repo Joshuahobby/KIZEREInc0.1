@@ -229,7 +229,39 @@
       "admin": "Admin",
       "adminPanel": "Igice cy'Umuyobozi",
       "agent": "Umukozi",
-      "agentConsole": "Igice cy'Umukozi"
+      "agentConsole": "Igice cy'Umukozi",
+      "moderation": "Kugenzura",
+      "businessInsights": "Ubucuruzi"
+    },
+    "experience": {
+      "title": "Imigaragarire y'Ikibaho",
+      "standard": "Isanzwe",
+      "classic": "Ya Kera",
+      "command_center": "Command Center",
+      "grid": "Imbonerahamwe",
+      "style": "Uburyo bwa {style}",
+      "updated": "Ikibaho Cyavuguruwe",
+      "updatedDesc": "Imigaragarire y'ikibaho yarahindutse: {style}"
+    },
+    "matching": {
+      "title": "Imyirondoro Ihuye",
+      "description": "Ibihuye n'ibyo ushakisha byatanzwe n'ubwenge bukorano.",
+      "selectToSee": "Hitamo raporo kugira ngo urebe ibishobora kuba bihuye.",
+      "noMatches": "Nta byahuye byizewe bibonetse.",
+      "foundCount": "{count} Byabonetse",
+      "matchScore": "{score}% Bihuye",
+      "inspect": "Sura"
+    },
+    "business": {
+      "protectionRate": "Igipimo cy'Umutekano",
+      "itemsWithIds": "Ibikoresho bifite ID",
+      "assetRetention": "Igihe cyo Kubika",
+      "avgRecoveryTime": "Impuzandengo y'igihe cyo kugarura",
+      "complianceScore": "Amanota yo Kubahiriza",
+      "inventoryGrowth": "Ukwiyongera kw'Ibikoresho",
+      "inventoryDesc": "Ibikoresho byanditswe mu minsi 7 ishize.",
+      "protectedValueTrend": "Agaciro k'Ibireinzwe",
+      "protectedValueDesc": "Agaciro k'ibintu byanditswe (UGX)."
     },
     "selectTab": "Hitamo umutwe",
     "registeredItems": "Ibintu Byanditswe",
@@ -466,7 +498,20 @@
       "ownership": "Gucunga ibyemezo by'uburenganzira",
       "lost_found": "Kumenyekanisha ibyabuze n'ibyabonetse",
       "qr_codes": "Uburyo bwo gukoresha kode QR za KIZERE"
-    }
+    },
+    "welcome_title": "Murakaza neza kuri KIZERE",
+    "welcome_text": "Iyi nyandiko igenewe kugufasha kubyaza umusaruro KIZERE. Waba uri umukoresha mushya ushaka kwandikisha ibintu byawe cyangwa umukozi ufasha mu kugarura ibyabuze, hano urahasanga byose.",
+    "tip_title": "Inama",
+    "tip_text": "Koresha agasanduku k'ishakisha kari hejuru kugira ngo ubone vuba amakuru ku kintu cyanditswe cyangwa ubufasha.",
+    "core_concepts": "Amahame Y'ibanze",
+    "concept1_title": "Umwirondoro w'Ikoranabuhanga",
+    "concept1_text": "Buri kintu muri KIZERE gifite umwirondoro wihariye w'ikoranabuhanga ugaragaza ko ari icyawe.",
+    "concept2_title": "Umuyoboro w'Ubwizerane",
+    "concept2_text": "Uburyo bwacu bwo kugarura ibintu bushingiye ku baturage bufasha ibintu kubona ba nyirabyo.",
+    "quick_start_title": "Inyobora Yihuse",
+    "quick_start_desc": "Iyandikishe kandi wandike ikintu mu minota itageze kuri 5.",
+    "security_title": "Umutekano kuri KIZERE",
+    "security_desc": "Menya uburyo turinda ibintu byawe n'amakuru yawe bwite."
   },
   "community_page": {
     "title": "Umuryango",
