@@ -71,6 +71,8 @@ export interface DashboardData {
   user: Omit<User, "password"> | null;
   isAdmin: boolean;
   isAgent: boolean;
+  isModerator: boolean;
+  isBusiness: boolean;
   userStats: DashboardStats;
   adminStats: AdminDashboardStats | null;
   isLoading: boolean;
@@ -93,6 +95,8 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
   const isAgent = user?.role === 'Agent';
+  const isModerator = user?.role === 'Moderator';
+  const isBusiness = user?.role === 'Business';
   const { refreshInterval = 60000 } = options; // Default refresh every minute
 
   // Basic data queries for all users
@@ -288,6 +292,8 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     user,
     isAdmin,
     isAgent,
+    isModerator,
+    isBusiness,
     userStats,
     adminStats,
     isLoading,

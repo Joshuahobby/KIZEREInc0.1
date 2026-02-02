@@ -229,7 +229,9 @@
       "admin": "Admin",
       "adminPanel": "Admin Panel",
       "agent": "Agent",
-      "agentConsole": "Agent Console"
+      "agentConsole": "Agent Console",
+      "moderation": "Moderation",
+      "businessInsights": "Business Insights"
     },
     "experience": {
       "title": "Dashboard Experience",

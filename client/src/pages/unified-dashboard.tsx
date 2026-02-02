@@ -91,6 +91,8 @@ export default function UnifiedDashboard() {
     adminStats,
     isAdmin = false,
     isAgent = false,
+    isModerator = false,
+    isBusiness = false,
     isLoading = true,
     notifications = [],
     items = [],
@@ -973,20 +975,20 @@ export default function UnifiedDashboard() {
       });
     }
 
-    // Add moderation tab for moderators and admins
-    if (isAdmin || user.role === 'Moderator') {
+    // Add moderation tab for moderators, agents and admins
+    if (isAdmin || isAgent || isModerator) {
       tabs.push({
         id: "moderation",
-        label: "Moderation",
-        icon: <AlertTriangle className="h-5 w-5" />
+        label: t('dashboard.tabs.moderation') || "Moderation",
+        icon: <ShieldCheck className="h-5 w-5" />
       });
     }
 
-    // Add Business Insights for high-volume users
-    if (userStats.totalItems >= 5 || user.role === 'Subscriber' && userStats.totalSpent > 5000) {
+    // Add Business Insights for business users and high-volume subscribers
+    if (isBusiness || userStats.totalItems >= 5 || (user.role === 'Subscriber' && userStats.totalSpent > 5000)) {
       tabs.push({
         id: "business",
-        label: "Business Insights",
+        label: t('dashboard.tabs.businessInsights') || "Business Insights",
         icon: <BarChart3 className="h-5 w-5" />
       });
     }
