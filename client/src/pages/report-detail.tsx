@@ -7,6 +7,7 @@ import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { ClaimForm } from "@/components/reports/claim-form";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -211,12 +212,11 @@ export default function ReportDetailPage() {
                           </div>
                           {match.similarityScore && (
                             <div className="mt-2 flex items-center gap-1">
-                              <div className="h-1.5 flex-1 bg-neutral-100 rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full bg-purple-500 rounded-full w-[var(--score-width)]" 
-                                  style={{ '--score-width': `${match.similarityScore}%` } as CSSProperties} 
-                                />
-                              </div>
+                              <Progress 
+                                value={match.similarityScore} 
+                                className="h-1.5 flex-1 bg-neutral-100" 
+                                indicatorClassName="bg-purple-500" 
+                              />
                               <span className="text-xs font-mono text-purple-700">{match.similarityScore}%</span>
                             </div>
                           )}
