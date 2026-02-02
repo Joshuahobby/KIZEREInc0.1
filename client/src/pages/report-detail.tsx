@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, CSSProperties } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -213,8 +213,8 @@ export default function ReportDetailPage() {
                             <div className="mt-2 flex items-center gap-1">
                               <div className="h-1.5 flex-1 bg-neutral-100 rounded-full overflow-hidden">
                                 <div 
-                                  className="h-full bg-purple-500 rounded-full" 
-                                  style={{ width: `${match.similarityScore}%` }} 
+                                  className="h-full bg-purple-500 rounded-full w-[var(--score-width)]" 
+                                  style={{ '--score-width': `${match.similarityScore}%` } as CSSProperties} 
                                 />
                               </div>
                               <span className="text-xs font-mono text-purple-700">{match.similarityScore}%</span>
