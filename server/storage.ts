@@ -99,6 +99,7 @@ export class DatabaseStorage implements IStorage {
   deleteItem = itemOps.deleteItem;
   searchItems = itemOps.searchItems;
   getAllItems = itemOps.getAllItems;
+  getItemByUniqueIdentifier = itemOps.getItemByUniqueIdentifier;
   
   // Report methods
   getReport = reportOps.getReport;

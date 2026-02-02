@@ -1,6 +1,7 @@
 import { storage } from "../storage";
 import { Report, Notification } from "../../shared/schema";
 import { createLogger } from "../utils/logger";
+import { sendMatchNotificationEmail, sendFoundNotificationEmail } from "./email.service";
 
 const logger = createLogger('ReportMatchingService');
 
@@ -40,6 +41,20 @@ export class ReportMatchingService {
           });
 
           await this.notifyUsers(report, candidate, score);
+        }
+      }
+
+      // If it's a FOUND report, also check against registered items (Passive Protection)
+      if (report.type === 'found' && report.uniqueIdentifier) {
+        const matchingItem = await storage.getItemByUniqueIdentifier(report.uniqueIdentifier);
+        if (matchingItem && matchingItem.userId !== report.userId) {
+          logger.info('Found report matches a registered item', { 
+            reportId: report.id, 
+            itemId: matchingItem.id,
+            ownerId: matchingItem.userId
+          });
+
+          await this.notifyItemOwner(report, matchingItem);
         }
       }
     } catch (error) {
@@ -96,27 +111,23 @@ export class ReportMatchingService {
     const candidateOwner = await storage.getUser(candidate.userId);
 
     if (reportOwner && reportOwner.email) {
-      await import('./email.service').then(service => 
-        service.sendMatchNotificationEmail(
-          reportOwner.email, 
-          reportOwner.fullName, 
-          report.title, 
-          candidate.title, 
-          candidate.id
-        )
-      );
+      await sendMatchNotificationEmail(
+        reportOwner.email, 
+        reportOwner.fullName, 
+        report.title, 
+        candidate.title, 
+        candidate.id
+      ).catch(err => logger.error('Failed to send match email', { error: err }));
     }
 
     if (candidateOwner && candidateOwner.email) {
-      await import('./email.service').then(service => 
-        service.sendMatchNotificationEmail(
-          candidateOwner.email, 
-          candidateOwner.fullName, 
-          candidate.title, 
-          report.title, 
-          report.id
-        )
-      );
+      await sendMatchNotificationEmail(
+        candidateOwner.email, 
+        candidateOwner.fullName, 
+        candidate.title, 
+        report.title, 
+        report.id
+      ).catch(err => logger.error('Failed to send match email', { error: err }));
     }
 
     // Notify the user who just created the report
@@ -138,6 +149,34 @@ export class ReportMatchingService {
       type: "report_match",
       isRead: false,
       relatedItemId: candidate.itemId || null,
+      relatedReportId: report.id
+    });
+  }
+
+  /**
+   * Notify an item owner that their registered item was reported as found
+   */
+  private static async notifyItemOwner(report: Report, item: any): Promise<void> {
+    const message = `Good news! Your registered item "${item.name}" was reported as FOUND by another user.`;
+    
+    const owner = await storage.getUser(item.userId);
+    if (owner && owner.email) {
+      await sendFoundNotificationEmail(
+        owner.email, 
+        owner.fullName, 
+        item.name, 
+        report.title, 
+        report.id
+      ).catch(err => logger.error('Failed to send found notification email', { error: err }));
+    }
+
+    await storage.createNotification({
+      userId: item.userId,
+      title: "Your Item Was Found!",
+      message: message,
+      type: "report_match",
+      isRead: false,
+      relatedItemId: item.id,
       relatedReportId: report.id
     });
   }

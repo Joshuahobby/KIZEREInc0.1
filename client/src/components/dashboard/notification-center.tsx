@@ -42,6 +42,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         return <AlertTriangle className="h-5 w-5 text-amber-500" />;
       case 'success':
         return <CheckCircle className="h-5 w-5 text-green-500" />;
+      case 'report_match':
+        return <AlertTriangle className="h-5 w-5 text-purple-500" />;
       default:
         return <Bell className="h-5 w-5 text-gray-500" />;
     }
@@ -190,18 +192,33 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                           <div className="mt-2 text-sm">
                             <p>{notification.message}</p>
                             {!notification.isRead && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="mt-2 h-8 text-xs"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  markAsRead(notification.id);
-                                }}
-                              >
-                                <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                                Mark as read
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="mt-2 h-8 text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsRead(notification.id);
+                                  }}
+                                >
+                                  <CheckCircle className="h-3.5 w-3.5 mr-1" />
+                                  Mark as read
+                                </Button>
+                                {notification.type === 'report_match' && notification.relatedReportId && (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="mt-2 h-8 text-xs border-purple-200 text-purple-600 hover:bg-purple-50"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.location.href = `/reports/${notification.relatedReportId}`;
+                                    }}
+                                  >
+                                    View Match
+                                  </Button>
+                                )}
+                              </div>
                             )}
                           </div>
                         )}

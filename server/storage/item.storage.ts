@@ -131,3 +131,8 @@ export async function getPaginatedItems(options: {
 export async function getItemReports(itemId: number): Promise<any[]> {
   return await db.select().from(reports).where(eq(reports.itemId, itemId));
 }
+
+export async function getItemByUniqueIdentifier(identifier: string): Promise<Item | undefined> {
+  const [item] = await db.select().from(items).where(eq(items.uniqueIdentifier, identifier));
+  return item;
+}

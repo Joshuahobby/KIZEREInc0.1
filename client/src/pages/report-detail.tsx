@@ -43,6 +43,11 @@ export default function ReportDetailPage() {
     enabled: !!id,
   });
 
+  const { data: matches } = useQuery<Report[]>({
+    queryKey: [`/api/reports/matches/${id}`],
+    enabled: !!id && !!report && user?.id === report.userId,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -174,6 +179,53 @@ export default function ReportDetailPage() {
                   <p className="text-neutral-600 leading-relaxed">{report.description}</p>
                 </CardContent>
               </Card>
+
+              {/* Potential Matches */}
+              {isOwner && matches && matches.length > 0 && (
+                <Card className="border-purple-200 bg-purple-50">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-purple-600" />
+                      <CardTitle className="text-purple-900">Potential Matches Found</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-purple-700">
+                      We found {matches.length} item(s) that might match your report.
+                    </p>
+                    <div className="space-y-3">
+                      {matches.map((match) => (
+                        <div 
+                          key={match.id} 
+                          className="bg-white p-3 rounded-lg border border-purple-100 shadow-sm cursor-pointer hover:bg-purple-50 transition-colors"
+                          onClick={() => navigate(`/reports/${match.id}`)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-purple-900">{match.title}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-1">{match.description}</p>
+                            </div>
+                            <Badge variant="outline" className="text-purple-600 border-purple-200 text-xs">
+                              {match.type === 'lost' ? 'Lost' : 'Found'}
+                            </Badge>
+                          </div>
+                          {match.similarityScore && (
+                            <div className="mt-2 flex items-center gap-1">
+                              <div className="h-1.5 flex-1 bg-neutral-100 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-purple-500 rounded-full" 
+                                  style={{ width: `${match.similarityScore}%` }} 
+                                />
+                              </div>
+                              <span className="text-xs font-mono text-purple-700">{match.similarityScore}%</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Actions */}
               {!isOwner && isFoundReport && report.status === 'Open' && (

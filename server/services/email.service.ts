@@ -285,6 +285,48 @@ export async function sendPaymentConfirmationEmail(
   });
 }
 
+/**
+ * Send notification to item owner when their registered item is found
+ */
+export async function sendFoundNotificationEmail(
+  email: string,
+  userName: string,
+  itemName: string,
+  reportTitle: string,
+  reportId: number
+): Promise<boolean> {
+  return sendEmail({
+    to: email,
+    subject: `Good News! Your Registered Item Was Found - ${itemName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #10b981; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Your Item Was Found! 🔔</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Your registered item <strong>${itemName}</strong> was reported as found by another user.
+          </p>
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="margin: 8px 0;"><strong>Found Report:</strong> ${reportTitle}</p>
+          </div>
+          <p style="color: #4b5563; line-height: 1.6;">
+            This is part of KIZERE's Passive Protection. You didn't even have to report it lost yet!
+          </p>
+          <a href="${process.env.APP_URL || 'https://kizere.com'}/report/${reportId}" 
+             style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
+            View Details & Claim
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>© ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
 export default {
   sendEmail,
   sendWelcomeEmail,
@@ -294,6 +336,7 @@ export default {
   sendPaymentConfirmationEmail,
   sendMatchNotificationEmail,
   sendExpirationEmail,
+  sendFoundNotificationEmail,
 };
 
 /**

@@ -79,6 +79,7 @@ export interface IStorage {
   deleteItem(id: number): Promise<boolean>;
   searchItems(query: string, filters?: object): Promise<Item[]>;
   getAllItems(): Promise<Item[]>;
+  getItemByUniqueIdentifier(identifier: string): Promise<Item | undefined>;
   
   // Report methods
   getReport(id: number): Promise<Report | undefined>;
