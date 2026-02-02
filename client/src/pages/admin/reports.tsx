@@ -301,6 +301,9 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
       <AlertDialogContent className="max-w-3xl">
         <AlertDialogHeader>
           <AlertDialogTitle>Report Details</AlertDialogTitle>
+          <AlertDialogDescription className="sr-only">
+            Detailed view of report information including item and user details
+          </AlertDialogDescription>
         </AlertDialogHeader>
         
         {isLoading ? (

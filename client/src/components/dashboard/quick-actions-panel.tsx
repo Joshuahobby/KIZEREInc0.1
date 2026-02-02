@@ -1,5 +1,6 @@
 import React from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,7 +22,8 @@ import {
   Upload,
   Download,
   Package,
-  CreditCard
+  CreditCard,
+  LogOut
 } from "lucide-react";
 
 interface QuickActionItemProps {
@@ -46,7 +48,18 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
   isDisabled = false
 }) => {
   const [, navigate] = useLocation();
+  const { signOut } = useAuth(); // We need to import useAuth
   
+  const handleClick = () => {
+    if (isDisabled) return;
+    
+    if (href.includes('logout=true')) {
+      signOut();
+    } else {
+      navigate(href);
+    }
+  };
+
   const colorVariants: Record<string, string> = {
     primary: "bg-primary/10 text-primary hover:bg-primary/20",
     blue: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50",
@@ -60,7 +73,7 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
   
   return (
     <button
-      onClick={() => navigate(href)}
+      onClick={handleClick}
       disabled={isDisabled}
       className={`w-full text-left px-4 py-3 rounded-lg mb-2 transition-colors ${colorClass} ${
         isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
@@ -114,6 +127,13 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       description: "Submit a found item report",
       href: "/lost-found/report/found",
       color: "green"
+    },
+    {
+      icon: <LogOut className="h-5 w-5 text-red-600" />,
+      title: "Log Out",
+      description: "Sign out of your account",
+      href: "/auth?logout=true", // We'll handle this in the component or via a wrapper
+      color: "red"
     }
   ];
   

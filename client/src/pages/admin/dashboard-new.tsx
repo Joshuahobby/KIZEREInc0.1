@@ -12,6 +12,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 import {
   AlertTriangle,
   ArrowRight,
@@ -47,7 +55,8 @@ import {
   Shield,
   HardDrive,
   RefreshCw,
-  Terminal
+  Terminal,
+  LogOut
 } from "lucide-react";
 import { PaymentAnalyticsChart, PaymentStatusChart } from "@/components/dashboard/payment-analytics-chart-fixed";
 import { UserRoleDistribution } from "@/components/dashboard/user-role-distribution";
@@ -65,9 +74,10 @@ import { SystemStatus, SystemStatusItemProps } from "@/components/dashboard/syst
 import { DataTableDashboard, renderStatusBadge } from "@/components/dashboard/data-table-dashboard";
 import { DashboardWrapper } from "@/components/dashboard/dashboard-wrapper";
 import { SettingsToggle } from "@/components/dashboard/settings-panel";
+import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [location, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [timeRange, setTimeRange] = useState("30d");
@@ -896,15 +906,7 @@ export default function AdminDashboard() {
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="h-9 gap-1.5 hidden md:flex items-center"
-            onClick={() => navigate("/admin/command-center")}
-          >
-            <Terminal className="h-4 w-4" />
-            Command Center
-          </Button>
+          <DashboardStyleSwitcher />
           
           <div className="relative w-full sm:w-48 md:w-64">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -939,9 +941,42 @@ export default function AdminDashboard() {
               <Bell className="h-5 w-5 text-muted-foreground" />
             </Button>
             
-            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium">
-              {user?.fullName?.charAt(0) || 'A'}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
+                  <div className="h-full w-full bg-primary/20 flex items-center justify-center text-primary font-medium">
+                    {user?.fullName?.charAt(0) || 'A'}
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-1">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user?.fullName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email || user?.username}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/settings")}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-red-600 focus:text-red-600" 
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -1473,7 +1508,7 @@ export default function AdminDashboard() {
                         <span className="text-emerald-400">+12.5%</span>
                       </div>
                       <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div className="bg-emerald-500 h-full rounded-full" style={{ width: '12.5%' }}></div>
+                        <div className="bg-emerald-500 h-full rounded-full w-[12.5%]"></div>
                       </div>
                     </div>
                     
@@ -1483,7 +1518,7 @@ export default function AdminDashboard() {
                         <span className="text-emerald-400">+18.3%</span>
                       </div>
                       <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div className="bg-emerald-500 h-full rounded-full" style={{ width: '18.3%' }}></div>
+                        <div className="bg-emerald-500 h-full rounded-full w-[18.3%]"></div>
                       </div>
                     </div>
                     
@@ -1493,7 +1528,7 @@ export default function AdminDashboard() {
                         <span className="text-emerald-400">+24.7%</span>
                       </div>
                       <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div className="bg-emerald-500 h-full rounded-full" style={{ width: '24.7%' }}></div>
+                        <div className="bg-emerald-500 h-full rounded-full w-[24.7%]"></div>
                       </div>
                     </div>
                   </div>
@@ -1644,7 +1679,7 @@ export default function AdminDashboard() {
                         <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Good</span>
                       </div>
                       <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div className="bg-green-500 h-full rounded-full" style={{ width: '15%' }}></div>
+                        <div className="bg-green-500 h-full rounded-full w-[15%]"></div>
                       </div>
                       <div className="flex justify-between mt-1 text-xs text-gray-400">
                         <span>45ms average</span>
@@ -1658,7 +1693,7 @@ export default function AdminDashboard() {
                         <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Good</span>
                       </div>
                       <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div className="bg-green-500 h-full rounded-full" style={{ width: '30%' }}></div>
+                        <div className="bg-green-500 h-full rounded-full w-[30%]"></div>
                       </div>
                       <div className="flex justify-between mt-1 text-xs text-gray-400">
                         <span>30% utilization</span>
@@ -1672,7 +1707,7 @@ export default function AdminDashboard() {
                         <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Good</span>
                       </div>
                       <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div className="bg-green-500 h-full rounded-full" style={{ width: '45%' }}></div>
+                        <div className="bg-green-500 h-full rounded-full w-[45%]"></div>
                       </div>
                       <div className="flex justify-between mt-1 text-xs text-gray-400">
                         <span>45% usage</span>
@@ -1686,7 +1721,7 @@ export default function AdminDashboard() {
                         <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full">Good</span>
                       </div>
                       <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div className="bg-green-500 h-full rounded-full" style={{ width: '25%' }}></div>
+                        <div className="bg-green-500 h-full rounded-full w-[25%]"></div>
                       </div>
                       <div className="flex justify-between mt-1 text-xs text-gray-400">
                         <span>25% usage</span>

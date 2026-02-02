@@ -28,6 +28,7 @@ export interface UserPreferences {
     push: boolean;
   };
   dashboardLayout: string;
+  dashboardStyle: 'standard' | 'classic' | 'command_center';
   currency: string;
   timezone: string;
   // Additional preferences

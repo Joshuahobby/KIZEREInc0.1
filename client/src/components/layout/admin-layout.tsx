@@ -61,7 +61,10 @@ import {
 } from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-// const useTranslation = () => ({ t: (key: string) => key });
+import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
+import { AuthService } from "@/services/auth.service";
+import { UserPreferences } from "@shared/schema";
+
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -88,6 +91,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   // Check if user has admin role
   const isAdmin = user?.role === "Admin";
+  
+  // Get current dashboard path dynamically based on role and preference
+  const dashboardPath = AuthService.getDashboardPathByRole(
+    user?.role || '', 
+    (user?.preferences as UserPreferences)?.dashboardStyle
+  );
 
   // Navigation categories and items for admin sidebar
   interface NavCategory {
@@ -104,7 +113,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       items: [
         {
           title: "Dashboard",
-          href: "/admin",
+          href: dashboardPath,
           icon: <Home className="h-5 w-5" />,
         },
         {
@@ -233,7 +242,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   // Flatten nav categories for top bar
   const topNavItems: NavItem[] = [
-    { title: "Dashboard", href: "/admin", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { title: "Dashboard", href: dashboardPath, icon: <LayoutDashboard className="h-5 w-5" /> },
     { title: "Users", href: "/admin/users", icon: <Users className="h-5 w-5" /> },
     { title: "Items", href: "/admin/items", icon: <Database className="h-5 w-5" /> },
     { title: "Matches", href: "/admin/matches", icon: <Star className="h-5 w-5" /> },
@@ -342,6 +351,18 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                       </Collapsible>
                     ))}
                   </nav>
+                  
+                  <div className="pt-4 mt-auto">
+                    <Separator className="mb-4" />
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </Button>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -389,6 +410,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
           {/* Right side actions */}
           <div className="flex items-center gap-2">
+            {/* Dashboard Style Switcher */}
+            <div className="hidden md:block">
+              <DashboardStyleSwitcher />
+            </div>
+
             {/* Notification bell */}
             <TooltipProvider>
               <Tooltip>
@@ -474,99 +500,112 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main content with three-panel layout */}
       <div className="flex-1 flex flex-col md:flex-row">
         {/* Left panel: Navigation sidebar - desktop only */}
-        <aside className="hidden md:block w-64 border-r bg-muted/10 p-4 pt-6 overflow-y-auto">
-          <div className="space-y-6">
-            {/* Recently viewed */}
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2 text-muted-foreground px-3">Recently Viewed</h3>
-              <div className="space-y-1">
-                <Link href="/admin/users/5">
-                  <a className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>User ID #5</span>
-                  </a>
-                </Link>
-                <Link href="/admin/items/10">
-                  <a className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground">
-                    <Database className="h-4 w-4 text-muted-foreground" />
-                    <span>Item ID #10</span>
-                  </a>
-                </Link>
+        <aside className="hidden md:flex flex-col w-64 border-r bg-muted/10">
+          <div className="flex-1 overflow-y-auto p-4 pt-6">
+            <div className="space-y-6">
+              {/* Recently viewed */}
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-2 text-muted-foreground px-3">Recently Viewed</h3>
+                <div className="space-y-1">
+                  <Link href="/admin/users/5">
+                    <a className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span>User ID #5</span>
+                    </a>
+                  </Link>
+                  <Link href="/admin/items/10">
+                    <a className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground">
+                      <Database className="h-4 w-4 text-muted-foreground" />
+                      <span>Item ID #10</span>
+                    </a>
+                  </Link>
+                </div>
+              </div>
+              
+              {/* Navigation categories */}
+              <nav className="flex flex-col space-y-2">
+                {navCategories.map((category) => (
+                  <Collapsible
+                    key={category.title}
+                    open={openCategories[category.title]}
+                    onOpenChange={() => toggleCategory(category.title)}
+                    className="w-full"
+                  >
+                    <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
+                      <div className="flex items-center gap-3">
+                        {category.icon}
+                        <span>{category.title}</span>
+                      </div>
+                      {category.badge && (
+                        <Badge variant="outline" className="ml-auto mr-2 px-1">
+                          {category.badge}
+                        </Badge>
+                      )}
+                      <ChevronDown className={cn(
+                        "h-4 w-4 transition-transform duration-200",
+                        openCategories[category.title] ? "rotate-180 transform" : ""
+                      )} />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-8 pt-1">
+                      {category.items.map((item) => (
+                        <Link key={item.href} href={item.href}>
+                          <a
+                            className={cn(
+                              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
+                              location === item.href
+                                ? "bg-accent text-accent-foreground"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {item.icon}
+                            <span>{item.title}</span>
+                            {item.badge && (
+                              <Badge variant="outline" className="ml-auto">
+                                {item.badge}
+                              </Badge>
+                            )}
+                          </a>
+                        </Link>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                ))}
+              </nav>
+              
+              {/* Quick shortcuts */}
+              <div className="pt-4">
+                <h3 className="text-sm font-medium mb-2 text-muted-foreground px-3">Shortcuts</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" className="justify-start">
+                    <Users className="h-3.5 w-3.5 mr-2" />
+                    <span>New User</span>
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start">
+                    <Database className="h-3.5 w-3.5 mr-2" />
+                    <span>New Item</span>
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start">
+                    <FileText className="h-3.5 w-3.5 mr-2" />
+                    <span>Reports</span>
+                  </Button>
+                  <Button variant="outline" size="sm" className="justify-start">
+                    <Settings className="h-3.5 w-3.5 mr-2" />
+                    <span>Settings</span>
+                  </Button>
+                </div>
               </div>
             </div>
-            
-            {/* Navigation categories */}
-            <nav className="flex flex-col space-y-2">
-              {navCategories.map((category) => (
-                <Collapsible
-                  key={category.title}
-                  open={openCategories[category.title]}
-                  onOpenChange={() => toggleCategory(category.title)}
-                  className="w-full"
-                >
-                  <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
-                    <div className="flex items-center gap-3">
-                      {category.icon}
-                      <span>{category.title}</span>
-                    </div>
-                    {category.badge && (
-                      <Badge variant="outline" className="ml-auto mr-2 px-1">
-                        {category.badge}
-                      </Badge>
-                    )}
-                    <ChevronDown className={cn(
-                      "h-4 w-4 transition-transform duration-200",
-                      openCategories[category.title] ? "rotate-180 transform" : ""
-                    )} />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pl-8 pt-1">
-                    {category.items.map((item) => (
-                      <Link key={item.href} href={item.href}>
-                        <a
-                          className={cn(
-                            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                            location === item.href
-                              ? "bg-accent text-accent-foreground"
-                              : "text-muted-foreground"
-                          )}
-                        >
-                          {item.icon}
-                          <span>{item.title}</span>
-                          {item.badge && (
-                            <Badge variant="outline" className="ml-auto">
-                              {item.badge}
-                            </Badge>
-                          )}
-                        </a>
-                      </Link>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-            </nav>
-            
-            {/* Quick shortcuts */}
-            <div className="pt-4">
-              <h3 className="text-sm font-medium mb-2 text-muted-foreground px-3">Shortcuts</h3>
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" className="justify-start">
-                  <Users className="h-3.5 w-3.5 mr-2" />
-                  <span>New User</span>
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start">
-                  <Database className="h-3.5 w-3.5 mr-2" />
-                  <span>New Item</span>
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start">
-                  <FileText className="h-3.5 w-3.5 mr-2" />
-                  <span>Reports</span>
-                </Button>
-                <Button variant="outline" size="sm" className="justify-start">
-                  <Settings className="h-3.5 w-3.5 mr-2" />
-                  <span>Settings</span>
-                </Button>
-              </div>
-            </div>
+          </div>
+          
+          <div className="p-4 border-t bg-muted/10">
+            <Button 
+              variant="ghost" 
+              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </Button>
           </div>
         </aside>
         

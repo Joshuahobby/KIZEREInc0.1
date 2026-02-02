@@ -46,6 +46,7 @@ import {
 
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, AuthContextType } from "@/hooks/use-auth";
+import { useLocation } from "wouter";
 import { AuthService } from "@/services/auth.service";
 import { AuthModel } from "@/models/auth.model";
 import { PasswordStrengthIndicator } from "@/components/ui/password-strength-indicator";
@@ -66,6 +67,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string; score: number } | null>(null);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [, setLocation] = useLocation();
   
   // Use try-catch to handle potential auth context issues
   let auth: AuthContextType;
@@ -132,6 +134,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
         description: "You have successfully signed in",
       });
       
+      const dashboardPath = AuthService.getDashboardPathByRole(auth.user?.role || "Subscriber");
+      setLocation(dashboardPath);
       onClose();
     } catch (error: any) {
       console.error("Login error:", error);
@@ -161,6 +165,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
         description: "You have successfully created an account",
       });
       
+      setLocation("/dashboard");
       onClose();
     } catch (error: any) {
       console.error("Registration error:", error);

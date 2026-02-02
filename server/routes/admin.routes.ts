@@ -458,6 +458,19 @@ router.patch("/reports/:id/status", async (req, res) => {
   }
 });
 
+router.get("/reports/:id", async (req, res) => {
+  try {
+    const reportId = parseInt(req.params.id);
+    const reportData = await storage.getReportWithRelatedData(reportId);
+    
+    if (!reportData) return res.status(404).json({ message: "Report not found" });
+    
+    res.json(reportData);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch report" });
+  }
+});
+
 router.get("/reports/export/csv", async (req, res) => {
   try {
     const csvContent = await storage.generateReportCSV();
@@ -507,15 +520,104 @@ router.get("/payments", async (req, res) => {
   }
 });
 
+// CRUD for Payment Packages
+
+// Get all packages
 router.get("/payment-packages", async (req, res) => {
   try {
-    const packages = await storage.getAllPaymentPackages(true);
+    const includeInactive = req.query.includeInactive === 'true';
+    const packages = await storage.getAllPaymentPackages(includeInactive);
     res.json(packages);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch packages" });
   }
 });
 
+// Create new package
+router.post("/payment-packages", async (req, res) => {
+  try {
+    const newPackage = await storage.createPaymentPackage(req.body);
+    await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'package_create',
+        newState: newPackage,
+        targetUserId: req.user!.id 
+    });
+    res.status(201).json(newPackage);
+  } catch (error) {
+    logger.error("Failed to create package", error);
+    res.status(500).json({ message: "Failed to create package" });
+  }
+});
+
+// Update package (General update)
+router.patch("/payment-packages/:id", async (req, res) => {
+  try {
+    const pkgId = parseInt(req.params.id);
+    const updated = await storage.updatePaymentPackage(pkgId, req.body);
+    if (!updated) return res.status(404).json({ message: "Package not found" });
+    
+    await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'package_update',
+        newState: updated,
+        targetUserId: req.user!.id
+    });
+    
+    res.json(updated);
+  } catch (error) {
+    logger.error("Failed to update package", error);
+    res.status(500).json({ message: "Update failed" });
+  }
+});
+
+// Delete package
+router.delete("/payment-packages/:id", async (req, res) => {
+  try {
+    const pkgId = parseInt(req.params.id);
+    const success = await storage.deletePaymentPackage(pkgId);
+    if (!success) return res.status(404).json({ message: "Package not found" });
+    
+    await storage.createAdminActionLog({
+        adminId: req.user!.id,
+        action: 'package_delete',
+        previousState: { id: pkgId },
+        targetUserId: req.user!.id
+    });
+    
+    res.json({ success: true });
+  } catch (error) {
+     logger.error("Failed to delete package", error);
+    res.status(500).json({ message: "Delete failed" });
+  }
+});
+
+// Update status specific
+router.patch("/payment-packages/:id/status", async (req, res) => {
+  try {
+    const pkgId = parseInt(req.params.id);
+    const { status } = req.body;
+    const updated = await storage.updatePaymentPackage(pkgId, { status });
+    if (!updated) return res.status(404).json({ message: "Package not found" });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: "Status update failed" });
+  }
+});
+
+// Set default
+router.patch("/payment-packages/:id/default", async (req, res) => {
+  try {
+    const pkgId = parseInt(req.params.id);
+    const updated = await storage.setDefaultPaymentPackage(pkgId);
+    if (!updated) return res.status(404).json({ message: "Package not found" });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to set default" });
+  }
+});
+
+// Legacy PUT support (optional, can be removed if frontend is fully updated to PATCH)
 router.put("/payment-packages/:id", async (req, res) => {
   try {
     const updated = await storage.updatePaymentPackage(parseInt(req.params.id), req.body);
@@ -530,11 +632,15 @@ router.put("/payment-packages/:id", async (req, res) => {
 // ==========================================
 
 router.get("/system-status", async (req, res) => {
-  res.json({
-    status: 'operational',
-    timestamp: new Date().toISOString(),
-    services: { database: 'ok', auth: 'ok', storage: 'ok' }
-  });
+  try {
+    const status = await dashboardService.getSystemStatus();
+    res.json(status);
+  } catch (error) {
+    logger.error('Error getting system status', { error });
+    // Return degraded status on error instead of 500 if possible, 
+    // or let the frontend handle the error
+    res.status(500).json({ message: "Failed to get system status" });
+  }
 });
 
 router.get("/activity-log", async (req, res) => {

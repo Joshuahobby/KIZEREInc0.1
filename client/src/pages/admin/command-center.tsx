@@ -13,6 +13,8 @@ import { SystemStatus } from "@/components/dashboard/system-status";
 import { EnhancedPaymentAnalytics } from "@/components/dashboard/enhanced-payment-analytics";
 import { PaymentStatusChart } from "@/components/dashboard/payment-analytics-chart-fixed";
 import { UserRoleDistribution } from "@/components/dashboard/user-role-distribution";
+import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
+import { Progress } from "@/components/ui/progress";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 import {
   AlertTriangle,
@@ -56,6 +66,7 @@ import {
   Database,
   Shield,
   HardDrive,
+  LogOut,
   Menu
 } from "lucide-react";
 
@@ -67,7 +78,7 @@ import {
  * use the CommandCenterLayout component imported from '@/components/layouts/command-center-layout'
  */
 export default function CommandCenter() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [location, navigate] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [timeRange, setTimeRange] = useState("30d");
@@ -111,24 +122,7 @@ export default function CommandCenter() {
               
               {/* Dashboard Navigation */}
               <div className="hidden md:flex items-center ml-4 border-l border-border/50 pl-4">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="text-xs gap-1"
-                  onClick={() => navigate("/admin")}
-                >
-                  <LayoutDashboard className="h-3.5 w-3.5" />
-                  Standard
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="text-xs gap-1"
-                  onClick={() => navigate("/admin/classic")}
-                >
-                  <Activity className="h-3.5 w-3.5" />
-                  Classic
-                </Button>
+                <DashboardStyleSwitcher />
               </div>
               
               <Tabs defaultValue={timeRange} onValueChange={setTimeRange}>
@@ -162,18 +156,46 @@ export default function CommandCenter() {
                 </span>
               </Button>
               
-              <div className="flex items-center gap-4">
-                <div className="text-sm text-muted-foreground hidden md:block">
-                  Hi, {user?.fullName?.split(' ')[0] || 'Admin'}
-                </div>
-                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="User avatar" className="h-8 w-8 rounded-full" />
-                  ) : (
-                    <User className="h-4 w-4 text-primary" />
-                  )}
-                </div>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
+                    <div className="h-full w-full bg-primary/10 flex items-center justify-center">
+                      {user?.avatarUrl ? (
+                        <img src={user.avatarUrl} alt="User avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-4 w-4 text-primary" />
+                      )}
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 p-1">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user?.fullName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email || user?.username}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/settings")}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    className="text-red-600 focus:text-red-600" 
+                    onClick={() => signOut()}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
@@ -226,12 +248,11 @@ export default function CommandCenter() {
                     <div className="text-sm font-medium">Health Score</div>
                     <div className="text-lg font-bold">{healthScore}%</div>
                   </div>
-                  <div className="h-2 bg-background rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${healthScore >= 90 ? 'bg-emerald-500' : healthScore >= 70 ? 'bg-amber-500' : 'bg-red-500'}`}
-                      style={{ width: `${healthScore}%` }}
-                    ></div>
-                  </div>
+                  <Progress 
+                    value={healthScore} 
+                    className="h-2 bg-background/20" 
+                    indicatorClassName={healthScore >= 90 ? 'bg-emerald-500' : healthScore >= 70 ? 'bg-amber-500' : 'bg-red-500'}
+                  />
                 </div>
                 {activeIssues.length > 0 && (
                   <Alert variant="destructive" className="mt-2">
@@ -291,11 +312,6 @@ export default function CommandCenter() {
                   <p className="text-muted-foreground">
                     Here's what's happening with your platform today.
                   </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button onClick={() => navigate("/admin/classic")}>
-                    Switch to Classic View
-                  </Button>
                 </div>
               </div>
               

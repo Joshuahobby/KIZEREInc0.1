@@ -231,6 +231,15 @@
       "agent": "Agent",
       "agentConsole": "Agent Console"
     },
+    "experience": {
+      "title": "Dashboard Experience",
+      "standard": "Standard",
+      "classic": "Classic",
+      "command_center": "Command Center",
+      "style": "{style} Style",
+      "updated": "Dashboard Updated",
+      "updatedDesc": "Dashboard experience switched to {style}"
+    },
     "selectTab": "Select a tab to view content",
     "registeredItems": "Registered Items",
     "lostReports": "Lost Reports",
@@ -598,7 +607,24 @@
   },
   "profile": {
     "title": "Profile",
+    "subtitle": "Manage your personal information, security settings, and preferences",
+    "editProfile": "Edit Profile",
+    "updateSuccess": "Profile Updated",
+    "updateSuccessDesc": "Your profile information has been successfully updated",
+    "tabs": {
+      "profile": "Profile Info",
+      "security": "Security",
+      "permissions": "Permissions",
+      "preferences": "Preferences"
+    },
     "security": {
+      "passwordTitle": "Change Password",
+      "passwordDesc": "Update your password to keep your account secure",
+      "sessionsTitle": "Active Sessions",
+      "sessionsDesc": "Manage your active login sessions across devices",
+      "currentSession": "Current Session",
+      "active": "Active",
+      "logoutAllSessions": "Logout All Other Sessions",
       "passwordStrength": {
         "weak": "Weak",
         "fair": "Fair",

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import { useLocation } from "wouter";
-import type { User, InsertUser } from "@shared/schema";
+import { User, InsertUser, UserPreferences } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { AuthService } from "@/services/auth.service";
 import { useMutation } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ export interface AuthContextType {
   logoutMutation: any;
   loginWithGoogle: (redirectUrl?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshUser: (userData?: User) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -143,24 +144,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }, SYNC_DEBOUNCE_MS);
   };
 
+  const refreshUser = async (userData?: User) => {
+    if (userData) {
+      setUser(userData);
+      return;
+    }
+    
+    try {
+      const response = await fetch("/api/user");
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data);
+      }
+    } catch (error) {
+      console.error("[useAuth] Failed to refresh user:", error);
+    }
+  };
+
   // Check if user is already authenticated on mount
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
     
     const setupAuth = async () => {
       try {
-        // First check server session
+        // Check server session once at start
         const sessionResponse = await fetch("/api/user");
+        let initialUserData = null;
         if (sessionResponse.ok) {
-          const userData = await sessionResponse.json();
+          initialUserData = await sessionResponse.json();
           if (isMounted.current) {
-            setUser(userData);
+            setUser(initialUserData);
             setIsLoading(false);
-            console.log("[useAuth] Session valid");
+            console.log("[useAuth] Session valid from initial check");
           }
         } else {
-             // If no valid session, wait for Firebase
-             console.log("[useAuth] No active session");
+          console.log("[useAuth] No active session on startup");
         }
 
         const { onAuthChange, handleRedirectResult } = await import('@/lib/firebase');
@@ -184,8 +202,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log("[useAuth] Firebase user detected");
             await synchronizeWithServer(firebaseUser);
           } else {
-            console.log("[useAuth] Firebase user signed out");
-            setUser(null);
+            // Firebase says no user, but let's see if we already have a valid server session
+            // If we have a session but NO Firebase user, we'll keep the session until it actually fails
+            console.log("[useAuth] Firebase user signed out or not found");
+            
+            // If we don't have a user state yet, OR we were specifically waiting for firebase
+            // then we should set to null. But if we already have a user from the initial 
+            // session check, let's NOT clear it just because Firebase is null.
+            // Using the current user state instead of a fresh fetch saves latency
+            if (!user && !initialUserData) {
+              console.log("[useAuth] No existing session and no Firebase user, set to null");
+              setUser(null);
+            } else {
+              console.log("[useAuth] Keeping existing session despite missing Firebase user");
+            }
             setIsLoading(false);
           }
         });
@@ -205,7 +235,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Handle redirections based on user role
   useEffect(() => {
-    if (!user || isRedirecting) return;
+    if (!user || isRedirecting || isLoading) return;
 
     const pathname = window.location.pathname;
     
@@ -220,12 +250,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (user) {
-      const dashboardPath = AuthService.getDashboardPathByRole(user.role);
+      const preferredStyle = (user.preferences as UserPreferences)?.dashboardStyle;
+      const dashboardPath = AuthService.getDashboardPathByRole(user.role, preferredStyle);
       console.log("[useAuth] Redirecting to dashboard:", dashboardPath);
       setIsRedirecting(true);
       setLocation(dashboardPath);
     }
-  }, [user, setLocation, isRedirecting]);
+  }, [user, setLocation, isRedirecting, isLoading]);
+
+  // Reset isRedirecting when path matches dashboard
+  useEffect(() => {
+    if (!user || !isRedirecting) return;
+    
+    const preferredStyle = (user.preferences as UserPreferences)?.dashboardStyle;
+    const dashboardPath = AuthService.getDashboardPathByRole(user.role, preferredStyle);
+    if (window.location.pathname === dashboardPath) {
+      console.log("[useAuth] Arrived at dashboard, resetting isRedirecting");
+      setIsRedirecting(false);
+    }
+  }, [user, isRedirecting]);
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: any) => {
@@ -244,7 +287,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     },
     onSuccess: (userData: User) => {
       setUser(userData);
-      const dashboardPath = AuthService.getDashboardPathByRole(userData.role);
+      const preferredStyle = (userData.preferences as UserPreferences)?.dashboardStyle;
+      const dashboardPath = AuthService.getDashboardPathByRole(userData.role, preferredStyle);
       setLocation(dashboardPath);
     },
     onError: (err: Error) => {
@@ -339,6 +383,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.clear();
       sessionStorage.clear();
       
+      setIsRedirecting(false); // Reset redirecting state
       setLocation("/");
       
       toast({
@@ -367,6 +412,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logoutMutation,
     loginWithGoogle,
     signOut,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

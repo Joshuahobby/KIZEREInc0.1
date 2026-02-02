@@ -29,6 +29,7 @@ import { Logo } from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
 
 export function Header() {
   const [location] = useLocation();
@@ -142,6 +143,12 @@ export function Header() {
               <div className="hidden sm:block">
                 <LanguageSwitcher variant="minimal" />
               </div>
+              
+              {isAdmin && (
+                <div className="hidden md:block">
+                  <DashboardStyleSwitcher />
+                </div>
+              )}
               
               {isAuthenticated && (
                 <DropdownMenu>
@@ -273,10 +280,38 @@ export function Header() {
               </div>
               
               {!isAuthenticated && (
-                <Button asChild className="w-full rounded-xl py-6 rounded-full shadow-md bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg">
-                  <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
-                    {t('auth.getStarted') || "Get Started"}
+                <div className="flex flex-col gap-2">
+                  <Button asChild className="w-full rounded-xl py-6 rounded-full shadow-md bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg">
+                    <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      {t('auth.getStarted') || "Get Started"}
+                    </Link>
+                  </Button>
+                </div>
+              )}
+
+              {isAuthenticated && (
+                <>
+                  <Link href="/profile" className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
+                    <User className="mr-3 h-5 w-5" />
+                    {t('profile.title') || "Profile"}
                   </Link>
+                  <Link href="/settings" className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
+                    <Settings className="mr-3 h-5 w-5" />
+                    {t('settings.title') || "Settings"}
+                  </Link>
+                </>
+              )}
+
+              {isAuthenticated && (
+                <Button 
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full rounded-xl py-6 rounded-full shadow-md bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-lg mt-2"
+                >
+                  <LogOut className="mr-3 h-5 w-5" />
+                  {t('auth.logout') || "Sign Out"}
                 </Button>
               )}
             </div>

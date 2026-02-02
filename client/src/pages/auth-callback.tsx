@@ -5,6 +5,7 @@ import { Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { AuthService } from "@/services/auth.service";
+import { UserPreferences } from "@shared/schema";
 
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
@@ -13,7 +14,10 @@ export default function AuthCallback() {
   useEffect(() => {
     // If user is successfully authenticated, redirect them
     if (user && !isLoading) {
-      const redirectPath = AuthService.getDashboardPathByRole(user.role);
+      const redirectPath = AuthService.getDashboardPathByRole(
+        user.role, 
+        (user.preferences as UserPreferences)?.dashboardStyle
+      );
       console.log("[AuthCallback] User authenticated, redirecting to:", redirectPath);
       setLocation(redirectPath);
     }

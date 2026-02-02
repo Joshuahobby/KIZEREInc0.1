@@ -288,7 +288,7 @@ export default function AdminPaymentDashboard() {
                 ) : (
                   <>
                     <div className="text-2xl font-bold">
-                      {revenueSummary?.totalRevenue.toLocaleString()} {DEFAULT_CURRENCY}
+                      {(revenueSummary?.totalRevenue || 0).toLocaleString()} {DEFAULT_CURRENCY}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       From {revenueSummary?.successfulTransactions || 0} successful transactions
@@ -312,7 +312,7 @@ export default function AdminPaymentDashboard() {
                 ) : (
                   <>
                     <div className="text-2xl font-bold">
-                      {revenueSummary?.registrationRevenue.toLocaleString()} {DEFAULT_CURRENCY}
+                      {(revenueSummary?.registrationRevenue || 0).toLocaleString()} {DEFAULT_CURRENCY}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       From item registration fees
@@ -336,7 +336,7 @@ export default function AdminPaymentDashboard() {
                 ) : (
                   <>
                     <div className="text-2xl font-bold">
-                      {revenueSummary?.lostReportRevenue.toLocaleString()} {DEFAULT_CURRENCY}
+                      {(revenueSummary?.lostReportRevenue || 0).toLocaleString()} {DEFAULT_CURRENCY}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       From lost item report fees

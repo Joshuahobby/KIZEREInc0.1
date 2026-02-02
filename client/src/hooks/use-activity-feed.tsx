@@ -68,9 +68,53 @@ export function useActivityFeed(options: {
     queryKey,
     queryFn: async () => {
       try {
+
         // Try to get activity data from API
         const result = await adminApi.getActivityLog();
-        let events = result as ActivityEvent[];
+        
+        // Map backend AdminActionLog to frontend ActivityEvent if necessary
+        let events = (result as any[]).map(item => {
+          // If it already looks like an ActivityEvent, return it
+          if (item.title && item.message) return item as ActivityEvent;
+          
+          // Otherwise map from AdminActionLog
+          // Default category determination
+          let category: any = 'system';
+          if (item.entityType) {
+             const entityLower = item.entityType.toLowerCase();
+             if (entityLower.includes('user')) category = 'users';
+             else if (entityLower.includes('item')) category = 'items';
+             else if (entityLower.includes('report')) category = 'reports';
+             else if (entityLower.includes('payment') || entityLower.includes('revenue')) category = 'revenue';
+          } else if (item.action) {
+             if (item.action.includes('user')) category = 'users';
+             else if (item.action.includes('item')) category = 'items';
+             else if (item.action.includes('report')) category = 'reports';
+             else if (item.action.includes('payment')) category = 'revenue';
+          }
+          
+          // Default type determination
+          let type: any = 'info';
+          if (item.action) {
+            if (item.action.includes('delete') || item.action.includes('suspend') || item.action.includes('ban')) type = 'warning';
+            else if (item.action.includes('create') || item.action.includes('approve') || item.action.includes('verify')) type = 'success';
+          }
+          
+          return {
+            id: item.id.toString(),
+            type,
+            category,
+            title: item.action || 'Unknown Action',
+            message: item.reason || item.details || `Action performed on ${item.entityType || 'unknown entity'}`,
+            time: item.timestamp || new Date().toISOString(),
+            userId: item.adminId, // The actor
+            metadata: {
+              targetUserId: item.targetUserId,
+              previousState: item.previousState,
+              newState: item.newState
+            }
+          } as ActivityEvent; 
+        });
         
         // Apply filters if provided
         if (category) {

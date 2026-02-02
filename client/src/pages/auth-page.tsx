@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { userRoles } from "@shared/schema";
+import { userRoles, UserPreferences } from "@shared/schema";
 import { 
   Loader2,
   KeyRound, 
@@ -50,7 +50,10 @@ export default function AuthPage() {
   useEffect(() => {
     if (user) {
       // Use role-specific dashboard instead of landing page
-      const dashboardPath = AuthService.getDashboardPathByRole(user.role);
+      const dashboardPath = AuthService.getDashboardPathByRole(
+        user.role, 
+        (user.preferences as UserPreferences)?.dashboardStyle
+      );
       navigate(dashboardPath);
     }
   }, [user, navigate]);

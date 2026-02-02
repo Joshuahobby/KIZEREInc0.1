@@ -29,6 +29,14 @@ export default function LandingPage() {
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
   
+  // Auto-redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      const dashboardPath = "/dashboard"; // Default to unified dashboard
+      navigate(dashboardPath);
+    }
+  }, [user, navigate]);
+
   // Open auth modal with specific tab
   const openAuthModal = (tab: "login" | "register") => {
     setAuthModalTab(tab);

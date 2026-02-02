@@ -49,6 +49,16 @@ export const packageStatuses = ['active', 'inactive', 'archived'] as const;
 // Define claim statuses
 export const claimStatuses = ['pending', 'verified', 'rejected', 'resolved'] as const;
 
+// User preferences schema
+export const userPreferencesSchema = z.object({
+  theme: z.enum(['light', 'dark', 'system']).optional(),
+  dashboardStyle: z.enum(['standard', 'classic', 'command_center']).optional(),
+  notifications: z.boolean().optional(),
+  language: z.enum(['en', 'fr', 'rw']).optional(),
+});
+
+export type UserPreferences = z.infer<typeof userPreferencesSchema>;
+
 // User table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -275,7 +285,10 @@ export const paymentPackages = pgTable("payment_packages", {
 // Zod schemas for input validation
 
 // User schemas
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true }).extend({
+  role: z.enum(userRoles).default('Subscriber'),
+  preferences: userPreferencesSchema.optional().default({}),
+});
 export const userLoginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),

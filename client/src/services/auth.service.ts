@@ -102,22 +102,19 @@ export const AuthService = {
   },
 
   /**
-   * Determine redirect path based on user role
+   * Determine redirect path based on user role and preferences
    * @returns Dashboard path for redirecting after login
    */
   async getDashboardPathForUser(): Promise<string> {
     try {
-      const role = await this.getUserRole();
+      // Fetch role and basic user info from the server
+      const response = await fetch('/api/user');
+      if (!response.ok) return '/dashboard';
       
-      switch (role) {
-        case 'admin':
-          return '/admin';
-        case 'agent':
-          return '/dashboard';
-        case 'user':
-        default:
-          return '/dashboard';
-      }
+      const user = await response.json();
+      const style = user.preferences?.dashboardStyle;
+      
+      return this.getDashboardPathByRole(user.role, style);
     } catch (error) {
       console.error("Error determining dashboard path:", error);
       return '/dashboard'; // Default path on error
@@ -125,17 +122,33 @@ export const AuthService = {
   },
 
   /**
-   * Determines dashboard path by user role
+   * Determines dashboard path by user role and optional preferred style
    * @param role User role string
-   * @returns Dashboard path for the specified role
+   * @param preferredStyle Optional preferred dashboard style
+   * @returns Dashboard path for the specified role and style
    */
-  getDashboardPathByRole(role: string): string {
-    console.log("Getting dashboard for role:", role);
+  getDashboardPathByRole(role: string, preferredStyle?: string): string {
+    console.log("Getting dashboard for role:", role, "style:", preferredStyle);
+    
+    // For Admin role, respect the preferred style
+    if (role === 'Admin') {
+      switch (preferredStyle) {
+        case 'classic':
+          return '/admin/classic';
+        case 'command_center':
+          return '/admin/command-center';
+        case 'standard':
+        default:
+          return '/admin';
+      }
+    }
+    
     switch(role) {
-      case 'Admin':
-        return '/admin'; // Changed to match the route in App.tsx
+      case 'Business':
+        // Business users go to the unified dashboard which has business-specific views
+        return '/dashboard'; 
       case 'Agent':
-        return '/dashboard'; // Agents use the regular dashboard for now
+      case 'Moderator':
       case 'Subscriber':
       default:
         return '/dashboard';

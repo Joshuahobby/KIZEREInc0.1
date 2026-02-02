@@ -3,6 +3,8 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 // Keep track of pending auth check to avoid multiple simultaneous calls
 let authCheckPending = false;
 let authCheckPromise: Promise<void> | null = null;
+let lastSessionCheckTime = 0;
+const SESSION_CHECK_TTL_MS = 60 * 1000; // 1 minute TTL
 
 declare global {
   interface Window {
@@ -14,7 +16,12 @@ declare global {
  * Checks that the user is authenticated with the server
  * This creates/refreshes a session if a Firebase token is available
  */
-export async function ensureAuthenticated(): Promise<void> {
+export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
+  // If not forcing refresh, check if we've successfully checked recently
+  if (!forceRefresh && Date.now() - lastSessionCheckTime < SESSION_CHECK_TTL_MS) {
+    return;
+  }
+
   // If there's already a check in progress, return its promise
   if (authCheckPending && authCheckPromise) {
     return authCheckPromise;
@@ -31,6 +38,7 @@ export async function ensureAuthenticated(): Promise<void> {
       // If session is valid, we're good
       if (sessionCheck.ok) {
         console.log('[QueryClient] User already has valid session');
+        lastSessionCheckTime = Date.now();
         resolve();
         return;
       }
@@ -64,6 +72,7 @@ export async function ensureAuthenticated(): Promise<void> {
             
             if (response.ok) {
               console.log('[QueryClient] Successfully synced Firebase auth with server');
+              lastSessionCheckTime = Date.now();
               resolve();
             } else {
               console.error('[QueryClient] Error syncing auth with server:', response.status);
@@ -136,12 +145,30 @@ export async function apiRequest<T = any>(
   const method = options?.method || 'GET';
   const data = options?.data;
   
-  const res = await fetch(url, {
+  let res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
+
+  // If we get a 401, try to re-authenticate and retry once
+  if (res.status === 401) {
+    console.warn(`[apiRequest] 401 Unauthorized for ${url}, attempting sync...`);
+    try {
+      await ensureAuthenticated(true);
+      console.log(`[apiRequest] Sync successful, retrying ${url}`);
+      res = await fetch(url, {
+        method,
+        headers: data ? { "Content-Type": "application/json" } : {},
+        body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
+      });
+    } catch (authError) {
+      console.error('[apiRequest] Re-authentication failed:', authError);
+      // Let it fall through to throwIfResNotOk
+    }
+  }
 
   await throwIfResNotOk(res);
   return res.json();
@@ -170,12 +197,28 @@ export const getQueryFn: <T>(options: {
     
     try {
       console.log(`Making request to: ${url}`);
-      const res = await fetch(url, {
+      let res = await fetch(url, {
         credentials: "include",
       });
 
       console.log(`Response status for ${url}: ${res.status}`);
       
+      // If we get a 401, try to re-authenticate and retry once
+      if (res.status === 401) {
+        console.warn(`[getQueryFn] 401 Unauthorized for ${url}, attempting sync...`);
+        try {
+          await ensureAuthenticated(true);
+          console.log(`[getQueryFn] Sync successful, retrying ${url}`);
+          res = await fetch(url, {
+            credentials: "include",
+          });
+          console.log(`Retry response status for ${url}: ${res.status}`);
+        } catch (authError) {
+          console.error('[getQueryFn] Re-authentication failed:', authError);
+          // Let it fall through
+        }
+      }
+
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
         console.log(`Returning null for 401 response to ${url}`);
         return null;

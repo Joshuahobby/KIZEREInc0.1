@@ -6,6 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { 
   ArrowUpRight, 
   Calendar, 
   ChevronDown,
@@ -37,7 +45,8 @@ import {
   Star,
   Inbox,
   Tags,
-  HelpCircle
+  HelpCircle,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -45,9 +54,10 @@ import { PaymentAnalyticsChart, PaymentStatusChart } from "@/components/dashboar
 import { ItemStatusDistribution, ItemCategoryChart } from "@/components/dashboard/item-stats-chart";
 import { UserRoleDistribution } from "@/components/dashboard/user-stats-chart";
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
+import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [_, setLocation] = useLocation();
   const { stats, chartData, isLoading, refetch } = useDashboardStats();
   const [timeRange, setTimeRange] = useState("7d");
@@ -123,6 +133,8 @@ export default function AdminDashboard() {
         </div>
         
         <div className="flex flex-wrap items-center gap-2 md:gap-4 w-full md:w-auto">
+          <DashboardStyleSwitcher />
+          
           <div className="relative w-full md:w-64">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input 
@@ -163,9 +175,48 @@ export default function AdminDashboard() {
             </Button>
             
             <div className="flex items-center gap-2 border-l border-gray-700 pl-2 md:pl-4">
-              <div className="h-8 w-8 rounded-full bg-[#00BFFF]/20 flex items-center justify-center text-[#00BFFF] font-medium">
-                {user?.fullName?.charAt(0) || 'A'}
-              </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden ring-offset-background transition-all hover:ring-2 hover:ring-[#00BFFF]/20">
+                  <div className="h-full w-full bg-[#00BFFF]/20 flex items-center justify-center text-[#00BFFF] font-medium">
+                    {user?.fullName?.charAt(0) || 'A'}
+                  </div>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-1 bg-gray-800 border-gray-700 text-gray-300">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none text-white">{user?.fullName}</p>
+                    <p className="text-xs leading-none text-gray-400">
+                      {user?.email || user?.username}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-700" />
+                <DropdownMenuItem 
+                  className="hover:bg-gray-700 focus:bg-gray-700 cursor-pointer" 
+                  onClick={() => setLocation("/profile")}
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="hover:bg-gray-700 focus:bg-gray-700 cursor-pointer" 
+                  onClick={() => setLocation("/settings")}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-gray-700" />
+                <DropdownMenuItem 
+                  className="text-red-500 hover:bg-gray-700 focus:bg-gray-700 cursor-pointer" 
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             </div>
           </div>
         </div>

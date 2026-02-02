@@ -34,6 +34,9 @@ const preferencesFormSchema = z.object({
   dashboardLayout: z.enum(["default", "compact", "wide"], {
     required_error: "Please select a dashboard layout",
   }),
+  dashboardStyle: z.enum(["standard", "classic", "command_center"], {
+    required_error: "Please select a dashboard style",
+  }),
   currency: z.string({
     required_error: "Please select a currency",
   }),
@@ -101,6 +104,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
         push: preferences?.notifications?.push ?? true,
       },
       dashboardLayout: (preferences?.dashboardLayout as "default" | "compact" | "wide") || "default",
+      dashboardStyle: (preferences?.dashboardStyle as "standard" | "classic" | "command_center") || "standard",
       currency: preferences?.currency || "USD",
       timezone: preferences?.timezone || "UTC",
     },
@@ -351,6 +355,35 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                         </Select>
                         <FormDescription>
                           {t("profile.preferences.layoutDescription")}
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="dashboardStyle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dashboard Style</FormLabel>
+                        <Select 
+                          disabled={isSaving}
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a dashbaord style" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="standard">Standard (Default)</SelectItem>
+                            <SelectItem value="classic">Classic (Detailed)</SelectItem>
+                            <SelectItem value="command_center">Command Center (Admin Focus)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Choose your preferred dashboard experience for immediate redirection after login.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>

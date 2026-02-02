@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { UserPreferences } from "@shared/schema";
 import { storage } from "../storage";
 import { createLogger } from "../utils/logger";
 import { UserService } from "../services/user.service";
@@ -21,13 +22,21 @@ router.put("/", async (req, res) => {
     const userId = req.user!.id;
     const updateData = req.body;
     
-    const allowedFields = ['fullName', 'email', 'phoneNumber', 'avatarUrl'];
+    const allowedFields = ['fullName', 'email', 'phoneNumber', 'avatarUrl', 'preferences'];
     const filteredUpdateData = Object.keys(updateData)
       .filter(key => allowedFields.includes(key))
       .reduce<Record<string, any>>((obj, key) => {
         obj[key] = updateData[key];
         return obj;
       }, {});
+    
+    // Special handling for preferences to merge instead of overwrite
+    if (filteredUpdateData.preferences && req.user?.preferences) {
+      filteredUpdateData.preferences = {
+        ...((req.user.preferences as UserPreferences) || {}),
+        ...(filteredUpdateData.preferences || {})
+      };
+    }
     
     const updatedUser = await UserService.updateUser(userId, filteredUpdateData);
     if (!updatedUser) return res.status(404).json({ message: "User not found" });
@@ -84,13 +93,45 @@ router.get("/permissions", (req, res) => {
 });
 
 router.get("/preferences", (req, res) => {
-  res.json({
-    theme: 'system',
-    layout: 'default',
-    cardDensity: 'comfortable',
-    widgetFavorites: [],
-    notifications: { email: true, inApp: true }
-  });
+  try {
+    const preferences = req.user?.preferences || {
+      theme: 'system',
+      layout: 'default',
+      cardDensity: 'comfortable',
+      widgetFavorites: [],
+      notifications: { email: true, inApp: true }
+    };
+    res.json(preferences);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to retrieve preferences" });
+  }
+});
+
+/**
+ * Update user preferences directly
+ */
+router.put("/preferences", async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const preferences = req.body;
+    
+    // Validate that it's an object
+    if (typeof preferences !== 'object' || preferences === null) {
+      return res.status(400).json({ message: "Invalid preferences data" });
+    }
+
+    // Merge with existing preferences
+    const existingPreferences = (req.user?.preferences as UserPreferences) || {};
+    const mergedPreferences = { ...existingPreferences, ...preferences };
+
+    const updatedUser = await UserService.updateUser(userId, { preferences: mergedPreferences });
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+    
+    res.json(updatedUser);
+  } catch (error: any) {
+    logger.error('Error updating user preferences', { error, userId: req.user?.id });
+    res.status(500).json({ message: "Failed to update preferences" });
+  }
 });
 
 export default router;

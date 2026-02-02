@@ -49,7 +49,8 @@ import {
   Bell,
   Plus,
   LayoutDashboard,
-  BarChart3
+  BarChart3,
+  LogOut
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -350,6 +351,15 @@ export default function UnifiedDashboard() {
                   >
                     <CheckCircle2 className="mr-2 h-4 w-4" />
                     Report Found Item
+                  </Button>
+
+                  <Button 
+                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10 border-red-200 dark:border-red-900/30" 
+                    variant="outline"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('auth.logout') || "Sign Out"}
                   </Button>
                 </CardContent>
               </Card>

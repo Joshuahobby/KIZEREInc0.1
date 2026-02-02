@@ -147,7 +147,9 @@ export function useSystemStatus() {
   };
 
   // Get active issues (unresolved)
-  const activeIssues = data?.issues.filter(issue => !issue.resolvedAt) || [];
+  const activeIssues = Array.isArray(data?.issues) 
+    ? data.issues.filter(issue => !issue.resolvedAt) 
+    : [];
   
   // Calculate health score
   const healthScore = data ? calculateHealthScore(data) : 100;
