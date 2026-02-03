@@ -32,6 +32,27 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
+  const url = new URL(event.request.url);
+  
+  // Skip intercepting external domains that should not be cached
+  // This includes Google APIs, Firebase, and other authentication-related URLs
+  const externalDomains = [
+    'apis.google.com',
+    'accounts.google.com',
+    'www.googleapis.com',
+    'securetoken.googleapis.com',
+    'identitytoolkit.googleapis.com',
+    'firebaseinstallations.googleapis.com',
+    'firebaseapp.com',
+    'firebaseio.com',
+    'gstatic.com'
+  ];
+  
+  if (externalDomains.some(domain => url.hostname.includes(domain))) {
+    // Let browser handle these requests directly without service worker intervention
+    return;
+  }
+
   // Network first for API calls
   if (event.request.url.includes('/api/')) {
     event.respondWith(
