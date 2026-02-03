@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kizere-v1';
+const CACHE_NAME = 'kizere-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -49,7 +49,8 @@ self.addEventListener('fetch', (event) => {
   ];
   
   if (externalDomains.some(domain => url.hostname.includes(domain))) {
-    // Let browser handle these requests directly without service worker intervention
+    // Explicitly pass through to network for external auth-related domains
+    event.respondWith(fetch(event.request));
     return;
   }
 

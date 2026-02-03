@@ -102,11 +102,26 @@ export interface IStorage {
 
   // Claim methods
   getClaim(id: number): Promise<Claim | undefined>;
+  getClaimWithDetails(id: number): Promise<any>;
   getClaimsForReport(reportId: number): Promise<Claim[]>;
+  getClaimsForReportWithUsers(reportId: number): Promise<any[]>;
   getUserClaims(userId: number): Promise<Claim[]>;
+  getUserClaimsWithReports(userId: number): Promise<any[]>;
   getClaimsReceived(userId: number): Promise<Claim[]>;
+  getClaimsReceivedWithDetails(userId: number): Promise<any[]>;
+  getUserClaimForReport(userId: number, reportId: number): Promise<Claim | undefined>;
   createClaim(claim: InsertClaim): Promise<Claim>;
   updateClaim(id: number, claim: Partial<Claim>): Promise<Claim | undefined>;
+  getClaimStats(): Promise<any>;
+  getClaimsByStatus(status: string): Promise<Claim[]>;
+  createClaimStatusLog(log: { claimId: number; previousStatus: string; newStatus: string; changedBy: number; notes?: string }): Promise<any>;
+  getClaimStatusHistory(claimId: number): Promise<any[]>;
+  createClaimAppeal(appeal: { claimId: number; userId: number; reason: string; status: string }): Promise<any>;
+  getClaimAppeal(claimId: number): Promise<any>;
+  getPendingAppeals(): Promise<any[]>;
+  
+  // User lookup
+  getUsersByRole(roles: string[]): Promise<User[]>;
 
   // Payment methods
   getPayment(id: number): Promise<Payment | undefined>;

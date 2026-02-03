@@ -18,6 +18,7 @@ const ItemDetail = lazy(() => import("@/pages/item-detail"));
 const Search = lazy(() => import("@/pages/search"));
 const LostFound = lazy(() => import("@/pages/lost-found"));
 const ReportDetailPage = lazy(() => import("@/pages/report-detail"));
+const ClaimDetailPage = lazy(() => import("@/pages/claim-detail"));
 const UserManagement = lazy(() => import("@/pages/user-management"));
 const AdminUserManagement = lazy(() => import("@/pages/admin/user-management"));
 const NewUser = lazy(() => import("@/pages/admin/new-user"));
@@ -112,6 +113,8 @@ function App() {
                 <ProtectedRoute path="/lost-found/report" component={LostFound} requiredRole="any" />
                 <ProtectedRoute path="/lost-found/report/:type" component={LostFound} requiredRole="any" />
                 <ProtectedRoute path="/report/:id" component={ReportDetailPage} requiredRole="any" />
+                <ProtectedRoute path="/reports/:id" component={ReportDetailPage} requiredRole="any" />
+                <ProtectedRoute path="/claims/:id" component={ClaimDetailPage} requiredRole="any" />
                 <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
                 
                 {/* Payment routes */}

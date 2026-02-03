@@ -15,6 +15,8 @@ import { PaymentStatusChart } from "@/components/dashboard/payment-analytics-cha
 import { UserRoleDistribution } from "@/components/dashboard/user-role-distribution";
 import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -83,6 +85,32 @@ export default function CommandCenter() {
   const [searchQuery, setSearchQuery] = useState("");
   const [timeRange, setTimeRange] = useState("30d");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { toast } = useToast();
+  const [jobsLoading, setJobsLoading] = useState(false);
+
+  const triggerJob = async (type: 'matching' | 'expiration') => {
+    try {
+       setJobsLoading(true);
+       const url = type === 'matching' 
+         ? '/api/admin/jobs/run-matching' 
+         : '/api/admin/jobs/run-expiration';
+         
+       const res = await apiRequest(url, { method: 'POST' });
+       
+       toast({
+         title: "Job Triggered",
+         description: `Successfully started ${type} job. Result: ${res.message || 'Done'}`,
+       });
+    } catch (err: any) {
+       toast({
+         variant: "destructive",
+         title: "Job Failed",
+         description: err.message
+       });
+    } finally {
+       setJobsLoading(false);
+    }
+  };
 
   // Get data using our hooks
   const { stats, chartData, isLoading: statsLoading } = useDashboardStats();
@@ -488,6 +516,49 @@ export default function CommandCenter() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
+
+
+              {/* System Jobs Control */}
+              <div className="grid md:grid-cols-2 gap-6">
+                 <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
+                    <CardHeader>
+                       <CardTitle className="text-lg font-medium">System Maintenance Jobs</CardTitle>
+                       <CardDescription>Manually trigger scheduled batch jobs</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                       <div className="flex items-center justify-between p-3 border border-border/50 rounded-lg bg-background/50">
+                          <div>
+                             <h4 className="font-medium text-sm">Report Matching Engine</h4>
+                             <p className="text-xs text-muted-foreground">Finds matches for lost/found items</p>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            onClick={() => triggerJob('matching')}
+                            disabled={jobsLoading}
+                          >
+                            <Server className="h-4 w-4 mr-2" />
+                            {jobsLoading ? "Running..." : "Run Matching"}
+                          </Button>
+                       </div>
+                       
+                       <div className="flex items-center justify-between p-3 border border-border/50 rounded-lg bg-background/50">
+                          <div>
+                             <h4 className="font-medium text-sm">Expiration Cleaner</h4>
+                             <p className="text-xs text-muted-foreground">Archives expired reports</p>
+                          </div>
+                          <Button 
+                            size="sm" 
+                            variant="secondary"
+                            onClick={() => triggerJob('expiration')}
+                            disabled={jobsLoading}
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            {jobsLoading ? "Running..." : "Run Cleanup"}
+                          </Button>
+                       </div>
+                    </CardContent>
+                 </Card>
               </div>
             </div>
           </main>

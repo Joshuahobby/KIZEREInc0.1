@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json, numeric, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json, numeric, varchar, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -104,7 +104,11 @@ export const items = pgTable("items", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   details: json("details"),
   imageUrls: text("image_urls").array(),
-});
+}, (table) => [
+  index("item_user_idx").on(table.userId),
+  index("item_unique_id_idx").on(table.uniqueIdentifier),
+  index("item_category_idx").on(table.category)
+]);
 
 // Lost and found reports
 export const reports = pgTable("reports", {
@@ -126,7 +130,12 @@ export const reports = pgTable("reports", {
   gracePeriodEnd: timestamp("grace_period_end"),
   paymentStatus: text("payment_status").default('pending'),
   reportedAt: timestamp("reported_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("report_user_idx").on(table.userId),
+  index("report_type_status_idx").on(table.type, table.status),
+  index("report_status_idx").on(table.status),
+  index("report_expiration_idx").on(table.expirationDate)
+]);
 
 // Claims table
 export const claims = pgTable("claims", {
@@ -140,7 +149,13 @@ export const claims = pgTable("claims", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
   verifiedAt: timestamp("verified_at"),
-});
+}, (table) => [
+  index("claim_user_idx").on(table.userId),
+  index("claim_report_idx").on(table.reportId),
+  index("claim_status_idx").on(table.status),
+  // Phase 1.1: Prevent duplicate claims by same user on same report
+  uniqueIndex("claim_unique_user_report_idx").on(table.userId, table.reportId)
+]);
 
 // Notifications
 export const notifications = pgTable("notifications", {
@@ -153,7 +168,9 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   relatedItemId: integer("related_item_id").references(() => items.id),
   relatedReportId: integer("related_report_id").references(() => reports.id),
-});
+}, (table) => [
+  index("notif_user_read_idx").on(table.userId, table.isRead)
+]);
 
 // Payments
 export const payments = pgTable("payments", {

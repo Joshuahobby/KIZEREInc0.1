@@ -62,6 +62,7 @@ export class DatabaseStorage implements IStorage {
   updateUserStatus = userOps.updateUserStatus;
   updateUserRole = userOps.updateUserRole;
   updateUserVerificationStatus = userOps.updateUserVerificationStatus;
+  getUsersByRole = userOps.getUsersByRole;
   
   // User activity logs
   getUserActivityLogs = userOps.getUserActivityLogs;
@@ -117,11 +118,23 @@ export class DatabaseStorage implements IStorage {
 
   // Claim methods
   getClaim = claimOps.getClaim;
+  getClaimWithDetails = claimOps.getClaimWithDetails;
   getClaimsForReport = claimOps.getClaimsForReport;
+  getClaimsForReportWithUsers = claimOps.getClaimsForReportWithUsers;
   getUserClaims = claimOps.getUserClaims;
+  getUserClaimsWithReports = claimOps.getUserClaimsWithReports;
   getClaimsReceived = claimOps.getClaimsReceived;
+  getClaimsReceivedWithDetails = claimOps.getClaimsReceivedWithDetails;
+  getUserClaimForReport = claimOps.getUserClaimForReport;
   createClaim = claimOps.createClaim;
   updateClaim = claimOps.updateClaim;
+  getClaimStats = claimOps.getClaimStats;
+  getClaimsByStatus = claimOps.getClaimsByStatus;
+  createClaimStatusLog = claimOps.createClaimStatusLog;
+  getClaimStatusHistory = claimOps.getClaimStatusHistory;
+  createClaimAppeal = claimOps.createClaimAppeal;
+  getClaimAppeal = claimOps.getClaimAppeal;
+  getPendingAppeals = claimOps.getPendingAppeals;
   
   // Notification methods
   getNotification = notificationOps.getNotification;

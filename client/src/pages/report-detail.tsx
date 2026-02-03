@@ -5,14 +5,24 @@ import { format } from "date-fns";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ClaimForm } from "@/components/reports/claim-form";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Report } from "@shared/schema";
+import { Report, Claim } from "@shared/schema";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -33,6 +43,8 @@ export default function ReportDetailPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [showClaimForm, setShowClaimForm] = useState(false);
+  const [showAppealDialog, setShowAppealDialog] = useState(false);
+  const [appealReason, setAppealReason] = useState("");
 
   const { data: report, isLoading, error } = useQuery<Report>({
     queryKey: [`/api/reports/${id}`],
@@ -44,9 +56,44 @@ export default function ReportDetailPage() {
     enabled: !!id,
   });
 
-  const { data: matches } = useQuery<Report[]>({
+  // Extended type for report matches
+  interface ReportMatch extends Report {
+    matchScore?: number;
+  }
+
+  const { data: matches } = useQuery<ReportMatch[]>({
     queryKey: [`/api/reports/matches/${id}`],
     enabled: !!id && !!report && user?.id === report.userId,
+  });
+
+  // Fetch claims if user is owner
+  const { data: claims } = useQuery<Claim[]>({
+    queryKey: [`/api/claims/report/${id}`],
+    enabled: !!id && !!report && user?.id === report.userId,
+  });
+
+  // Check if I have already claimed this (if not owner)
+  const { data: myClaims } = useQuery<Claim[]>({
+    queryKey: ['/api/claims'],
+    enabled: !!user && !!report && user.id !== report.userId,
+  });
+  
+  const myClaim = myClaims?.find(c => c.reportId === parseInt(id!));
+
+  const submitAppealMutation = useMutation({
+    mutationFn: async () => {
+      if (!myClaim) return;
+      await apiRequest(`/api/claims/${myClaim.id}/appeal`, { method: 'POST', data: { reason: appealReason } });
+    },
+    onSuccess: () => {
+      setShowAppealDialog(false);
+      setAppealReason("");
+      toast({ title: "Appeal submitted successfully", description: "An admin will review your case." });
+      queryClient.invalidateQueries({ queryKey: ['/api/claims'] });
+    },
+    onError: (err: Error) => {
+      toast({ variant: "destructive", title: "Failed to submit appeal", description: err.message });
+    }
   });
 
   if (isLoading) {
@@ -138,6 +185,36 @@ export default function ReportDetailPage() {
                     Receipt: {report.receiptNumber}
                   </p>
                 )}
+                
+                {report.status === 'Expired' && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
+                    <div className="flex items-center gap-2 text-amber-800 mb-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      <span className="font-semibold">This report has expired</span>
+                    </div>
+                    <p className="text-sm text-amber-700 mb-3">
+                      Expired reports are no longer visible in public searches. 
+                      {isOwner ? " You can renew this report to make it active again." : ""}
+                    </p>
+                    {isOwner && (
+                      <Button 
+                         variant="outline" 
+                         className="bg-white border-amber-300 text-amber-900 hover:bg-amber-100"
+                         onClick={async () => {
+                           try {
+                             await apiRequest(`/api/reports/${report.id}/renew`, { method: 'POST' });
+                             toast({ title: "Report renewed successfully" });
+                             queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
+                           } catch (e) {
+                             toast({ variant: "destructive", title: "Failed to renew report" });
+                           }
+                         }}
+                      >
+                        Renew Report (30 Days)
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Info Cards */}
@@ -164,10 +241,21 @@ export default function ReportDetailPage() {
                   )}
 
                   {report.type === 'lost' && report.contactInfo && (
-                    <div className="flex items-center gap-3 text-sm">
-                      <Phone className="h-4 w-4 text-primary flex-shrink-0" />
+                    <div className="flex items-start gap-3 text-sm">
+                      <Phone className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                       <span className="text-neutral-600">Contact:</span>
-                      <span className="font-medium">{report.contactInfo}</span>
+                      {report.contactInfo.startsWith('[') ? (
+                         <div className="flex flex-col">
+                           <span className="text-neutral-400 italic">Contact info hidden</span>
+                           <span className="text-xs text-neutral-500 mt-1">
+                             {isOwner 
+                               ? "Visible to you and verified claimants." 
+                               : "Submit a claim and get verified to see contact details."}
+                           </span>
+                         </div>
+                      ) : (
+                        <span className="font-medium">{report.contactInfo}</span>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -210,14 +298,14 @@ export default function ReportDetailPage() {
                               {match.type === 'lost' ? 'Lost' : 'Found'}
                             </Badge>
                           </div>
-                          {match.similarityScore && (
+                          {match.matchScore && (
                             <div className="mt-2 flex items-center gap-1">
                               <Progress 
-                                value={match.similarityScore} 
+                                value={match.matchScore} 
                                 className="h-1.5 flex-1 bg-neutral-100" 
                                 indicatorClassName="bg-purple-500" 
                               />
-                              <span className="text-xs font-mono text-purple-700">{match.similarityScore}%</span>
+                              <span className="text-xs font-mono text-purple-700">{match.matchScore}%</span>
                             </div>
                           )}
                         </div>
@@ -227,8 +315,77 @@ export default function ReportDetailPage() {
                 </Card>
               )}
 
-              {/* Actions */}
-              {!isOwner && isFoundReport && report.status === 'Open' && (
+              {/* My Claim Status */}
+              {!isOwner && myClaim && (
+                <Card className="border-blue-200 bg-blue-50">
+                   <CardHeader>
+                     <CardTitle className="text-blue-900">Your Claim Status</CardTitle>
+                   </CardHeader>
+                   <CardContent>
+                     <div className="flex items-center justify-between">
+                       <span className="font-medium text-blue-800 capitalize">Status: {myClaim.status}</span>
+                       <Badge variant={myClaim.status === 'verified' ? 'default' : 'secondary'}>
+                         {myClaim.status}
+                       </Badge>
+                     </div>
+                     <p className="text-sm text-blue-700 mt-2">
+                       {myClaim.status === 'verified' 
+                         ? "Congratulations! Your claim has been verified. You can now see the contact info above."
+                         : myClaim.status === 'rejected'
+                         ? "Your claim was rejected by the finder." 
+                         : "Your claim is currently under review by the finder."}
+                     </p>
+                     
+                     <div className="flex gap-2 mt-3">
+                       {myClaim.status === 'rejected' && (
+                         <Button 
+                           variant="outline" 
+                           className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                           onClick={() => setShowAppealDialog(true)}
+                         >
+                           Appeal Decision
+                         </Button>
+                       )}
+                       <Button 
+                         variant="secondary"
+                         className="flex-1"
+                         onClick={() => navigate(`/claims/${myClaim.id}`)}
+                       >
+                         View Full Claim
+                       </Button>
+                     </div>
+                   </CardContent>
+                </Card>
+              )}
+
+              {/* Claims Received (Owner View) */}
+              {isOwner && claims && claims.length > 0 && (
+                <Card className="border-green-200 bg-green-50">
+                  <CardHeader>
+                    <CardTitle className="text-green-900">Claims Received</CardTitle>
+                    <CardDescription>Review claims from users who believe this is their item.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {claims.map(claim => (
+                      <div key={claim.id} className="bg-white p-4 rounded-lg border border-green-100 shadow-sm">
+                         <div className="flex justify-between items-start mb-2">
+                           <span className="font-semibold text-green-900">Claimant #{claim.userId}</span>
+                           <Badge variant={claim.status === 'verified' ? 'default' : 'outline'}>{claim.status}</Badge>
+                         </div>
+                         <p className="text-sm text-neutral-600 mb-3 line-clamp-2">{claim.description}</p>
+                         <div className="flex gap-2">
+                           <Button size="sm" variant="outline" onClick={() => navigate(`/claims/${claim.id}`)}>
+                             View Details
+                           </Button>
+                         </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* File Claim Action */}
+              {!isOwner && isFoundReport && report.status === 'Open' && !myClaim && (
                 <Card className="border-primary/30 bg-primary/5">
                   <CardContent className="p-5">
                     {!showClaimForm ? (
@@ -256,6 +413,7 @@ export default function ReportDetailPage() {
                             setShowClaimForm(false);
                             toast({ title: "Claim submitted successfully!" });
                             queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
+                            queryClient.invalidateQueries({ queryKey: ['/api/claims'] });
                           }} 
                         />
                       </div>
@@ -278,6 +436,38 @@ export default function ReportDetailPage() {
       </main>
 
       <Footer />
+
+      <Dialog open={showAppealDialog} onOpenChange={setShowAppealDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Appeal Claim Decision</DialogTitle>
+            <DialogDescription>
+              If you believe your claim was wrongly rejected, you can submit an appeal to our administration team.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reason">Reason for Appeal</Label>
+              <Textarea 
+                id="reason" 
+                placeholder="Please explain why this item belongs to you and provide any additional details..." 
+                className="min-h-[100px]"
+                value={appealReason}
+                onChange={(e) => setAppealReason(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAppealDialog(false)}>Cancel</Button>
+            <Button 
+              onClick={() => submitAppealMutation.mutate()} 
+              disabled={appealReason.length < 20 || submitAppealMutation.isPending}
+            >
+              {submitAppealMutation.isPending ? "Submitting..." : "Submit Appeal"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

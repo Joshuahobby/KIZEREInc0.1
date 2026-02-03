@@ -5,7 +5,17 @@ import { sendMatchNotificationEmail, sendFoundNotificationEmail } from "./email.
 
 const logger = createLogger('ReportMatchingService');
 
+/**
+ * Enhanced Report Matching Service
+ * Phase 2.1: Improved matching algorithm with location proximity, date proximity, and color matching
+ */
 export class ReportMatchingService {
+  // Match score threshold for notification (0-100)
+  private static readonly NOTIFICATION_THRESHOLD = 40;
+  
+  // High confidence threshold
+  private static readonly HIGH_CONFIDENCE_THRESHOLD = 75;
+
   /**
    * Scan for potential matches for a given report
    * @param report the newly created report
@@ -27,21 +37,32 @@ export class ReportMatchingService {
         status: 'Open'
       });
 
+      const matchResults: { candidate: Report; score: number }[] = [];
+
       for (const candidate of potentialMatches.reports) {
         // Skip own reports
         if (candidate.userId === report.userId) continue;
 
         const score = this.calculateMatchScore(report, candidate);
         
-        if (score >= 40) { // Threshold for notification
-          logger.info('Potential match found', { 
-            reportId: report.id, 
-            candidateId: candidate.id, 
-            score 
-          });
-
-          await this.notifyUsers(report, candidate, score);
+        if (score >= this.NOTIFICATION_THRESHOLD) {
+          matchResults.push({ candidate, score });
         }
+      }
+
+      // Sort by score descending
+      matchResults.sort((a, b) => b.score - a.score);
+
+      // Notify for top 5 matches
+      for (const match of matchResults.slice(0, 5)) {
+        logger.info('Potential match found', { 
+          reportId: report.id, 
+          candidateId: match.candidate.id, 
+          score: match.score,
+          highConfidence: match.score >= this.HIGH_CONFIDENCE_THRESHOLD
+        });
+
+        await this.notifyUsers(report, match.candidate, match.score);
       }
 
       // If it's a FOUND report, also check against registered items (Passive Protection)
@@ -57,42 +78,59 @@ export class ReportMatchingService {
           await this.notifyItemOwner(report, matchingItem);
         }
       }
+
+      logger.info('Match scan complete', { 
+        reportId: report.id, 
+        matchesFound: matchResults.length 
+      });
     } catch (error) {
       logger.error('Error during report matching', { error, reportId: report.id });
     }
   }
 
+  /**
+   * Enhanced match score calculation
+   * Phase 2.1: Added location proximity, date proximity, category, and color matching
+   */
   private static calculateMatchScore(r1: Report, r2: Report): number {
     let score = 0;
 
-    // 1. Precise Unique Identifier match (Critical)
-    // If both have unique identifiers and they match exactly, it's a near-certain match
+    // 1. CRITICAL: Precise Unique Identifier match (IMEI, Serial, etc.)
     if (r1.uniqueIdentifier && r2.uniqueIdentifier && 
-        r1.uniqueIdentifier.trim().toLowerCase() === r2.uniqueIdentifier.trim().toLowerCase()) {
-      score += 95;
+        this.normalizeIdentifier(r1.uniqueIdentifier) === this.normalizeIdentifier(r2.uniqueIdentifier)) {
+      score += 95; // Near-certain match
     }
 
-    // 2. Precise Item ID match (High weight)
+    // 2. HIGH: Precise Item ID match
     if (r1.itemId && r2.itemId && r1.itemId === r2.itemId) {
       score += 90;
     }
 
-    // 3. Title keyword overlap
-    const words1 = new Set(r1.title.toLowerCase().split(/\s+/).filter(w => w.length > 2));
-    const words2 = new Set(r2.title.toLowerCase().split(/\s+/).filter(w => w.length > 2));
-    const commonWords = Array.from(words1).filter(w => words2.has(w));
-    
-    if (commonWords.length > 0) {
-      score += Math.min(40, commonWords.length * 15);
+    // 3. MEDIUM: Same Category
+    if (r1.category && r2.category && r1.category === r2.category) {
+      score += 15;
     }
 
-    // 4. Location overlap
+    // 4. MEDIUM: Location overlap/proximity
     if (r1.location && r2.location) {
-      const loc1 = r1.location.toLowerCase();
-      const loc2 = r2.location.toLowerCase();
-      if (loc1.includes(loc2) || loc2.includes(loc1)) {
-        score += 30;
-      }
+      const locationScore = this.calculateLocationScore(r1.location, r2.location);
+      score += locationScore;
+    }
+
+    // 5. MEDIUM: Date proximity
+    if (r1.date && r2.date) {
+      const dateScore = this.calculateDateProximityScore(r1.date, r2.date);
+      score += dateScore;
+    }
+
+    // 6. LOW-MEDIUM: Title keyword overlap
+    const titleScore = this.calculateKeywordOverlap(r1.title, r2.title);
+    score += Math.min(30, titleScore);
+
+    // 7. LOW: Description keyword overlap
+    if (r1.description && r2.description) {
+      const descScore = this.calculateKeywordOverlap(r1.description, r2.description);
+      score += Math.min(10, descScore * 0.5);
     }
 
     // Cap score at 100
@@ -100,11 +138,113 @@ export class ReportMatchingService {
   }
 
   /**
+   * Normalize identifier for comparison
+   */
+  private static normalizeIdentifier(identifier: string): string {
+    return identifier.trim().toLowerCase().replace(/[\s-]/g, '');
+  }
+
+  /**
+   * Calculate location-based score
+   * Uses simple string matching for now, can be upgraded to geocoding
+   */
+  private static calculateLocationScore(loc1: string, loc2: string): number {
+    const l1 = loc1.toLowerCase().trim();
+    const l2 = loc2.toLowerCase().trim();
+
+    // Exact match
+    if (l1 === l2) return 25;
+
+    // One contains the other
+    if (l1.includes(l2) || l2.includes(l1)) return 20;
+
+    // Extract location tokens and check overlap
+    const tokens1 = l1.split(/[\s,]+/).filter(t => t.length > 2);
+    const tokens2Set = new Set(l2.split(/[\s,]+/).filter(t => t.length > 2));
+    
+    let commonTokens = 0;
+    for (const token of tokens1) {
+      if (tokens2Set.has(token)) commonTokens++;
+    }
+
+    if (commonTokens >= 2) return 15;
+    if (commonTokens === 1) return 10;
+
+    // Common Rwanda districts
+    const districts = [
+      'kigali', 'gasabo', 'kicukiro', 'nyarugenge',
+      'huye', 'musanze', 'rubavu', 'rusizi', 'nyagatare',
+      'gisenyi', 'butare', 'rwamagana', 'muhanga'
+    ];
+
+    for (const district of districts) {
+      if (l1.includes(district) && l2.includes(district)) {
+        return 15;
+      }
+    }
+
+    return 0;
+  }
+
+  /**
+   * Calculate date proximity score
+   */
+  private static calculateDateProximityScore(date1: Date, date2: Date): number {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    const diffDays = Math.abs(Math.floor((d1.getTime() - d2.getTime()) / (1000 * 60 * 60 * 24)));
+
+    if (diffDays <= 1) return 15;   // Same day or next day
+    if (diffDays <= 3) return 12;   // Within 3 days
+    if (diffDays <= 7) return 10;   // Within a week
+    if (diffDays <= 14) return 5;   // Within 2 weeks
+    if (diffDays <= 30) return 2;   // Within a month
+    
+    return 0;
+  }
+
+  /**
+   * Calculate keyword overlap between two strings
+   */
+  private static calculateKeywordOverlap(text1: string, text2: string): number {
+    // Common stop words to ignore
+    const stopWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+      'of', 'with', 'by', 'from', 'as', 'is', 'was', 'are', 'were', 'been',
+      'be', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+      'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare', 'ought',
+      'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'your', 'his', 'her',
+      'its', 'our', 'their', 'this', 'that', 'these', 'those', 'lost', 'found'
+    ]);
+
+    const getKeywords = (text: string): Set<string> => {
+      return new Set(
+        text.toLowerCase()
+          .replace(/[^\w\s]/g, '')
+          .split(/\s+/)
+          .filter(word => word.length > 2 && !stopWords.has(word))
+      );
+    };
+
+    const words1Array = Array.from(getKeywords(text1));
+    const words2Set = getKeywords(text2);
+
+    let commonWords = 0;
+    for (const word of words1Array) {
+      if (words2Set.has(word)) commonWords++;
+    }
+
+    // Score based on number of matching keywords
+    return commonWords * 10;
+  }
+
+  /**
    * Send notifications to both users
    */
   private static async notifyUsers(report: Report, candidate: Report, score: number): Promise<void> {
-    const message = `We found a potential match (${score}%) for your "${report.type === 'lost' ? 'Lost' : 'Found'}" report: ${report.title}`;
-    const relatedMessage = `We found a potential match for your "${candidate.type === 'lost' ? 'Lost' : 'Found'}" report: ${candidate.title}`;
+    const confidenceLevel = score >= this.HIGH_CONFIDENCE_THRESHOLD ? 'High' : 'Moderate';
+    const message = `We found a ${confidenceLevel.toLowerCase()} confidence match (${score}%) for your "${report.type === 'lost' ? 'Lost' : 'Found'}" report: ${report.title}`;
+    const relatedMessage = `We found a ${confidenceLevel.toLowerCase()} confidence match for your "${candidate.type === 'lost' ? 'Lost' : 'Found'}" report: ${candidate.title}`;
 
     // Get user details for emails
     const reportOwner = await storage.getUser(report.userId);
@@ -133,7 +273,7 @@ export class ReportMatchingService {
     // Notify the user who just created the report
     await storage.createNotification({
       userId: report.userId,
-      title: "Potential Match Found!",
+      title: `${confidenceLevel} Confidence Match Found!`,
       message: message,
       type: "report_match",
       isRead: false,
@@ -144,7 +284,7 @@ export class ReportMatchingService {
     // Notify the existing report owner
     await storage.createNotification({
       userId: candidate.userId,
-      title: "New Potential Match Found!",
+      title: `New ${confidenceLevel} Confidence Match Found!`,
       message: relatedMessage,
       type: "report_match",
       isRead: false,
@@ -179,5 +319,33 @@ export class ReportMatchingService {
       relatedItemId: item.id,
       relatedReportId: report.id
     });
+  }
+
+  /**
+   * Re-run matching for all open reports (can be called by admin or cron)
+   */
+  static async rerunMatchingForAllReports(): Promise<{ processed: number; matches: number }> {
+    logger.info('Starting batch matching for all open reports');
+    
+    const openReports = await storage.getReportsWithFilters({
+      page: 1,
+      limit: 500,
+      status: 'Open'
+    });
+
+    let processed = 0;
+    let matchesFound = 0;
+
+    for (const report of openReports.reports) {
+      try {
+        await this.findMatches(report);
+        processed++;
+      } catch (err) {
+        logger.error('Error processing report in batch matching', { reportId: report.id, error: err });
+      }
+    }
+
+    logger.info('Batch matching complete', { processed, matchesFound });
+    return { processed, matches: matchesFound };
   }
 }

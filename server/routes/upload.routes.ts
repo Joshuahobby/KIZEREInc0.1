@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import multer from 'multer';
 import { uploadImage, uploadImages, getUploadSignature, deleteImage } from '../services/cloudinary.service';
 import { createLogger } from '../utils/logger';
+import { validateUploadedFile } from '../utils/file-validation';
 
 const router = Router();
 const logger = createLogger('UploadRoutes');
@@ -34,11 +35,27 @@ const upload = multer({
 /**
  * POST /api/upload
  * Upload a single image
+ * Phase 1.3: Added magic byte validation
  */
 router.post('/', upload.single('image'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    // Phase 1.3: Validate file by magic bytes
+    if (req.file.mimetype.startsWith('image/')) {
+      const validation = validateUploadedFile(req.file.buffer, req.file.mimetype);
+      if (!validation.isValid) {
+        logger.warn('File validation failed', { 
+          error: validation.error, 
+          claimed: req.file.mimetype,
+          detected: validation.detectedMimeType 
+        });
+        return res.status(400).json({ 
+          message: validation.error || 'Invalid file format detected' 
+        });
+      }
     }
 
     // Convert buffer to base64 data URI

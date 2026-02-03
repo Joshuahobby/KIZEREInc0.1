@@ -208,3 +208,15 @@ export async function createUserActivityLog(log: InsertUserActivityLog): Promise
   const [newLog] = await db.insert(userActivityLogs).values(log).returning();
   return newLog;
 }
+
+/**
+ * Get users by role(s)
+ * Used for notifying admins/moderators for appeals
+ */
+export async function getUsersByRole(roles: string[]): Promise<User[]> {
+  if (roles.length === 0) return [];
+  
+  const conditions = roles.map(role => eq(users.role, role));
+  return await db.select().from(users).where(or(...conditions));
+}
+
