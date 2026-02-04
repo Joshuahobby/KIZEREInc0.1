@@ -1,38 +1,15 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
-import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/hooks/use-auth";
-import { apiRequest } from "../lib/queryClient";
-
-// Locally define types until we fix imports
-type ItemStatus = 'Registered' | 'Lost' | 'Found' | 'Recovered' | 'Archived';
-
-interface Item {
-  id: number;
-  userId: number;
-  name: string;
-  category: string;
-  uniqueIdentifier: string;
-  description: string;
-  status: ItemStatus;
-  location: string;
-  registeredAt: Date;
-  updatedAt: Date;
-  details: Record<string, any>;
-  imageUrls: string[];
-}
+import { Item, ItemStatus } from "@shared/schema";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  PlusCircle, Search, Package, AlertTriangle, CheckCircle, X, Eye, 
-  Edit, ArrowUpDown, Calendar, Tag, MapPin, ArrowRight, Loader2 
+  PlusCircle, Search, Package, AlertTriangle, X, Eye, 
+  Calendar, Tag, MapPin, Activity, LayoutGrid, List, MoreVertical, Edit2
 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
+import { cn } from "@/lib/utils";
 import { EmptyState, ItemSkeleton } from "@/components/ui";
 import { 
   Select, 
@@ -41,6 +18,12 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useLocation } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 
 // Status badge variations based on item status
 const getStatusBadgeVariant = (status: ItemStatus) => {
@@ -63,10 +46,11 @@ const getStatusBadgeVariant = (status: ItemStatus) => {
 export default function MyItemsPage() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [statusTab, setStatusTab] = useState<ItemStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [currentTab, setCurrentTab] = useState("all");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "alpha">("newest");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   
   // Fetch user's items
   const { data: items, isLoading, error } = useQuery<Item[]>({
@@ -77,23 +61,25 @@ export default function MyItemsPage() {
     enabled: !!user?.id
   });
   
-  // Filter items based on search, category, and status
+  // Filter and Sort items
   const filteredItems = items?.filter(item => {
-    const matchesSearch = searchQuery === "" || 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.uniqueIdentifier.toLowerCase().includes(searchQuery.toLowerCase());
-    
     const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
-    const matchesStatus = selectedStatus === "all" || item.status === selectedStatus;
+    const matchesSearch = !searchQuery || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase());
     
     // Filter by tab
-    if (currentTab === "all") return matchesSearch && matchesCategory && matchesStatus;
-    if (currentTab === "registered") return item.status === "Registered" && matchesSearch && matchesCategory;
-    if (currentTab === "lost") return item.status === "Lost" && matchesSearch && matchesCategory;
-    if (currentTab === "recovered") return (item.status === "Recovered" || item.status === "Found") && matchesSearch && matchesCategory;
+    const matchesTab = statusTab === "all" || 
+      (statusTab === "Registered" && item.status === "Registered") ||
+      (statusTab === "Lost" && item.status === "Lost") ||
+      (statusTab === "Recovered" && (item.status === "Recovered" || item.status === "Found"));
     
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesCategory && matchesSearch && matchesTab;
+  }).sort((a, b) => {
+    if (sortBy === "newest") return new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime();
+    if (sortBy === "oldest") return new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime();
+    if (sortBy === "alpha") return a.name.localeCompare(b.name);
+    return 0;
   }) || [];
   
   // Get unique categories from items for the filter dropdown
@@ -110,19 +96,16 @@ export default function MyItemsPage() {
   if (isLoading) {
     return (
       <PageLayout>
-        <div className="container max-w-6xl mx-auto py-8">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Items</h1>
-              <p className="text-muted-foreground mt-1">Manage your registered possessions</p>
-            </div>
-            <div className="h-10 w-32">
-              <div className="bg-gray-200 dark:bg-gray-700 rounded-md h-full animate-pulse"></div>
+        <div className="container max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="space-y-1">
+              <div className="h-10 w-48 bg-muted animate-pulse rounded-lg" />
+              <div className="h-4 w-64 bg-muted animate-pulse rounded-lg" />
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <ItemSkeleton key={i} />
             ))}
           </div>
@@ -134,13 +117,13 @@ export default function MyItemsPage() {
   if (error) {
     return (
       <PageLayout>
-        <div className="container max-w-6xl mx-auto py-8">
+        <div className="container max-w-6xl mx-auto">
           <EmptyState 
-            icon={<X className="h-10 w-10 text-red-500" />}
+            icon={<X className="h-12 w-12 text-destructive" />}
             title="Failed to load items"
             description="We couldn't load your registered items. Please try again later."
             action={
-              <Button onClick={() => window.location.reload()} className="bg-red-500 hover:bg-red-600">
+              <Button onClick={() => window.location.reload()} variant="default">
                 Try Again
               </Button>
             }
@@ -153,116 +136,140 @@ export default function MyItemsPage() {
   
   return (
     <PageLayout>
-      <div className="container max-w-6xl mx-auto py-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Items</h1>
-            <p className="text-muted-foreground mt-1">Manage your registered possessions</p>
+      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 py-4 sm:py-6 animate-in fade-in duration-700">
+        {/* Header Section - Zero-Waste Mobile Layout */}
+        <div className="flex justify-between items-center pb-2">
+          <div className="space-y-0.5">
+            <h1 className="text-xl sm:text-3xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 uppercase">
+              My Items
+            </h1>
           </div>
           
           <Button
             onClick={() => navigate("/register-item")}
-            className="bg-sky-500 hover:bg-sky-600"
+            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
+            size="sm"
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Register New Item
+            <PlusCircle className="mr-1.5 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="text-xs sm:text-sm font-bold">New Item</span>
           </Button>
         </div>
+
         
-        <div className="bg-muted/40 rounded-lg p-4 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, description, or identifier..."
-                className="pl-9"
+        {/* Single Inlined Filter Row - Easy & Direct */}
+        <div className="relative group w-full max-w-xl mx-auto mb-1">
+          <div className="relative flex items-center gap-1 p-1 bg-background/20 backdrop-blur-xl border border-muted/20 rounded-full shadow-sm">
+            {/* Search */}
+            <div className="flex-1 relative flex items-center">
+              <Search className="absolute left-3 h-3 w-3 text-primary opacity-40" />
+              <Input 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="w-full h-8 pl-8 bg-transparent border-none focus-visible:ring-0 text-[11px] font-bold placeholder:text-muted-foreground/30"
               />
             </div>
             
-            <div className="flex gap-3">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[180px] bg-white dark:bg-gray-900">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {uniqueCategories.map(category => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-[180px] bg-white dark:bg-gray-900">
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Registered">Registered</SelectItem>
-                  <SelectItem value="Lost">Lost</SelectItem>
-                  <SelectItem value="Found">Found</SelectItem>
-                  <SelectItem value="Recovered">Recovered</SelectItem>
-                  <SelectItem value="Archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="w-px h-4 bg-muted/20" />
+            
+            {/* Direct Selects */}
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-auto h-8 px-2 border-none bg-transparent rounded-full text-[10px] font-black uppercase tracking-wider">
+                <Tag className="h-3 w-3 sm:mr-1 text-primary opacity-40 shrink-0" />
+                <span className="hidden sm:inline">
+                  <SelectValue placeholder="Cat" />
+                </span>
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl bg-background/95 border-muted/20">
+                <SelectItem value="all" className="text-xs">All Categories</SelectItem>
+                {["Electronics", "Jewelry", "Documents", "Accessories", "Clothing", "Bags", "Keys", "Wallets", "Phones", "Computers", "Transportation", "Other"].map(cat => (
+                  <SelectItem key={cat} value={cat} className="text-xs">{cat}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="w-px h-4 bg-muted/20" />
+
+            <div className="flex items-center gap-0.5 px-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "h-7 w-7 rounded-full transition-all",
+                  viewMode === "list" ? "bg-primary/20 text-primary" : "text-muted-foreground/40 hover:text-foreground"
+                )}
+              >
+                <List className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "h-7 w-7 rounded-full transition-all",
+                  viewMode === "grid" ? "bg-primary/20 text-primary" : "text-muted-foreground/40 hover:text-foreground"
+                )}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" />
+              </Button>
             </div>
           </div>
         </div>
         
-        <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab} className="w-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="all" className="relative">
-              All
-              <Badge className="ml-2 bg-sky-500">{items?.length || 0}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="registered" className="relative">
-              Registered
-              <Badge className="ml-2 bg-primary">{items?.filter(i => i.status === "Registered").length || 0}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="lost" className="relative">
-              Lost
-              <Badge className="ml-2 bg-destructive">{items?.filter(i => i.status === "Lost").length || 0}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="recovered" className="relative">
-              Recovered
-              <Badge className="ml-2 bg-green-500">{items?.filter(i => i.status === "Recovered" || i.status === "Found").length || 0}</Badge>
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all" className="mt-0">
-            <ItemsGrid 
-              items={filteredItems} 
-              onReportLost={handleReportLost} 
-              onViewItem={handleViewItem}
-            />
-          </TabsContent>
-          
-          <TabsContent value="registered" className="mt-0">
-            <ItemsGrid 
-              items={filteredItems} 
-              onReportLost={handleReportLost} 
-              onViewItem={handleViewItem}
-            />
-          </TabsContent>
-          
-          <TabsContent value="lost" className="mt-0">
-            <ItemsGrid 
-              items={filteredItems} 
-              onReportLost={handleReportLost} 
-              onViewItem={handleViewItem}
-            />
-          </TabsContent>
-          
-          <TabsContent value="recovered" className="mt-0">
-            <ItemsGrid 
-              items={filteredItems} 
-              onReportLost={handleReportLost} 
-              onViewItem={handleViewItem}
-            />
-          </TabsContent>
-        </Tabs>
+        {/* Status Pill Tabs - Centered & Ultra-Slim */}
+        <div className="flex items-center gap-1.5 pb-2 overflow-x-auto no-scrollbar mask-fade-right justify-center">
+          {[
+            { id: 'all', label: 'All', count: items?.length || 0 },
+            { id: 'Registered', label: 'Reg', count: items?.filter(i => i.status === "Registered").length || 0 },
+            { id: 'Lost', label: 'Lost', count: items?.filter(i => i.status === "Lost").length || 0 },
+            { id: 'Recovered', label: 'Rec', count: items?.filter(i => i.status === "Recovered" || i.status === "Found").length || 0 },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setStatusTab(tab.id as any)}
+              className="relative px-3 sm:px-4 py-1.5 text-[9px] sm:text-[10px] font-black tracking-widest uppercase transition-all duration-300 outline-none group shrink-0"
+            >
+              <AnimatePresence>
+                {statusTab === tab.id && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-primary/10 sm:bg-primary shadow-sm rounded-full border border-primary/20 sm:border-none"
+                    transition={{ type: "spring", bounce: 0.1, duration: 0.4 }}
+                  />
+                )}
+              </AnimatePresence>
+              <span className={cn(
+                "relative z-10 transition-colors duration-300 flex items-center gap-1",
+                statusTab === tab.id ? (window.innerWidth < 640 ? "text-primary" : "text-primary-foreground") : "text-muted-foreground group-hover:text-foreground"
+              )}>
+                {tab.label}
+                <span className={cn(
+                  "text-[8px] py-0.5 px-1 rounded-full transition-colors duration-300 font-bold",
+                  statusTab === tab.id ? (window.innerWidth < 640 ? "bg-primary/20 text-primary" : "bg-white/20 text-white") : "bg-muted text-muted-foreground"
+                )}>
+                  {tab.count}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Content Area */}
+        <div className="min-h-[300px]">
+          <ItemsGrid 
+            items={filteredItems} 
+            viewMode={viewMode}
+            onReportLost={handleReportLost} 
+            onViewItem={handleViewItem}
+            hasActiveFilters={selectedCategory !== 'all' || searchQuery !== '' || statusTab !== 'all'}
+            onClearFilters={() => {
+              setSelectedCategory('all');
+              setSearchQuery('');
+              setStatusTab('all');
+            }}
+          />
+        </div>
       </div>
     </PageLayout>
   );
@@ -270,125 +277,304 @@ export default function MyItemsPage() {
 
 interface ItemsGridProps {
   items: Item[];
+  viewMode: "grid" | "list";
   onReportLost: (itemId: number) => void;
   onViewItem: (itemId: number) => void;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
-function ItemsGrid({ items, onReportLost, onViewItem }: ItemsGridProps) {
+function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters, onClearFilters }: ItemsGridProps) {
+  const [, navigate] = useLocation();
+
   if (items.length === 0) {
+    // ... previous code for empty state
     return (
-      <EmptyState 
-        icon={<Package className="h-10 w-10 text-sky-500" />}
-        title="No items found"
-        description="You don't have any items matching your filters."
-        action={
-          <Button variant="outline" asChild className="border-sky-500 text-sky-500 hover:bg-sky-50 hover:text-sky-600">
-            <Link href="/register-item">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Register New Item
-            </Link>
+      <div className="py-8 sm:py-20 flex flex-col items-center justify-center animate-in slide-in-from-bottom-4 duration-500 px-4">
+        {/* ... empty state content ... */}
+        <div className="relative mb-6 group">
+          <motion.div 
+            className="absolute -inset-10 bg-gradient-to-br from-primary/20 to-blue-500/10 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+          <motion.div 
+             className="relative h-20 w-20 sm:h-24 sm:w-24 bg-muted/40 rounded-2xl sm:rounded-3xl flex items-center justify-center border border-muted/30 backdrop-blur-xl shadow-2xl"
+             animate={{ y: [0, -8, 0] }}
+             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Package className="h-10 w-10 sm:h-12 sm:w-12 text-primary/40" />
+          </motion.div>
+        </div>
+        <h3 className="text-lg sm:text-2xl font-black tracking-tight mb-2 text-center bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60">
+          No items found
+        </h3>
+        <p className="text-xs sm:text-base text-muted-foreground max-w-sm text-center mb-6 px-4 opacity-70 font-medium">
+          {hasActiveFilters 
+            ? "Your current filters aren't returning any results." 
+            : "You don't have any registered possessions yet."}
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          {hasActiveFilters && (
+            <button 
+              onClick={onClearFilters}
+              className="px-6 py-2 text-[10px] font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors duration-300"
+            >
+              Reset Filters
+            </button>
+          )}
+          <Button 
+            variant="default" 
+            onClick={() => navigate("/register-item")}
+            className="rounded-full px-8 h-10 sm:h-12 bg-primary hover:bg-primary/90 font-bold transition-all shadow-xl shadow-primary/20"
+          >
+            <PlusCircle className="mr-2 h-4 w-4 text-white" />
+            Register Item
           </Button>
-        }
-        variant="default"
-      />
+        </div>
+      </div>
     );
   }
   
+  if (viewMode === "list") {
+    return (
+      <div className="space-y-3 pb-20">
+        <AnimatePresence mode="popLayout">
+          {items.map(item => (
+            <motion.div
+              key={item.id}
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card className="overflow-hidden bg-background/40 hover:bg-background/80 backdrop-blur-md border border-muted/30 hover:border-primary/20 transition-all duration-300 group">
+                <div className="p-3 flex items-center gap-4">
+                  {/* Small Thumbnail */}
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl overflow-hidden shrink-0 bg-muted/20 border border-muted/30">
+                    {item.imageUrls && item.imageUrls.length > 0 ? (
+                      <img 
+                        src={item.imageUrls[0]} 
+                        alt={item.name}
+                        className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Package className="h-6 w-6 text-muted-foreground/20" />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Name & Subtitle */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-sm sm:text-base font-black tracking-tight truncate group-hover:text-primary transition-colors">
+                        {item.name}
+                      </h3>
+                      <Badge 
+                        className={cn(
+                          "sm:hidden text-[8px] px-1.5 py-0 border-none font-black uppercase tracking-widest",
+                          item.status === 'Registered' && "bg-blue-500/80 text-white",
+                          item.status === 'Lost' && "bg-destructive/80 text-white animate-pulse",
+                          (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-500/80 text-white",
+                        )}
+                      >
+                        {item.status}
+                      </Badge>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <div className="flex items-center text-[10px] font-black text-muted-foreground/50 tracking-widest uppercase">
+                        <Tag className="h-2.5 w-2.5 mr-1 text-primary/40" />
+                        {item.category}
+                      </div>
+                      <div className="hidden sm:flex items-center text-[10px] text-muted-foreground/40 font-bold">
+                        <Calendar className="h-2.5 w-2.5 mr-1" />
+                        {new Date(item.registeredAt).toLocaleDateString()}
+                      </div>
+                      {item.uniqueIdentifier && (
+                        <div className="hidden md:flex items-center text-[10px] text-primary/40 font-black tracking-tighter uppercase px-1.5 py-0.5 rounded-md bg-primary/5 border border-primary/10">
+                          ID: {item.uniqueIdentifier.substring(0, 12)}...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Status & Actions */}
+                  <div className="flex items-center gap-2 sm:gap-4">
+                    <Badge 
+                      className={cn(
+                        "hidden sm:flex shadow-sm transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 border-none",
+                        item.status === 'Registered' && "bg-blue-500/80 text-white",
+                        item.status === 'Lost' && "bg-destructive/80 text-white animate-pulse",
+                        (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-500/80 text-white",
+                        item.status === 'Archived' && "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {item.status}
+                    </Badge>
+                    
+                    <div className="flex items-center gap-1">
+                       <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full hover:bg-primary/5 hover:text-primary"
+                        onClick={() => onViewItem(item.id)}
+                        title="View Details"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 rounded-full hover:bg-primary/5 hover:text-primary"
+                        onClick={() => navigate(`/items/${item.id}/edit`)}
+                        title="Edit"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </Button>
+                      {item.status === 'Registered' && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/5 hover:text-destructive"
+                          onClick={() => onReportLost(item.id)}
+                          title="Report Loss"
+                        >
+                          <AlertTriangle className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <AnimatePresence>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 pb-20">
+      <AnimatePresence mode="popLayout">
         {items.map(item => (
           <motion.div
             key={item.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="group"
           >
-            <Card className="h-full flex flex-col overflow-hidden group hover:shadow-md transition-shadow">
-              <div className="relative aspect-video overflow-hidden bg-muted">
+            <Card className="h-full flex flex-col overflow-hidden bg-background/40 hover:bg-background/80 backdrop-blur-md border border-muted/30 hover:border-primary/20 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_-12px_rgba(var(--primary),0.15)]">
+              {/* Image Header */}
+              <div className="relative aspect-[16/10] overflow-hidden">
                 {item.imageUrls && item.imageUrls.length > 0 ? (
                   <img 
                     src={item.imageUrls[0]} 
                     alt={item.name}
-                    className="object-cover w-full h-full transition-transform group-hover:scale-105"
+                    className="object-cover w-full h-full transition-transform duration-1000 group-hover:scale-110"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full bg-muted">
-                    <Package className="h-12 w-12 text-muted-foreground" />
+                  <div className="flex items-center justify-center h-full bg-muted/20">
+                    <Package className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-700" />
                   </div>
                 )}
                 
-                {/* Status badge floating on the image */}
-                <Badge 
-                  className="absolute top-2 right-2"
-                  variant={getStatusBadgeVariant(item.status)}
-                >
-                  {item.status === 'Lost' && <AlertTriangle className="mr-1 h-3 w-3" />}
-                  {item.status === 'Recovered' && <CheckCircle className="mr-1 h-3 w-3" />}
-                  {item.status}
-                </Badge>
+                {/* Visual Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                {/* Status badge */}
+                <div className="absolute top-2.5 right-2.5">
+                  <Badge 
+                    className={cn(
+                      "shadow-xl backdrop-blur-xl transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 border-none",
+                      item.status === 'Registered' && "bg-blue-500/80 text-white",
+                      item.status === 'Lost' && "bg-destructive/80 text-white animate-pulse",
+                      (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-500/80 text-white",
+                      item.status === 'Archived' && "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {item.status}
+                  </Badge>
+                </div>
+
+                {/* Quick view button on hover */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="rounded-full h-9 px-5 backdrop-blur-md bg-white/20 text-white border border-white/30 hover:bg-white/40 font-bold transition-all"
+                    onClick={() => onViewItem(item.id)}
+                  >
+                    <Eye className="h-3.5 w-3.5 mr-2" />
+                    Details
+                  </Button>
+                </div>
               </div>
               
-              <CardHeader className="p-4 pb-2">
-                <CardTitle className="text-xl line-clamp-1">{item.name}</CardTitle>
-                <div className="flex items-center text-sm text-muted-foreground mt-1">
-                  <Tag className="h-4 w-4 mr-1" />
+              <CardHeader className="p-4 pb-1">
+                <CardTitle className="text-base sm:text-lg font-black line-clamp-1 group-hover:text-primary transition-colors duration-300">
+                  {item.name}
+                </CardTitle>
+                <div className="flex items-center text-[10px] font-black text-muted-foreground/50 tracking-widest uppercase mt-0.5">
+                  <Tag className="h-2.5 w-2.5 mr-1.5 text-primary/40" />
                   {item.category}
                 </div>
               </CardHeader>
               
-              <CardContent className="p-4 pt-0 flex-grow">
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                  {item.description}
+              <CardContent className="p-4 pt-1 flex-grow space-y-3">
+                <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed opacity-70 font-medium">
+                  {item.description ?? "No description provided"}
                 </p>
                 
-                <div className="flex items-center text-xs text-muted-foreground mb-1">
-                  <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
-                  <span>Registered: {new Date(item.registeredAt).toLocaleDateString()}</span>
-                </div>
-                
-                {item.location && (
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                    <span className="line-clamp-1">{item.location}</span>
+                <div className="grid grid-cols-1 gap-1.5 pt-1">
+                  <div className="flex items-center text-[10px] text-muted-foreground/60 bg-muted/10 rounded-md py-1.5 px-2">
+                    <Calendar className="h-3 w-3 mr-2 text-primary/30" />
+                    <span className="font-bold">{new Date(item.registeredAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
                   </div>
-                )}
+                  
+                  {item.location && (
+                    <div className="flex items-center text-[10px] text-muted-foreground/60 bg-muted/10 rounded-md py-1.5 px-2">
+                      <MapPin className="h-3 w-3 mr-2 text-emerald-500/30" />
+                      <span className="line-clamp-1 font-bold">{item.location}</span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
               
-              <CardFooter className="p-4 pt-0 flex gap-2">
+              <CardFooter className="p-4 pt-2 border-t border-muted/10 flex gap-2">
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   size="sm" 
-                  className="flex-1"
-                  onClick={() => onViewItem(item.id)}
+                  className="flex-1 rounded-lg h-9 hover:bg-primary/5 hover:text-primary transition-all font-bold text-[11px]"
+                  onClick={() => navigate(`/items/${item.id}/edit`)}
                 >
-                  <Eye className="h-4 w-4 mr-1" />
-                  View
+                  Edit
                 </Button>
                 
-                {item.status === 'Registered' && (
+                {item.status === 'Registered' ? (
                   <Button 
-                    variant="destructive" 
+                    variant="ghost" 
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 rounded-lg h-9 text-destructive hover:bg-destructive/5 hover:text-destructive transition-all font-bold text-[11px]"
                     onClick={() => onReportLost(item.id)}
                   >
-                    <AlertTriangle className="h-4 w-4 mr-1" />
-                    Report Lost
+                    Report Loss
                   </Button>
-                )}
-                
-                {item.status === 'Lost' && (
+                ) : item.status === 'Lost' ? (
                   <Button 
                     variant="default" 
                     size="sm"
-                    className="flex-1 bg-green-500 hover:bg-green-600"
+                    className="flex-1 rounded-lg h-9 bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all font-bold text-[11px]"
+                    onClick={() => navigate(`/items/${item.id}?action=found`)}
                   >
-                    <CheckCircle className="h-4 w-4 mr-1" />
-                    Mark Found
+                    Found!
                   </Button>
-                )}
+                ) : null}
               </CardFooter>
             </Card>
           </motion.div>

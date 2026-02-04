@@ -78,7 +78,7 @@ export function setupSecurityMiddleware(app: Express) {
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:", "https://cdn.jsdelivr.net", "https://apis.google.com", "https://*.firebaseapp.com", "https://*.gstatic.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com"],
+        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co"],
         connectSrc: ["'self'", 
           "blob:",
           "data:",
@@ -94,7 +94,9 @@ export function setupSecurityMiddleware(app: Express) {
           "https://replit.com",
           "https://*.replit.com",
           "wss://*.replit.com",
-          "https://apis.google.com"
+          "https://apis.google.com",
+          "https://lh3.googleusercontent.com",
+          "https://placehold.co"
         ],
         frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         workerSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net"],

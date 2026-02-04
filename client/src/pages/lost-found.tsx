@@ -4,8 +4,7 @@ import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +15,7 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
+  DialogDescription,
   DialogTrigger 
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -207,11 +207,8 @@ export default function LostFound() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-grow">
-        <div className="py-6">
+    <PageLayout>
+      <div className="py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 className="text-3xl font-display font-bold text-neutral-900">Lost & Found Hub</h1>
             <p className="mt-2 text-neutral-500 max-w-2xl">Helping Rwanda reunite people with their lost belongings. Report lost items or register what you've found to help others.</p>
@@ -303,6 +300,9 @@ export default function LostFound() {
                           <DialogContent className="sm:max-w-md">
                             <DialogHeader>
                               <DialogTitle>Select an Item to Report</DialogTitle>
+                              <DialogDescription>
+                                Choose one of your registered items to create a report.
+                              </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-2 max-h-[400px] overflow-y-auto p-1">
                               {userItems.map(item => (
@@ -389,7 +389,6 @@ export default function LostFound() {
             </div>
           </div>
         </div>
-      </main>
       
       {/* Form Dialog for Lost/Found Items */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
@@ -398,6 +397,9 @@ export default function LostFound() {
             <DialogTitle>
               {dialogType === "lost" ? "Report Lost Item" : "Register Found Item"}
             </DialogTitle>
+            <DialogDescription>
+              Please provide the details to help us {dialogType === "lost" ? "find" : "return"} the item.
+            </DialogDescription>
           </DialogHeader>
           
           <ReportWizard 
@@ -413,8 +415,6 @@ export default function LostFound() {
         isOpen={detailOpen}
         onClose={() => setDetailOpen(false)}
       />
-
-      <Footer />
-    </div>
+    </PageLayout>
   );
 }

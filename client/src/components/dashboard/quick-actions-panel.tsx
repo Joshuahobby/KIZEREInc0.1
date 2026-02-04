@@ -23,7 +23,8 @@ import {
   Download,
   Package,
   CreditCard,
-  LogOut
+  LogOut,
+  ShieldCheck
 } from "lucide-react";
 
 interface QuickActionItemProps {
@@ -101,6 +102,20 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
   // Common actions for all users
   const commonActions: QuickActionItemProps[] = [
     {
+      icon: <ShieldCheck className="h-5 w-5 text-indigo-600" />,
+      title: "View My Claims",
+      description: "Manage your item ownership claims",
+      href: "/dashboard?tab=claims",
+      color: "blue"
+    },
+    {
+      icon: <Settings className="h-5 w-5 text-slate-600" />,
+      title: "Account Settings",
+      description: "Manage your profile and preferences",
+      href: "/profile",
+      color: "primary"
+    },
+    {
       icon: <PlusCircle className="h-5 w-5 text-blue-600" />,
       title: "Register New Item",
       description: "Add a new item to your inventory",
@@ -132,7 +147,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       icon: <LogOut className="h-5 w-5 text-red-600" />,
       title: "Log Out",
       description: "Sign out of your account",
-      href: "/auth?logout=true", // We'll handle this in the component or via a wrapper
+      href: "/auth?logout=true", 
       color: "red"
     }
   ];

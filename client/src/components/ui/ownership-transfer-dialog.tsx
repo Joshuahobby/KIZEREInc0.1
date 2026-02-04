@@ -123,6 +123,19 @@ export function OwnershipTransferDialog({
       </DialogTrigger>
       
       <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>
+            {transferStep === 'form' && "Transfer Item Ownership"}
+            {transferStep === 'confirmation' && "Confirm Transfer"}
+            {transferStep === 'success' && "Transfer Complete"}
+          </DialogTitle>
+          <DialogDescription>
+            {transferStep === 'form' && `Transfer ownership of "${itemName}" to another user.`}
+            {transferStep === 'confirmation' && "Please review the ownership transfer details below."}
+            {transferStep === 'success' && `Ownership of "${itemName}" has been successfully transferred.`}
+          </DialogDescription>
+        </DialogHeader>
+
         <AnimatePresence mode="wait">
           {transferStep === 'form' && (
             <motion.div
@@ -131,13 +144,6 @@ export function OwnershipTransferDialog({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
             >
-              <DialogHeader>
-                <DialogTitle>Transfer Item Ownership</DialogTitle>
-                <DialogDescription>
-                  Transfer ownership of "{itemName}" to another user.
-                </DialogDescription>
-              </DialogHeader>
-              
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
                   <FormField
@@ -193,15 +199,8 @@ export function OwnershipTransferDialog({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
+              className="space-y-4 pt-4"
             >
-              <DialogHeader>
-                <DialogTitle>Confirm Transfer</DialogTitle>
-                <DialogDescription>
-                  Please review the ownership transfer details below.
-                </DialogDescription>
-              </DialogHeader>
-              
               <div className="border rounded-md p-4 bg-background/50">
                 <div className="font-medium mb-2">Transfer details:</div>
                 <div className="grid grid-cols-[auto_1fr] gap-x-2 text-sm">
@@ -248,21 +247,20 @@ export function OwnershipTransferDialog({
               key="success"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="text-center pt-4 pb-2"
+              className="text-center pt-8 pb-2"
             >
               <div className="flex flex-col items-center space-y-4">
-                <div className="rounded-full bg-green-100 p-3">
-                  <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <div className="rounded-full bg-green-100 p-4">
+                  <CheckCircle2 className="h-10 w-10 text-green-600" />
                 </div>
                 
-                <div>
-                  <h3 className="font-semibold text-xl">Transfer Complete</h3>
-                  <p className="text-muted-foreground mt-1">
-                    Ownership of "{itemName}" has been successfully transferred to {form.getValues().recipientEmail}.
+                <div className="max-w-[300px]">
+                  <p className="text-muted-foreground">
+                    Ownership has been successfully transferred to <span className="font-bold text-foreground">{form.getValues().recipientEmail}</span>.
                   </p>
                 </div>
                 
-                <Button onClick={closeDialog} className="mt-4">Done</Button>
+                <Button onClick={closeDialog} className="mt-4 w-full">Done</Button>
               </div>
             </motion.div>
           )}

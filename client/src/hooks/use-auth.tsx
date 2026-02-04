@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const now = Date.now();
       if (now - lastSyncTimeRef.current < SYNC_COOLDOWN_MS) {
         console.log("[useAuth] Skipping sync - within cooldown period");
-        setIsLoading(false);
+        if (isMounted.current) setIsLoading(false);
         return;
       }
       
@@ -68,9 +68,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      console.log("[useAuth] Starting performSync for user:", firebaseUser.email);
       try {
         syncInProgressRef.current = true;
-        const token = await firebaseUser.getIdToken();
+        const token = await firebaseUser.getIdToken(true);
+        console.log("[useAuth] ID Token retrieved successfully");
         
         const payload = {
           email: firebaseUser.email,
@@ -80,26 +82,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           photoURL: firebaseUser.photoURL
         };
 
-        console.log("[useAuth] Syncing session...");
+        console.log("[useAuth] Calling /api/auth/google...");
         const res = await fetch("/api/auth/google", {
            method: "POST",
            headers: { "Content-Type": "application/json" },
-           body: JSON.stringify(payload)
+           body: JSON.stringify(payload),
+           credentials: "include"
         });
 
+
+        console.log("[useAuth] /api/auth/google response status:", res.status);
         if (res.ok) {
            lastSyncTimeRef.current = Date.now(); // Update last sync time on success
            const userData = await res.json();
+           console.log("[useAuth] Sync successful, user role:", userData.role);
            if (isMounted.current) {
              setUser(userData);
              setError(null);
-             toast({
-              title: "Welcome!",
-              description: `Signed in as ${userData.fullName || userData.email}`,
-            });
+             // Only toast if it's the first login in this session to avoid noise
+             if (!user) {
+               toast({
+                title: "Welcome!",
+                description: `Signed in as ${userData.fullName || userData.email}`,
+              });
+             }
            }
         } else {
-           const err = await res.json();
+           const errText = await res.text();
+           let err;
+           try { err = JSON.parse(errText); } catch { err = { message: errText }; }
            console.error("[useAuth] Session sync failed", err);
            // If rate limited, respect the retry-after
            if (res.status === 429 && err.retryAfter) {
@@ -109,12 +120,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
            if (isMounted.current) setError(err.message || "Login failed");
         }
 
-      } catch (e) {
+      } catch (e: any) {
          console.error("[useAuth] Sync network error", e);
-         if (isMounted.current) setError("Network error during login");
+         if (isMounted.current) setError("Network error during login: " + e.message);
       } finally {
          syncInProgressRef.current = false;
          if (isMounted.current) {
+            console.log("[useAuth] performSync finally, setting isLoading to false");
             setIsLoading(false); 
          }
       }
@@ -124,6 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const synchronizeWithServer = (firebaseUser: any) => {
       if (!isMounted.current) return;
       
+      console.log("[useAuth] synchronizeWithServer called for:", firebaseUser.email);
       // Store the pending user
       pendingFirebaseUserRef.current = firebaseUser;
       
@@ -139,10 +152,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         syncDebounceTimerRef.current = null;
         
         if (userToSync && isMounted.current) {
+          console.log("[useAuth] Debounce timer fired, calling performSync");
           performSync(userToSync);
         }
       }, SYNC_DEBOUNCE_MS);
   };
+
 
   const refreshUser = async (userData?: User) => {
     if (userData) {
@@ -168,7 +183,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const setupAuth = async () => {
       try {
         // Check server session once at start
-        const sessionResponse = await fetch("/api/user");
+        const sessionResponse = await fetch("/api/user", { credentials: "include" });
+
         let initialUserData = null;
         if (sessionResponse.ok) {
           initialUserData = await sessionResponse.json();
@@ -228,9 +244,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     setupAuth();
     
+    // Safety timeout - ensure we don't stay in loading state forever
+    const safetyTimeout = setTimeout(() => {
+      setIsLoading(prev => {
+        if (isMounted.current && prev) {
+          console.warn("[useAuth] Safety timeout reached in AuthProvider, forcing isLoading to false");
+          return false;
+        }
+        return prev;
+      });
+    }, 30000);
+
+
+
     return () => {
       if (unsubscribe) unsubscribe();
+      if (safetyTimeout) clearTimeout(safetyTimeout);
     };
+
   }, [toast]);
 
   // Handle redirections based on user role

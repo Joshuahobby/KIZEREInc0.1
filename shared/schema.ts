@@ -52,7 +52,7 @@ export const claimStatuses = ['pending', 'verified', 'rejected', 'resolved'] as 
 // User preferences schema
 export const userPreferencesSchema = z.object({
   theme: z.enum(['light', 'dark', 'system']).optional(),
-  dashboardStyle: z.enum(['standard', 'classic', 'command_center']).optional(),
+  dashboardStyle: z.enum(['standard', 'grid', 'classic', 'command_center']).optional(),
   notifications: z.boolean().optional(),
   language: z.enum(['en', 'fr', 'rw']).optional(),
 });
@@ -227,6 +227,8 @@ export const adminActionLogs = pgTable("admin_action_logs", {
   entityType: text("entity_type"),
   entityId: integer("entity_id"),
   details: text("details"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 

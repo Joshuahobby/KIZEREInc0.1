@@ -135,24 +135,26 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
           <CardDescription>{t('registration.ownership_description')}</CardDescription>
         </CardHeader>
       )}
-      <CardContent className="space-y-5">
+      <CardContent className="p-0 space-y-4">
         <div className="space-y-4">
           <div className="flex items-center gap-4">
             <Button
+              type="button"
               variant="outline"
               size="sm"
+              className="h-9 rounded-xl px-4 text-[10px] font-black uppercase tracking-widest border-muted-foreground/20"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
             >
               {isUploading ? (
                 <>
-                  <LuLoader className="mr-2 h-4 w-4 animate-spin" />
+                  <LuLoader className="mr-2 h-3 w-3 animate-spin" />
                   {t('uploading')}
                 </>
               ) : (
                 <>
-                  <LuPlus className="mr-2 h-4 w-4" />
-                  {t('registration.ownership_select_file')}
+                  <LuPlus className="mr-2 h-3 w-3" />
+                  Attach Document
                 </>
               )}
             </Button>
@@ -171,49 +173,51 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
             )}
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="doc-title">{t('registration.ownership_doc_title')} *</Label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="doc-title" className="text-[10px] font-black uppercase tracking-widest opacity-60">Title *</Label>
               <Input
                 id="doc-title"
-                placeholder={t('registration.ownership_doc_title_placeholder')}
+                placeholder="e.g. Purchase Receipt"
+                className="h-9 text-xs rounded-xl"
                 value={currentDocument.title}
                 onChange={(e) => setCurrentDocument(prev => ({ ...prev, title: e.target.value }))}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="doc-date">{t('registration.ownership_doc_date')}</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="doc-date" className="text-[10px] font-black uppercase tracking-widest opacity-60">Date</Label>
               <div className="relative">
                 <Input
                   id="doc-date"
                   type="date"
-                  placeholder={t('registration.ownership_doc_date_placeholder')}
+                  className="h-9 text-xs rounded-xl pr-8"
                   value={currentDocument.date}
                   onChange={(e) => setCurrentDocument(prev => ({ ...prev, date: e.target.value }))}
                 />
-                <LuCalendar className="absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
               </div>
             </div>
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="doc-description">{t('registration.ownership_doc_description')}</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="doc-description" className="text-[10px] font-black uppercase tracking-widest opacity-60">Notes</Label>
             <Textarea
               id="doc-description"
-              placeholder={t('registration.ownership_doc_description_placeholder')}
+              placeholder="Additional details..."
+              className="text-xs rounded-xl min-h-[60px] resize-none"
               value={currentDocument.description}
               onChange={(e) => setCurrentDocument(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
+              rows={2}
             />
           </div>
           
           <Button 
+            type="button"
             onClick={addDocument} 
             disabled={!currentDocument.file || !currentDocument.title || isUploading}
-            className="w-full"
+            className="w-full h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-primary/20 text-primary hover:bg-primary/30 border border-primary/20"
           >
-            <LuPlus className="mr-2 h-4 w-4" />
-            {t('registration.ownership_add_document')}
+            <LuPlus className="mr-2 h-3 w-3" />
+            Add to Chain
           </Button>
         </div>
         
@@ -231,6 +235,7 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium">{doc.title}</h4>
                         <Button
+                          type="button"
                           variant="ghost"
                           size="icon"
                           onClick={() => removeDocument(doc.id)}

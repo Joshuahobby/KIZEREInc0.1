@@ -3,6 +3,7 @@ import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -22,7 +23,7 @@ export function ThemeToggle() {
   };
 
   if (!mounted) {
-    return <div className="w-9 h-9"></div>; // Placeholder to avoid layout shift
+    return <div className="w-10 h-10"></div>; // Placeholder to avoid layout shift
   }
 
   return (
@@ -30,7 +31,12 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={toggleTheme}
-      className="relative flex items-center justify-center w-10 h-10 rounded-full overflow-hidden"
+      className={cn(
+        "relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300",
+        theme === 'light' 
+          ? "bg-amber-50/50 border border-amber-100 hover:bg-amber-100/80" 
+          : "hover:bg-blue-900/20 border border-transparent"
+      )}
       aria-label="Toggle Theme"
     >
       <div className="relative h-5 w-5">
@@ -43,7 +49,7 @@ export function ThemeToggle() {
           transition={{ duration: 0.2 }}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <Sun className="h-5 w-5 text-amber-500" />
+          <Sun className="h-5 w-5 text-amber-600" />
         </motion.div>
         
         <motion.div

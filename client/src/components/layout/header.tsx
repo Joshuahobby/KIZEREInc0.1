@@ -30,6 +30,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
+import { GlobalSearch } from "@/components/dashboard/global-search";
 
 export function Header() {
   const [location] = useLocation();
@@ -70,21 +71,16 @@ export function Header() {
   // Dynamic navigation based on auth state
   const navigation: NavItem[] = isAuthenticated 
     ? [
-        { name: t('nav.dashboard'), href: getDashboardPath(), icon: LayoutDashboard },
-        { name: t('nav.myItems') || "My Items", href: "/my-items", icon: Package }, 
-        { name: t('nav.lostFound'), href: "/lost-found", icon: Search },
-        { name: t('nav.search'), href: "/search", icon: Search },
-        { name: t('nav.registerItem') || t('nav.registerItems'), href: "/register-item", icon: PlusCircle },
+        { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
+        { name: "Explore Hub", href: "/lost-found", icon: Search },
       ]
     : [
         { name: t('nav.home'), href: "/", icon: null },
-        { name: t('nav.features'), href: "/#features", icon: null },
-        { name: t('nav.search'), href: "/search", icon: Search },
+        { name: "Explore Hub", href: "/lost-found", icon: Search },
+        { name: "About", href: "/about", icon: null },
       ];
 
-  if (isAdmin) {
-    navigation.push({ name: t('nav.userManagement'), href: "/user-management", icon: User });
-  }
+  // Admin access is now handled via the sidebar in the dashboard layout
 
   const handleLogout = () => {
     signOut();
@@ -111,13 +107,13 @@ export function Header() {
             {/* Logo */}
             <Link href={isAuthenticated ? getDashboardPath() : "/"} className="flex items-center gap-2 group">
               <Logo className="h-8 w-8 transition-transform group-hover:scale-110" />
-              <span className="text-2xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tight">
+              <span className="text-xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tighter">
                 KIZERE
               </span>
             </Link>
             
             {/* Desktop Navigation - Hidden on mobile */}
-            <nav className="hidden md:flex ml-10 space-x-1">
+            <nav className="hidden md:flex ml-8 space-x-1 items-center">
               {navigation.map((item) => (
                 <Link 
                   key={item.name} 
@@ -132,6 +128,12 @@ export function Header() {
                   {item.name}
                 </Link>
               ))}
+              
+              {isAuthenticated && (
+                <div className="ml-4 lg:ml-6">
+                  <GlobalSearch variant="navbar" placeholder="Quick search..." />
+                </div>
+              )}
             </nav>
           </div>
 

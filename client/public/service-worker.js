@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kizere-v2';
+const CACHE_NAME = 'kizere-v5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -49,8 +49,7 @@ self.addEventListener('fetch', (event) => {
   ];
   
   if (externalDomains.some(domain => url.hostname.includes(domain))) {
-    // Explicitly pass through to network for external auth-related domains
-    event.respondWith(fetch(event.request));
+    // Let browser handle these requests directly without service worker intervention
     return;
   }
 
@@ -71,12 +70,15 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
-        // Cache valid responses
+        // Cache valid responses for http/https schemes only
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-           const responseToCache = networkResponse.clone();
-           caches.open(CACHE_NAME).then((cache) => {
-             cache.put(event.request, responseToCache);
-           });
+          const scheme = new URL(event.request.url).protocol;
+          if (scheme === 'http:' || scheme === 'https:') {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
         }
         return networkResponse;
       }).catch((err) => {

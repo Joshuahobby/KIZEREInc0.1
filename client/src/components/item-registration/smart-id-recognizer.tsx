@@ -153,6 +153,7 @@ export function SmartIDRecognizer({ onIdentifierSelected, showHeader = true }: S
           
           {!selectedImage ? (
             <Button
+              type="button"
               variant="outline"
               onClick={() => fileInputRef.current?.click()}
               className="w-full sm:w-auto"
@@ -169,6 +170,7 @@ export function SmartIDRecognizer({ onIdentifierSelected, showHeader = true }: S
                   className="w-full h-full object-contain" 
                 />
                 <Button 
+                  type="button"
                   variant="ghost" 
                   size="icon" 
                   className="absolute top-2 right-2 h-8 w-8 rounded-full bg-black/50 text-white hover:bg-black/70"
@@ -180,6 +182,7 @@ export function SmartIDRecognizer({ onIdentifierSelected, showHeader = true }: S
               
               <div className="flex gap-2">
                 <Button
+                  type="button"
                   variant="default"
                   onClick={processImage}
                   disabled={isProcessing}
@@ -193,6 +196,7 @@ export function SmartIDRecognizer({ onIdentifierSelected, showHeader = true }: S
                   {t('registration.smart_id_process')}
                 </Button>
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isProcessing}
@@ -240,6 +244,7 @@ export function SmartIDRecognizer({ onIdentifierSelected, showHeader = true }: S
               </RadioGroup>
               
               <Button 
+                type="button"
                 onClick={useIdentifier}
                 disabled={!selectedIdentifier}
                 className="w-full mt-4"

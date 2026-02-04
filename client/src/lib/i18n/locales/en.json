@@ -54,7 +54,7 @@
     "loginRequired": "You need to be logged in to view this page"
   },
   "footer": {
-    "description": "KIZERE is a comprehensive digital platform for streamlined item registration, lost and found reporting, and intelligent ownership management.",
+    "description": "KIZERE Hub is a comprehensive digital platform for streamlined item registration, lost and found reporting, and intelligent ownership management.",
     "quickLinks": "Quick Links",
     "resources": "Resources",
     "contact": "Contact",
@@ -187,7 +187,7 @@
       },
       "contactUs": "Can't find your answer? Contact our support team."
     },
-    "footerDescription": "KIZERE is a comprehensive platform for item registration, lost and found reporting, and ownership management with a focus on security and efficiency.",
+    "footerDescription": "KIZERE Hub is a comprehensive platform for item registration, lost and found reporting, and ownership management with a focus on security and efficiency.",
     "footer": {
       "quickLinks": "Quick Links",
       "home": "Home",
@@ -738,7 +738,7 @@
       "lost_found": "Reporting lost and found items",
       "qr_codes": "How to use KIZERE QR tags"
     },
-    "welcome_title": "Welcome to KIZERE",
+    "welcome_title": "Welcome to KIZERE Hub",
     "welcome_text": "This documentation is designed to help you get the most out of KIZERE. Whether you are a first-time user looking to register your valuables or an agent helping with recovery, you'll find everything you need here.",
     "tip_title": "Tip",
     "tip_text": "Use the search bar at the top of the header to quickly find information about any registered item or help topic.",

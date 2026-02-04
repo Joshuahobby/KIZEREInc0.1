@@ -272,7 +272,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             password: securePassword,
             phoneNumber: null,
             role: 'Subscriber',
-            avatarUrl: photoURL || null
+            avatarUrl: photoURL || null,
+            preferences: {}
           });
           logger.info('Created new user from Firebase auth', { userId: user.id, email });
         } catch (createError: any) {

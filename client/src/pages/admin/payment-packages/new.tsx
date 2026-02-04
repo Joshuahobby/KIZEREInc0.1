@@ -7,7 +7,7 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
-import { AdminLayout } from '@/components/layout/admin-layout';
+import { AppLayout } from '@/components/layout/admin-layout';
 import {
   Form,
   FormControl,
@@ -147,7 +147,7 @@ export default function NewPaymentPackage() {
   }
 
   return (
-    <AdminLayout>
+    <AppLayout>
       <div className="container mx-auto p-4">
         <div className="flex items-center mb-6">
           <Button
@@ -436,6 +436,6 @@ export default function NewPaymentPackage() {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    </AppLayout>
   );
 }

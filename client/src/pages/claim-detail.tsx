@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -119,28 +118,24 @@ export default function ClaimDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow flex items-center justify-center">
+      <PageLayout>
+        <div className="flex items-center justify-center py-20">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </PageLayout>
     );
   }
 
   if (error || !claim) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow flex flex-col items-center justify-center p-8 text-center">
+      <PageLayout>
+        <div className="flex flex-col items-center justify-center p-8 text-center py-20">
           <AlertTriangle className="h-16 w-16 text-red-500 mb-4" />
           <h1 className="text-2xl font-bold text-neutral-900 mb-2">Claim Not Found</h1>
           <p className="text-neutral-500 mb-6">The claim you're looking for doesn't exist or you don't have permission to view it.</p>
           <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </PageLayout>
     );
   }
 
@@ -150,10 +145,8 @@ export default function ClaimDetailPage() {
   const showActions = (isFinder || isAdmin) && claim.status === 'pending';
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-50">
-      <Header />
-      
-      <main className="flex-grow py-8">
+    <PageLayout>
+      <div className="py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Button 
             variant="ghost" 
@@ -281,9 +274,7 @@ export default function ClaimDetailPage() {
             </div>
           </div>
         </div>
-      </main>
-      
-      <Footer />
+        </div>
 
       {/* Verify Dialog */}
       <Dialog open={showVerifyDialog} onOpenChange={setShowVerifyDialog}>
@@ -377,6 +368,6 @@ export default function ClaimDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageLayout>
   );
 }

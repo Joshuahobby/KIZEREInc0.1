@@ -89,7 +89,7 @@ function App() {
       <LanguageProvider defaultLanguage="en">
         <AuthProvider>
           <TooltipProvider>
-            <Suspense fallback={<LoadingOverlay />}>
+            <Suspense fallback={<LoadingOverlay alwaysShow={true} />}>
               <Switch>
                 <Route path="/">
                   <LandingPage />

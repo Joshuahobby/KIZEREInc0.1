@@ -4,7 +4,7 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { AdminLayout } from '@/components/layout/admin-layout';
+import { AppLayout } from '@/components/layout/admin-layout';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -367,7 +367,7 @@ export default function PaymentPackages() {
   }
 
   return (
-    <AdminLayout>
+    <AppLayout>
       <div className="container mx-auto p-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
@@ -485,6 +485,6 @@ export default function PaymentPackages() {
           </div>
         )}
       </div>
-    </AdminLayout>
+    </AppLayout>
   );
 }

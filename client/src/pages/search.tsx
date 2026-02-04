@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -77,11 +76,8 @@ export default function Search() {
   };
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      
-      <main className="flex-grow">
-        <div className="py-6">
+    <PageLayout>
+      <div className="py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h1 className="text-2xl font-display font-semibold text-neutral-900">Search Items</h1>
             <p className="mt-1 text-sm text-neutral-500">Find registered items or check if a found item has been reported.</p>
@@ -230,9 +226,11 @@ export default function Search() {
                         <ul role="list" className="divide-y divide-gray-200">
                           {searchResults.map((item) => (
                             <li key={item.id}>
-                              <Link href={`/items/${item.id}`}>
-                                <a className="block hover:bg-gray-50">
-                                  <div className="px-4 py-4 sm:px-6">
+                              <Link 
+                                href={`/items/${item.id}`}
+                                className="block hover:bg-gray-50 text-inherit no-underline"
+                              >
+                                <div className="px-4 py-4 sm:px-6">
                                     <div className="flex items-center justify-between">
                                       <p className="text-sm font-medium text-primary-600 truncate">{item.name}</p>
                                       <div className="ml-2 flex-shrink-0 flex">
@@ -268,8 +266,7 @@ export default function Search() {
                                       </div>
                                     </div>
                                   </div>
-                                </a>
-                              </Link>
+                                </Link>
                             </li>
                           ))}
                         </ul>
@@ -286,11 +283,8 @@ export default function Search() {
                 )}
               </div>
             )}
+            </div>
           </div>
-        </div>
-      </main>
-      
-      <Footer />
-    </div>
+    </PageLayout>
   );
 }

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "../lib/queryClient";
 import { useAuth } from "../hooks/use-auth";
 import { Item, Report, Notification, Payment, UserRole, User, Claim } from "../../../shared/schema";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { createLogger } from "../lib/logger";
 
 const logger = createLogger('useDashboardData');
@@ -287,6 +287,22 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
   const isLoading = itemsLoading || reportsLoading || notificationsLoading || paymentsLoading || 
     dashboardStatsLoading || myClaimsLoading || claimsReceivedLoading || (isAdmin && (allUsersLoading || revenueSummaryLoading)) ||
     ((isAdmin || isAgent) && allReportsLoading);
+
+  useEffect(() => {
+    console.log('[useDashboardData] Loading status:', {
+      isLoading,
+      itemsLoading,
+      reportsLoading,
+      notificationsLoading,
+      paymentsLoading,
+      dashboardStatsLoading,
+      myClaimsLoading,
+      claimsReceivedLoading,
+      isAdmin,
+      isAgent
+    });
+  }, [isLoading, itemsLoading, reportsLoading, notificationsLoading, paymentsLoading, dashboardStatsLoading, myClaimsLoading, claimsReceivedLoading, isAdmin, isAgent]);
+
 
   return {
     user,

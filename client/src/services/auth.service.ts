@@ -128,8 +128,6 @@ export const AuthService = {
    * @returns Dashboard path for the specified role and style
    */
   getDashboardPathByRole(role: string, preferredStyle?: string): string {
-    console.log("Getting dashboard for role:", role, "style:", preferredStyle);
-    
     // For Admin role, respect the preferred style
     if (role === 'Admin') {
       switch (preferredStyle) {

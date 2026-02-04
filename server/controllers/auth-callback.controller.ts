@@ -140,7 +140,8 @@ export class AuthCallbackController {
             password: hashedPass,
             phoneNumber: null,
             role: 'Subscriber',
-            avatarUrl: userData.picture || null
+            avatarUrl: userData.picture || null,
+            preferences: {}
           });
           
           logger.info('Created new user from Google auth', { userId: user.id, email: userData.email });

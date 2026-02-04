@@ -23,8 +23,8 @@ process.on('uncaughtException', (error) => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Start background jobs
-startExpirationCron();
+// Start background jobs handled inside startServer to avoid duplication
+
 
 // Apply security middleware before route handlers
 setupSecurityMiddleware(app);

@@ -10,9 +10,14 @@ export async function setupVite(app: Express, server: Server) {
   const viteConfig = (await import(viteConfigPath)).default;
   const viteLogger = createLogger();
 
+  const hmrPort = parseInt(process.env.PORT || "5000", 10);
   const serverOptions = {
     middlewareMode: true,
-    hmr: { server },
+    hmr: { 
+      server,
+      port: hmrPort,
+      clientPort: hmrPort
+    },
   };
 
   const vite = await createViteServer({
@@ -22,7 +27,6 @@ export async function setupVite(app: Express, server: Server) {
       ...viteLogger,
       error: (msg, options) => {
         viteLogger.error(msg, options);
-        process.exit(1);
       },
     },
     server: serverOptions,

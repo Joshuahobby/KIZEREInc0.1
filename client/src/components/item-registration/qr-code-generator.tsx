@@ -16,15 +16,16 @@ export interface QRCodeGeneratorProps {
   itemIdentifier: string;
   itemName?: string;
   showHeader?: boolean;
+  size?: number;
 }
 
-export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true }: QRCodeGeneratorProps) {
+export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true, size = 200 }: QRCodeGeneratorProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [qrValue, setQRValue] = useState<string>('');
   const [qrOptions, setQROptions] = useState({
-    width: 200,
+    width: size,
     margin: 4,
     color: {
       dark: '#000000',
@@ -32,6 +33,11 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true }:
     },
     includeItemName: true,
   });
+
+  // Sync internal width with size prop if provided
+  useEffect(() => {
+    if (size) setQROptions(prev => ({ ...prev, width: size }));
+  }, [size]);
 
   // Initialize QR value when itemIdentifier changes
   useEffect(() => {
@@ -207,11 +213,11 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true }:
         </div>
       </CardContent>
       <CardFooter className={cn("flex justify-between", !showHeader && "flex-col gap-3")}>
-        <Button variant="outline" onClick={refreshQRCode} className={cn(!showHeader && "w-full")}>
+        <Button type="button" variant="outline" onClick={refreshQRCode} className={cn(!showHeader && "w-full")}>
           <LuRefreshCw className="mr-2 h-4 w-4" />
           {t('registration.qr_refresh')}
         </Button>
-        <Button onClick={downloadQRCode} className={cn(!showHeader && "w-full")}>
+        <Button type="button" onClick={downloadQRCode} className={cn(!showHeader && "w-full")}>
           <LuDownload className="mr-2 h-4 w-4" />
           {t('registration.qr_download')}
         </Button>

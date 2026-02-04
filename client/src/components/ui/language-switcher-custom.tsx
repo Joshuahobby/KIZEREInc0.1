@@ -66,7 +66,10 @@ export function LanguageSwitcher({
               "flex items-center justify-between cursor-pointer",
               lang.code === language && "font-medium"
             )}
-            onClick={() => setLanguage(lang.code as Language)}
+            onClick={() => {
+              console.log(`[LanguageSwitcher] Item clicked: ${lang.code}`);
+              setLanguage(lang.code as Language);
+            }}
           >
             <span>{lang.name}</span>
             {lang.code === language && <Check className="h-4 w-4 ml-2" />}

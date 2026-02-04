@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,7 +26,11 @@ import {
   Fingerprint,
   FileImage,
   FileStack,
-  QrCode
+  QrCode,
+  Activity,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck as Shield
 } from "lucide-react";
 
 // UI Components
@@ -38,12 +43,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -116,11 +116,10 @@ export default function ItemRegistrationPage() {
   const queryClient = useQueryClient();
   
   // UI State
-  const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info"]);
+  const [currentStep, setCurrentStep] = useState(0);
   const [itemImages, setItemImages] = useState<File[]>([]);
   const [ownershipDocuments, setOwnershipDocuments] = useState<OwnershipDoc[]>([]);
   const [completion, setCompletion] = useState(0);
-  const [paymentStatus, setPaymentStatus] = useState<"idle" | "pending" | "success" | "error">("idle");
   const [autoSaving, setAutoSaving] = useState(false);
 
   // Form initialization
@@ -139,7 +138,10 @@ export default function ItemRegistrationPage() {
     mode: "onChange",
   });
 
-  const watchedValues = form.watch();
+  const watchedName = useWatch({ control: form.control, name: "name" });
+  const watchedCategory = useWatch({ control: form.control, name: "category" });
+  const watchedIdentifier = useWatch({ control: form.control, name: "uniqueIdentifier" });
+  const watchedDescription = useWatch({ control: form.control, name: "description" });
 
   // Load draft from localStorage on mount
   useEffect(() => {
@@ -162,28 +164,29 @@ export default function ItemRegistrationPage() {
     let totalFields = 6;
     let completedFields = 0;
     
-    if (watchedValues.name) completedFields++;
-    if (watchedValues.category) completedFields++;
-    if (watchedValues.uniqueIdentifier) completedFields++;
-    if (watchedValues.description && watchedValues.description.length >= 10) completedFields++;
+    if (watchedName) completedFields++;
+    if (watchedCategory) completedFields++;
+    if (watchedIdentifier) completedFields++;
+    if (watchedDescription && watchedDescription.length >= 10) completedFields++;
     if (itemImages.length > 0) completedFields++;
     if (ownershipDocuments.length > 0) completedFields++;
     
     // Weight essential fields more if needed, but for now just count
     setCompletion(Math.round((completedFields / totalFields) * 100));
-  }, [watchedValues, itemImages, ownershipDocuments]);
+  }, [watchedName, watchedCategory, watchedIdentifier, watchedDescription, itemImages, ownershipDocuments]);
 
   // Auto-save draft
   useEffect(() => {
     const timer = setTimeout(() => {
       if (form.formState.isDirty) {
         setAutoSaving(true);
-        localStorage.setItem('itemRegistrationDraft', JSON.stringify(watchedValues));
+        const values = form.getValues();
+        localStorage.setItem('itemRegistrationDraft', JSON.stringify(values));
         setTimeout(() => setAutoSaving(false), 1000);
       }
     }, 3000);
     return () => clearTimeout(timer);
-  }, [watchedValues, form.formState.isDirty]);
+  }, [watchedName, watchedCategory, watchedIdentifier, watchedDescription, form.formState.isDirty]);
 
   // Monitor form errors
   useEffect(() => {
@@ -196,31 +199,14 @@ export default function ItemRegistrationPage() {
     console.log(`[Registration] Completion: ${completion}%`);
   }, [completion]);
 
-  const toggleSection = (section: string) => {
-    setExpandedSections(prev => 
-      prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
-    );
+  const prevStep = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    if (currentStep > 0) setCurrentStep(currentStep - 1);
   };
 
-
-  const isSectionComplete = (section: string): boolean => {
-    switch (section) {
-      case "basic-info":
-        return !!watchedValues.name && !!watchedValues.category && !!watchedValues.uniqueIdentifier;
-      case "media":
-        return itemImages.length > 0;
-      case "ownership":
-        return ownershipDocuments.length > 0;
-      default:
-        return false;
-    }
-  };
-
-  const getSectionIcon = (section: string, index: number) => {
-    if (isSectionComplete(section)) {
-      return <Check className="h-4 w-4 text-green-500" />;
-    }
-    return <span className="text-xs font-bold">{index}</span>;
+  const nextStep = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    if (currentStep < 2) setCurrentStep(currentStep + 1);
   };
 
   // OCR/Smart ID detection handler
@@ -275,14 +261,15 @@ export default function ItemRegistrationPage() {
       }
 
       // 3. Register Item
+      const { subCategory, ...rootData } = data;
       const itemResponse = await apiRequest<any>('/api/items', {
         method: 'POST',
         data: {
-          ...data,
+          ...rootData,
           imageUrls: uploadedImageUrls,
           details: {
             ...(data.details as any),
-            subCategory: data.subCategory,
+            subCategory: subCategory,
             ownershipDocuments: uploadedDocUrls
           }
         }
@@ -315,7 +302,6 @@ export default function ItemRegistrationPage() {
     },
     onError: (error: Error) => {
       console.error("[Registration] Mutation error:", error);
-      setPaymentStatus("error");
       toast({
         title: "Registration Failed",
         description: error.message || "Failed to register item. Please try again.",
@@ -330,63 +316,89 @@ export default function ItemRegistrationPage() {
 
   return (
     <PageLayout>
-      <div className="container max-w-5xl mx-auto py-8 px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="space-y-6"
-        >
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-neutral-900">
-                {t('common.register_item')}
-              </h1>
-              <p className="text-neutral-500 mt-2">
-                {t('landing.heroSubtitle')}
-              </p>
+      <div className="min-h-[70vh] flex flex-col items-center py-2 px-3 sm:py-6 bg-gradient-to-b from-background to-muted/5">
+        <div className="w-full max-w-4xl">
+          {/* High-Performance Stepper - Compact */}
+          <div className="mb-4 px-2 max-w-sm mx-auto h-14 relative">
+            <div className="flex justify-between items-center relative h-full">
+              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-muted/30 -translate-y-1/2 z-0" />
+              <motion.div 
+                className="absolute top-1/2 left-0 h-0.5 bg-primary -translate-y-1/2 z-0"
+                initial={{ width: "0%" }}
+                animate={{ width: `${(currentStep / 2) * 100}%` }}
+              />
+              {[0, 1, 2].map((step) => (
+                <div key={step} className="relative z-10 flex flex-col items-center">
+                  <motion.div 
+                    animate={{ 
+                      scale: currentStep === step ? 1.15 : 1
+                    }}
+                    className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black transition-colors duration-500 shadow-sm",
+                      currentStep >= step ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+                      currentStep === step && "ring-4 ring-primary/20"
+                    )}
+                  >
+                    {currentStep > step ? <Check className="h-3.5 w-3.5" /> : `0${step + 1}`}
+                  </motion.div>
+                   <div className="absolute -bottom-6 flex justify-center w-20">
+                    <span className={cn(
+                      "text-[8px] font-bold uppercase tracking-widest transition-colors duration-300",
+                      currentStep === step ? "text-primary" : "text-muted-foreground"
+                    )}>
+                      {step === 0 && "Info"}
+                      {step === 1 && "Media"}
+                      {step === 2 && "Review"}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-            {autoSaving && (
-              <div className="flex items-center text-xs text-neutral-400 bg-neutral-50 px-3 py-1 rounded-full border">
-                <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-                {t('registration.item_draft_saved')}
-              </div>
-            )}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-24">
-            {/* Left: Form Content */}
-            <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <Accordion
-                    type="multiple"
-                    value={expandedSections}
-                    onValueChange={setExpandedSections}
-                    className="space-y-4"
-                  >
-                    {/* Step 1: Basic Info & OCR */}
-                    <AccordionItem value="basic-info" className="border rounded-xl bg-white overflow-hidden shadow-sm">
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-neutral-50/50">
-                        <div className="flex items-center space-x-3">
-                          <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors",
-                            isSectionComplete("basic-info") ? "bg-green-500 border-green-500 text-white" : "border-neutral-200"
-                          )}>
-                            {getSectionIcon("basic-info", 1)}
-                          </div>
-                          <span className="font-semibold text-lg text-neutral-800">{t('registration.report_item_details')}</span>
+                <form 
+                  id="item-registration-form"
+                  onSubmit={form.handleSubmit(onSubmit)} 
+                  className="space-y-6"
+                >
+                  <AnimatePresence mode="wait">
+                    {currentStep === 0 && (
+                      <motion.div
+                        key="step-info"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="space-y-5 bg-background/50 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-muted/20 shadow-lg"
+                      >
+                        <div className="flex items-center gap-3 mb-1">
+                           <div className="p-2.5 bg-primary/10 rounded-xl">
+                             <Barcode className="h-5 w-5 text-primary" />
+                           </div>
+                           <div>
+                             <h2 className="text-lg font-extrabold tracking-tight">Main Details</h2>
+                             <p className="text-[10px] text-muted-foreground">The essential info for your possession</p>
+                           </div>
                         </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-6 py-4 space-y-6 border-t bg-neutral-50/30">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <FormField
                             control={form.control}
                             name="name"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t('registration.item_name')} <span className="text-red-500">*</span></FormLabel>
+                                <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                                  Item Name
+                                  <Badge variant="outline" className="text-[8px] py-0 px-1 border-primary/20 text-primary uppercase">Required</Badge>
+                                </FormLabel>
                                 <FormControl>
-                                  <Input placeholder="e.g. MacBook Pro M2, Rolex Datejust" {...field} />
+                                  <Input 
+                                    placeholder="e.g. MacBook Pro M2" 
+                                    className="h-12 bg-muted/10 border-muted/20 focus:border-primary/40 rounded-2xl text-base font-medium shadow-inner" 
+                                    {...field} 
+                                  />
                                 </FormControl>
                                 <FormMessage />
                               </FormItem>
@@ -394,54 +406,20 @@ export default function ItemRegistrationPage() {
                           />
 
                           <FormField
-                          control={form.control}
-                          name="category"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>{t('registration.item_category')} <span className="text-red-500">*</span></FormLabel>
-                              <Select 
-                                onValueChange={(val) => {
-                                  field.onChange(val);
-                                  form.setValue('subCategory', ''); // Reset subcategory on category change
-                                }} 
-                                defaultValue={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder={t('registration.item_category')} />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {CATEGORIES.map((c) => (
-                                    <SelectItem key={c} value={c}>
-                                      {t(`registration.item_category_${c.toLowerCase()}`, c)}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        {watchedValues.category && (
-                          <FormField
                             control={form.control}
-                            name="subCategory"
+                            name="category"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>{t('registration.item_subcategory')} <span className="text-red-500">*</span></FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
+                                <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Category</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder={t('registration.item_subcategory')} />
+                                    <SelectTrigger className="h-12 bg-muted/10 border-muted/20 rounded-2xl text-base font-medium">
+                                      <SelectValue placeholder="Select Category" />
                                     </SelectTrigger>
                                   </FormControl>
-                                  <SelectContent>
-                                    {SUB_CATEGORIES[watchedValues.category as keyof typeof SUB_CATEGORIES]?.map((sc) => (
-                                      <SelectItem key={sc} value={sc}>
-                                        {t(`registration.item_subcategory_${sc.toLowerCase().replace(/ /g, '_').replace(/'/g, '')}`, sc)}
-                                      </SelectItem>
+                                  <SelectContent className="rounded-2xl">
+                                    {CATEGORIES.map((c) => (
+                                      <SelectItem key={c} value={c} className="rounded-xl">{c}</SelectItem>
                                     ))}
                                   </SelectContent>
                                 </Select>
@@ -449,29 +427,35 @@ export default function ItemRegistrationPage() {
                               </FormItem>
                             )}
                           />
-                        )}
-                      </div>
+                        </div>
 
                         <FormField
                           control={form.control}
                           name="uniqueIdentifier"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('registration.item_uuid')} <span className="text-red-500">*</span></FormLabel>
-                              <div className="space-y-3">
+                              <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Unique ID (S/N, IMEI)</FormLabel>
+                              <div className="space-y-4">
                                 <FormControl>
                                   <div className="relative">
-                                    <Input placeholder="IMEI, Serial Number, or Document ID" {...field} />
-                                    <Fingerprint className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                                    <Input 
+                                      placeholder="Serial Number, IMEI, or ID" 
+                                      className="h-12 pl-12 bg-muted/10 border-muted/20 focus:border-primary/40 rounded-2xl text-base font-bold tracking-widest" 
+                                      {...field} 
+                                    />
+                                    <Activity className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary opacity-50" />
                                   </div>
                                 </FormControl>
-                                <FormDescription>{t('registration.item_registration_description')}</FormDescription>
-                                <FormMessage />
                                 
-                                  <div className="p-4 bg-neutral-50/50 border rounded-lg border-neutral-200">
-                                    <SmartIDRecognizer onIdentifierSelected={handleIdentifierDetected} showHeader={false} />
+                                <div className="p-3 bg-primary/5 rounded-2xl border border-dashed border-primary/20">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-primary/60">Fast-Track Entry</span>
+                                    <Badge className="bg-primary text-[7px] px-1.5 h-4 uppercase">Smart AI</Badge>
                                   </div>
+                                  <SmartIDRecognizer onIdentifierSelected={handleIdentifierDetected} showHeader={false} />
+                                </div>
                               </div>
+                              <FormMessage />
                             </FormItem>
                           )}
                         />
@@ -481,11 +465,11 @@ export default function ItemRegistrationPage() {
                           name="description"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>{t('registration.item_description')}</FormLabel>
+                              <FormLabel className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Notes / Markings</FormLabel>
                               <FormControl>
                                 <Textarea 
-                                  placeholder="Provide distinguishable features (scratches, repairs, markings)..." 
-                                  className="min-h-[100px]"
+                                  placeholder="Describe any special features..." 
+                                  className="min-h-[120px] bg-muted/10 border-muted/20 rounded-2xl text-base font-medium resize-none shadow-inner" 
                                   {...field}
                                 />
                               </FormControl>
@@ -493,141 +477,195 @@ export default function ItemRegistrationPage() {
                             </FormItem>
                           )}
                         />
-                      </AccordionContent>
-                    </AccordionItem>
+                      </motion.div>
+                    )}
 
-                    {/* Step 2: Media */}
-                    <AccordionItem value="media" className="border rounded-xl bg-white overflow-hidden shadow-sm">
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-neutral-50/50">
-                        <div className="flex items-center space-x-3">
-                          <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors",
-                            isSectionComplete("media") ? "bg-green-500 border-green-500 text-white" : "border-neutral-200"
-                          )}>
-                            {getSectionIcon("media", 2)}
-                          </div>
-                          <span className="font-semibold text-lg text-neutral-800">{t('registration.item_images')}</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-6 py-4 space-y-4 border-t bg-neutral-50/30">
-                        <BatchImageUpload onImagesChange={setItemImages} maxFiles={5} showHeader={false} />
-                      </AccordionContent>
-                    </AccordionItem>
+                     {currentStep === 1 && (
+                      <motion.div
+                        key="step-media"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="space-y-6"
+                      >
+                         <div className="bg-background/50 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-muted/20 shadow-lg space-y-4">
+                            <div className="flex items-center gap-3">
+                               <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500">
+                                 <ImageIcon className="h-5 w-5" />
+                               </div>
+                               <div>
+                                 <h2 className="text-lg font-extrabold tracking-tight">Visual Assets</h2>
+                                 <p className="text-[10px] text-muted-foreground">Upload photos of the item</p>
+                                </div>
+                            </div>
+                            <div className="p-1 rounded-2xl border border-dashed border-muted/30">
+                              <BatchImageUpload onImagesChange={setItemImages} maxFiles={5} showHeader={false} />
+                            </div>
+                         </div>
 
-                    {/* Step 3: Ownership */}
-                    <AccordionItem value="ownership" className="border rounded-xl bg-white overflow-hidden shadow-sm">
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-neutral-50/50">
-                        <div className="flex items-center space-x-3">
-                          <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors",
-                            isSectionComplete("ownership") ? "bg-green-500 border-green-500 text-white" : "border-neutral-200"
-                          )}>
-                            {getSectionIcon("ownership", 3)}
-                          </div>
-                          <span className="font-semibold text-lg text-neutral-800">{t('registration.ownership_title')}</span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-6 py-4 space-y-4 border-t bg-neutral-50/30">
-                        <OwnershipChain onDocumentsChange={setOwnershipDocuments} showHeader={false} />
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                         <div className="bg-background/50 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border border-muted/20 shadow-lg space-y-4">
+                            <div className="flex items-center gap-3">
+                               <div className="p-2.5 bg-blue-500/10 rounded-xl text-blue-500">
+                                 <FileStack className="h-5 w-5" />
+                               </div>
+                               <div>
+                                 <h2 className="text-lg font-extrabold tracking-tight">Ownership Proof</h2>
+                                 <p className="text-[10px] text-muted-foreground">Receipts, certificates or invoices</p>
+                               </div>
+                            </div>
+                            <div className="p-1 rounded-2xl">
+                               <OwnershipChain onDocumentsChange={setOwnershipDocuments} showHeader={false} />
+                            </div>
+                         </div>
+                      </motion.div>
+                    )}
+
+                    {currentStep === 2 && (
+                      <motion.div
+                        key="step-review"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="space-y-6"
+                      >
+                         <div className="bg-foreground text-background p-6 rounded-3xl shadow-2xl relative overflow-hidden">
+                           <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full -mr-16 -mt-16" />
+                           <div className="relative z-10 flex flex-col md:flex-row gap-6 items-center">
+                              <div className="shrink-0 bg-white p-3 rounded-2xl shadow-lg border-2 border-primary/20">
+                                <QRCodeGenerator 
+                                  itemIdentifier={watchedIdentifier} 
+                                  itemName={watchedName || "Pending"}
+                                  showHeader={false}
+                                  size={130}
+                                />
+                              </div>
+                              <div className="flex-1 space-y-3 text-center md:text-left">
+                                 <div className="flex items-center gap-2 justify-center md:justify-start">
+                                    <Shield className="h-4 w-4 text-primary" />
+                                    <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-60">Authentication Lock</span>
+                                 </div>
+                                 <h3 className="text-2xl font-black tracking-tight leading-none truncate max-w-sm mx-auto md:mx-0">
+                                   {watchedName || "Unnamed Item"}
+                                 </h3>
+                                 <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                                    <Badge className="bg-white/10 text-white border-white/20 hover:bg-white/20 px-2 py-0.5 rounded-full text-[9px] font-bold">
+                                      {watchedCategory}
+                                    </Badge>
+                                    <Badge className="bg-primary/20 text-primary border-primary/30 px-2 py-0.5 rounded-full text-[9px] font-black">
+                                      ID: {watchedIdentifier}
+                                    </Badge>
+                                 </div>
+                              </div>
+                           </div>
+                         </div>
+
+                         <div className="bg-background/80 backdrop-blur-xl border border-muted/20 p-6 rounded-3xl shadow-xl space-y-5">
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground border-b border-muted/10 pb-3">Registration Summary</h4>
+                            
+                            <div className="space-y-3">
+                               <div className="flex justify-between items-center group">
+                                  <span className="text-xs text-muted-foreground font-bold">Data Quality</span>
+                                   <div className="flex items-center gap-2">
+                                      <Progress value={completion} className="h-1 w-20" />
+                                      <span className="text-[10px] font-black text-primary">{completion}%</span>
+                                   </div>
+                               </div>
+                               <div className="flex justify-between items-center">
+                                  <span className="text-xs text-muted-foreground font-bold italic">Registration Fee</span>
+                                  <span className="text-xl font-black tracking-tighter">2,000 RWF</span>
+                               </div>
+                               <div className="p-3 bg-primary/5 rounded-xl flex items-center gap-3">
+                                  <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />
+                                  <p className="text-[9px] font-medium leading-relaxed opacity-70 italic">Verified security, lifetime ownership track, and instant recovery alerts included.</p>
+                               </div>
+                            </div>
+                         </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </form>
               </Form>
             </div>
 
-            {/* Right: Summary & Action Sidebar */}
-            <div className="space-y-6 lg:sticky lg:top-28 self-start z-30">
-              <Card className="border-neutral-200 shadow-xl overflow-hidden shadow-lg">
-                <CardHeader className="bg-neutral-900 text-white py-3 lg:py-4">
-                  <CardTitle className="text-lg">{t('registration.item_registration_summary')}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-6">
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-neutral-500">{t('registration.item_progress')}</span>
-                      <span className="font-medium">{completion}%</span>
-                    </div>
-                    <Progress value={completion} className="h-1.5" />
+            {/* Navigation & Summary Panel (Desktop) */}
+            <div className="lg:col-span-4 space-y-6">
+               <div className="hidden lg:block sticky top-24 space-y-6">
+                  <div className="bg-background/40 backdrop-blur-md p-5 rounded-2xl border border-muted/20 shadow-lg">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest mb-3 opacity-30">Guide</h3>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed italic">
+                      {currentStep === 0 && "Provide accurate item details and unique identifiers to ensure the highest chance of recovery if lost."}
+                      {currentStep === 1 && "High-quality photos from different angles make it easy for finders to verify your item instantly."}
+                      {currentStep === 2 && "Final check! Once submitted, your item is permanently linked to your Kizere account."}
+                    </p>
                   </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between text-sm py-2 border-b">
-                      <span className="text-neutral-500">{t('registration.item_name')}</span>
-                      <span className="font-medium truncate max-w-[120px]">{watchedValues.name || "-"}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm py-2 border-b">
-                      <span className="text-neutral-500">{t('registration.item_category')}</span>
-                      <span className="font-medium text-sky-600">{t(`registration.item_category_${watchedValues.category?.toLowerCase()}`, watchedValues.category) || "-"}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm py-2 border-b">
-                      <span className="text-neutral-500">{t('registration.item_images')}</span>
-                      <span className="font-medium">{itemImages.length} uploaded</span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">{t('registration.item_register_fee')}</span>
-                      <span className="text-lg font-bold text-amber-900">2,000 RWF</span>
-                    </div>
-                    <p className="text-[10px] text-amber-700">{t('registration.item_fee_description')}</p>
-                  </div>
-
-                  <Button 
-                    className="w-full h-12 text-lg font-bold shadow-md bg-neutral-900 hover:bg-neutral-800"
-                    disabled={completion < 40 || registerMutation.isPending}
-                    onClick={() => {
-                      console.log("[Registration] Submit button clicked. Completion:", completion);
-                      form.handleSubmit(onSubmit, (errors) => {
-                        console.error("[Registration] Form submission blocked by validation errors:", errors);
-                      })();
-                    }}
-                  >
-                    {registerMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        {t('common.processing')}
-                      </>
+                  
+                  <div className="flex flex-col gap-2">
+                    {currentStep < 2 ? (
+                      <Button 
+                        type="button"
+                        onClick={nextStep}
+                        disabled={currentStep === 0 && !watchedName}
+                        className="h-14 rounded-2xl text-base font-black uppercase tracking-widest shadow-lg shadow-primary/20 group"
+                      >
+                        Continue
+                        <ChevronRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </Button>
                     ) : (
-                      <>
-                        {t('common.complete_registration')}
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </>
+                      <Button 
+                        type="submit"
+                        form="item-registration-form"
+                        disabled={completion < 40 || registerMutation.isPending}
+                        className="h-14 rounded-2xl text-base font-black uppercase tracking-widest shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90"
+                      >
+                        {registerMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Complete Registration"}
+                      </Button>
                     )}
-                  </Button>
-                </CardContent>
-                <CardFooter className="px-6 py-4 bg-neutral-50 border-t flex flex-col gap-2">
-                   <div className="flex items-center text-xs text-neutral-500">
-                     <CheckCircle className="h-3 w-3 mr-2 text-green-500" />
-                     {t('registration.item_ssl_secured')}
-                   </div>
-                   <div className="flex items-center text-xs text-neutral-500">
-                     <CheckCircle className="h-3 w-3 mr-2 text-green-500" />
-                     {t('registration.item_verified_certificate')}
-                   </div>
-                </CardFooter>
-              </Card>
-              {/* QR Code Preview (Only shown if at least identifier is present) */}
-              {watchedValues.uniqueIdentifier && (
-                <Card className="border-dashed border-2 bg-neutral-50/50">
-                  <CardContent className="p-6">
-                    <h3 className="text-sm font-bold mb-4 flex items-center">
-                      <QrCode className="h-4 w-4 mr-2" />
-                      {t('registration.item_qr_preview')}
-                    </h3>
-                    <QRCodeGenerator 
-                      itemIdentifier={watchedValues.uniqueIdentifier} 
-                      itemName={watchedValues.name || "Pending Registration"}
-                      showHeader={false}
-                    />
-                  </CardContent>
-                </Card>
-              )}
+                    {currentStep > 0 && (
+                      <Button type="button" variant="ghost" onClick={prevStep} className="font-bold opacity-60 hover:opacity-100 text-xs">
+                        Go Back
+                      </Button>
+                    )}
+                  </div>
+               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
+
+       {/* Floating Action Bar (Mobile only) */}
+      {typeof document !== 'undefined' && createPortal(
+        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-[100]">
+          <div className="bg-background/80 backdrop-blur-2xl p-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-2 max-w-md mx-auto">
+            {currentStep > 0 && (
+              <Button type="button" variant="outline" size="icon" onClick={prevStep} className="rounded-full h-12 w-12 shrink-0 bg-background/50 border-muted/20">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+            )}
+            
+            {currentStep < 2 ? (
+              <Button 
+                type="button"
+                onClick={nextStep}
+                disabled={currentStep === 0 && !watchedName}
+                className="flex-1 h-12 rounded-full text-sm font-black uppercase tracking-widest shadow-lg shadow-primary/20"
+              >
+                Continue
+                <ChevronRight className="ml-1.5 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button 
+                type="submit"
+                form="item-registration-form"
+                disabled={completion < 40 || registerMutation.isPending}
+                className="flex-1 h-12 rounded-full text-sm font-black uppercase tracking-widest shadow-lg shadow-primary/20 bg-primary"
+              >
+                {registerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Finish"}
+              </Button>
+            )}
+          </div>
+        </div>,
+        document.body
+      )}
     </PageLayout>
   );
 }

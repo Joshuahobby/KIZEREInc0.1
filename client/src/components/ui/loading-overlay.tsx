@@ -5,8 +5,10 @@ import { Loader2 } from "lucide-react";
 /**
  * Loading overlay that appears during page transitions
  */
-export function LoadingOverlay() {
-  const { isLoading } = useLoadingState();
+export function LoadingOverlay({ alwaysShow = false }: { alwaysShow?: boolean }) {
+  const { isLoading: contextLoading } = useLoadingState();
+  const isLoading = alwaysShow || contextLoading;
+
   
   return (
     <AnimatePresence>

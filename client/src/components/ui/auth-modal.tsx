@@ -86,6 +86,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       logoutMutation: { mutateAsync: async () => {} },
       loginWithGoogle: async () => { throw new Error("Auth context not available") },
       signOut: async () => { throw new Error("Auth context not available") },
+      refreshUser: async () => {},
     };
   }
   

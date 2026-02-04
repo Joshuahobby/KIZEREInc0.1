@@ -65,17 +65,16 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 
   // Update the language state and save to localStorage
   const setLanguage = (newLanguage: Language) => {
+    console.log(`[LanguageContext] Changing language to: ${newLanguage}`);
     setLanguageState(newLanguage);
     localStorage.setItem('language', newLanguage);
-    // Optional: Update HTML lang attribute
-    document.documentElement.lang = newLanguage;
   };
 
-  // Initialize language on mount
+  // Initialize and update HTML lang attribute on mount and on language change
   useEffect(() => {
-    // Set the HTML lang attribute
+    console.log(`[LanguageContext] Updating document.documentElement.lang to: ${language}`);
     document.documentElement.lang = language;
-  }, []);
+  }, [language]);
 
   // Translation function
   const t = (key: string, optionsOrDefault?: Record<string, any> | string, defaultValue?: string): string => {

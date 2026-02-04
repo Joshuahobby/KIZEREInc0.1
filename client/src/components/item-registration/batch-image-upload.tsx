@@ -46,6 +46,7 @@ function SortableItem({ id, url, file, onRemove }: SortableItemProps) {
         
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
           <Button 
+            type="button"
             variant="ghost" 
             size="icon" 
             className="h-8 w-8 rounded-full bg-white text-black"
@@ -277,26 +278,29 @@ export function BatchImageUpload({
           
           {isUploading ? (
             <div className="flex flex-col items-center">
-              <LuLoader className="h-10 w-10 text-muted-foreground animate-spin mb-2" />
-              <p>{t('common.uploading')}</p>
+              <LuLoader className="h-6 w-6 text-muted-foreground animate-spin mb-1" />
+              <p className="text-[10px] font-bold uppercase tracking-tight">{t('common.uploading')}</p>
             </div>
           ) : (
             <>
               <div className="flex flex-col items-center">
-                <LuImage className="h-10 w-10 text-muted-foreground mb-2" />
-                <div className="text-lg font-medium mb-1">
-                  {isDraggingOver ? t('batchUpload.drag_images') : t('batchUpload.drag_images')}
+                <LuImage className="h-8 w-8 text-muted-foreground/40 mb-2" />
+                <div className="text-xs font-black uppercase tracking-tight mb-1">
+                  Drag and drop images
                 </div>
-                <p className="text-sm text-muted-foreground mb-3 max-w-xs">
-                  {t('batchUpload.batch_upload_instructions')}
+                <p className="text-[9px] text-muted-foreground mb-3 max-w-[180px] font-medium leading-tight">
+                  Supports JPG, PNG, WEBP (Up to 5MB each)
                 </p>
               </div>
               <Button
+                type="button"
                 variant="outline"
+                size="sm"
+                className="h-8 rounded-lg px-4 text-[10px] font-black uppercase tracking-widest border-muted-foreground/20"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={images.length >= maxFiles}
               >
-                <LuUpload className="mr-2 h-4 w-4" />
+                <LuUpload className="mr-2 h-3 w-3" />
                 {t('batchUpload.select_images')}
               </Button>
             </>
@@ -304,10 +308,10 @@ export function BatchImageUpload({
         </div>
         
         {images.length > 0 && (
-          <div className="space-y-3">
+          <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium">
-                {t('batchUpload.uploaded_images')}
+              <h3 className="text-[10px] font-black uppercase tracking-widest">
+                Media ({images.length}/{maxFiles})
               </h3>
               {images.length > 1 && (
                 <p className="text-sm text-muted-foreground">
@@ -356,6 +360,7 @@ export function BatchImageUpload({
         </div>
         {images.length > 0 && (
           <Button
+            type="button"
             variant="ghost"
             size="sm"
             className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"

@@ -1,11 +1,11 @@
-import { useState } from "react";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
+import { ErrorBoundary } from "@/components/error-boundary";
+
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useDashboardData, DashboardData, DashboardStats } from "@/hooks/use-dashboard-data";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import { ItemsTable } from "@/components/dashboard/items-table";
 import { QuickActionsPanel } from "@/components/dashboard/quick-actions-panel";
 import { GlobalSearch } from "@/components/dashboard/global-search";
 import { createLogger } from "@/lib/logger";
+import { PageLayout } from "@/components/layout/page-layout";
 import {
   Table,
   TableBody,
@@ -65,18 +66,53 @@ import { ModerationQueue } from "@/components/dashboard/moderation-queue";
 import { BusinessInsights } from "@/components/dashboard/business-insights";
 import { VerificationRequestsTable } from "@/components/dashboard/verification-requests-table";
 import { SuggestedMatches } from "@/components/dashboard/suggested-matches";
+import { UpcomingTasksCard } from "@/components/dashboard/upcoming-tasks-card";
+import { DashboardAlerts } from "@/components/dashboard/dashboard-alerts";
 import { UserPreferences } from "@shared/schema";
+import { AppLayout } from "@/components/layout/admin-layout";
 
 const logger = createLogger('UnifiedDashboard');
 
 export default function UnifiedDashboard() {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
-  const [selectedClaim, setSelectedClaim] = useState<Claim | null>(null);
-  const [reviewOpen, setReviewOpen] = useState(false);
+  const [location, navigate] = useLocation();
   const { user, signOut } = useAuth();
-  const [, navigate] = useLocation();
   const { t } = useLanguage();
+  
+  // Get tab from URL or default to overview
+  const getTabFromUrl = () => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tab') || "overview";
+  };
+
+  const [activeTab, setActiveTab] = React.useState(getTabFromUrl());
+
+  console.log('[UnifiedDashboard] Rendering...', { 
+    user: user?.email, 
+    activeTab, 
+    isUserAuthenticated: !!user
+  });
+
+
+  // Update state when URL changes - using explicit React reference to avoid ReferenceErrors
+  React.useEffect(() => {
+    const currentTab = getTabFromUrl();
+    if (currentTab !== activeTab) {
+      setActiveTab(currentTab);
+    }
+    // Added console log to confirm this effect is running and cache is refreshed
+    console.log('[UnifiedDashboard] Tab sync effect running', { currentTab, activeTab });
+  }, [window.location.search, activeTab]);
+
+  // Helper to change tab and update URL
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    navigate(`/dashboard?tab=${newTab}`);
+  };
+
+  const [selectedReportId, setSelectedReportId] = React.useState<number | null>(null);
+  const [selectedClaim, setSelectedClaim] = React.useState<Claim | null>(null);
+  const [reviewOpen, setReviewOpen] = React.useState(false);
+
   
   const dashboardData = useDashboardData();
   const {
@@ -103,7 +139,15 @@ export default function UnifiedDashboard() {
     claimsReceived = []
   } = dashboardData || {};
 
-  const dashboardStyle = (user?.preferences as UserPreferences)?.dashboardStyle || 'standard';
+  console.log('[UnifiedDashboard] Data status:', { 
+    isLoading, 
+    hasUserStats: !!userStats,
+    itemsCount: items?.length,
+    reportsCount: reports?.length
+  });
+
+
+  const dashboardStyle = ((user?.preferences as UserPreferences)?.dashboardStyle || 'standard') as string;
 
   const getStatsGridClass = () => {
     switch(dashboardStyle) {
@@ -145,16 +189,12 @@ export default function UnifiedDashboard() {
   if (!user) {
     // Handle not logged in state
     return (
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto text-center py-12">
-            <h2 className="text-2xl font-semibold mb-4">{t('auth.loginRequired')}</h2>
-            <Button onClick={() => navigate("/")}>{t('common.returnToHome')}</Button>
-          </div>
-        </main>
-        <Footer />
-      </div>
+      <PageLayout>
+        <div className="max-w-7xl mx-auto text-center py-12 px-4">
+          <h2 className="text-2xl font-semibold mb-4">{t('auth.loginRequired')}</h2>
+          <Button onClick={() => navigate("/")}>{t('common.returnToHome')}</Button>
+        </div>
+      </PageLayout>
     );
   }
 
@@ -274,10 +314,7 @@ export default function UnifiedDashboard() {
             </div>
           )}
 
-          {/* Global Search */}
-          <motion.div variants={itemVariants} className="mb-6">
-            <GlobalSearch onSearch={(query) => logger.info(`Search query: ${query}`)} />
-          </motion.div>
+          {/* Global Search removed - now accessible in the header for a cleaner UI */}
 
           {/* Main Content Grid */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
@@ -291,103 +328,40 @@ export default function UnifiedDashboard() {
               <ActivityTimeline items={items} reports={reports} />
             </motion.div>
 
+            {/* Upcoming Tasks - New Component */}
+            <motion.div variants={itemVariants} className="lg:col-span-1">
+              <UpcomingTasksCard />
+            </motion.div>
+
             {/* Notifications */}
             <motion.div variants={itemVariants} className="lg:col-span-1">
               <NotificationCenter notifications={notifications || []} isLoading={false} />
             </motion.div>
+            
+             {/* Dashboard Alerts - New Component */}
+             <motion.div variants={itemVariants} className="lg:col-span-1">
+              <DashboardAlerts />
+            </motion.div>
           </div>
 
           {/* Quick Actions & Recent Items */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
-            <motion.div variants={itemVariants} className="lg:col-span-2">
+          {/* Recent Items Full Width */}
+          <div className="grid gap-6 mb-6">
+            <motion.div variants={itemVariants}>
               <Card className="h-full">
-                <CardHeader>
-                  <CardTitle>{t('dashboard.recentItems')}</CardTitle>
-                  <CardDescription>
-                    {t('dashboard.recentItemsDescription')}
-                  </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle>{t('dashboard.recentItems')}</CardTitle>
+                    <CardDescription>
+                      {t('dashboard.recentItemsDescription')}
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab('items')}>
+                    View All
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <ItemsTable items={userStats.recentlyAddedItems} isLoading={false} />
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div variants={itemVariants} className="space-y-6">
-               {/* Quick Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Quick Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                   <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
-                    onClick={() => setActiveTab('claims')}
-                  >
-                    <ShieldCheck className="mr-2 h-4 w-4" />
-                    View My Claims
-                    {myClaims.length > 0 && (
-                      <Badge className="ml-auto" variant="secondary">{myClaims.length}</Badge>
-                    )}
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start text-left"
-                    onClick={() => navigate('/profile')}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    {t('dashboard.settings')}
-                  </Button>
-
-                  {user?.verificationStatus !== 'approved' && (
-                    <Button 
-                      className="w-full justify-start text-left bg-blue-600 hover:bg-blue-700 text-white"
-                      onClick={() => navigate('/identity-verification')}
-                    >
-                      <ShieldCheck className="mr-2 h-4 w-4" />
-                      Get Verified
-                    </Button>
-                  )}
-
-                  <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
-                    onClick={() => navigate('/report/new?type=lost')}
-                  >
-                    <HelpCircle className="mr-2 h-4 w-4" />
-                    Report Lost Item
-                  </Button>
-
-                  <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
-                    onClick={() => navigate('/report/new?type=found')}
-                  >
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Report Found Item
-                  </Button>
-
-                  <Button 
-                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10 border-red-200 dark:border-red-900/30" 
-                    variant="outline"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    {t('auth.logout') || "Sign Out"}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Notifications Summary */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Notifications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{notifications.filter(n => !n.isRead).length}</div>
-                  <p className="text-xs text-muted-foreground">Unread messages</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -1011,66 +985,40 @@ export default function UnifiedDashboard() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-1 bg-background p-4 md:p-6">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            {/* Welcome Banner */}
-            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-background p-6 rounded-lg mb-6">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                    {t('dashboard.welcomeMessage', { name: user.fullName || user.username })}
-                  </h1>
-                  <p className="text-muted-foreground">
-                    {isAdmin 
-                      ? t('dashboard.subtitles.admin')
-                      : isAgent 
-                        ? t('dashboard.subtitles.agent')
-                        : t('dashboard.subtitles.user')
-                    }
-                  </p>
-                </div>
-                <div className="mt-4 md:mt-0">
-                  <Button onClick={() => navigate("/register-item")}>
-                    <Plus className="h-4 w-4 mr-2" /> {t('dashboard.registerNewItem')}
-                  </Button>
-                </div>
-              </div>
+    <AppLayout>
+      <ErrorBoundary>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+        >
+          {/* Simple Welcome Title */}
+          <div className="flex flex-col md:flex-row justify-between items-baseline mb-6 border-b pb-4">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
+                {t('dashboard.welcomeMessage', { name: user.fullName || user.username })}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {isAdmin 
+                  ? t('dashboard.subtitles.admin')
+                  : isAgent 
+                    ? t('dashboard.subtitles.agent')
+                    : t('dashboard.subtitles.user')
+                }
+              </p>
             </div>
+          </div>
 
-            {/* Dashboard Tabs */}
-            <div className="bg-card rounded-lg shadow-sm mb-6 p-1">
-              <div className="flex overflow-x-auto">
-                {getDashboardTabs().map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center px-4 py-2 text-sm font-medium rounded-md mr-1 ${
-                      activeTab === tab.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-background hover:bg-muted"
-                    }`}
-                  >
-                    {tab.icon}
-                    <span className="ml-2">{tab.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Dashboard Content */}
+          <div className="mt-2">
+            <Suspense fallback={<div className="p-8 text-center italic">Loading dashboard components...</div>}>
+              {renderDashboardContent()}
+            </Suspense>
+          </div>
+        </motion.div>
+      </ErrorBoundary>
+    </AppLayout>
 
-            {/* Dashboard Content */}
-            {renderDashboardContent()}
-          </motion.div>
-        </div>
-      </main>
-      <Footer />
-    </div>
   );
 }

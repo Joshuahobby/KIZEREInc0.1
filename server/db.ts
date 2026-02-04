@@ -12,6 +12,7 @@ neonConfig.webSocketConstructor = ws;
 
 // 1. HTTP Connection for fast, stateless queries (Drizzle)
 // This is more stable in serverless environments (Vercel) and latest Node versions
+// Using a larger timeout for network stability
 const sql = neon(env.DATABASE_URL);
 export const db = drizzle({ client: sql, schema });
 
@@ -20,7 +21,7 @@ export const pool = new Pool({
   connectionString: env.DATABASE_URL,
   max: process.env.NODE_ENV === 'production' ? 20 : 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  connectionTimeoutMillis: 15000, // Increased to 15s
   maxUses: 7500,
 });
 

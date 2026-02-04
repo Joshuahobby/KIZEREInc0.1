@@ -247,7 +247,8 @@ router.post("/users", async (req, res) => {
       status: status || 'active',
       verificationStatus: verificationStatus || 'pending',
       warningCount: 0,
-      activityLevel: 'low'
+      activityLevel: 'low',
+      preferences: {}
     });
     
     await storage.createAdminActionLog({
