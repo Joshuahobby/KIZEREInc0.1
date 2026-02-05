@@ -20,41 +20,64 @@ interface Logger {
  * @param moduleName Name of the module (for log context)
  * @returns Logger instance
  */
+/**
+ * Safely stringifies metadata to avoid util.inspect crashes
+ */
+function safeStringify(meta: any): string {
+  try {
+    if (meta instanceof Error) {
+      const { message, stack, ...rest } = meta;
+      return JSON.stringify({
+        message,
+        stack,
+        ...rest
+      }, null, 2);
+    }
+    if (typeof meta === 'object' && meta !== null) {
+      // Use a circular-safe or simple stringify
+      return JSON.stringify(meta, (key, value) =>
+        typeof value === 'bigint' ? value.toString() : value
+        , 2);
+    }
+    return String(meta);
+  } catch (e) {
+    return '[Unserializable Metadata]';
+  }
+}
+
 export function createLogger(moduleName: string): Logger {
   return {
     debug: (message: string, meta?: any) => {
       if (process.env.NODE_ENV !== 'production') {
         if (meta !== undefined) {
-          console.debug(`[${new Date().toISOString()}] [DEBUG] [${moduleName}]`, message, meta);
+          console.debug(`[${new Date().toISOString()}] [DEBUG] [${moduleName}] ${message}`, safeStringify(meta));
         } else {
-          console.debug(`[${new Date().toISOString()}] [DEBUG] [${moduleName}]`, message);
+          console.debug(`[${new Date().toISOString()}] [DEBUG] [${moduleName}] ${message}`);
         }
       }
     },
-    
+
     info: (message: string, meta?: any) => {
       if (meta !== undefined) {
-        console.info(`[${new Date().toISOString()}] [INFO] [${moduleName}]`, message, meta);
+        console.info(`[${new Date().toISOString()}] [INFO] [${moduleName}] ${message}`, safeStringify(meta));
       } else {
-        console.info(`[${new Date().toISOString()}] [INFO] [${moduleName}]`, message);
+        console.info(`[${new Date().toISOString()}] [INFO] [${moduleName}] ${message}`);
       }
     },
-    
+
     warn: (message: string, meta?: any) => {
       if (meta !== undefined) {
-        console.warn(`[${new Date().toISOString()}] [WARN] [${moduleName}]`, message, meta);
+        console.warn(`[${new Date().toISOString()}] [WARN] [${moduleName}] ${message}`, safeStringify(meta));
       } else {
-        console.warn(`[${new Date().toISOString()}] [WARN] [${moduleName}]`, message);
+        console.warn(`[${new Date().toISOString()}] [WARN] [${moduleName}] ${message}`);
       }
     },
-    
+
     error: (message: string, meta?: any) => {
       if (meta !== undefined) {
-        // If meta is an error, try to pass its message or string representation to avoid util.inspect issues
-        const safeMeta = (meta instanceof Error) ? { message: meta.message, stack: meta.stack } : meta;
-        console.error(`[${new Date().toISOString()}] [ERROR] [${moduleName}]`, message, safeMeta);
+        console.error(`[${new Date().toISOString()}] [ERROR] [${moduleName}] ${message}`, safeStringify(meta));
       } else {
-        console.error(`[${new Date().toISOString()}] [ERROR] [${moduleName}]`, message);
+        console.error(`[${new Date().toISOString()}] [ERROR] [${moduleName}] ${message}`);
       }
     }
   };

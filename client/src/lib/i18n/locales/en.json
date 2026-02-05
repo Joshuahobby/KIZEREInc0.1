@@ -10,7 +10,11 @@
     "language": "Language",
     "register_item": "Register Item",
     "complete_registration": "Complete Registration",
-    "filter": "Filter"
+    "filter": "Filter",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "updating": "Updating...",
+    "update": "Update"
   },
   "nav": {
     "home": "Home",
@@ -612,6 +616,12 @@
     "title": "Profile",
     "subtitle": "Manage your personal information, security settings, and preferences",
     "editProfile": "Edit Profile",
+    "joinedOn": "Joined on {date}",
+    "username": "Username",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "notProvided": "Not provided",
+    "memberSince": "Member Since",
     "updateSuccess": "Profile Updated",
     "updateSuccessDesc": "Your profile information has been successfully updated",
     "tabs": {
@@ -621,8 +631,16 @@
       "preferences": "Preferences"
     },
     "security": {
+      "changePassword": "Change Password",
       "passwordTitle": "Change Password",
       "passwordDesc": "Update your password to keep your account secure",
+      "currentPassword": "Current Password",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "passwordChangeSuccess": "Password Changed Successfully",
+      "passwordChangeSuccessDesc": "Your password has been updated. Please use your new password for future logins.",
+      "passwordChangeError": "Error Changing Password",
+      "passwordChangeErrorDesc": "There was a problem changing your password. Please check your current password and try again.",
       "sessionsTitle": "Active Sessions",
       "sessionsDesc": "Manage your active login sessions across devices",
       "currentSession": "Current Session",
@@ -633,8 +651,66 @@
         "fair": "Fair",
         "good": "Good",
         "strong": "Strong",
-        "veryStrong": "Very Strong"
+        "excellent": "Excellent"
       }
+    },
+    "permissions": {
+      "title": "Permissions & Access",
+      "description": "View the actions you are authorized to perform based on your current role.",
+      "categories": {
+        "dashboard": "Dashboard",
+        "items": "Items",
+        "reports": "Reports",
+        "users": "Users",
+        "payments": "Payments",
+        "system": "System",
+        "other": "Other"
+      },
+      "noPermissions": "No Permissions Found",
+      "noPermissionsDesc": "You don't have any specific permissions assigned to your account."
+    },
+    "preferences": {
+      "title": "System Preferences",
+      "description": "Customize your dashboard experience, theme, and regional settings.",
+      "appearance": "Appearance & Language",
+      "theme": "Theme Style",
+      "selectTheme": "Select theme",
+      "themes": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      },
+      "themeDescription": "Select your preferred appearance for the application dashboard.",
+      "language": "Language Selection",
+      "selectLanguage": "Select language",
+      "languageDescription": "Choose the language used for buttons, labels, and system messages.",
+      "notifications": "Notification Preferences",
+      "emailNotifications": "Email Notifications",
+      "emailNotificationsDesc": "Receive important updates and alerts via email.",
+      "smsNotifications": "SMS Alerts",
+      "smsNotificationsDesc": "Get critical security and item recovery alerts via SMS.",
+      "pushNotifications": "Web Push Notifications",
+      "pushNotificationsDesc": "Receive real-time alerts in your browser.",
+      "dashboardSettings": "Dashboard Settings",
+      "layout": "Dashboard Layout",
+      "selectLayout": "Select layout",
+      "layouts": {
+        "default": "Default",
+        "compact": "Compact",
+        "wide": "Wide"
+      },
+      "layoutDescription": "Choose how information is arranged on your dashboard.",
+      "regionalization": "Regional & Units",
+      "currency": "Preferred Currency",
+      "selectCurrency": "Select currency",
+      "currencyDescription": "Used for displaying fees and transaction history.",
+      "timezone": "Timezone",
+      "selectTimezone": "Select timezone",
+      "timezoneDescription": "Ensures timestamps are displayed in your local time.",
+      "saveSuccess": "Preferences Saved",
+      "saveSuccessDesc": "Your system preferences have been updated successfully.",
+      "saveError": "Update Failed",
+      "saveErrorDesc": "We couldn't save your preferences. Please try again later."
     }
   },
   "settings": {
@@ -783,5 +859,19 @@
       "recovery_expert": "Recovery Expert"
     },
     "create_post": "Share a Story or Alert"
+  },
+  "permissions": {
+    "descriptions": {
+      "fallback": "Standard access for this action.",
+      "can_view_dashboard": "Grant access to view the main dashboard and overview statistics.",
+      "can_manage_own_items": "Allows you to register, edit, and manage items that you own.",
+      "can_create_reports": "Allows you to report lost or found items in the system.",
+      "can_view_own_payments": "Grant access to view your payment history and transaction details.",
+      "can_view_all_items": "Administrative access to view all registered items in the system.",
+      "can_manage_users": "Administrative access to manage user accounts and roles.",
+      "can_manage_system": "Access to system configuration and maintenance tools.",
+      "can_view_reports": "Access to view lost and found reports.",
+      "can_manage_reports": "Access to manage and resolve lost and found reports."
+    }
   }
 }

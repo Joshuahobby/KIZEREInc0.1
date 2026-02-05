@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 // Layout components
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { PageLayout } from "@/components/layout/page-layout";
 
 // Icons
 import { User, Settings, ShieldCheck, Bell, Palette, Lock, Phone, Mail, Edit } from "lucide-react";
@@ -77,7 +78,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <DashboardShell>
+      <PageLayout>
         <DashboardHeader
           heading={t("profile.title")}
           text={t("profile.subtitle")}
@@ -89,12 +90,12 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
         </div>
-      </DashboardShell>
+      </PageLayout>
     );
   }
 
   return (
-    <DashboardShell>
+    <PageLayout>
       <DashboardHeader
         heading={t("profile.title")}
         text={t("profile.subtitle")}
@@ -131,8 +132,8 @@ export default function ProfilePage() {
           {/* Profile Tab */}
           <TabsContent value="profile" className="space-y-4 mt-6">
             {isEditingProfile ? (
-              <ProfileEditForm 
-                user={user as any} 
+              <ProfileEditForm
+                user={user as any}
                 onCancel={handleCancelEdit}
                 onSuccess={handleProfileUpdated}
               />
@@ -181,22 +182,22 @@ export default function ProfilePage() {
 
           {/* Permissions Tab */}
           <TabsContent value="permissions" className="space-y-4 mt-6">
-            <UserPermissionsPanel 
-              userRole={user.role as any} 
-              permissions={(permissionsData as any)?.permissions || []} 
+            <UserPermissionsPanel
+              userRole={user.role as any}
+              permissions={(permissionsData as any)?.permissions || []}
               isLoading={permissionsLoading}
             />
           </TabsContent>
 
           {/* Preferences Tab */}
           <TabsContent value="preferences" className="space-y-4 mt-6">
-            <UserPreferencesForm 
-              preferences={preferencesData || {}} 
+            <UserPreferencesForm
+              preferences={preferencesData || {}}
               isLoading={preferencesLoading}
             />
           </TabsContent>
         </Tabs>
       </div>
-    </DashboardShell>
+    </PageLayout>
   );
 }

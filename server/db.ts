@@ -1,6 +1,6 @@
 import { Pool, neonConfig, neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import ws from "ws";
+// import ws from "ws";
 import * as schema from "@shared/schema";
 import { env } from "./config";
 import { createLogger } from "./utils/logger";
@@ -8,7 +8,7 @@ import { createLogger } from "./utils/logger";
 const logger = createLogger("database");
 
 // Configure WebSockets for environments that need them (like session stores)
-neonConfig.webSocketConstructor = ws;
+// neonConfig.webSocketConstructor = ws;
 
 // 1. HTTP Connection for fast, stateless queries (Drizzle)
 // This is more stable in serverless environments (Vercel) and latest Node versions

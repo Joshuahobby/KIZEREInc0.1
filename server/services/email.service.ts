@@ -12,7 +12,7 @@ function getResendClient(): Resend | null {
     logger.warn('RESEND_API_KEY is missing. Email service will be disabled.');
     return null;
   }
-  
+
   if (!_resend) {
     try {
       _resend = new Resend(apiKey);
@@ -40,13 +40,13 @@ export interface EmailOptions {
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
     logger.info('Sending email', { to: options.to, subject: options.subject });
-    
+
     const client = getResendClient();
     if (!client) {
       logger.error('Cannot send email: Resend client not initialized (missing API key)');
       return false;
     }
-    
+
     const result = await client.emails.send({
       from: FROM_EMAIL,
       to: options.to,
@@ -217,10 +217,10 @@ export async function sendClaimStatusEmail(
         <div style="padding: 30px; background: #f9fafb;">
           <h2 style="color: #1f2937;">Hello ${claimantName},</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            ${isApproved 
-              ? `Great news! Your ownership claim for <strong>${itemTitle}</strong> has been approved.`
-              : `Unfortunately, your ownership claim for <strong>${itemTitle}</strong> has been rejected.`
-            }
+            ${isApproved
+        ? `Great news! Your ownership claim for <strong>${itemTitle}</strong> has been approved.`
+        : `Unfortunately, your ownership claim for <strong>${itemTitle}</strong> has been rejected.`
+      }
           </p>
           ${isApproved ? `
             <p style="color: #4b5563; line-height: 1.6;">

@@ -21,7 +21,7 @@ export class AppError extends Error {
   ) {
     super(message);
     this.name = this.constructor.name;
-    
+
     // Capture stack trace
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
@@ -97,19 +97,19 @@ export class ValidationError extends AppError {
 export function handleRequestError(error: any, res: Response): void {
   // Generate unique error ID for tracking
   const errorId = crypto.randomUUID();
-  
+
   if (error instanceof ZodError) {
     // Handle validation errors from Zod
     const formattedErrors = error.errors.map(err => ({
       path: err.path.join('.'),
       message: err.message
     }));
-    
-    logger.warn('Validation error', { 
-      errorId, 
+
+    logger.warn('Validation error', {
+      errorId,
       errors: formattedErrors
     });
-    
+
     res.status(400).json({
       status: 'error',
       message: 'Validation failed',
@@ -120,15 +120,15 @@ export function handleRequestError(error: any, res: Response): void {
   } else if (error instanceof AppError) {
     // Handle application-specific errors
     const logMethod = error.statusCode >= 500 ? 'error' : 'warn';
-    
-    logger[logMethod](`${error.name}: ${error.message}`, { 
-      errorId, 
+
+    logger[logMethod](`${error.name}: ${error.message}`, {
+      errorId,
       code: error.code,
       statusCode: error.statusCode,
       details: error.details,
       stack: error.stack
     });
-    
+
     // Send response with appropriate details
     // Hide detailed error information in production
     const responseBody = {
@@ -140,23 +140,23 @@ export function handleRequestError(error: any, res: Response): void {
         details: error.details
       })
     };
-    
+
     res.status(error.statusCode).json(responseBody);
   } else {
     // Handle unexpected errors
-    logger.error('Unexpected error', { 
-      errorId, 
-      error, 
+    logger.error('Unexpected error', {
+      errorId,
+      error,
       stack: error.stack,
       message: error.message || 'Unknown error'
     });
-    
+
     // Generic error response for unknown errors
     // Avoid exposing internal details in production
     res.status(500).json({
       status: 'error',
-      message: process.env.NODE_ENV === 'production' 
-        ? 'An unexpected error occurred' 
+      message: process.env.NODE_ENV === 'production'
+        ? 'An unexpected error occurred'
         : error.message || 'Unknown error',
       errorId
     });

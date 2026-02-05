@@ -2,21 +2,38 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { createLogger } from './logger';
 import { DEFAULT_PAYMENT_FEES, getPaymentAmount as configGetPaymentAmount } from '../config/payment.config';
+import { env } from "../config";
 
 const logger = createLogger('FlutterwaveUtils');
 
+
 // Environment variables validation
 const flutterwaveConfigSchema = z.object({
-  FLUTTERWAVE_SECRET_KEY: z.string().min(1, "Flutterwave secret key is required"),
-  FLUTTERWAVE_PUBLIC_KEY: z.string().min(1, "Flutterwave public key is required")
+  FLUTTERWAVE_SECRET_KEY: z.string().optional(),
+  FLUTTERWAVE_PUBLIC_KEY: z.string().optional()
 });
 
-// Verify configuration
+let isConfigured = false;
 try {
-  flutterwaveConfigSchema.parse(process.env);
+  const config = flutterwaveConfigSchema.parse(process.env);
+  if (config.FLUTTERWAVE_SECRET_KEY && config.FLUTTERWAVE_PUBLIC_KEY) {
+    isConfigured = true;
+  } else {
+    logger.warn("Flutterwave is not fully configured. Payment features will be disabled.", {
+      hasSecretKey: !!config.FLUTTERWAVE_SECRET_KEY,
+      hasPublicKey: !!config.FLUTTERWAVE_PUBLIC_KEY
+    });
+  }
 } catch (error) {
-  logger.error("Flutterwave configuration error", { error });
-  throw new Error("Flutterwave configuration error: Missing required environment variables");
+  logger.warn("Flutterwave configuration validation failed. Payment features will be disabled.", { error });
+}
+
+export const isFlutterwaveConfigured = () => isConfigured;
+
+function checkConfig() {
+  if (!isConfigured) {
+    throw new Error("Flutterwave is not configured. Please set FLUTTERWAVE_SECRET_KEY and FLUTTERWAVE_PUBLIC_KEY.");
+  }
 }
 
 // Use centralized payment fee structure
@@ -58,7 +75,7 @@ export interface FlutterwaveVerificationResponse {
     amount: number;
     currency: string;
     charged_amount: number;
-    status: string; 
+    status: string;
     payment_type: string;
     narration: string;
     customer: {
@@ -105,7 +122,7 @@ export function verifyWebhookSignature(signature: string, data: string): boolean
       .createHmac('sha256', secretKey)
       .update(data)
       .digest('hex');
-    
+
     return hash === signature;
   } catch (error) {
     logger.error('Error verifying webhook signature', { error });
@@ -133,22 +150,23 @@ export function generateTransactionReference(prefix = 'KIZERE'): string {
  */
 export async function verifyTransaction(transactionId: string): Promise<FlutterwaveVerificationResponse> {
   try {
+    checkConfig();
     logger.info('Attempting to verify transaction', { transactionId });
-    
+
     // Input validation
     if (!transactionId) {
       logger.error('Invalid transaction ID provided', { transactionId });
       throw new Error('Invalid transaction ID: empty or undefined');
     }
-    
+
     // Clean up transaction ID if needed (sometimes there might be extra characters)
     const cleanTransactionId = transactionId.trim();
-    
-    logger.info('Calling Flutterwave API', { 
+
+    logger.info('Calling Flutterwave API', {
       transactionId: cleanTransactionId,
-      url: `https://api.flutterwave.com/v3/transactions/${cleanTransactionId}/verify` 
+      url: `https://api.flutterwave.com/v3/transactions/${cleanTransactionId}/verify`
     });
-    
+
     // Make API request to Flutterwave
     const response = await fetch(`https://api.flutterwave.com/v3/transactions/${cleanTransactionId}/verify`, {
       method: 'GET',
@@ -161,7 +179,7 @@ export async function verifyTransaction(transactionId: string): Promise<Flutterw
     // Check if request was successful
     if (!response.ok) {
       let errorMessage = '';
-      
+
       try {
         // Try to parse error as JSON
         const errorData = await response.json();
@@ -170,21 +188,21 @@ export async function verifyTransaction(transactionId: string): Promise<Flutterw
         // If not JSON, get as text
         errorMessage = await response.text();
       }
-      
-      logger.error('Transaction verification failed', { 
-        transactionId: cleanTransactionId, 
-        status: response.status, 
+
+      logger.error('Transaction verification failed', {
+        transactionId: cleanTransactionId,
+        status: response.status,
         error: errorMessage
       });
-      
+
       throw new Error(`Transaction verification failed (${response.status}): ${errorMessage}`);
     }
 
     // Parse response data
     const verificationData: FlutterwaveVerificationResponse = await response.json();
-    
-    logger.info('Transaction verification response received', { 
-      transactionId: cleanTransactionId, 
+
+    logger.info('Transaction verification response received', {
+      transactionId: cleanTransactionId,
       status: verificationData.status,
       message: verificationData.message,
       dataStatus: verificationData.data?.status,
@@ -194,12 +212,12 @@ export async function verifyTransaction(transactionId: string): Promise<Flutterw
 
     return verificationData;
   } catch (error) {
-    logger.error('Error verifying transaction', { 
-      transactionId, 
+    logger.error('Error verifying transaction', {
+      transactionId,
       errorMessage: error instanceof Error ? error.message : 'Unknown error',
       errorStack: error instanceof Error ? error.stack : undefined
     });
-    
+
     throw new Error(`Error verifying transaction: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
@@ -212,6 +230,7 @@ export async function verifyTransaction(transactionId: string): Promise<Flutterw
  */
 export async function initializePayment(paymentData: PaymentInitialization): Promise<FlutterwavePaymentResponse> {
   try {
+    checkConfig();
     const response = await fetch('https://api.flutterwave.com/v3/payments', {
       method: 'POST',
       headers: {
@@ -223,15 +242,15 @@ export async function initializePayment(paymentData: PaymentInitialization): Pro
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error('Payment initialization failed', { 
-        status: response.status, 
-        error: errorText 
+      logger.error('Payment initialization failed', {
+        status: response.status,
+        error: errorText
       });
       throw new Error(`Payment initialization failed: ${errorText}`);
     }
 
     const responseData: FlutterwavePaymentResponse = await response.json();
-    logger.info('Payment initialized', { 
+    logger.info('Payment initialized', {
       status: responseData.status,
       message: responseData.message,
       transactionRef: paymentData.tx_ref

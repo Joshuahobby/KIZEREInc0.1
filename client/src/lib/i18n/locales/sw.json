@@ -7,11 +7,17 @@
     "joinKizere": "Jiunge na KIZERE",
     "continueWith": "Au endelea na",
     "search": "Tafuta",
-    "notifications": "Arifa", 
+    "notifications": "Arifa",
     "profile": "Wasifu",
     "settings": "Mipangilio",
     "logout": "Toka",
-    "language": "Lugha"
+    "language": "Lugha",
+    "saveChanges": "Hifadhi mabadiliko",
+    "saving": "Inahifadhi...",
+    "updating": "Inasasisha...",
+    "update": "Sasisha",
+    "filter": "Chuja",
+    "returnToHome": "Rudi Nyumbani"
   },
   "nav": {
     "home": "Nyumbani",
@@ -59,7 +65,7 @@
   "landing": {
     "nav": {
       "features": "Huduma",
-      "howItWorks": "Jinsi Inavyofanya Kazi", 
+      "howItWorks": "Jinsi Inavyofanya Kazi",
       "testimonials": "Shuhuda"
     },
     "heroTitle": "Linda Yaliyo Muhimu Zaidi",
@@ -189,6 +195,107 @@
     "uploadImage": "Pakia Picha",
     "additionalDetails": "Maelezo ya Ziada"
   },
+  "profile": {
+    "title": "Wasifu",
+    "subtitle": "Simamia maelezo yako binafsi, mipangilio ya usalama, na upendeleo",
+    "editProfile": "Badilisha Wasifu",
+    "joinedOn": "Alijiunga tarehe {date}",
+    "username": "Jina la mtumiaji",
+    "email": "Anwani ya barua pepe",
+    "phone": "Namba ya simu",
+    "notProvided": "Haijatolewa",
+    "memberSince": "Mwanachama tangu",
+    "updateSuccess": "Wasifu Umeshawasilishwa",
+    "updateSuccessDesc": "Maelezo ya wasifu wako yamesasishwa kikamilifu",
+    "tabs": {
+      "profile": "Maelezo ya Wasifu",
+      "security": "Usalama",
+      "permissions": "Ruhusa",
+      "preferences": "Upendeleo"
+    },
+    "security": {
+      "changePassword": "Badilisha Nywila",
+      "passwordTitle": "Badilisha Nywila",
+      "passwordDesc": "Sasisha nywila yako ili kuweka akaunti yako salama",
+      "currentPassword": "Nywila ya Sasa",
+      "newPassword": "Nywila Mpya",
+      "confirmPassword": "Thibitisha Nywila Mpya",
+      "passwordChangeSuccess": "Nywila Imebadilishwa kwa Mafanikio",
+      "passwordChangeSuccessDesc": "Nywila yako imesasishwa. Tafadhali tumia nywila yako mpya kwa kuingia siku zijazo.",
+      "passwordChangeError": "Hitilafu katika Kubadilisha Nywila",
+      "passwordChangeErrorDesc": "Kulikuwa na tatizo katika kubadilisha nywila yako. Tafadhali kagua nywila yako ya sasa na ujaribu tena.",
+      "sessionsTitle": "Vipindi Vinavyoendelea",
+      "sessionsDesc": "Simamia vipindi vyako vya kuingia kwenye vifaa vyote",
+      "currentSession": "Kipindi cha Sasa",
+      "active": "Inatumika",
+      "logoutAllSessions": "Logout kutoka kwa Vipindi Vingine Vyote",
+      "passwordStrength": {
+        "weak": "Dhaifu",
+        "fair": "Wastani",
+        "good": "Nzuri",
+        "strong": "Imara",
+        "excellent": "Bora"
+      }
+    },
+    "permissions": {
+      "title": "Ruhusa & Ufikiaji",
+      "description": "Tazama hatua unazostahili kufanya kulingana na jukumu lako la sasa.",
+      "categories": {
+        "dashboard": "Dashibodi",
+        "items": "Vitu",
+        "reports": "Ripoti",
+        "users": "Watumiaji",
+        "payments": "Malipo",
+        "system": "Mfumo",
+        "other": "Nyingine"
+      },
+      "noPermissions": "Hakuna Ruhusa Zilizopatikana",
+      "noPermissionsDesc": "Huna ruhusa zozote maalum zilizotolewa kwa akaunti yako."
+    },
+    "preferences": {
+      "title": "Upendeleo wa Mfumo",
+      "description": "Customize uzoefu wa dashibodi yako, muonekano, na mipangilio ya kikanda.",
+      "appearance": "Muonekano & Lugha",
+      "theme": "Mtindo wa Mandhari",
+      "selectTheme": "Chagua mandhari",
+      "themes": {
+        "light": "Nyeupe",
+        "dark": "Giza",
+        "system": "Mfumo"
+      },
+      "themeDescription": "Chagua muonekano wako unaopendelea wa dashibodi ya programu.",
+      "language": "Uteuzi wa Lugha",
+      "selectLanguage": "Chagua lugha",
+      "languageDescription": "Chagua lugha inayotumiwa kwa vitufe, lebo, na ujumbe wa mfumo.",
+      "notifications": "Upendeleo wa Arifa",
+      "emailNotifications": "Arifa za Barua Pepe",
+      "emailNotificationsDesc": "Pokea sasisho na arifa muhimu kupitia barua pepe.",
+      "smsNotifications": "Arifa za SMS",
+      "smsNotificationsDesc": "Pokea arifa za usalama na za kurejesha vitu kupitia SMS.",
+      "pushNotifications": "Arifa za Push za Web",
+      "pushNotificationsDesc": "Pokea arifa za muda halisi kwenye kivinjari chako.",
+      "dashboardSettings": "Mipangilio ya Dashibodi",
+      "layout": "Mpangilio wa Dashibodi",
+      "selectLayout": "Chagua mpangilio",
+      "layouts": {
+        "default": "Kawaida",
+        "compact": "Imeshindiliwa",
+        "wide": "Pana"
+      },
+      "layoutDescription": "Chagua jinsi habari inavyopangwa kwenye dashibodi yako.",
+      "regionalization": "Kikanda & Vipimo",
+      "currency": "Sarafu Unayopendelea",
+      "selectCurrency": "Chagua sarafu",
+      "currencyDescription": "Inatumiwa kuonyesha ada na historia ya miamala.",
+      "timezone": "Ukanda wa Muda",
+      "selectTimezone": "Chagua ukanda wa muda",
+      "timezoneDescription": "Inahakikisha muda unaonyeshwa kulingana na muda wa eneo lako.",
+      "saveSuccess": "Upendeleo Umehifadhiwa",
+      "saveSuccessDesc": "Upendeleo wako wa mfumo umesasishwa kwa mafanikio.",
+      "saveError": "Uwasilishaji Umeshindikana",
+      "saveErrorDesc": "Hatukuweza kuhifadhi upendeleo wako. Tafadhali jaribu tena baadaye."
+    }
+  },
   "reports": {
     "reportLostItem": "Ripoti Kitu Kilichopotea",
     "reportFoundItem": "Ripoti Kitu Kilichopatikana",
@@ -204,5 +311,19 @@
     "terms": "Masharti",
     "privacy": "Faragha",
     "contact": "Wasiliana"
+  },
+  "permissions": {
+    "descriptions": {
+      "fallback": "Ufikiaji wa kawaida kwa kitendo hiki.",
+      "can_view_dashboard": "Ruhusu ufikiaji wa kutazama dashibodi kuu na takwimu za jumla.",
+      "can_manage_own_items": "Inakuruhusu kusajili, kuhariri, na kusimamia vitu unavyomiliki.",
+      "can_create_reports": "Inakuruhusu kuripoti vitu vilivyopotea au kupatikana katika mfumo.",
+      "can_view_own_payments": "Ruhusu ufikiaji wa kutazama historia yako ya malipo na maelezo ya miamala.",
+      "can_view_all_items": "Ufikiaji wa kiutawala wa kutazama vitu vyote vilivyosajiliwa katika mfumo.",
+      "can_manage_users": "Ufikiaji wa kiutawala wa kusimamia akaunti za watumiaji na majukumu.",
+      "can_manage_system": "Ufikiaji wa zana za usanidi wa mfumo na matengenezo.",
+      "can_view_reports": "Ufikiaji wa kutazama ripoti za vitu vilivyopotea na kupatikana.",
+      "can_manage_reports": "Ufikiaji wa kusimamia na kutatua ripoti za vitu vilivyopotea na kupatikana."
+    }
   }
 }

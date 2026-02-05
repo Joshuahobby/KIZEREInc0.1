@@ -2,14 +2,14 @@ import { Link } from "wouter";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import { Logo } from "@/components/ui/logo";
-import { 
-  Facebook, 
-  Twitter, 
-  Instagram, 
-  Github, 
-  Mail, 
-  Phone, 
-  MapPin 
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  Github,
+  Mail,
+  Phone,
+  MapPin
 } from "lucide-react";
 
 export function Footer() {
@@ -21,8 +21,8 @@ export function Footer() {
       title: t('landing.footer.quickLinks') || "Quick Links",
       links: [
         { label: t('landing.footer.home') || "Home", href: "/" },
-        { 
-          label: t('landing.footer.features') || "Features", 
+        {
+          label: t('landing.footer.features') || "Features",
           href: "/#features",
           onClick: (e: React.MouseEvent) => {
             if (window.location.pathname === '/') {
@@ -55,7 +55,7 @@ export function Footer() {
 
   const contactInfo = [
     { icon: Mail, label: "support@kizere.com", href: "mailto:support@kizere.com" },
-    { icon: Phone, label: "+254 712 345 678", href: "tel:+254712345678" },
+    { icon: Phone, label: "+250 788 331 033", href: "tel:+250788331033" },
     { icon: MapPin, label: t('landing.footer.location') || "Kigali, Rwanda", href: "#" },
   ];
 
@@ -64,7 +64,7 @@ export function Footer() {
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute inset-0 bg-grid-pattern opacity-30"></div>
       </div>
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           {/* Brand & Description */}
@@ -84,10 +84,10 @@ export function Footer() {
               </p>
               <div className="flex items-center gap-3">
                 {socialLinks.map((social) => (
-                  <a 
+                  <a
                     key={social.label}
-                    href={social.href} 
-                    aria-label={social.label} 
+                    href={social.href}
+                    aria-label={social.label}
                     className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/20 hover:scale-110 transition-all duration-200 border border-white/10"
                   >
                     <social.icon className="h-5 w-5" />
@@ -96,10 +96,10 @@ export function Footer() {
               </div>
             </motion.div>
           </div>
-          
+
           {/* Links Sections */}
           {footerSections.map((section, idx) => (
-            <motion.div 
+            <motion.div
               key={section.title}
               className="md:col-span-2"
               initial={{ opacity: 0, y: 20 }}
@@ -111,8 +111,8 @@ export function Footer() {
               <ul className="space-y-4">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <Link 
-                      href={link.href} 
+                    <Link
+                      href={link.href}
                       onClick={link.onClick}
                       className="text-gray-400 hover:text-white transition-colors duration-200 inline-flex items-center group"
                     >
@@ -126,9 +126,9 @@ export function Footer() {
               </ul>
             </motion.div>
           ))}
-          
+
           {/* Contact Section */}
-          <motion.div 
+          <motion.div
             className="md:col-span-4 lg:col-span-3"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -139,8 +139,8 @@ export function Footer() {
             <ul className="space-y-4">
               {contactInfo.map((item) => (
                 <li key={item.label}>
-                  <a 
-                    href={item.href} 
+                  <a
+                    href={item.href}
                     className="flex items-center text-gray-400 group transition-colors hover:text-white"
                   >
                     <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors shrink-0">
@@ -153,9 +153,9 @@ export function Footer() {
             </ul>
           </motion.div>
         </div>
-        
+
         {/* Bottom Bar */}
-        <motion.div 
+        <motion.div
           className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}

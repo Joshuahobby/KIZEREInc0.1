@@ -25,7 +25,7 @@ export class UserService {
       throw new DatabaseError('Failed to retrieve user', { userId });
     }
   }
-  
+
   /**
    * Get user by email
    * @param email Email to look up
@@ -40,7 +40,7 @@ export class UserService {
       throw new DatabaseError('Failed to retrieve user by email');
     }
   }
-  
+
   /**
    * Get user by username
    * @param username Username to look up
@@ -54,7 +54,7 @@ export class UserService {
       throw new DatabaseError('Failed to retrieve user by username');
     }
   }
-  
+
   /**
    * Create a new user
    * @param userData User data to create
@@ -69,13 +69,13 @@ export class UserService {
           throw new ValidationError(validation.message || 'Password does not meet strength requirements');
         }
       }
-      
+
       // Check if email is already in use
       const existingEmail = await userRepository.findByEmail(userData.email);
       if (existingEmail) {
         throw new ValidationError('Email address is already in use');
       }
-      
+
       // Check if username is already in use (if provided)
       if (userData.username) {
         const existingUsername = await userRepository.findByUsername(userData.username);
@@ -83,7 +83,7 @@ export class UserService {
           throw new ValidationError('Username is already in use');
         }
       }
-      
+
       const user = await userRepository.create(userData);
       logger.info('User created successfully', { userId: user.id, email: userData.email });
       return user;
@@ -95,7 +95,7 @@ export class UserService {
       throw new DatabaseError('Failed to create user account');
     }
   }
-  
+
   /**
    * Update an existing user
    * @param userId User ID to update
@@ -111,7 +111,7 @@ export class UserService {
           throw new ValidationError(validation.message || 'Password does not meet strength requirements');
         }
       }
-      
+
       // Check if email is being changed and is already in use
       if (userData.email) {
         const existingEmail = await userRepository.findByEmail(userData.email);
@@ -119,7 +119,7 @@ export class UserService {
           throw new ValidationError('Email address is already in use');
         }
       }
-      
+
       // Check if username is being changed and is already in use
       if (userData.username) {
         const existingUsername = await userRepository.findByUsername(userData.username);
@@ -127,7 +127,7 @@ export class UserService {
           throw new ValidationError('Username is already in use');
         }
       }
-      
+
       const updatedUser = await userRepository.update(userId, userData);
       logger.info('User updated successfully', { userId });
       return updatedUser;
@@ -139,7 +139,7 @@ export class UserService {
       throw new DatabaseError('Failed to update user');
     }
   }
-  
+
   /**
    * Get all users
    * @returns Array of all users
@@ -152,7 +152,7 @@ export class UserService {
       throw new DatabaseError('Failed to retrieve users');
     }
   }
-  
+
   /**
    * Delete a user
    * @param userId User ID to delete
@@ -169,7 +169,7 @@ export class UserService {
       throw new DatabaseError('Failed to delete user');
     }
   }
-  
+
   /**
    * Find users by role
    * @param role Role to filter by
@@ -183,7 +183,7 @@ export class UserService {
       throw new DatabaseError('Failed to retrieve users by role');
     }
   }
-  
+
   /**
    * Search users by query
    * @param query Search query (name, email, username)

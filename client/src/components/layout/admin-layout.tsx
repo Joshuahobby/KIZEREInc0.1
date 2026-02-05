@@ -24,7 +24,6 @@ import {
   Lock,
   List,
   ChevronRight,
-  ChevronDown,
   BookCheck,
   Sliders,
   PanelTop,
@@ -49,17 +48,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
@@ -79,138 +79,23 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
   badge?: number;
+  onClick?: () => void;
 }
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [location] = useLocation();
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
-  const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
-    // Default open categories
-    Overview: true
-  });
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Check roles
   const isAdmin = user?.role === "Admin";
   const isAgent = user?.role === "Agent" || user?.role === "Moderator";
   const isSubscriber = user?.role === "Subscriber" || user?.role === "Business";
-  
+
   // Get current dashboard path dynamically based on role and preference
-  const dashboardPath = AuthService.getDashboardPathByRole(
-    user?.role || '', 
-    (user?.preferences as UserPreferences)?.dashboardStyle
-  );
-
-  // Navigation categories and items based on role
-  interface NavCategory {
-    title: string;
-    icon: React.ReactNode;
-    items: NavItem[];
-    badge?: number;
-  }
-
-  const getNavCategories = (): NavCategory[] => {
-    const categories: NavCategory[] = [];
-
-    // Main / Overview Category (For everyone)
-    categories.push({
-      title: "Main",
-      icon: <Home className="h-5 w-5" />,
-      items: [
-        { title: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
-      ],
-    });
-
-    // Inventory Category
-    if (isSubscriber) {
-      categories.push({
-        title: "Inventory",
-        icon: <Database className="h-5 w-5" />,
-        items: [
-          { title: "My Items", href: "/my-items", icon: <List className="h-5 w-5" /> },
-          { title: "Register New", href: "/register-item", icon: <ArrowRightCircle className="h-5 w-5" /> },
-        ],
-      });
-    } else if (isAdmin || isAgent) {
-      categories.push({
-        title: "Item Management",
-        icon: <Database className="h-5 w-5" />,
-        items: [
-          { title: "Item Database", href: "/admin/items", icon: <List className="h-5 w-5" /> },
-          { title: "Verification Queue", href: "/admin/item-verification", icon: <AlertTriangle className="h-5 w-5" />, badge: 3 },
-        ],
-      });
-    }
-
-    // Community / Lost & Found Category
-    categories.push({
-      title: "Discovery",
-      icon: <PackageSearch className="h-5 w-5" />,
-      items: [
-        { title: "Search Hub", href: "/lost-found", icon: <Search className="h-5 w-5" /> },
-        { title: "My Claims", href: "/dashboard?tab=claims", icon: <Shield className="h-5 w-5" /> },
-      ],
-    });
-
-    // Admin & Agent Specific Management
-    if (isAdmin || isAgent) {
-      categories.push({
-        title: "Management",
-        icon: <Users className="h-5 w-5" />,
-        items: [
-          { title: "User Directory", href: "/admin/users", icon: <List className="h-5 w-5" /> },
-          { title: "Identity Verification", href: "/admin/user-verification", icon: <BookCheck className="h-5 w-5" /> },
-          { title: "Moderation Queue", href: "/dashboard?tab=moderation", icon: <Shield className="h-5 w-5" /> },
-        ],
-      });
-    }
-
-    // Finance Category
-    if (isSubscriber || isAdmin) {
-      categories.push({
-        title: "Finance",
-        icon: <Wallet className="h-5 w-5" />,
-        items: [
-          { title: isAdmin ? "Financial Insights" : "My Payments", href: isAdmin ? "/admin/payment-dashboard" : "/dashboard?tab=payments", icon: <CreditCard className="h-5 w-5" /> },
-          { title: "Pricing Plans", href: "/admin/payment-packages", icon: <PackageIcon className="h-5 w-5" /> },
-        ],
-      });
-    }
-
-    // System Category (Admin only)
-    if (isAdmin) {
-      categories.push({
-        title: "System",
-        icon: <Settings className="h-5 w-5" />,
-        items: [
-          { title: "Settings", href: "/admin/settings", icon: <Settings className="h-5 w-5" /> },
-          { title: "Security", href: "/admin/security", icon: <Lock className="h-5 w-5" /> },
-        ],
-      });
-    }
-
-    return categories;
-  };
-
-  const navCategories = getNavCategories();
-
-  // Top Nav Items (Simplified for quick access)
-  const topNavItems: NavItem[] = [
-    { title: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { title: "Lost & Found", href: "/lost-found", icon: <Search className="h-4 w-4" /> },
-    { title: "My Items", href: "/my-items", icon: <PackageIcon className="h-4 w-4" /> },
-  ];
-
-  // Toggle category open/closed state
-  const toggleCategory = (categoryTitle: string) => {
-    setOpenCategories((prev) => ({
-      ...prev,
-      [categoryTitle]: !prev[categoryTitle],
-    }));
-  };
-
   // Handle logout
   const handleLogout = () => {
     signOut();
@@ -229,6 +114,75 @@ export function AppLayout({ children }: AppLayoutProps) {
     return user?.username?.substring(0, 2).toUpperCase() || "U";
   };
 
+  const dashboardPath = AuthService.getDashboardPathByRole(
+    user?.role || '',
+    (user?.preferences as UserPreferences)?.dashboardStyle
+  );
+
+  // Navigation categories and items based on role
+  interface NavCategory {
+    title: string;
+    icon: React.ReactNode;
+    items: NavItem[];
+    badge?: number;
+  }
+
+  const getNavItems = (): NavItem[] => {
+    const items: NavItem[] = [];
+
+    // Core
+    items.push({ title: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> });
+
+    // Assets / Property
+    if (isSubscriber) {
+      items.push({ title: "My Items", href: "/my-items", icon: <List className="h-5 w-5" /> });
+      items.push({ title: "Register New", href: "/register-item", icon: <ArrowRightCircle className="h-5 w-5" /> });
+    } else if (isAdmin || isAgent) {
+      items.push({ title: "Item Database", href: "/admin/items", icon: <List className="h-5 w-5" /> });
+      items.push({ title: "Verification Queue", href: "/admin/item-verification", icon: <AlertTriangle className="h-5 w-5" />, badge: 3 });
+    }
+
+    // Community
+    items.push({ title: "Search Hub", href: "/lost-found", icon: <Search className="h-5 w-5" /> });
+    items.push({ title: "My Claims", href: "/dashboard?tab=claims", icon: <Shield className="h-5 w-5" /> });
+
+    // Management (Admin/Agent)
+    if (isAdmin || isAgent) {
+      items.push({ title: "User Directory", href: "/admin/users", icon: <Users className="h-5 w-5" /> });
+      items.push({ title: "Identity Verification", href: "/admin/user-verification", icon: <BookCheck className="h-5 w-5" /> });
+      items.push({ title: "Moderation Queue", href: "/dashboard?tab=moderation", icon: <Shield className="h-5 w-5" /> });
+    }
+
+    // Finance (Admin/Subscriber)
+    if (isSubscriber || isAdmin) {
+      items.push({ title: isAdmin ? "Financial Insights" : "My Payments", href: isAdmin ? "/admin/payment-dashboard" : "/dashboard?tab=payments", icon: <CreditCard className="h-5 w-5" /> });
+      items.push({ title: "Pricing Plans", href: "/admin/payment-packages", icon: <PackageIcon className="h-5 w-5" /> });
+    }
+
+    // System
+    items.push({ title: "Settings", href: isAdmin ? "/admin/settings" : "/profile", icon: <Settings className="h-5 w-5" /> });
+    items.push({ title: "Security", href: isAdmin ? "/admin/security" : "/settings", icon: <Lock className="h-5 w-5" /> });
+
+    // Logout Item (Added for easy access since card is removed)
+    items.push({
+      title: "Terminate Session",
+      href: "#",
+      icon: <LogOut className="h-5 w-5" />,
+      onClick: handleLogout
+    });
+
+    return items;
+  };
+
+  const navItems = getNavItems();
+
+  // Top Nav Items (Simplified for quick access)
+  const topNavItems: NavItem[] = [
+    { title: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
+    { title: "Lost & Found", href: "/lost-found", icon: <Search className="h-4 w-4" /> },
+    { title: "My Items", href: "/my-items", icon: <PackageIcon className="h-4 w-4" /> },
+  ];
+
   // AdminLayout is now role-aware and available to all authenticated users
 
   return (
@@ -239,7 +193,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {/* Logo - Left */}
           <div className="flex items-center gap-2 md:gap-4 shrink-0">
             {/* Mobile menu trigger */}
-            <Sheet>
+            <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
@@ -250,72 +204,83 @@ export function AppLayout({ children }: AppLayoutProps) {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80 overflow-y-auto">
-                <div className="flex flex-col space-y-6 py-4">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                      <Shield className="h-5 w-5 text-primary" />
+              <SheetContent side="left" className="w-[300px] p-0 border-r-0 overflow-hidden flex flex-col midnight-sidebar sidebar-dark-content dark">
+                <div className="p-8 pb-4">
+                  <SheetTitle className="sr-only">KIZERE Navigation Menu</SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Access your property dashboard, lost & found hub, and platform settings.
+                  </SheetDescription>
+                  <div className="flex items-center space-x-3 mb-8">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+                      <Shield className="h-6 w-6" />
                     </div>
-                    <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">KIZERE Hub</span>
+                    <div>
+                      <span className="text-xl font-black block leading-none tracking-tighter text-white">KIZERE</span>
+                      <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black opacity-80">CENTRAL HUB</span>
+                    </div>
                   </div>
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+
+                  <div className="relative group">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
                     <Input
-                      placeholder="Search..."
-                      className="pl-8"
+                      placeholder="Search OS..."
+                      className="pl-9 bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-primary/40 rounded-2xl h-11 text-sm text-white placeholder:text-muted-foreground/30"
                     />
                   </div>
-                  <Separator />
-                  <nav className="flex flex-col space-y-1 pr-1">
-                    {navCategories.map((category) => (
-                      <Collapsible
-                        key={category.title}
-                        open={openCategories[category.title]}
-                        onOpenChange={() => toggleCategory(category.title)}
-                        className="w-full"
-                      >
-                        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground">
-                          <div className="flex items-center gap-3">
-                            {category.icon}
-                            <span>{category.title}</span>
+                </div>
+
+                <div className="flex-1 overflow-y-auto px-4 py-8 custom-scrollbar h-full">
+                  <nav className="flex flex-col space-y-2 h-full">
+                    {navItems.map((item) => {
+                      const isActive = location === item.href;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={(e) => {
+                            if (item.onClick) {
+                              e.preventDefault();
+                              item.onClick();
+                            }
+                            setIsMobileOpen(false);
+                          }}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors duration-300 relative rounded-2xl group",
+                            isActive
+                              ? "text-white"
+                              : item.title === "Terminate Session"
+                                ? "text-red-400/60 hover:text-red-400 hover:bg-red-400/5 mt-auto pt-8 border-t border-white/5"
+                                : "text-muted-foreground/40 hover:text-white"
+                          )}
+                        >
+                          {isActive && (
+                            <motion.div
+                              layoutId="active-capsule-mobile"
+                              className="absolute inset-0 active-capsule-glow rounded-2xl -z-10"
+                              initial={false}
+                              transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30
+                              }}
+                            />
+                          )}
+                          <div className={cn(
+                            "flex h-5 w-5 items-center justify-center transition-all duration-500",
+                            isActive ? "text-primary scale-110 drop-shadow-[0_0_8px_rgba(var(--primary),0.8)]" : "text-muted-foreground/30 group-hover:scale-110 group-hover:text-white"
+                          )}>
+                            {item.icon}
                           </div>
-                          <ChevronDown className={cn(
-                            "h-4 w-4 transition-transform duration-200",
-                            openCategories[category.title] ? "rotate-180 transform" : ""
-                          )} />
-                        </CollapsibleTrigger>
-                        <CollapsibleContent className="pl-4">
-                          {category.items.map((item) => (
-                            <Link 
-                              key={item.href} 
-                              href={item.href}
-                              className={cn(
-                                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground",
-                                location === item.href
-                                  ? "bg-accent text-accent-foreground"
-                                  : "transparent"
-                              )}
-                            >
-                              {item.icon}
-                              <span>{item.title}</span>
-                            </Link>
-                          ))}
-                        </CollapsibleContent>
-                      </Collapsible>
-                    ))}
+                          <span className="flex-1 tracking-tight">{item.title}</span>
+                          {item.badge && (
+                            <Badge variant="secondary" className="h-5 px-2 text-[9px] bg-primary/20 text-primary border-none font-black rounded-full">
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </Link>
+                      );
+                    })}
                   </nav>
-                  
-                  <div className="pt-4 mt-auto">
-                    <Separator className="mb-4" />
-                    <Button 
-                      variant="ghost" 
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </Button>
-                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -337,7 +302,7 @@ export function AppLayout({ children }: AppLayoutProps) {
               <GlobalSearch variant="navbar" placeholder="Press ⌘K to search everything..." />
             </div>
           </div>
-          
+
           {/* Right side actions - Right aligned */}
           <div className="ml-auto flex items-center gap-1.5 md:gap-3">
             <div className="hidden sm:flex items-center gap-1.5 md:gap-2 pr-2 border-r mr-1.5 md:mr-2">
@@ -358,7 +323,7 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <TooltipContent>Notifications</TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
+
             {/* User dropdown menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -412,93 +377,90 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
       </header>
 
-
       {/* Main content area */}
       <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
         {/* Left panel: Navigation sidebar - desktop only */}
-        <aside className="hidden md:flex flex-col w-72 border-r bg-background/50 backdrop-blur-sm">
-          <div className="flex-1 overflow-y-auto px-4 py-8 custom-scrollbar">
-            <div className="space-y-8">
-              {/* App sections */}
-              
-              {/* Navigation categories */}
-              <nav className="flex flex-col space-y-2">
-                {navCategories.map((category) => (
-                  <div key={category.title} className="mb-4 last:mb-0">
-                    <h3 className="px-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/50 mb-3 select-none">
-                      {category.title}
-                    </h3>
-                    <div className="space-y-1">
-                      {category.items.map((item) => {
-                        const isActive = location === item.href;
-                        return (
-                          <Link 
-                            key={item.href} 
-                            href={item.href}
-                            className={cn(
-                              "group relative flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-300 outline-none",
-                              isActive
-                                ? "bg-primary/10 text-primary border border-primary/20 backdrop-blur-md shadow-[0_8px_16px_-6px_rgba(var(--primary),0.15)]"
-                                : "text-muted-foreground hover:bg-muted/40 hover:text-foreground border border-transparent"
-                            )}
-                          >
-                            <div className={cn(
-                              "flex h-5 w-5 items-center justify-center transition-colors",
-                              isActive ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground"
-                            )}>
-                              {item.icon}
-                            </div>
-                            <span className="flex-1 truncate">{item.title}</span>
-                            {item.badge && (
-                              <Badge 
-                                variant={isActive ? "default" : "outline"} 
-                                className={cn(
-                                  "ml-auto h-5 px-1.5 text-[10px] font-bold min-w-[20px] justify-center",
-                                  isActive ? "bg-primary text-primary-foreground" : "border-muted-foreground/30 text-muted-foreground/80"
-                                )}
-                              >
-                                {item.badge}
-                              </Badge>
-                            )}
-                            {isActive && (
-                              <motion.div 
-                                layoutId="active-indicator"
-                                className="absolute left-0 w-0.5 h-4 bg-primary rounded-full"
-                                initial={{ opacity: 0, x: -2 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3, ease: "easeOut" }}
-                              />
-                            )}
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+        <aside className="hidden md:flex flex-col w-72 h-full p-6 sidebar-dark-content">
+          <div className="flex flex-col h-full midnight-sidebar border border-white/5 rounded-[2rem] shadow-2xl overflow-hidden dark">
+            <div className="p-8 pb-4">
+              <Link href="/" className="flex items-center space-x-3 group">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform duration-500">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <div className="transition-all duration-500">
+                  <span className="text-xl font-black block leading-none tracking-tighter text-white">KIZERE</span>
+                  <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black opacity-80">CENTRAL HUB</span>
+                </div>
+              </Link>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 py-8 custom-scrollbar">
+              <nav className="flex flex-col space-y-2 h-full">
+                {navItems.map((item) => {
+                  const isActive = location === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={(e) => {
+                        if (item.onClick) {
+                          e.preventDefault();
+                          item.onClick();
+                        }
+                      }}
+                      className={cn(
+                        "group relative flex items-center gap-3 px-5 py-3 text-sm font-bold transition-colors duration-300 outline-none rounded-2xl",
+                        isActive
+                          ? "text-white"
+                          : item.title === "Terminate Session"
+                            ? "text-red-400/50 hover:text-red-400 hover:bg-red-400/10 mt-auto mb-6 border-t border-white/5 pt-6 mx-2"
+                            : "text-muted-foreground/40 hover:text-white"
+                      )}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="active-capsule-desktop"
+                          className="absolute inset-0 active-capsule-glow rounded-2xl -z-10"
+                          initial={false}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 30
+                          }}
+                        />
+                      )}
+                      <div className={cn(
+                        "flex h-5 w-5 items-center justify-center transition-all duration-500",
+                        isActive ? "text-primary scale-110 drop-shadow-[0_0_8px_rgba(var(--primary),0.8)]" : "text-muted-foreground/30 group-hover:text-white group-hover:scale-110"
+                      )}>
+                        {item.icon}
+                      </div>
+                      <span className="flex-1 truncate tracking-tight">{item.title}</span>
+                      {item.badge && (
+                        <Badge
+                          variant="secondary"
+                          className={cn(
+                            "ml-auto h-5 px-2 text-[9px] font-black min-w-[20px] justify-center transition-all duration-500 border-none rounded-full",
+                            isActive ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground/30"
+                          )}
+                        >
+                          {item.badge}
+                        </Badge>
+                      )}
+                    </Link>
+                  );
+                })}
               </nav>
             </div>
           </div>
-          
-          <div className="p-5 border-t bg-muted/5 bg-gradient-to-up from-muted/10 to-transparent">
-            <Button 
-              variant="ghost" 
-              className="w-full justify-start text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all duration-300 font-medium px-4 h-11"
-              onClick={handleLogout}
-            >
-              <LogOut className="mr-3 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              <span>Log out</span>
-            </Button>
-          </div>
         </aside>
-        
+
         {/* Center panel: Main content area */}
         <main className="flex-1 overflow-y-auto bg-gradient-to-br from-background via-background to-muted/30 custom-scrollbar">
           <div className="p-8 pb-12 max-w-[1600px] mx-auto min-h-full flex flex-col">
             {children}
           </div>
         </main>
-        
-        {/* Right panel removed */}
       </div>
 
       {/* Footer */}
@@ -509,13 +471,13 @@ export function AppLayout({ children }: AppLayoutProps) {
             reserved.
           </p>
           <nav className="flex gap-4">
-            <Link 
+            <Link
               href="/terms"
               className="text-sm text-muted-foreground underline-offset-4 hover:underline"
             >
               Terms
             </Link>
-            <Link 
+            <Link
               href="/privacy"
               className="text-sm text-muted-foreground underline-offset-4 hover:underline"
             >
@@ -524,7 +486,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </nav>
         </div>
       </footer>
-      
+
       {/* Quick action floating menu */}
       <QuickActionMenu />
     </div>

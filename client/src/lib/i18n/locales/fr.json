@@ -7,11 +7,15 @@
     "joinKizere": "Rejoindre KIZERE",
     "continueWith": "Ou continuer avec",
     "search": "Rechercher",
-    "notifications": "Notifications", 
+    "notifications": "Notifications",
     "profile": "Profil",
     "settings": "Paramètres",
     "logout": "Déconnexion",
-    "language": "Langue"
+    "language": "Langue",
+    "saveChanges": "Enregistrer les modifications",
+    "saving": "Enregistrement...",
+    "updating": "Mise à jour...",
+    "update": "Mettre à jour"
   },
   "nav": {
     "home": "Accueil",
@@ -60,7 +64,7 @@
   "landing": {
     "nav": {
       "features": "Fonctionnalités",
-      "howItWorks": "Comment Ça Marche", 
+      "howItWorks": "Comment Ça Marche",
       "testimonials": "Témoignages"
     },
     "heroTitle": "Protégez ce qui Compte le Plus",
@@ -273,6 +277,107 @@
     "uploadImage": "Télécharger une Image",
     "additionalDetails": "Détails Supplémentaires"
   },
+  "profile": {
+    "title": "Profil",
+    "subtitle": "Gérez vos informations personnelles, paramètres de sécurité et préférences",
+    "editProfile": "Modifier le profil",
+    "joinedOn": "Rejoint le {date}",
+    "username": "Nom d'utilisateur",
+    "email": "Adresse e-mail",
+    "phone": "Numéro de téléphone",
+    "notProvided": "Non fourni",
+    "memberSince": "Membre depuis",
+    "updateSuccess": "Profil mis à jour",
+    "updateSuccessDesc": "Vos informations de profil ont été mises à jour avec succès",
+    "tabs": {
+      "profile": "Info Profil",
+      "security": "Sécurité",
+      "permissions": "Permissions",
+      "preferences": "Préférences"
+    },
+    "security": {
+      "changePassword": "Modifier le mot de passe",
+      "passwordTitle": "Modifier le mot de passe",
+      "passwordDesc": "Mettez à jour votre mot de passe pour sécuriser votre compte",
+      "currentPassword": "Mot de passe actuel",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "passwordChangeSuccess": "Mot de passe modifié avec succès",
+      "passwordChangeSuccessDesc": "Votre mot de passe a été mis à jour. Veuillez utiliser votre nouveau mot de passe pour vos prochaines connexions.",
+      "passwordChangeError": "Erreur lors de la modification du mot de passe",
+      "passwordChangeErrorDesc": "Un problème est survenu lors de la modification de votre mot de passe. Veuillez vérifier votre mot de passe actuel et réessayer.",
+      "sessionsTitle": "Sessions Actives",
+      "sessionsDesc": "Gérez vos sessions de connexion actives sur tous les appareils",
+      "currentSession": "Session Actuelle",
+      "active": "Active",
+      "logoutAllSessions": "Déconnecter toutes les autres sessions",
+      "passwordStrength": {
+        "weak": "Faible",
+        "fair": "Moyen",
+        "good": "Bon",
+        "strong": "Fort",
+        "excellent": "Excellent"
+      }
+    },
+    "permissions": {
+      "title": "Permissions et Accès",
+      "description": "Consultez les actions que vous êtes autorisé à effectuer en fonction de votre rôle actuel.",
+      "categories": {
+        "dashboard": "Tableau de Bord",
+        "items": "Objets",
+        "reports": "Signalements",
+        "users": "Utilisateurs",
+        "payments": "Paiements",
+        "system": "Système",
+        "other": "Autre"
+      },
+      "noPermissions": "Aucune permission trouvée",
+      "noPermissionsDesc": "Vous n'avez aucune permission spécifique assignée à votre compte."
+    },
+    "preferences": {
+      "title": "Préférences Système",
+      "description": "Personnalisez votre expérience du tableau de bord, le thème et les paramètres régionaux.",
+      "appearance": "Apparence et Langue",
+      "theme": "Style du Thème",
+      "selectTheme": "Sélectionner le thème",
+      "themes": {
+        "light": "Clair",
+        "dark": "Sombre",
+        "system": "Système"
+      },
+      "themeDescription": "Sélectionnez votre apparence préférée pour le tableau de bord de l'application.",
+      "language": "Sélection de la Langue",
+      "selectLanguage": "Sélectionner la langue",
+      "languageDescription": "Choisissez la langue utilisée pour les boutons, les étiquettes et les messages système.",
+      "notifications": "Préférences de Notification",
+      "emailNotifications": "Notifications par Email",
+      "emailNotificationsDesc": "Recevez des mises à jour et des alertes importantes par email.",
+      "smsNotifications": "Alertes SMS",
+      "smsNotificationsDesc": "Recevez des alertes de sécurité et de récupération d'objets critiques par SMS.",
+      "pushNotifications": "Notifications Push Web",
+      "pushNotificationsDesc": "Recevez des alertes en temps réel dans votre navigateur.",
+      "dashboardSettings": "Paramètres du Tableau de Bord",
+      "layout": "Disposition du Tableau de Bord",
+      "selectLayout": "Sélectionner la disposition",
+      "layouts": {
+        "default": "Par défaut",
+        "compact": "Compacte",
+        "wide": "Large"
+      },
+      "layoutDescription": "Choisissez comment les informations sont organisées sur votre tableau de bord.",
+      "regionalization": "Régionalisation et Unités",
+      "currency": "Devise Préférée",
+      "selectCurrency": "Sélectionner la devise",
+      "currencyDescription": "Utilisé pour afficher les frais et l'historique des transactions.",
+      "timezone": "Fuseau Horaire",
+      "selectTimezone": "Sélectionner le fuseau horaire",
+      "timezoneDescription": "Garantit que les horodatages sont affichés à votre heure locale.",
+      "saveSuccess": "Préférences Enregistrées",
+      "saveSuccessDesc": "Vos préférences système ont été mises à jour avec succès.",
+      "saveError": "Échec de la Mise à Jour",
+      "saveErrorDesc": "Nous n'avons pas pu enregistrer vos préférences. Veuillez réessayer plus tard."
+    }
+  },
   "reports": {
     "reportLostItem": "Signaler un Objet Perdu",
     "reportFoundItem": "Signaler un Objet Trouvé",
@@ -329,5 +434,19 @@
     "quick_start_desc": "Passez de zéro à enregistré en moins de 5 minutes.",
     "security_title": "Sécurité chez KIZERE",
     "security_desc": "Découvrez comment nous protégeons vos objets et vos données personnelles."
+  },
+  "permissions": {
+    "descriptions": {
+      "fallback": "Accès standard pour cette action.",
+      "can_view_dashboard": "Accorder l'accès pour voir le tableau de bord principal et les statistiques générales.",
+      "can_manage_own_items": "Vous permet d'enregistrer, de modifier et de gérer les objets que vous possédez.",
+      "can_create_reports": "Vous permet de signaler des objets perdus ou trouvés dans le système.",
+      "can_view_own_payments": "Accorder l'accès pour voir votre historique de paiement et les détails des transactions.",
+      "can_view_all_items": "Accès administratif pour voir tous les objets enregistrés dans le système.",
+      "can_manage_users": "Accès administratif pour gérer les comptes d'utilisateurs et les rôles.",
+      "can_manage_system": "Accès aux outils de configuration et de maintenance du système.",
+      "can_view_reports": "Accès pour voir les signalements d'objets perdus et trouvés.",
+      "can_manage_reports": "Accès pour gérer et résoudre les signalements d'objets perdus et trouvés."
+    }
   }
 }

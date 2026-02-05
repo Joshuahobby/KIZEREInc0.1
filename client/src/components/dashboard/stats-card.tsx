@@ -61,13 +61,13 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   // Generate SVG path for the sparkline
   const generateSparklinePath = (data: number[]) => {
     if (!data.length) return "";
-    
+
     const max = Math.max(...data);
     const min = Math.min(...data);
     const range = max - min || 1;
     const width = 80;
     const height = 30;
-    
+
     return data.map((value, index) => {
       const x = (index / (data.length - 1)) * width;
       const y = height - ((value - min) / range) * height;
@@ -90,52 +90,54 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   };
 
   return (
-    <Card className="h-full border border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-3">
-          <div className="font-medium text-sm text-muted-foreground">{title}</div>
+    <Card className="h-full border-none bg-card/40 backdrop-blur-md shadow-[var(--shadow-premium)] hover:shadow-[var(--shadow-premium-lg)] transition-all duration-500 overflow-hidden">
+      <CardContent className="p-6 relative">
+        <div className="flex items-center justify-between mb-4">
+          <div className="font-bold text-xs uppercase tracking-widest text-muted-foreground/70">{title}</div>
           {icon && (
-            <div className={`rounded-full p-2 ${iconBgClass}`}>
+            <div className={`rounded-2xl p-2.5 transition-transform duration-500 hover:scale-110 ${iconBgClass}`}>
               <div className={iconTextClass}>{icon}</div>
             </div>
           )}
         </div>
-        
+
         {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-3/4" />
+          <div className="space-y-3">
+            <Skeleton className="h-10 w-3/4 rounded-lg" />
             <div className="flex space-x-2">
-              <Skeleton className="h-5 w-16" />
-              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+              <Skeleton className="h-6 w-24 rounded-full" />
             </div>
           </div>
         ) : (
-          <>
-            <div className="text-2xl font-bold mb-1">
-              {prefix}{formattedValue}{suffix}
+          <div className="space-y-4">
+            <div>
+              <div className="text-3xl font-black tracking-tighter mb-1">
+                {prefix}{formattedValue}{suffix}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                {percentChange !== undefined && (
+                  <Badge
+                    variant="outline"
+                    className={`
+                      flex items-center space-x-1 font-bold text-[10px] px-2 py-0 h-5 border-none
+                      ${trendDirection === 'positive' ? 'bg-emerald-500/10 text-emerald-500' :
+                        trendDirection === 'negative' ? 'bg-red-500/10 text-red-500' :
+                          'bg-gray-500/10 text-gray-500'}
+                    `}
+                  >
+                    {getTrendIcon(trendDirection)}
+                    <span>{formattedChange}</span>
+                  </Badge>
+                )}
+
+                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground/50">
+                  vs. last period
+                </span>
+              </div>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              {percentChange !== undefined && (
-                <Badge 
-                  variant="outline" 
-                  className={`
-                    flex items-center space-x-1 font-medium
-                    ${trendDirection === 'positive' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 
-                      trendDirection === 'negative' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 
-                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}
-                  `}
-                >
-                  {getTrendIcon(trendDirection)}
-                  <span>{formattedChange}</span>
-                </Badge>
-              )}
-              
-              <span className="text-xs text-muted-foreground">
-                vs. previous period
-              </span>
-            </div>
-            
+
             {trendData.length > 0 && (
               <div className="mt-3 relative h-[30px]">
                 <svg width="100%" height="30" className="overflow-visible">
@@ -161,7 +163,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
                 </svg>
               </div>
             )}
-          </>
+          </div>
         )}
       </CardContent>
     </Card>

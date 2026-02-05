@@ -6,9 +6,9 @@ import { setupAuth } from "./auth";
 import { z } from "zod";
 import { db } from "./db";
 import { and, eq, like, or, sql, desc } from "drizzle-orm";
-import { 
-  insertItemSchema, 
-  insertReportSchema, 
+import {
+  insertItemSchema,
+  insertReportSchema,
   insertNotificationSchema,
   insertPaymentPackageSchema,
   userRoles,
@@ -19,9 +19,9 @@ import {
   PaymentStatus,
   PaymentPackage
 } from "@shared/schema";
-import { 
-  generateTransactionReference, 
-  verifyTransaction, 
+import {
+  generateTransactionReference,
+  verifyTransaction,
   verifyWebhookSignature,
   initializePayment,
   PAYMENT_FEES,
@@ -30,21 +30,22 @@ import {
 import { getPaymentDescription } from "./config/payment.config";
 import { createLogger } from "./utils/logger";
 import { DEFAULT_CURRENCY } from "./config/payment.config";
-import { 
-  format, 
-  subDays, 
-  startOfDay, 
-  endOfDay, 
-  startOfWeek, 
-  endOfWeek, 
-  startOfMonth, 
-  endOfMonth, 
-  startOfYear, 
-  endOfYear 
+import {
+  format,
+  subDays,
+  startOfDay,
+  endOfDay,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  startOfYear,
+  endOfYear
 } from "date-fns";
 // Import service layer
 import { UserService } from "./services/user.service";
 import { PaymentService } from "./services/payment.service";
+
 import { dashboardService, DashboardService } from "./services/dashboard.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
 import { ReportMatchingService } from "./services/report-matching.service";
@@ -58,31 +59,31 @@ const logger = createLogger('Routes');
 function requireRole(roles: string[] | 'any') {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.isAuthenticated()) {
-      logger.warn('Authentication required but not present', { 
+      logger.warn('Authentication required but not present', {
         path: req.path,
         cookies: !!req.headers.cookie,
         sessionId: req.sessionID
       });
       return res.status(401).json({ message: "Authentication required" });
     }
-    
+
     if (roles === 'any') {
       return next();
     }
-    
+
     if (!req.user || !roles.includes(req.user.role)) {
-      logger.warn('Access denied: insufficient permissions', { 
-        userId: req.user?.id, 
-        userRole: req.user?.role, 
+      logger.warn('Access denied: insufficient permissions', {
+        userId: req.user?.id,
+        userRole: req.user?.role,
         requiredRoles: roles,
         path: req.path
       });
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: "Insufficient permissions",
         required: roles
       });
     }
-    
+
     next();
   };
 }
@@ -111,7 +112,7 @@ import adminJobsRoutes from './routes/admin-jobs.routes';
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
-  
+
   // Middleware for authenticated routes
   const requireAuth = requireRole('any');
   const requireAdmin = requireRole(['Admin']);
@@ -123,6 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/reports', requireAuth, reportRoutes);
   app.use('/api/notifications', requireAuth, notificationRoutes);
   app.use('/api/payments', requireAuth, paymentRoutes);
+  app.use('/api/payment-packages', requireAuth, paymentRoutes);
   app.use('/api/claims', requireAuth, claimRoutes);
   app.use('/api/me', requireAuth, profileRoutes);
   app.use('/api/upload', requireAuth, uploadRoutes);
@@ -204,31 +206,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const validationResult = googleAuthSchema.safeParse(req.body);
-      
+
       if (!validationResult.success) {
         logger.warn('Google auth validation failed', { errors: validationResult.error.errors });
-        return res.status(400).json({ 
-          message: "Invalid request data", 
-          errors: validationResult.error.errors 
+        return res.status(400).json({
+          message: "Invalid request data",
+          errors: validationResult.error.errors
         });
       }
 
       const { email, name, uid, token, photoURL } = validationResult.data;
       const origin = req.headers.origin;
       const referer = req.headers.referer;
-      const isReplitEnvironment = 
+      const isReplitEnvironment =
         (origin && (origin.includes('replit') || origin.includes('repl.co'))) ||
         (referer && (referer.includes('replit') || referer.includes('repl.co')));
-      
+
       logger.info('Google auth request details', {
         email,
         hasToken: !!token,
         isReplitEnvironment
       });
-      
+
       // Token Verification Logic
       let tokenVerified = false;
-      
+
       if (token) {
         try {
           if (canVerifyTokens && typeof canVerifyTokens === 'function' && canVerifyTokens()) {
@@ -239,32 +241,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else {
               logger.warn('Token UID mismatch or invalid', { tokenUid: decodedToken?.uid, providedUid: uid });
               if (process.env.NODE_ENV === 'production') {
-                 return res.status(401).json({ message: "Invalid authentication token" });
+                return res.status(401).json({ message: "Invalid authentication token" });
               }
             }
           } else {
             logger.warn('Token verification skipped - no FIREBASE_SERVICE_ACCOUNT credentials');
           }
         } catch (tokenError: any) {
-           logger.error('Token verification error', { error: tokenError.message });
-           if (process.env.NODE_ENV === 'production' && !isReplitEnvironment) {
-             return res.status(401).json({ message: "Failed to verify authentication token" });
-           }
+          logger.error('Token verification error', { error: tokenError.message });
+          if (process.env.NODE_ENV === 'production' && !isReplitEnvironment) {
+            return res.status(401).json({ message: "Failed to verify authentication token" });
+          }
         }
       } else if (process.env.NODE_ENV === 'production' && !isReplitEnvironment) {
-          // In strict production (non-Replit), require a token
-          return res.status(401).json({ message: "Authentication token is required" });
+        // In strict production (non-Replit), require a token
+        return res.status(401).json({ message: "Authentication token is required" });
       }
 
       // Find or Create User
       let user = await UserService.getUserByEmail(email);
-      
+
       if (!user) {
         try {
           // Create secure random password that won't be used for login
           // We pass it PLAIN to UserService.createUser so it can be validated and then hashed by Repository
           const securePassword = `FirebaseAuth_${uid}_${crypto.randomBytes(4).toString('hex')}!`;
-          
+
           user = await UserService.createUser({
             fullName: name,
             username: email, // Use email as username for Google Auth users initially
@@ -277,27 +279,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           logger.info('Created new user from Firebase auth', { userId: user.id, email });
         } catch (createError: any) {
-          logger.error('Failed to create user from Firebase auth', { 
-            error: createError.message, 
+          logger.error('Failed to create user from Firebase auth', {
+            error: createError.message,
             stack: createError.stack,
-            email 
+            email
           });
-          return res.status(500).json({ 
+          return res.status(500).json({
             message: "Failed to create user account",
             details: createError.message
           });
         }
       } else {
-         // Update avatar if changed
-         if (photoURL && user.avatarUrl !== photoURL) {
-            try {
-              await UserService.updateUser(user.id, { avatarUrl: photoURL });
-            } catch (e) { /* ignore avatar update error */ }
-         }
+        // Update avatar if changed
+        if (photoURL && user.avatarUrl !== photoURL) {
+          try {
+            await UserService.updateUser(user.id, { avatarUrl: photoURL });
+          } catch (e) { /* ignore avatar update error */ }
+        }
       }
 
       if (!user) {
-         return res.status(500).json({ message: "User retrieval failed" });
+        return res.status(500).json({ message: "User retrieval failed" });
       }
 
       // Initial login establishes the session in memory/store
@@ -312,30 +314,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // before the Vercel serverless function freezes/terminates.
         req.session.save((saveErr) => {
           if (saveErr) {
-             logger.error('Session save error', { error: saveErr });
-             return res.status(500).json({ message: "Failed to save session" });
+            logger.error('Session save error', { error: saveErr });
+            return res.status(500).json({ message: "Failed to save session" });
           }
-          
+
           logger.info('Session saved successfully', { userId: user!.id, sessionId: req.sessionID });
-          
+
           const { password, ...userData } = user!;
           return res.status(200).json(userData);
         });
       });
 
     } catch (error: any) {
-      logger.error('Firebase auth critical error', { 
-        message: error.message, 
-        stack: error.stack 
+      logger.error('Firebase auth critical error', {
+        message: error.message,
+        stack: error.stack
       });
-      
-      res.status(500).json({ 
-        message: "Internal authentication error", 
+
+      res.status(500).json({
+        message: "Internal authentication error",
         debug_error: process.env.NODE_ENV === 'development' ? error.message : undefined
       });
     }
   });
-  
+
   // Mount verification routes
   app.use("/api/verification", verificationRoutes);
 

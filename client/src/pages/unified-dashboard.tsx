@@ -77,7 +77,7 @@ export default function UnifiedDashboard() {
   const [location, navigate] = useLocation();
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
-  
+
   // Get tab from URL or default to overview
   const getTabFromUrl = () => {
     const params = new URLSearchParams(window.location.search);
@@ -86,9 +86,9 @@ export default function UnifiedDashboard() {
 
   const [activeTab, setActiveTab] = React.useState(getTabFromUrl());
 
-  console.log('[UnifiedDashboard] Rendering...', { 
-    user: user?.email, 
-    activeTab, 
+  console.log('[UnifiedDashboard] Rendering...', {
+    user: user?.email,
+    activeTab,
     isUserAuthenticated: !!user
   });
 
@@ -113,7 +113,7 @@ export default function UnifiedDashboard() {
   const [selectedClaim, setSelectedClaim] = React.useState<Claim | null>(null);
   const [reviewOpen, setReviewOpen] = React.useState(false);
 
-  
+
   const dashboardData = useDashboardData();
   const {
     userStats = {
@@ -139,8 +139,30 @@ export default function UnifiedDashboard() {
     claimsReceived = []
   } = dashboardData || {};
 
-  console.log('[UnifiedDashboard] Data status:', { 
-    isLoading, 
+  // Welcome Header with Retouch
+  const WelcomeHeader = () => (
+    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+      <div className="space-y-1">
+        <h1 className="text-4xl font-black tracking-tighter sm:text-5xl">
+          Welcome back, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/50">{user?.fullName || user?.username}</span>
+          {isAdmin && <span className="ml-3 text-xs uppercase tracking-[0.3em] font-black text-primary bg-primary/10 px-3 py-1 rounded-full align-middle">SUDO</span>}
+        </h1>
+        <p className="text-muted-foreground font-medium text-lg leading-relaxed max-w-2xl">
+          Manage your registered assets, monitor hub activity, and track security status in real-time.
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-px bg-border/50 hidden md:block mx-2" />
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60">Local Time</span>
+          <span className="font-bold tabular-nums">{format(new Date(), 'HH:mm')}</span>
+        </div>
+      </div>
+    </div>
+  );
+
+  console.log('[UnifiedDashboard] Data status:', {
+    isLoading,
     hasUserStats: !!userStats,
     itemsCount: items?.length,
     reportsCount: reports?.length
@@ -150,13 +172,13 @@ export default function UnifiedDashboard() {
   const dashboardStyle = ((user?.preferences as UserPreferences)?.dashboardStyle || 'standard') as string;
 
   const getStatsGridClass = () => {
-    switch(dashboardStyle) {
+    switch (dashboardStyle) {
       case 'grid':
-        return 'grid gap-4 md:grid-cols-3 lg:grid-cols-5 mb-6';
+        return 'grid gap-6 md:grid-cols-3 lg:grid-cols-5 mb-8';
       case 'classic':
-        return 'grid gap-4 md:grid-cols-1 lg:grid-cols-2 mb-6'; // List-like but still cards
+        return 'grid gap-6 md:grid-cols-1 lg:grid-cols-2 mb-8';
       default:
-        return 'grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6';
+        return 'grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8';
     }
   };
 
@@ -337,9 +359,9 @@ export default function UnifiedDashboard() {
             <motion.div variants={itemVariants} className="lg:col-span-1">
               <NotificationCenter notifications={notifications || []} isLoading={false} />
             </motion.div>
-            
-             {/* Dashboard Alerts - New Component */}
-             <motion.div variants={itemVariants} className="lg:col-span-1">
+
+            {/* Dashboard Alerts - New Component */}
+            <motion.div variants={itemVariants} className="lg:col-span-1">
               <DashboardAlerts />
             </motion.div>
           </div>
@@ -446,7 +468,7 @@ export default function UnifiedDashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <PaymentAnalyticsChart data={adminStats?.monthlyRevenue?.map(item => ({ date: item.month, amount: item.revenue })) || []} />
+                  <PaymentAnalyticsChart data={adminStats?.monthlyRevenue?.map((item: any) => ({ date: item.month, amount: item.revenue })) || []} />
                 </CardContent>
               </Card>
             </motion.div>
@@ -458,12 +480,12 @@ export default function UnifiedDashboard() {
                 </CardHeader>
                 <CardContent>
                   <PaymentStatusChart data={
-                    (adminStats?.paymentsByStatus || []).map(item => ({
+                    (adminStats?.paymentsByStatus || []).map((item: any) => ({
                       name: item.status,
                       value: item.count,
-                      color: item.status === 'successful' ? '#10b981' : 
-                             item.status === 'pending' ? '#f59e0b' : 
-                             item.status === 'failed' ? '#ef4444' : '#94a3b8'
+                      color: item.status === 'successful' ? '#10b981' :
+                        item.status === 'pending' ? '#f59e0b' :
+                          item.status === 'failed' ? '#ef4444' : '#94a3b8'
                     }))
                   } />
                 </CardContent>
@@ -475,11 +497,11 @@ export default function UnifiedDashboard() {
                 </CardHeader>
                 <CardContent>
                   <PaymentTypeChart data={
-                    (adminStats?.paymentsByType || []).map(item => ({
+                    (adminStats?.paymentsByType || []).map((item: any) => ({
                       name: item.type,
                       value: item.amount,
-                      color: item.type === 'registration' ? '#3b82f6' : 
-                             item.type === 'lost_report' ? '#8b5cf6' : '#94a3b8'
+                      color: item.type === 'registration' ? '#3b82f6' :
+                        item.type === 'lost_report' ? '#8b5cf6' : '#94a3b8'
                     }))
                   } />
                 </CardContent>
@@ -498,7 +520,7 @@ export default function UnifiedDashboard() {
               </CardHeader>
               <CardContent>
                 <RecentTransactions transactions={
-                  (adminStats?.recentTransactions || []).map(transaction => ({
+                  (adminStats?.recentTransactions || []).map((transaction: any) => ({
                     id: transaction.id,
                     transactionRef: transaction.transactionRef,
                     amount: transaction.amount,
@@ -591,81 +613,81 @@ export default function UnifiedDashboard() {
                 <div className="grid lg:grid-cols-4 gap-6">
                   <div className="lg:col-span-3">
                     <Tabs defaultValue="all" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 mb-4">
-                    <TabsTrigger value="all">{t('dashboard.agent.allReports')}</TabsTrigger>
-                    <TabsTrigger value="lost">{t('dashboard.agent.lostItems')}</TabsTrigger>
-                    <TabsTrigger value="found">{t('dashboard.agent.foundItems')}</TabsTrigger>
-                    <TabsTrigger value="resolved">{t('dashboard.agent.resolvedItems')}</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="all">
-                    {/* All Reports Table */}
-                    <div className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>{t('dashboard.table.reportId')}</TableHead>
-                            <TableHead>{t('dashboard.table.type')}</TableHead>
-                            <TableHead>{t('dashboard.table.status')}</TableHead>
-                            <TableHead>{t('dashboard.table.location')}</TableHead>
-                            <TableHead>{t('dashboard.table.date')}</TableHead>
-                            <TableHead>{t('dashboard.table.actions')}</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {allReports.length > 0 ? (
-                            allReports.map((r: any) => (
-                              <TableRow 
-                                key={r.id}
-                                className={`cursor-pointer transition-colors ${selectedReportId === r.id ? 'bg-primary/5 hover:bg-primary/10' : ''}`}
-                                onClick={() => setSelectedReportId(r.id)}
-                              >
-                                <TableCell>{r.id}</TableCell>
-                                <TableCell>
-                                  <Badge variant={r.type === "lost" ? "destructive" : "success"}>
-                                    {r.type}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant={r.status === "active" ? "outline" : "secondary"}>
-                                    {r.status}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>{r.location}</TableCell>
-                                <TableCell>{new Date(r.reportedAt).toLocaleDateString()}</TableCell>
-                                <TableCell>
-                                  <Button 
-                                    size="sm" 
-                                    variant={selectedReportId === r.id ? "default" : "outline"}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedReportId(r.id);
-                                    }}
-                                  >
-                                    {selectedReportId === r.id ? t('dashboard.table.selected') : t('dashboard.table.match')}
-                                  </Button>
-                                </TableCell>
+                      <TabsList className="grid w-full grid-cols-4 mb-4">
+                        <TabsTrigger value="all">{t('dashboard.agent.allReports')}</TabsTrigger>
+                        <TabsTrigger value="lost">{t('dashboard.agent.lostItems')}</TabsTrigger>
+                        <TabsTrigger value="found">{t('dashboard.agent.foundItems')}</TabsTrigger>
+                        <TabsTrigger value="resolved">{t('dashboard.agent.resolvedItems')}</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="all">
+                        {/* All Reports Table */}
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>{t('dashboard.table.reportId')}</TableHead>
+                                <TableHead>{t('dashboard.table.type')}</TableHead>
+                                <TableHead>{t('dashboard.table.status')}</TableHead>
+                                <TableHead>{t('dashboard.table.location')}</TableHead>
+                                <TableHead>{t('dashboard.table.date')}</TableHead>
+                                <TableHead>{t('dashboard.table.actions')}</TableHead>
                               </TableRow>
-                            ))
-                          ) : (
-                            <TableRow>
-                              <TableCell colSpan={6} className="text-center py-4">
-                                No reports found
-                              </TableCell>
-                            </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </div>
-              <div className="lg:col-span-1">
-                <SuggestedMatches reportId={selectedReportId} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+                            </TableHeader>
+                            <TableBody>
+                              {allReports.length > 0 ? (
+                                allReports.map((r: any) => (
+                                  <TableRow
+                                    key={r.id}
+                                    className={`cursor-pointer transition-colors ${selectedReportId === r.id ? 'bg-primary/5 hover:bg-primary/10' : ''}`}
+                                    onClick={() => setSelectedReportId(r.id)}
+                                  >
+                                    <TableCell>{r.id}</TableCell>
+                                    <TableCell>
+                                      <Badge variant={r.type === "lost" ? "destructive" : "success"}>
+                                        {r.type}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant={r.status === "active" ? "outline" : "secondary"}>
+                                        {r.status}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell>{r.location}</TableCell>
+                                    <TableCell>{new Date(r.reportedAt).toLocaleDateString()}</TableCell>
+                                    <TableCell>
+                                      <Button
+                                        size="sm"
+                                        variant={selectedReportId === r.id ? "default" : "outline"}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedReportId(r.id);
+                                        }}
+                                      >
+                                        {selectedReportId === r.id ? t('dashboard.table.selected') : t('dashboard.table.match')}
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              ) : (
+                                <TableRow>
+                                  <TableCell colSpan={6} className="text-center py-4">
+                                    No reports found
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </div>
+                  <div className="lg:col-span-1">
+                    <SuggestedMatches reportId={selectedReportId} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Quick Actions for Agents */}
           <motion.div variants={itemVariants} className="mb-6">
@@ -859,8 +881,8 @@ export default function UnifiedDashboard() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <Button 
-                              size="sm" 
+                            <Button
+                              size="sm"
                               variant="ghost"
                               onClick={() => {
                                 setSelectedClaim(claim);
@@ -882,8 +904,8 @@ export default function UnifiedDashboard() {
               </CardContent>
             </Card>
           </div>
-          
-          <ClaimReviewDialog 
+
+          <ClaimReviewDialog
             claim={selectedClaim}
             isOpen={reviewOpen}
             onClose={() => setReviewOpen(false)}
@@ -1000,9 +1022,9 @@ export default function UnifiedDashboard() {
                 {t('dashboard.welcomeMessage', { name: user.fullName || user.username })}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {isAdmin 
+                {isAdmin
                   ? t('dashboard.subtitles.admin')
-                  : isAgent 
+                  : isAgent
                     ? t('dashboard.subtitles.agent')
                     : t('dashboard.subtitles.user')
                 }

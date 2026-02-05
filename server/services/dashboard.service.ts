@@ -49,69 +49,69 @@ export class DashboardService {
     try {
       // Get all payments
       const allPayments = await storage.getAllPayments();
-      
+
       // Calculate total revenue (only from successful payments)
       const totalRevenue = allPayments
         .filter(p => p.status === 'successful')
         .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
-      
+
       // Get this month's and last month's revenue for comparison
       const now = new Date();
       const thisMonth = now.getMonth();
       const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
       const thisYear = now.getFullYear();
       const lastMonthYear = thisMonth === 0 ? thisYear - 1 : thisYear;
-      
+
       // Revenue from this month
       const thisMonthRevenue = allPayments
         .filter(p => {
           const paymentDate = new Date(p.createdAt);
-          return paymentDate.getMonth() === thisMonth && 
-                 paymentDate.getFullYear() === thisYear &&
-                 p.status === 'successful';
+          return paymentDate.getMonth() === thisMonth &&
+            paymentDate.getFullYear() === thisYear &&
+            p.status === 'successful';
         })
         .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
-      
+
       // Revenue from last month
       const lastMonthRevenue = allPayments
         .filter(p => {
           const paymentDate = new Date(p.createdAt);
-          return paymentDate.getMonth() === lastMonth && 
-                 paymentDate.getFullYear() === lastMonthYear &&
-                 p.status === 'successful';
+          return paymentDate.getMonth() === lastMonth &&
+            paymentDate.getFullYear() === lastMonthYear &&
+            p.status === 'successful';
         })
         .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
-      
+
       // Calculate percentage change
-      const revenuePercentChange = lastMonthRevenue === 0 
-        ? 100 
+      const revenuePercentChange = lastMonthRevenue === 0
+        ? 100
         : Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100);
-      
+
       // Get all users
       const allUsers = await storage.getAllUsers();
-      
+
       // Get user registrations this month and last month
       const thisMonthRegistrations = allUsers.filter(u => {
         const registrationDate = new Date(u.createdAt);
-        return registrationDate.getMonth() === thisMonth && 
-               registrationDate.getFullYear() === thisYear;
+        return registrationDate.getMonth() === thisMonth &&
+          registrationDate.getFullYear() === thisYear;
       }).length;
-      
+
       const lastMonthRegistrations = allUsers.filter(u => {
         const registrationDate = new Date(u.createdAt);
-        return registrationDate.getMonth() === lastMonth && 
-               registrationDate.getFullYear() === lastMonthYear;
+        return registrationDate.getMonth() === lastMonth &&
+          registrationDate.getFullYear() === lastMonthYear;
       }).length;
-      
+
       // Calculate registration percentage change
-      const registrationPercentChange = lastMonthRegistrations === 0 
-        ? 100 
+      const registrationPercentChange = lastMonthRegistrations === 0
+        ? 100
         : Math.round(((thisMonthRegistrations - lastMonthRegistrations) / lastMonthRegistrations) * 100);
-      
+
       // Calculate payments by type
       const paymentsByType: PaymentTypeStatistics[] = [];
       const typeMap = new Map<string, { amount: number, count: number }>();
-      
+
       allPayments.forEach(payment => {
         if (payment.status === 'successful') {
           const currentType = typeMap.get(payment.type) || { amount: 0, count: 0 };
@@ -121,7 +121,7 @@ export class DashboardService {
           });
         }
       });
-      
+
       typeMap.forEach((value, type) => {
         paymentsByType.push({
           type,
@@ -129,53 +129,53 @@ export class DashboardService {
           count: value.count
         });
       });
-      
+
       // Calculate payments by status
       const paymentsByStatus: PaymentStatusStatistics[] = [];
       const statusMap = new Map<string, number>();
-      
+
       allPayments.forEach(payment => {
         const currentCount = statusMap.get(payment.status) || 0;
         statusMap.set(payment.status, currentCount + 1);
       });
-      
+
       statusMap.forEach((count, status) => {
         paymentsByStatus.push({ status, count });
       });
-      
+
       // Generate monthly revenue data for the last 6 months
       const monthlyRevenue: MonthlyRevenue[] = [];
       const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      
+
       for (let i = 5; i >= 0; i--) {
         let month = thisMonth - i;
         let year = thisYear;
-        
+
         if (month < 0) {
           month += 12;
           year -= 1;
         }
-        
+
         const monthRevenue = allPayments
           .filter(p => {
             const paymentDate = new Date(p.createdAt);
-            return paymentDate.getMonth() === month && 
-                   paymentDate.getFullYear() === year &&
-                   p.status === 'successful';
+            return paymentDate.getMonth() === month &&
+              paymentDate.getFullYear() === year &&
+              p.status === 'successful';
           })
           .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
-        
+
         monthlyRevenue.push({
           month: `${monthNames[month]} ${year}`,
           revenue: monthRevenue
         });
       }
-      
+
       // Get recent transactions (limit to 10)
       const recentTransactions = allPayments
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 10);
-      
+
       return {
         totalRevenue,
         revenueComparison: {
@@ -259,7 +259,7 @@ export class DashboardService {
       throw error;
     }
   }
-  
+
   /**
    * Get role-based dashboard statistics
    */
@@ -267,16 +267,16 @@ export class DashboardService {
     try {
       // Get user's items
       const items = await storage.getUserItems(userId);
-      
+
       // Get user's reports
       const reports = await storage.getUserReports(userId);
-      
+
       // Get user's notifications
       const notifications = await storage.getUserNotifications(userId);
-      
+
       // Get user's payments
       const payments = await storage.getUserPayments(userId);
-      
+
       // Calculate basic stats
       const totalItems = items.length;
       const totalLostReports = reports.filter(r => r.type === 'lost').length;
@@ -284,18 +284,18 @@ export class DashboardService {
       const totalSpent = payments
         .filter(p => p.status === 'successful')
         .reduce((total, payment) => total + (parseFloat(payment.amount as string) || 0), 0);
-      
+
       // Sort items by registration date to get the most recent
-      const sortedItems = [...items].sort((a, b) => 
+      const sortedItems = [...items].sort((a, b) =>
         new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
       const recentlyAddedItems = sortedItems.slice(0, 5);
-      
+
       // Count pending payments
       const pendingPayments = payments.filter(p => p.status === 'pending').length;
-      
+
       // Count unread notifications
       const unreadNotifications = notifications.filter(n => !n.isRead).length;
-      
+
       // Return stats based on role
       const stats: any = {
         totalItems,
@@ -311,15 +311,15 @@ export class DashboardService {
       if (role === 'Admin' || role === 'Agent' || role === 'Moderator') {
         const allReports = await storage.getAllReports();
         stats.allOpenReports = allReports.filter(r => r.status === 'Open').length;
-        
+
         if (role === 'Admin' || role === 'Moderator') {
           try {
             // Add moderation stats
-            const [modStats] = await db.select({ 
+            const [modStats] = await db.select({
               pending: sql<number>`count(*) filter (where status = 'pending')`,
               total: sql<number>`count(*)`
             }).from(moderationReports);
-            
+
             stats.moderation = {
               pending: Number(modStats?.pending || 0),
               total: Number(modStats?.total || 0)
@@ -334,7 +334,7 @@ export class DashboardService {
           const allUsers = await storage.getAllUsers();
           stats.totalUsers = allUsers.length;
           stats.pendingVerifications = allUsers.filter(u => u.verificationStatus === 'pending').length;
-          
+
           // Add detailed counts for frontend compatibility
           stats.userStats = {
             subscriberCount: allUsers.filter(u => u.role === 'Subscriber').length,
@@ -372,7 +372,7 @@ export class DashboardService {
         }
         stats.registrationTrends = registrationTrends;
       }
-      
+
       return stats;
     } catch (error) {
       logger.error('Error getting user dashboard stats', { error, userId });
@@ -395,17 +395,17 @@ export class DashboardService {
     try {
       await db.execute(sql`SELECT 1`);
       const dbResponseTime = Date.now() - dbStart;
-      
+
       status.services.push({
         id: 'database',
         name: 'Database',
         status: 'operational',
         description: 'PostgreSQL Database',
         updatedAt: new Date().toISOString(),
-        metrics: { 
-          responseTime: dbResponseTime, 
-          uptime: 100, 
-          errorRate: 0 
+        metrics: {
+          responseTime: dbResponseTime,
+          uptime: 100,
+          errorRate: 0
         }
       });
     } catch (error) {
@@ -418,7 +418,7 @@ export class DashboardService {
         updatedAt: new Date().toISOString(),
         metrics: { responseTime: 0, uptime: 0, errorRate: 100 }
       });
-      
+
       status.issues.push({
         id: 'db-conn-err',
         severity: 'critical',
@@ -426,7 +426,7 @@ export class DashboardService {
         description: 'Unable to connect to the primary database.',
         timestamp: new Date().toISOString()
       });
-      
+
       logger.error('Database health check failed', { error });
     }
 
@@ -448,10 +448,10 @@ export class DashboardService {
       status: 'operational',
       description: 'Express API Server',
       updatedAt: new Date().toISOString(),
-      metrics: { 
-        responseTime: 10, 
-        uptime: process.uptime(), 
-        memoryUsage: Math.round(memUsage.heapUsed / 1024 / 1024) 
+      metrics: {
+        responseTime: 10,
+        uptime: process.uptime(),
+        memoryUsage: Math.round(memUsage.heapUsed / 1024 / 1024)
       }
     });
 

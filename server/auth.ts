@@ -13,7 +13,7 @@ import { sendWelcomeEmail } from "./services/email.service";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser {}
+    interface User extends SelectUser { }
   }
 }
 
@@ -22,13 +22,13 @@ export function setupAuth(app: Express) {
   // SESSION_SECRET is critical for session persistence in serverless environments.
   // If missing, a new secret is generated on every lambda cold start, logging everyone out.
   const sessionSecret = process.env.SESSION_SECRET;
-  
+
   if (!sessionSecret && env.NODE_ENV === "production") {
     console.warn("⚠️ WARNING: SESSION_SECRET is not set in production. Sessions will be volatile across serverless instances.");
   }
-  
+
   const finalSecret = sessionSecret || randomBytes(32).toString('hex');
-  
+
   const sessionSettings: session.SessionOptions = {
     secret: finalSecret,
     resave: false,
@@ -67,7 +67,7 @@ export function setupAuth(app: Express) {
     console.log("Serializing user:", user.id);
     done(null, user.id);
   });
-  
+
   passport.deserializeUser(async (id: number, done) => {
     try {
       console.log("Deserializing user ID:", id);
@@ -119,7 +119,7 @@ export function setupAuth(app: Express) {
       // Log in the new user
       req.login(user, (err) => {
         if (err) return next(err);
-        
+
         req.session.save((saveErr) => {
           if (saveErr) return next(saveErr);
           res.status(201).json(userWithoutPassword);
@@ -138,7 +138,7 @@ export function setupAuth(app: Express) {
       }
       req.login(user, (loginErr) => {
         if (loginErr) return next(loginErr);
-        
+
         req.session.save((saveErr) => {
           if (saveErr) return next(saveErr);
           // Strip password from response
@@ -164,15 +164,15 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    
+
     try {
       // Use UserService to get fresh user data
       const freshUserData = await UserService.getUserById(req.user.id);
-      
+
       if (!freshUserData) {
         return res.status(404).json({ message: "User no longer exists" });
       }
-      
+
       // Strip password from response
       const { password, ...userWithoutPassword } = freshUserData;
       res.json(userWithoutPassword);
@@ -186,6 +186,6 @@ export function setupAuth(app: Express) {
       res.json(userWithoutPassword);
     }
   });
-  
+
   // Google OAuth authentication is now handled in routes.ts
 }

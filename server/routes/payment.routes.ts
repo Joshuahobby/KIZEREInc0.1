@@ -1,13 +1,13 @@
 import { Router } from "express";
 import { storage } from "../storage";
-import { 
+import {
   insertPaymentPackageSchema,
   initiatePaymentSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { createLogger } from "../utils/logger";
-import { 
-  generateTransactionReference, 
+import {
+  generateTransactionReference,
   initializePayment,
   getPaymentAmount
 } from "../utils/flutterwave";
@@ -28,14 +28,30 @@ const requireAdmin = requireRole(['Admin']);
 
 
 // Payments & Packages API
-router.get("/packages", async (req, res) => {
+// Supports both /api/payments/packages and /api/payment-packages (when mounted accordingly)
+router.get(["/", "/packages"], async (req, res) => {
   try {
+    const includeInactive = req.query.includeInactive === 'true';
     const packages = await storage.getAllPaymentPackages();
-    res.json(packages);
+    // Filter by active if not explicitly requested
+    const filteredPackages = includeInactive ? packages : packages.filter(p => p.status === 'active');
+    res.json(filteredPackages);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch payment packages" });
   }
 });
+
+router.get("/type/:type", async (req, res) => {
+  try {
+    const { type } = req.params;
+    const onlyActive = req.query.onlyActive !== 'false';
+    const packages = await storage.getPaymentPackageByType(type as any, onlyActive);
+    res.json(packages);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch payment packages by type" });
+  }
+});
+
 
 router.post("/packages", requireAdmin, async (req, res) => {
   try {
@@ -52,7 +68,8 @@ router.post("/packages", requireAdmin, async (req, res) => {
 
 router.get("/history", async (req, res) => {
   try {
-    const payments = await storage.getUserPayments(req.user!.id);
+    if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+    const payments = await storage.getUserPayments(req.user.id);
     res.json(payments);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch payment history" });
@@ -65,7 +82,7 @@ router.post("/initiate", async (req, res) => {
     const validatedData = initiatePaymentSchema.parse(req.body);
     const amount = await getPaymentAmount(validatedData.type as 'registration' | 'lost_report');
     const txRef = generateTransactionReference();
-    
+
     const payment = await storage.createPayment({
       userId: req.user!.id,
       amount: amount.toString(),
@@ -116,16 +133,16 @@ router.post("/webhook", async (req, res) => {
     }
 
     const { status, txRef, id } = req.body;
-    
+
     if (status === 'successful') {
       const transaction = await verifyTransaction(id.toString());
-      
+
       if (transaction.status === 'success') {
         // Update payment status
         const payment = await storage.getPaymentByTransactionRef(txRef);
         if (payment && payment.status !== 'completed') {
           await storage.updatePayment(payment.id, { status: 'completed' });
-          
+
           // Send confirmation email
           const user = await storage.getUser(payment.userId);
           if (user?.email) {
@@ -167,8 +184,8 @@ router.get("/verify/:txRef", async (req, res) => {
     // Let's check if we can verify by tx_ref.
     // To keep it simple, if the payment is already completed in our DB (via webhook), return success.
     if (payment.status === 'completed' || payment.status === 'successful') {
-      return res.json({ 
-        status: "successful", 
+      return res.json({
+        status: "successful",
         message: "Payment already verified",
         transactionRef: txRef,
         amount: parseFloat(payment.amount)
@@ -180,11 +197,11 @@ router.get("/verify/:txRef", async (req, res) => {
     // (or implement txRef lookup if Flutterwave supports it).
     // Actually, Flutterwave's verify endpoint is /transactions/:id/verify.
     // If the client just has tx_ref, we might need to search for the transaction.
-    
-    res.json({ 
-      status: "pending", 
-      message: "Payment verification is in progress. Please wait a moment.", 
-      transactionRef: txRef 
+
+    res.json({
+      status: "pending",
+      message: "Payment verification is in progress. Please wait a moment.",
+      transactionRef: txRef
     });
   } catch (error) {
     logger.error("Verification failed", { error, txRef });
@@ -202,6 +219,20 @@ router.get("/status/:txRef", async (req, res) => {
     res.json(payment);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch status" });
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid package ID" });
+    }
+    const pkg = await storage.getPaymentPackage(id);
+    if (!pkg) return res.status(404).json({ message: "Package not found" });
+    res.json(pkg);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch payment package" });
   }
 });
 

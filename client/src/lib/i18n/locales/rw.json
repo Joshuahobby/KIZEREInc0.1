@@ -7,7 +7,7 @@
     "joinKizere": "Ifatanye na KIZERE",
     "continueWith": "Cyangwa ukomeze na",
     "search": "Gushakisha",
-    "notifications": "Imenyesha", 
+    "notifications": "Imenyesha",
     "profile": "Umwirondoro",
     "settings": "Igenamiterere",
     "logout": "Gusohoka",
@@ -15,7 +15,11 @@
     "returnToHome": "Garuka ku ipaji y'ibanze",
     "register_item": "Andika Ikintu",
     "complete_registration": "Uzuza Kwandikisha",
-    "filter": "Shungura"
+    "filter": "Shungura",
+    "saveChanges": "Bika amahinduka",
+    "saving": "Irarabika...",
+    "updating": "Iravugurura...",
+    "update": "Vugurura"
   },
   "nav": {
     "home": "Ahabanza",
@@ -67,7 +71,7 @@
   "landing": {
     "nav": {
       "features": "Ibiranga",
-      "howItWorks": "Uko Bikora", 
+      "howItWorks": "Uko Bikora",
       "testimonials": "Ubuhamya"
     },
     "heroTitle": "Kurinda Ibyawe by'Agaciro",
@@ -385,6 +389,107 @@
     "uploadImage": "Ohereza Ifoto",
     "additionalDetails": "Andi Makuru"
   },
+  "profile": {
+    "title": "Umwirondoro",
+    "subtitle": "Gucunga amakuru yawe bwite, igenamiterere ry'umutekano, n'ibyo uhitamo",
+    "editProfile": "Guhindura Umwirondoro",
+    "joinedOn": "Yinjiye ku wa {date}",
+    "username": "Izina ry'ukoresha",
+    "email": "Imeyili",
+    "phone": "Nimero ya telefone",
+    "notProvided": "Ntabwo yatanzwe",
+    "memberSince": "Umunyamuryango kuva",
+    "updateSuccess": "Umwirondoro Wavuguruwe",
+    "updateSuccessDesc": "Amakuru y'umwirondoro wawe yavuguruwe neza",
+    "tabs": {
+      "profile": "Amakuru y'Umwirondoro",
+      "security": "Umutekano",
+      "permissions": "Uburenganzira",
+      "preferences": "Ibyo Uhitamo"
+    },
+    "security": {
+      "changePassword": "Guhindura ijambo ry'ibanga",
+      "passwordTitle": "Guhindura ijambo ry'ibanga",
+      "passwordDesc": "Vugurura ijambo ryawe ry'ibanga kugira ngo urinde konti yawe",
+      "currentPassword": "Ijambo ry'ibanga rya none",
+      "newPassword": "Ijambo ry'ibanga rishya",
+      "confirmPassword": "Emeza ijambo ry'ibanga rishya",
+      "passwordChangeSuccess": "Ijambo ry'ibanga ryahinduwe neza",
+      "passwordChangeSuccessDesc": "Ijambo ryawe ry'ibanga ryamaze kuvugururwa. Koresha ijambo rishya igihe winjira ubutaha.",
+      "passwordChangeError": "Guhindura ijambo ry'ibanga byanze",
+      "passwordChangeErrorDesc": "Hagaragaye ikibazo mu guhindura ijambo ryawe ry'ibanga. Reba ijambo ryawe rya none maze wongere ugerageze.",
+      "sessionsTitle": "Ibikorwa biheruka",
+      "sessionsDesc": "Cunga ibikoresho byose winjiriyeho kuri konti yawe",
+      "currentSession": "Ibikoresho winjiriyeho ubu",
+      "active": "Kirimo gukoreshwa",
+      "logoutAllSessions": "Sohoka mu bindi bikoresho byose",
+      "passwordStrength": {
+        "weak": "Roroheje",
+        "fair": "Riringaniye",
+        "good": "Rikomeye",
+        "strong": "Rikomeye cyane",
+        "excellent": "Rihagije neza"
+      }
+    },
+    "permissions": {
+      "title": "Uburenganzira & Ukugera kuri Sisitemu",
+      "description": "Reba ibyo wemerewe gukora bishingiye ku nshingano zawe muri sisitemu.",
+      "categories": {
+        "dashboard": "Ikibaho",
+        "items": "Ibintu",
+        "reports": "Raporo",
+        "users": "Abakoresha",
+        "payments": "Ubwishyu",
+        "system": "Sisitemu",
+        "other": "Ibindi"
+      },
+      "noPermissions": "Nta burenganzira bwabonetse",
+      "noPermissionsDesc": "Ntabwo ufite uburenganzira bwihariye wahawe kuri konti yawe."
+    },
+    "preferences": {
+      "title": "Igenamiterere rya Sisitemu",
+      "description": "Hindura uko ubona ikibaho cyawe, ururimi, n'ibindi bijyanye n'akarere.",
+      "appearance": "Isura & Ururimi",
+      "theme": "Uburyo bugaragara",
+      "selectTheme": "Hitamo isura",
+      "themes": {
+        "light": "Hacyeye",
+        "dark": "Hijima",
+        "system": "Bishingiye kuri sisitemu"
+      },
+      "themeDescription": "Hitamo isura ushaka ko urubuga rugira.",
+      "language": "Guhitamo Ururimi",
+      "selectLanguage": "Hitamo ururimi",
+      "languageDescription": "Hitamo ururimi rwakoreshwa ku mibonano, amazina, n'ubutumwa bwa sisitemu.",
+      "notifications": "Igenamiterere ry'Imenyesha",
+      "emailNotifications": "Imenyesha kuri Imeyili",
+      "emailNotificationsDesc": "Jya ubona ubutumwa n'imenyesha by'amasaha kuri imeyili yawe.",
+      "smsNotifications": "Imenyesha kuri SMS",
+      "smsNotificationsDesc": "Jya ubona ubutumwa bw'umutekano n'ibyo kugarura ibintu kuri SMS.",
+      "pushNotifications": "Imenyesha rya Web Push",
+      "pushNotificationsDesc": "Jya ubona ubutumwa bahita batanga muri browser yawe.",
+      "dashboardSettings": "Igenamiterere ry'Ikibaho",
+      "layout": "Uko amakuru ategerejwe",
+      "selectLayout": "Hitamo uko amakuru ategerejwe",
+      "layouts": {
+        "default": "Bisanzwe",
+        "compact": "Bito",
+        "wide": "Bigari"
+      },
+      "layoutDescription": "Hitamo uko amakuru ashaka kugaragara ku kibaho cyawe.",
+      "regionalization": "Akarere & Amayuniti",
+      "currency": "Ifaranga ryifuzwa",
+      "selectCurrency": "Hitamo ifaranga",
+      "currencyDescription": "Rikoreshwa mu kwerekana amafaranga wishyura n'amateka y'ubwishyu.",
+      "timezone": "Isaha y'akarere",
+      "selectTimezone": "Hitamo isaha y'akarere",
+      "timezoneDescription": "Bituma amasaha agaragara bishingiye ku gihe cy'aho uherereye.",
+      "saveSuccess": "Igenamiterere ryabitse",
+      "saveSuccessDesc": "Igenamiterere ryawe rya sisitemu ryavuguruwe neza.",
+      "saveError": "Kuvugurura byanze",
+      "saveErrorDesc": "Ntabwo twabashije kubika igenamiterere ryawe. Ongera ugerageze nyuma."
+    }
+  },
   "reports": {
     "reportLostItem": "Menyekanisha Ikintu Cyabuze",
     "reportFoundItem": "Menyekanisha Ikintu Cyabonetse",
@@ -544,5 +649,19 @@
       "recovery_expert": "Recovery Expert"
     },
     "create_post": "Sangiza Inkuru cyangwa Integuza"
+  },
+  "permissions": {
+    "descriptions": {
+      "fallback": "Uburenganzira busanzwe kuri iki gikorwa.",
+      "can_view_dashboard": "Guhabwa uburenganzira bwo kureba ikibaho gikuru n'imibare rusange.",
+      "can_manage_own_items": "Bituma ubasha kwandika, guhindura, no gucunga ibintu utunze.",
+      "can_create_reports": "Bituma ubasha gutanga raporo y'ibintu byabuze cyangwa byabonetse muri sisitemu.",
+      "can_view_own_payments": "Guhabwa uburenganzira bwo kureba amateka y'ubwishyu bwawe.",
+      "can_view_all_items": "Uburenganzira bw'ubuyobozi bwo kureba ibintu byose byanditswe muri sisitemu.",
+      "can_manage_users": "Uburenganzira bw'ubuyobozi bwo gucunga konti z'abakoresha n'inshingano zabo.",
+      "can_manage_system": "Uburenganzira bwo kwinjira mu igenamiterere rya sisitemu.",
+      "can_view_reports": "Uburenganzira bwo kureba raporo z'ibyabuze n'ibyabonetse.",
+      "can_manage_reports": "Uburenganzira bwo gucunga no gukemura raporo z'ibyabuze n'ibyabonetse."
+    }
   }
 }

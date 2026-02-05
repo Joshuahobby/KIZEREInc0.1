@@ -137,7 +137,7 @@ landing.footer.resources
 landing.footer.contact
 
 support@kizere.com
-+254 712 345 678
++250 788 331 033
 
     landing.footer.location
 

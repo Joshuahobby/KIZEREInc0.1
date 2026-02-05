@@ -4,6 +4,7 @@
  */
 
 import { PaymentType } from "@shared/schema";
+import { z } from "zod";
 import { storage } from "../storage";
 
 /**
@@ -37,13 +38,13 @@ export const DEFAULT_CURRENCY = "RWF";
 export function getUploadLimit(user: any): number {
   if (user.role === 'Admin') return DEFAULT_UPLOAD_LIMITS.ADMIN;
   if (user.role === 'Business') return DEFAULT_UPLOAD_LIMITS.BUSINESS;
-  
+
   // For other users, check if they have a paid package
   // This is a simplified check - in a real app we might check active subscriptions
   if (user.role === 'Subscriber') {
     return DEFAULT_UPLOAD_LIMITS.FREE; // Default for free subscribers
   }
-  
+
   return DEFAULT_UPLOAD_LIMITS.FREE;
 }
 
@@ -58,12 +59,12 @@ export function getUploadLimit(user: any): number {
 export async function getPaymentAmount(type: PaymentType): Promise<number> {
   // Try to find a default package for this payment type
   const defaultPackage = await storage.getDefaultPackageByType(type);
-  
+
   // If a default package exists, use its amount
   if (defaultPackage) {
     return Number(defaultPackage.amount);
   }
-  
+
   // Otherwise fallback to default fees
   switch (type) {
     case "registration":
@@ -100,7 +101,7 @@ export async function getPaymentDescription(type: PaymentType, packageId?: numbe
       return packageData.name;
     }
   }
-  
+
   // Otherwise, use default descriptions
   switch (type) {
     case "registration":
