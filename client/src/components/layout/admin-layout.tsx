@@ -188,7 +188,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Top navigation bar */}
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm px-4 md:px-8">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm px-4 md:px-8">
         <div className="flex h-16 items-center w-full max-w-[1600px] mx-auto relative">
           {/* Logo - Left */}
           <div className="flex items-center gap-2 md:gap-4 shrink-0">
@@ -247,10 +247,10 @@ export function AppLayout({ children }: AppLayoutProps) {
                           className={cn(
                             "flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors duration-300 relative rounded-2xl group",
                             isActive
-                              ? "text-white"
+                              ? "text-primary font-black bg-primary/10"
                               : item.title === "Terminate Session"
-                                ? "text-red-400/60 hover:text-red-400 hover:bg-red-400/5 mt-auto pt-8 border-t border-white/5"
-                                : "text-muted-foreground/40 hover:text-white"
+                                ? "text-red-500/70 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 mt-auto pt-8 border-t border-border"
+                                : "text-muted-foreground hover:text-foreground"
                           )}
                         >
                           {isActive && (
@@ -286,7 +286,7 @@ export function AppLayout({ children }: AppLayoutProps) {
             </Sheet>
 
             {/* Logo for larger screens */}
-            <Link href="/" className="flex items-center space-x-2 mr-4 lg:mr-8 group">
+            <Link href="/" className="md:hidden flex items-center space-x-2 mr-4 lg:mr-8 group">
               <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-all duration-300">
                 <Shield className="h-5 w-5 text-primary" />
               </div>
@@ -380,15 +380,15 @@ export function AppLayout({ children }: AppLayoutProps) {
       {/* Main content area */}
       <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
         {/* Left panel: Navigation sidebar - desktop only */}
-        <aside className="hidden md:flex flex-col w-72 h-full p-6 sidebar-dark-content">
-          <div className="flex flex-col h-full midnight-sidebar border border-white/5 rounded-[2rem] shadow-2xl overflow-hidden dark">
+        <aside className="hidden md:flex flex-col w-72 h-full p-6">
+          <div className="flex flex-col h-full bg-card/50 backdrop-blur-xl border border-border/60 rounded-[2rem] shadow-xl shadow-neutral-200/20 dark:shadow-none overflow-hidden">
             <div className="p-8 pb-4">
               <Link href="/" className="flex items-center space-x-3 group">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform duration-500">
                   <Shield className="h-6 w-6" />
                 </div>
                 <div className="transition-all duration-500">
-                  <span className="text-xl font-black block leading-none tracking-tighter text-white">KIZERE</span>
+                  <span className="text-xl font-black block leading-none tracking-tighter text-foreground">KIZERE</span>
                   <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black opacity-80">CENTRAL HUB</span>
                 </div>
               </Link>
@@ -409,12 +409,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                         }
                       }}
                       className={cn(
-                        "group relative flex items-center gap-3 px-5 py-3 text-sm font-bold transition-colors duration-300 outline-none rounded-2xl",
+                        "group relative flex items-center gap-3 px-5 py-3 text-sm font-bold transition-all duration-300 outline-none rounded-2xl hover:translate-x-1",
                         isActive
-                          ? "text-white"
+                          ? "text-primary font-black bg-primary/10"
                           : item.title === "Terminate Session"
-                            ? "text-red-400/50 hover:text-red-400 hover:bg-red-400/10 mt-auto mb-6 border-t border-white/5 pt-6 mx-2"
-                            : "text-muted-foreground/40 hover:text-white"
+                            ? "text-red-500/70 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 mt-auto mb-6 border-t border-border pt-6 mx-2"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
                       )}
                     >
                       {isActive && (
@@ -456,7 +456,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </aside>
 
         {/* Center panel: Main content area */}
-        <main className="flex-1 overflow-y-auto bg-gradient-to-br from-background via-background to-muted/30 custom-scrollbar">
+        <main className="flex-1 overflow-y-auto bg-neutral-50/50 dark:bg-background custom-scrollbar">
           <div className="p-8 pb-12 max-w-[1600px] mx-auto min-h-full flex flex-col">
             {children}
           </div>

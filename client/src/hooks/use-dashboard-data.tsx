@@ -131,7 +131,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     },
     refetchInterval: refreshInterval
   });
-  
+
   const { data: myClaims, isLoading: myClaimsLoading } = useQuery({
     queryKey: ['/api/claims/my-claims'],
     queryFn: async () => {
@@ -176,7 +176,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
       if (!isAgent && !isAdmin) return null;
       const lostReports = await apiRequest('/api/reports?type=lost');
       const foundReports = await apiRequest('/api/reports?type=found');
-      
+
       return [...(lostReports as any[]), ...(foundReports as any[])];
     },
     enabled: isAgent || isAdmin,
@@ -201,12 +201,12 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
       return {
         ...dashboardStats,
         // The API may return the amount as a string, ensure it's a number
-        totalSpent: typeof dashboardStats.totalSpent === 'string' 
-          ? parseFloat(dashboardStats.totalSpent) 
+        totalSpent: typeof dashboardStats.totalSpent === 'string'
+          ? parseFloat(dashboardStats.totalSpent)
           : dashboardStats.totalSpent
       };
     }
-    
+
     // Fallback to client-side computation if API data is not available
     if (!items || !reports || !notifications || !payments) {
       return {
@@ -223,13 +223,13 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     const totalItems = items.length;
     const totalLostReports = reports.filter((r: Report) => r.type === 'lost').length;
     const totalFoundReports = reports.filter((r: Report) => r.type === 'found').length;
-    const totalSpent = payments.reduce((total: number, payment: Payment) => 
+    const totalSpent = payments.reduce((total: number, payment: Payment) =>
       payment.status === 'successful' ? total + parseFloat(payment.amount as string) : total, 0);
-    
-    const sortedItems = [...items].sort((a, b) => 
+
+    const sortedItems = [...items].sort((a, b) =>
       new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
     const recentlyAddedItems = sortedItems.slice(0, 5);
-    
+
     const pendingPayments = payments.filter((p: Payment) => p.status === 'pending').length;
     const unreadNotifications = notifications.filter((n: Notification) => !n.isRead).length;
 
@@ -284,27 +284,14 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
   }, [isAdmin, allUsers, revenueSummary, userStats, reports]);
 
   // Calculate loading state
-  const isLoading = itemsLoading || reportsLoading || notificationsLoading || paymentsLoading || 
+  const isLoading = itemsLoading || reportsLoading || notificationsLoading || paymentsLoading ||
     dashboardStatsLoading || myClaimsLoading || claimsReceivedLoading || (isAdmin && (allUsersLoading || revenueSummaryLoading)) ||
     ((isAdmin || isAgent) && allReportsLoading);
 
-  useEffect(() => {
-    console.log('[useDashboardData] Loading status:', {
-      isLoading,
-      itemsLoading,
-      reportsLoading,
-      notificationsLoading,
-      paymentsLoading,
-      dashboardStatsLoading,
-      myClaimsLoading,
-      claimsReceivedLoading,
-      isAdmin,
-      isAgent
-    });
-  }, [isLoading, itemsLoading, reportsLoading, notificationsLoading, paymentsLoading, dashboardStatsLoading, myClaimsLoading, claimsReceivedLoading, isAdmin, isAgent]);
 
 
-  return {
+
+  return useMemo(() => ({
     user,
     isAdmin,
     isAgent,
@@ -313,7 +300,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     userStats,
     adminStats,
     isLoading,
-    items: items || [], 
+    items: items || [],
     reports: reports || [],
     allReports: (isAdmin || isAgent) ? (allReports || []) : (reports || []),
     notifications: notifications || [],
@@ -321,5 +308,8 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     myClaims: myClaims || [],
     claimsReceived: claimsReceived || [],
     allUsers: isAdmin ? (allUsers || []) : null
-  };
+  }), [
+    user, isAdmin, isAgent, isModerator, isBusiness, userStats, adminStats, isLoading,
+    items, reports, allReports, notifications, payments, myClaims, claimsReceived, allUsers
+  ]);
 }

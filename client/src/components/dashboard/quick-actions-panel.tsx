@@ -50,10 +50,10 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
 }) => {
   const [, navigate] = useLocation();
   const { signOut } = useAuth(); // We need to import useAuth
-  
+
   const handleClick = () => {
     if (isDisabled) return;
-    
+
     if (href.includes('logout=true')) {
       signOut();
     } else {
@@ -69,16 +69,15 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
     amber: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50",
     purple: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50",
   };
-  
+
   const colorClass = colorVariants[color] || colorVariants.primary;
-  
+
   return (
     <button
       onClick={handleClick}
       disabled={isDisabled}
-      className={`w-full text-left px-4 py-3 rounded-lg mb-2 transition-colors ${colorClass} ${
-        isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
-      }`}
+      className={`w-full text-left px-4 py-3 rounded-lg mb-2 transition-all duration-200 ease-in-out hover:translate-x-1 group ${colorClass} ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-sm"
+        }`}
     >
       <div className="flex items-start">
         <div className="flex-shrink-0 mr-3">
@@ -98,7 +97,7 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
 export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) => {
   const isAdmin = user?.role === "Admin";
   const isAgent = user?.role === "Agent";
-  
+
   // Common actions for all users
   const commonActions: QuickActionItemProps[] = [
     {
@@ -147,11 +146,11 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       icon: <LogOut className="h-5 w-5 text-red-600" />,
       title: "Log Out",
       description: "Sign out of your account",
-      href: "/auth?logout=true", 
+      href: "/auth?logout=true",
       color: "red"
     }
   ];
-  
+
   // Admin-specific actions
   const adminActions: QuickActionItemProps[] = [
     {
@@ -190,7 +189,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       color: "amber"
     }
   ];
-  
+
   // Agent-specific actions
   const agentActions: QuickActionItemProps[] = [
     {
@@ -208,26 +207,26 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       color: "blue"
     }
   ];
-  
+
   // Determine which actions to show based on user role
   const actionsList = isAdmin
     ? [...adminActions, ...commonActions]
     : isAgent
       ? [...agentActions, ...commonActions]
       : commonActions;
-  
+
   return (
     <Card className="h-full border border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-display flex items-center">
-          <Bookmark className="h-5 w-5 mr-2 text-[#00BFFF]" />
+          <Bookmark className="h-5 w-5 mr-2 text-primary" />
           Quick Actions
         </CardTitle>
         <CardDescription>
           Frequently used tools and shortcuts
         </CardDescription>
       </CardHeader>
-      
+
       <CardContent className="py-0">
         <ScrollArea className="max-h-[330px] pr-3">
           <div className="space-y-1">
@@ -245,7 +244,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
           </div>
         </ScrollArea>
       </CardContent>
-      
+
       <CardFooter className="flex justify-between pt-5 border-t mt-3">
         <Button variant="outline" size="sm" className="h-8">
           <Download className="h-4 w-4 mr-1" />

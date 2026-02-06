@@ -37,6 +37,7 @@ const PaymentPackages = lazy(() => import("@/pages/admin/payment-packages"));
 const NewPaymentPackage = lazy(() => import("@/pages/admin/payment-packages/new"));
 const CreatePackage = lazy(() => import("@/pages/admin/payment-packages/create-package"));
 const ProfilePage = lazy(() => import("@/pages/profile"));
+const SettingsPage = lazy(() => import("@/pages/settings"));
 const IdentityVerification = lazy(() => import("@/pages/verification-page"));
 const AdminVerifications = lazy(() => import("@/pages/admin/verifications"));
 const BlogPage = lazy(() => import("./pages/blog"));
@@ -63,7 +64,7 @@ function App() {
         console.error('[App] Error handling Firebase redirect:', error);
       }
     };
-    
+
     setTimeout(() => {
       handleRedirect().catch(err => {
         console.error('[App] Unhandled error in redirect handler:', err);
@@ -100,12 +101,13 @@ function App() {
                 <Route path="/auth">
                   <AuthPage />
                 </Route>
-                
+
                 {/* Protected routes */}
                 <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
                 <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
                 <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
                 <ProtectedRoute path="/items/:id" component={ItemDetail} requiredRole="any" />
+                <ProtectedRoute path="/items/:id/edit" component={ItemRegistration} requiredRole="any" />
                 <Route path="/search">
                   <Search />
                 </Route>
@@ -116,14 +118,14 @@ function App() {
                 <ProtectedRoute path="/reports/:id" component={ReportDetailPage} requiredRole="any" />
                 <ProtectedRoute path="/claims/:id" component={ClaimDetailPage} requiredRole="any" />
                 <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
-                
+
                 {/* Payment routes */}
                 <Route path="/payment-status">
                   <PaymentStatus />
                 </Route>
                 <ProtectedRoute path="/payment-history" component={PaymentHistory} requiredRole="any" />
                 <ProtectedRoute path="/payment-test" component={PaymentTest} requiredRole="any" />
-                
+
                 {/* Admin routes */}
                 <ProtectedRoute path="/admin" component={AdminDashboard} requiredRole="Admin" />
                 <ProtectedRoute path="/admin/command-center" component={CommandCenter} requiredRole="Admin" />
@@ -139,11 +141,12 @@ function App() {
                 <ProtectedRoute path="/admin/item-management/:id" component={AdminItemDetail} requiredRole="Admin" />
                 <ProtectedRoute path="/admin/reports" component={AdminReports} requiredRole="Admin" />
                 <ProtectedRoute path="/admin/verifications" component={AdminVerifications} requiredRole="Admin" />
-                
+
                 {/* Profile route */}
                 <ProtectedRoute path="/profile" component={ProfilePage} requiredRole="any" />
+                <ProtectedRoute path="/settings" component={SettingsPage} requiredRole="any" />
                 <ProtectedRoute path="/identity-verification" component={IdentityVerification} requiredRole="any" />
-                
+
                 {/* Static Pages */}
                 <Route path="/faq">
                   <FAQPage />
@@ -169,7 +172,7 @@ function App() {
                 <Route path="/community">
                   <CommunityPage />
                 </Route>
-                
+
                 {/* 404 route */}
                 <Route>
                   <NotFound />

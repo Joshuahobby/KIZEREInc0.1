@@ -3,25 +3,30 @@ import { Link, useLocation } from "wouter";
 import { AvatarWithInitials } from "@/components/ui/avatar-with-initials";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { 
-  Menu, 
-  X, 
-  User, 
-  Search, 
-  PlusCircle, 
-  LayoutDashboard, 
-  Bell, 
+import {
+  Menu,
+  X,
+  User,
+  Search,
+  PlusCircle,
+  LayoutDashboard,
+  Bell,
   Package,
   Settings,
   Shield,
-  LogOut
+  LogOut,
+  Home,
+  Info,
+  Users,
+  Mail,
+  Phone
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -69,16 +74,18 @@ export function Header() {
   };
 
   // Dynamic navigation based on auth state
-  const navigation: NavItem[] = isAuthenticated 
+  const navigation: NavItem[] = isAuthenticated
     ? [
-        { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
-        { name: "Explore Hub", href: "/lost-found", icon: Search },
-      ]
+      { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
+      { name: "Explore Hub", href: "/lost-found", icon: Search },
+    ]
     : [
-        { name: t('nav.home'), href: "/", icon: null },
-        { name: "Explore Hub", href: "/lost-found", icon: Search },
-        { name: "About", href: "/about", icon: null },
-      ];
+      { name: t('nav.home'), href: "/", icon: Home },
+      { name: "Explore Hub", href: "/lost-found", icon: Search },
+      { name: "Community", href: "/community", icon: Users },
+      { name: "About", href: "/about", icon: Info },
+      { name: "Contact", href: "/contact", icon: Mail },
+    ];
 
   // Admin access is now handled via the sidebar in the dashboard layout
 
@@ -93,11 +100,11 @@ export function Header() {
   };
 
   return (
-    <header 
+    <header
       className={cn(
         "sticky top-0 z-50 w-full transition-all duration-200 border-b",
-        isScrolled 
-          ? "bg-background/80 backdrop-blur-md shadow-sm border-border" 
+        isScrolled
+          ? "bg-background/80 backdrop-blur-md shadow-sm border-border"
           : "bg-background border-transparent"
       )}
     >
@@ -111,12 +118,12 @@ export function Header() {
                 KIZERE
               </span>
             </Link>
-            
+
             {/* Desktop Navigation - Hidden on mobile */}
             <nav className="hidden md:flex ml-8 space-x-1 items-center">
               {navigation.map((item) => (
-                <Link 
-                  key={item.name} 
+                <Link
+                  key={item.name}
                   href={item.href}
                   className={cn(
                     "inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
@@ -128,7 +135,7 @@ export function Header() {
                   {item.name}
                 </Link>
               ))}
-              
+
               {isAuthenticated && (
                 <div className="ml-4 lg:ml-6">
                   <GlobalSearch variant="navbar" placeholder="Quick search..." />
@@ -141,17 +148,17 @@ export function Header() {
             {/* Actions grouped together */}
             <div className="flex items-center gap-1 sm:gap-2 mr-2">
               <ThemeToggle />
-              
+
               <div className="hidden sm:block">
                 <LanguageSwitcher variant="minimal" />
               </div>
-              
+
               {isAdmin && (
                 <div className="hidden md:block">
                   <DashboardStyleSwitcher />
                 </div>
               )}
-              
+
               {isAuthenticated && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -189,9 +196,9 @@ export function Header() {
                 </DropdownMenu>
               )}
             </div>
-            
+
             <div className="h-6 w-px bg-border hidden sm:block mx-1"></div>
-            
+
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -217,8 +224,8 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={handleLogout} 
+                  <DropdownMenuItem
+                    onClick={handleLogout}
                     className="rounded-lg cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive font-medium"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -238,8 +245,8 @@ export function Header() {
             )}
 
             {/* Mobile menu button */}
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="md:hidden rounded-full ml-1"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -259,8 +266,8 @@ export function Header() {
         <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-md animate-in slide-in-from-top duration-300">
           <div className="px-4 py-6 space-y-2">
             {navigation.map((item) => (
-              <Link 
-                key={item.name} 
+              <Link
+                key={item.name}
                 href={item.href}
                 className={cn(
                   "flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all",
@@ -274,13 +281,13 @@ export function Header() {
                 {item.name}
               </Link>
             ))}
-            
+
             <div className="pt-4 border-t border-border mt-4 flex flex-col gap-4">
               <div className="flex items-center justify-between px-4">
                 <span className="text-sm font-medium text-muted-foreground">{t('common.language') || "Language"}</span>
                 <LanguageSwitcher variant="minimal" />
               </div>
-              
+
               {!isAuthenticated && (
                 <div className="flex flex-col gap-2">
                   <Button asChild className="w-full rounded-xl py-6 rounded-full shadow-md bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg">
@@ -305,7 +312,7 @@ export function Header() {
               )}
 
               {isAuthenticated && (
-                <Button 
+                <Button
                   onClick={() => {
                     handleLogout();
                     setMobileMenuOpen(false);

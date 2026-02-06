@@ -1,17 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
-import { 
-  ArrowLeft, 
-  Package, 
-  Tag, 
-  Calendar, 
-  MapPin, 
-  AlertTriangle, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  Package,
+  Tag,
+  Calendar,
+  MapPin,
+  AlertTriangle,
+  CheckCircle,
   Info,
   QrCode,
   Shield,
-  FileText
+  FileText,
+  Share2,
+  Printer,
+  ChevronRight,
+  Edit
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -38,16 +42,15 @@ export default function ItemDetailPage() {
   if (isLoading) {
     return (
       <PageLayout>
-        <div className="container max-w-5xl mx-auto py-8 px-4">
-          <Skeleton className="h-10 w-32 mb-6" />
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2 space-y-6">
-              <Skeleton className="h-[400px] w-full rounded-xl" />
-              <Skeleton className="h-40 w-full" />
-            </div>
-            <div className="space-y-6">
-              <Skeleton className="h-60 w-full" />
-              <Skeleton className="h-40 w-full" />
+        <div className="container max-w-4xl mx-auto py-6 px-4">
+          <Skeleton className="h-8 w-24 mb-6" />
+          <div className="grid md:grid-cols-2 gap-6">
+            <Skeleton className="aspect-video w-full rounded-xl" />
+            <div className="space-y-4">
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-20 w-full" />
             </div>
           </div>
         </div>
@@ -58,12 +61,12 @@ export default function ItemDetailPage() {
   if (error || !item) {
     return (
       <PageLayout>
-        <div className="container max-w-5xl mx-auto py-20 px-4 text-center">
-          <div className="bg-red-50 dark:bg-red-900/10 p-8 rounded-2xl inline-block mb-6">
-            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto" />
+        <div className="container max-w-4xl mx-auto py-20 px-4 text-center">
+          <div className="bg-red-50 dark:bg-red-900/10 p-6 rounded-full inline-block mb-4">
+            <AlertTriangle className="h-8 w-8 text-red-500 mx-auto" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Item Not Found</h1>
-          <p className="text-muted-foreground mb-8">
+          <h1 className="text-xl font-bold mb-2">Item Not Found</h1>
+          <p className="text-muted-foreground mb-6">
             The item you're looking for doesn't exist or you don't have permission to view it.
           </p>
           <Button onClick={() => navigate("/my-items")} variant="default">
@@ -77,171 +80,180 @@ export default function ItemDetailPage() {
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case 'registered':
-        return <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none px-3 py-1">Registered</Badge>;
+        return <Badge className="bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border-emerald-200 shadow-none">Registered</Badge>;
       case 'lost':
-        return <Badge variant="destructive" className="px-3 py-1">Lost</Badge>;
+        return <Badge variant="destructive" className="shadow-none">Lost</Badge>;
       case 'found':
-        return <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-none px-3 py-1">Found</Badge>;
+        return <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-200 shadow-none">Found</Badge>;
       case 'recovered':
-        return <Badge className="bg-purple-500 hover:bg-purple-600 text-white border-none px-3 py-1">Recovered</Badge>;
+        return <Badge className="bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 border-purple-200 shadow-none">Recovered</Badge>;
       default:
-        return <Badge variant="outline" className="px-3 py-1">{status}</Badge>;
+        return <Badge variant="outline" className="text-muted-foreground">{status}</Badge>;
     }
   };
 
   return (
     <PageLayout>
-      <div className="container max-w-5xl mx-auto py-8 px-4">
-        {/* Header Navigation */}
-        <div className="mb-8">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            asChild
-            className="text-muted-foreground hover:text-foreground transition-colors -ml-2"
-          >
-            <Link href="/my-items">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to My Items
-            </Link>
-          </Button>
+      <div className="container max-w-4xl mx-auto py-4 md:py-8 px-4">
+        {/* Breadcrumb / Back Navigation */}
+        <div className="mb-6 flex items-center justify-between">
+          <Link href="/my-items" className="flex items-center text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back
+          </Link>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" className="h-8">
+              <Share2 className="h-3.5 w-3.5 mr-1" />
+              Share
+            </Button>
+            <Button variant="outline" size="sm" className="h-8">
+              <Printer className="h-3.5 w-3.5 mr-1" />
+              Print
+            </Button>
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Main Content Side */}
-          <div className="md:col-span-2 space-y-8">
-            {/* Image Gallery */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
+        <div className="grid md:grid-cols-5 gap-6 md:gap-8">
+          {/* Main Content - Left Side */}
+          <div className="md:col-span-3 space-y-6">
+            {/* Image Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800 aspect-video group"
+              className="relative overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-800 aspect-video group border border-neutral-200 dark:border-neutral-800"
             >
               {item.imageUrls && item.imageUrls.length > 0 ? (
-                <img 
-                  src={item.imageUrls[0]} 
-                  alt={item.name} 
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                <img
+                  src={item.imageUrls[0]}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
-                  <Package className="h-16 w-16 mb-4 opacity-20" />
-                  <p>No images available</p>
+                  <Package className="h-10 w-10 mb-2 opacity-20" />
+                  <p className="text-sm">No image</p>
                 </div>
               )}
-              
-              <div className="absolute top-4 left-4">
+              <div className="absolute top-3 left-3">
                 {getStatusBadge(item.status)}
               </div>
             </motion.div>
 
-            {/* Description Card */}
-            <Card className="border-none shadow-sm bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm">
-              <CardHeader>
-                <div className="flex items-center gap-2 text-sky-600 dark:text-sky-400 mb-1">
-                  <Info className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Item Details</span>
-                </div>
-                <CardTitle className="text-3xl font-bold">{item.name}</CardTitle>
-                <CardDescription className="text-base mt-2">
-                  {item.description || "No description provided for this item."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-tight">Category</p>
-                    <div className="flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-sky-500" />
-                      <span className="font-medium">{item.category}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-tight">Identifier</p>
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4 text-sky-500" />
-                      <span className="font-mono text-sm font-medium">{item.uniqueIdentifier}</span>
-                    </div>
-                  </div>
+            {/* Basic Info */}
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">{item.name}</h1>
+                <p className="text-muted-foreground mt-2 leading-relaxed">
+                  {item.description || "No description provided."}
+                </p>
+              </div>
 
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-tight">Registered At</p>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-sky-500" />
-                      <span className="font-medium">{format(new Date(item.registeredAt), 'PPP')}</span>
-                    </div>
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                <div>
+                  <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Category</label>
+                  <div className="flex items-center mt-1 gap-1.5 font-medium text-neutral-900 dark:text-neutral-200">
+                    <Tag className="h-3.5 w-3.5 text-sky-500" />
+                    {item.category}
                   </div>
                 </div>
-
+                <div>
+                  <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Registered</label>
+                  <div className="flex items-center mt-1 gap-1.5 font-medium text-neutral-900 dark:text-neutral-200">
+                    <Calendar className="h-3.5 w-3.5 text-sky-500" />
+                    {format(new Date(item.registeredAt), 'MMM d, yyyy')}
+                  </div>
+                </div>
                 {item.location && (
-                  <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-tight mb-2">Last Known Location</p>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="h-4 w-4 text-sky-500" />
-                      <span>{item.location}</span>
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Last Location</label>
+                    <div className="flex items-center mt-1 gap-1.5 font-medium text-neutral-900 dark:text-neutral-200">
+                      <MapPin className="h-3.5 w-3.5 text-sky-500" />
+                      {item.location}
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
 
-          {/* Sidebar / Actions Side */}
-          <div className="space-y-6">
-            <Card className="border-none shadow-sm bg-neutral-900 text-white overflow-hidden">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <QrCode className="h-5 w-5 text-sky-400" />
-                  Smart Security
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-white p-4 rounded-xl aspect-square flex items-center justify-center mb-2">
-                  <div className="w-full h-full border-2 border-dashed border-neutral-200 rounded-lg flex items-center justify-center">
-                    <QrCode className="h-24 w-24 text-neutral-900 opacity-80" />
+          {/* Sidebar - Right Side */}
+          <div className="md:col-span-2 space-y-4">
+            {/* ID Card */}
+            <Card className="bg-neutral-50 dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 shadow-sm">
+              <CardContent className="p-4 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-neutral-500 uppercase">Item ID</p>
+                    <p className="font-mono text-sm font-bold mt-1 text-neutral-900 dark:text-white">{item.uniqueIdentifier}</p>
+                  </div>
+                  <Shield className="h-5 w-5 text-emerald-500" />
+                </div>
+
+                <div className="bg-white dark:bg-black p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 flex items-center gap-4">
+                  <div className="h-12 w-12 bg-neutral-100 dark:bg-neutral-800 rounded flex items-center justify-center shrink-0">
+                    <QrCode className="h-8 w-8 text-neutral-900 dark:text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium truncate">Smart Tag Active</p>
+                    <Button variant="link" size="sm" className="h-auto p-0 text-sky-600 text-xs">
+                      Download Label
+                    </Button>
                   </div>
                 </div>
-                <p className="text-xs text-neutral-400 text-center leading-relaxed px-2">
-                  This unique QR code can be used to scan and identify your item instantly in case of loss.
-                </p>
-                <Button className="w-full bg-sky-500 hover:bg-sky-600 text-white border-none font-bold">
-                  Download Security Label
-                </Button>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-sm">
-              <CardHeader className="pb-4">
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {item.status === 'Registered' && (
-                  <Button 
-                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20" 
-                    variant="outline"
-                    onClick={() => navigate(`/lost-found/report?type=lost&itemId=${item.id}`)}
-                  >
-                    <AlertTriangle className="mr-2 h-4 w-4" />
-                    Report as Lost
-                  </Button>
-                )}
-                
-                {item.status === 'Lost' && (
-                  <Button 
-                    className="w-full justify-start text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/20" 
-                    variant="outline"
-                  >
+            {/* Actions */}
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-neutral-500 uppercase pl-1">Actions</p>
+
+              {item.status === 'Registered' && (
+                <Button
+                  className="w-full justify-between"
+                  variant="outline"
+                  onClick={() => navigate(`/lost-found/report?type=lost&itemId=${item.id}`)}
+                >
+                  <span className="flex items-center">
+                    <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
+                    Report Lost
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-neutral-400" />
+                </Button>
+              )}
+
+              {item.status === 'Lost' && (
+                <Button
+                  className="w-full justify-between border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
+                  variant="outline"
+                >
+                  <span className="flex items-center">
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Mark as Found
-                  </Button>
-                )}
-
-                <Button className="w-full justify-start" variant="outline">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Digital Ownership Cert
+                    Mark Found
+                  </span>
+                  <ChevronRight className="h-4 w-4 opacity-50" />
                 </Button>
-              </CardContent>
-            </Card>
+              )}
+
+              <Button className="w-full justify-between" variant="outline">
+                <span className="flex items-center">
+                  <FileText className="mr-2 h-4 w-4 text-sky-500" />
+                  View Certificate
+                </span>
+                <ChevronRight className="h-4 w-4 text-neutral-400" />
+              </Button>
+
+              <Button
+                className="w-full justify-between"
+                variant="outline"
+                onClick={() => navigate(`/items/${item.id}/edit`)}
+              >
+                <span className="flex items-center">
+                  <Edit className="mr-2 h-4 w-4 text-neutral-500" />
+                  Edit Details
+                </span>
+                <ChevronRight className="h-4 w-4 text-neutral-400" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

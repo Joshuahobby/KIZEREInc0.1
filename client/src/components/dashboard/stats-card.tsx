@@ -90,7 +90,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   };
 
   return (
-    <Card className="h-full border-none bg-card/40 backdrop-blur-md shadow-[var(--shadow-premium)] hover:shadow-[var(--shadow-premium-lg)] transition-all duration-500 overflow-hidden">
+    <Card className="h-full border border-border/60 bg-card/60 backdrop-blur-xl shadow-lg shadow-neutral-200/20 dark:shadow-none hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
       <CardContent className="p-6 relative">
         <div className="flex items-center justify-between mb-4">
           <div className="font-bold text-xs uppercase tracking-widest text-muted-foreground/70">{title}</div>

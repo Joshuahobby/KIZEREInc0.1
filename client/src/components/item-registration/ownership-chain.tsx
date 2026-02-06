@@ -12,7 +12,8 @@ import { cn } from '@/lib/utils';
 
 export interface OwnershipDocument {
   id: string;
-  file: File;
+  file: File | null; // Changed to allow null for existing docs
+  url?: string;      // Added for existing docs
   title: string;
   date: string;
   description: string;
@@ -20,14 +21,23 @@ export interface OwnershipDocument {
 
 export interface OwnershipChainProps {
   onDocumentsChange: (documents: OwnershipDocument[]) => void;
+  initialDocuments?: OwnershipDocument[]; // Added prop
   showHeader?: boolean;
 }
 
-export function OwnershipChain({ onDocumentsChange, showHeader = true }: OwnershipChainProps) {
+export function OwnershipChain({ onDocumentsChange, initialDocuments = [], showHeader = true }: OwnershipChainProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [documents, setDocuments] = useState<OwnershipDocument[]>([]);
+  const [documents, setDocuments] = useState<OwnershipDocument[]>(initialDocuments);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Sync with initialDocuments when they change (e.g. loaded from API)
+  React.useEffect(() => {
+    if (initialDocuments.length > 0 && documents.length === 0) {
+      setDocuments(initialDocuments);
+    }
+  }, [initialDocuments]);
+
   const [currentDocument, setCurrentDocument] = useState<{
     file: File | null;
     title: string;
@@ -39,14 +49,14 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
     date: '',
     description: '',
   });
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     // Check if file is a PDF or image
     if (!file.type.match('application/pdf') && !file.type.match('image/')) {
       toast({
@@ -56,13 +66,13 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
       });
       return;
     }
-    
+
     setCurrentDocument(prev => ({
       ...prev,
       file,
     }));
   };
-  
+
   // Add new document to chain
   const addDocument = () => {
     if (!currentDocument.file || !currentDocument.title) {
@@ -73,7 +83,7 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
       });
       return;
     }
-    
+
     const newDocument: OwnershipDocument = {
       id: Math.random().toString(36).substr(2, 9),
       file: currentDocument.file,
@@ -81,11 +91,11 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
       date: currentDocument.date,
       description: currentDocument.description,
     };
-    
+
     const updatedDocuments = [...documents, newDocument];
     setDocuments(updatedDocuments);
     onDocumentsChange(updatedDocuments);
-    
+
     // Reset current document form
     setCurrentDocument({
       file: null,
@@ -93,40 +103,40 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
       date: '',
       description: '',
     });
-    
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    
+
     toast({
       title: t('registration.ownership_document_added'),
       description: t('registration.ownership_document_added_desc'),
     });
   };
-  
+
   // Remove document from chain
   const removeDocument = (id: string) => {
     const updatedDocuments = documents.filter(doc => doc.id !== id);
     setDocuments(updatedDocuments);
     onDocumentsChange(updatedDocuments);
-    
+
     toast({
       title: t('registration.ownership_document_removed'),
       description: t('registration.ownership_document_removed_desc'),
     });
   };
-  
+
   // Get file name to display
   const getFileName = (file: File | null) => {
     if (!file) return '';
-    
+
     const name = file.name;
     if (name.length > 20) {
       return name.substring(0, 17) + '...';
     }
     return name;
   };
-  
+
   return (
     <Card className={cn("w-full", !showHeader && "border-0 shadow-none bg-transparent")}>
       {showHeader && (
@@ -172,7 +182,7 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
               </div>
             )}
           </div>
-          
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="doc-title" className="text-[10px] font-black uppercase tracking-widest opacity-60">Title *</Label>
@@ -197,7 +207,7 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-1.5">
             <Label htmlFor="doc-description" className="text-[10px] font-black uppercase tracking-widest opacity-60">Notes</Label>
             <Textarea
@@ -209,10 +219,10 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
               rows={2}
             />
           </div>
-          
-          <Button 
+
+          <Button
             type="button"
-            onClick={addDocument} 
+            onClick={addDocument}
             disabled={!currentDocument.file || !currentDocument.title || isUploading}
             className="w-full h-9 rounded-xl text-[10px] font-black uppercase tracking-widest bg-primary/20 text-primary hover:bg-primary/30 border border-primary/20"
           >
@@ -220,7 +230,7 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
             Add to Chain
           </Button>
         </div>
-        
+
         {documents.length > 0 && (
           <>
             <Separator />
@@ -230,7 +240,7 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
                 {documents.map((doc, index) => (
                   <div key={doc.id} className="relative pl-6 border-l-2 border-dashed pb-6 last:border-0 last:pb-0">
                     <div className="absolute -left-2 top-0 w-4 h-4 rounded-full bg-primary" />
-                    
+
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <h4 className="font-medium">{doc.title}</h4>
@@ -244,21 +254,21 @@ export function OwnershipChain({ onDocumentsChange, showHeader = true }: Ownersh
                           <LuTrash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <div className="flex items-center text-sm text-muted-foreground">
-                        <span>{getFileName(doc.file)}</span>
+                        <span>{getFileName(doc.file, doc.url)}</span>
                         {doc.date && (
                           <span className="ml-2 pl-2 border-l">
                             {new Date(doc.date).toLocaleDateString()}
                           </span>
                         )}
                       </div>
-                      
+
                       {doc.description && (
                         <p className="text-sm text-muted-foreground">{doc.description}</p>
                       )}
                     </div>
-                    
+
                     {index < documents.length - 1 && (
                       <div className="absolute -left-3 bottom-3 flex items-center justify-center">
                         <LuArrowDown className="h-4 w-4 text-muted-foreground" />

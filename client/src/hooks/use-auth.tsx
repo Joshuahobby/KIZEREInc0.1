@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, useMemo, ReactNode } from "react";
+// Force HMR refresh
 import { useLocation } from "wouter";
 import { User, InsertUser, UserPreferences } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
@@ -30,7 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const { toast } = useToast();
   const isMounted = useRef(true);
-  
+
   // Refs for debouncing and preventing duplicate sync calls
   const syncInProgressRef = useRef(false);
   const lastSyncTimeRef = useRef(0);
@@ -52,110 +53,110 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Core sync function - actually performs the server sync
   const performSync = async (firebaseUser: any) => {
-      if (!isMounted.current) return;
-      
-      // Check cooldown - skip if we synced recently
-      const now = Date.now();
-      if (now - lastSyncTimeRef.current < SYNC_COOLDOWN_MS) {
-        console.log("[useAuth] Skipping sync - within cooldown period");
-        if (isMounted.current) setIsLoading(false);
-        return;
-      }
-      
-      // Check if sync is already in progress using ref (instant, no re-render delay)
-      if (syncInProgressRef.current) {
-        console.log("[useAuth] Skipping sync - already in progress");
-        return;
-      }
+    if (!isMounted.current) return;
 
-      console.log("[useAuth] Starting performSync for user:", firebaseUser.email);
-      try {
-        syncInProgressRef.current = true;
-        const token = await firebaseUser.getIdToken(true);
-        console.log("[useAuth] ID Token retrieved successfully");
-        
-        const payload = {
-          email: firebaseUser.email,
-          name: firebaseUser.displayName || 'User',
-          uid: firebaseUser.uid,
-          token,
-          photoURL: firebaseUser.photoURL
-        };
+    // Check cooldown - skip if we synced recently
+    const now = Date.now();
+    if (now - lastSyncTimeRef.current < SYNC_COOLDOWN_MS) {
+      console.log("[useAuth] Skipping sync - within cooldown period");
+      if (isMounted.current) setIsLoading(false);
+      return;
+    }
 
-        console.log("[useAuth] Calling /api/auth/google...");
-        const res = await fetch("/api/auth/google", {
-           method: "POST",
-           headers: { "Content-Type": "application/json" },
-           body: JSON.stringify(payload),
-           credentials: "include"
-        });
+    // Check if sync is already in progress using ref (instant, no re-render delay)
+    if (syncInProgressRef.current) {
+      console.log("[useAuth] Skipping sync - already in progress");
+      return;
+    }
+
+    console.log("[useAuth] Starting performSync for user:", firebaseUser.email);
+    try {
+      syncInProgressRef.current = true;
+      const token = await firebaseUser.getIdToken(true);
+      console.log("[useAuth] ID Token retrieved successfully");
+
+      const payload = {
+        email: firebaseUser.email,
+        name: firebaseUser.displayName || 'User',
+        uid: firebaseUser.uid,
+        token,
+        photoURL: firebaseUser.photoURL
+      };
+
+      console.log("[useAuth] Calling /api/auth/google...");
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        credentials: "include"
+      });
 
 
-        console.log("[useAuth] /api/auth/google response status:", res.status);
-        if (res.ok) {
-           lastSyncTimeRef.current = Date.now(); // Update last sync time on success
-           const userData = await res.json();
-           console.log("[useAuth] Sync successful, user role:", userData.role);
-           if (isMounted.current) {
-             setUser(userData);
-             setError(null);
-             // Only toast if it's the first login in this session to avoid noise
-             if (!user) {
-               toast({
-                title: "Welcome!",
-                description: `Signed in as ${userData.fullName || userData.email}`,
-              });
-             }
-           }
-        } else {
-           const errText = await res.text();
-           let err;
-           try { err = JSON.parse(errText); } catch { err = { message: errText }; }
-           console.error("[useAuth] Session sync failed", err);
-           // If rate limited, respect the retry-after
-           if (res.status === 429 && err.retryAfter) {
-             lastSyncTimeRef.current = Date.now(); // Prevent immediate retry
-             console.log(`[useAuth] Rate limited, retry after ${err.retryAfter}s`);
-           }
-           if (isMounted.current) setError(err.message || "Login failed");
+      console.log("[useAuth] /api/auth/google response status:", res.status);
+      if (res.ok) {
+        lastSyncTimeRef.current = Date.now(); // Update last sync time on success
+        const userData = await res.json();
+        console.log("[useAuth] Sync successful, user role:", userData.role);
+        if (isMounted.current) {
+          setUser(userData);
+          setError(null);
+          // Only toast if it's the first login in this session to avoid noise
+          if (!user) {
+            toast({
+              title: "Welcome!",
+              description: `Signed in as ${userData.fullName || userData.email}`,
+            });
+          }
         }
-
-      } catch (e: any) {
-         console.error("[useAuth] Sync network error", e);
-         if (isMounted.current) setError("Network error during login: " + e.message);
-      } finally {
-         syncInProgressRef.current = false;
-         if (isMounted.current) {
-            console.log("[useAuth] performSync finally, setting isLoading to false");
-            setIsLoading(false); 
-         }
+      } else {
+        const errText = await res.text();
+        let err;
+        try { err = JSON.parse(errText); } catch { err = { message: errText }; }
+        console.error("[useAuth] Session sync failed", err);
+        // If rate limited, respect the retry-after
+        if (res.status === 429 && err.retryAfter) {
+          lastSyncTimeRef.current = Date.now(); // Prevent immediate retry
+          console.log(`[useAuth] Rate limited, retry after ${err.retryAfter}s`);
+        }
+        if (isMounted.current) setError(err.message || "Login failed");
       }
+
+    } catch (e: any) {
+      console.error("[useAuth] Sync network error", e);
+      if (isMounted.current) setError("Network error during login: " + e.message);
+    } finally {
+      syncInProgressRef.current = false;
+      if (isMounted.current) {
+        console.log("[useAuth] performSync finally, setting isLoading to false");
+        setIsLoading(false);
+      }
+    }
   };
 
   // Debounced wrapper - batches rapid calls and only executes the last one
   const synchronizeWithServer = (firebaseUser: any) => {
-      if (!isMounted.current) return;
-      
-      console.log("[useAuth] synchronizeWithServer called for:", firebaseUser.email);
-      // Store the pending user
-      pendingFirebaseUserRef.current = firebaseUser;
-      
-      // Clear any existing debounce timer
-      if (syncDebounceTimerRef.current) {
-        clearTimeout(syncDebounceTimerRef.current);
+    if (!isMounted.current) return;
+
+    console.log("[useAuth] synchronizeWithServer called for:", firebaseUser.email);
+    // Store the pending user
+    pendingFirebaseUserRef.current = firebaseUser;
+
+    // Clear any existing debounce timer
+    if (syncDebounceTimerRef.current) {
+      clearTimeout(syncDebounceTimerRef.current);
+    }
+
+    // Set new debounce timer
+    syncDebounceTimerRef.current = setTimeout(() => {
+      const userToSync = pendingFirebaseUserRef.current;
+      pendingFirebaseUserRef.current = null;
+      syncDebounceTimerRef.current = null;
+
+      if (userToSync && isMounted.current) {
+        console.log("[useAuth] Debounce timer fired, calling performSync");
+        performSync(userToSync);
       }
-      
-      // Set new debounce timer
-      syncDebounceTimerRef.current = setTimeout(() => {
-        const userToSync = pendingFirebaseUserRef.current;
-        pendingFirebaseUserRef.current = null;
-        syncDebounceTimerRef.current = null;
-        
-        if (userToSync && isMounted.current) {
-          console.log("[useAuth] Debounce timer fired, calling performSync");
-          performSync(userToSync);
-        }
-      }, SYNC_DEBOUNCE_MS);
+    }, SYNC_DEBOUNCE_MS);
   };
 
 
@@ -164,7 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(userData);
       return;
     }
-    
+
     try {
       const response = await fetch("/api/user");
       if (response.ok) {
@@ -179,7 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Check if user is already authenticated on mount
   useEffect(() => {
     let unsubscribe: (() => void) | undefined;
-    
+
     const setupAuth = async () => {
       try {
         // Check server session once at start
@@ -201,19 +202,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // Handle Redirect Result FIRST
         try {
-           const result = await handleRedirectResult();
-           if (result && result.user) {
-              console.log("[useAuth] Redirect result found");
-              await synchronizeWithServer(result.user);
-           }
+          const result = await handleRedirectResult();
+          if (result && result.user) {
+            console.log("[useAuth] Redirect result found");
+            await synchronizeWithServer(result.user);
+          }
         } catch (e) {
-           console.error("[useAuth] Redirect handling error", e);
+          console.error("[useAuth] Redirect handling error", e);
         }
 
         // Listen for Auth State Changes
         unsubscribe = onAuthChange(async (firebaseUser) => {
           if (!isMounted.current) return;
-          
+
           if (firebaseUser) {
             console.log("[useAuth] Firebase user detected");
             await synchronizeWithServer(firebaseUser);
@@ -221,7 +222,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Firebase says no user, but let's see if we already have a valid server session
             // If we have a session but NO Firebase user, we'll keep the session until it actually fails
             console.log("[useAuth] Firebase user signed out or not found");
-            
+
             // If we don't have a user state yet, OR we were specifically waiting for firebase
             // then we should set to null. But if we already have a user from the initial 
             // session check, let's NOT clear it just because Firebase is null.
@@ -243,7 +244,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     setupAuth();
-    
+
     // Safety timeout - ensure we don't stay in loading state forever
     const safetyTimeout = setTimeout(() => {
       setIsLoading(prev => {
@@ -269,7 +270,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user || isRedirecting || isLoading) return;
 
     const pathname = window.location.pathname;
-    
+
     if (
       pathname === "/login" ||
       pathname === "/register" ||
@@ -292,7 +293,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Reset isRedirecting when path matches dashboard
   useEffect(() => {
     if (!user || !isRedirecting) return;
-    
+
     const preferredStyle = (user.preferences as UserPreferences)?.dashboardStyle;
     const dashboardPath = AuthService.getDashboardPathByRole(user.role, preferredStyle);
     if (window.location.pathname === dashboardPath) {
@@ -362,30 +363,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginWithGoogle = async (redirectUrl?: string) => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const { signInWithGoogle } = await import('@/lib/firebase');
       const callbackUrl = redirectUrl || '/dashboard';
-      
+
       const result = await signInWithGoogle(callbackUrl);
-      
+
       if (result && result.user) {
-         console.log("[useAuth] Popup success, syncing...");
-         await synchronizeWithServer(result.user);
-         
-         import('@/lib/auth-helpers').then(({ AuthHelpers }) => {
-             const target = redirectUrl || '/dashboard'; 
-             setLocation(target);
-         });
+        console.log("[useAuth] Popup success, syncing...");
+        await synchronizeWithServer(result.user);
+
+        import('@/lib/auth-helpers').then(({ AuthHelpers }) => {
+          const target = redirectUrl || '/dashboard';
+          setLocation(target);
+        });
       }
-      
+
     } catch (error: any) {
       console.error("[useAuth] Login error", error);
       setError(error.message || "Login failed");
       toast({
-         title: "Login Error",
-         description: error.message || "Failed to login with Google",
-         variant: "destructive"
+        title: "Login Error",
+        description: error.message || "Failed to login with Google",
+        variant: "destructive"
       });
       setIsLoading(false);
     }
@@ -397,26 +398,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const { logOut } = await import('@/lib/firebase');
         await logOut();
-      } catch (e) {}
-      
+      } catch (e) { }
+
       await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
       });
-      
+
       setUser(null);
       setError(null);
-      
+
       // Clear all query cache to prevent stale data
       queryClient.clear();
-      
+
       // Clear all local and session storage for a fresh start
       localStorage.clear();
       sessionStorage.clear();
-      
+
       setIsRedirecting(false); // Reset redirecting state
       setLocation("/");
-      
+
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out",
@@ -432,7 +433,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     mutationFn: signOut,
   });
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     role: user?.role || null,
     isAuthenticated: !!user,
@@ -444,7 +445,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     loginWithGoogle,
     signOut,
     refreshUser,
-  };
+  }), [user, isLoading, error, loginMutation, registerMutation, logoutMutation]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

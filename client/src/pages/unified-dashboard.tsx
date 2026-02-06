@@ -86,11 +86,7 @@ export default function UnifiedDashboard() {
 
   const [activeTab, setActiveTab] = React.useState(getTabFromUrl());
 
-  console.log('[UnifiedDashboard] Rendering...', {
-    user: user?.email,
-    activeTab,
-    isUserAuthenticated: !!user
-  });
+
 
 
   // Update state when URL changes - using explicit React reference to avoid ReferenceErrors
@@ -143,11 +139,11 @@ export default function UnifiedDashboard() {
   const WelcomeHeader = () => (
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
       <div className="space-y-1">
-        <h1 className="text-4xl font-black tracking-tighter sm:text-5xl">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
           Welcome back, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/50">{user?.fullName || user?.username}</span>
-          {isAdmin && <span className="ml-3 text-xs uppercase tracking-[0.3em] font-black text-primary bg-primary/10 px-3 py-1 rounded-full align-middle">SUDO</span>}
+          {isAdmin && <span className="ml-3 text-[10px] uppercase tracking-[0.2em] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full align-middle">SUDO</span>}
         </h1>
-        <p className="text-muted-foreground font-medium text-lg leading-relaxed max-w-2xl">
+        <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-2xl mt-1">
           Manage your registered assets, monitor hub activity, and track security status in real-time.
         </p>
       </div>
@@ -161,12 +157,7 @@ export default function UnifiedDashboard() {
     </div>
   );
 
-  console.log('[UnifiedDashboard] Data status:', {
-    isLoading,
-    hasUserStats: !!userStats,
-    itemsCount: items?.length,
-    reportsCount: reports?.length
-  });
+
 
 
   const dashboardStyle = ((user?.preferences as UserPreferences)?.dashboardStyle || 'standard') as string;
@@ -1016,21 +1007,8 @@ export default function UnifiedDashboard() {
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
           {/* Simple Welcome Title */}
-          <div className="flex flex-col md:flex-row justify-between items-baseline mb-6 border-b pb-4">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
-                {t('dashboard.welcomeMessage', { name: user.fullName || user.username })}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                {isAdmin
-                  ? t('dashboard.subtitles.admin')
-                  : isAgent
-                    ? t('dashboard.subtitles.agent')
-                    : t('dashboard.subtitles.user')
-                }
-              </p>
-            </div>
-          </div>
+          {/* Premium Welcome Header */}
+          <WelcomeHeader />
 
           {/* Dashboard Content */}
           <div className="mt-2">

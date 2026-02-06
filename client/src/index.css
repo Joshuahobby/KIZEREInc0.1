@@ -6,12 +6,12 @@
   --yellow-accent: #FFD700;
   --yellow-light: #FFF8DC;
   --yellow-hover: #FFDF00;
-  --kizere-blue: #00BFFF;
-  --kizere-blue-dark: #0099CC;
-  --kizere-blue-light: #99E5FF;
+  --kizere-blue: #0ea5e9;
+  --kizere-blue-dark: #0284c7;
+  --kizere-blue-light: #bae6fd;
 
   /* Chart colors */
-  --chart-primary: #00BFFF;
+  --chart-primary: #0ea5e9;
   --chart-secondary: #FFD700;
   --chart-accent: #8A2BE2;
   --chart-success: #10B981;
@@ -25,8 +25,9 @@
   --card-foreground: 222.2 84% 4.9%;
   --popover: 0 0% 100%;
   --popover-foreground: 222.2 84% 4.9%;
-  --primary: 195 100% 50%;
-  /* #00BFFF */
+  /* Sky Blue-500 equivalent */
+  --primary: 199 89% 48%;
+  /* #0ea5e9 */
   --primary-foreground: 210 40% 98%;
   --secondary: 48 100% 50%;
   /* #FFD700 */

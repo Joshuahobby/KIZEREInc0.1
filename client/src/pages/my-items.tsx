@@ -4,19 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  PlusCircle, Search, Package, AlertTriangle, X, Eye, 
+import {
+  PlusCircle, Search, Package, AlertTriangle, X, Eye,
   Calendar, Tag, MapPin, Activity, LayoutGrid, List, MoreVertical, Edit2
 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { cn } from "@/lib/utils";
 import { EmptyState, ItemSkeleton } from "@/components/ui";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -51,7 +51,7 @@ export default function MyItemsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "alpha">("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
-  
+
   // Fetch user's items
   const { data: items, isLoading, error } = useQuery<Item[]>({
     queryKey: ["/api/items"],
@@ -60,20 +60,20 @@ export default function MyItemsPage() {
     },
     enabled: !!user?.id
   });
-  
+
   // Filter and Sort items
   const filteredItems = items?.filter(item => {
     const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
-    const matchesSearch = !searchQuery || 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = !searchQuery ||
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     // Filter by tab
-    const matchesTab = statusTab === "all" || 
+    const matchesTab = statusTab === "all" ||
       (statusTab === "Registered" && item.status === "Registered") ||
       (statusTab === "Lost" && item.status === "Lost") ||
       (statusTab === "Recovered" && (item.status === "Recovered" || item.status === "Found"));
-    
+
     return matchesCategory && matchesSearch && matchesTab;
   }).sort((a, b) => {
     if (sortBy === "newest") return new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime();
@@ -81,18 +81,18 @@ export default function MyItemsPage() {
     if (sortBy === "alpha") return a.name.localeCompare(b.name);
     return 0;
   }) || [];
-  
+
   // Get unique categories from items for the filter dropdown
   const uniqueCategories = items ? Array.from(new Set(items.map(item => item.category))) : [];
-  
+
   const handleReportLost = (itemId: number) => {
     navigate(`/report-lost/${itemId}`);
   };
-  
+
   const handleViewItem = (itemId: number) => {
     navigate(`/items/${itemId}`);
   };
-  
+
   if (isLoading) {
     return (
       <PageLayout>
@@ -103,7 +103,7 @@ export default function MyItemsPage() {
               <div className="h-4 w-64 bg-muted animate-pulse rounded-lg" />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <ItemSkeleton key={i} />
@@ -113,12 +113,12 @@ export default function MyItemsPage() {
       </PageLayout>
     );
   }
-  
+
   if (error) {
     return (
       <PageLayout>
         <div className="container max-w-6xl mx-auto">
-          <EmptyState 
+          <EmptyState
             icon={<X className="h-12 w-12 text-destructive" />}
             title="Failed to load items"
             description="We couldn't load your registered items. Please try again later."
@@ -133,18 +133,18 @@ export default function MyItemsPage() {
       </PageLayout>
     );
   }
-  
+
   return (
     <PageLayout>
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 py-4 sm:py-6 animate-in fade-in duration-700">
         {/* Header Section - Zero-Waste Mobile Layout */}
         <div className="flex justify-between items-center pb-2">
           <div className="space-y-0.5">
-            <h1 className="text-xl sm:text-3xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 uppercase">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
               My Items
             </h1>
           </div>
-          
+
           <Button
             onClick={() => navigate("/register-item")}
             className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5"
@@ -155,23 +155,23 @@ export default function MyItemsPage() {
           </Button>
         </div>
 
-        
+
         {/* Single Inlined Filter Row - Easy & Direct */}
         <div className="relative group w-full max-w-xl mx-auto mb-1">
           <div className="relative flex items-center gap-1 p-1 bg-background/20 backdrop-blur-xl border border-muted/20 rounded-full shadow-sm">
             {/* Search */}
             <div className="flex-1 relative flex items-center">
               <Search className="absolute left-3 h-3 w-3 text-primary opacity-40" />
-              <Input 
+              <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
                 className="w-full h-8 pl-8 bg-transparent border-none focus-visible:ring-0 text-[11px] font-bold placeholder:text-muted-foreground/30"
               />
             </div>
-            
+
             <div className="w-px h-4 bg-muted/20" />
-            
+
             {/* Direct Selects */}
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-auto h-8 px-2 border-none bg-transparent rounded-full text-[10px] font-black uppercase tracking-wider">
@@ -216,7 +216,7 @@ export default function MyItemsPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Status Pill Tabs - Centered & Ultra-Slim */}
         <div className="flex items-center gap-1.5 pb-2 overflow-x-auto no-scrollbar mask-fade-right justify-center">
           {[
@@ -257,10 +257,10 @@ export default function MyItemsPage() {
 
         {/* Content Area */}
         <div className="min-h-[300px]">
-          <ItemsGrid 
-            items={filteredItems} 
+          <ItemsGrid
+            items={filteredItems}
             viewMode={viewMode}
-            onReportLost={handleReportLost} 
+            onReportLost={handleReportLost}
             onViewItem={handleViewItem}
             hasActiveFilters={selectedCategory !== 'all' || searchQuery !== '' || statusTab !== 'all'}
             onClearFilters={() => {
@@ -293,15 +293,15 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
       <div className="py-8 sm:py-20 flex flex-col items-center justify-center animate-in slide-in-from-bottom-4 duration-500 px-4">
         {/* ... empty state content ... */}
         <div className="relative mb-6 group">
-          <motion.div 
+          <motion.div
             className="absolute -inset-10 bg-gradient-to-br from-primary/20 to-blue-500/10 rounded-full blur-3xl"
             animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           />
-          <motion.div 
-             className="relative h-20 w-20 sm:h-24 sm:w-24 bg-muted/40 rounded-2xl sm:rounded-3xl flex items-center justify-center border border-muted/30 backdrop-blur-xl shadow-2xl"
-             animate={{ y: [0, -8, 0] }}
-             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          <motion.div
+            className="relative h-20 w-20 sm:h-24 sm:w-24 bg-muted/40 rounded-2xl sm:rounded-3xl flex items-center justify-center border border-muted/30 backdrop-blur-xl shadow-2xl"
+            animate={{ y: [0, -8, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
           >
             <Package className="h-10 w-10 sm:h-12 sm:w-12 text-primary/40" />
           </motion.div>
@@ -310,22 +310,22 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
           No items found
         </h3>
         <p className="text-xs sm:text-base text-muted-foreground max-w-sm text-center mb-6 px-4 opacity-70 font-medium">
-          {hasActiveFilters 
-            ? "Your current filters aren't returning any results." 
+          {hasActiveFilters
+            ? "Your current filters aren't returning any results."
             : "You don't have any registered possessions yet."}
         </p>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           {hasActiveFilters && (
-            <button 
+            <button
               onClick={onClearFilters}
               className="px-6 py-2 text-[10px] font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-colors duration-300"
             >
               Reset Filters
             </button>
           )}
-          <Button 
-            variant="default" 
+          <Button
+            variant="default"
             onClick={() => navigate("/register-item")}
             className="rounded-full px-8 h-10 sm:h-12 bg-primary hover:bg-primary/90 font-bold transition-all shadow-xl shadow-primary/20"
           >
@@ -336,7 +336,7 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
       </div>
     );
   }
-  
+
   if (viewMode === "list") {
     return (
       <div className="space-y-3 pb-20">
@@ -355,8 +355,8 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                   {/* Small Thumbnail */}
                   <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl overflow-hidden shrink-0 bg-muted/20 border border-muted/30">
                     {item.imageUrls && item.imageUrls.length > 0 ? (
-                      <img 
-                        src={item.imageUrls[0]} 
+                      <img
+                        src={item.imageUrls[0]}
                         alt={item.name}
                         className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
                       />
@@ -366,14 +366,14 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Name & Subtitle */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-sm sm:text-base font-black tracking-tight truncate group-hover:text-primary transition-colors">
                         {item.name}
                       </h3>
-                      <Badge 
+                      <Badge
                         className={cn(
                           "sm:hidden text-[8px] px-1.5 py-0 border-none font-black uppercase tracking-widest",
                           item.status === 'Registered' && "bg-blue-500/80 text-white",
@@ -400,10 +400,10 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Status & Actions */}
                   <div className="flex items-center gap-2 sm:gap-4">
-                    <Badge 
+                    <Badge
                       className={cn(
                         "hidden sm:flex shadow-sm transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 border-none",
                         item.status === 'Registered' && "bg-blue-500/80 text-white",
@@ -414,20 +414,20 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                     >
                       {item.status}
                     </Badge>
-                    
+
                     <div className="flex items-center gap-1">
-                       <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8 rounded-full hover:bg-primary/5 hover:text-primary"
                         onClick={() => onViewItem(item.id)}
                         title="View Details"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8 rounded-full hover:bg-primary/5 hover:text-primary"
                         onClick={() => navigate(`/items/${item.id}/edit`)}
                         title="Edit"
@@ -435,9 +435,9 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
                       {item.status === 'Registered' && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/5 hover:text-destructive"
                           onClick={() => onReportLost(item.id)}
                           title="Report Loss"
@@ -473,8 +473,8 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
               {/* Image Header */}
               <div className="relative aspect-[16/10] overflow-hidden">
                 {item.imageUrls && item.imageUrls.length > 0 ? (
-                  <img 
-                    src={item.imageUrls[0]} 
+                  <img
+                    src={item.imageUrls[0]}
                     alt={item.name}
                     className="object-cover w-full h-full transition-transform duration-1000 group-hover:scale-110"
                   />
@@ -483,13 +483,13 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                     <Package className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-700" />
                   </div>
                 )}
-                
+
                 {/* Visual Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
+
                 {/* Status badge */}
                 <div className="absolute top-2.5 right-2.5">
-                  <Badge 
+                  <Badge
                     className={cn(
                       "shadow-xl backdrop-blur-xl transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 border-none",
                       item.status === 'Registered' && "bg-blue-500/80 text-white",
@@ -504,9 +504,9 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
 
                 {/* Quick view button on hover */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
-                  <Button 
-                    variant="secondary" 
-                    size="sm" 
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     className="rounded-full h-9 px-5 backdrop-blur-md bg-white/20 text-white border border-white/30 hover:bg-white/40 font-bold transition-all"
                     onClick={() => onViewItem(item.id)}
                   >
@@ -515,7 +515,7 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                   </Button>
                 </div>
               </div>
-              
+
               <CardHeader className="p-4 pb-1">
                 <CardTitle className="text-base sm:text-lg font-black line-clamp-1 group-hover:text-primary transition-colors duration-300">
                   {item.name}
@@ -525,18 +525,18 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                   {item.category}
                 </div>
               </CardHeader>
-              
+
               <CardContent className="p-4 pt-1 flex-grow space-y-3">
                 <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed opacity-70 font-medium">
                   {item.description ?? "No description provided"}
                 </p>
-                
+
                 <div className="grid grid-cols-1 gap-1.5 pt-1">
                   <div className="flex items-center text-[10px] text-muted-foreground/60 bg-muted/10 rounded-md py-1.5 px-2">
                     <Calendar className="h-3 w-3 mr-2 text-primary/30" />
                     <span className="font-bold">{new Date(item.registeredAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
                   </div>
-                  
+
                   {item.location && (
                     <div className="flex items-center text-[10px] text-muted-foreground/60 bg-muted/10 rounded-md py-1.5 px-2">
                       <MapPin className="h-3 w-3 mr-2 text-emerald-500/30" />
@@ -545,20 +545,20 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                   )}
                 </div>
               </CardContent>
-              
+
               <CardFooter className="p-4 pt-2 border-t border-muted/10 flex gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="flex-1 rounded-lg h-9 hover:bg-primary/5 hover:text-primary transition-all font-bold text-[11px]"
                   onClick={() => navigate(`/items/${item.id}/edit`)}
                 >
                   Edit
                 </Button>
-                
+
                 {item.status === 'Registered' ? (
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     className="flex-1 rounded-lg h-9 text-destructive hover:bg-destructive/5 hover:text-destructive transition-all font-bold text-[11px]"
                     onClick={() => onReportLost(item.id)}
@@ -566,8 +566,8 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                     Report Loss
                   </Button>
                 ) : item.status === 'Lost' ? (
-                  <Button 
-                    variant="default" 
+                  <Button
+                    variant="default"
                     size="sm"
                     className="flex-1 rounded-lg h-9 bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all font-bold text-[11px]"
                     onClick={() => navigate(`/items/${item.id}?action=found`)}
