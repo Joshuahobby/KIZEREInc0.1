@@ -127,10 +127,25 @@ export function OwnershipChain({ onDocumentsChange, initialDocuments = [], showH
   };
 
   // Get file name to display
-  const getFileName = (file: File | null) => {
-    if (!file) return '';
+  const getFileName = (file: File | null, url?: string) => {
+    let name = '';
 
-    const name = file.name;
+    if (file) {
+      name = file.name;
+    } else if (url) {
+      // Try to get distinct name from URL or fallback
+      try {
+        const urlObj = new URL(url);
+        name = urlObj.pathname.split('/').pop() || 'Existing Document';
+      } catch (e) {
+        name = url.split('/').pop() || 'Existing Document';
+      }
+      // Decode URI component if needed (e.g. %20 -> space)
+      try { name = decodeURIComponent(name); } catch (e) { }
+    } else {
+      return '';
+    }
+
     if (name.length > 20) {
       return name.substring(0, 17) + '...';
     }
