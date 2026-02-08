@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
+import { useState } from "react";
 import {
   ArrowLeft,
   Package,
@@ -21,9 +22,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { PageLayout } from "@/components/layout";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { ReportRegisteredItemDialog } from "@/components/reports/report-registered-item-dialog";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 
@@ -32,11 +46,30 @@ export default function ItemDetailPage() {
   const itemId = parseInt(id || "");
   const { user } = useAuth();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [showMarkFoundDialog, setShowMarkFoundDialog] = useState(false);
 
   const { data: item, isLoading, error } = useQuery<any>({
     queryKey: [`/api/items/${itemId}`],
     queryFn: () => apiRequest(`/api/items/${itemId}`),
     enabled: !!itemId && !!user
+  });
+
+  const markAsFoundMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest(`/api/items/${itemId}/mark-found`, { method: 'POST' });
+    },
+    onSuccess: () => {
+      toast({ title: "Item updated", description: "Your item has been marked as recovered." });
+      queryClient.invalidateQueries({ queryKey: [`/api/items/${itemId}`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/items'] });
+      setShowMarkFoundDialog(false);
+    },
+    onError: (err: Error) => {
+      toast({ variant: "destructive", title: "Failed to update item", description: err.message });
+    }
   });
 
   if (isLoading) {
@@ -69,9 +102,11 @@ export default function ItemDetailPage() {
           <p className="text-muted-foreground mb-6">
             The item you're looking for doesn't exist or you don't have permission to view it.
           </p>
-          <Button onClick={() => navigate("/my-items")} variant="default">
-            Back to My Items
-          </Button>
+          <Link href="/my-items">
+            <Button variant="default">
+              Back to My Items
+            </Button>
+          </Link>
         </div>
       </PageLayout>
     );
@@ -211,7 +246,7 @@ export default function ItemDetailPage() {
                 <Button
                   className="w-full justify-between"
                   variant="outline"
-                  onClick={() => navigate(`/lost-found/report?type=lost&itemId=${item.id}`)}
+                  onClick={() => setIsReportDialogOpen(true)}
                 >
                   <span className="flex items-center">
                     <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
@@ -225,10 +260,12 @@ export default function ItemDetailPage() {
                 <Button
                   className="w-full justify-between border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800"
                   variant="outline"
+                  onClick={() => setShowMarkFoundDialog(true)}
+                  disabled={markAsFoundMutation.isPending}
                 >
                   <span className="flex items-center">
                     <CheckCircle className="mr-2 h-4 w-4" />
-                    Mark Found
+                    {markAsFoundMutation.isPending ? "Updating..." : "Mark Found"}
                   </span>
                   <ChevronRight className="h-4 w-4 opacity-50" />
                 </Button>
@@ -257,6 +294,35 @@ export default function ItemDetailPage() {
           </div>
         </div>
       </div>
-    </PageLayout>
+
+      <ReportRegisteredItemDialog
+        item={item}
+        open={isReportDialogOpen}
+        onOpenChange={setIsReportDialogOpen}
+      />
+
+      <AlertDialog open={showMarkFoundDialog} onOpenChange={setShowMarkFoundDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Found your item?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will mark your item as "Recovered" and any associated lost reports will be resolved.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                markAsFoundMutation.mutate();
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20"
+            >
+              Confirm Recovered
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </PageLayout >
   );
 }

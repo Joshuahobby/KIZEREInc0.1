@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
-import { apiRequest, queryClient } from '@/lib/query-client';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { CommandCenterLayout } from '@/components/layouts/command-center-layout';
@@ -32,7 +32,7 @@ import {
   AlertTriangle,
   Plus
 } from 'lucide-react';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -40,15 +40,15 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { EmptyState } from '@/components/ui/empty-state';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from '@/components/ui/dialog';
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -100,7 +100,7 @@ export default function AdminItemManagement() {
   const [limit] = useState(10);
   const [sortBy, setSortBy] = useState('registeredAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  
+
   // Advanced filter states
   const [advancedFilters, setAdvancedFilters] = useState<FilterFormValues>({
     ownerName: '',
@@ -132,14 +132,14 @@ export default function AdminItemManagement() {
       if (typeof value === 'string' && value.trim() === '') return false;
       return true;
     }).length;
-    
+
     console.log('Applied filters:', filters, 'Active count:', filterCount);
-    
+
     setAdvancedFilters(filters);
     setActiveAdvancedFilters(filterCount);
     setPage(1); // Reset to first page when filters change
   };
-  
+
   // Clear all advanced filters
   const clearAdvancedFilters = () => {
     setAdvancedFilters({
@@ -155,11 +155,11 @@ export default function AdminItemManagement() {
     });
     setActiveAdvancedFilters(0);
   };
-  
+
   // Build query parameters including advanced filters
   const queryParams = useMemo(() => {
     let params = new URLSearchParams();
-    
+
     // Basic filters
     params.append('page', page.toString());
     params.append('limit', limit.toString());
@@ -168,14 +168,14 @@ export default function AdminItemManagement() {
     if (status !== '_all_statuses') params.append('status', status);
     params.append('sortBy', sortBy);
     params.append('sortOrder', sortOrder);
-    
+
     // Advanced filters
     if (advancedFilters.ownerName) params.append('ownerName', advancedFilters.ownerName);
     if (advancedFilters.serialNumber) params.append('serialNumber', advancedFilters.serialNumber);
     if (advancedFilters.minValue) params.append('minValue', advancedFilters.minValue);
     if (advancedFilters.maxValue) params.append('maxValue', advancedFilters.maxValue);
     if (advancedFilters.location) params.append('location', advancedFilters.location);
-    
+
     // Date filters need special handling to convert to ISO strings
     if (advancedFilters.registeredAfter) {
       params.append('registeredAfter', advancedFilters.registeredAfter.toISOString());
@@ -183,7 +183,7 @@ export default function AdminItemManagement() {
     if (advancedFilters.registeredBefore) {
       params.append('registeredBefore', advancedFilters.registeredBefore.toISOString());
     }
-    
+
     // Report filters
     if (advancedFilters.hasReports) {
       params.append('hasReports', 'true');
@@ -191,45 +191,42 @@ export default function AdminItemManagement() {
         params.append('reportType', advancedFilters.reportType);
       }
     }
-    
+
     return params.toString();
   }, [page, limit, search, category, status, sortBy, sortOrder, advancedFilters]);
 
   // Fetch items data with filters
   const { data, isLoading, error } = useQuery({
     queryKey: ['/api/admin/items', queryParams],
-    queryFn: () => 
-      apiRequest({
-        url: `/api/admin/items?${queryParams}`,
-      }),
+    queryFn: () =>
+      apiRequest(`/api/admin/items?${queryParams}`),
   });
 
   // Handle status change
   const handleStatusChange = async () => {
     if (!selectedItem || !newStatus) return;
-    
+
     try {
-      await apiRequest({
-        url: `/api/admin/items/${selectedItem.id}/status`,
+      await apiRequest(`/api/admin/items/${selectedItem.id}/status`, {
         method: 'PATCH',
         data: {
           status: newStatus,
           notes: statusNotes
         }
       });
-      
+
       // Show success toast
       toast({
         title: 'Status updated',
         description: `Item ${selectedItem.name} status has been updated to ${newStatus}`,
       });
-      
+
       // Close dialog and reset state
       setStatusDialogOpen(false);
       setSelectedItem(null);
       setNewStatus('');
       setStatusNotes('');
-      
+
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/items'] });
     } catch (error) {
@@ -245,27 +242,26 @@ export default function AdminItemManagement() {
   // Handle item deletion
   const handleDelete = async () => {
     if (!selectedItem) return;
-    
+
     try {
-      await apiRequest({
-        url: `/api/admin/items/${selectedItem.id}`,
+      await apiRequest(`/api/admin/items/${selectedItem.id}`, {
         method: 'DELETE',
         data: {
           reason: deleteReason
         }
       });
-      
+
       // Show success toast
       toast({
         title: 'Item deleted',
         description: `Item ${selectedItem.name} has been deleted successfully`,
       });
-      
+
       // Close dialog and reset state
       setDeleteDialogOpen(false);
       setSelectedItem(null);
       setDeleteReason('');
-      
+
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/admin/items'] });
     } catch (error) {
@@ -284,7 +280,7 @@ export default function AdminItemManagement() {
     setNewStatus(status);
     setStatusDialogOpen(true);
   };
-  
+
   // Open the delete confirmation dialog
   const openDeleteDialog = (item: any) => {
     setSelectedItem(item);
@@ -303,8 +299,8 @@ export default function AdminItemManagement() {
       header: 'Item Name',
       cell: ({ row }: any) => (
         <div className="font-medium truncate max-w-[180px]" title={row.getValue('name')}>
-          <Link 
-            href={`/admin/items/${row.getValue('id')}`} 
+          <Link
+            href={`/admin/items/${row.getValue('id')}`}
             className="hover:text-primary hover:underline"
           >
             {row.getValue('name')}
@@ -377,7 +373,7 @@ export default function AdminItemManagement() {
                 Archive Item
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => openDeleteDialog(item)}
                 className="text-red-600 focus:text-red-600"
               >
@@ -432,7 +428,7 @@ export default function AdminItemManagement() {
               Add Item
             </Button>
           </CardHeader>
-          
+
           <CardContent>
             {/* Filters */}
             <div className="flex flex-wrap gap-2 mb-4">
@@ -447,7 +443,7 @@ export default function AdminItemManagement() {
                   />
                 </div>
               </div>
-              
+
               <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Category" />
@@ -462,7 +458,7 @@ export default function AdminItemManagement() {
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <Select value={status} onValueChange={setStatus}>
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="Status" />
@@ -476,7 +472,7 @@ export default function AdminItemManagement() {
                   <SelectItem value="Archived">Archived</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon">
@@ -498,15 +494,15 @@ export default function AdminItemManagement() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              
-              <AdvancedItemFilters 
-                onFilterChange={handleAdvancedFilterChange} 
+
+              <AdvancedItemFilters
+                onFilterChange={handleAdvancedFilterChange}
                 onClearFilters={clearAdvancedFilters}
                 activeFilters={activeAdvancedFilters}
               />
-              
-              <Button 
-                variant="outline" 
+
+              <Button
+                variant="outline"
                 size="icon"
                 onClick={() => {
                   setSearch('');
@@ -551,7 +547,7 @@ export default function AdminItemManagement() {
               Change the status of "{selectedItem?.name}" to {newStatus}.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium">Current Status:</span>
@@ -559,14 +555,14 @@ export default function AdminItemManagement() {
                 {selectedItem?.status}
               </Badge>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium">New Status:</span>
               <Badge variant="outline" className={getStatusColor(newStatus)}>
                 {newStatus}
               </Badge>
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="notes" className="text-sm font-medium">
                 Notes
@@ -579,7 +575,7 @@ export default function AdminItemManagement() {
               />
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
               Cancel
@@ -601,7 +597,7 @@ export default function AdminItemManagement() {
               "{selectedItem?.name}" from the system and notify the owner.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          
+
           <div className="space-y-2 py-4">
             <label htmlFor="deleteReason" className="text-sm font-medium">
               Reason for deletion
@@ -613,10 +609,10 @@ export default function AdminItemManagement() {
               onChange={(e) => setDeleteReason(e.target.value)}
             />
           </div>
-          
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 text-white hover:bg-red-700"
             >

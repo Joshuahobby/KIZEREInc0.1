@@ -1,4 +1,5 @@
-import { useLoadingState } from "@/hooks/use-loading-state";
+import * as React from "react";
+import { useLoadingState } from "../../hooks/use-loading-state";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
@@ -9,7 +10,7 @@ export function LoadingOverlay({ alwaysShow = false }: { alwaysShow?: boolean })
   const { isLoading: contextLoading } = useLoadingState();
   const isLoading = alwaysShow || contextLoading;
 
-  
+
   return (
     <AnimatePresence>
       {isLoading && (

@@ -20,7 +20,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Eye, MoreHorizontal, Pencil, Trash, QrCode } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Trash, QrCode, AlertTriangle } from "lucide-react";
+import { ReportRegisteredItemDialog } from "@/components/reports/report-registered-item-dialog";
+import { useState } from "react";
 
 interface ItemsTableProps {
   items: Item[];
@@ -34,13 +36,20 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
   showHeader = true,
 }) => {
   const [, navigate] = useLocation();
+  const [reportItem, setReportItem] = useState<Item | null>(null);
+  const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+
+  const handleReportLost = (item: Item) => {
+    setReportItem(item);
+    setIsReportDialogOpen(true);
+  };
 
   // Format registration date
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
@@ -52,7 +61,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
   // Get status badge
   const getStatusBadge = (status: string) => {
     let className = '';
-    
+
     switch (status.toLowerCase()) {
       case 'registered':
         className = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
@@ -66,7 +75,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
       default:
         className = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
-    
+
     return (
       <Badge variant="outline" className={className}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -96,8 +105,8 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">No items found</p>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="mt-4"
           onClick={() => navigate('/register-item')}
         >
@@ -129,9 +138,9 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                 <div className="flex items-center">
                   {item.imageUrls && item.imageUrls.length > 0 ? (
                     <div className="h-10 w-10 rounded bg-muted mr-3 overflow-hidden flex-shrink-0">
-                      <img 
-                        src={item.imageUrls[0]} 
-                        alt={item.name} 
+                      <img
+                        src={item.imageUrls[0]}
+                        alt={item.name}
                         className="h-full w-full object-cover"
                       />
                     </div>
@@ -171,6 +180,17 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                       <QrCode className="mr-2 h-4 w-4" />
                       <span>Generate QR Code</span>
                     </DropdownMenuItem>
+
+                    {item.status === 'Registered' && (
+                      <DropdownMenuItem
+                        onClick={() => handleReportLost(item)}
+                        className="text-amber-600 focus:text-amber-700"
+                      >
+                        <AlertTriangle className="mr-2 h-4 w-4" />
+                        <span>Report as Lost</span>
+                      </DropdownMenuItem>
+                    )}
+
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-red-600 dark:text-red-400">
                       <Trash className="mr-2 h-4 w-4" />
@@ -183,6 +203,14 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
           ))}
         </TableBody>
       </Table>
+
+      {reportItem && (
+        <ReportRegisteredItemDialog
+          item={reportItem}
+          open={isReportDialogOpen}
+          onOpenChange={setIsReportDialogOpen}
+        />
+      )}
     </div>
   );
 };

@@ -1,19 +1,19 @@
-import { useEffect, useState } from "react";
+import * as React from "react";
 import { useLocation, Link } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "../hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import { AuthModal } from "@/components/ui/auth-modal";
 import crowdImage from "../assets/crowd.jpg";
 import mobileMockupImage from "../assets/mobile-mockup.png";
-import { 
-  Shield, 
-  Search, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Smartphone, 
-  Users, 
+import {
+  Shield,
+  Search,
+  AlertTriangle,
+  CheckCircle2,
+  Smartphone,
+  Users,
   BarChart2,
   Calendar,
   Lock,
@@ -26,11 +26,11 @@ export default function LandingPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [_, navigate] = useLocation();
-  const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
-  const [authModalTab, setAuthModalTab] = useState<"login" | "register">("login");
-  
+  const [authModalOpen, setAuthModalOpen] = React.useState<boolean>(false);
+  const [authModalTab, setAuthModalTab] = React.useState<"login" | "register">("login");
+
   // Auto-redirect if already logged in
-  useEffect(() => {
+  React.useEffect(() => {
     if (user) {
       const dashboardPath = "/dashboard"; // Default to unified dashboard
       navigate(dashboardPath);
@@ -72,12 +72,12 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Auth Modal */}
-      <AuthModal 
-        isOpen={authModalOpen} 
+      <AuthModal
+        isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         defaultTab={authModalTab}
       />
-      
+
       {/* Unified Header */}
       <Header />
 
@@ -85,13 +85,13 @@ export default function LandingPage() {
       <section className="hero-section">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-12 items-center">
-            <motion.div 
+            <motion.div
               className="lg:w-1/2"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <motion.span 
+              <motion.span
                 className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-semibold text-sm"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -99,9 +99,9 @@ export default function LandingPage() {
               >
                 {t('landing.trustedUsers')}
               </motion.span>
-              
+
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
-                <motion.span 
+                <motion.span
                   className="text-gradient block"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -109,7 +109,7 @@ export default function LandingPage() {
                 >
                   {t('landing.heroTitle1')}
                 </motion.span>
-                <motion.span 
+                <motion.span
                   className="text-gradient block"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -118,8 +118,8 @@ export default function LandingPage() {
                   {t('landing.heroTitle2')}
                 </motion.span>
               </h1>
-              
-              <motion.p 
+
+              <motion.p
                 className="mt-6 text-lg text-gray-700 dark:text-gray-300 max-w-lg"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -127,14 +127,14 @@ export default function LandingPage() {
               >
                 {t('landing.heroSubtitle')}
               </motion.p>
-              
-              <motion.div 
+
+              <motion.div
                 className="mt-8 flex flex-col sm:flex-row gap-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
               >
-                <Button 
+                <Button
                   onClick={() => openAuthModal("register")}
                   className="yellow-button group relative overflow-hidden h-12"
                   size="lg"
@@ -145,9 +145,9 @@ export default function LandingPage() {
                   </span>
                   <span className="absolute inset-0 bg-[var(--yellow-accent)] group-hover:bg-[var(--yellow-hover)] transition-colors duration-300"></span>
                 </Button>
-                
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   size="lg"
                   className="border-primary/30 hover:border-primary"
                   onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
@@ -155,7 +155,7 @@ export default function LandingPage() {
                   {t('landing.learnMore')}
                 </Button>
               </motion.div>
-              
+
               <motion.div
                 className="mt-8 flex items-center gap-8"
                 initial={{ opacity: 0 }}
@@ -172,8 +172,8 @@ export default function LandingPage() {
                 </div>
               </motion.div>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="lg:w-1/2"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -182,17 +182,17 @@ export default function LandingPage() {
               <div className="relative">
                 <div className="absolute -left-10 -top-10 w-64 h-64 bg-primary/20 rounded-full opacity-60 filter blur-3xl"></div>
                 <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-[var(--yellow-light)] rounded-full opacity-60 filter blur-3xl"></div>
-                
-                <motion.div 
+
+                <motion.div
                   className="relative bg-card backdrop-blur-sm bg-opacity-95 p-8 rounded-2xl shadow-xl border border-border overflow-hidden"
                   whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full"></div>
-                  
+
                   <div className="flex justify-between items-center mb-8">
                     <h3 className="text-xl font-semibold text-foreground">{t('landing.itemRegistration')}</h3>
-                    <motion.span 
+                    <motion.span
                       className="px-3 py-1 bg-green-100 dark:bg-green-900/60 text-green-800 dark:text-green-200 rounded-full text-sm font-medium"
                       animate={{ y: [0, -3, 0] }}
                       transition={{ duration: 1, repeat: Infinity, repeatDelay: 3 }}
@@ -200,10 +200,10 @@ export default function LandingPage() {
                       {t('landing.registered')}
                     </motion.span>
                   </div>
-                  
+
                   <div className="space-y-6">
                     <div className="flex items-start gap-4">
-                      <motion.div 
+                      <motion.div
                         className="w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0"
                         whileHover={{ rotate: [0, -5, 5, -5, 0] }}
                         transition={{ duration: 0.5 }}
@@ -216,7 +216,7 @@ export default function LandingPage() {
                         <p className="text-sm text-muted-foreground">{t('landing.demoItem.date')}</p>
                       </div>
                     </div>
-                    
+
                     <div className="border-t border-border pt-4">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center">
@@ -231,11 +231,11 @@ export default function LandingPage() {
                         </motion.div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center justify-between gap-3 mt-6">
                       <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                        <motion.div 
-                          className="h-full bg-primary rounded-full" 
+                        <motion.div
+                          className="h-full bg-primary rounded-full"
                           initial={{ width: 0 }}
                           animate={{ width: "100%" }}
                           transition={{ duration: 1.5, delay: 0.5 }}
@@ -254,7 +254,7 @@ export default function LandingPage() {
       {/* Features Section */}
       <section id="features" className="py-24 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
             <motion.div
@@ -274,16 +274,16 @@ export default function LandingPage() {
               </p>
             </motion.div>
           </div>
-          
-          <motion.div 
+
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
           >
-            <motion.div 
-              className="feature-card group" 
+            <motion.div
+              className="feature-card group"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -299,9 +299,9 @@ export default function LandingPage() {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
-            
-            <motion.div 
-              className="feature-card group" 
+
+            <motion.div
+              className="feature-card group"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -317,9 +317,9 @@ export default function LandingPage() {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
-            
-            <motion.div 
-              className="feature-card group" 
+
+            <motion.div
+              className="feature-card group"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -335,9 +335,9 @@ export default function LandingPage() {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
-            
-            <motion.div 
-              className="feature-card group" 
+
+            <motion.div
+              className="feature-card group"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -353,9 +353,9 @@ export default function LandingPage() {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
-            
-            <motion.div 
-              className="feature-card group" 
+
+            <motion.div
+              className="feature-card group"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -371,9 +371,9 @@ export default function LandingPage() {
                 <ArrowRight className="ml-1 h-4 w-4" />
               </div>
             </motion.div>
-            
-            <motion.div 
-              className="feature-card group" 
+
+            <motion.div
+              className="feature-card group"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -400,10 +400,10 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-grid-pattern opacity-25"></div>
           <div className="h-full w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary-400/20 via-transparent to-transparent"></div>
         </div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col items-center">
-            <motion.div 
+            <motion.div
               className="text-center"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -419,13 +419,13 @@ export default function LandingPage() {
               <p className="text-xl max-w-3xl mx-auto mb-8 text-white/80">
                 {t('landing.joinThousands')}
               </p>
-              
+
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: "spring", stiffness: 400 }}
               >
-                <Button 
+                <Button
                   onClick={() => navigate("/auth")}
                   size="lg"
                   className="bg-[#FFDE59] hover:bg-[#FFD60A] text-[#333333] font-bold text-lg px-8 py-6 rounded-xl shadow-lg shadow-primary-900/30 group relative overflow-hidden"
@@ -436,7 +436,7 @@ export default function LandingPage() {
                   </span>
                 </Button>
               </motion.div>
-              
+
               <div className="mt-6 flex items-center justify-center gap-2 text-white">
                 <CheckCircle2 className="h-5 w-5 text-white" />
                 <span>{t('landing.noCardRequired')}</span>
@@ -449,9 +449,9 @@ export default function LandingPage() {
       {/* Statistics Section */}
       <section className="py-20 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <motion.div 
+          <motion.div
             className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -459,7 +459,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
           >
             <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
-              <motion.div 
+              <motion.div
                 className="text-5xl font-bold text-primary mb-2"
                 initial={{ scale: 0.8 }}
                 whileInView={{ scale: 1 }}
@@ -470,9 +470,9 @@ export default function LandingPage() {
               </motion.div>
               <p className="text-muted-foreground text-lg">{t('landing.statItems')}</p>
             </div>
-            
+
             <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
-              <motion.div 
+              <motion.div
                 className="text-5xl font-bold text-primary mb-2"
                 initial={{ scale: 0.8 }}
                 whileInView={{ scale: 1 }}
@@ -483,9 +483,9 @@ export default function LandingPage() {
               </motion.div>
               <p className="text-muted-foreground text-lg">{t('landing.statRecoveries')}</p>
             </div>
-            
+
             <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
-              <motion.div 
+              <motion.div
                 className="text-5xl font-bold text-primary mb-2"
                 initial={{ scale: 0.8 }}
                 whileInView={{ scale: 1 }}
@@ -496,9 +496,9 @@ export default function LandingPage() {
               </motion.div>
               <p className="text-muted-foreground text-lg">{t('landing.statUsers')}</p>
             </div>
-            
+
             <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
-              <motion.div 
+              <motion.div
                 className="text-5xl font-bold text-primary mb-2"
                 initial={{ scale: 0.8 }}
                 whileInView={{ scale: 1 }}
@@ -516,7 +516,7 @@ export default function LandingPage() {
       {/* How It Works Section */}
       <section id="how-it-works" className="py-24 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
             <motion.div
@@ -536,18 +536,18 @@ export default function LandingPage() {
               </p>
             </motion.div>
           </div>
-          
+
           <div className="flex flex-col md:flex-row md:items-start gap-12 md:gap-16">
             <div className="relative md:w-1/2">
-              <motion.div 
+              <motion.div
                 className="rounded-2xl overflow-hidden shadow-xl border border-border relative"
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/30 to-black/50 mix-blend-overlay z-10 dark:mix-blend-soft-light"></div>
-                <motion.img 
-                  src={crowdImage} 
-                  alt="Busy pedestrian crossing with people from diverse backgrounds" 
+                <motion.img
+                  src={crowdImage}
+                  alt="Busy pedestrian crossing with people from diverse backgrounds"
                   className="w-full h-auto object-cover"
                   initial={{ scale: 1.1, filter: "blur(5px)" }}
                   whileInView={{ scale: 1, filter: "blur(0px)" }}
@@ -559,10 +559,10 @@ export default function LandingPage() {
                 </div>
               </motion.div>
             </div>
-            
+
             <div className="md:w-1/2">
               <div className="space-y-10">
-                <motion.div 
+                <motion.div
                   className="flex gap-4"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -579,8 +579,8 @@ export default function LandingPage() {
                     </p>
                   </div>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   className="flex gap-4"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -597,8 +597,8 @@ export default function LandingPage() {
                     </p>
                   </div>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   className="flex gap-4"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -615,8 +615,8 @@ export default function LandingPage() {
                     </p>
                   </div>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   className="flex gap-4"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -642,7 +642,7 @@ export default function LandingPage() {
       {/* Testimonials */}
       <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-background to-transparent"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
             <motion.div
@@ -662,15 +662,15 @@ export default function LandingPage() {
               </p>
             </motion.div>
           </div>
-          
-          <motion.div 
+
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-3 gap-8"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
           >
-            <motion.div 
+            <motion.div
               className="bg-card p-8 rounded-xl shadow-md border border-border relative"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
@@ -678,7 +678,7 @@ export default function LandingPage() {
               <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-3xl"></div>
               <div className="flex items-center mb-6">
                 <div className="mr-4">
-                  <motion.div 
+                  <motion.div
                     className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"
                     whileHover={{ rotate: [0, -5, 5, -5, 0] }}
                     transition={{ duration: 0.5 }}
@@ -705,8 +705,8 @@ export default function LandingPage() {
                 <span className="ml-2 text-sm text-muted-foreground">5.0</span>
               </div>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="bg-card p-8 rounded-xl shadow-md border border-border relative"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
@@ -714,7 +714,7 @@ export default function LandingPage() {
               <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-3xl"></div>
               <div className="flex items-center mb-6">
                 <div className="mr-4">
-                  <motion.div 
+                  <motion.div
                     className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"
                     whileHover={{ rotate: [0, -5, 5, -5, 0] }}
                     transition={{ duration: 0.5 }}
@@ -741,8 +741,8 @@ export default function LandingPage() {
                 <span className="ml-2 text-sm text-muted-foreground">5.0</span>
               </div>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="bg-card p-8 rounded-xl shadow-md border border-border relative"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
@@ -750,7 +750,7 @@ export default function LandingPage() {
               <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-bl-3xl"></div>
               <div className="flex items-center mb-6">
                 <div className="mr-4">
-                  <motion.div 
+                  <motion.div
                     className="w-16 h-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center"
                     whileHover={{ rotate: [0, -5, 5, -5, 0] }}
                     transition={{ duration: 0.5 }}
@@ -778,10 +778,10 @@ export default function LandingPage() {
               </div>
             </motion.div>
           </motion.div>
-          
+
           <div className="mt-12 text-center">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="lg"
               className="border-primary/30 hover:border-primary"
             >
@@ -795,7 +795,7 @@ export default function LandingPage() {
       <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-gray-50 dark:from-gray-900 to-transparent"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
             <div className="md:w-1/2 order-2 md:order-1">
@@ -814,7 +814,7 @@ export default function LandingPage() {
                 <p className="text-lg text-muted-foreground mb-8">
                   {t('landing.mobileApp.description')}
                 </p>
-                
+
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <CheckCircle2 className="h-6 w-6 text-green-500 flex-shrink-0 mt-0.5" />
@@ -833,22 +833,22 @@ export default function LandingPage() {
                     <p className="text-foreground">{t('landing.mobileApp.features.feature4')}</p>
                   </div>
                 </div>
-                
+
                 <div className="mt-8 flex gap-4">
                   <button className="bg-black text-white flex items-center gap-2 px-5 py-3 rounded-lg transition-transform hover:scale-105">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                      <path d="M17.566 11.996c-.036-2.033 1.351-3.231 1.414-3.279-1.047-1.497-2.708-1.596-3.242-1.596-1.854-.036-3.279 1.036-4.134 1.036-.893 0-2.135-1.013-3.514-1.013-1.8 0-3.455 1.05-4.379 2.674-1.879 3.279-.507 8.086 1.326 10.754.905 1.292 1.963 2.674 3.361 2.634 1.351-.036 1.879-.854 3.514-.854 1.634 0 2.101.854 3.528.828 1.465-.036 2.386-1.301 3.27-2.634 1.048-1.481 1.465-2.925 1.48-3.003-.036-.012-2.844-1.06-2.864-4.236-.021-1.327 1.097-2.634 2.24-3.311z"/>
-                      <path d="M14.918 3.636c.727-.893 1.23-2.135 1.096-3.384-1.065.071-2.386.727-3.137 1.597-.69.785-1.301 2.061-1.145 3.264 1.193.089 2.404-.604 3.186-1.477z"/>
+                      <path d="M17.566 11.996c-.036-2.033 1.351-3.231 1.414-3.279-1.047-1.497-2.708-1.596-3.242-1.596-1.854-.036-3.279 1.036-4.134 1.036-.893 0-2.135-1.013-3.514-1.013-1.8 0-3.455 1.05-4.379 2.674-1.879 3.279-.507 8.086 1.326 10.754.905 1.292 1.963 2.674 3.361 2.634 1.351-.036 1.879-.854 3.514-.854 1.634 0 2.101.854 3.528.828 1.465-.036 2.386-1.301 3.27-2.634 1.048-1.481 1.465-2.925 1.48-3.003-.036-.012-2.844-1.06-2.864-4.236-.021-1.327 1.097-2.634 2.24-3.311z" />
+                      <path d="M14.918 3.636c.727-.893 1.23-2.135 1.096-3.384-1.065.071-2.386.727-3.137 1.597-.69.785-1.301 2.061-1.145 3.264 1.193.089 2.404-.604 3.186-1.477z" />
                     </svg>
                     <div className="text-left">
                       <div className="text-xs">{t('landing.mobileApp.downloadOn')}</div>
                       <div className="text-lg font-semibold leading-tight">{t('landing.mobileApp.appStore')}</div>
                     </div>
                   </button>
-                  
+
                   <button className="bg-black text-white flex items-center gap-2 px-5 py-3 rounded-lg transition-transform hover:scale-105">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-                      <path d="M3.609 1.814 13.792 12 3.609 22.186c-.181.181-.29.423-.29.684V1.13c0 .261.109.503.29.684zm1.505-.648v21.667l11-10.833-11-10.834zm3.29 4.728 5.5 5.388 1.634-1.604L6.825 2.066l1.579 3.828zm0 12.389 1.579 3.828 9.209-9.039-1.634-1.604-9.154 6.815z"/>
+                      <path d="M3.609 1.814 13.792 12 3.609 22.186c-.181.181-.29.423-.29.684V1.13c0 .261.109.503.29.684zm1.505-.648v21.667l11-10.833-11-10.834zm3.29 4.728 5.5 5.388 1.634-1.604L6.825 2.066l1.579 3.828zm0 12.389 1.579 3.828 9.209-9.039-1.634-1.604-9.154 6.815z" />
                     </svg>
                     <div className="text-left">
                       <div className="text-xs">{t('landing.mobileApp.getItOn')}</div>
@@ -858,7 +858,7 @@ export default function LandingPage() {
                 </div>
               </motion.div>
             </div>
-            
+
             <div className="md:w-1/2 order-1 md:order-2 flex justify-center">
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -869,9 +869,9 @@ export default function LandingPage() {
               >
                 <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/30 rounded-full filter blur-3xl opacity-30"></div>
                 <div className="relative z-10">
-                  <img 
-                    src={mobileMockupImage} 
-                    alt="KIZERE Mobile App" 
+                  <img
+                    src={mobileMockupImage}
+                    alt="KIZERE Mobile App"
                     className="max-w-full h-auto drop-shadow-2xl"
                   />
                 </div>
@@ -884,7 +884,7 @@ export default function LandingPage() {
       {/* FAQ Section */}
       <section className="py-24 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        
+
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
             <motion.div
@@ -904,15 +904,15 @@ export default function LandingPage() {
               </p>
             </motion.div>
           </div>
-          
-          <motion.div 
+
+          <motion.div
             className="grid grid-cols-1 md:grid-cols-2 gap-8"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
           >
-            <motion.div 
+            <motion.div
               className="bg-card p-8 rounded-xl shadow-md border border-border hover:shadow-xl transition-shadow"
               variants={itemVariants}
             >
@@ -930,8 +930,8 @@ export default function LandingPage() {
                 </div>
               </div>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="bg-card p-8 rounded-xl shadow-md border border-border hover:shadow-xl transition-shadow"
               variants={itemVariants}
             >
@@ -949,8 +949,8 @@ export default function LandingPage() {
                 </div>
               </div>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="bg-card p-8 rounded-xl shadow-md border border-border hover:shadow-xl transition-shadow"
               variants={itemVariants}
             >
@@ -968,8 +968,8 @@ export default function LandingPage() {
                 </div>
               </div>
             </motion.div>
-            
-            <motion.div 
+
+            <motion.div
               className="bg-card p-8 rounded-xl shadow-md border border-border hover:shadow-xl transition-shadow"
               variants={itemVariants}
             >
@@ -988,10 +988,10 @@ export default function LandingPage() {
               </div>
             </motion.div>
           </motion.div>
-          
+
           <div className="mt-12 text-center">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="lg"
               className="border-primary/30 hover:border-primary"
               onClick={() => navigate("/auth")}

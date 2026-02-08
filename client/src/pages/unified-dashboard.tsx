@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, Suspense } from "react";
+import * as React from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
 
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "../hooks/use-auth";
 import { useLocation } from "wouter";
-import { useDashboardData, DashboardData, DashboardStats } from "@/hooks/use-dashboard-data";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useDashboardData, DashboardData, DashboardStats } from "../hooks/use-dashboard-data";
+import { useLanguage } from "../lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,6 +71,30 @@ import { DashboardAlerts } from "@/components/dashboard/dashboard-alerts";
 import { UserPreferences } from "@shared/schema";
 import { AppLayout } from "@/components/layout/admin-layout";
 
+
+// Helper component for the header
+const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: any }) => (
+  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+    <div className="space-y-1">
+      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+        Welcome back, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/50">{user?.fullName || user?.username}</span>
+        {isAdmin && <span className="ml-3 text-[10px] uppercase tracking-[0.2em] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full align-middle">SUDO</span>}
+      </h1>
+      <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-2xl mt-1">
+        Manage your registered assets, monitor hub activity, and track security status in real-time.
+      </p>
+    </div>
+    <div className="flex items-center gap-3">
+      <div className="h-10 w-px bg-border/50 hidden md:block mx-2" />
+      <div className="flex flex-col items-end">
+        <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60">Local Time</span>
+        <span className="font-bold tabular-nums">{format(new Date(), 'HH:mm')}</span>
+      </div>
+    </div>
+  </div>
+);
+
+
 const logger = createLogger('UnifiedDashboard');
 
 export default function UnifiedDashboard() {
@@ -135,8 +159,8 @@ export default function UnifiedDashboard() {
     claimsReceived = []
   } = dashboardData || {};
 
-  // Welcome Header with Retouch
-  const WelcomeHeader = () => (
+  // Helper component for the header
+  const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: any }) => (
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
@@ -999,26 +1023,20 @@ export default function UnifiedDashboard() {
 
   return (
     <AppLayout>
-      <ErrorBoundary>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-        >
-          {/* Simple Welcome Title */}
-          {/* Premium Welcome Header */}
-          <WelcomeHeader />
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        <WelcomeHeader user={user} isAdmin={isAdmin} t={t} />
 
-          {/* Dashboard Content */}
-          <div className="mt-2">
-            <Suspense fallback={<div className="p-8 text-center italic">Loading dashboard components...</div>}>
-              {renderDashboardContent()}
-            </Suspense>
-          </div>
-        </motion.div>
-      </ErrorBoundary>
+        <div className="mt-2">
+          <React.Suspense fallback={<div className="p-8 text-center italic">Loading dashboard components...</div>}>
+            {renderDashboardContent()}
+          </React.Suspense>
+        </div>
+      </motion.div>
     </AppLayout>
-
   );
 }

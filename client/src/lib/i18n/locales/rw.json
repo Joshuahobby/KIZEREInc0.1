@@ -498,7 +498,31 @@
     "contactInformation": "Amakuru yo Kuvugana",
     "reward": "Ingororano (Bishoboka)",
     "reportDate": "Itariki yo Kumenyekanisha",
-    "status": "Imimerere"
+    "status": "Imimerere",
+    "registeredItemDialog": {
+      "title": "Menyekanisha ko Cyabuze",
+      "description": "Menyekanisha ko <strong>{itemName}</strong> cyabuze.",
+      "freeForRegistered": "Ubuntu ku bintu byanditswe.",
+      "noImage": "NTAFOTO",
+      "dateLost": "Itariki Cyabuzweho",
+      "location": "Aho",
+      "locationPlaceholder": "Ni he cyabuzweho?",
+      "additionalDetails": "Andi Makuru",
+      "additionalDetailsPlaceholder": "Tanga amakuru arambuye ku buryo cyabuzwe...",
+      "contactInfo": "Amakuru yo Gufatanya (Bishoboka)",
+      "contactInfoPlaceholder": "Indi telefoni cyangwa imeyili...",
+      "contactInfoHint": "Siga ubusa kugira ngo ukoreshwe amakuru yawe y'umwirondoro.",
+      "warning": "Ibi bizahindura imimerere y'ikintu bibe <strong>Cyabuze</strong> kandi biremye raporo rusange.",
+      "cancel": "Hagarika",
+      "confirmReport": "Emeza & Menyekanisha",
+      "submitting": "Birimo koherezwa...",
+      "successTitle": "Raporo Yoherejwe",
+      "successDescription": "{itemName} cyagaragajwe ko cyabuze. Twizera ko kizaboneka vuba!",
+      "toastTitle": "Raporo Yoherejwe",
+      "toastDescription": "Ikintu cyawe cyagaragajwe ko cyabuze kandi raporo yaremwe.",
+      "errorTitle": "Kohereza raporo byanze",
+      "receiptNumber": "Nimero ya resiti:"
+    }
   },
   "footer": {
     "copyright": "© 2025 KIZERE. Uburenganzira bwose bwihariwe.",

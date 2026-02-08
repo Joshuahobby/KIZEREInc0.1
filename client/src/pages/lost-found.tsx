@@ -141,7 +141,7 @@ export default function LostFound() {
       });
 
       // 3. Handle payment for lost items
-      if (data.type === 'lost') {
+      if (data.type === 'lost' && report.paymentStatus !== 'successful') {
         const payment = await PaymentService.initializePayment({
           type: "lost_report",
           reportId: report.id
@@ -344,8 +344,8 @@ export default function LostFound() {
                         <div className="flex justify-between items-start">
                           <div>
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${report.type === 'lost'
-                                ? 'bg-red-100 text-red-800'
-                                : 'bg-amber-100 text-amber-800'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-amber-100 text-amber-800'
                               }`}>
                               {report.type === 'lost' ? 'Lost' : 'Found'}
                             </span>

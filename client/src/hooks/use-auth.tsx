@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef, useMemo, ReactNode } from "react";
+import * as React from "react";
 // Force HMR refresh
 import { useLocation } from "wouter";
 import { User, InsertUser, UserPreferences } from "@shared/schema";
@@ -21,26 +21,40 @@ export interface AuthContextType {
   refreshUser: (userData?: User) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Use a global singleton for AuthContext to prevent duplicate instances
+// when the module is loaded multiple times (e.g. via alias vs relative path)
+const AUTH_CONTEXT_KEY = Symbol.for("kizere-auth-context");
+const globalSymbols = Object.getOwnPropertySymbols(globalThis);
+const hasAuthContext = globalSymbols.includes(AUTH_CONTEXT_KEY);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const AuthContext = ((globalThis as any)[AUTH_CONTEXT_KEY] as React.Context<AuthContextType | undefined>) || React.createContext<AuthContextType | undefined>(undefined);
+
+if (!(globalThis as any)[AUTH_CONTEXT_KEY]) {
+  (globalThis as any)[AUTH_CONTEXT_KEY] = AuthContext;
+  AuthContext.displayName = "AuthContext";
+  console.log("[useAuth] Created new AuthContext and assigned to global scope");
+} else {
+  console.log("[useAuth] Reusing existing AuthContext from global scope");
+}
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = React.useState<User | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
   const [, setLocation] = useLocation();
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = React.useState(false);
   const { toast } = useToast();
-  const isMounted = useRef(true);
+  const isMounted = React.useRef(true);
 
   // Refs for debouncing and preventing duplicate sync calls
-  const syncInProgressRef = useRef(false);
-  const lastSyncTimeRef = useRef(0);
-  const syncDebounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const pendingFirebaseUserRef = useRef<any>(null);
+  const syncInProgressRef = React.useRef(false);
+  const lastSyncTimeRef = React.useRef(0);
+  const syncDebounceTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const pendingFirebaseUserRef = React.useRef<any>(null);
   const SYNC_COOLDOWN_MS = 5000; // 5 second cooldown between syncs
   const SYNC_DEBOUNCE_MS = 500; // 500ms debounce for rapid calls
 
-  useEffect(() => {
+  React.useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
@@ -178,7 +192,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   // Check if user is already authenticated on mount
-  useEffect(() => {
+  React.useEffect(() => {
     let unsubscribe: (() => void) | undefined;
 
     const setupAuth = async () => {
@@ -266,7 +280,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
 
   // Handle redirections based on user role
-  useEffect(() => {
+  React.useEffect(() => {
     if (!user || isRedirecting || isLoading) return;
 
     const pathname = window.location.pathname;
@@ -291,7 +305,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, setLocation, isRedirecting, isLoading]);
 
   // Reset isRedirecting when path matches dashboard
-  useEffect(() => {
+  React.useEffect(() => {
     if (!user || !isRedirecting) return;
 
     const preferredStyle = (user.preferences as UserPreferences)?.dashboardStyle;
@@ -382,10 +396,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     } catch (error: any) {
       console.error("[useAuth] Login error", error);
-      setError(error.message || "Login failed");
+
+      let errorMessage = error.message || "Login failed";
+      let errorTitle = "Login Error";
+
+      if (error.code === 'auth/popup-blocked' || error.message?.includes('popup-blocked')) {
+        errorTitle = "Popup Blocked";
+        errorMessage = "Please allow popups for this site to sign in with Google.";
+      }
+
+      setError(errorMessage);
       toast({
-        title: "Login Error",
-        description: error.message || "Failed to login with Google",
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive"
       });
       setIsLoading(false);
@@ -433,7 +456,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     mutationFn: signOut,
   });
 
-  const value = useMemo(() => ({
+  const value = React.useMemo(() => ({
     user,
     role: user?.role || null,
     isAuthenticated: !!user,
@@ -451,7 +474,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = React.useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }

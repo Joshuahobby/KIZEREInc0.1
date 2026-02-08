@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import * as React from "react";
 import { Link, useLocation } from "wouter";
 import { AvatarWithInitials } from "@/components/ui/avatar-with-initials";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "../../hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ import {
   Phone
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
-import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useLanguage } from "../../lib/i18n/LanguageContext";
 import { Logo } from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Badge } from "@/components/ui/badge";
@@ -40,15 +40,15 @@ import { GlobalSearch } from "@/components/dashboard/global-search";
 export function Header() {
   const [location] = useLocation();
   const { user, signOut } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [isScrolled, setIsScrolled] = React.useState(false);
   const { t } = useLanguage();
 
   const isAdmin = user?.role === "Admin";
   const isAuthenticated = !!user;
 
   // Handle scroll events to change header appearance
-  useEffect(() => {
+  React.useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };

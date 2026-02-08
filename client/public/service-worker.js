@@ -33,7 +33,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  
+
   // Skip intercepting external domains that should not be cached
   // This includes Google APIs, Firebase, and other authentication-related URLs
   const externalDomains = [
@@ -47,7 +47,7 @@ self.addEventListener('fetch', (event) => {
     'firebaseio.com',
     'gstatic.com'
   ];
-  
+
   if (externalDomains.some(domain => url.hostname.includes(domain))) {
     // Let browser handle these requests directly without service worker intervention
     return;
@@ -58,9 +58,9 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .catch(() => {
-           return new Response(JSON.stringify({ error: 'You are offline' }), {
-             headers: { 'Content-Type': 'application/json' }
-           });
+          return new Response(JSON.stringify({ error: 'You are offline' }), {
+            headers: { 'Content-Type': 'application/json' }
+          });
         })
     );
     return;
@@ -81,11 +81,19 @@ self.addEventListener('fetch', (event) => {
           }
         }
         return networkResponse;
-      }).catch((err) => {
-         // Network failed, return cached response if available
-         return cachedResponse; 
+      }).catch(() => {
+        // Network failed, return cached response if available, otherwise return an offline fallback
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        // Return a proper offline response to prevent "Failed to convert value to Response" errors
+        return new Response('Offline - resource not available', {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'text/plain' }
+        });
       });
-      
+
       return cachedResponse || fetchPromise;
     })
   );

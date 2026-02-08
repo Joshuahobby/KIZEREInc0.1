@@ -11,7 +11,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { apiRequest } from "@/lib/query-client";
+import { apiRequest } from "@/lib/queryClient";
 import { CommandCenterLayout } from "@/components/layouts/command-center-layout";
 
 // Define form schema
@@ -53,8 +53,7 @@ export default function NewItem() {
     setIsSubmitting(true);
     try {
       // API call to create the item
-      const response = await apiRequest({
-        url: '/api/admin/items',
+      const response = await apiRequest('/api/admin/items', {
         method: 'POST',
         data,
       });
@@ -128,8 +127,8 @@ export default function NewItem() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Category*</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
+                        <Select
+                          onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -241,8 +240,8 @@ export default function NewItem() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Status</FormLabel>
-                        <Select 
-                          onValueChange={field.onChange} 
+                        <Select
+                          onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -272,10 +271,10 @@ export default function NewItem() {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea 
+                        <Textarea
                           placeholder="Provide a detailed description of the item"
                           className="min-h-[120px]"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />

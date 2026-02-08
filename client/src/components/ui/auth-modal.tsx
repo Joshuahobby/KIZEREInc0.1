@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
+import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { SiGoogle } from "react-icons/si";
 import { motion } from "framer-motion";
-import { 
-  Eye, 
-  EyeOff, 
-  KeyRound, 
-  Loader2, 
-  Phone, 
-  Shield, 
-  ShieldCheck, 
+import {
+  Eye,
+  EyeOff,
+  KeyRound,
+  Loader2,
+  Phone,
+  Shield,
+  ShieldCheck,
   User,
   Sparkles,
   CheckCircle2,
@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/tabs";
 
 import { useToast } from "@/hooks/use-toast";
-import { useAuth, AuthContextType } from "@/hooks/use-auth";
+import { useAuth, AuthContextType } from "../../hooks/use-auth";
 import { useLocation } from "wouter";
 import { AuthService } from "@/services/auth.service";
 import { AuthModel } from "@/models/auth.model";
@@ -61,14 +61,14 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalProps) {
-  const [activeTab, setActiveTab] = useState<"login" | "register">(defaultTab);
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string; score: number } | null>(null);
-  const [googleLoading, setGoogleLoading] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = React.useState<"login" | "register">(defaultTab);
+  const [showPassword, setShowPassword] = React.useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState<boolean>(false);
+  const [passwordStrength, setPasswordStrength] = React.useState<{ isStrong: boolean; message: string; score: number } | null>(null);
+  const [googleLoading, setGoogleLoading] = React.useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [, setLocation] = useLocation();
-  
+
   // Use try-catch to handle potential auth context issues
   let auth: AuthContextType;
   try {
@@ -81,18 +81,18 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       isAuthenticated: false,
       isLoading: false,
       error: null,
-      loginMutation: { mutateAsync: async () => {} },
-      registerMutation: { mutateAsync: async () => {} },
-      logoutMutation: { mutateAsync: async () => {} },
+      loginMutation: { mutateAsync: async () => { } },
+      registerMutation: { mutateAsync: async () => { } },
+      logoutMutation: { mutateAsync: async () => { } },
       loginWithGoogle: async () => { throw new Error("Auth context not available") },
       signOut: async () => { throw new Error("Auth context not available") },
-      refreshUser: async () => {},
+      refreshUser: async () => { },
     };
   }
-  
+
   const { toast } = useToast();
-  
-  useEffect(() => {
+
+  React.useEffect(() => {
     if (isOpen) {
       setActiveTab(defaultTab);
     } else {
@@ -124,17 +124,17 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     try {
       setIsSubmitting(true);
       const loginData = AuthModel.prepareLoginData(data);
-      
+
       await auth.loginMutation.mutateAsync({
         username: loginData.username,
         password: loginData.password
       });
-      
+
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in",
       });
-      
+
       const dashboardPath = AuthService.getDashboardPathByRole(auth.user?.role || "Subscriber");
       setLocation(dashboardPath);
       onClose();
@@ -154,18 +154,18 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
     try {
       setIsSubmitting(true);
       const registerData = AuthModel.prepareRegisterData(data);
-      
+
       await auth.registerMutation.mutateAsync({
         username: registerData.username,
         password: registerData.password,
         fullName: registerData.fullName
       });
-      
+
       toast({
         title: "Account created!",
         description: "You have successfully created an account",
       });
-      
+
       setLocation("/dashboard");
       onClose();
     } catch (error: any) {
@@ -183,26 +183,26 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
   const handleGoogleSignIn = async () => {
     try {
       setGoogleLoading(true);
-      
+
       const currentPath = window.location.pathname;
       const redirectUrl = currentPath === '/' ? '/dashboard' : currentPath;
-      
+
       localStorage.setItem('auth_source', 'auth_modal');
-      
+
       toast({
         title: "Google Authentication",
         description: "A popup window will open for authentication.",
         duration: 5000,
       });
-      
+
       await auth.loginWithGoogle(redirectUrl);
       onClose();
     } catch (error: any) {
       console.error("[AuthModal] Google sign-in failed:", error);
-      
+
       let errorTitle = "Sign in failed";
       let errorMessage = error?.message || "Failed to authenticate with Google";
-      
+
       if (error?.code === 'auth/popup-closed-by-user' || errorMessage.includes('popup')) {
         errorTitle = "Authentication Window Closed";
         errorMessage = "The authentication window was closed. Please try again.";
@@ -210,14 +210,14 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
         errorTitle = "Domain Not Authorized";
         errorMessage = "This domain is not authorized. Please contact the administrator.";
       }
-      
+
       toast({
         title: errorTitle,
         description: errorMessage,
         variant: "destructive",
         duration: 8000,
       });
-      
+
       setGoogleLoading(false);
     }
   };
@@ -240,7 +240,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
           <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-primary/5 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="relative flex flex-col md:flex-row">
           {/* LEFT SIDE - Branding & Google */}
           <div className="md:w-2/5 bg-gradient-to-br from-primary via-primary to-primary/80 p-6 md:p-8 text-white relative overflow-hidden">
@@ -248,10 +248,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 left-0 w-full h-full bg-pattern-white" />
             </div>
-            
+
             <div className="relative z-10">
               {/* Logo */}
-              <motion.div 
+              <motion.div
                 className="flex items-center gap-2 mb-6"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -262,7 +262,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                 </div>
                 <span className="text-xl font-bold">KIZERE</span>
               </motion.div>
-              
+
               {/* Headline */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -273,21 +273,21 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                   {activeTab === "login" ? "Welcome Back!" : "Join Us Today"}
                 </h2>
                 <p className="text-white/80 text-sm mb-6">
-                  {activeTab === "login" 
-                    ? "Access your secured items and protection features" 
+                  {activeTab === "login"
+                    ? "Access your secured items and protection features"
                     : "Start protecting your valuables in minutes"}
                 </p>
               </motion.div>
-              
+
               {/* Features list */}
-              <motion.div 
+              <motion.div
                 className="space-y-3 mb-8 hidden md:block"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.2 }}
               >
                 {features.map((feature, index) => (
-                  <motion.div 
+                  <motion.div
                     key={index}
                     className="flex items-center gap-3"
                     initial={{ opacity: 0, x: -10 }}
@@ -301,7 +301,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                   </motion.div>
                 ))}
               </motion.div>
-              
+
               {/* Google Sign-in Button */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -311,8 +311,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                 <p className="text-xs text-white/70 mb-2 flex items-center gap-1">
                   <Sparkles className="h-3 w-3" /> Recommended
                 </p>
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   className="w-full bg-white hover:bg-gray-50 text-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl h-12 font-medium group"
                   onClick={handleGoogleSignIn}
                   disabled={googleLoading}
@@ -333,7 +333,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
               </motion.div>
             </div>
           </div>
-          
+
           {/* RIGHT SIDE - Forms */}
           <div className="md:w-3/5 p-6 md:p-8">
             {/* Mobile divider */}
@@ -348,26 +348,26 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
               </div>
             </div>
 
-            <Tabs 
-              value={activeTab} 
+            <Tabs
+              value={activeTab}
               onValueChange={(value) => setActiveTab(value as "login" | "register")}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1.5 rounded-xl">
-                <TabsTrigger 
-                  value="login" 
+                <TabsTrigger
+                  value="login"
                   className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-md transition-all duration-200 font-medium"
                 >
                   Sign In
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="register" 
+                <TabsTrigger
+                  value="register"
                   className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-md transition-all duration-200 font-medium"
                 >
                   Register
                 </TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="login" className="mt-0">
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-5">
@@ -380,10 +380,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                           <FormControl>
                             <div className="relative group">
                               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                              <Input 
-                                className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                placeholder="Enter your username or email" 
-                                {...field} 
+                              <Input
+                                className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all"
+                                placeholder="Enter your username or email"
+                                {...field}
                               />
                             </div>
                           </FormControl>
@@ -401,13 +401,13 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                           <FormControl>
                             <div className="relative group">
                               <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                              <Input 
-                                className="pl-10 pr-12 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                type={showPassword ? "text" : "password"} 
-                                placeholder="Enter your password" 
-                                {...field} 
+                              <Input
+                                className="pl-10 pr-12 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all"
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Enter your password"
+                                {...field}
                               />
-                              <button 
+                              <button
                                 type="button"
                                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
                                 onClick={() => setShowPassword(!showPassword)}
@@ -423,8 +423,8 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
 
                     <div className="flex justify-between items-center text-sm">
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           className="rounded border-muted-foreground/30 h-4 w-4 text-primary focus:ring-primary/20"
                         />
                         <span className="text-muted-foreground">Remember me</span>
@@ -434,9 +434,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                       </a>
                     </div>
 
-                    <Button 
-                      type="submit" 
-                      className="w-full h-12 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300" 
+                    <Button
+                      type="submit"
+                      className="w-full h-12 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
@@ -454,7 +454,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                   </form>
                 </Form>
               </TabsContent>
-                
+
               <TabsContent value="register" className="mt-0">
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
@@ -467,10 +467,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                           <FormControl>
                             <div className="relative group">
                               <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                              <Input 
-                                className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                placeholder="Enter your full name" 
-                                {...field} 
+                              <Input
+                                className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all"
+                                placeholder="Enter your full name"
+                                {...field}
                               />
                             </div>
                           </FormControl>
@@ -488,10 +488,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                           <FormControl>
                             <div className="relative group">
                               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                              <Input 
-                                className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                placeholder="+250 xxx xxx xxx or email" 
-                                {...field} 
+                              <Input
+                                className="pl-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all"
+                                placeholder="+250 xxx xxx xxx or email"
+                                {...field}
                               />
                             </div>
                           </FormControl>
@@ -510,11 +510,11 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                             <FormControl>
                               <div className="relative group">
                                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                <Input 
-                                  className="pl-10 pr-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                  type={showPassword ? "text" : "password"} 
-                                  placeholder="Create password" 
-                                  {...field} 
+                                <Input
+                                  className="pl-10 pr-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all"
+                                  type={showPassword ? "text" : "password"}
+                                  placeholder="Create password"
+                                  {...field}
                                   onChange={(e) => {
                                     field.onChange(e);
                                     if (e.target.value) {
@@ -524,7 +524,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                                     }
                                   }}
                                 />
-                                <button 
+                                <button
                                   type="button"
                                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                   onClick={() => setShowPassword(!showPassword)}
@@ -547,13 +547,13 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                             <FormControl>
                               <div className="relative group">
                                 <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                <Input 
-                                  className="pl-10 pr-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all" 
-                                  type={showConfirmPassword ? "text" : "password"} 
-                                  placeholder="Confirm password" 
-                                  {...field} 
+                                <Input
+                                  className="pl-10 pr-10 h-12 rounded-xl border-muted-foreground/20 focus:border-primary transition-all"
+                                  type={showConfirmPassword ? "text" : "password"}
+                                  placeholder="Confirm password"
+                                  {...field}
                                 />
-                                <button 
+                                <button
                                   type="button"
                                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -567,12 +567,12 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                         )}
                       />
                     </div>
-                    
+
                     <PasswordStrengthIndicator score={passwordStrength?.score || 0} maxScore={5} />
 
                     <label className="flex items-start gap-2 cursor-pointer text-sm">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="rounded border-muted-foreground/30 h-4 w-4 text-primary focus:ring-primary/20 mt-0.5"
                       />
                       <span className="text-muted-foreground leading-tight">
@@ -580,9 +580,9 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
                       </span>
                     </label>
 
-                    <Button 
-                      type="submit" 
-                      className="w-full h-12 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300" 
+                    <Button
+                      type="submit"
+                      className="w-full h-12 rounded-xl font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300"
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (

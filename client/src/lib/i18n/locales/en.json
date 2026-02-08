@@ -610,7 +610,31 @@
     "contactInformation": "Contact Information",
     "reward": "Reward (Optional)",
     "reportDate": "Report Date",
-    "status": "Status"
+    "status": "Status",
+    "registeredItemDialog": {
+      "title": "Report as Lost",
+      "description": "Report <strong>{itemName}</strong> as lost.",
+      "freeForRegistered": "Free for registered items.",
+      "noImage": "NO IMG",
+      "dateLost": "Date Lost",
+      "location": "Location",
+      "locationPlaceholder": "Where was it lost?",
+      "additionalDetails": "Additional Details",
+      "additionalDetailsPlaceholder": "Provide any specific details about how it was lost...",
+      "contactInfo": "Contact Info (Optional)",
+      "contactInfoPlaceholder": "Alternative phone or email...",
+      "contactInfoHint": "Leave blank to use your profile contact info.",
+      "warning": "This will change the item status to <strong>Lost</strong> and create a public lost report.",
+      "cancel": "Cancel",
+      "confirmReport": "Confirm & Report",
+      "submitting": "Submitting...",
+      "successTitle": "Report Submitted",
+      "successDescription": "{itemName} has been marked as lost. We hope it is found soon!",
+      "toastTitle": "Report Submitted",
+      "toastDescription": "Your item has been marked as lost and a report has been created.",
+      "errorTitle": "Failed to submit report",
+      "receiptNumber": "Receipt #"
+    }
   },
   "profile": {
     "title": "Profile",

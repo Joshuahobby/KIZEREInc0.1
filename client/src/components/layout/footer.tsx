@@ -1,3 +1,4 @@
+import * as React from "react";
 import { Link } from "wouter";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";

@@ -1,58 +1,57 @@
+import * as React from "react";
 import { Switch, Route } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/lib/protected-route";
-import { useEffect, lazy, Suspense } from "react";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
-import { AuthProvider } from "@/hooks/use-auth";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import UnifiedDashboard from "@/pages/unified-dashboard";
+import ItemRegistration from "@/pages/item-registration";
 
 // Lazy load all pages
-const LandingPage = lazy(() => import("@/pages/landing-page"));
-const AuthPage = lazy(() => import("@/pages/auth-page"));
-const AuthCallback = lazy(() => import("@/pages/auth-callback"));
-const UnifiedDashboard = lazy(() => import("@/pages/unified-dashboard"));
-const ItemRegistration = lazy(() => import("@/pages/item-registration"));
-const MyItems = lazy(() => import("@/pages/my-items"));
-const ItemDetail = lazy(() => import("@/pages/item-detail"));
-const Search = lazy(() => import("@/pages/search"));
-const LostFound = lazy(() => import("@/pages/lost-found"));
-const ReportDetailPage = lazy(() => import("@/pages/report-detail"));
-const ClaimDetailPage = lazy(() => import("@/pages/claim-detail"));
-const UserManagement = lazy(() => import("@/pages/user-management"));
-const AdminUserManagement = lazy(() => import("@/pages/admin/user-management"));
-const NewUser = lazy(() => import("@/pages/admin/new-user"));
-const AdminItemManagement = lazy(() => import("@/pages/admin/item-management"));
-const AdminItemDetail = lazy(() => import("@/pages/admin/item-detail"));
-const NewItem = lazy(() => import("@/pages/admin/new-item"));
-const PaymentStatus = lazy(() => import("@/pages/payment-status"));
-const PaymentHistory = lazy(() => import("@/pages/payment-history"));
-const PaymentTest = lazy(() => import("@/pages/payment-test"));
-const PaymentDashboard = lazy(() => import("@/pages/admin/payment-dashboard"));
-const AdminDashboardClassic = lazy(() => import("@/pages/admin/dashboard"));
-const AdminDashboard = lazy(() => import("@/pages/admin/dashboard-new"));
-const CommandCenter = lazy(() => import("@/pages/admin/command-center"));
-const AdminReports = lazy(() => import("@/pages/admin/reports"));
-const PaymentPackages = lazy(() => import("@/pages/admin/payment-packages"));
-const NewPaymentPackage = lazy(() => import("@/pages/admin/payment-packages/new"));
-const CreatePackage = lazy(() => import("@/pages/admin/payment-packages/create-package"));
-const ProfilePage = lazy(() => import("@/pages/profile"));
-const SettingsPage = lazy(() => import("@/pages/settings"));
-const IdentityVerification = lazy(() => import("@/pages/verification-page"));
-const AdminVerifications = lazy(() => import("@/pages/admin/verifications"));
-const BlogPage = lazy(() => import("./pages/blog"));
-const DocsPage = lazy(() => import("./pages/docs"));
-const CommunityPage = lazy(() => import("./pages/community"));
-const FAQPage = lazy(() => import("./pages/faqs"));
-const AboutPage = lazy(() => import("./pages/about"));
-const ContactPage = lazy(() => import("./pages/contact"));
-const PrivacyPage = lazy(() => import("./pages/privacy"));
-const TermsPage = lazy(() => import("./pages/terms"));
-const NotFound = lazy(() => import("@/pages/not-found"));
+const LandingPage = React.lazy(() => import("./pages/landing-page"));
+const AuthPage = React.lazy(() => import("./pages/auth-page"));
+const AuthCallback = React.lazy(() => import("./pages/auth-callback"));
+const MyItems = React.lazy(() => import("./pages/my-items"));
+const ItemDetail = React.lazy(() => import("./pages/item-detail"));
+const Search = React.lazy(() => import("./pages/search"));
+const LostFound = React.lazy(() => import("./pages/lost-found"));
+const ReportDetailPage = React.lazy(() => import("./pages/report-detail"));
+const ClaimDetailPage = React.lazy(() => import("./pages/claim-detail"));
+const UserManagement = React.lazy(() => import("./pages/user-management"));
+const AdminUserManagement = React.lazy(() => import("./pages/admin/user-management"));
+const NewUser = React.lazy(() => import("./pages/admin/new-user"));
+const AdminItemManagement = React.lazy(() => import("./pages/admin/item-management"));
+const AdminItemDetail = React.lazy(() => import("./pages/admin/item-detail"));
+const NewItem = React.lazy(() => import("./pages/admin/new-item"));
+const PaymentStatus = React.lazy(() => import("./pages/payment-status"));
+const PaymentHistory = React.lazy(() => import("./pages/payment-history"));
+const PaymentTest = React.lazy(() => import("./pages/payment-test"));
+const PaymentDashboard = React.lazy(() => import("./pages/admin/payment-dashboard"));
+const AdminDashboardClassic = React.lazy(() => import("./pages/admin/dashboard"));
+const AdminDashboard = React.lazy(() => import("./pages/admin/dashboard-new"));
+const CommandCenter = React.lazy(() => import("./pages/admin/command-center"));
+const AdminReports = React.lazy(() => import("./pages/admin/reports"));
+const PaymentPackages = React.lazy(() => import("./pages/admin/payment-packages"));
+const NewPaymentPackage = React.lazy(() => import("./pages/admin/payment-packages/new"));
+const CreatePackage = React.lazy(() => import("./pages/admin/payment-packages/create-package"));
+const ProfilePage = React.lazy(() => import("./pages/profile"));
+const SettingsPage = React.lazy(() => import("./pages/settings"));
+const IdentityVerification = React.lazy(() => import("./pages/verification-page"));
+const AdminVerifications = React.lazy(() => import("./pages/admin/verifications"));
+const BlogPage = React.lazy(() => import("./pages/blog"));
+const DocsPage = React.lazy(() => import("./pages/docs"));
+const CommunityPage = React.lazy(() => import("./pages/community"));
+const FAQPage = React.lazy(() => import("./pages/faqs"));
+const AboutPage = React.lazy(() => import("./pages/about"));
+const ContactPage = React.lazy(() => import("./pages/contact"));
+const PrivacyPage = React.lazy(() => import("./pages/privacy"));
+const TermsPage = React.lazy(() => import("./pages/terms"));
+const NotFound = React.lazy(() => import("@/pages/not-found"));
 
 function App() {
   // Handle Firebase redirect result
-  useEffect(() => {
+  React.useEffect(() => {
     const handleRedirect = async () => {
       try {
         const { handleRedirectResult } = await import('@/lib/firebase');
@@ -88,99 +87,97 @@ function App() {
     <ErrorBoundary>
       <IframeWarning />
       <LanguageProvider defaultLanguage="en">
-        <AuthProvider>
-          <TooltipProvider>
-            <Suspense fallback={<LoadingOverlay alwaysShow={true} />}>
-              <Switch>
-                <Route path="/">
-                  <LandingPage />
-                </Route>
-                <Route path="/auth-callback">
-                  <AuthCallback />
-                </Route>
-                <Route path="/auth">
-                  <AuthPage />
-                </Route>
+        <TooltipProvider>
+          <React.Suspense fallback={<LoadingOverlay alwaysShow={true} />}>
+            <Switch>
+              <Route path="/">
+                <LandingPage />
+              </Route>
+              <Route path="/auth-callback">
+                <AuthCallback />
+              </Route>
+              <Route path="/auth">
+                <AuthPage />
+              </Route>
 
-                {/* Protected routes */}
-                <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
-                <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
-                <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
-                <ProtectedRoute path="/items/:id" component={ItemDetail} requiredRole="any" />
-                <ProtectedRoute path="/items/:id/edit" component={ItemRegistration} requiredRole="any" />
-                <Route path="/search">
-                  <Search />
-                </Route>
-                <ProtectedRoute path="/lost-found" component={LostFound} requiredRole="any" />
-                <ProtectedRoute path="/lost-found/report" component={LostFound} requiredRole="any" />
-                <ProtectedRoute path="/lost-found/report/:type" component={LostFound} requiredRole="any" />
-                <ProtectedRoute path="/report/:id" component={ReportDetailPage} requiredRole="any" />
-                <ProtectedRoute path="/reports/:id" component={ReportDetailPage} requiredRole="any" />
-                <ProtectedRoute path="/claims/:id" component={ClaimDetailPage} requiredRole="any" />
-                <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
+              {/* Protected routes */}
+              <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
+              <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
+              <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
+              <ProtectedRoute path="/items/:id" component={ItemDetail} requiredRole="any" />
+              <ProtectedRoute path="/items/:id/edit" component={ItemRegistration} requiredRole="any" />
+              <Route path="/search">
+                <Search />
+              </Route>
+              <ProtectedRoute path="/lost-found" component={LostFound} requiredRole="any" />
+              <ProtectedRoute path="/lost-found/report" component={LostFound} requiredRole="any" />
+              <ProtectedRoute path="/lost-found/report/:type" component={LostFound} requiredRole="any" />
+              <ProtectedRoute path="/report/:id" component={ReportDetailPage} requiredRole="any" />
+              <ProtectedRoute path="/reports/:id" component={ReportDetailPage} requiredRole="any" />
+              <ProtectedRoute path="/claims/:id" component={ClaimDetailPage} requiredRole="any" />
+              <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
 
-                {/* Payment routes */}
-                <Route path="/payment-status">
-                  <PaymentStatus />
-                </Route>
-                <ProtectedRoute path="/payment-history" component={PaymentHistory} requiredRole="any" />
-                <ProtectedRoute path="/payment-test" component={PaymentTest} requiredRole="any" />
+              {/* Payment routes */}
+              <Route path="/payment-status">
+                <PaymentStatus />
+              </Route>
+              <ProtectedRoute path="/payment-history" component={PaymentHistory} requiredRole="any" />
+              <ProtectedRoute path="/payment-test" component={PaymentTest} requiredRole="any" />
 
-                {/* Admin routes */}
-                <ProtectedRoute path="/admin" component={AdminDashboard} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/command-center" component={CommandCenter} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/classic" component={AdminDashboardClassic} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboard} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/payment-packages" component={PaymentPackages} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/payment-packages/new" component={NewPaymentPackage} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/payment-packages/create" component={CreatePackage} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/users" component={AdminUserManagement} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/users/new" component={NewUser} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/item-management" component={AdminItemManagement} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/item-management/new" component={NewItem} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/item-management/:id" component={AdminItemDetail} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/reports" component={AdminReports} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/verifications" component={AdminVerifications} requiredRole="Admin" />
+              {/* Admin routes */}
+              <ProtectedRoute path="/admin" component={AdminDashboard} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/command-center" component={CommandCenter} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/classic" component={AdminDashboardClassic} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboard} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/payment-packages" component={PaymentPackages} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/payment-packages/new" component={NewPaymentPackage} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/payment-packages/create" component={CreatePackage} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/users" component={AdminUserManagement} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/users/new" component={NewUser} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/item-management" component={AdminItemManagement} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/item-management/new" component={NewItem} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/item-management/:id" component={AdminItemDetail} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/reports" component={AdminReports} requiredRole="Admin" />
+              <ProtectedRoute path="/admin/verifications" component={AdminVerifications} requiredRole="Admin" />
 
-                {/* Profile route */}
-                <ProtectedRoute path="/profile" component={ProfilePage} requiredRole="any" />
-                <ProtectedRoute path="/settings" component={SettingsPage} requiredRole="any" />
-                <ProtectedRoute path="/identity-verification" component={IdentityVerification} requiredRole="any" />
+              {/* Profile route */}
+              <ProtectedRoute path="/profile" component={ProfilePage} requiredRole="any" />
+              <ProtectedRoute path="/settings" component={SettingsPage} requiredRole="any" />
+              <ProtectedRoute path="/identity-verification" component={IdentityVerification} requiredRole="any" />
 
-                {/* Static Pages */}
-                <Route path="/faq">
-                  <FAQPage />
-                </Route>
-                <Route path="/about">
-                  <AboutPage />
-                </Route>
-                <Route path="/contact">
-                  <ContactPage />
-                </Route>
-                <Route path="/privacy">
-                  <PrivacyPage />
-                </Route>
-                <Route path="/terms">
-                  <TermsPage />
-                </Route>
-                <Route path="/blog">
-                  <BlogPage />
-                </Route>
-                <Route path="/docs">
-                  <DocsPage />
-                </Route>
-                <Route path="/community">
-                  <CommunityPage />
-                </Route>
+              {/* Static Pages */}
+              <Route path="/faq">
+                <FAQPage />
+              </Route>
+              <Route path="/about">
+                <AboutPage />
+              </Route>
+              <Route path="/contact">
+                <ContactPage />
+              </Route>
+              <Route path="/privacy">
+                <PrivacyPage />
+              </Route>
+              <Route path="/terms">
+                <TermsPage />
+              </Route>
+              <Route path="/blog">
+                <BlogPage />
+              </Route>
+              <Route path="/docs">
+                <DocsPage />
+              </Route>
+              <Route path="/community">
+                <CommunityPage />
+              </Route>
 
-                {/* 404 route */}
-                <Route>
-                  <NotFound />
-                </Route>
-              </Switch>
-            </Suspense>
-          </TooltipProvider>
-        </AuthProvider>
+              {/* 404 route */}
+              <Route>
+                <NotFound />
+              </Route>
+            </Switch>
+          </React.Suspense>
+        </TooltipProvider>
       </LanguageProvider>
     </ErrorBoundary>
   );

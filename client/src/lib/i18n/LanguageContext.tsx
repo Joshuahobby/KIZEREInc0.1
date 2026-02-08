@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import * as React from 'react';
 // Import all translations from JSON files for consistency
 // @ts-ignore - Allow direct import of JSON files
 import en from './locales/en.json';
@@ -41,7 +41,10 @@ interface LanguageContextType {
   getLanguages: () => { code: Language; name: string }[];
 }
 
-const LanguageContext = createContext<LanguageContextType>({
+// Use a global singleton for LanguageContext
+const LANGUAGE_CONTEXT_KEY = Symbol.for("kizere-language-context");
+
+const LanguageContext = ((globalThis as any)[LANGUAGE_CONTEXT_KEY] as React.Context<LanguageContextType>) || React.createContext<LanguageContextType>({
   language: DEFAULT_LANGUAGE,
   translations,
   setLanguage: () => { },
@@ -51,8 +54,13 @@ const LanguageContext = createContext<LanguageContextType>({
   getLanguages: () => [],
 });
 
+if (!(globalThis as any)[LANGUAGE_CONTEXT_KEY]) {
+  (globalThis as any)[LANGUAGE_CONTEXT_KEY] = LanguageContext;
+  LanguageContext.displayName = "LanguageContext";
+}
+
 interface LanguageProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
   defaultLanguage?: Language;
 }
 
@@ -61,7 +69,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   defaultLanguage = DEFAULT_LANGUAGE
 }) => {
   const initialLang = defaultLanguage || getInitialLanguage();
-  const [language, setLanguageState] = useState<Language>(initialLang);
+  const [language, setLanguageState] = React.useState<Language>(initialLang);
 
   // Update the language state and save to localStorage
   const setLanguage = (newLanguage: Language) => {
@@ -71,7 +79,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   };
 
   // Initialize and update HTML lang attribute on mount and on language change
-  useEffect(() => {
+  React.useEffect(() => {
     console.log(`[LanguageContext] Updating document.documentElement.lang to: ${language}`);
     document.documentElement.lang = language;
   }, [language]);
@@ -85,33 +93,49 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     const options = typeof optionsOrDefault === 'object' ? optionsOrDefault : undefined;
     const finalDefaultValue = typeof optionsOrDefault === 'string' ? optionsOrDefault : defaultValue;
 
-    // Get the current language's translations or default to empty object
-    const currentTranslations = translations[language] || {};
+    // Helper to solve JSON default export issue in some environments
+    const getRoot = (obj: any) => (obj && obj.default && Object.keys(obj).length === 1) ? obj.default : obj;
 
-    // Traverse the translations object
-    let value = keys.reduce((obj, k) => (obj && obj[k] !== undefined ? obj[k] : undefined), currentTranslations as any);
+    // Traverse helper
+    const traverse = (obj: any, pathKeys: string[]) => {
+      let current = getRoot(obj);
+      for (const k of pathKeys) {
+        if (current && typeof current === 'object' && k in current) {
+          current = current[k];
+        } else {
+          return undefined;
+        }
+      }
+      return current;
+    };
+
+    // Get the current language's translations
+    const currentLangObj = translations[language];
+    let value = traverse(currentLangObj, keys);
 
     // If translation not found in current language, try in default language
     if (value === undefined && language !== DEFAULT_LANGUAGE) {
-      const defaultTranslations = translations[DEFAULT_LANGUAGE] || {};
-      value = keys.reduce((obj, k) => (obj && obj[k] !== undefined ? obj[k] : undefined), defaultTranslations as any);
+      console.log(`[LanguageContext] Key "${key}" not found in "${language}", trying fallback to "${DEFAULT_LANGUAGE}"`);
+      const defaultLangObj = translations[DEFAULT_LANGUAGE];
+      value = traverse(defaultLangObj, keys);
     }
 
     // If still not found, return the default value or the key itself
     if (value === undefined) {
       if (finalDefaultValue) return finalDefaultValue;
 
-      console.warn(`Translation key not found: ${key}`, {
-        language,
-        path: keys.join('.')
-      });
+      console.warn(`[LanguageContext] Translation key not found: "${key}" (Language: ${language})`);
+      // To help debug, let's see what keys ARE available at top level
+      const root = getRoot(currentLangObj || translations[DEFAULT_LANGUAGE]);
+      if (root) {
+        console.log(`[LanguageContext] Available top-level keys:`, Object.keys(root).slice(0, 5));
+      }
       return key;
     }
 
     // Handle params replacement if any
     if (options && typeof value === "string") {
       Object.entries(options).forEach(([paramKey, paramValue]) => {
-        // Support both {name} and {{name}} formats for parameter replacement
         // Escape special characters in paramKey for RegExp
         const escapedKey = paramKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const replacement = String(paramValue);
@@ -148,7 +172,16 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 };
 
 // Custom hook to use the language context
-export const useLanguage = () => useContext(LanguageContext);
+export const useLanguage = () => React.useContext(LanguageContext);
+
+/**
+ * Compatibility shim for components transitioning from react-i18next
+ * @deprecated Use useLanguage() instead
+ */
+export const useTranslation = () => {
+  const { t } = useLanguage();
+  return { t, i18n: { changeLanguage: (lang: string) => { /* no-op for shim */ } } };
+};
 
 // Higher-order component to wrap components that need translations
 export const withLanguage = <P extends object>(

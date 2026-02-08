@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
-import { apiRequest, queryClient } from '@/lib/query-client';
+import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { CommandCenterLayout } from '@/components/layouts/command-center-layout';
@@ -48,15 +48,15 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { EmptyState } from '@/components/ui/empty-state';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
 } from '@/components/ui/dialog';
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -131,28 +131,27 @@ export default function AdminItemDetail() {
   // Handle status change
   const handleStatusChange = async () => {
     if (!data?.item || !newStatus) return;
-    
+
     try {
-      await apiRequest({
-        url: `/api/admin/items/${itemId}/status`,
+      await apiRequest(`/api/admin/items/${itemId}/status`, {
         method: 'PATCH',
         data: {
           status: newStatus,
           notes: statusNotes
         }
       });
-      
+
       // Show success toast
       toast({
         title: 'Status updated',
         description: `Item ${data.item.name} status has been updated to ${newStatus}`,
       });
-      
+
       // Close dialog and reset state
       setStatusDialogOpen(false);
       setNewStatus('');
       setStatusNotes('');
-      
+
       // Refresh data
       queryClient.invalidateQueries({ queryKey: [`/api/admin/items/${itemId}`] });
     } catch (error) {
@@ -168,22 +167,21 @@ export default function AdminItemDetail() {
   // Handle item deletion
   const handleDelete = async () => {
     if (!data?.item) return;
-    
+
     try {
-      await apiRequest({
-        url: `/api/admin/items/${itemId}`,
+      await apiRequest(`/api/admin/items/${itemId}`, {
         method: 'DELETE',
         data: {
           reason: deleteReason
         }
       });
-      
+
       // Show success toast
       toast({
         title: 'Item deleted',
         description: `Item ${data.item.name} has been deleted successfully`,
       });
-      
+
       // Navigate back to item management
       navigate('/admin/item-management');
     } catch (error) {
@@ -296,7 +294,7 @@ export default function AdminItemDetail() {
                 </div>
               </CardContent>
             </Card>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Skeleton className="h-40 w-full" />
               <Skeleton className="h-40 w-full" />
@@ -318,7 +316,7 @@ export default function AdminItemDetail() {
                   </Badge>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Left column - Basic info */}
@@ -331,13 +329,13 @@ export default function AdminItemDetail() {
                           <span className="text-sm">Category:</span>
                         </div>
                         <span className="text-sm font-medium capitalize">{item?.category || 'N/A'}</span>
-                        
+
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">Registered:</span>
                         </div>
                         <span className="text-sm font-medium">{formatDate(item?.registeredAt)}</span>
-                        
+
                         <div className="flex items-center gap-2">
                           <Gift className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">Value:</span>
@@ -345,7 +343,7 @@ export default function AdminItemDetail() {
                         <span className="text-sm font-medium">
                           {item?.estimatedValue ? `$${item.estimatedValue.toFixed(2)}` : 'N/A'}
                         </span>
-                        
+
                         <div className="flex items-center gap-2">
                           <MapPin className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm">Location:</span>
@@ -355,7 +353,7 @@ export default function AdminItemDetail() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground mb-2">Description</h3>
                       <p className="text-sm">
@@ -363,11 +361,11 @@ export default function AdminItemDetail() {
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Right column - Owner info */}
                   <div className="space-y-4">
                     <h3 className="text-sm font-medium text-muted-foreground mb-2">Owner Information</h3>
-                    
+
                     {owner ? (
                       <div className="border rounded-lg p-4 space-y-4">
                         <div className="flex items-center gap-3">
@@ -382,20 +380,20 @@ export default function AdminItemDetail() {
                             <p className="text-sm text-muted-foreground">{owner.email}</p>
                           </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4 text-muted-foreground" />
                             <span>Phone:</span>
                           </div>
                           <span className="font-medium">{owner.phoneNumber || 'Not provided'}</span>
-                          
+
                           <div className="flex items-center gap-2">
                             <UserCircle className="h-4 w-4 text-muted-foreground" />
                             <span>User ID:</span>
                           </div>
                           <span className="font-medium">{owner.id}</span>
-                          
+
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="h-4 py-0">Status</Badge>
                           </div>
@@ -412,7 +410,7 @@ export default function AdminItemDetail() {
                         />
                       </div>
                     )}
-                    
+
                     {/* Item identifiers section */}
                     <div>
                       <h3 className="text-sm font-medium text-muted-foreground mb-2">Item Identifiers</h3>
@@ -423,14 +421,14 @@ export default function AdminItemDetail() {
                             <span className="font-medium font-mono">{item.serialNumber}</span>
                           </div>
                         )}
-                        
+
                         {item?.modelNumber && (
                           <div className="grid grid-cols-2 text-sm">
                             <span className="text-muted-foreground">Model Number:</span>
                             <span className="font-medium font-mono">{item.modelNumber}</span>
                           </div>
                         )}
-                        
+
                         {!item?.serialNumber && !item?.modelNumber && (
                           <p className="text-sm text-muted-foreground">No unique identifiers provided</p>
                         )}
@@ -438,7 +436,7 @@ export default function AdminItemDetail() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Reports section with tabs */}
                 {reports.length > 0 && (
                   <div>
@@ -449,13 +447,13 @@ export default function AdminItemDetail() {
                         <TabsTrigger value="lost">Lost Reports ({reports.filter((r: Report) => r.type === 'lost').length})</TabsTrigger>
                         <TabsTrigger value="found">Found Reports ({reports.filter((r: Report) => r.type === 'found').length})</TabsTrigger>
                       </TabsList>
-                      
+
                       <TabsContent value="all" className="space-y-2">
                         {reports.map((report: Report) => (
                           <ReportCard key={report.id} report={report} />
                         ))}
                       </TabsContent>
-                      
+
                       <TabsContent value="lost" className="space-y-2">
                         {reports.filter((r: Report) => r.type === 'lost').map((report: Report) => (
                           <ReportCard key={report.id} report={report} />
@@ -471,7 +469,7 @@ export default function AdminItemDetail() {
                           </div>
                         )}
                       </TabsContent>
-                      
+
                       <TabsContent value="found" className="space-y-2">
                         {reports.filter((r: Report) => r.type === 'found').map((report: Report) => (
                           <ReportCard key={report.id} report={report} />
@@ -491,7 +489,7 @@ export default function AdminItemDetail() {
                   </div>
                 )}
               </CardContent>
-              
+
               <CardFooter className="flex justify-between">
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => openStatusDialog('Registered')}>
@@ -515,9 +513,9 @@ export default function AdminItemDetail() {
                     Archive
                   </Button>
                 </div>
-                
-                <Button 
-                  variant="destructive" 
+
+                <Button
+                  variant="destructive"
                   onClick={() => setDeleteDialogOpen(true)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -538,7 +536,7 @@ export default function AdminItemDetail() {
               Change the status of "{item?.name}" to {newStatus}.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium">Current Status:</span>
@@ -546,14 +544,14 @@ export default function AdminItemDetail() {
                 {item?.status}
               </Badge>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium">New Status:</span>
               <Badge variant="outline" className={getStatusColor(newStatus)}>
                 {newStatus}
               </Badge>
             </div>
-            
+
             <div className="space-y-2">
               <label htmlFor="notes" className="text-sm font-medium">
                 Notes
@@ -566,7 +564,7 @@ export default function AdminItemDetail() {
               />
             </div>
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
               Cancel
@@ -588,7 +586,7 @@ export default function AdminItemDetail() {
               "{item?.name}" from the system and notify the owner.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          
+
           <div className="space-y-2 py-4">
             <label htmlFor="deleteReason" className="text-sm font-medium">
               Reason for deletion
@@ -600,10 +598,10 @@ export default function AdminItemDetail() {
               onChange={(e) => setDeleteReason(e.target.value)}
             />
           </div>
-          
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 text-white hover:bg-red-700"
             >
@@ -626,7 +624,7 @@ function ReportCard({ report }: { report: Report }) {
             <CardTitle className="text-base">{report.title}</CardTitle>
             <CardDescription>Report #{report.id}</CardDescription>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <Badge variant={report.type === 'lost' ? 'destructive' : 'default'}>
               {report.type === 'lost' ? 'Lost' : 'Found'}
@@ -637,7 +635,7 @@ function ReportCard({ report }: { report: Report }) {
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="py-2">
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div className="flex items-center gap-2">
@@ -645,18 +643,18 @@ function ReportCard({ report }: { report: Report }) {
             <span className="text-muted-foreground">Date:</span>
           </div>
           <span>{formatDate(report.date)}</span>
-          
+
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-muted-foreground" />
             <span className="text-muted-foreground">Location:</span>
           </div>
           <span>{report.location || 'Not specified'}</span>
-          
+
           <div className="col-span-2">
             <span className="text-muted-foreground">Description:</span>
             <p className="mt-1">{report.description || 'No description provided'}</p>
           </div>
-          
+
           {report.contactInfo && (
             <>
               <div className="flex items-center gap-2">

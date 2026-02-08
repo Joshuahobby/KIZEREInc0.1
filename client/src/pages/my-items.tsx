@@ -6,11 +6,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import {
   PlusCircle, Search, Package, AlertTriangle, X, Eye,
-  Calendar, Tag, MapPin, Activity, LayoutGrid, List, MoreVertical, Edit2
+  Calendar, Tag, MapPin, Activity, LayoutGrid, List, MoreVertical, Edit2, CheckCircle
 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { cn } from "@/lib/utils";
-import { EmptyState, ItemSkeleton } from "@/components/ui";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ItemSkeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -18,12 +19,24 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import * as React from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "../hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
+import { ReportRegisteredItemDialog } from "@/components/reports/report-registered-item-dialog";
 
 // Status badge variations based on item status
 const getStatusBadgeVariant = (status: ItemStatus) => {
@@ -46,11 +59,22 @@ const getStatusBadgeVariant = (status: ItemStatus) => {
 export default function MyItemsPage() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [statusTab, setStatusTab] = useState<ItemStatus | "all">("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "alpha">("newest");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [selectedCategory, setSelectedCategory] = React.useState("all");
+  const [statusTab, setStatusTab] = React.useState<ItemStatus | "all">("all");
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortBy, setSortBy] = React.useState<"newest" | "oldest" | "alpha">("newest");
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("list");
+
+  // Report lost dialog state
+  const [reportItem, setReportItem] = React.useState<Item | null>(null);
+  const [isReportDialogOpen, setIsReportDialogOpen] = React.useState(false);
+
+  // Mark found dialog state
+  const [itemToMarkFound, setItemToMarkFound] = React.useState<Item | null>(null);
+  const [isMarkFoundDialogOpen, setIsMarkFoundDialogOpen] = React.useState(false);
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch user's items
   const { data: items, isLoading, error } = useQuery<Item[]>({
@@ -60,6 +84,26 @@ export default function MyItemsPage() {
     },
     enabled: !!user?.id
   });
+
+  const markAsFoundMutation = useMutation({
+    mutationFn: async (itemId: number) => {
+      await apiRequest(`/api/items/${itemId}/mark-found`, { method: 'POST' });
+    },
+    onSuccess: () => {
+      toast({ title: "Item updated", description: "Your item has been marked as recovered." });
+      queryClient.invalidateQueries({ queryKey: ["/api/items"] });
+      setIsMarkFoundDialogOpen(false);
+      setItemToMarkFound(null);
+    },
+    onError: (err: Error) => {
+      toast({ variant: "destructive", title: "Failed to update item", description: err.message });
+    }
+  });
+
+  const handleMarkFound = (item: Item) => {
+    setItemToMarkFound(item);
+    setIsMarkFoundDialogOpen(true);
+  };
 
   // Filter and Sort items
   const filteredItems = items?.filter(item => {
@@ -86,7 +130,11 @@ export default function MyItemsPage() {
   const uniqueCategories = items ? Array.from(new Set(items.map(item => item.category))) : [];
 
   const handleReportLost = (itemId: number) => {
-    navigate(`/report-lost/${itemId}`);
+    const itemToReport = items?.find(i => i.id === itemId);
+    if (itemToReport) {
+      setReportItem(itemToReport);
+      setIsReportDialogOpen(true);
+    }
   };
 
   const handleViewItem = (itemId: number) => {
@@ -261,6 +309,7 @@ export default function MyItemsPage() {
             items={filteredItems}
             viewMode={viewMode}
             onReportLost={handleReportLost}
+            onMarkFound={handleMarkFound}
             onViewItem={handleViewItem}
             hasActiveFilters={selectedCategory !== 'all' || searchQuery !== '' || statusTab !== 'all'}
             onClearFilters={() => {
@@ -271,6 +320,40 @@ export default function MyItemsPage() {
           />
         </div>
       </div>
+
+      {/* Mark Found Dialog */}
+      <AlertDialog open={isMarkFoundDialogOpen} onOpenChange={setIsMarkFoundDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mark "{itemToMarkFound?.name}" as found?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will update the item status to "Recovered" and resolve any active lost reports.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (itemToMarkFound) markAsFoundMutation.mutate(itemToMarkFound.id);
+              }}
+              className="bg-emerald-600 hover:bg-emerald-700"
+              disabled={markAsFoundMutation.isPending}
+            >
+              {markAsFoundMutation.isPending ? "Updating..." : "Mark Found"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Report Lost Dialog */}
+      {reportItem && (
+        <ReportRegisteredItemDialog
+          item={reportItem}
+          open={isReportDialogOpen}
+          onOpenChange={setIsReportDialogOpen}
+        />
+      )}
     </PageLayout>
   );
 }
@@ -279,19 +362,18 @@ interface ItemsGridProps {
   items: Item[];
   viewMode: "grid" | "list";
   onReportLost: (itemId: number) => void;
+  onMarkFound: (item: Item) => void;
   onViewItem: (itemId: number) => void;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
 }
 
-function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters, onClearFilters }: ItemsGridProps) {
+function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, hasActiveFilters, onClearFilters }: ItemsGridProps) {
   const [, navigate] = useLocation();
 
   if (items.length === 0) {
-    // ... previous code for empty state
     return (
       <div className="py-8 sm:py-20 flex flex-col items-center justify-center animate-in slide-in-from-bottom-4 duration-500 px-4">
-        {/* ... empty state content ... */}
         <div className="relative mb-6 group">
           <motion.div
             className="absolute -inset-10 bg-gradient-to-br from-primary/20 to-blue-500/10 rounded-full blur-3xl"
@@ -445,6 +527,17 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                           <AlertTriangle className="h-4 w-4" />
                         </Button>
                       )}
+                      {item.status === 'Lost' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                          onClick={() => onMarkFound(item)}
+                          title="Mark as Found"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -570,7 +663,7 @@ function ItemsGrid({ items, viewMode, onReportLost, onViewItem, hasActiveFilters
                     variant="default"
                     size="sm"
                     className="flex-1 rounded-lg h-9 bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all font-bold text-[11px]"
-                    onClick={() => navigate(`/items/${item.id}?action=found`)}
+                    onClick={() => onMarkFound(item)}
                   >
                     Found!
                   </Button>

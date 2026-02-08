@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import * as React from "react";
 
 interface LoadingContextType {
   isLoading: boolean;
@@ -6,33 +6,41 @@ interface LoadingContextType {
   stopLoading: () => void;
 }
 
+// Use a global singleton for LoadingContext
+const LOADING_CONTEXT_KEY = Symbol.for("kizere-loading-context");
+
 // Create the context with a default value
-const LoadingContext = createContext<LoadingContextType>({
+const LoadingContext = ((globalThis as any)[LOADING_CONTEXT_KEY] as React.Context<LoadingContextType>) || React.createContext<LoadingContextType>({
   isLoading: false,
-  startLoading: () => {},
-  stopLoading: () => {},
+  startLoading: () => { },
+  stopLoading: () => { },
 });
 
+if (!(globalThis as any)[LOADING_CONTEXT_KEY]) {
+  (globalThis as any)[LOADING_CONTEXT_KEY] = LoadingContext;
+  LoadingContext.displayName = "LoadingContext";
+}
+
 interface LoadingProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 /**
  * Provider component that wraps the app to provide loading state management
  */
 export function LoadingProvider({ children }: LoadingProviderProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // Simplified loading management
   const startLoading = () => {
     setIsLoading(true);
-    
+
     // Auto-reset loading state after 2 seconds as a safety measure
     setTimeout(() => {
       setIsLoading(false);
     }, 2000);
   };
-  
+
   const stopLoading = () => {
     setIsLoading(false);
   };
@@ -48,11 +56,11 @@ export function LoadingProvider({ children }: LoadingProviderProps) {
  * Custom hook to use the loading state context
  */
 export function useLoadingState() {
-  const context = useContext(LoadingContext);
-  
+  const context = React.useContext(LoadingContext);
+
   if (context === undefined) {
     throw new Error("useLoadingState must be used within a LoadingProvider");
   }
-  
+
   return context;
 }

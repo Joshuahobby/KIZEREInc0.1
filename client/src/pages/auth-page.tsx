@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import * as React from "react";
 import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { motion } from "framer-motion";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "../hooks/use-auth";
 import { AuthService } from "@/services/auth.service";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,18 +13,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { userRoles, UserPreferences } from "@shared/schema";
-import { 
+import {
   Loader2,
-  KeyRound, 
-  User, 
-  Mail, 
-  Phone, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  Shield, 
-  Tag, 
-  Search, 
+  KeyRound,
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Eye,
+  EyeOff,
+  Shield,
+  Tag,
+  Search,
   MapPin,
   Database,
   AlertCircle,
@@ -39,19 +39,19 @@ type LoginFormValues = z.infer<typeof AuthModel.loginSchema>;
 type RegisterFormValues = z.infer<typeof AuthModel.registerSchema>;
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = useState<string>("login");
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
-  const [passwordStrength, setPasswordStrength] = useState<{ isStrong: boolean; message: string; score: number } | null>(null);
+  const [activeTab, setActiveTab] = React.useState<string>("login");
+  const [showPassword, setShowPassword] = React.useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState<boolean>(false);
+  const [passwordStrength, setPasswordStrength] = React.useState<{ isStrong: boolean; message: string; score: number } | null>(null);
   const { user, loginMutation, registerMutation, loginWithGoogle, isLoading: authLoading } = useAuth();
   const [location, navigate] = useLocation();
 
   // Redirect if already logged in
-  useEffect(() => {
+  React.useEffect(() => {
     if (user) {
       // Use role-specific dashboard instead of landing page
       const dashboardPath = AuthService.getDashboardPathByRole(
-        user.role, 
+        user.role,
         (user.preferences as UserPreferences)?.dashboardStyle
       );
       navigate(dashboardPath);
@@ -91,8 +91,8 @@ export default function AuthPage() {
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: { duration: 0.6 }
     }
@@ -110,8 +110,8 @@ export default function AuthPage() {
 
   const featureItem = {
     hidden: { opacity: 0, x: -20 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       x: 0,
       transition: { duration: 0.5 }
     }
@@ -122,39 +122,39 @@ export default function AuthPage() {
       <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl w-full flex flex-col lg:flex-row gap-12 items-center">
           {/* Hero Section with 3D-like UI */}
-          <motion.div 
+          <motion.div
             className="lg:w-1/2 flex flex-col justify-center"
             initial="hidden"
             animate="visible"
             variants={fadeIn}
           >
             <div className="relative mb-8">
-              <motion.div 
+              <motion.div
                 className="absolute -top-12 -left-12 w-24 h-24 rounded-full bg-primary/10 z-0"
-                animate={{ 
+                animate={{
                   scale: [1, 1.2, 1],
                   rotate: [0, 10, 0],
                 }}
-                transition={{ 
-                  duration: 8, 
-                  repeat: Infinity, 
-                  repeatType: "reverse" 
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  repeatType: "reverse"
                 }}
               />
-              <motion.div 
+              <motion.div
                 className="absolute -bottom-8 -right-8 w-32 h-32 rounded-full bg-secondary/10 z-0"
-                animate={{ 
+                animate={{
                   scale: [1, 1.3, 1],
                   rotate: [0, -15, 0],
                 }}
-                transition={{ 
-                  duration: 10, 
-                  repeat: Infinity, 
+                transition={{
+                  duration: 10,
+                  repeat: Infinity,
                   repeatType: "reverse",
-                  delay: 1 
+                  delay: 1
                 }}
               />
-              <motion.h1 
+              <motion.h1
                 className="text-4xl md:text-5xl font-bold text-foreground mb-4 relative z-10"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -164,8 +164,8 @@ export default function AuthPage() {
                 <span className="block text-2xl md:text-3xl mt-2 text-foreground/90">Smart Item Management</span>
               </motion.h1>
             </div>
-            
-            <motion.p 
+
+            <motion.p
               className="text-lg text-muted-foreground mb-10"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -173,8 +173,8 @@ export default function AuthPage() {
             >
               The modern digital solution to register, protect, track, and recover your valuable possessions with advanced technology.
             </motion.p>
-            
-            <motion.div 
+
+            <motion.div
               className="space-y-5"
               variants={stagger}
               initial="hidden"
@@ -182,14 +182,14 @@ export default function AuthPage() {
             >
               <motion.div className="flex items-start" variants={featureItem}>
                 <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                   <Database className="h-5 w-5" />
+                  <Database className="h-5 w-5" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-base font-medium text-foreground">Secure Registration</h3>
                   <p className="mt-1 text-sm text-muted-foreground">Register your valuable items in our encrypted database</p>
                 </div>
               </motion.div>
-              
+
               <motion.div className="flex items-start" variants={featureItem}>
                 <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <AlertCircle className="h-5 w-5" />
@@ -199,7 +199,7 @@ export default function AuthPage() {
                   <p className="mt-1 text-sm text-muted-foreground">Report lost items and get notified when they're found</p>
                 </div>
               </motion.div>
-              
+
               <motion.div className="flex items-start" variants={featureItem}>
                 <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <Search className="h-5 w-5" />
@@ -209,7 +209,7 @@ export default function AuthPage() {
                   <p className="mt-1 text-sm text-muted-foreground">Find items with our AI-powered search system</p>
                 </div>
               </motion.div>
-              
+
               <motion.div className="flex items-start" variants={featureItem}>
                 <div className="flex-shrink-0 h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                   <Tag className="h-5 w-5" />
@@ -223,7 +223,7 @@ export default function AuthPage() {
           </motion.div>
 
           {/* Auth Forms with Glass Morphism */}
-          <motion.div 
+          <motion.div
             className="lg:w-1/2 mt-8 lg:mt-0 w-full max-w-md"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -236,7 +236,7 @@ export default function AuthPage() {
                     <TabsTrigger value="login" className="text-sm">Sign In</TabsTrigger>
                     <TabsTrigger value="register" className="text-sm">Create Account</TabsTrigger>
                   </TabsList>
-                  
+
                   {/* Login Form */}
                   <TabsContent value="login">
                     <Form {...loginForm}>
@@ -257,7 +257,7 @@ export default function AuthPage() {
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={loginForm.control}
                           name="password"
@@ -267,13 +267,13 @@ export default function AuthPage() {
                               <FormControl>
                                 <div className="relative">
                                   <KeyRound className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                                  <Input 
-                                    className="pl-10 pr-10" 
-                                    type={showPassword ? "text" : "password"} 
-                                    placeholder="Enter your password" 
-                                    {...field} 
+                                  <Input
+                                    className="pl-10 pr-10"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Enter your password"
+                                    {...field}
                                   />
-                                  <button 
+                                  <button
                                     type="button"
                                     className="absolute right-3 top-2.5 text-muted-foreground"
                                     onClick={() => setShowPassword(!showPassword)}
@@ -286,12 +286,12 @@ export default function AuthPage() {
                             </FormItem>
                           )}
                         />
-                        
+
                         <div className="flex justify-between items-center mt-2 mb-1">
                           <div className="flex items-center space-x-2">
-                            <input 
-                              type="checkbox" 
-                              id="remember" 
+                            <input
+                              type="checkbox"
+                              id="remember"
                               className="rounded border-input h-4 w-4 text-primary focus:ring-primary"
                             />
                             <label htmlFor="remember" className="text-sm text-muted-foreground">
@@ -302,10 +302,10 @@ export default function AuthPage() {
                             Forgot password?
                           </a>
                         </div>
-                        
-                        <Button 
-                          type="submit" 
-                          className="w-full mt-4" 
+
+                        <Button
+                          type="submit"
+                          className="w-full mt-4"
                           disabled={loginMutation.isPending}
                           size="lg"
                         >
@@ -328,9 +328,9 @@ export default function AuthPage() {
                           </div>
                         </div>
 
-                        <Button 
-                          type="button" 
-                          variant="outline" 
+                        <Button
+                          type="button"
+                          variant="outline"
                           className="w-full h-12 border-border/60 hover:bg-muted/50 transition-all duration-300"
                           onClick={() => loginWithGoogle()}
                           disabled={authLoading || loginMutation.isPending}
@@ -341,7 +341,7 @@ export default function AuthPage() {
                       </form>
                     </Form>
                   </TabsContent>
-                  
+
                   {/* Registration Form */}
                   <TabsContent value="register">
                     <Form {...registerForm}>
@@ -362,7 +362,7 @@ export default function AuthPage() {
                             </FormItem>
                           )}
                         />
-                        
+
                         <FormField
                           control={registerForm.control}
                           name="username"
@@ -379,7 +379,7 @@ export default function AuthPage() {
                             </FormItem>
                           )}
                         />
-                        
+
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                           <FormField
                             control={registerForm.control}
@@ -390,11 +390,11 @@ export default function AuthPage() {
                                 <FormControl>
                                   <div className="relative">
                                     <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                                    <Input 
-                                      className="pl-10 pr-10" 
-                                      type={showPassword ? "text" : "password"} 
-                                      placeholder="Create a password" 
-                                      {...field} 
+                                    <Input
+                                      className="pl-10 pr-10"
+                                      type={showPassword ? "text" : "password"}
+                                      placeholder="Create a password"
+                                      {...field}
                                       onChange={(e) => {
                                         field.onChange(e);
                                         if (e.target.value) {
@@ -404,7 +404,7 @@ export default function AuthPage() {
                                         }
                                       }}
                                     />
-                                    <button 
+                                    <button
                                       type="button"
                                       className="absolute right-3 top-2.5 text-muted-foreground"
                                       onClick={() => setShowPassword(!showPassword)}
@@ -418,7 +418,7 @@ export default function AuthPage() {
                               </FormItem>
                             )}
                           />
-                          
+
                           <FormField
                             control={registerForm.control}
                             name="confirmPassword"
@@ -428,13 +428,13 @@ export default function AuthPage() {
                                 <FormControl>
                                   <div className="relative">
                                     <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                                    <Input 
-                                      className="pl-10 pr-10" 
-                                      type={showConfirmPassword ? "text" : "password"} 
-                                      placeholder="Confirm your password" 
-                                      {...field} 
+                                    <Input
+                                      className="pl-10 pr-10"
+                                      type={showConfirmPassword ? "text" : "password"}
+                                      placeholder="Confirm your password"
+                                      {...field}
                                     />
-                                    <button 
+                                    <button
                                       type="button"
                                       className="absolute right-3 top-2.5 text-muted-foreground"
                                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -448,23 +448,23 @@ export default function AuthPage() {
                             )}
                           />
                         </div>
-                        
+
                         {/* Role is automatically set to Subscriber for public registration */}
                         {/* Admin and Agent roles can only be assigned by administrators */}
-                        
+
                         <div className="flex items-center space-x-2 mt-2">
-                          <input 
-                            type="checkbox" 
-                            id="terms" 
+                          <input
+                            type="checkbox"
+                            id="terms"
                             className="rounded border-input h-4 w-4 text-primary focus:ring-primary"
                           />
                           <label htmlFor="terms" className="text-sm text-muted-foreground">
                             I agree to the <a href="#" className="text-primary hover:underline">Terms of Service</a> and <a href="#" className="text-primary hover:underline">Privacy Policy</a>
                           </label>
                         </div>
-                        
-                        <Button 
-                          type="submit" 
+
+                        <Button
+                          type="submit"
                           className="w-full mt-4"
                           disabled={registerMutation.isPending}
                           size="lg"

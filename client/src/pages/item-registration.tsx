@@ -55,7 +55,7 @@ import { PaymentService } from "@/services/payment.service";
 import { DEFAULT_CURRENCY } from "@/config/payment.config";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { PageLayout } from "@/components/layout/index";
+import { PageLayout } from "@/components/layout/page-layout";
 
 // Custom Registration Components
 import { SmartIDRecognizer } from "@/components/item-registration/smart-id-recognizer";
@@ -120,7 +120,12 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
   const [itemImages, setItemImages] = useState<File[]>([]);
   const [ownershipDocuments, setOwnershipDocuments] = useState<OwnershipDoc[]>([]);
   const [completion, setCompletion] = useState(0);
+  const [isMounted, setIsMounted] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Form initialization
   const form = useForm<ItemRegistrationValues>({
@@ -762,7 +767,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
 
       {/* Floating Action Bar (Mobile only) */}
       {
-        typeof document !== 'undefined' && createPortal(
+        isMounted && typeof document !== 'undefined' && createPortal(
           <div className="lg:hidden fixed bottom-6 left-4 right-4 z-[100]">
             <div className="bg-background/80 backdrop-blur-2xl p-3 rounded-full border border-white/10 shadow-2xl flex items-center gap-2 max-w-md mx-auto">
               {currentStep > 0 && (
