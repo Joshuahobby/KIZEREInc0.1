@@ -15,7 +15,7 @@ export async function getClaim(id: number): Promise<Claim | undefined> {
 }
 
 /**
- * Get claim with related report and user details
+ * Get claim with related report, user, and appeal details
  */
 export async function getClaimWithDetails(id: number): Promise<any> {
   const result = await db.select({
@@ -32,11 +32,16 @@ export async function getClaimWithDetails(id: number): Promise<any> {
     reportTitle: reports.title,
     reportType: reports.type,
     claimantName: users.fullName,
-    claimantEmail: users.email
+    claimantEmail: users.email,
+    appealStatus: claimAppeals.status,
+    appealReason: claimAppeals.reason,
+    appealAdminNotes: claimAppeals.adminNotes,
+    appealResolvedAt: claimAppeals.resolvedAt
   })
     .from(claims)
     .leftJoin(reports, eq(claims.reportId, reports.id))
     .leftJoin(users, eq(claims.userId, users.id))
+    .leftJoin(claimAppeals, eq(claims.id, claimAppeals.claimId))
     .where(eq(claims.id, id));
 
   return result[0];

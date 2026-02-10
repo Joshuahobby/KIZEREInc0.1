@@ -1,12 +1,12 @@
 import session from "express-session";
-import { 
-  User, InsertUser, Item, InsertItem, Report, InsertReport, 
+import {
+  User, InsertUser, Item, InsertItem, Report, InsertReport,
   Notification, InsertNotification, Payment, InsertPayment,
   PaymentMethod, InsertPaymentMethod, UserActivityLog, InsertUserActivityLog,
   AdminActionLog, InsertAdminActionLog, Role, InsertRole,
   VerificationRequest, InsertVerificationRequest, StatusChange, InsertStatusChange,
   UserWarning, InsertUserWarning, PaymentPackage, InsertPaymentPackage,
-  Claim, InsertClaim,
+  Claim, InsertClaim, ClaimAppeal, InsertClaimAppeal, ClaimStatusLog, InsertClaimStatusLog,
   AccountStatus, VerificationStatus, PaymentType
 } from "@shared/schema";
 
@@ -35,12 +35,12 @@ export interface IStorage {
   updateUserStatus(userId: number, status: AccountStatus, reason?: string, expirationDate?: Date): Promise<StatusChange>;
   updateUserRole(userId: number, role: string): Promise<User | undefined>;
   updateUserVerificationStatus(userId: number, status: VerificationStatus): Promise<User | undefined>;
-  
+
   // User activity logs
   getUserActivityLogs(userId: number, page: number, pageSize: number): Promise<UserActivityLog[]>;
   countUserActivityLogs(userId: number): Promise<number>;
   createUserActivityLog(log: InsertUserActivityLog): Promise<UserActivityLog>;
-  
+
   // Admin action logs
   getRecentAdminActions(limit?: number): Promise<AdminActionLog[]>;
   getAdminActionLogs(filters?: {
@@ -61,16 +61,16 @@ export interface IStorage {
   createRole(role: InsertRole): Promise<Role>;
   updateRole(id: number, role: Partial<Role>): Promise<Role | undefined>;
   deleteRole(id: number): Promise<boolean>;
-  
+
   // Status changes
   getUserStatusHistory(userId: number): Promise<StatusChange[]>;
   createStatusChange(change: InsertStatusChange): Promise<StatusChange>;
-  
+
   // User warnings
   getUserWarnings(userId: number): Promise<UserWarning[]>;
   createUserWarning(warning: InsertUserWarning): Promise<UserWarning>;
   acknowledgeWarning(id: number): Promise<UserWarning | undefined>;
-  
+
   // Item methods
   getItem(id: number): Promise<Item | undefined>;
   getUserItems(userId: number): Promise<Item[]>;
@@ -80,7 +80,7 @@ export interface IStorage {
   searchItems(query: string, filters?: object): Promise<Item[]>;
   getAllItems(): Promise<Item[]>;
   getItemByUniqueIdentifier(identifier: string): Promise<Item | undefined>;
-  
+
   // Report methods
   getReport(id: number): Promise<Report | undefined>;
   getUserReports(userId: number): Promise<Report[]>;
@@ -94,7 +94,7 @@ export interface IStorage {
   getReportWithRelatedData(id: number): Promise<any>;
   generateReportCSV(): Promise<string>;
   findPotentialMatches(reportId: number): Promise<any[]>;
-  
+
   // Notification methods
   getNotification(id: number): Promise<Notification | undefined>;
   getUserNotifications(userId: number): Promise<Notification[]>;
@@ -114,12 +114,14 @@ export interface IStorage {
   updateClaim(id: number, claim: Partial<Claim>): Promise<Claim | undefined>;
   getClaimStats(): Promise<any>;
   getClaimsByStatus(status: string): Promise<Claim[]>;
-  createClaimStatusLog(log: { claimId: number; previousStatus: string; newStatus: string; changedBy: number; notes?: string }): Promise<any>;
-  getClaimStatusHistory(claimId: number): Promise<any[]>;
-  createClaimAppeal(appeal: { claimId: number; userId: number; reason: string; status: string }): Promise<any>;
-  getClaimAppeal(claimId: number): Promise<any>;
-  getPendingAppeals(): Promise<any[]>;
-  
+  createClaimStatusLog(log: InsertClaimStatusLog): Promise<ClaimStatusLog>;
+  getClaimStatusHistory(claimId: number): Promise<ClaimStatusLog[]>;
+  createClaimAppeal(appeal: InsertClaimAppeal): Promise<ClaimAppeal>;
+  getClaimAppeal(claimId: number): Promise<ClaimAppeal | undefined>;
+  getAppeal(id: number): Promise<ClaimAppeal | undefined>;
+  getPendingAppeals(): Promise<ClaimAppeal[]>;
+  updateClaimAppeal(id: number, appealData: Partial<ClaimAppeal>): Promise<ClaimAppeal | undefined>;
+
   // User lookup
   getUsersByRole(roles: string[]): Promise<User[]>;
 
@@ -131,7 +133,7 @@ export interface IStorage {
   updatePayment(id: number, payment: Partial<Payment>): Promise<Payment | undefined>;
   getItemPayments(itemId: number): Promise<Payment[]>;
   getReportPayments(reportId: number): Promise<Payment[]>;
-  
+
   // Admin payment methods
   getAllPayments(): Promise<Payment[]>;
   getPaymentsWithFilters(options: {
@@ -142,14 +144,14 @@ export interface IStorage {
     type?: string;
     dateFilter?: { start: Date; end: Date } | null;
   }): Promise<{ payments: Payment[]; total: number }>;
-  
+
   // Payment method storage
   getUserPaymentMethods(userId: number): Promise<PaymentMethod[]>;
   createPaymentMethod(paymentMethod: InsertPaymentMethod): Promise<PaymentMethod>;
   updatePaymentMethod(id: number, paymentMethod: Partial<PaymentMethod>): Promise<PaymentMethod | undefined>;
   deletePaymentMethod(id: number): Promise<boolean>;
   setDefaultPaymentMethod(userId: number, paymentMethodId: number): Promise<void>;
-  
+
   // Payment packages
   getPaymentPackage(id: number): Promise<PaymentPackage | undefined>;
   getPaymentPackageByType(type: PaymentType, onlyActive?: boolean): Promise<PaymentPackage[]>;

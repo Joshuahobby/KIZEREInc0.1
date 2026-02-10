@@ -12,13 +12,13 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Report } from "@shared/schema";
-import { 
-  ArrowLeft, 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Loader2, 
-  ShieldCheck, 
+import {
+  ArrowLeft,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Loader2,
+  ShieldCheck,
   User as UserIcon,
   MessageSquare,
   Image as ImageIcon
@@ -48,6 +48,10 @@ interface ClaimDetail {
   reportType: string;
   claimantName: string;
   claimantEmail: string;
+  appealStatus?: 'pending' | 'approved' | 'rejected';
+  appealReason?: string;
+  appealAdminNotes?: string;
+  appealResolvedAt?: string;
 }
 
 export default function ClaimDetailPage() {
@@ -55,7 +59,7 @@ export default function ClaimDetailPage() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   // Dialog states
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
@@ -78,11 +82,11 @@ export default function ClaimDetailPage() {
   // Verification Mutation
   const verifyMutation = useMutation({
     mutationFn: async (status: 'verified' | 'rejected') => {
-      await apiRequest(`/api/claims/${id}/verify`, { 
+      await apiRequest(`/api/claims/${id}/verify`, {
         method: 'PATCH',
-        data: { 
-          status, 
-          finderNotes: notes 
+        data: {
+          status,
+          finderNotes: notes
         }
       });
     },
@@ -90,8 +94,8 @@ export default function ClaimDetailPage() {
       setShowVerifyDialog(false);
       setShowRejectDialog(false);
       setNotes("");
-      toast({ 
-        title: status === 'verified' ? "Claim Verified" : "Claim Rejected", 
+      toast({
+        title: status === 'verified' ? "Claim Verified" : "Claim Rejected",
         description: `Successfully ${status === 'verified' ? 'verified' : 'rejected'} the claim.`
       });
       queryClient.invalidateQueries({ queryKey: [`/api/claims/${id}`] });
@@ -100,7 +104,7 @@ export default function ClaimDetailPage() {
       toast({ variant: "destructive", title: "Action Failed", description: err.message });
     }
   });
-  
+
   // Appeal Mutation
   const appealMutation = useMutation({
     mutationFn: async () => {
@@ -148,8 +152,8 @@ export default function ClaimDetailPage() {
     <PageLayout>
       <div className="py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             onClick={() => navigate(report ? `/reports/${report.id}` : '/dashboard')}
             className="mb-6"
           >
@@ -169,7 +173,7 @@ export default function ClaimDetailPage() {
                         Claim for: <span className="font-medium text-neutral-900">{claim.reportTitle}</span>
                       </CardDescription>
                     </div>
-                    <Badge 
+                    <Badge
                       variant={claim.status === 'verified' ? 'default' : claim.status === 'rejected' ? 'destructive' : 'outline'}
                       className="capitalize"
                     >
@@ -188,14 +192,14 @@ export default function ClaimDetailPage() {
                       <h3 className="font-medium text-neutral-900 mb-2">Proof Images</h3>
                       <div className="grid grid-cols-2 gap-4">
                         {claim.imageUrls.map((url, i) => (
-                           <div key={i} className="aspect-video relative rounded-lg overflow-hidden border bg-neutral-100">
-                             <img src={url} alt={`Proof ${i+1}`} className="object-cover w-full h-full" />
-                           </div>
+                          <div key={i} className="aspect-video relative rounded-lg overflow-hidden border bg-neutral-100">
+                            <img src={url} alt={`Proof ${i + 1}`} className="object-cover w-full h-full" />
+                          </div>
                         ))}
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Finder Notes (if verified/rejected) */}
                   {claim.finderNotes && (
                     <div className="bg-neutral-100 p-4 rounded-lg">
@@ -206,20 +210,52 @@ export default function ClaimDetailPage() {
                       <p className="text-neutral-700">{claim.finderNotes}</p>
                     </div>
                   )}
+
+                  {/* Appeal Status Section */}
+                  {claim.appealStatus && (
+                    <div className={`p-4 rounded-lg border ${claim.appealStatus === 'approved' ? 'bg-green-50 border-green-100' :
+                        claim.appealStatus === 'rejected' ? 'bg-red-50 border-red-100' :
+                          'bg-amber-50 border-amber-100'
+                      }`}>
+                      <div className="flex items-center gap-2 mb-2 font-semibold text-neutral-900">
+                        <AlertTriangle className={`h-4 w-4 ${claim.appealStatus === 'approved' ? 'text-green-600' :
+                            claim.appealStatus === 'rejected' ? 'text-red-600' :
+                              'text-amber-600'
+                          }`} />
+                        <span>Claim Appeal: {claim.appealStatus.charAt(0).toUpperCase() + claim.appealStatus.slice(1)}</span>
+                      </div>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="text-neutral-500 font-medium">Your Reason:</span> {claim.appealReason}</p>
+                        {claim.appealAdminNotes && (
+                          <div className="pt-2 border-t border-neutral-200/50 mt-2">
+                            <p><span className="text-neutral-500 font-medium">Admin Decision:</span> {claim.appealAdminNotes}</p>
+                            {claim.appealResolvedAt && (
+                              <p className="text-[10px] text-neutral-400 mt-1">
+                                Resolved on {format(new Date(claim.appealResolvedAt), 'MMM d, yyyy HH:mm')}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {claim.appealStatus === 'pending' && (
+                          <p className="text-amber-700 italic text-xs">An administrator is currently reviewing your appeal.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
-                
+
                 {/* Actions for Finder/Admin */}
                 {showActions && (
                   <CardFooter className="flex justify-end gap-3 border-t bg-neutral-50/50 p-4">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="text-red-600 border-red-200 hover:bg-red-50"
                       onClick={() => setShowRejectDialog(true)}
                     >
                       <XCircle className="mr-2 h-4 w-4" />
                       Reject Claim
                     </Button>
-                    <Button 
+                    <Button
                       className="bg-green-600 hover:bg-green-700"
                       onClick={() => setShowVerifyDialog(true)}
                     >
@@ -233,7 +269,7 @@ export default function ClaimDetailPage() {
                 {isClaimant && claim.status === 'rejected' && (
                   <CardFooter className="bg-neutral-50 border-t p-4 flex justify-between items-center">
                     <p className="text-sm text-neutral-600">Believe this rejection was a mistake?</p>
-                    <Button 
+                    <Button
                       variant="outline"
                       onClick={() => setShowAppealDialog(true)}
                     >
@@ -250,31 +286,31 @@ export default function ClaimDetailPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
-                       <UserIcon className="h-5 w-5" />
-                       Claimant Info
+                      <UserIcon className="h-5 w-5" />
+                      Claimant Info
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                     <div>
-                       <span className="text-xs text-neutral-500 uppercase tracking-wider font-semibold">Name</span>
-                       <p className="font-medium">{claim.claimantName}</p>
-                     </div>
-                     <div>
-                       <span className="text-xs text-neutral-500 uppercase tracking-wider font-semibold">Email</span>
-                       <p className="font-medium text-sm">{claim.claimantEmail}</p>
-                     </div>
-                     <div className="pt-2">
-                        <div className="bg-blue-50 border border-blue-100 p-3 rounded text-xs text-blue-800">
-                          Verify the proof images and description carefully before approving. Once verified, your contact info will be shared with them.
-                        </div>
-                     </div>
+                    <div>
+                      <span className="text-xs text-neutral-500 uppercase tracking-wider font-semibold">Name</span>
+                      <p className="font-medium">{claim.claimantName}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-neutral-500 uppercase tracking-wider font-semibold">Email</span>
+                      <p className="font-medium text-sm">{claim.claimantEmail}</p>
+                    </div>
+                    <div className="pt-2">
+                      <div className="bg-blue-50 border border-blue-100 p-3 rounded text-xs text-blue-800">
+                        Verify the proof images and description carefully before approving. Once verified, your contact info will be shared with them.
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               )}
             </div>
           </div>
         </div>
-        </div>
+      </div>
 
       {/* Verify Dialog */}
       <Dialog open={showVerifyDialog} onOpenChange={setShowVerifyDialog}>
@@ -287,17 +323,17 @@ export default function ClaimDetailPage() {
           </DialogHeader>
           <div className="py-4">
             <Label htmlFor="verify-notes">Optional Notes for Claimant</Label>
-            <Textarea 
-              id="verify-notes" 
-              placeholder="Add any instructions on how to meet up..." 
+            <Textarea
+              id="verify-notes"
+              placeholder="Add any instructions on how to meet up..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowVerifyDialog(false)}>Cancel</Button>
-            <Button 
-              className="bg-green-600 hover:bg-green-700" 
+            <Button
+              className="bg-green-600 hover:bg-green-700"
               onClick={() => verifyMutation.mutate('verified')}
               disabled={verifyMutation.isPending}
             >
@@ -318,16 +354,16 @@ export default function ClaimDetailPage() {
           </DialogHeader>
           <div className="py-4">
             <Label htmlFor="reject-notes">Reason for Rejection *</Label>
-            <Textarea 
-              id="reject-notes" 
-              placeholder="Explain why the proof was insufficient..." 
+            <Textarea
+              id="reject-notes"
+              placeholder="Explain why the proof was insufficient..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRejectDialog(false)}>Cancel</Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={() => verifyMutation.mutate('rejected')}
               disabled={verifyMutation.isPending || notes.length < 5}
@@ -337,7 +373,7 @@ export default function ClaimDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Appeal Dialog */}
       <Dialog open={showAppealDialog} onOpenChange={setShowAppealDialog}>
         <DialogContent>
@@ -349,9 +385,9 @@ export default function ClaimDetailPage() {
           </DialogHeader>
           <div className="py-4">
             <Label htmlFor="appeal-reason">Reason for Appeal *</Label>
-            <Textarea 
-              id="appeal-reason" 
-              placeholder="Explain why this decision is incorrect..." 
+            <Textarea
+              id="appeal-reason"
+              placeholder="Explain why this decision is incorrect..."
               value={appealReason}
               onChange={(e) => setAppealReason(e.target.value)}
               className="min-h-[100px]"
@@ -359,7 +395,7 @@ export default function ClaimDetailPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAppealDialog(false)}>Cancel</Button>
-            <Button 
+            <Button
               onClick={() => appealMutation.mutate()}
               disabled={appealMutation.isPending || appealReason.length < 20}
             >

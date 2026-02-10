@@ -21,6 +21,7 @@ export interface DashboardStats {
   pendingVerifications?: number;
   totalRevenue?: number;
   systemHealth?: string;
+  registrationTrends?: { date: string; count: number }[];
 }
 
 export interface DashboardData {
@@ -136,14 +137,14 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     // Basic user stats
     const userStats: DashboardStats = {
       totalItems: items.length || 0,
-      totalLostReports: reports.filter(r => r.type === 'lost').length || 0,
-      totalFoundReports: reports.filter(r => r.type === 'found').length || 0,
-      totalSpent: payments.reduce((acc, p) => p.status === 'completed' ? acc + Number(p.amount) : acc, 0) || 0,
-      recentlyAddedItems: [...items].sort((a: any, b: any) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      totalLostReports: reports.filter((r: Report) => r.type === 'lost').length || 0,
+      totalFoundReports: reports.filter((r: Report) => r.type === 'found').length || 0,
+      totalSpent: payments.reduce((acc: number, p: Payment) => p.status === 'completed' ? acc + Number(p.amount) : acc, 0) || 0,
+      recentlyAddedItems: [...items].sort((a: Item, b: Item) =>
+        new Date(b.registeredAt || '').getTime() - new Date(a.registeredAt || '').getTime()
       ).slice(0, 5),
-      pendingPayments: payments.filter(p => p.status === 'pending').length || 0,
-      unreadNotifications: notifications.filter(n => !n.read).length || 0
+      pendingPayments: payments.filter((p: Payment) => p.status === 'pending').length || 0,
+      unreadNotifications: notifications.filter((n: Notification) => !n.isRead).length || 0
     };
 
     // If we have dashboard stats from the server, use those to augment

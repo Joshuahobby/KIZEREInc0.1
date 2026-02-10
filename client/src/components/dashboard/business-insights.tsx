@@ -2,13 +2,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { BarChart3, TrendingUp, ShieldCheck, ShoppingBag } from "lucide-react";
 import { DashboardStats } from "@/hooks/use-dashboard-data";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   LineChart,
   Line
@@ -20,20 +20,20 @@ interface BusinessInsightsProps {
 
 export function BusinessInsights({ userStats }: BusinessInsightsProps) {
   const { t } = useLanguage();
-  
+
   // Use real data from API or fall back to mock
-  const registrationData = userStats.registrationTrends?.map(item => ({
+  const registrationData = userStats.registrationTrends?.map((item: { date: string, count: number }) => ({
     name: item.date,
     count: item.count
   })) || [
-    { name: "Mon", count: 1 },
-    { name: "Tue", count: 3 },
-    { name: "Wed", count: 2 },
-    { name: "Thu", count: 4 },
-    { name: "Fri", count: 6 },
-    { name: "Sat", count: 8 },
-    { name: "Sun", count: userStats.totalItems },
-  ];
+      { name: "Mon", count: 1 },
+      { name: "Tue", count: 3 },
+      { name: "Wed", count: 2 },
+      { name: "Thu", count: 4 },
+      { name: "Fri", count: 6 },
+      { name: "Sat", count: 8 },
+      { name: "Sun", count: userStats.totalItems },
+    ];
 
   const valueData = [
     { name: "Week 1", value: 1200 },
@@ -57,7 +57,7 @@ export function BusinessInsights({ userStats }: BusinessInsightsProps) {
             <p className="text-xs text-muted-foreground mt-1">{t('dashboard.business.itemsWithIds')}</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t('dashboard.business.assetRetention')}</CardTitle>
@@ -96,7 +96,7 @@ export function BusinessInsights({ userStats }: BusinessInsightsProps) {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
                   itemStyle={{ color: 'hsl(var(--primary))' }}
                 />
@@ -120,15 +120,15 @@ export function BusinessInsights({ userStats }: BusinessInsightsProps) {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={2} 
-                  dot={{ fill: 'hsl(var(--primary))' }} 
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{ fill: 'hsl(var(--primary))' }}
                   activeDot={{ r: 6 }}
                 />
               </LineChart>

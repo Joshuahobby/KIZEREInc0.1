@@ -132,6 +132,7 @@ export class DatabaseStorage implements IStorage {
   getClaimsByStatus = claimOps.getClaimsByStatus;
   createClaimStatusLog = claimOps.createClaimStatusLog;
   getClaimStatusHistory = claimOps.getClaimStatusHistory;
+  createClaimAppeal = claimOps.createClaimAppeal;
   getClaimAppeal = claimOps.getClaimAppeal;
   getAppeal = claimOps.getAppeal;
   getPendingAppeals = claimOps.getPendingAppeals;
