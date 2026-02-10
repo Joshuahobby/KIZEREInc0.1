@@ -15,6 +15,7 @@ export const DEFAULT_PAYMENT_FEES = {
   REGISTRATION: 2000, // 2,000 in local currency for item registration
   LOST_REPORT: 1000,  // 1,000 in local currency for lost item report
   FOUND_REPORT: 0,    // Free
+  BOUNTY: 0,          // Variable, determined by user
 };
 
 /**
@@ -71,6 +72,8 @@ export async function getPaymentAmount(type: PaymentType): Promise<number> {
       return DEFAULT_PAYMENT_FEES.REGISTRATION;
     case "lost_report":
       return DEFAULT_PAYMENT_FEES.LOST_REPORT;
+    case "bounty":
+      return DEFAULT_PAYMENT_FEES.BOUNTY;
     default:
       return 0;
   }
@@ -108,6 +111,8 @@ export async function getPaymentDescription(type: PaymentType, packageId?: numbe
       return "Item Registration Fee";
     case "lost_report":
       return "Lost Item Report Fee";
+    case "bounty":
+      return "Bounty Payment";
     default:
       return "Payment";
   }

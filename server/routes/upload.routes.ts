@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { uploadImage, uploadImages, getUploadSignature, deleteImage } from '../services/cloudinary.service';
 import { createLogger } from '../utils/logger';
@@ -9,7 +9,7 @@ const logger = createLogger('UploadRoutes');
 
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
-const upload = multer({ 
+const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
@@ -23,7 +23,7 @@ const upload = multer({
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'text/plain'
     ];
-    
+
     if (allowedMimeTypes.some(type => file.mimetype.startsWith(type))) {
       cb(null, true);
     } else {
@@ -47,20 +47,20 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
     if (req.file.mimetype.startsWith('image/')) {
       const validation = validateUploadedFile(req.file.buffer, req.file.mimetype);
       if (!validation.isValid) {
-        logger.warn('File validation failed', { 
-          error: validation.error, 
+        logger.warn('File validation failed', {
+          error: validation.error,
           claimed: req.file.mimetype,
-          detected: validation.detectedMimeType 
+          detected: validation.detectedMimeType
         });
-        return res.status(400).json({ 
-          message: validation.error || 'Invalid file format detected' 
+        return res.status(400).json({
+          message: validation.error || 'Invalid file format detected'
         });
       }
     }
 
     // Convert buffer to base64 data URI
     const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-    
+
     const folder = req.body.folder || 'kizere/uploads';
     const result = await uploadImage(base64, folder);
 
@@ -84,14 +84,14 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
 router.post('/multiple', upload.array('images', 3), async (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];
-    
+
     if (!files || files.length === 0) {
       return res.status(400).json({ message: 'No image files provided' });
     }
 
     const folder = req.body.folder || 'kizere/uploads';
-    
-    const base64Images = files.map(file => 
+
+    const base64Images = files.map(file =>
       `data:${file.mimetype};base64,${file.buffer.toString('base64')}`
     );
 
@@ -113,20 +113,36 @@ router.post('/multiple', upload.array('images', 3), async (req: Request, res: Re
  * POST /api/upload/images
  * Specialized endpoint for frontend item registration
  */
-router.post('/images', upload.array('images', 5), async (req: Request, res: Response) => {
+router.post('/images', (req: Request, res: Response, next: NextFunction) => {
+  upload.array('images', 5)(req, res, (err) => {
+    if (err) {
+      logger.error('Multer error while uploading images', {
+        error: err.message,
+        code: (err as any).code,
+        field: (err as any).field
+      });
+      return res.status(400).json({
+        message: err.message || 'Error processing uploaded files',
+        code: (err as any).code
+      });
+    }
+    next();
+  });
+}, async (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];
     if (!files || files.length === 0) {
+      logger.warn('No image files provided in request');
       return res.status(400).json({ message: 'No image files provided' });
     }
 
     const folder = req.body.folder || 'kizere/items';
-    const base64Images = files.map(file => 
+    const base64Images = files.map(file =>
       `data:${file.mimetype};base64,${file.buffer.toString('base64')}`
     );
 
     const results = await uploadImages(base64Images, folder);
-    
+
     res.json({
       success: true,
       urls: results.map(r => r.url)
@@ -149,11 +165,11 @@ router.post('/documents', upload.array('documents', 5), async (req: Request, res
     }
 
     const folder = req.body.folder || 'kizere/documents';
-    
+
     const uploadPromises = files.map(async (file, index) => {
       const base64 = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
       const result = await uploadImage(base64, folder);
-      
+
       // Try to get document info from request body if available
       let info = {};
       try {
@@ -175,7 +191,7 @@ router.post('/documents', upload.array('documents', 5), async (req: Request, res
     });
 
     const documents = await Promise.all(uploadPromises);
-    
+
     res.json({
       success: true,
       documents
@@ -209,7 +225,7 @@ router.delete('/:publicId', async (req: Request, res: Response) => {
   try {
     const { publicId } = req.params;
     const success = await deleteImage(publicId);
-    
+
     if (success) {
       res.json({ success: true, message: 'Image deleted' });
     } else {

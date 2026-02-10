@@ -192,4 +192,4 @@ function deepSanitize(obj: any): any {
   return result;
 }
 
-export { authLimiter, apiLimiter };
+export { authLimiter, apiLimiter, uploadLimiter };

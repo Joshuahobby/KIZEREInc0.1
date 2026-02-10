@@ -108,6 +108,42 @@ export interface PaymentInitialization {
   meta?: Record<string, any>;
 }
 
+// Transfer initialization interface
+export interface TransferInitialization {
+  account_bank: string; // Destination bank code (e.g. 'MPS' for mobile money)
+  account_number: string; // Phone number
+  amount: number;
+  currency: string;
+  narration: string;
+  reference: string;
+  callback_url?: string;
+  debit_currency?: string;
+}
+
+export interface FlutterwaveTransferResponse {
+  status: string;
+  message: string;
+  data?: {
+    id: number;
+    account_number: string;
+    bank_code: string;
+    full_name: string;
+    created_at: string;
+    currency: string;
+    debit_currency: string;
+    amount: number;
+    fee: number;
+    status: string;
+    reference: string;
+    meta: any;
+    narration: string;
+    complete_message: string;
+    requires_approval: number;
+    is_approved: number;
+    bank_name: string;
+  };
+}
+
 /**
  * Verify a webhook signature from Flutterwave
  * 
@@ -264,12 +300,53 @@ export async function initializePayment(paymentData: PaymentInitialization): Pro
 }
 
 /**
+ * Initiate a transfer (payout) with Flutterwave
+ * 
+ * @param transferData The transfer initialization data
+ * @returns The transfer response
+ */
+export async function initiateTransfer(transferData: TransferInitialization): Promise<FlutterwaveTransferResponse> {
+  try {
+    checkConfig();
+    const response = await fetch('https://api.flutterwave.com/v3/transfers', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(transferData)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error('Transfer initialization failed', {
+        status: response.status,
+        error: errorText
+      });
+      throw new Error(`Transfer initialization failed: ${errorText}`);
+    }
+
+    const responseData: FlutterwaveTransferResponse = await response.json();
+    logger.info('Transfer initialized', {
+      status: responseData.status,
+      message: responseData.message,
+      reference: transferData.reference
+    });
+
+    return responseData;
+  } catch (error) {
+    logger.error('Error initializing transfer', { error });
+    throw new Error(`Error initializing transfer: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
  * Get the payment amount based on the payment type
  * 
- * @param paymentType The type of payment ('registration' or 'lost_report')
+ * @param paymentType The type of payment ('registration' or 'lost_report' or 'bounty')
  * @returns The payment amount in the default currency
  */
-export async function getPaymentAmount(paymentType: 'registration' | 'lost_report'): Promise<number> {
+export async function getPaymentAmount(paymentType: 'registration' | 'lost_report' | 'bounty'): Promise<number> {
   // Use the centralized config function
-  return configGetPaymentAmount(paymentType);
+  return configGetPaymentAmount(paymentType as any);
 }

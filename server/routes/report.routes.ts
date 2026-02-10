@@ -174,7 +174,7 @@ router.post("/", reportSubmissionLimiter, async (req, res) => {
     }
 
     // Send confirmation email
-    const user = await storage.getUser(validatedData.userId);
+    const user = await storage.getUser(req.user!.id);
     if (user?.email && newReport.receiptNumber) {
       sendReportConfirmationEmail(
         user.email,
@@ -188,6 +188,8 @@ router.post("/", reportSubmissionLimiter, async (req, res) => {
     res.status(201).json(newReport);
   } catch (error) {
     if (error instanceof z.ZodError) {
+      console.log("DEBUG: Report validation error:", JSON.stringify(error.errors, null, 2));
+      console.log("DEBUG: Request body:", JSON.stringify(req.body, null, 2));
       return res.status(400).json({
         message: "Validation error",
         errors: error.errors

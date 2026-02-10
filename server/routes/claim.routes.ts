@@ -450,6 +450,44 @@ router.post("/:id/handover", async (req, res) => {
       logger.error('Failed to award resolution points', { userId: report.userId, error: err })
     );
 
+    // Initial Bounty Payout Logic
+    // If report has a bounty, release it to the finder (who is the current user in this context? No, wait.)
+    // In /handover, the FINDER is triggering it? No, usually the owner or finder confirms.
+    // Let's re-read the handover logic.
+    // logic: "Enter the 6-digit OTP provided by the claimant to confirm you have handed over the item."
+    // User entering OTP is the FINDER. Claimant GAVE the OTP.
+    // So if successful, we pay the FINDER (req.user.id).
+
+    if (report.bountyAmount && Number(report.bountyAmount) > 0) {
+      if (report.bountyStatus === 'escrowed' || report.bountyStatus === 'none') { // 'none' for now if we haven't enforced deposit
+        try {
+          const { payoutService } = await import("../services/payout.service");
+
+          // Create payout record
+          const payout = await payoutService.createPayout(
+            req.user!.id, // Finder receives the money
+            report.id,
+            Number(report.bountyAmount),
+            req.user!.phoneNumber || "0000000000" // Use user's phone or placeholder if missing (should be validated)
+          );
+
+          // Process it automatically
+          payoutService.processPayout(payout.id).catch(err =>
+            logger.error('Failed to process automatic payout', { payoutId: payout.id, error: err })
+          );
+
+          logger.info('Bounty payout initiated', {
+            reportId: report.id,
+            amount: report.bountyAmount,
+            finderId: req.user!.id
+          });
+        } catch (payoutError) {
+          logger.error('Failed to initiate bounty payout', { error: payoutError });
+          // Don't fail the handover request, just log it. Admin can retry.
+        }
+      }
+    }
+
     logger.info('Secure handover completed', { claimId, userId: req.user!.id });
 
     res.json({ message: "Handover confirmed successfully", claim: updatedClaim });

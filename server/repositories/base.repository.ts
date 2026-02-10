@@ -17,7 +17,7 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
     protected readonly table: any,
     protected readonly idColumn: any,
     protected readonly tableName: string
-  ) {}
+  ) { }
 
   /**
    * Find an entity by ID
@@ -31,7 +31,7 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
         .from(this.table)
         .where(eq(this.idColumn, id as any))
         .limit(1);
-      
+
       return results.length > 0 ? results[0] as T : undefined;
     } catch (error) {
       logger.error(`Error finding ${this.tableName} by ID`, { id, error });
@@ -52,7 +52,7 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
         .from(this.table)
         .where(eq(field, value)) as T[];
     } catch (error) {
-      logger.error(`Error finding ${this.tableName} by field`, { field, value, error });
+      logger.error(`Error finding ${this.tableName} by field`, { fieldName: (field as any).name, value, error });
       throw new DatabaseError(`Failed to retrieve ${this.tableName} by field`);
     }
   }
@@ -70,10 +70,10 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
         .from(this.table)
         .where(eq(field, value))
         .limit(1);
-      
+
       return results.length > 0 ? results[0] as T : undefined;
     } catch (error) {
-      logger.error(`Error finding ${this.tableName} by field`, { field, value, error });
+      logger.error(`Error finding ${this.tableName} by field`, { fieldName: (field as any).name, value, error });
       throw new DatabaseError(`Failed to retrieve ${this.tableName} by field`);
     }
   }
@@ -121,7 +121,7 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
         .insert(this.table)
         .values(data as any)
         .returning() as any[];
-      
+
       logger.info(`Created ${this.tableName} successfully`, { id: result.id });
       return result as T;
     } catch (error) {
@@ -199,11 +199,11 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
       let queryBuilder: any = db
         .select({ count: sql<number>`count(*)::int` })
         .from(this.table);
-      
+
       if (conditions?.length) {
         queryBuilder = queryBuilder.where(and(...conditions));
       }
-      
+
       const result = await queryBuilder;
       return Number(result[0]?.count || 0);
     } catch (error) {

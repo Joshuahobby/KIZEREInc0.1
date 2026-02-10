@@ -22,7 +22,8 @@ import {
   ShieldCheck,
   User as UserIcon,
   MessageSquare,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Banknote
 } from "lucide-react";
 import {
   Dialog,
@@ -141,7 +142,13 @@ export default function ClaimDetailPage() {
     onSuccess: () => {
       setShowHandoverDialog(false);
       setOtpValue("");
-      toast({ title: "Handover Confirmed", description: "The item has been successfully returned!" });
+      const hasBounty = report?.bountyAmount && Number(report.bountyAmount) > 0;
+      toast({
+        title: "Handover Confirmed",
+        description: hasBounty
+          ? "The item has been successfully returned! Bounty payout initiated."
+          : "The item has been successfully returned!"
+      });
       queryClient.invalidateQueries({ queryKey: [`/api/claims/${id}`] });
     },
     onError: (err: Error) => {
@@ -229,6 +236,26 @@ export default function ClaimDetailPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-6">
+
+                  {report?.bountyAmount && Number(report.bountyAmount) > 0 && (
+                    <div className="p-4 bg-green-50 border border-green-100 rounded-lg flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-green-100 p-2 rounded-full">
+                          <Banknote className="h-5 w-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-green-900">Bounty Reward</p>
+                          <p className="text-lg font-bold text-green-700">
+                            {Number(report.bountyAmount).toLocaleString()} RWF
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="bg-white text-green-700 border-green-200">
+                        {report.bountyStatus === 'released' ? 'Paid Out' : 'Escrowed'}
+                      </Badge>
+                    </div>
+                  )}
+
                   <div>
                     <h3 className="font-medium text-neutral-900 mb-2">Description of Item/Proof</h3>
                     <p className="text-neutral-600 whitespace-pre-wrap">{claim.description}</p>
@@ -540,6 +567,11 @@ export default function ClaimDetailPage() {
             <p className="text-xs text-neutral-500 text-center">
               By confirming, you agree that the item has been safely returned to its rightful owner.
             </p>
+            {report?.bountyAmount && Number(report.bountyAmount) > 0 && (
+              <div className="bg-green-50 p-2 rounded text-xs text-green-700 text-center w-full">
+                <strong>Bounty Note:</strong> Verifying this code will strictly release the {Number(report.bountyAmount).toLocaleString()} RWF reward to you.
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowHandoverDialog(false)}>Cancel</Button>

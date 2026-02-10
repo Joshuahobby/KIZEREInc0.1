@@ -34,10 +34,16 @@ function safeStringify(meta: any): string {
       }, null, 2);
     }
     if (typeof meta === 'object' && meta !== null) {
-      // Use a circular-safe or simple stringify
-      return JSON.stringify(meta, (key, value) =>
-        typeof value === 'bigint' ? value.toString() : value
-        , 2);
+      const seen = new WeakSet();
+      return JSON.stringify(meta, (key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return '[Circular]';
+          }
+          seen.add(value);
+        }
+        return typeof value === 'bigint' ? value.toString() : value;
+      }, 2);
     }
     return String(meta);
   } catch (e) {
