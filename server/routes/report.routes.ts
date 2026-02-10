@@ -277,11 +277,19 @@ router.get("/:id", async (req, res) => {
       }
     }
 
+    // Include finder reputation in the response
+    const finder = await storage.getUser(report.userId);
+
     const sanitizedReport = {
       ...report,
       contactInfo: canSeeContactInfo
         ? report.contactInfo
-        : (report.contactInfo ? '[Submit a verified claim to view contact info]' : null)
+        : (report.contactInfo ? '[Submit a verified claim to view contact info]' : null),
+      finderReputation: finder ? {
+        reputationScore: finder.reputationScore,
+        itemsReturnedCount: finder.itemsReturnedCount,
+        isTrusted: finder.isTrusted
+      } : null
     };
 
     res.json(sanitizedReport);

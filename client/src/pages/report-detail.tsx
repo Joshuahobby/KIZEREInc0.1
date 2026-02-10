@@ -285,6 +285,33 @@ export default function ReportDetailPage() {
                       )}
                     </div>
                   )}
+
+                  {/* Finder Reputation (Phase 2) */}
+                  {(report as any).finderReputation && (
+                    <div className="pt-2">
+                      <div className="flex items-center gap-2 p-3 bg-neutral-50 rounded-lg border border-neutral-100">
+                        <div className="bg-primary/10 p-2 rounded-full">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-semibold text-neutral-700">Finder Reputation</span>
+                            {(report as any).finderReputation.isTrusted && (
+                              <Badge className="h-4 px-1 bg-blue-500 text-[10px] hover:bg-blue-600">
+                                <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
+                                Trusted
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-[11px] text-neutral-500">
+                            <span>Score: {(report as any).finderReputation.reputationScore}</span>
+                            <span>•</span>
+                            <span>{(report as any).finderReputation.itemsReturnedCount} items returned</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

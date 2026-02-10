@@ -310,6 +310,17 @@ export default function UnifiedDashboard() {
                 chartColor="#8b5cf6"
               />
             </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <StatsCard
+                title="Reputation Score"
+                value={user.reputationScore ?? 0}
+                icon={<ShieldCheck className="h-5 w-5" />}
+                iconBgClass="bg-blue-100 dark:bg-blue-900/30"
+                iconTextClass="text-blue-600 dark:text-blue-400"
+                subtitle={user.isTrusted ? "Trusted Member" : "Community Member"}
+              />
+            </motion.div>
           </div>
 
           {/* Role-Specific Stats Row */}

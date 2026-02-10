@@ -64,6 +64,7 @@ export class DatabaseStorage implements IStorage {
   updateUserRole = userOps.updateUserRole;
   updateUserVerificationStatus = userOps.updateUserVerificationStatus;
   getUsersByRole = userOps.getUsersByRole;
+  updateUserReputation = userOps.updateUserReputation;
 
   // User activity logs
   getUserActivityLogs = userOps.getUserActivityLogs;

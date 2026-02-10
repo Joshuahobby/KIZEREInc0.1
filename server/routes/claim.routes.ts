@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createLogger } from "../utils/logger";
 import { sendClaimNotificationEmail, sendClaimStatusEmail } from "../services/email.service";
 import { claimSubmissionLimiter, claimVerificationLimiter } from "../middleware/claim-rate-limit.middleware";
+import { ReputationService } from "../services/reputation.service";
 
 const logger = createLogger('ClaimRoutes');
 const router = Router();
@@ -226,6 +227,11 @@ router.patch("/:id/verify", claimVerificationLimiter, async (req, res) => {
       updateData.verifiedAt = new Date();
       // Generate 6-digit OTP for secure handover
       updateData.handoverOtp = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Phase 2: Award points for verification
+      ReputationService.awardVerificationPoints(report.userId).catch(err =>
+        logger.error('Failed to award verification points', { userId: report.userId, error: err })
+      );
     }
 
     const updatedClaim = await storage.updateClaim(claimId, updateData);
@@ -410,6 +416,11 @@ router.post("/:id/handover", async (req, res) => {
       return res.status(400).json({ message: "Item must be verified before handover" });
     }
 
+    const report = await storage.getReport(claim.reportId);
+    if (!report) {
+      return res.status(404).json({ message: "Associated report not found" });
+    }
+
     // Verify OTP
     if (claim.handoverOtp !== otp) {
       return res.status(401).json({ message: "Invalid handover OTP" });
@@ -433,6 +444,11 @@ router.post("/:id/handover", async (req, res) => {
       isRead: false,
       relatedReportId: claim.reportId
     });
+
+    // Award reputation points for successful return
+    ReputationService.awardResolutionPoints(report.userId).catch(err =>
+      logger.error('Failed to award resolution points', { userId: report.userId, error: err })
+    );
 
     logger.info('Secure handover completed', { claimId, userId: req.user!.id });
 

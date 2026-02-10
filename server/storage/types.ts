@@ -36,6 +36,7 @@ export interface IStorage {
   updateUserStatus(userId: number, status: AccountStatus, reason?: string, expirationDate?: Date): Promise<StatusChange>;
   updateUserRole(userId: number, role: string): Promise<User | undefined>;
   updateUserVerificationStatus(userId: number, status: VerificationStatus): Promise<User | undefined>;
+  updateUserReputation(userId: number, pointsDelta: number, itemsReturnedDelta: number): Promise<User | undefined>;
 
   // User activity logs
   getUserActivityLogs(userId: number, page: number, pageSize: number): Promise<UserActivityLog[]>;
