@@ -5,10 +5,9 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
-import UnifiedDashboard from "@/pages/unified-dashboard";
-import ItemRegistration from "@/pages/item-registration";
-
 // Lazy load all pages
+const UnifiedDashboard = React.lazy(() => import("@/pages/unified-dashboard"));
+const ItemRegistration = React.lazy(() => import("@/pages/item-registration"));
 const LandingPage = React.lazy(() => import("./pages/landing-page"));
 const AuthPage = React.lazy(() => import("./pages/auth-page"));
 const AuthCallback = React.lazy(() => import("./pages/auth-callback"));

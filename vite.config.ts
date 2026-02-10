@@ -30,5 +30,32 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("node_modules")) {
+            if (id.includes("react") || id.includes("react-dom") || id.includes("wouter") || id.includes("@tanstack/react-query")) {
+              return "vendor-react";
+            }
+            if (id.includes("lucide-react") || id.includes("date-fns") || id.includes("clsx") || id.includes("tailwind-merge")) {
+              return "vendor-utils";
+            }
+            if (id.includes("@radix-ui") || id.includes("framer-motion")) {
+              return "vendor-ui";
+            }
+            if (id.includes("recharts")) {
+              return "vendor-charts";
+            }
+            if (id.includes("firebase")) {
+              return "vendor-firebase";
+            }
+            if (id.includes("tesseract.js") || id.includes("openai") || id.includes("cloudinary")) {
+              return "vendor-heavy";
+            }
+            return "vendor";
+          }
+        },
+      },
+    },
   },
 });
