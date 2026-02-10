@@ -11,6 +11,7 @@ import * as claimOps from "./storage/claim.storage";
 import * as notificationOps from "./storage/notification.storage";
 import * as paymentOps from "./storage/payment.storage";
 import * as verificationOps from "./storage/verification.storage";
+import * as chatOps from "./storage/chat.storage";
 import {
   User, InsertUser, Item, InsertItem, Report, InsertReport,
   Notification, InsertNotification, Payment, InsertPayment,
@@ -179,6 +180,15 @@ export class DatabaseStorage implements IStorage {
   updateVerificationRequestStatus = verificationOps.updateVerificationRequestStatus;
   setDefaultPaymentPackage = paymentOps.setDefaultPaymentPackage;
   getAllPaymentPackages = paymentOps.getAllPaymentPackages;
+
+  // Chat methods
+  getChat = chatOps.getChat;
+  getChatForClaim = chatOps.getChatForClaim;
+  getUserChats = chatOps.getUserChats;
+  createChat = chatOps.createChat;
+  getMessages = chatOps.getMessages;
+  createMessage = chatOps.createMessage;
+  markMessagesAsRead = chatOps.markMessagesAsRead;
 }
 
 export const storage = new DatabaseStorage();

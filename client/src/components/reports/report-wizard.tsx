@@ -3,36 +3,37 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Loader2, 
-  Check, 
-  MapPin, 
-  Calendar, 
-  Info, 
-  ArrowRight, 
+import {
+  Loader2,
+  Check,
+  MapPin,
+  Calendar,
+  Info,
+  ArrowRight,
   ArrowLeft,
   Camera,
   AlertTriangle,
-  Receipt
+  Receipt,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage, 
-  FormDescription 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription
 } from "@/components/ui/form";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -49,7 +50,7 @@ interface ReportWizardProps {
 export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps) {
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
-  
+
   const schema = type === "lost" ? lostItemReportSchema : foundItemReportSchema;
   const form = useForm({
     resolver: zodResolver(schema),
@@ -62,15 +63,17 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
       uniqueIdentifier: "",
       date: new Date().toISOString().split("T")[0],
       contactInfo: "",
+      custodyLocation: "", // Added default value
+      challengeQuestion: "", // Added default value
       status: "Open"
     } as any
   });
 
   const nextStep = async () => {
-    const fieldsToValidate = step === 1 
-      ? ["title", "category", "description"] 
-      : ["location", "date"];
-    
+    const fieldsToValidate = step === 1
+      ? ["title", "category", "description"]
+      : ["location", "date", "custodyLocation"];
+
     const isValid = await form.trigger(fieldsToValidate as any);
     if (isValid) setStep(step + 1);
   };
@@ -105,7 +108,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                   <h3 className="text-lg font-semibold">Basic Information</h3>
                   <p className="text-sm text-neutral-500">Tell us what you {type === 'lost' ? 'lost' : 'found'}.</p>
                 </div>
-                
+
                 <FormField
                   control={form.control}
                   name="title"
@@ -150,10 +153,10 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                     <FormItem>
                       <FormLabel>Description <span className="text-red-500">*</span></FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Include distinguishing features like brand, color, scratches, etc." 
+                        <Textarea
+                          placeholder="Include distinguishing features like brand, color, scratches, etc."
                           className="min-h-[120px]"
-                          {...field} 
+                          {...field}
                         />
                       </FormControl>
                       <FormDescription>Min 10 characters.</FormDescription>
@@ -223,6 +226,26 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                     </FormItem>
                   )}
                 />
+
+                {type === 'found' && (
+                  <FormField
+                    control={form.control}
+                    name="custodyLocation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Current Item Custody <span className="text-red-500">*</span></FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Input placeholder="e.g. Left at Security Desk, With me, Police Station" {...field} />
+                            <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                          </div>
+                        </FormControl>
+                        <FormDescription>Where can the owner find the item or meet you?</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </motion.div>
             )}
 
@@ -267,14 +290,36 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                         <Input placeholder="Phone number or specific instructions" {...field} />
                       </FormControl>
                       <FormDescription>
-                        {type === 'found' 
-                          ? "This will be hidden until a claim is verified." 
+                        {type === 'found'
+                          ? "This will be hidden until a claim is verified."
                           : "This will be visible to potential finders."}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {type === 'found' && (
+                  <FormField
+                    control={form.control}
+                    name="challengeQuestion"
+                    render={({ field }) => (
+                      <FormItem className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
+                        <FormLabel className="text-amber-900 font-bold flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4" />
+                          Security Challenge Question
+                        </FormLabel>
+                        <FormDescription className="text-amber-800 text-xs mb-2">
+                          Ask something only the real owner would know (e.g. "What is the lock screen wallpaper?").
+                        </FormDescription>
+                        <FormControl>
+                          <Input placeholder="Verification question for claimants..." className="bg-white" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex gap-3">
                   <Info className="h-5 w-5 text-blue-600 shrink-0" />
@@ -307,8 +352,8 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isSubmitting}
                 className={cn(
                   "font-bold px-8",

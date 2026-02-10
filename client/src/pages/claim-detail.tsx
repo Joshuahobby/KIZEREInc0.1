@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -31,6 +32,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ChatWindow } from "@/components/chat/chat-window";
+import { AnimatePresence } from "framer-motion";
 
 // Type for the special claim response
 interface ClaimDetail {
@@ -48,6 +51,9 @@ interface ClaimDetail {
   reportType: string;
   claimantName: string;
   claimantEmail: string;
+  verificationAnswer: string | null;
+  handoverOtp: string | null;
+  handedOverAt: string | null;
   appealStatus?: 'pending' | 'approved' | 'rejected';
   appealReason?: string;
   appealAdminNotes?: string;
@@ -66,6 +72,10 @@ export default function ClaimDetailPage() {
   const [showAppealDialog, setShowAppealDialog] = useState(false);
   const [notes, setNotes] = useState("");
   const [appealReason, setAppealReason] = useState("");
+  const [showHandoverDialog, setShowHandoverDialog] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [showChat, setShowChat] = useState(false);
+  const [activeChatId, setActiveChatId] = useState<number | null>(null);
 
   // Fetch claim logic
   const { data: claim, isLoading, error } = useQuery<ClaimDetail>({
@@ -117,6 +127,43 @@ export default function ClaimDetailPage() {
     },
     onError: (err: Error) => {
       toast({ variant: "destructive", title: "Appeal Failed", description: err.message });
+    }
+  });
+
+  // Handover Mutation
+  const handoverMutation = useMutation({
+    mutationFn: async (otp: string) => {
+      await apiRequest(`/api/claims/${id}/handover`, {
+        method: 'POST',
+        data: { otp }
+      });
+    },
+    onSuccess: () => {
+      setShowHandoverDialog(false);
+      setOtpValue("");
+      toast({ title: "Handover Confirmed", description: "The item has been successfully returned!" });
+      queryClient.invalidateQueries({ queryKey: [`/api/claims/${id}`] });
+    },
+    onError: (err: Error) => {
+      toast({ variant: "destructive", title: "Handover Failed", description: "Invalid OTP. Please try again." });
+    }
+  });
+
+  // Chat Initialization Mutation
+  const initializeChatMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest<{ id: number }>("/api/chats/initialize", {
+        method: 'POST',
+        data: { claimId: id }
+      });
+      return res;
+    },
+    onSuccess: (data) => {
+      setActiveChatId(data.id);
+      setShowChat(true);
+    },
+    onError: (err: Error) => {
+      toast({ variant: "destructive", title: "Chat Error", description: err.message });
     }
   });
 
@@ -187,6 +234,16 @@ export default function ClaimDetailPage() {
                     <p className="text-neutral-600 whitespace-pre-wrap">{claim.description}</p>
                   </div>
 
+                  {claim.verificationAnswer && (
+                    <div className="p-4 bg-primary/5 border border-primary/10 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2 text-primary font-bold">
+                        <ShieldCheck className="h-4 w-4" />
+                        <span>Verification Answer</span>
+                      </div>
+                      <p className="text-neutral-700 italic">"{claim.verificationAnswer}"</p>
+                    </div>
+                  )}
+
                   {claim.imageUrls && claim.imageUrls.length > 0 && (
                     <div>
                       <h3 className="font-medium text-neutral-900 mb-2">Proof Images</h3>
@@ -214,13 +271,13 @@ export default function ClaimDetailPage() {
                   {/* Appeal Status Section */}
                   {claim.appealStatus && (
                     <div className={`p-4 rounded-lg border ${claim.appealStatus === 'approved' ? 'bg-green-50 border-green-100' :
-                        claim.appealStatus === 'rejected' ? 'bg-red-50 border-red-100' :
-                          'bg-amber-50 border-amber-100'
+                      claim.appealStatus === 'rejected' ? 'bg-red-50 border-red-100' :
+                        'bg-amber-50 border-amber-100'
                       }`}>
                       <div className="flex items-center gap-2 mb-2 font-semibold text-neutral-900">
                         <AlertTriangle className={`h-4 w-4 ${claim.appealStatus === 'approved' ? 'text-green-600' :
-                            claim.appealStatus === 'rejected' ? 'text-red-600' :
-                              'text-amber-600'
+                          claim.appealStatus === 'rejected' ? 'text-red-600' :
+                            'text-amber-600'
                           }`} />
                         <span>Claim Appeal: {claim.appealStatus.charAt(0).toUpperCase() + claim.appealStatus.slice(1)}</span>
                       </div>
@@ -239,6 +296,18 @@ export default function ClaimDetailPage() {
                         {claim.appealStatus === 'pending' && (
                           <p className="text-amber-700 italic text-xs">An administrator is currently reviewing your appeal.</p>
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Secure Handover OTP (For Claimant) */}
+                  {isClaimant && claim.status === 'verified' && claim.handoverOtp && (
+                    <div className="p-6 mt-6 bg-green-50 border-2 border-dashed border-green-200 rounded-xl text-center">
+                      <ShieldCheck className="h-10 w-10 text-green-600 mx-auto mb-3" />
+                      <h3 className="text-lg font-bold text-green-900 mb-1">Secure Handover Code</h3>
+                      <p className="text-sm text-green-700 mb-4">When meeting the finder, provide them with this 6-digit code to finalize the return.</p>
+                      <div className="bg-white rounded-lg py-4 px-8 border border-green-100 inline-block shadow-sm">
+                        <span className="text-4xl font-black tracking-[0.5em] text-neutral-900">{claim.handoverOtp}</span>
                       </div>
                     </div>
                   )}
@@ -261,6 +330,22 @@ export default function ClaimDetailPage() {
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Verify Claim
+                    </Button>
+                  </CardFooter>
+                )}
+
+                {/* Secure Handover Flow (For Finder) */}
+                {isFinder && claim.status === 'verified' && (
+                  <CardFooter className="flex justify-between items-center border-t bg-amber-50/50 p-4">
+                    <div className="flex items-center gap-2 text-amber-800">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Ready for handover?</span>
+                    </div>
+                    <Button
+                      className="bg-amber-600 hover:bg-amber-700"
+                      onClick={() => setShowHandoverDialog(true)}
+                    >
+                      Process Handover
                     </Button>
                   </CardFooter>
                 )}
@@ -310,6 +395,34 @@ export default function ClaimDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Chat Toggle Button (Floating) */}
+        {!showChat && claim.status !== 'pending' && (
+          <Button
+            onClick={() => initializeChatMutation.mutate()}
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-2xl z-40 hover:scale-110 transition-transform ring-4 ring-white"
+            disabled={initializeChatMutation.isPending}
+          >
+            {initializeChatMutation.isPending ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              <MessageSquare className="h-6 w-6" />
+            )}
+          </Button>
+        )}
+
+        {/* Floating Chat Window */}
+        <AnimatePresence>
+          {showChat && activeChatId && (
+            <div className="fixed bottom-6 right-6 z-50 w-full max-w-[400px]">
+              <ChatWindow
+                chatId={activeChatId}
+                title={`Chat: ${claim.reportTitle}`}
+                onClose={() => setShowChat(false)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Verify Dialog */}
@@ -400,6 +513,42 @@ export default function ClaimDetailPage() {
               disabled={appealMutation.isPending || appealReason.length < 20}
             >
               {appealMutation.isPending ? "Submitting..." : "Submit Appeal"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Handover Dialog */}
+      <Dialog open={showHandoverDialog} onOpenChange={setShowHandoverDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Secure Handover</DialogTitle>
+            <DialogDescription>
+              Enter the 6-digit OTP provided by the claimant to confirm you have handed over the item.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 flex flex-col items-center gap-4">
+            <Label htmlFor="otp">6-Digit Handover Code</Label>
+            <Input
+              id="otp"
+              className="text-center text-2xl font-black tracking-[0.5em] h-14"
+              placeholder="000000"
+              maxLength={6}
+              value={otpValue}
+              onChange={(e) => setOtpValue(e.target.value)}
+            />
+            <p className="text-xs text-neutral-500 text-center">
+              By confirming, you agree that the item has been safely returned to its rightful owner.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowHandoverDialog(false)}>Cancel</Button>
+            <Button
+              className="bg-amber-600 hover:bg-amber-700"
+              onClick={() => handoverMutation.mutate(otpValue)}
+              disabled={handoverMutation.isPending || otpValue.length !== 6}
+            >
+              {handoverMutation.isPending ? "Confirming..." : "Finalize Handover"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -64,7 +64,8 @@ export default function LostFound() {
   const [filters, setFilters] = useState<FilterState>({
     category: "All Categories",
     location: "All Locations",
-    sortBy: "newest"
+    sortBy: "newest",
+    dateFilter: "all"
   });
   const debouncedSearch = useDebounce(searchQuery, 300);
   const { toast } = useToast();
@@ -89,6 +90,7 @@ export default function LostFound() {
       if (debouncedSearch) params.append('search', debouncedSearch);
       if (filters.category !== 'All Categories') params.append('category', filters.category);
       if (filters.location !== 'All Locations') params.append('location', filters.location);
+      if (filters.dateFilter !== 'all') params.append('dateFilter', filters.dateFilter);
 
       const endpoint = `/api/reports?${params.toString()}`;
       const res = await fetch(endpoint, { credentials: 'include' });

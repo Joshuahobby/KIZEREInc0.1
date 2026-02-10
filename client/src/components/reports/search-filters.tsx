@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select";
 import { Calendar, Filter, MapPin, Tag, X, ArrowUpDown } from "lucide-react";
 
@@ -43,44 +43,61 @@ export interface FilterState {
   category: string;
   location: string;
   sortBy: "newest" | "oldest" | "relevance";
+  dateFilter: string;
 }
+
+const TIME_RANGES = [
+  { label: "All Time", value: "all" },
+  { label: "Last 24 Hours", value: "24h" },
+  { label: "Last 7 Days", value: "7d" },
+  { label: "Last 30 Days", value: "30d" }
+];
 
 export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
   const [category, setCategory] = useState("All Categories");
   const [location, setLocation] = useState("All Locations");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "relevance">("newest");
+  const [dateFilter, setDateFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
   const handleCategoryChange = (value: string) => {
     setCategory(value);
-    onFiltersChange({ category: value, location, sortBy });
+    onFiltersChange({ category: value, location, sortBy, dateFilter });
   };
 
   const handleLocationChange = (value: string) => {
     setLocation(value);
-    onFiltersChange({ category, location: value, sortBy });
+    onFiltersChange({ category, location: value, sortBy, dateFilter });
   };
 
   const handleSortChange = (value: "newest" | "oldest" | "relevance") => {
     setSortBy(value);
-    onFiltersChange({ category, location, sortBy: value });
+    onFiltersChange({ category, location, sortBy: value, dateFilter });
+  };
+
+  const handleDateChange = (value: string) => {
+    setDateFilter(value);
+    onFiltersChange({ category, location, sortBy, dateFilter: value });
   };
 
   const clearFilters = () => {
     setCategory("All Categories");
     setLocation("All Locations");
     setSortBy("newest");
-    onFiltersChange({ 
-      category: "All Categories", 
-      location: "All Locations", 
-      sortBy: "newest" 
+    setDateFilter("all");
+    onFiltersChange({
+      category: "All Categories",
+      location: "All Locations",
+      sortBy: "newest",
+      dateFilter: "all"
     });
   };
 
-  const hasActiveFilters = 
-    category !== "All Categories" || 
-    location !== "All Locations" || 
-    sortBy !== "newest";
+  const hasActiveFilters =
+    category !== "All Categories" ||
+    location !== "All Locations" ||
+    sortBy !== "newest" ||
+    dateFilter !== "all";
 
   return (
     <div className="space-y-4">
@@ -100,7 +117,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
             </span>
           )}
         </Button>
-        
+
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>
             <X className="h-4 w-4 mr-1" />
@@ -153,11 +170,25 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
           </Select>
         </div>
 
+        <div className="flex items-center gap-2 flex-1">
+          <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Select value={dateFilter} onValueChange={handleDateChange}>
+            <SelectTrigger className="w-full md:w-[160px] bg-white">
+              <SelectValue placeholder="Time" />
+            </SelectTrigger>
+            <SelectContent>
+              {TIME_RANGES.map(range => (
+                <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Clear Filters (Desktop) */}
         {hasActiveFilters && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={clearFilters}
             className="hidden md:flex items-center"
           >

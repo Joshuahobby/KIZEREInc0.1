@@ -129,6 +129,8 @@ export const reports = pgTable("reports", {
   expirationDate: timestamp("expiration_date"),
   gracePeriodEnd: timestamp("grace_period_end"),
   paymentStatus: text("payment_status").default('pending'),
+  custodyLocation: text("custody_location"), // e.g. "Security Desk", "Front Office"
+  challengeQuestion: text("challenge_question"), // Only for 'found' reports
   reportedAt: timestamp("reported_at").defaultNow().notNull(),
 }, (table) => [
   index("report_user_idx").on(table.userId),
@@ -149,12 +151,40 @@ export const claims = pgTable("claims", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
   verifiedAt: timestamp("verified_at"),
+  verificationAnswer: text("verification_answer"), // Claimant's answer to challenge question
+  handoverOtp: text("handover_otp"), // Generated for secure handover
+  handedOverAt: timestamp("handed_over_at"), // Completion timestamp
 }, (table) => [
   index("claim_user_idx").on(table.userId),
   index("claim_report_idx").on(table.reportId),
   index("claim_status_idx").on(table.status),
   // Phase 1.1: Prevent duplicate claims by same user on same report
   uniqueIndex("claim_unique_user_report_idx").on(table.userId, table.reportId)
+]);
+
+// Phase 1.6: In-App Chat
+export const chats = pgTable("chats", {
+  id: serial("id").primaryKey(),
+  reportId: integer("report_id").notNull().references(() => reports.id),
+  claimId: integer("claim_id").notNull().references(() => claims.id),
+  finderId: integer("finder_id").notNull().references(() => users.id),
+  claimantId: integer("claimant_id").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("chat_report_idx").on(table.reportId),
+  index("chat_claim_idx").on(table.claimId),
+  uniqueIndex("chat_unique_claim_idx").on(table.claimId)
+]);
+
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  chatId: integer("chat_id").notNull().references(() => chats.id),
+  senderId: integer("sender_id").notNull().references(() => users.id),
+  content: text("content").notNull(),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  isRead: boolean("is_read").default(false).notNull(),
+}, (table) => [
+  index("message_chat_idx").on(table.chatId)
 ]);
 
 // Notifications
@@ -357,6 +387,8 @@ export const insertReportSchema = createInsertSchema(reports)
       errorMap: () => ({ message: "Please select a valid category for this report" })
     }).default('Other'),
     uniqueIdentifier: z.string().optional(),
+    custodyLocation: z.string().optional(),
+    challengeQuestion: z.string().optional(),
   });
 
 // Extended schema for lost item report form with validation
@@ -377,11 +409,14 @@ export const insertClaimSchema = createInsertSchema(claims).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-  verifiedAt: true
-}).extend({
-  description: z.string().min(50, "Please provide a detailed description (min 50 characters)"),
-  imageUrls: z.array(z.string().url()).optional().default([])
+  verifiedAt: true,
+  handoverOtp: true,
+  handedOverAt: true
 });
+
+// Chat & Message schemas
+export const insertChatSchema = createInsertSchema(chats).omit({ id: true, createdAt: true });
+export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, timestamp: true });
 
 // Notification schemas
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
@@ -448,6 +483,8 @@ export type InsertStatusChange = z.infer<typeof insertStatusChangeSchema>;
 export type InsertUserWarning = z.infer<typeof insertUserWarningSchema>;
 export type InsertPaymentPackage = z.infer<typeof insertPaymentPackageSchema>;
 export type InsertClaim = z.infer<typeof insertClaimSchema>;
+export type InsertChat = z.infer<typeof insertChatSchema>;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Item = typeof items.$inferSelect;
@@ -463,6 +500,8 @@ export type StatusChange = typeof statusChanges.$inferSelect;
 export type UserWarning = typeof userWarnings.$inferSelect;
 export type PaymentPackage = typeof paymentPackages.$inferSelect;
 export type Claim = typeof claims.$inferSelect;
+export type Chat = typeof chats.$inferSelect;
+export type Message = typeof messages.$inferSelect;
 
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type UserRole = typeof userRoles[number];

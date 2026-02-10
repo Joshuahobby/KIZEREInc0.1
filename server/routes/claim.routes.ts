@@ -22,49 +22,52 @@ router.post("/", claimSubmissionLimiter, async (req, res) => {
       ...req.body,
       userId: req.user!.id
     });
-    
+
     // Check if report exists
     const report = await storage.getReport(validatedData.reportId);
     if (!report) {
       return res.status(404).json({ message: "Report not found" });
     }
-    
+
     // Phase 2.4: Prevent claiming non-found reports
     if (report.type !== 'found') {
       return res.status(400).json({ message: "Can only claim found items" });
     }
-    
+
     // Phase 2.4: Prevent claiming closed/expired/resolved reports
     const nonClaimableStatuses = ['Closed', 'Expired', 'Resolved'];
     if (nonClaimableStatuses.includes(report.status)) {
-      return res.status(400).json({ 
-        message: `Cannot claim a report with status "${report.status}". This report is no longer active.` 
+      return res.status(400).json({
+        message: `Cannot claim a report with status "${report.status}". This report is no longer active.`
       });
     }
-    
+
     // Prevent claiming your own report
     if (report.userId === req.user!.id) {
       return res.status(400).json({ message: "You cannot claim your own found item report" });
     }
-    
+
     // Phase 1.1: Check for duplicate claim (same user, same report)
     const existingClaim = await storage.getUserClaimForReport(req.user!.id, validatedData.reportId);
     if (existingClaim) {
-      return res.status(409).json({ 
+      return res.status(409).json({
         message: "You have already submitted a claim for this item. Please wait for the finder to review it.",
         existingClaimId: existingClaim.id
       });
     }
-    
+
     const newClaim = await storage.createClaim(validatedData);
-    
+
+    // Logic for challenge question: the finder sees the answer in their dashboard
+    // We already updated the storage to return verificationAnswer.
+
     // Log the claim creation
     logger.info('New claim created', {
       claimId: newClaim.id,
       reportId: report.id,
       userId: req.user!.id
     });
-    
+
     // Notify the finder (in-app)
     await storage.createNotification({
       userId: report.userId,
@@ -75,7 +78,7 @@ router.post("/", claimSubmissionLimiter, async (req, res) => {
       relatedItemId: report.itemId || null,
       relatedReportId: report.id
     });
-    
+
     // Send email notification to finder
     const finder = await storage.getUser(report.userId);
     if (finder?.email) {
@@ -87,13 +90,13 @@ router.post("/", claimSubmissionLimiter, async (req, res) => {
         report.id
       ).catch(err => logger.error('Failed to send claim email', { error: err }));
     }
-    
+
     res.status(201).json(newClaim);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        message: "Validation error", 
-        errors: error.errors 
+      return res.status(400).json({
+        message: "Validation error",
+        errors: error.errors
       });
     }
     logger.error("Failed to create claim:", error);
@@ -139,22 +142,22 @@ router.get("/:id", async (req, res) => {
     if (isNaN(claimId)) {
       return res.status(400).json({ message: "Invalid claim ID" });
     }
-    
+
     const claim = await storage.getClaimWithDetails(claimId);
     if (!claim) {
       return res.status(404).json({ message: "Claim not found" });
     }
-    
+
     // Authorization check: Only claimant, finder of the report, or admin can view
     const report = await storage.getReport(claim.reportId);
     const isClaimant = claim.userId === req.user!.id;
     const isFinder = report?.userId === req.user!.id;
     const isAdmin = ['Admin', 'Moderator'].includes(req.user!.role);
-    
+
     if (!isClaimant && !isFinder && !isAdmin) {
       return res.status(403).json({ message: "Access denied" });
     }
-    
+
     res.json(claim);
   } catch (error) {
     logger.error("Failed to fetch claim:", error);
@@ -171,33 +174,33 @@ router.patch("/:id/verify", claimVerificationLimiter, async (req, res) => {
   try {
     const claimId = parseInt(req.params.id);
     const { status, finderNotes } = req.body;
-    
+
     // Validate status transition
     const validStatuses = ['verified', 'rejected', 'resolved'];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ 
-        message: "Invalid status. Must be one of: " + validStatuses.join(', ') 
+      return res.status(400).json({
+        message: "Invalid status. Must be one of: " + validStatuses.join(', ')
       });
     }
-    
+
     const claim = await storage.getClaim(claimId);
     if (!claim) {
       return res.status(404).json({ message: "Claim not found" });
     }
-    
+
     const report = await storage.getReport(claim.reportId);
     if (!report) {
       return res.status(404).json({ message: "Associated report not found" });
     }
-    
+
     // Authorization: Only finder or Admin/Moderator can verify
     const isFinder = report.userId === req.user!.id;
     const isAdmin = ['Admin', 'Moderator'].includes(req.user!.role);
-    
+
     if (!isFinder && !isAdmin) {
       return res.status(403).json({ message: "Access denied. Only the finder or an administrator can verify claims." });
     }
-    
+
     // Validate status transitions (state machine)
     const validTransitions: Record<string, string[]> = {
       'pending': ['verified', 'rejected'],
@@ -205,26 +208,28 @@ router.patch("/:id/verify", claimVerificationLimiter, async (req, res) => {
       'rejected': ['pending'], // Appeal: Can be re-opened
       'resolved': [] // Final state
     };
-    
+
     const currentStatus = claim.status;
     if (!validTransitions[currentStatus]?.includes(status)) {
-      return res.status(400).json({ 
-        message: `Cannot transition from "${currentStatus}" to "${status}". Valid transitions: ${validTransitions[currentStatus]?.join(', ') || 'none'}` 
+      return res.status(400).json({
+        message: `Cannot transition from "${currentStatus}" to "${status}". Valid transitions: ${validTransitions[currentStatus]?.join(', ') || 'none'}`
       });
     }
-    
+
     const updateData: any = {
       status,
       finderNotes,
       updatedAt: new Date()
     };
-    
+
     if (status === 'verified') {
       updateData.verifiedAt = new Date();
+      // Generate 6-digit OTP for secure handover
+      updateData.handoverOtp = Math.floor(100000 + Math.random() * 900000).toString();
     }
-    
+
     const updatedClaim = await storage.updateClaim(claimId, updateData);
-    
+
     // Log the action
     await storage.createClaimStatusLog({
       claimId,
@@ -233,14 +238,14 @@ router.patch("/:id/verify", claimVerificationLimiter, async (req, res) => {
       changedBy: req.user!.id,
       notes: finderNotes
     });
-    
+
     // Update report status if claim is verified
     if (status === 'verified') {
       await storage.updateReport(report.id, { status: 'In_Progress' });
     } else if (status === 'resolved') {
       await storage.updateReport(report.id, { status: 'Resolved' });
     }
-    
+
     // Notify the claimant (in-app)
     await storage.createNotification({
       userId: claim.userId,
@@ -251,7 +256,7 @@ router.patch("/:id/verify", claimVerificationLimiter, async (req, res) => {
       relatedItemId: report.itemId || null,
       relatedReportId: report.id
     });
-    
+
     // Send email notification to claimant
     const claimant = await storage.getUser(claim.userId);
     if (claimant?.email) {
@@ -263,14 +268,14 @@ router.patch("/:id/verify", claimVerificationLimiter, async (req, res) => {
         emailStatus
       ).catch(err => logger.error('Failed to send claim status email', { error: err }));
     }
-    
+
     logger.info('Claim status updated', {
       claimId,
       previousStatus: currentStatus,
       newStatus: status,
       updatedBy: req.user!.id
     });
-    
+
     res.json(updatedClaim);
   } catch (error) {
     logger.error("Failed to verify claim:", error);
@@ -287,45 +292,45 @@ router.post("/:id/appeal", claimSubmissionLimiter, async (req, res) => {
   try {
     const claimId = parseInt(req.params.id);
     const { reason } = req.body;
-    
+
     if (!reason || reason.length < 20) {
-      return res.status(400).json({ 
-        message: "Please provide a detailed reason for your appeal (min 20 characters)" 
+      return res.status(400).json({
+        message: "Please provide a detailed reason for your appeal (min 20 characters)"
       });
     }
-    
+
     const claim = await storage.getClaim(claimId);
     if (!claim) {
       return res.status(404).json({ message: "Claim not found" });
     }
-    
+
     // Only the claimant can appeal
     if (claim.userId !== req.user!.id) {
       return res.status(403).json({ message: "Only the original claimant can appeal" });
     }
-    
+
     // Can only appeal rejected claims
     if (claim.status !== 'rejected') {
-      return res.status(400).json({ 
-        message: "Only rejected claims can be appealed" 
+      return res.status(400).json({
+        message: "Only rejected claims can be appealed"
       });
     }
-    
+
     // Check for existing appeal
     const existingAppeal = await storage.getClaimAppeal(claimId);
     if (existingAppeal) {
-      return res.status(409).json({ 
-        message: "You have already submitted an appeal for this claim" 
+      return res.status(409).json({
+        message: "You have already submitted an appeal for this claim"
       });
     }
-    
+
     const appeal = await storage.createClaimAppeal({
       claimId,
       userId: req.user!.id,
       reason,
       status: 'pending'
     });
-    
+
     // Notify admins
     const admins = await storage.getUsersByRole(['Admin', 'Moderator']);
     for (const admin of admins) {
@@ -338,10 +343,10 @@ router.post("/:id/appeal", claimSubmissionLimiter, async (req, res) => {
         relatedReportId: claim.reportId
       });
     }
-    
+
     logger.info('Claim appeal submitted', { claimId, userId: req.user!.id });
-    
-    res.status(201).json({ 
+
+    res.status(201).json({
       message: "Appeal submitted successfully. An administrator will review your case.",
       appealId: appeal.id
     });
@@ -361,25 +366,80 @@ router.get("/report/:reportId", async (req, res) => {
     if (isNaN(reportId)) {
       return res.status(400).json({ message: "Invalid report ID" });
     }
-    
+
     const report = await storage.getReport(reportId);
     if (!report) {
       return res.status(404).json({ message: "Report not found" });
     }
-    
+
     // Authorization: Only finder or admin can see all claims
     const isFinder = report.userId === req.user!.id;
     const isAdmin = ['Admin', 'Moderator'].includes(req.user!.role);
-    
+
     if (!isFinder && !isAdmin) {
       return res.status(403).json({ message: "Access denied" });
     }
-    
+
     const claims = await storage.getClaimsForReportWithUsers(reportId);
     res.json(claims);
   } catch (error) {
     logger.error("Failed to fetch claims for report:", error);
     res.status(500).json({ message: "Failed to fetch claims" });
+  }
+});
+
+/**
+ * POST /api/claims/:id/handover
+ * Finalize the handover using an OTP
+ */
+router.post("/:id/handover", async (req, res) => {
+  try {
+    const claimId = parseInt(req.params.id);
+    const { otp } = req.body;
+
+    if (!otp) {
+      return res.status(400).json({ message: "OTP is required" });
+    }
+
+    const claim = await storage.getClaim(claimId);
+    if (!claim) {
+      return res.status(404).json({ message: "Claim not found" });
+    }
+
+    if (claim.status !== 'verified') {
+      return res.status(400).json({ message: "Item must be verified before handover" });
+    }
+
+    // Verify OTP
+    if (claim.handoverOtp !== otp) {
+      return res.status(401).json({ message: "Invalid handover OTP" });
+    }
+
+    // Update claim to resolved
+    const updatedClaim = await storage.updateClaim(claimId, {
+      status: 'resolved',
+      handedOverAt: new Date()
+    });
+
+    // Update report to resolved
+    await storage.updateReport(claim.reportId, { status: 'Resolved' });
+
+    // Notify the claimant
+    await storage.createNotification({
+      userId: claim.userId,
+      title: "Item Returned Successfully",
+      message: "The handover has been confirmed. Thank you for using KIZERE!",
+      type: 'item_claim',
+      isRead: false,
+      relatedReportId: claim.reportId
+    });
+
+    logger.info('Secure handover completed', { claimId, userId: req.user!.id });
+
+    res.json({ message: "Handover confirmed successfully", claim: updatedClaim });
+  } catch (error) {
+    logger.error("Handover failed:", error);
+    res.status(500).json({ message: "Failed to confirm handover" });
   }
 });
 

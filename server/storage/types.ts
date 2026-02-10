@@ -7,6 +7,7 @@ import {
   VerificationRequest, InsertVerificationRequest, StatusChange, InsertStatusChange,
   UserWarning, InsertUserWarning, PaymentPackage, InsertPaymentPackage,
   Claim, InsertClaim, ClaimAppeal, InsertClaimAppeal, ClaimStatusLog, InsertClaimStatusLog,
+  Chat, InsertChat, Message, InsertMessage,
   AccountStatus, VerificationStatus, PaymentType
 } from "@shared/schema";
 
@@ -167,6 +168,15 @@ export interface IStorage {
   getPendingVerificationRequests(): Promise<(VerificationRequest & { user: User })[]>;
   updateVerificationRequestStatus(id: number, status: 'approved' | 'rejected', adminId: number, comment?: string): Promise<VerificationRequest | undefined>;
   getAllPaymentPackages(includeInactive?: boolean): Promise<PaymentPackage[]>;
+
+  // Chat methods
+  getChat(id: number): Promise<Chat | undefined>;
+  getChatForClaim(claimId: number): Promise<Chat | undefined>;
+  getUserChats(userId: number): Promise<Chat[]>;
+  createChat(chat: InsertChat): Promise<Chat>;
+  getMessages(chatId: number): Promise<Message[]>;
+  createMessage(message: InsertMessage): Promise<Message>;
+  markMessagesAsRead(chatId: number, userId: number): Promise<void>;
 
   // Session management
   sessionStore: session.Store;

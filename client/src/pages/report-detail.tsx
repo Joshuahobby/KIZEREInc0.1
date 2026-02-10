@@ -259,6 +259,14 @@ export default function ReportDetailPage() {
                     </div>
                   )}
 
+                  {report.custodyLocation && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="text-neutral-600">Held At:</span>
+                      <span className="font-medium">{report.custodyLocation}</span>
+                    </div>
+                  )}
+
                   {report.type === 'lost' && report.contactInfo && (
                     <div className="flex items-start gap-3 text-sm">
                       <Phone className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
@@ -428,6 +436,7 @@ export default function ReportDetailPage() {
                         </div>
                         <ClaimForm
                           reportId={report.id}
+                          challengeQuestion={report.challengeQuestion}
                           onSuccess={() => {
                             setShowClaimForm(false);
                             toast({ title: "Claim submitted successfully!" });

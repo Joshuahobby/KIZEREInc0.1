@@ -18,7 +18,7 @@ const router = Router();
  */
 router.get("/", async (req, res) => {
   try {
-    const { type, search, status, category, page, limit } = req.query;
+    const { type, search, status, category, dateFilter, page, limit } = req.query;
     const userId = req.user!.id;
 
     // If it's a general search (type or search provided) or a specific filter
@@ -32,6 +32,7 @@ router.get("/", async (req, res) => {
       search: search as string,
       status: status as string,
       category: category as string,
+      dateFilter: dateFilter as string,
       userId: (type || search) ? undefined : userId // Only filter by user if not searching the hub
     });
 

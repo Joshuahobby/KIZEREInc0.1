@@ -3,14 +3,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { insertClaimSchema } from "@shared/schema";
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage, 
-  FormDescription 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,10 +22,11 @@ import { BatchImageUpload } from "@/components/item-registration/batch-image-upl
 
 interface ClaimFormProps {
   reportId: number;
+  challengeQuestion?: string | null;
   onSuccess: () => void;
 }
 
-export function ClaimForm({ reportId, onSuccess }: ClaimFormProps) {
+export function ClaimForm({ reportId, challengeQuestion, onSuccess }: ClaimFormProps) {
   const [images, setImages] = useState<File[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -36,6 +37,7 @@ export function ClaimForm({ reportId, onSuccess }: ClaimFormProps) {
       reportId,
       description: "",
       imageUrls: [],
+      verificationAnswer: "",
     },
   });
 
@@ -94,10 +96,10 @@ export function ClaimForm({ reportId, onSuccess }: ClaimFormProps) {
               <FormItem>
                 <FormLabel>Detailed Proof of Ownership</FormLabel>
                 <FormControl>
-                  <Textarea 
-                    placeholder="Describe the item in detail, including unique identifiers, contents, or circumstances of loss..." 
+                  <Textarea
+                    placeholder="Describe the item in detail, including unique identifiers, contents, or circumstances of loss..."
                     className="min-h-[150px]"
-                    {...field} 
+                    {...field}
                   />
                 </FormControl>
                 <FormDescription>Min 50 characters for a valid claim.</FormDescription>
@@ -106,14 +108,40 @@ export function ClaimForm({ reportId, onSuccess }: ClaimFormProps) {
             )}
           />
 
+          {challengeQuestion && (
+            <FormField
+              control={form.control}
+              name="verificationAnswer"
+              render={({ field }) => (
+                <FormItem className="p-4 bg-primary/5 border border-primary/10 rounded-lg">
+                  <FormLabel className="text-primary font-bold flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4" />
+                    Verification Question
+                  </FormLabel>
+                  <FormDescription className="text-neutral-700 font-medium mb-2">
+                    The finder asks: "{challengeQuestion}"
+                  </FormDescription>
+                  <FormControl>
+                    <Input
+                      placeholder="Enter your answer here..."
+                      className="bg-white"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
           <div className="space-y-2">
             <FormLabel>Upload Evidence (Optional)</FormLabel>
             <BatchImageUpload onImagesChange={setImages} maxFiles={2} />
             <p className="text-[10px] text-neutral-400">Upload receipts, old photos of the item, or ID scans.</p>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full bg-primary hover:bg-primary/90 font-bold"
             disabled={claimMutation.isPending}
           >

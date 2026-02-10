@@ -108,6 +108,7 @@ import moderationRoutes from './routes/moderation.routes';
 import searchRoutes from './routes/search.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import adminJobsRoutes from './routes/admin-jobs.routes';
+import chatRoutes from './routes/chat.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -131,6 +132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/moderation', requireAuth, moderationRoutes);
   app.use('/api/search', requireAuth, searchRoutes);
   app.use('/api/dashboard', requireAuth, dashboardRoutes);
+  app.use('/api/chats', requireAuth, chatRoutes);
 
   // Health check endpoint
   app.get("/api/health", async (req, res) => {
