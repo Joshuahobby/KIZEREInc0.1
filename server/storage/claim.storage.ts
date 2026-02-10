@@ -1,6 +1,10 @@
 import { db } from "../db";
 import { eq, and, desc, sql } from "drizzle-orm";
-import { claims, reports, users, type Claim, type InsertClaim } from "@shared/schema";
+import {
+  claims, reports, users, claimAppeals, claimStatusLogs,
+  type Claim, type InsertClaim, type ClaimAppeal, type InsertClaimAppeal,
+  type ClaimStatusLog, type InsertClaimStatusLog
+} from "@shared/schema";
 
 /**
  * Get a single claim by ID
@@ -34,7 +38,7 @@ export async function getClaimWithDetails(id: number): Promise<any> {
     .leftJoin(reports, eq(claims.reportId, reports.id))
     .leftJoin(users, eq(claims.userId, users.id))
     .where(eq(claims.id, id));
-  
+
   return result[0];
 }
 
@@ -125,8 +129,8 @@ export async function getClaimsReceived(userId: number): Promise<Claim[]> {
     .innerJoin(reports, eq(claims.reportId, reports.id))
     .where(eq(reports.userId, userId))
     .orderBy(desc(claims.createdAt));
-  
-  return result;
+
+  return result as unknown as Claim[];
 }
 
 /**
@@ -196,7 +200,7 @@ export async function updateClaim(id: number, claimData: Partial<Claim>): Promis
  */
 export async function getClaimStats(): Promise<any> {
   const allClaims = await db.select().from(claims);
-  
+
   return {
     totalClaims: allClaims.length,
     pendingClaims: allClaims.filter(c => c.status === 'pending').length,
@@ -216,66 +220,69 @@ export async function getClaimsByStatus(status: string): Promise<Claim[]> {
     .orderBy(desc(claims.createdAt));
 }
 
-// Claim status log storage (uses in-memory or JSON for now, can be upgraded to table)
-const claimStatusLogs: any[] = [];
-
 /**
  * Create a claim status change log entry
  */
-export async function createClaimStatusLog(log: {
-  claimId: number;
-  previousStatus: string;
-  newStatus: string;
-  changedBy: number;
-  notes?: string;
-}): Promise<any> {
-  const entry = {
-    id: claimStatusLogs.length + 1,
-    ...log,
-    timestamp: new Date()
-  };
-  claimStatusLogs.push(entry);
-  return entry;
+export async function createClaimStatusLog(log: InsertClaimStatusLog): Promise<ClaimStatusLog> {
+  const [newLog] = await db.insert(claimStatusLogs).values(log).returning();
+  return newLog;
 }
 
 /**
  * Get status change history for a claim
  */
-export async function getClaimStatusHistory(claimId: number): Promise<any[]> {
-  return claimStatusLogs.filter(log => log.claimId === claimId);
+export async function getClaimStatusHistory(claimId: number): Promise<ClaimStatusLog[]> {
+  return await db.select()
+    .from(claimStatusLogs)
+    .where(eq(claimStatusLogs.claimId, claimId))
+    .orderBy(desc(claimStatusLogs.timestamp));
 }
-
-// Claim appeals storage (uses in-memory for now, can be upgraded to table)
-const claimAppeals: any[] = [];
 
 /**
  * Create a claim appeal
  */
-export async function createClaimAppeal(appeal: {
-  claimId: number;
-  userId: number;
-  reason: string;
-  status: string;
-}): Promise<any> {
-  const entry = {
-    id: claimAppeals.length + 1,
-    ...appeal,
-    createdAt: new Date()
-  };
-  claimAppeals.push(entry);
-  return entry;
+export async function createClaimAppeal(appeal: InsertClaimAppeal): Promise<ClaimAppeal> {
+  const [newAppeal] = await db.insert(claimAppeals).values(appeal).returning();
+  return newAppeal;
 }
 
 /**
  * Get appeal for a claim
  */
-export async function getClaimAppeal(claimId: number): Promise<any> {
-  return claimAppeals.find(a => a.claimId === claimId);
+export async function getClaimAppeal(claimId: number): Promise<ClaimAppeal | undefined> {
+  const [appeal] = await db.select()
+    .from(claimAppeals)
+    .where(eq(claimAppeals.claimId, claimId));
+  return appeal;
+}
+
+/**
+ * Get a specific appeal by ID
+ */
+export async function getAppeal(id: number): Promise<ClaimAppeal | undefined> {
+  const [appeal] = await db.select()
+    .from(claimAppeals)
+    .where(eq(claimAppeals.id, id));
+  return appeal;
 }
 
 /**
  * Get all pending appeals (for admin)
  */
-export async function getPendingAppeals(): Promise<any[]> {
-  return claimAppeals.filter(a => a.status === 'pending');
+export async function getPendingAppeals(): Promise<ClaimAppeal[]> {
+  return await db.select()
+    .from(claimAppeals)
+    .where(eq(claimAppeals.status, 'pending'))
+    .orderBy(desc(claimAppeals.createdAt));
+}
+
+/**
+ * Update a claim appeal (for resolution)
+ */
+export async function updateClaimAppeal(id: number, appealData: Partial<ClaimAppeal>): Promise<ClaimAppeal | undefined> {
+  const [updatedAppeal] = await db.update(claimAppeals)
+    .set(appealData)
+    .where(eq(claimAppeals.id, id))
+    .returning();
+  return updatedAppeal;
 }

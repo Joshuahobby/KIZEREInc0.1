@@ -16,8 +16,8 @@ export const activityLevels = ['high', 'medium', 'low', 'inactive'] as const;
 
 // Define item categories
 export const itemCategories = [
-  'Electronics', 'Jewelry', 'Documents', 'Accessories', 
-  'Clothing', 'Bags', 'Keys', 'Wallets', 'Phones', 
+  'Electronics', 'Jewelry', 'Documents', 'Accessories',
+  'Clothing', 'Bags', 'Keys', 'Wallets', 'Phones',
   'Computers', 'Transportation', 'Other'
 ] as const;
 
@@ -373,9 +373,9 @@ export const foundItemReportSchema = insertReportSchema.extend({
 });
 
 // Claim schemas
-export const insertClaimSchema = createInsertSchema(claims).omit({ 
-  id: true, 
-  createdAt: true, 
+export const insertClaimSchema = createInsertSchema(claims).omit({
+  id: true,
+  createdAt: true,
   updatedAt: true,
   verifiedAt: true
 }).extend({
@@ -387,16 +387,16 @@ export const insertClaimSchema = createInsertSchema(claims).omit({
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
 
 // Payment schemas
-export const insertPaymentSchema = createInsertSchema(payments).omit({ 
-  id: true, 
-  createdAt: true, 
-  paymentDate: true, 
-  flutterwaveRef: true, 
-  transactionId: true 
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+  paymentDate: true,
+  flutterwaveRef: true,
+  transactionId: true
 });
 
-export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit({ 
-  id: true, 
+export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit({
+  id: true,
   createdAt: true
 });
 
@@ -404,8 +404,8 @@ export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit
 export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs).omit({ id: true, timestamp: true });
 export const insertAdminActionLogSchema = createInsertSchema(adminActionLogs).omit({ id: true, timestamp: true });
 export const insertRoleSchema = createInsertSchema(roles).omit({ id: true, createdAt: true, updatedAt: true });
-export const insertVerificationRequestSchema = createInsertSchema(verificationRequests).omit({ 
-  id: true, submittedAt: true, reviewedAt: true, status: true 
+export const insertVerificationRequestSchema = createInsertSchema(verificationRequests).omit({
+  id: true, submittedAt: true, reviewedAt: true, status: true
 }).extend({
   documentType: z.enum(['nid', 'passport', 'drivers_license'], {
     errorMap: () => ({ message: "Please select a valid document type" })
@@ -414,8 +414,8 @@ export const insertVerificationRequestSchema = createInsertSchema(verificationRe
   selfieUrl: z.string().url("Selfie URL is required"),
 });
 export const insertStatusChangeSchema = createInsertSchema(statusChanges).omit({ id: true, timestamp: true });
-export const insertUserWarningSchema = createInsertSchema(userWarnings).omit({ 
-  id: true, issuedAt: true, acknowledgedAt: true, expiresAt: true 
+export const insertUserWarningSchema = createInsertSchema(userWarnings).omit({
+  id: true, issuedAt: true, acknowledgedAt: true, expiresAt: true
 });
 
 // Payment package schema
@@ -529,3 +529,48 @@ export type InsertModerationReport = z.infer<typeof insertModerationReportSchema
 export type ModerationReport = typeof moderationReports.$inferSelect;
 export type ReportReason = typeof reportReasons[number];
 export type ModerationStatus = typeof reportModerationStatuses[number];
+// Claim appeals table
+export const claimAppeals = pgTable("claim_appeals", {
+  id: serial("id").primaryKey(),
+  claimId: integer("claim_id").notNull().references(() => claims.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default('pending'), // 'pending', 'approved', 'rejected'
+  adminNotes: text("admin_notes"),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  resolvedAt: timestamp("resolved_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("claim_appeal_claim_idx").on(table.claimId),
+  index("claim_appeal_status_idx").on(table.status)
+]);
+
+// Claim status change logs
+export const claimStatusLogs = pgTable("claim_status_logs", {
+  id: serial("id").primaryKey(),
+  claimId: integer("claim_id").notNull().references(() => claims.id),
+  previousStatus: text("previous_status").notNull(),
+  newStatus: text("new_status").notNull(),
+  changedBy: integer("changed_by").notNull().references(() => users.id),
+  notes: text("notes"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => [
+  index("claim_log_claim_idx").on(table.claimId)
+]);
+
+export const insertClaimAppealSchema = createInsertSchema(claimAppeals).omit({
+  id: true,
+  createdAt: true,
+  resolvedAt: true,
+  resolvedBy: true
+});
+
+export const insertClaimStatusLogSchema = createInsertSchema(claimStatusLogs).omit({
+  id: true,
+  timestamp: true
+});
+
+export type ClaimAppeal = typeof claimAppeals.$inferSelect;
+export type InsertClaimAppeal = z.infer<typeof insertClaimAppealSchema>;
+export type ClaimStatusLog = typeof claimStatusLogs.$inferSelect;
+export type InsertClaimStatusLog = z.infer<typeof insertClaimStatusLogSchema>;

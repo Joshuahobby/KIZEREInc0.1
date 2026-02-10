@@ -11,8 +11,8 @@ import * as claimOps from "./storage/claim.storage";
 import * as notificationOps from "./storage/notification.storage";
 import * as paymentOps from "./storage/payment.storage";
 import * as verificationOps from "./storage/verification.storage";
-import { 
-  User, InsertUser, Item, InsertItem, Report, InsertReport, 
+import {
+  User, InsertUser, Item, InsertItem, Report, InsertReport,
   Notification, InsertNotification, Payment, InsertPayment,
   PaymentMethod, InsertPaymentMethod, UserActivityLog, InsertUserActivityLog,
   AdminActionLog, InsertAdminActionLog, Role, InsertRole,
@@ -28,8 +28,8 @@ export class DatabaseStorage implements IStorage {
     if (process.env.NODE_ENV === "production" && process.env.VERCEL === "1") {
       try {
         const PostgresSessionStore = connectPg(session);
-        this.sessionStore = new PostgresSessionStore({ 
-          pool, 
+        this.sessionStore = new PostgresSessionStore({
+          pool,
           createTableIfMissing: true,
           pruneSessionInterval: 60 * 15 // 15 minutes
         });
@@ -63,12 +63,12 @@ export class DatabaseStorage implements IStorage {
   updateUserRole = userOps.updateUserRole;
   updateUserVerificationStatus = userOps.updateUserVerificationStatus;
   getUsersByRole = userOps.getUsersByRole;
-  
+
   // User activity logs
   getUserActivityLogs = userOps.getUserActivityLogs;
   countUserActivityLogs = userOps.countUserActivityLogs;
   createUserActivityLog = userOps.createUserActivityLog;
-  
+
   // Admin action logs
   getRecentAdminActions = adminOps.getRecentAdminActions;
   getAdminActionLogs = adminOps.getAdminActionLogs;
@@ -81,17 +81,17 @@ export class DatabaseStorage implements IStorage {
   createRole = adminOps.createRole;
   updateRole = adminOps.updateRole;
   deleteRole = adminOps.deleteRole;
-  
-  
+
+
   // Status changes
   getUserStatusHistory = adminOps.getUserStatusHistory;
   createStatusChange = adminOps.createStatusChange;
-  
+
   // User warnings
   getUserWarnings = adminOps.getUserWarnings;
   createUserWarning = adminOps.createUserWarning;
   acknowledgeWarning = adminOps.acknowledgeWarning;
-  
+
   // Item methods
   getItem = itemOps.getItem;
   getUserItems = itemOps.getUserItems;
@@ -101,7 +101,7 @@ export class DatabaseStorage implements IStorage {
   searchItems = itemOps.searchItems;
   getAllItems = itemOps.getAllItems;
   getItemByUniqueIdentifier = itemOps.getItemByUniqueIdentifier;
-  
+
   // Report methods
   getReport = reportOps.getReport;
   getUserReports = reportOps.getUserReports;
@@ -132,10 +132,11 @@ export class DatabaseStorage implements IStorage {
   getClaimsByStatus = claimOps.getClaimsByStatus;
   createClaimStatusLog = claimOps.createClaimStatusLog;
   getClaimStatusHistory = claimOps.getClaimStatusHistory;
-  createClaimAppeal = claimOps.createClaimAppeal;
   getClaimAppeal = claimOps.getClaimAppeal;
+  getAppeal = claimOps.getAppeal;
   getPendingAppeals = claimOps.getPendingAppeals;
-  
+  updateClaimAppeal = claimOps.updateClaimAppeal;
+
   // Notification methods
   getNotification = notificationOps.getNotification;
   getUserNotifications = notificationOps.getUserNotifications;
@@ -150,18 +151,18 @@ export class DatabaseStorage implements IStorage {
   updatePayment = paymentOps.updatePayment;
   getItemPayments = paymentOps.getItemPayments;
   getReportPayments = paymentOps.getReportPayments;
-  
+
   // Admin payment methods
   getAllPayments = paymentOps.getAllPayments;
   getPaymentsWithFilters = paymentOps.getPaymentsWithFilters;
-  
+
   // Payment method storage
   getUserPaymentMethods = paymentOps.getUserPaymentMethods;
   createPaymentMethod = paymentOps.createPaymentMethod;
   updatePaymentMethod = paymentOps.updatePaymentMethod;
   deletePaymentMethod = paymentOps.deletePaymentMethod;
   setDefaultPaymentMethod = paymentOps.setDefaultPaymentMethod;
-  
+
   // Payment packages
   getPaymentPackage = paymentOps.getPaymentPackage;
   getPaymentPackageByType = paymentOps.getPaymentPackageByType;

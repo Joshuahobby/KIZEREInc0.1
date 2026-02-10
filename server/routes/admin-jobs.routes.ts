@@ -24,9 +24,9 @@ const adminOnly = (req: any, res: any, next: any) => {
 router.post('/jobs/run-matching', adminOnly, async (req, res) => {
   try {
     logger.info('Admin initiated batch matching', { userId: req.user!.id });
-    
+
     const result = await ReportMatchingService.rerunMatchingForAllReports();
-    
+
     // Log admin action
     await storage.createAdminActionLog({
       adminId: req.user!.id,
@@ -36,7 +36,7 @@ router.post('/jobs/run-matching', adminOnly, async (req, res) => {
       ipAddress: req.ip || null,
       userAgent: req.headers['user-agent'] || null
     });
-    
+
     res.json({
       success: true,
       message: `Processed ${result.processed} reports`,
@@ -55,9 +55,9 @@ router.post('/jobs/run-matching', adminOnly, async (req, res) => {
 router.post('/jobs/run-expiration', adminOnly, async (req, res) => {
   try {
     logger.info('Admin initiated expiration job', { userId: req.user!.id });
-    
+
     const result = await processExpiredReports();
-    
+
     // Log admin action
     await storage.createAdminActionLog({
       adminId: req.user!.id,
@@ -67,7 +67,7 @@ router.post('/jobs/run-expiration', adminOnly, async (req, res) => {
       ipAddress: req.ip || null,
       userAgent: req.headers['user-agent'] || null
     });
-    
+
     res.json({
       success: true,
       message: `Processed ${result.processed} reports. ${result.expired} expired, ${result.gracePeriodStarted} entered grace period`,
@@ -101,30 +101,46 @@ router.patch('/claims/appeals/:id', adminOnly, async (req, res) => {
   try {
     const appealId = parseInt(req.params.id);
     const { decision, adminNotes } = req.body;
-    
+
     if (!['approved', 'rejected'].includes(decision)) {
       return res.status(400).json({ message: 'Decision must be approved or rejected' });
     }
-    
-    // For now, update in memory - in production, this would be a DB operation
-    const appeals = await storage.getPendingAppeals();
-    const appeal = appeals.find(a => a.id === appealId);
-    
+
+    const appeal = await storage.getAppeal(appealId);
+
     if (!appeal) {
       return res.status(404).json({ message: 'Appeal not found' });
     }
-    
+
     // Update appeal status
-    appeal.status = decision;
-    appeal.resolvedBy = req.user!.id;
-    appeal.resolvedAt = new Date();
-    appeal.adminNotes = adminNotes;
-    
+    const updatedAppeal = await storage.updateClaimAppeal(appealId, {
+      status: decision,
+      resolvedBy: req.user!.id,
+      resolvedAt: new Date(),
+      adminNotes: adminNotes,
+    });
+
+    if (!updatedAppeal) {
+      return res.status(500).json({ message: 'Failed to update appeal' });
+    }
+
     // If approved, re-open the claim
     if (decision === 'approved') {
-      await storage.updateClaim(appeal.claimId, { status: 'pending' });
+      const currentClaim = await storage.getClaim(appeal.claimId);
+      if (currentClaim) {
+        await storage.updateClaim(appeal.claimId, { status: 'pending' });
+
+        // Log the transition
+        await storage.createClaimStatusLog({
+          claimId: appeal.claimId,
+          previousStatus: currentClaim.status,
+          newStatus: 'pending',
+          changedBy: req.user!.id,
+          notes: `Re-opened via appeal approval: ${adminNotes || 'No notes'}`
+        });
+      }
     }
-    
+
     // Log admin action
     await storage.createAdminActionLog({
       adminId: req.user!.id,
@@ -134,7 +150,7 @@ router.patch('/claims/appeals/:id', adminOnly, async (req, res) => {
       ipAddress: req.ip || null,
       userAgent: req.headers['user-agent'] || null
     });
-    
+
     // Notify the user
     await storage.createNotification({
       userId: appeal.userId,
@@ -143,7 +159,7 @@ router.patch('/claims/appeals/:id', adminOnly, async (req, res) => {
       type: 'claim_update',
       isRead: false
     });
-    
+
     res.json({
       success: true,
       message: `Appeal ${decision}`,
@@ -177,13 +193,13 @@ router.post('/reports/:id/renew', adminOnly, async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
     const { extensionDays } = req.body;
-    
+
     const renewedReport = await renewReport(reportId, extensionDays || 30);
-    
+
     if (!renewedReport) {
       return res.status(404).json({ message: 'Report not found' });
     }
-    
+
     // Log admin action
     await storage.createAdminActionLog({
       adminId: req.user!.id,
@@ -193,7 +209,7 @@ router.post('/reports/:id/renew', adminOnly, async (req, res) => {
       ipAddress: req.ip || null,
       userAgent: req.headers['user-agent'] || null
     });
-    
+
     res.json({
       success: true,
       message: 'Report renewed successfully',
