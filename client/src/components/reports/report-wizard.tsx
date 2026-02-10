@@ -40,6 +40,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { BatchImageUpload } from "@/components/item-registration/batch-image-upload";
 import { foundItemReportSchema, lostItemReportSchema, itemCategories } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { OCRScanner } from "./ocr-scanner";
 
 interface ReportWizardProps {
   type: "lost" | "found";
@@ -257,9 +258,18 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-4"
               >
-                <div className="space-y-1 mb-4">
-                  <h3 className="text-lg font-semibold">Images</h3>
-                  <p className="text-sm text-neutral-500">Photos help identify the item faster.</p>
+                <div className="flex justify-between items-start mb-4">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-semibold">Images</h3>
+                    <p className="text-sm text-neutral-500">Photos help identify the item faster.</p>
+                  </div>
+                  <OCRScanner
+                    image={images[0] || null}
+                    onScanComplete={(data) => {
+                      if (data.uniqueIdentifier) form.setValue('uniqueIdentifier', data.uniqueIdentifier);
+                      if (data.title && !form.getValues('title')) form.setValue('title', data.title);
+                    }}
+                  />
                 </div>
 
                 <BatchImageUpload onImagesChange={setImages} maxFiles={3} />

@@ -3,6 +3,8 @@ import { Report, Notification } from "../../shared/schema";
 import { createLogger } from "../utils/logger";
 import { sendMatchNotificationEmail, sendFoundNotificationEmail } from "./email.service";
 
+import { OCRService } from "./ocr.service";
+
 const logger = createLogger('ReportMatchingService');
 
 /**
@@ -12,7 +14,7 @@ const logger = createLogger('ReportMatchingService');
 export class ReportMatchingService {
   // Match score threshold for notification (0-100)
   private static readonly NOTIFICATION_THRESHOLD = 40;
-  
+
   // High confidence threshold
   private static readonly HIGH_CONFIDENCE_THRESHOLD = 75;
 
@@ -28,7 +30,7 @@ export class ReportMatchingService {
       if (report.status !== 'Open') return;
 
       const oppositeType = report.type === 'lost' ? 'found' : 'lost';
-      
+
       // Get all open reports of the opposite type
       const potentialMatches = await storage.getReportsWithFilters({
         page: 1,
@@ -44,7 +46,7 @@ export class ReportMatchingService {
         if (candidate.userId === report.userId) continue;
 
         const score = this.calculateMatchScore(report, candidate);
-        
+
         if (score >= this.NOTIFICATION_THRESHOLD) {
           matchResults.push({ candidate, score });
         }
@@ -55,9 +57,9 @@ export class ReportMatchingService {
 
       // Notify for top 5 matches
       for (const match of matchResults.slice(0, 5)) {
-        logger.info('Potential match found', { 
-          reportId: report.id, 
-          candidateId: match.candidate.id, 
+        logger.info('Potential match found', {
+          reportId: report.id,
+          candidateId: match.candidate.id,
           score: match.score,
           highConfidence: match.score >= this.HIGH_CONFIDENCE_THRESHOLD
         });
@@ -69,8 +71,8 @@ export class ReportMatchingService {
       if (report.type === 'found' && report.uniqueIdentifier) {
         const matchingItem = await storage.getItemByUniqueIdentifier(report.uniqueIdentifier);
         if (matchingItem && matchingItem.userId !== report.userId) {
-          logger.info('Found report matches a registered item', { 
-            reportId: report.id, 
+          logger.info('Found report matches a registered item', {
+            reportId: report.id,
             itemId: matchingItem.id,
             ownerId: matchingItem.userId
           });
@@ -79,9 +81,9 @@ export class ReportMatchingService {
         }
       }
 
-      logger.info('Match scan complete', { 
-        reportId: report.id, 
-        matchesFound: matchResults.length 
+      logger.info('Match scan complete', {
+        reportId: report.id,
+        matchesFound: matchResults.length
       });
     } catch (error) {
       logger.error('Error during report matching', { error, reportId: report.id });
@@ -96,8 +98,8 @@ export class ReportMatchingService {
     let score = 0;
 
     // 1. CRITICAL: Precise Unique Identifier match (IMEI, Serial, etc.)
-    if (r1.uniqueIdentifier && r2.uniqueIdentifier && 
-        this.normalizeIdentifier(r1.uniqueIdentifier) === this.normalizeIdentifier(r2.uniqueIdentifier)) {
+    if (r1.uniqueIdentifier && r2.uniqueIdentifier &&
+      this.normalizeIdentifier(r1.uniqueIdentifier) === this.normalizeIdentifier(r2.uniqueIdentifier)) {
       score += 95; // Near-certain match
     }
 
@@ -133,6 +135,25 @@ export class ReportMatchingService {
       score += Math.min(10, descScore * 0.5);
     }
 
+    // 8. NEW: OCR Text Matching
+    if (r1.ocrText && r2.ocrText) {
+      // Direct identifier extraction and comparison
+      const ids1 = OCRService.extractIdentifiers(r1.ocrText);
+      const ids2 = OCRService.extractIdentifiers(r2.ocrText);
+
+      const hasIdMatch = ids1.idNumbers.some(id => ids2.idNumbers.includes(id)) ||
+        ids1.imei.some(i => ids2.imei.includes(i)) ||
+        ids1.serialNumbers.some(s => ids2.serialNumbers.includes(s));
+
+      if (hasIdMatch) {
+        score += 85; // High confidence if IDs extracted from images match
+      } else {
+        // Fallback to fuzzy keyword overlap for OCR text
+        const ocrOverlapScore = this.calculateKeywordOverlap(r1.ocrText, r2.ocrText);
+        score += Math.min(30, ocrOverlapScore * 0.6);
+      }
+    }
+
     // Cap score at 100
     return Math.min(100, score);
   }
@@ -161,7 +182,7 @@ export class ReportMatchingService {
     // Extract location tokens and check overlap
     const tokens1 = l1.split(/[\s,]+/).filter(t => t.length > 2);
     const tokens2Set = new Set(l2.split(/[\s,]+/).filter(t => t.length > 2));
-    
+
     let commonTokens = 0;
     for (const token of tokens1) {
       if (tokens2Set.has(token)) commonTokens++;
@@ -199,7 +220,7 @@ export class ReportMatchingService {
     if (diffDays <= 7) return 10;   // Within a week
     if (diffDays <= 14) return 5;   // Within 2 weeks
     if (diffDays <= 30) return 2;   // Within a month
-    
+
     return 0;
   }
 
@@ -252,20 +273,20 @@ export class ReportMatchingService {
 
     if (reportOwner && reportOwner.email) {
       await sendMatchNotificationEmail(
-        reportOwner.email, 
-        reportOwner.fullName, 
-        report.title, 
-        candidate.title, 
+        reportOwner.email,
+        reportOwner.fullName,
+        report.title,
+        candidate.title,
         candidate.id
       ).catch(err => logger.error('Failed to send match email', { error: err }));
     }
 
     if (candidateOwner && candidateOwner.email) {
       await sendMatchNotificationEmail(
-        candidateOwner.email, 
-        candidateOwner.fullName, 
-        candidate.title, 
-        report.title, 
+        candidateOwner.email,
+        candidateOwner.fullName,
+        candidate.title,
+        report.title,
         report.id
       ).catch(err => logger.error('Failed to send match email', { error: err }));
     }
@@ -298,14 +319,14 @@ export class ReportMatchingService {
    */
   private static async notifyItemOwner(report: Report, item: any): Promise<void> {
     const message = `Good news! Your registered item "${item.name}" was reported as FOUND by another user.`;
-    
+
     const owner = await storage.getUser(item.userId);
     if (owner && owner.email) {
       await sendFoundNotificationEmail(
-        owner.email, 
-        owner.fullName, 
-        item.name, 
-        report.title, 
+        owner.email,
+        owner.fullName,
+        item.name,
+        report.title,
         report.id
       ).catch(err => logger.error('Failed to send found notification email', { error: err }));
     }
@@ -326,7 +347,7 @@ export class ReportMatchingService {
    */
   static async rerunMatchingForAllReports(): Promise<{ processed: number; matches: number }> {
     logger.info('Starting batch matching for all open reports');
-    
+
     const openReports = await storage.getReportsWithFilters({
       page: 1,
       limit: 500,

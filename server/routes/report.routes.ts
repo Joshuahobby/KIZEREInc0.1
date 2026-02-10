@@ -7,6 +7,7 @@ import { ReportMatchingService } from "../services/report-matching.service";
 import { sendReportConfirmationEmail } from "../services/email.service";
 import { reportSubmissionLimiter } from "../middleware/claim-rate-limit.middleware";
 import { renewReport } from "../services/report-expiration.service";
+import { OCRService } from "../services/ocr.service";
 
 const logger = createLogger('ReportRoutes');
 const router = Router();
@@ -151,13 +152,25 @@ router.post("/", reportSubmissionLimiter, async (req, res) => {
       userAgent: req.headers['user-agent'] || null
     });
 
-    // Explicitly run matching in the background
+    // Explicitly run matching and OCR in the background
     try {
-      ReportMatchingService.findMatches(newReport).catch(err => {
-        logger.error('Background matching failed for report', { reportId: newReport.id, error: err.message });
-      });
+      if (newReport.imageUrls && newReport.imageUrls.length > 0) {
+        OCRService.extractTextFromImage(newReport.imageUrls[0]).then(text => {
+          if (text) {
+            storage.updateReport(newReport.id, { ocrText: text });
+            // Rerun matching with new OCR data
+            ReportMatchingService.findMatches({ ...newReport, ocrText: text }).catch(err =>
+              logger.error('Matching failed after OCR', { reportId: newReport.id, error: err })
+            );
+          }
+        }).catch(err => logger.error('OCR processing failed', { reportId: newReport.id, error: err }));
+      } else {
+        ReportMatchingService.findMatches(newReport).catch(err =>
+          logger.error('Background matching failed for report', { reportId: newReport.id, error: err.message })
+        );
+      }
     } catch (matchError) {
-      logger.error('Failed to initiate matching', { error: matchError });
+      logger.error('External error in matching trigger', { reportId: newReport.id, error: matchError });
     }
 
     // Send confirmation email

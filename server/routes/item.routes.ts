@@ -3,6 +3,7 @@ import { storage } from "../storage";
 import { insertItemSchema } from "@shared/schema";
 import { z } from "zod";
 import { createLogger } from "../utils/logger";
+import { OCRService } from "../services/ocr.service";
 
 const logger = createLogger('ItemRoutes');
 const router = Router();
@@ -59,6 +60,16 @@ router.post("/", async (req, res) => {
     }
 
     const newItem = await storage.createItem(validatedData);
+
+    // Phase 3: Trigger OCR for registered item
+    if (newItem.imageUrls && newItem.imageUrls.length > 0) {
+      OCRService.extractTextFromImage(newItem.imageUrls[0]).then(text => {
+        if (text) {
+          storage.updateItem(newItem.id, { ocrText: text });
+        }
+      }).catch(err => logger.error('OCR processing failed for item', { itemId: newItem.id, error: err }));
+    }
+
     logger.info("Item created successfully", { itemId: newItem.id });
     res.status(201).json(newItem);
   } catch (error) {

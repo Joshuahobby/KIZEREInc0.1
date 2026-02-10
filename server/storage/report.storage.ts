@@ -137,6 +137,7 @@ export async function getReportsWithFilters(options: {
     uniqueIdentifier: reports.uniqueIdentifier,
     custodyLocation: reports.custodyLocation,
     challengeQuestion: reports.challengeQuestion,
+    ocrText: reports.ocrText,
     reportedAt: reports.reportedAt,
     claimCount: sql<number>`(SELECT count(*) FROM ${claims} WHERE ${claims.reportId} = ${reports.id})`.mapWith(Number)
   } as any;

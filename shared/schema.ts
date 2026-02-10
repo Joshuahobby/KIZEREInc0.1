@@ -107,6 +107,7 @@ export const items = pgTable("items", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   details: json("details"),
   imageUrls: text("image_urls").array(),
+  ocrText: text("ocr_text"),
 }, (table) => [
   index("item_user_idx").on(table.userId),
   index("item_unique_id_idx").on(table.uniqueIdentifier),
@@ -134,6 +135,7 @@ export const reports = pgTable("reports", {
   paymentStatus: text("payment_status").default('pending'),
   custodyLocation: text("custody_location"), // e.g. "Security Desk", "Front Office"
   challengeQuestion: text("challenge_question"), // Only for 'found' reports
+  ocrText: text("ocr_text"),
   reportedAt: timestamp("reported_at").defaultNow().notNull(),
 }, (table) => [
   index("report_user_idx").on(table.userId),
