@@ -41,7 +41,7 @@ export const permissionTypes = [
 export const paymentStatuses = ['pending', 'successful', 'failed', 'cancelled'] as const;
 
 // Define payment types
-export const paymentTypes = ['registration', 'lost_report'] as const;
+export const paymentTypes = ['registration', 'lost_report', 'bounty'] as const;
 
 // Define package status
 export const packageStatuses = ['active', 'inactive', 'archived'] as const;
@@ -58,6 +58,14 @@ export const userPreferencesSchema = z.object({
 });
 
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
+
+// Shared validation fragments for consistency
+export const reportTitleSchema = z.string().min(5, "Title must be at least 5 characters").max(100, "Title is too long");
+export const reportDescriptionSchema = z.string().min(10, "Please provide a detailed description (min. 10 chars)").max(1000, "Description is too long");
+export const reportLocationSchema = z.string().min(3, "Please specify a location (min. 3 chars)");
+export const reportCategorySchema = z.enum(itemCategories, {
+  errorMap: () => ({ message: "Please select a valid category" })
+});
 
 // User table
 export const users = pgTable("users", {
@@ -136,6 +144,8 @@ export const reports = pgTable("reports", {
   custodyLocation: text("custody_location"), // e.g. "Security Desk", "Front Office"
   challengeQuestion: text("challenge_question"), // Only for 'found' reports
   ocrText: text("ocr_text"),
+  bountyAmount: numeric("bounty_amount"),
+  bountyStatus: text("bounty_status").default('none'), // 'none', 'escrowed', 'released', 'refunded'
   reportedAt: timestamp("reported_at").defaultNow().notNull(),
 }, (table) => [
   index("report_user_idx").on(table.userId),
@@ -225,6 +235,25 @@ export const payments = pgTable("payments", {
   metadata: json("metadata"),
   packageId: integer("package_id").references(() => paymentPackages.id),
 });
+
+// Payouts for bounty releases
+export const payouts = pgTable("payouts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  reportId: integer("report_id").notNull().references(() => reports.id),
+  amount: numeric("amount").notNull(),
+  currency: text("currency").notNull().default('RWF'),
+  status: text("status").notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed'
+  providerRef: text("provider_ref"), // Reference from transfer provider (e.g., Flutterwave)
+  destination: text("destination").notNull(), // Mobile Money number
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  processedAt: timestamp("processed_at"),
+  failureReason: text("failure_reason"),
+}, (table) => [
+  index("payout_user_idx").on(table.userId),
+  index("payout_report_idx").on(table.reportId),
+  index("payout_status_idx").on(table.status)
+]);
 
 // Payment methods (saved for future use)
 export const paymentMethods = pgTable("payment_methods", {
@@ -377,6 +406,7 @@ export const itemRegistrationSchema = insertItemSchema.extend({
 export const insertReportSchema = createInsertSchema(reports)
   .omit({ id: true, reportedAt: true })
   .extend({
+    userId: z.number().optional(),
     type: z.enum(['lost', 'found'], {
       errorMap: () => ({ message: "Report type must be either 'lost' or 'found'" })
     }),
@@ -386,27 +416,40 @@ export const insertReportSchema = createInsertSchema(reports)
     date: z.coerce.date({
       errorMap: () => ({ message: "Please enter a valid date" })
     }),
-    location: z.string().min(3, "Please provide a specific location"),
-    description: z.string().min(10, "Please provide a detailed description").max(500, "Description is too long"),
-    category: z.enum(itemCategories, {
-      errorMap: () => ({ message: "Please select a valid category for this report" })
-    }).default('Other'),
+    location: reportLocationSchema,
+    description: reportDescriptionSchema,
+    category: reportCategorySchema.default('Other'),
+    title: reportTitleSchema,
     uniqueIdentifier: z.string().optional(),
     custodyLocation: z.string().optional(),
     challengeQuestion: z.string().optional(),
+    contactInfo: z.string().optional(),
+    bountyAmount: z.coerce.number().optional(),
+    bountyStatus: z.string().optional(),
+    imageUrls: z.array(z.string()).optional(),
+    itemId: z.number().optional(),
+    receiptNumber: z.string().optional(),
+    expirationDate: z.coerce.date().optional(),
+    gracePeriodEnd: z.coerce.date().optional(),
+    paymentStatus: z.string().optional(),
+    ocrText: z.string().optional(),
   });
 
 // Extended schema for lost item report form with validation
 export const lostItemReportSchema = insertReportSchema.extend({
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  location: z.string().min(3, "Please specify a location"),
+  description: reportDescriptionSchema,
+  location: reportLocationSchema,
   category: z.string().default("Other"),
   contactInfo: z.string().optional(),
 });
 
 // Extended schema for found item report form
 export const foundItemReportSchema = insertReportSchema.extend({
-  title: z.string().min(5, "Title must be at least 5 characters")
+  title: reportTitleSchema,
+  description: reportDescriptionSchema,
+  location: reportLocationSchema,
+  contactInfo: z.string().optional(),
+  challengeQuestion: z.string().optional(),
 });
 
 // Claim schemas
@@ -433,6 +476,13 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   paymentDate: true,
   flutterwaveRef: true,
   transactionId: true
+});
+
+export const insertPayoutSchema = createInsertSchema(payouts).omit({
+  id: true,
+  createdAt: true,
+  processedAt: true,
+  failureReason: true
 });
 
 export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit({
@@ -479,6 +529,7 @@ export type InsertItem = z.infer<typeof insertItemSchema>;
 export type InsertReport = z.infer<typeof insertReportSchema>;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type InsertPayout = z.infer<typeof insertPayoutSchema>;
 export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
 export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
 export type InsertAdminActionLog = z.infer<typeof insertAdminActionLogSchema>;
@@ -496,6 +547,7 @@ export type Item = typeof items.$inferSelect;
 export type Report = typeof reports.$inferSelect;
 export type Notification = typeof notifications.$inferSelect;
 export type Payment = typeof payments.$inferSelect;
+export type Payout = typeof payouts.$inferSelect;
 export type PaymentMethod = typeof paymentMethods.$inferSelect;
 export type UserActivityLog = typeof userActivityLogs.$inferSelect;
 export type AdminActionLog = typeof adminActionLogs.$inferSelect;
@@ -526,7 +578,7 @@ export type ClaimStatus = typeof claimStatuses[number];
 export const initiatePaymentSchema = z.object({
   amount: z.number().positive("Amount must be positive").optional(),
   type: z.enum(paymentTypes, {
-    errorMap: () => ({ message: "Payment type must be either 'registration' or 'lost_report'" })
+    errorMap: () => ({ message: "Payment type must be either 'registration', 'lost_report', or 'bounty'" })
   }),
   packageId: z.number().optional(),
   itemId: z.number().optional(),

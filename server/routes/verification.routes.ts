@@ -32,12 +32,10 @@ const upload = multer({
  * Submit verification documents
  */
 router.post(
-  '/', 
-  upload.fields([{ name: 'document', maxCount: 1 }, { name: 'selfie', maxCount: 1 }]), 
+  '/',
+  upload.fields([{ name: 'document', maxCount: 1 }, { name: 'selfie', maxCount: 1 }]),
   async (req: Request, res: Response) => {
     try {
-      if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
-      
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       if (!files?.document?.[0] || !files?.selfie?.[0]) {
         return res.status(400).json({ message: 'Both document and selfie are required' });
@@ -52,22 +50,22 @@ router.post(
       const docBase64 = `data:${files.document[0].mimetype};base64,${files.document[0].buffer.toString('base64')}`;
       const selfieBase64 = `data:${files.selfie[0].mimetype};base64,${files.selfie[0].buffer.toString('base64')}`;
       // actually `data:${...};base64,${...}`
-      
+
       const docUpload = await uploadImage(docBase64, 'kizere/verification/docs');
       const selfieUpload = await uploadImage(
-        `data:${files.selfie[0].mimetype};base64,${files.selfie[0].buffer.toString('base64')}`, 
+        `data:${files.selfie[0].mimetype};base64,${files.selfie[0].buffer.toString('base64')}`,
         'kizere/verification/selfies'
       );
 
       const request = await storage.createVerificationRequest({
-        userId: req.user.id,
+        userId: req.user!.id,
         documentType,
         documentUrl: docUpload.url,
         selfieUrl: selfieUpload.url,
         // status is pending by default
       });
 
-      logger.info('Verification request created', { userId: req.user.id, requestId: request.id });
+      logger.info('Verification request created', { userId: req.user!.id, requestId: request.id });
       res.json(request);
 
     } catch (error) {
@@ -83,8 +81,7 @@ router.post(
  */
 router.get('/status', async (req: Request, res: Response) => {
   try {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
-    const request = await storage.getVerificationRequest(req.user.id);
+    const request = await storage.getVerificationRequest(req.user!.id);
     res.json(request || { status: 'none' });
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch status' });
@@ -97,8 +94,6 @@ router.get('/status', async (req: Request, res: Response) => {
  */
 router.get('/admin/list', async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.role !== 'Admin') return res.status(403).json({ message: 'Forbidden' });
-    
     const requests = await storage.getPendingVerificationRequests();
     res.json(requests);
   } catch (error) {
@@ -113,8 +108,6 @@ router.get('/admin/list', async (req: Request, res: Response) => {
  */
 router.post('/admin/:id/review', async (req: Request, res: Response) => {
   try {
-    if (!req.user || req.user.role !== 'Admin') return res.status(403).json({ message: 'Forbidden' });
-    
     const { status, comment } = req.body;
     if (!['approved', 'rejected'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
@@ -123,14 +116,14 @@ router.post('/admin/:id/review', async (req: Request, res: Response) => {
     const updated = await storage.updateVerificationRequestStatus(
       parseInt(req.params.id),
       status,
-      req.user.id,
+      req.user!.id,
       comment
     );
 
     if (!updated) return res.status(404).json({ message: 'Request not found' });
-    
+
     // TODO: Send email notification (Verification approved/rejected)
-    
+
     res.json(updated);
   } catch (error) {
     logger.error('Review failed', { error });

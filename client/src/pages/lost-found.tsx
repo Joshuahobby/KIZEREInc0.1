@@ -130,10 +130,11 @@ export default function LostFound() {
       if (images.length > 0) {
         const formData = new FormData();
         images.forEach(img => formData.append('images', img));
-        const uploadRes = await fetch('/api/upload/images', { method: 'POST', body: formData });
-        if (!uploadRes.ok) throw new Error("Image upload failed");
-        const { urls } = await uploadRes.json();
-        imageUrls = urls;
+        const uploadRes = await apiRequest<{ urls: string[] }>('/api/upload/images', {
+          method: 'POST',
+          data: formData
+        });
+        imageUrls = uploadRes.urls;
       }
 
       // 2. Create the report

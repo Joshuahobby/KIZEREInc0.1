@@ -35,10 +35,19 @@ const authLimiter = rateLimit({
 // General API rate limiter
 const apiLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 100, // Max 100 requests per window
+  max: 300, // Increased to 300 for better dashboard experience
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many requests, please try again later' }
+});
+
+// Stricter limiter for resource-intensive uploads
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Max 20 uploads per 15 mins
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Upload limit exceeded, please try again later' }
 });
 
 // HTML sanitization for user-generated content
@@ -55,7 +64,7 @@ const allowedHtmlTags = {
  */
 export function sanitizeContent(content: string, mode: 'strict' | 'default' = 'default'): string {
   if (!content) return content;
-  
+
   return sanitizeHtml(content, {
     allowedTags: mode === 'strict' ? allowedHtmlTags.strict : allowedHtmlTags.defaults,
     allowedAttributes: mode === 'strict' ? {} : {
@@ -79,13 +88,13 @@ export function setupSecurityMiddleware(app: Express) {
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co"],
-        connectSrc: ["'self'", 
+        connectSrc: ["'self'",
           "blob:",
           "data:",
           "https://cdn.jsdelivr.net",
           "https://tessdata.projectnaptha.com",
           "https://res.cloudinary.com",
-          "https://*.googleapis.com", 
+          "https://*.googleapis.com",
           "https://*.firebaseio.com",
           "https://*.firebaseapp.com",
           "wss://*.firebaseio.com",
@@ -111,18 +120,21 @@ export function setupSecurityMiddleware(app: Express) {
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
-  
+
   // Prevent XSS attacks
   app.use(xssClean());
-  
+
   // Apply rate limiting to authentication routes
   app.use('/api/auth/login', authLimiter);
   app.use('/api/auth/register', authLimiter);
   app.use('/api/auth/google', authLimiter);
-  
+
   // Apply general API rate limiting
   app.use('/api', apiLimiter);
-  
+
+  // Apply stricter limit to uploads
+  app.use('/api/upload', uploadLimiter);
+
   // Custom middleware for input data sanitization
   app.use((req: Request, _res: Response, next: NextFunction) => {
     if (req.body && typeof req.body === 'object') {
@@ -131,7 +143,7 @@ export function setupSecurityMiddleware(app: Express) {
     }
     next();
   });
-  
+
   logger.info('Security middleware configured successfully');
 }
 
@@ -142,41 +154,41 @@ export function setupSecurityMiddleware(app: Express) {
  */
 function deepSanitize(obj: any): any {
   if (!obj || typeof obj !== 'object') return obj;
-  
+
   if (Array.isArray(obj)) {
     return obj.map(item => deepSanitize(item));
   }
-  
+
   const result: any = {};
   for (const [key, value] of Object.entries(obj)) {
     // Sanitize string values
     if (typeof value === 'string') {
       const sensitiveFields = ['password', 'token', 'secret', 'key'];
       const strictFields = ['title', 'name'];
-      
+
       // Don't sanitize sensitive fields
       if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
         result[key] = value;
-      } 
+      }
       // Use strict sanitization for certain fields
       else if (strictFields.some(field => key.toLowerCase().includes(field))) {
         result[key] = sanitizeContent(value, 'strict');
-      } 
+      }
       // Default sanitization for other fields
       else {
         result[key] = sanitizeContent(value);
       }
-    } 
+    }
     // Recursively sanitize nested objects
     else if (value && typeof value === 'object') {
       result[key] = deepSanitize(value);
-    } 
+    }
     // Keep non-string values as-is
     else {
       result[key] = value;
     }
   }
-  
+
   return result;
 }
 

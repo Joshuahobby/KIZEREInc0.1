@@ -28,13 +28,13 @@ export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
   }
 
   authCheckPending = true;
-  
+
   // Create a new promise for this check
   authCheckPromise = new Promise<void>(async (resolve, reject) => {
     try {
       // First check if we already have a valid session
       const sessionCheck = await fetch('/api/user', { credentials: 'include' });
-      
+
       // If session is valid, we're good
       if (sessionCheck.ok) {
         console.log('[QueryClient] User already has valid session');
@@ -42,18 +42,18 @@ export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
         resolve();
         return;
       }
-      
+
       // If Firebase is available, try to get the current user
       if (window.firebase?.auth) {
         const auth = window.firebase.auth();
         const currentUser = auth.currentUser;
-        
+
         if (currentUser) {
           console.log('[QueryClient] No valid session but Firebase user found, syncing...');
           try {
             // Get ID token
             const token = await currentUser.getIdToken(true); // Force refresh
-            
+
             // Send to server to create session
             const response = await fetch('/api/auth/google', {
               method: 'POST',
@@ -69,7 +69,7 @@ export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
               }),
               credentials: 'include',
             });
-            
+
             if (response.ok) {
               console.log('[QueryClient] Successfully synced Firebase auth with server');
               lastSessionCheckTime = Date.now();
@@ -98,14 +98,14 @@ export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
       authCheckPromise = null;
     }
   });
-  
+
   return authCheckPromise;
 }
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     let errorMessage = res.statusText;
-    
+
     try {
       // First try to parse as JSON
       const contentType = res.headers.get('content-type');
@@ -120,7 +120,7 @@ async function throwIfResNotOk(res: Response) {
       console.error('Error parsing error response:', err);
       // Keep original status text if parsing fails
     }
-    
+
     throw new Error(`${res.status}: ${errorMessage}`);
   }
 }
@@ -141,14 +141,22 @@ export async function apiRequest<T = any>(
       throw new Error(`Authentication required for ${url}: ${error.message}`);
     }
   }
-  
+
   const method = options?.method || 'GET';
   const data = options?.data;
-  
+
+  const headers: Record<string, string> = {};
+  if (data && !(data instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const isFormData = data instanceof FormData;
+  const body = isFormData ? data : (data ? JSON.stringify(data) : undefined);
+
   let res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers,
+    body,
     credentials: "include",
   });
 
@@ -160,8 +168,8 @@ export async function apiRequest<T = any>(
       console.log(`[apiRequest] Sync successful, retrying ${url}`);
       res = await fetch(url, {
         method,
-        headers: data ? { "Content-Type": "application/json" } : {},
-        body: data ? JSON.stringify(data) : undefined,
+        headers,
+        body,
         credentials: "include",
       });
     } catch (authError) {
@@ -179,75 +187,75 @@ export const getQueryFn: <T>(options: {
   on401: UnauthorizedBehavior;
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const url = queryKey[0] as string;
-    
-    // For admin routes, ensure authentication first
-    if (url.startsWith('/api/admin')) {
+    async ({ queryKey }) => {
+      const url = queryKey[0] as string;
+
+      // For admin routes, ensure authentication first
+      if (url.startsWith('/api/admin')) {
+        try {
+          await ensureAuthenticated();
+        } catch (error: any) {
+          console.error('[getQueryFn] Authentication failed for admin request:', error);
+          if (unauthorizedBehavior === "returnNull") {
+            return null;
+          }
+          throw new Error(`Authentication required for ${url}: ${error.message}`);
+        }
+      }
+
       try {
-        await ensureAuthenticated();
-      } catch (error: any) {
-        console.error('[getQueryFn] Authentication failed for admin request:', error);
-        if (unauthorizedBehavior === "returnNull") {
+        console.log(`Making request to: ${url}`);
+        let res = await fetch(url, {
+          credentials: "include",
+        });
+
+        console.log(`Response status for ${url}: ${res.status}`);
+
+        // If we get a 401, try to re-authenticate and retry once
+        if (res.status === 401) {
+          console.warn(`[getQueryFn] 401 Unauthorized for ${url}, attempting sync...`);
+          try {
+            await ensureAuthenticated(true);
+            console.log(`[getQueryFn] Sync successful, retrying ${url}`);
+            res = await fetch(url, {
+              credentials: "include",
+            });
+            console.log(`Retry response status for ${url}: ${res.status}`);
+          } catch (authError) {
+            console.error('[getQueryFn] Re-authentication failed:', authError);
+            // Let it fall through
+          }
+        }
+
+        if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+          console.log(`Returning null for 401 response to ${url}`);
           return null;
         }
-        throw new Error(`Authentication required for ${url}: ${error.message}`);
-      }
-    }
-    
-    try {
-      console.log(`Making request to: ${url}`);
-      let res = await fetch(url, {
-        credentials: "include",
-      });
 
-      console.log(`Response status for ${url}: ${res.status}`);
-      
-      // If we get a 401, try to re-authenticate and retry once
-      if (res.status === 401) {
-        console.warn(`[getQueryFn] 401 Unauthorized for ${url}, attempting sync...`);
-        try {
-          await ensureAuthenticated(true);
-          console.log(`[getQueryFn] Sync successful, retrying ${url}`);
-          res = await fetch(url, {
-            credentials: "include",
-          });
-          console.log(`Retry response status for ${url}: ${res.status}`);
-        } catch (authError) {
-          console.error('[getQueryFn] Re-authentication failed:', authError);
-          // Let it fall through
+        await throwIfResNotOk(res);
+
+        // Check if response body is empty
+        const contentLength = res.headers.get('content-length');
+        if (contentLength === '0') {
+          console.log(`Empty response body for ${url}`);
+          return null;
         }
-      }
 
-      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-        console.log(`Returning null for 401 response to ${url}`);
-        return null;
-      }
+        // Check content type
+        const contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.warn(`Non-JSON response for ${url}: ${contentType}`);
+          const text = await res.text();
+          console.log(`Response text: ${text}`);
+          throw new Error(`Expected JSON response but got: ${contentType}`);
+        }
 
-      await throwIfResNotOk(res);
-      
-      // Check if response body is empty
-      const contentLength = res.headers.get('content-length');
-      if (contentLength === '0') {
-        console.log(`Empty response body for ${url}`);
-        return null;
+        return await res.json();
+      } catch (error) {
+        console.error(`Error fetching ${url}:`, error);
+        throw error;
       }
-      
-      // Check content type
-      const contentType = res.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.warn(`Non-JSON response for ${url}: ${contentType}`);
-        const text = await res.text();
-        console.log(`Response text: ${text}`);
-        throw new Error(`Expected JSON response but got: ${contentType}`);
-      }
-      
-      return await res.json();
-    } catch (error) {
-      console.error(`Error fetching ${url}:`, error);
-      throw error;
-    }
-  };
+    };
 
 export const queryClient = new QueryClient({
   defaultOptions: {

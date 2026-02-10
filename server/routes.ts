@@ -120,7 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Register domain routes
   app.use('/api/admin', requireAdmin, adminRoutes);
-  app.use('/api/admin', requireAuth, adminJobsRoutes); // Admin jobs have their own middleware
+  app.use('/api/admin/jobs', requireAdmin, adminJobsRoutes);
   app.use('/api/items', requireAuth, itemRoutes);
   app.use('/api/reports', requireAuth, reportRoutes);
   app.use('/api/notifications', requireAuth, notificationRoutes);
@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mount verification routes
-  app.use("/api/verification", verificationRoutes);
+  app.use("/api/verification", requireAuth, verificationRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

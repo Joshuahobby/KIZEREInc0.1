@@ -7,21 +7,13 @@ import { processExpiredReports, renewReport } from "../services/report-expiratio
 const logger = createLogger('AdminJobRoutes');
 const router = Router();
 
-/**
- * Middleware to ensure admin/moderator access
- */
-const adminOnly = (req: any, res: any, next: any) => {
-  if (!['Admin', 'Moderator'].includes(req.user?.role)) {
-    return res.status(403).json({ message: 'Admin access required' });
-  }
-  next();
-};
+// Trusting routes.ts to mount this with requireAdmin
 
 /**
  * POST /api/admin/jobs/run-matching
  * Re-run matching for all open reports
  */
-router.post('/jobs/run-matching', adminOnly, async (req, res) => {
+router.post('/jobs/run-matching', async (req, res) => {
   try {
     logger.info('Admin initiated batch matching', { userId: req.user!.id });
 
@@ -52,7 +44,7 @@ router.post('/jobs/run-matching', adminOnly, async (req, res) => {
  * POST /api/admin/jobs/run-expiration
  * Run report expiration job
  */
-router.post('/jobs/run-expiration', adminOnly, async (req, res) => {
+router.post('/jobs/run-expiration', async (req, res) => {
   try {
     logger.info('Admin initiated expiration job', { userId: req.user!.id });
 
@@ -83,7 +75,7 @@ router.post('/jobs/run-expiration', adminOnly, async (req, res) => {
  * GET /api/admin/claims/appeals
  * Get all pending claim appeals
  */
-router.get('/claims/appeals', adminOnly, async (req, res) => {
+router.get('/claims/appeals', async (req, res) => {
   try {
     const appeals = await storage.getPendingAppeals();
     res.json(appeals);
@@ -97,7 +89,7 @@ router.get('/claims/appeals', adminOnly, async (req, res) => {
  * PATCH /api/admin/claims/appeals/:id
  * Resolve a claim appeal
  */
-router.patch('/claims/appeals/:id', adminOnly, async (req, res) => {
+router.patch('/claims/appeals/:id', async (req, res) => {
   try {
     const appealId = parseInt(req.params.id);
     const { decision, adminNotes } = req.body;
@@ -175,7 +167,7 @@ router.patch('/claims/appeals/:id', adminOnly, async (req, res) => {
  * GET /api/admin/claims/stats
  * Get claim statistics
  */
-router.get('/claims/stats', adminOnly, async (req, res) => {
+router.get('/claims/stats', async (req, res) => {
   try {
     const stats = await storage.getClaimStats();
     res.json(stats);
@@ -189,7 +181,7 @@ router.get('/claims/stats', adminOnly, async (req, res) => {
  * POST /api/admin/reports/:id/renew
  * Admin renew a report
  */
-router.post('/reports/:id/renew', adminOnly, async (req, res) => {
+router.post('/reports/:id/renew', async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
     const { extensionDays } = req.body;
