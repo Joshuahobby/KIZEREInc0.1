@@ -58,6 +58,21 @@ The application follows a service-oriented architecture with the following layer
 - Repository pattern for consistent data access
 - Type-safe data handling with TypeScript and Zod
 
+## Deployment Strategy
+
+We use a multi-environment CI/CD pipeline to ensure data safety and feature reliability.
+
+### Environments
+- **Staging**: `staging.kizere.rw` - Used for final QA and E2E testing.
+- **Production**: `kizere.rw` - The live user-facing application.
+
+### CI/CD Workflow
+1. **Pull Requests**: Every PR triggers automated type checks, unit tests, and E2E tests via GitHub Actions.
+2. **Staging Review**: Once tests pass and code is merged to `main`, it is automatically deployed to the Staging environment.
+3. **Production Promotion**: After manual verification on Staging, the build is promoted to Production.
+
+For more details, see the [Production Migration Strategy](file:///C:/Users/Joesure/.gemini/antigravity/brain/bd3d3145-1830-4bf8-8565-4f92766db41b/migration_strategy.md).
+
 ## Getting Started
 
 1. Clone the repository
