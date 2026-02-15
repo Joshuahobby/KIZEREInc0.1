@@ -7,9 +7,33 @@ import xssClean from 'xss-clean';
 import rateLimit from 'express-rate-limit';
 import { Express, Request, Response, NextFunction } from 'express';
 import sanitizeHtml from 'sanitize-html';
+import hpp from 'hpp';
+import cors from 'cors';
+import { doubleCsrf } from "csrf-csrf";
 import { createLogger } from '../utils/logger';
+import { config, isProd } from '../config';
 
 const logger = createLogger('SecurityMiddleware');
+
+// CSRF Protection Configuration
+const csrfUtils = doubleCsrf({
+  getSecret: () => config.SESSION_SECRET || "default-secret-for-csrf",
+  cookieName: "kizere.x-csrf-token",
+  cookieOptions: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProd,
+  },
+  size: 64,
+  ignoredMethods: ["GET", "HEAD", "OPTIONS"],
+  getSessionIdentifier: (req: Request) => req.session.id,
+  getCsrfTokenFromRequest: (req: Request) => req.headers["x-csrf-token"] as string,
+}) as any;
+
+export const generateToken = csrfUtils.generateToken;
+export const invalidCsrfTokenError = csrfUtils.invalidCsrfTokenError;
+export const validateRequest = csrfUtils.validateRequest;
+export const doubleCsrfProtection = csrfUtils.doubleCsrfProtection;
 
 // Rate limiter configurations
 const authLimiter = rateLimit({
@@ -79,13 +103,23 @@ export function sanitizeContent(content: string, mode: 'strict' | 'default' = 'd
  * @param app Express application
  */
 export function setupSecurityMiddleware(app: Express) {
+  // CORS configuration
+  const origin = config.FRONTEND_URL || "http://localhost:5000";
+  app.use(
+    cors({
+      origin: isProd ? origin : true,
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    })
+  );
+
   // Apply Helmet to secure HTTP headers
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:", "https://cdn.jsdelivr.net", "https://apis.google.com", "https://*.firebaseapp.com", "https://*.gstatic.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
+        scriptSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net", "https://apis.google.com", "https://*.firebaseapp.com", "https://*.gstatic.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
+        styleSrc: ["'self'", "https://fonts.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co"],
         connectSrc: ["'self'",
@@ -114,7 +148,7 @@ export function setupSecurityMiddleware(app: Express) {
       }
     },
     // Disable HSTS in development
-    hsts: process.env.NODE_ENV === 'production',
+    hsts: isProd,
     // Allow Replit iframe embedding
     crossOriginEmbedderPolicy: false,
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
@@ -123,6 +157,26 @@ export function setupSecurityMiddleware(app: Express) {
 
   // Prevent XSS attacks
   app.use(xssClean());
+
+  // Prevent HTTP Parameter Pollution
+  app.use(hpp());
+
+  // CSRF Protection
+  // 1. Endpoint to get the token
+  app.get("/api/csrf-token", (req: Request, res: Response) => {
+    const token = generateToken(req, res);
+    res.json({ csrfToken: token });
+  });
+
+  // 2. Middleware to protect all other state-changing routes
+  app.use((req, res, next) => {
+    // Skip CSRF for specific routes if needed (e.g. webhooks)
+    const ignoredPaths = ["/api/payments/webhook", "/api/chat/webhook"];
+    if (ignoredPaths.some(path => req.path.startsWith(path))) {
+      return next();
+    }
+    doubleCsrfProtection(req, res, next);
+  });
 
   // Apply rate limiting to authentication routes
   app.use('/api/auth/login', authLimiter);

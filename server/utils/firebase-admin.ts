@@ -11,11 +11,11 @@ let isInitializedForTokenVerification = false;
 if (!admin.apps.length) {
   try {
     // Check if Firebase project ID is available
-    const projectId = env.VITE_FIREBASE_PROJECT_ID;
-    
+    const projectId = env.FIREBASE_PROJECT_ID;
+
     // Check for service account credentials (required for production token verification)
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-    
+
     if (serviceAccountJson) {
       try {
         // Parse and use service account credentials
@@ -48,8 +48,8 @@ if (!admin.apps.length) {
       logger.info('Firebase Admin SDK initialized with projectId only');
       logger.warn('Token verification may fail without FIREBASE_SERVICE_ACCOUNT credentials in production');
     }
-    
-    logger.info('Firebase Admin SDK initialization complete', { 
+
+    logger.info('Firebase Admin SDK initialization complete', {
       projectId,
       hasServiceAccount: !!serviceAccountJson,
       canVerifyTokens: isInitializedForTokenVerification,
@@ -73,15 +73,15 @@ export function canVerifyTokens(): boolean {
  * This is used to relax certain security requirements during development
  */
 function isReplitEnvironment(): boolean {
-  const isReplit = process.env.REPL_ID !== undefined || 
-                  process.env.REPL_OWNER !== undefined ||
-                  process.env.REPL_SLUG !== undefined ||
-                  process.env.NODE_ENV === 'development';
-                  
+  const isReplit = process.env.REPL_ID !== undefined ||
+    process.env.REPL_OWNER !== undefined ||
+    process.env.REPL_SLUG !== undefined ||
+    process.env.NODE_ENV === 'development';
+
   if (isReplit) {
     logger.info('Detected Replit/development environment');
   }
-  
+
   return isReplit;
 }
 
@@ -94,36 +94,36 @@ function isReplitEnvironment(): boolean {
 export async function verifyFirebaseToken(idToken: string) {
   // Check if running in Replit dev environment
   const isReplit = isReplitEnvironment();
-  
+
   // If we don't have service account credentials, skip verification
   if (!isInitializedForTokenVerification && process.env.NODE_ENV === 'production') {
     logger.warn('Skipping token verification - no service account credentials available');
     logger.warn('For secure production use, set FIREBASE_SERVICE_ACCOUNT environment variable');
     return null;
   }
-  
+
   try {
     // Validate input
     if (!idToken || typeof idToken !== 'string' || idToken.trim() === '') {
-      logger.error('Invalid token provided for verification', { 
+      logger.error('Invalid token provided for verification', {
         tokenProvided: !!idToken,
         tokenType: typeof idToken,
         isReplit
       });
-      
+
       // In Replit environment, we might need to be more permissive
       if (isReplit) {
         logger.warn('Replit environment detected: Would normally reject empty token');
       }
-      
+
       return null;
     }
-    
+
     // Attempt to verify token
     const decodedToken = await admin.auth().verifyIdToken(idToken);
-    
+
     // Successful verification
-    logger.info('Token verification succeeded', { 
+    logger.info('Token verification succeeded', {
       uid: decodedToken.uid,
       email: decodedToken.email || 'no-email'
     });
@@ -132,15 +132,15 @@ export async function verifyFirebaseToken(idToken: string) {
     // Enhanced error logging
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : 'No stack trace';
-    
-    logger.error('Token verification failed', { 
+
+    logger.error('Token verification failed', {
       errorMessage,
       errorStack,
       tokenLength: idToken ? idToken.length : 0,
       error,
       isReplit
     });
-    
+
     // For certain known errors, we can provide more specific logging
     if (errorMessage.includes('expired')) {
       logger.warn('Firebase token expired - user needs to reauthenticate');
@@ -149,7 +149,7 @@ export async function verifyFirebaseToken(idToken: string) {
     } else if (errorMessage.includes('project')) {
       logger.warn('Token from different Firebase project');
     }
-    
+
     // In development or Replit, provide more detailed error info
     if (isReplit) {
       logger.warn('Replit environment: Token verification failed but continuing', {
@@ -158,7 +158,7 @@ export async function verifyFirebaseToken(idToken: string) {
         idTokenLength: idToken ? idToken.length : 0
       });
     }
-    
+
     return null;
   }
 }

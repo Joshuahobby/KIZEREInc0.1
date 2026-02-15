@@ -7,6 +7,7 @@ import { UserPreferencesForm } from "@/components/profile/user-preferences-form"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Bell, Palette, Globe } from "lucide-react";
+import { PushSubscriptionManager } from "@/components/notifications/push-subscription-manager";
 
 export default function SettingsPage() {
     const { t } = useLanguage();
@@ -50,15 +51,7 @@ export default function SettingsPage() {
                     </TabsContent>
 
                     <TabsContent value="notifications" className="space-y-4 mt-6">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Notification Settings</CardTitle>
-                                <CardDescription>Manage how you receive alerts and updates.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground">Notification settings are currently managed within the General Preferences tab.</p>
-                            </CardContent>
-                        </Card>
+                        <PushSubscriptionManager />
                     </TabsContent>
 
                     <TabsContent value="appearance" className="space-y-4 mt-6">

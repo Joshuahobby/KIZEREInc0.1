@@ -31,29 +31,8 @@ export class ReportMatchingService {
 
       const oppositeType = report.type === 'lost' ? 'found' : 'lost';
 
-      // Get all open reports of the opposite type
-      const potentialMatches = await storage.getReportsWithFilters({
-        page: 1,
-        limit: 100,
-        type: oppositeType,
-        status: 'Open'
-      });
-
-      const matchResults: { candidate: Report; score: number }[] = [];
-
-      for (const candidate of potentialMatches.reports) {
-        // Skip own reports
-        if (candidate.userId === report.userId) continue;
-
-        const score = this.calculateMatchScore(report, candidate);
-
-        if (score >= this.NOTIFICATION_THRESHOLD) {
-          matchResults.push({ candidate, score });
-        }
-      }
-
-      // Sort by score descending
-      matchResults.sort((a, b) => b.score - a.score);
+      // Use the public method to get matches
+      const matchResults = await this.findPotentialMatches(report);
 
       // Notify for top 5 matches
       for (const match of matchResults.slice(0, 5)) {
@@ -91,6 +70,44 @@ export class ReportMatchingService {
   }
 
   /**
+   * Find potential matches for a report and return them with scores
+   * Used by both the background worker and the API
+   */
+  static async findPotentialMatches(report: Report): Promise<{ candidate: Report; score: number }[]> {
+    // Only scan for Open reports (or allow if check is done by caller)
+    // if (report.status !== 'Open') return [];
+
+    const oppositeType = report.type === 'lost' ? 'found' : 'lost';
+
+    // Get all open reports of the opposite type
+    const potentialMatches = await storage.getReportsWithFilters({
+      page: 1,
+      limit: 100,
+      type: oppositeType,
+      status: 'Open'
+    });
+
+    const matchResults: { candidate: Report; score: number }[] = [];
+
+    for (const candidate of potentialMatches.reports) {
+      // Skip own reports
+      if (candidate.userId === report.userId) continue;
+
+      const score = this.calculateMatchScore(report, candidate);
+
+      // For API results, we might want to return even lower scores, but keep threshold for now
+      if (score >= 20) { // Lowered threshold for manual search visibility
+        matchResults.push({ candidate, score });
+      }
+    }
+
+    // Sort by score descending
+    matchResults.sort((a, b) => b.score - a.score);
+
+    return matchResults;
+  }
+
+  /**
    * Enhanced match score calculation
    * Phase 2.1: Added location proximity, date proximity, category, and color matching
    */
@@ -100,29 +117,29 @@ export class ReportMatchingService {
     // 1. CRITICAL: Precise Unique Identifier match (IMEI, Serial, etc.)
     if (r1.uniqueIdentifier && r2.uniqueIdentifier &&
       this.normalizeIdentifier(r1.uniqueIdentifier) === this.normalizeIdentifier(r2.uniqueIdentifier)) {
-      score += 95; // Near-certain match
+      score += 100; // Exact match (Plan: 100)
     }
 
     // 2. HIGH: Precise Item ID match
     if (r1.itemId && r2.itemId && r1.itemId === r2.itemId) {
-      score += 90;
+      score += 100; // Exact match
     }
 
     // 3. MEDIUM: Same Category
     if (r1.category && r2.category && r1.category === r2.category) {
-      score += 15;
+      score += 20;
     }
 
     // 4. MEDIUM: Location overlap/proximity
     if (r1.location && r2.location) {
       const locationScore = this.calculateLocationScore(r1.location, r2.location);
-      score += locationScore;
+      score += locationScore; // Max 25
     }
 
     // 5. MEDIUM: Date proximity
     if (r1.date && r2.date) {
       const dateScore = this.calculateDateProximityScore(r1.date, r2.date);
-      score += dateScore;
+      score += dateScore; // Max 15
     }
 
     // 6. LOW-MEDIUM: Title keyword overlap
@@ -146,7 +163,7 @@ export class ReportMatchingService {
         ids1.serialNumbers.some(s => ids2.serialNumbers.includes(s));
 
       if (hasIdMatch) {
-        score += 85; // High confidence if IDs extracted from images match
+        score += 90; // High confidence if IDs extracted from images match
       } else {
         // Fallback to fuzzy keyword overlap for OCR text
         const ocrOverlapScore = this.calculateKeywordOverlap(r1.ocrText, r2.ocrText);

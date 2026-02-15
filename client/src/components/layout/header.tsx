@@ -31,11 +31,13 @@ import {
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
 import { useLanguage } from "../../lib/i18n/LanguageContext";
 import { Logo } from "@/components/ui/logo";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
 import { GlobalSearch } from "@/components/dashboard/global-search";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { WifiOff } from "lucide-react";
 
 export function Header() {
   const [location] = useLocation();
@@ -43,6 +45,7 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const { t } = useLanguage();
+  const isOnline = useOnlineStatus();
 
   const isAdmin = user?.role === "Admin";
   const isAuthenticated = !!user;
@@ -112,15 +115,21 @@ export function Header() {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             {/* Logo */}
-            <Link href={isAuthenticated ? getDashboardPath() : "/"} className="flex items-center gap-2 group">
-              <Logo className="h-8 w-8 transition-transform group-hover:scale-110" />
+            <Link href={isAuthenticated ? getDashboardPath() : "/"} className="flex items-center gap-2 group" aria-label="KIZERE Home">
+              <Logo className="h-8 w-8 transition-transform group-hover:scale-110" aria-hidden="true" />
               <span className="text-xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tighter">
                 KIZERE
               </span>
             </Link>
 
-            {/* Desktop Navigation - Hidden on mobile */}
-            <nav className="hidden md:flex ml-8 space-x-1 items-center">
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex lg:items-center lg:gap-1 ml-8" aria-label="Main Navigation">
+              {!isOnline && (
+                <Badge variant="outline" className="mr-2 border-amber-500/50 bg-amber-500/10 text-amber-600 animate-pulse gap-1">
+                  <WifiOff className="h-3 w-3" />
+                  Offline
+                </Badge>
+              )}
               {navigation.map((item) => (
                 <Link
                   key={item.name}

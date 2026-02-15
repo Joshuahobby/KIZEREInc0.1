@@ -61,7 +61,7 @@ export default function AdminPaymentPackagesPage() {
     defaultValues: {
       name: "",
       description: "",
-      type: "registration" as PaymentType,
+      type: "registration" as "registration" | "lost_report",
       amount: 0,
       currency: "RWF",
       features: "",
@@ -77,7 +77,7 @@ export default function AdminPaymentPackagesPage() {
     defaultValues: {
       name: "",
       description: "",
-      type: "registration" as PaymentType,
+      type: "registration" as "registration" | "lost_report",
       amount: 0,
       currency: "RWF",
       features: "",
@@ -234,14 +234,14 @@ export default function AdminPaymentPackagesPage() {
   // Open edit dialog with selected package data
   const openEditDialog = (pkg: PaymentPackage) => {
     setSelectedPackage(pkg);
-    
+
     // Convert features array to newline-separated string
     const featuresString = pkg.features.join('\n');
-    
+
     editForm.reset({
       name: pkg.name,
       description: pkg.description || "",
-      type: pkg.type,
+      type: pkg.type as "registration" | "lost_report",
       amount: Number(pkg.amount),
       currency: pkg.currency,
       features: featuresString,
@@ -249,7 +249,7 @@ export default function AdminPaymentPackagesPage() {
       status: pkg.status,
       validityDays: pkg.validityDays || 0
     });
-    
+
     setIsEditDialogOpen(true);
   };
 
@@ -325,21 +325,21 @@ export default function AdminPaymentPackagesPage() {
           New Package
         </Button>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
         <TabsList className="grid w-full md:w-[400px] grid-cols-2">
           <TabsTrigger value="registration">Registration Packages</TabsTrigger>
           <TabsTrigger value="lost_report">Lost Report Packages</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="registration" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPackages && filteredPackages.length > 0 ? (
               filteredPackages.map(pkg => (
-                <PackageCard 
-                  key={pkg.id} 
-                  package={pkg} 
-                  onEdit={() => openEditDialog(pkg)} 
+                <PackageCard
+                  key={pkg.id}
+                  package={pkg}
+                  onEdit={() => openEditDialog(pkg)}
                   onDelete={() => confirmDelete(pkg)}
                   onStatusChange={(status) => updatePackageStatusMutation.mutate({ id: pkg.id, status })}
                   onSetDefault={() => setDefaultPackageMutation.mutate({ id: pkg.id, type: pkg.type })}
@@ -357,15 +357,15 @@ export default function AdminPaymentPackagesPage() {
             )}
           </div>
         </TabsContent>
-        
+
         <TabsContent value="lost_report" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPackages && filteredPackages.length > 0 ? (
               filteredPackages.map(pkg => (
-                <PackageCard 
-                  key={pkg.id} 
-                  package={pkg} 
-                  onEdit={() => openEditDialog(pkg)} 
+                <PackageCard
+                  key={pkg.id}
+                  package={pkg}
+                  onEdit={() => openEditDialog(pkg)}
                   onDelete={() => confirmDelete(pkg)}
                   onStatusChange={(status) => updatePackageStatusMutation.mutate({ id: pkg.id, status })}
                   onSetDefault={() => setDefaultPackageMutation.mutate({ id: pkg.id, type: pkg.type })}
@@ -854,7 +854,7 @@ Priority processing"
               Are you sure you want to delete this payment package? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedPackage && (
             <div className="py-4">
               <p className="font-medium">{selectedPackage.name}</p>
@@ -865,7 +865,7 @@ Priority processing"
               </div>
             </div>
           )}
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancel
@@ -888,13 +888,13 @@ Priority processing"
 }
 
 // Package Card Component
-function PackageCard({ 
-  package: pkg, 
-  onEdit, 
+function PackageCard({
+  package: pkg,
+  onEdit,
   onDelete,
   onStatusChange,
   onSetDefault
-}: { 
+}: {
   package: PaymentPackage;
   onEdit: () => void;
   onDelete: () => void;
@@ -921,13 +921,13 @@ function PackageCard({
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold mb-4">{pkg.amount} {pkg.currency}</div>
-        
+
         {pkg.validityDays ? (
           <div className="text-sm text-muted-foreground mb-4">
             Valid for {pkg.validityDays} days
           </div>
         ) : null}
-        
+
         {pkg.features && pkg.features.length > 0 && (
           <div className="space-y-2">
             {pkg.features.map((feature, index) => (
@@ -951,45 +951,45 @@ function PackageCard({
         </div>
 
         <Separator />
-        
+
         <div className="flex flex-wrap gap-2 w-full">
           {pkg.status === 'active' ? (
-            <Button 
-              onClick={() => onStatusChange('inactive')} 
-              variant="outline" 
-              size="sm" 
+            <Button
+              onClick={() => onStatusChange('inactive')}
+              variant="outline"
+              size="sm"
               className="flex-1"
             >
               <XCircle className="h-4 w-4 mr-2" />
               Deactivate
             </Button>
           ) : pkg.status === 'inactive' ? (
-            <Button 
-              onClick={() => onStatusChange('active')} 
-              variant="outline" 
-              size="sm" 
+            <Button
+              onClick={() => onStatusChange('active')}
+              variant="outline"
+              size="sm"
               className="flex-1"
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Activate
             </Button>
           ) : (
-            <Button 
-              onClick={() => onStatusChange('active')} 
-              variant="outline" 
-              size="sm" 
+            <Button
+              onClick={() => onStatusChange('active')}
+              variant="outline"
+              size="sm"
               className="flex-1"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Restore
             </Button>
           )}
-          
+
           {!pkg.isDefault && pkg.status === 'active' && (
-            <Button 
-              onClick={onSetDefault} 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              onClick={onSetDefault}
+              variant="ghost"
+              size="sm"
               className="flex-1"
             >
               Set as Default

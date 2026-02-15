@@ -9,32 +9,32 @@ import {
 import { createStatusChange } from "./admin.storage";
 
 export async function getUser(id: number): Promise<User | undefined> {
-  const [user] = await db.select().from(users).where(eq(users.id, id));
-  return user;
+  const results = await db.select().from(users).where(eq(users.id, id));
+  return results[0];
 }
 
 export async function getUserByUsername(username: string): Promise<User | undefined> {
-  const [user] = await db.select().from(users).where(eq(users.username, username));
-  return user;
+  const results = await db.select().from(users).where(eq(users.username, username));
+  return results[0];
 }
 
 export async function getUserByEmail(email: string): Promise<User | undefined> {
-  const [user] = await db.select().from(users).where(eq(users.email, email));
-  return user;
+  const results = await db.select().from(users).where(eq(users.email, email));
+  return results[0];
 }
 
 export async function createUser(insertUser: InsertUser): Promise<User> {
-  const [user] = await db.insert(users).values(insertUser).returning();
-  return user;
+  const results = await db.insert(users).values([insertUser] as any).returning();
+  return results[0]!;
 }
 
 export async function updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-  const [updatedUser] = await db
+  const results = await db
     .update(users)
-    .set(userData)
+    .set(userData as any)
     .where(eq(users.id, id))
     .returning();
-  return updatedUser;
+  return results[0];
 }
 
 export async function getAllUsers(): Promise<User[]> {

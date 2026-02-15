@@ -3,6 +3,7 @@ import { storage } from "../storage";
 import { insertMessageSchema, insertChatSchema } from "@shared/schema";
 import { z } from "zod";
 import { createLogger } from "../utils/logger";
+import { emitChatMessage, emitNotification } from "../websocket";
 
 const logger = createLogger('ChatRoutes');
 const router = Router();
@@ -120,7 +121,7 @@ router.post("/:id/messages", async (req, res) => {
         const recipientId = chat.finderId === req.user!.id ? chat.claimantId : chat.finderId;
         const report = await storage.getReport(chat.reportId);
 
-        await storage.createNotification({
+        const notification = await storage.createNotification({
             userId: recipientId,
             title: "New Message",
             message: `You have a new message regarding: ${report?.title || 'Claim #' + chat.claimId}`,
@@ -128,6 +129,10 @@ router.post("/:id/messages", async (req, res) => {
             isRead: false,
             relatedReportId: chat.reportId
         });
+
+        // Emit real-time events
+        emitChatMessage(chatId, newMessage);
+        emitNotification(recipientId, notification);
 
         res.status(201).json(newMessage);
     } catch (error) {

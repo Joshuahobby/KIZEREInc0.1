@@ -15,6 +15,7 @@ interface StatsCardProps {
   chartColor?: string;
   prefix?: string;
   suffix?: string;
+  subtitle?: string; // Added subtitle prop
   isLoading?: boolean;
   formatter?: (value: number | string) => string;
 }
@@ -30,6 +31,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   chartColor = "#00BFFF",
   prefix = "",
   suffix = "",
+  subtitle,
   isLoading = false,
   formatter = (val) => val.toString()
 }) => {
@@ -93,7 +95,10 @@ export const StatsCard: React.FC<StatsCardProps> = ({
     <Card className="h-full border border-border/60 bg-card/60 backdrop-blur-xl shadow-lg shadow-neutral-200/20 dark:shadow-none hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
       <CardContent className="p-6 relative">
         <div className="flex items-center justify-between mb-4">
-          <div className="font-bold text-xs uppercase tracking-widest text-muted-foreground/70">{title}</div>
+          <div className="flex flex-col">
+            <div className="font-bold text-xs uppercase tracking-widest text-muted-foreground/70">{title}</div>
+            {subtitle && <div className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</div>}
+          </div>
           {icon && (
             <div className={`rounded-2xl p-2.5 transition-transform duration-500 hover:scale-110 ${iconBgClass}`}>
               <div className={iconTextClass}>{icon}</div>

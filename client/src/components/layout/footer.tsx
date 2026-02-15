@@ -61,7 +61,7 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-gray-900 dark:bg-gray-950 text-white py-16 relative overflow-hidden">
+    <footer className="bg-gray-900 dark:bg-gray-950 text-white py-16 relative overflow-hidden" role="contentinfo">
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute inset-0 bg-grid-pattern opacity-30"></div>
       </div>
@@ -76,8 +76,8 @@ export function Footer() {
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
             >
-              <Link href="/" className="flex items-center gap-2 mb-6 group">
-                <Logo className="h-8 w-8 text-white group-hover:scale-110 transition-transform" />
+              <Link href="/" className="flex items-center gap-2 mb-6 group" aria-label="KIZERE Home">
+                <Logo className="h-8 w-8 text-white group-hover:scale-110 transition-transform" aria-hidden="true" />
                 <span className="text-2xl font-display font-bold text-white tracking-tight">KIZERE</span>
               </Link>
               <p className="text-gray-400 mb-8 max-w-md text-base leading-relaxed">

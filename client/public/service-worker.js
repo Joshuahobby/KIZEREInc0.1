@@ -98,3 +98,131 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Push Notification Handling
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body,
+      icon: '/generated-icon.png',
+      badge: '/generated-icon.png',
+      data: data.data,
+      vibrate: [100, 50, 100],
+      actions: [
+        { action: 'view', title: 'View' },
+        { action: 'close', title: 'Close' }
+      ]
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'KIZERE', options)
+    );
+  } catch (error) {
+    console.error('Error in push event:', error);
+  }
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'close') return;
+
+  const urlToOpen = (event.notification.data && event.notification.data.url)
+    ? event.notification.data.url
+    : '/dashboard';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      // Check if there is already a window open with this URL
+      for (let client of windowClients) {
+        if (client.url.includes(urlToOpen) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // If no window found, open a new one
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+
+// Background Sync Handling
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'sync-kizere-data') {
+    event.waitUntil(processPendingSyncs());
+  }
+});
+
+async function processPendingSyncs() {
+  const db = await openOfflineDB();
+  const tx = db.transaction('pending-syncs', 'readwrite');
+  const store = tx.objectStore('pending-syncs');
+
+  // Use a temporary request to get all items since SW environment might be restricted
+  const items = await new Promise((resolve, reject) => {
+    const request = store.getAll();
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+
+  for (const item of items) {
+    try {
+      await syncItem(item);
+      await new Promise((resolve, reject) => {
+        const delRequest = store.delete(item.id);
+        delRequest.onerror = () => reject(delRequest.error);
+        delRequest.onsuccess = () => resolve();
+      });
+      console.log(`[SW Sync] Successfully synced item: ${item.id}`);
+    } catch (error) {
+      console.error(`[SW Sync] Failed to sync item: ${item.id}`, error);
+      // Item stays in DB to be retried next time
+    }
+  }
+}
+
+async function syncItem(item) {
+  let url = '';
+  // Convert object back to headers if needed
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+
+  const options = {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(item.data)
+  };
+
+  switch (item.type) {
+    case 'CREATE_ITEM':
+      url = '/api/items';
+      break;
+    case 'CREATE_REPORT':
+      url = '/api/reports';
+      break;
+    case 'SEND_MESSAGE':
+      url = `/api/chats/${item.data.chatId}/messages`;
+      break;
+    default:
+      return;
+  }
+
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`Sync failed with status: ${response.status}`);
+  }
+}
+
+// Minimal IndexedDB helpers for SW
+function openOfflineDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('kizere-offline', 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}

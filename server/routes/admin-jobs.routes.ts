@@ -143,7 +143,7 @@ router.patch('/claims/appeals/:id', async (req, res) => {
       userAgent: req.headers['user-agent'] || null
     });
 
-    // Notify the user
+    // Notify the user via in-app notification
     await storage.createNotification({
       userId: appeal.userId,
       title: `Appeal ${decision === 'approved' ? 'Approved' : 'Rejected'}`,
@@ -151,6 +151,26 @@ router.patch('/claims/appeals/:id', async (req, res) => {
       type: 'claim_update',
       isRead: false
     });
+
+    // Notify the user via email
+    try {
+      const { sendAppealUpdateEmail } = await import("../services/email.service");
+      const user = await storage.getUser(appeal.userId);
+      const claim = await storage.getClaim(appeal.claimId);
+      const report = claim ? await storage.getReport(claim.reportId) : null;
+
+      if (user && user.email && report) {
+        sendAppealUpdateEmail(
+          user.email,
+          user.fullName || user.username,
+          report.title,
+          decision as 'approved' | 'rejected',
+          adminNotes
+        ).catch(err => logger.error('Failed to send appeal update email', { error: err }));
+      }
+    } catch (e) {
+      logger.error('Error during appeal notification email trigger', { error: e });
+    }
 
     res.json({
       success: true,

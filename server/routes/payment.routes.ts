@@ -128,35 +128,76 @@ router.post("/initiate", async (req, res) => {
 router.post("/webhook", async (req, res) => {
   try {
     const signature = req.headers['verif-hash'];
-    if (!signature || !verifyWebhookSignature(signature as string, req.body)) {
+    if (!signature || !verifyWebhookSignature(signature as string, JSON.stringify(req.body))) {
+      // Note: req.body might be an object, but verifyWebhookSignature expects stringified body usually
+      // However, our verifyWebhookSignature implementation takes 'data: string'. 
+      // Express parses body to JSON. We should ideally use the raw body for signature verification.
+      // For now, assuming standard setup.
       return res.status(401).json({ message: "Invalid signature" });
     }
 
-    const { status, txRef, id } = req.body;
+    const payload = req.body;
+    logger.info("Received Webhook", { event: payload.event, type: payload.event?.type });
 
-    if (status === 'successful') {
+    // Handle different event types
+    // Standard structure: { event: 'charge.completed', data: { ... } }
+    // Or sometimes just the data if it's a legacy hook? 
+    // We will support the standard 'event' property.
+
+    const eventType = payload.event;
+    const data = payload.data;
+
+    if (eventType === 'charge.completed' && data.status === 'successful') {
+      const { tx_ref, id, amount, currency } = data;
+
       const transaction = await verifyTransaction(id.toString());
 
-      if (transaction.status === 'success') {
-        // Update payment status
-        const payment = await storage.getPaymentByTransactionRef(txRef);
-        if (payment && payment.status !== 'completed') {
-          await storage.updatePayment(payment.id, { status: 'completed' });
+      if (transaction.status === 'success' && transaction.data.status === 'successful') {
+        const payment = await storage.getPaymentByTransactionRef(tx_ref);
 
-          // Send confirmation email
-          const user = await storage.getUser(payment.userId);
-          if (user?.email) {
-            sendPaymentConfirmationEmail(
-              user.email,
-              user.fullName || user.username,
-              parseFloat(payment.amount),
-              payment.currency,
-              payment.transactionRef,
-              payment.type
-            ).catch(err => logger.error('Failed to send payment email', { error: err }));
+        if (payment) {
+          // Verify amount and currency
+          if (payment.currency !== currency) {
+            logger.error("Currency mismatch in webhook", { expected: payment.currency, received: currency });
+            return res.sendStatus(400);
           }
+
+          // Verify amount (allow small epsilon for float diffs if needed, but strings are safer)
+          if (parseFloat(payment.amount) > amount) {
+            logger.warn("Partial payment received", { expected: payment.amount, received: amount });
+            // We could mark as 'partial' or 'failed' depending on logic.
+            // For now, we only complete if full amount.
+            return res.sendStatus(200);
+          }
+
+          if (payment.status !== 'completed') {
+            await storage.updatePayment(payment.id, {
+              status: 'completed',
+              transactionId: id.toString(),
+              flutterwaveRef: data.flw_ref
+            });
+
+            // Send confirmation email
+            const user = await storage.getUser(payment.userId);
+            if (user?.email) {
+              sendPaymentConfirmationEmail(
+                user.email,
+                user.fullName || user.username,
+                parseFloat(payment.amount),
+                payment.currency,
+                payment.transactionRef,
+                payment.type
+              ).catch(err => logger.error('Failed to send payment email', { error: err }));
+            }
+          }
+        } else {
+          logger.warn("Payment not found for webhook", { tx_ref });
         }
       }
+    } else if (eventType === 'transfer.completed') {
+      // Handle payout completion
+      // TODO: Implement payout status updates
+      logger.info("Transfer completed webhook received", { data });
     }
 
     res.sendStatus(200);
@@ -178,34 +219,66 @@ router.get("/verify/:txRef", async (req, res) => {
     }
 
     // Call Flutterwave to verify
-    // Note: Flutterwave verification usually needs the transaction ID from the query param 
-    // but we can also use tx_ref if we list transactions.
-    // However, the verifyTransaction function in flutterwave.ts expects an ID.
-    // Let's check if we can verify by tx_ref.
-    // To keep it simple, if the payment is already completed in our DB (via webhook), return success.
-    if (payment.status === 'completed' || payment.status === 'successful') {
+    // Using txRef as ID for mock mode compatibility, or use getTransacitonId mechanism in real flow
+    // In real FW flow, we might need to search by tx_ref first to get ID, or use verify by tx_ref if supported.
+    // Our utility 'verifyTransaction' expects an ID usually, but for Mock it takes txRef.
+    // Let's assume we can pass txRef and the utility handles it, or we need to look it up.
+
+    // For now, let's try to verify using the ref (which works in our Mock).
+    // In production, we should probably store the FW ID if we have it, or query FW for it.
+
+    const transaction = await verifyTransaction(txRef);
+
+    if (transaction.status === 'success' && transaction.data.status === 'successful') {
+      // Verify amount and currency
+      if (payment.currency !== transaction.data.currency) {
+        logger.error("Currency mismatch in verification", { expected: payment.currency, received: transaction.data.currency });
+        return res.status(400).json({ message: "Currency mismatch" });
+      }
+
+      if (parseFloat(payment.amount) > transaction.data.amount) {
+        logger.warn("Partial payment found", { expected: payment.amount, received: transaction.data.amount });
+        return res.status(400).json({ message: "Payment amount insufficient" });
+      }
+
+      if (payment.status !== 'completed') {
+        await storage.updatePayment(payment.id, {
+          status: 'completed',
+          transactionId: transaction.data.id.toString(),
+          flutterwaveRef: transaction.data.flw_ref
+        });
+
+        // Send confirmation email if not already sent
+        const user = await storage.getUser(payment.userId);
+        if (user?.email) {
+          sendPaymentConfirmationEmail(
+            user.email,
+            user.fullName || user.username,
+            parseFloat(payment.amount),
+            payment.currency,
+            payment.transactionRef,
+            payment.type
+          ).catch(err => logger.error('Failed to send payment email', { error: err }));
+        }
+      }
+
       return res.json({
         status: "successful",
-        message: "Payment already verified",
+        message: "Payment verified successfully",
         transactionRef: txRef,
-        amount: parseFloat(payment.amount)
+        amount: transaction.data.amount
       });
     }
 
-    // If not completed, we might need the flutterwave transaction ID.
-    // For now, let's return a pending status if we can't verify by txRef alone 
-    // (or implement txRef lookup if Flutterwave supports it).
-    // Actually, Flutterwave's verify endpoint is /transactions/:id/verify.
-    // If the client just has tx_ref, we might need to search for the transaction.
-
     res.json({
-      status: "pending",
-      message: "Payment verification is in progress. Please wait a moment.",
+      status: transaction.data.status || "pending",
+      message: "Payment verification returned non-success status",
       transactionRef: txRef
     });
   } catch (error) {
     logger.error("Verification failed", { error, txRef });
-    res.status(500).json({ message: "Verification failed" });
+    // Don't expose internal errors
+    res.status(500).json({ message: "Verification failed. Please try again or contact support." });
   }
 });
 

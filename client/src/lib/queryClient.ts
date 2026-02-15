@@ -6,6 +6,9 @@ let authCheckPromise: Promise<void> | null = null;
 let lastSessionCheckTime = 0;
 const SESSION_CHECK_TTL_MS = 60 * 1000; // 1 minute TTL
 
+let cachedCsrfToken: string | null = null;
+let csrfTokenPromise: Promise<string> | null = null;
+
 declare global {
   interface Window {
     firebase?: any;
@@ -125,6 +128,29 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+/**
+ * Ensures we have a valid CSRF token.
+ * Fetches one from the server if not already cached.
+ */
+export async function ensureCsrfToken(): Promise<string> {
+  if (cachedCsrfToken) return cachedCsrfToken;
+  if (csrfTokenPromise) return csrfTokenPromise;
+
+  csrfTokenPromise = (async () => {
+    try {
+      const res = await fetch("/api/csrf-token", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch CSRF token");
+      const { csrfToken } = await res.json();
+      cachedCsrfToken = csrfToken;
+      return csrfToken;
+    } finally {
+      csrfTokenPromise = null;
+    }
+  })();
+
+  return csrfTokenPromise;
+}
+
 export async function apiRequest<T = any>(
   url: string,
   options?: {
@@ -148,6 +174,16 @@ export async function apiRequest<T = any>(
   const headers: Record<string, string> = {};
   if (data && !(data instanceof FormData)) {
     headers["Content-Type"] = "application/json";
+  }
+
+  // Include CSRF token for state-changing requests
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase())) {
+    try {
+      const csrfToken = await ensureCsrfToken();
+      headers["X-CSRF-Token"] = csrfToken;
+    } catch (error) {
+      console.error("[apiRequest] Failed to get CSRF token:", error);
+    }
   }
 
   const isFormData = data instanceof FormData;

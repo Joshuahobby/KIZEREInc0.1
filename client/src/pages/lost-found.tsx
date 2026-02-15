@@ -18,9 +18,10 @@ import {
   DialogDescription,
   DialogTrigger
 } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Report } from "@shared/schema";
+import { OfflineSyncService } from "@/lib/offline-db";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertTriangle,
   MapPin,
@@ -125,6 +126,15 @@ export default function LostFound() {
   // Mutation for creating a report
   const reportMutation = useMutation({
     mutationFn: async ({ data, images }: { data: any, images: File[] }) => {
+      // Check if offline
+      if (!navigator.onLine) {
+        console.log("[LostFound] Offline detected, queuing report...");
+        // For simplicity in this version, we queue metadata.
+        // In a full production app, we'd store Blobs in IndexedDB.
+        await OfflineSyncService.queue('CREATE_REPORT', data);
+        return { offline: true };
+      }
+
       // 1. Upload images if any
       let imageUrls: string[] = [];
       if (images.length > 0) {
@@ -154,7 +164,18 @@ export default function LostFound() {
 
       return { report };
     },
-    onSuccess: (res) => {
+    onSuccess: (res: any) => {
+      // Handle offline case
+      if (res.offline) {
+        toast({
+          title: "Offline Mode",
+          description: "Your report has been queued and will be submitted automatically when you're back online.",
+        });
+        setOpenDialog(false);
+        form.reset();
+        return;
+      }
+
       // Invalidate and refetch reports
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });

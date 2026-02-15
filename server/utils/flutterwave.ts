@@ -189,6 +189,33 @@ export async function verifyTransaction(transactionId: string): Promise<Flutterw
     checkConfig();
     logger.info('Attempting to verify transaction', { transactionId });
 
+    // Mock mode for testing
+    if (process.env.MOCK_PAYMENTS === 'true') {
+      logger.info('MOCK_PAYMENTS is enabled, returning successful mock response', { transactionId });
+      return {
+        status: 'success',
+        message: 'Transaction fetched successfully',
+        data: {
+          id: 123456,
+          tx_ref: transactionId,
+          flw_ref: `flw-mock-${Date.now()}`,
+          amount: 5000, // Default mock amount
+          currency: 'RWF',
+          charged_amount: 5000,
+          status: 'successful',
+          payment_type: 'card',
+          narration: 'Mock Payment',
+          customer: {
+            id: 999,
+            name: 'Mock User',
+            email: 'mock@example.com',
+            phone_number: '0780000000'
+          },
+          created_at: new Date().toISOString()
+        }
+      };
+    }
+
     // Input validation
     if (!transactionId) {
       logger.error('Invalid transaction ID provided', { transactionId });
@@ -267,6 +294,32 @@ export async function verifyTransaction(transactionId: string): Promise<Flutterw
 export async function initializePayment(paymentData: PaymentInitialization): Promise<FlutterwavePaymentResponse> {
   try {
     checkConfig();
+
+    // Mock mode for testing
+    if (process.env.MOCK_PAYMENTS === 'true') {
+      logger.info('MOCK_PAYMENTS is enabled, returning successful mock initialization');
+      return {
+        status: 'success',
+        message: 'Payment initialized',
+        data: {
+          link: `http://localhost:5000/mock-payment?tx_ref=${paymentData.tx_ref}`, // Fake link
+          id: 123456,
+          tx_ref: paymentData.tx_ref,
+          flw_ref: `flw-mock-${Date.now()}`,
+          amount: paymentData.amount,
+          currency: paymentData.currency,
+          charged_amount: paymentData.amount,
+          status: 'success',
+          payment_type: 'card',
+          customer: {
+            email: paymentData.customer.email,
+            name: paymentData.customer.name
+          },
+          created_at: new Date().toISOString()
+        }
+      };
+    }
+
     const response = await fetch('https://api.flutterwave.com/v3/payments', {
       method: 'POST',
       headers: {

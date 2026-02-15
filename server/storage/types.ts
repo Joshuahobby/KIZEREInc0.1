@@ -8,6 +8,7 @@ import {
   UserWarning, InsertUserWarning, PaymentPackage, InsertPaymentPackage,
   Claim, InsertClaim, ClaimAppeal, InsertClaimAppeal, ClaimStatusLog, InsertClaimStatusLog,
   Chat, InsertChat, Message, InsertMessage,
+  PushSubscription, InsertPushSubscription,
   AccountStatus, VerificationStatus, PaymentType
 } from "@shared/schema";
 
@@ -101,6 +102,12 @@ export interface IStorage {
   getNotification(id: number): Promise<Notification | undefined>;
   getUserNotifications(userId: number): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
+  markNotificationAsRead(id: number): Promise<Notification | undefined>;
+
+  // Push Subscription methods
+  createPushSubscription(subscription: InsertPushSubscription): Promise<PushSubscription>;
+  getUserPushSubscriptions(userId: number): Promise<PushSubscription[]>;
+  deletePushSubscription(endpoint: string): Promise<void>;
 
   // Claim methods
   getClaim(id: number): Promise<Claim | undefined>;

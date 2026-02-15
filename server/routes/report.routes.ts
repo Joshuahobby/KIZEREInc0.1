@@ -224,7 +224,14 @@ router.get("/matches/:id", async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const matches = await storage.findPotentialMatches(id);
+    // Use the matching service for consistent scoring
+    const matchResults = await ReportMatchingService.findPotentialMatches(report);
+
+    // Map to expected format (flattening the candidate and adding matchScore)
+    const matches = matchResults.map(m => ({
+      ...m.candidate,
+      matchScore: m.score
+    }));
 
     // Sanitize contact info in matches
     const sanitizedMatches = matches.map(match => ({

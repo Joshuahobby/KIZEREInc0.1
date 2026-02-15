@@ -4,7 +4,7 @@ import { Express } from "express";
 import session from "express-session";
 import { randomBytes } from "crypto";
 import { storage } from "./storage";
-import { User, User as SelectUser } from "@shared/schema";
+import { User as SchemaUser, User as SelectUser } from "@shared/schema";
 import { env } from "./config";
 import { UserService } from "./services/user.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
@@ -13,7 +13,10 @@ import { sendWelcomeEmail } from "./services/email.service";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser { }
+    interface User extends SelectUser {
+      preferences: any;
+      customPermissions: string[] | null;
+    }
   }
 }
 
@@ -131,7 +134,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/auth/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: User | false, info: any) => {
+    passport.authenticate("local", (err: any, user: SelectUser | false, info: any) => {
       if (err) return next(err);
       if (!user) {
         return res.status(401).json({ message: "Invalid username or password" });

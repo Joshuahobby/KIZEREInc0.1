@@ -8,6 +8,7 @@ import { useLanguage } from "../lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DashboardSkeleton } from "@/components/ui/skeleton-loader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard } from "@/components/dashboard/stats-card";
@@ -239,18 +240,7 @@ export default function UnifiedDashboard() {
   const renderDashboardContent = () => {
     // Show loading state
     if (isLoading || !userStats) {
-      return (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-8 w-1/2 mb-2" />
-                <Skeleton className="h-12 w-3/4" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      );
+      return <DashboardSkeleton />;
     }
 
     // Subscriber and default view

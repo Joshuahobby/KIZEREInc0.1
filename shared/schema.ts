@@ -86,8 +86,8 @@ export const users = pgTable("users", {
   country: text("country"),
   postalCode: text("postal_code"),
   bio: text("bio"),
-  preferences: json("preferences"),
-  customPermissions: json("custom_permissions"),
+  preferences: json("preferences").$type<UserPreferences>(),
+  customPermissions: json("custom_permissions").$type<string[]>(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
   recoveryEmail: text("recovery_email"),
   notes: text("admin_notes"),
@@ -523,70 +523,6 @@ export const insertPaymentPackageSchema = createInsertSchema(paymentPackages).om
   features: z.array(z.string()).optional().default([])
 });
 
-// Types
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type InsertItem = z.infer<typeof insertItemSchema>;
-export type InsertReport = z.infer<typeof insertReportSchema>;
-export type InsertNotification = z.infer<typeof insertNotificationSchema>;
-export type InsertPayment = z.infer<typeof insertPaymentSchema>;
-export type InsertPayout = z.infer<typeof insertPayoutSchema>;
-export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
-export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
-export type InsertAdminActionLog = z.infer<typeof insertAdminActionLogSchema>;
-export type InsertRole = z.infer<typeof insertRoleSchema>;
-export type InsertVerificationRequest = z.infer<typeof insertVerificationRequestSchema>;
-export type InsertStatusChange = z.infer<typeof insertStatusChangeSchema>;
-export type InsertUserWarning = z.infer<typeof insertUserWarningSchema>;
-export type InsertPaymentPackage = z.infer<typeof insertPaymentPackageSchema>;
-export type InsertClaim = z.infer<typeof insertClaimSchema>;
-export type InsertChat = z.infer<typeof insertChatSchema>;
-export type InsertMessage = z.infer<typeof insertMessageSchema>;
-
-export type User = typeof users.$inferSelect;
-export type Item = typeof items.$inferSelect;
-export type Report = typeof reports.$inferSelect;
-export type Notification = typeof notifications.$inferSelect;
-export type Payment = typeof payments.$inferSelect;
-export type Payout = typeof payouts.$inferSelect;
-export type PaymentMethod = typeof paymentMethods.$inferSelect;
-export type UserActivityLog = typeof userActivityLogs.$inferSelect;
-export type AdminActionLog = typeof adminActionLogs.$inferSelect;
-export type Role = typeof roles.$inferSelect;
-export type VerificationRequest = typeof verificationRequests.$inferSelect;
-export type StatusChange = typeof statusChanges.$inferSelect;
-export type UserWarning = typeof userWarnings.$inferSelect;
-export type PaymentPackage = typeof paymentPackages.$inferSelect;
-export type Claim = typeof claims.$inferSelect;
-export type Chat = typeof chats.$inferSelect;
-export type Message = typeof messages.$inferSelect;
-
-export type UserLogin = z.infer<typeof userLoginSchema>;
-export type UserRole = typeof userRoles[number];
-export type AccountStatus = typeof accountStatuses[number];
-export type VerificationStatus = typeof verificationStatuses[number];
-export type ActivityLevel = typeof activityLevels[number];
-export type ItemCategory = typeof itemCategories[number];
-export type ItemStatus = typeof itemStatuses[number];
-export type ReportStatus = typeof reportStatuses[number];
-export type PermissionType = typeof permissionTypes[number];
-export type PaymentStatus = typeof paymentStatuses[number];
-export type PaymentType = typeof paymentTypes[number];
-export type PackageStatus = typeof packageStatuses[number];
-export type ClaimStatus = typeof claimStatuses[number];
-
-// Payment validation schemas
-export const initiatePaymentSchema = z.object({
-  amount: z.number().positive("Amount must be positive").optional(),
-  type: z.enum(paymentTypes, {
-    errorMap: () => ({ message: "Payment type must be either 'registration', 'lost_report', or 'bounty'" })
-  }),
-  packageId: z.number().optional(),
-  itemId: z.number().optional(),
-  reportId: z.number().optional(),
-  redirectUrl: z.string().optional(),
-  metadata: z.record(z.any()).optional()
-});
-
 // Moderation schemas
 export const reportReasons = ['spam', 'scam', 'wrong_category', 'inappropriate', 'fraudulent', 'harassment'] as const;
 export const reportModerationStatuses = ['pending', 'reviewed', 'resolved', 'dismissed'] as const;
@@ -621,10 +557,6 @@ export const insertModerationReportSchema = createInsertSchema(moderationReports
   description: z.string().optional(),
 });
 
-export type InsertModerationReport = z.infer<typeof insertModerationReportSchema>;
-export type ModerationReport = typeof moderationReports.$inferSelect;
-export type ReportReason = typeof reportReasons[number];
-export type ModerationStatus = typeof reportModerationStatuses[number];
 // Claim appeals table
 export const claimAppeals = pgTable("claim_appeals", {
   id: serial("id").primaryKey(),
@@ -666,7 +598,132 @@ export const insertClaimStatusLogSchema = createInsertSchema(claimStatusLogs).om
   timestamp: true
 });
 
-export type ClaimAppeal = typeof claimAppeals.$inferSelect;
+// ===================== Audit Logs =====================
+
+export const auditActionTypes = [
+  'user_create', 'user_update', 'user_delete', 'user_ban', 'user_role_change',
+  'role_create', 'role_update', 'role_delete',
+  'item_approve', 'item_delete', 'item_update',
+  'report_resolve', 'report_delete',
+  'claim_approve', 'claim_reject', 'claim_appeal_resolve',
+  'payment_process', 'payment_refund',
+  'system_setting_change', 'login', 'logout'
+] as const;
+
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id),
+  action: text("action").notNull(),
+  entityType: text("entity_type"), // 'user', 'role', 'item', 'report', 'claim', 'payment'
+  entityId: text("entity_id"), // ID of the affected entity (string to support any ID type)
+  metadata: json("metadata"), // Additional context (old/new values, etc.)
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("audit_user_idx").on(table.userId),
+  index("audit_action_idx").on(table.action),
+  index("audit_created_idx").on(table.createdAt),
+]);
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+// ===================== Web Push Subscriptions =====================
+
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("push_sub_user_idx").on(table.userId)
+]);
+
+export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Types and Schemas Exports
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertItem = z.infer<typeof insertItemSchema>;
+export type InsertReport = z.infer<typeof insertReportSchema>;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type InsertPayout = z.infer<typeof insertPayoutSchema>;
+export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
+export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
+export type InsertAdminActionLog = z.infer<typeof insertAdminActionLogSchema>;
+export type InsertRole = z.infer<typeof insertRoleSchema>;
+export type InsertVerificationRequest = z.infer<typeof insertVerificationRequestSchema>;
+export type InsertStatusChange = z.infer<typeof insertStatusChangeSchema>;
+export type InsertUserWarning = z.infer<typeof insertUserWarningSchema>;
+export type InsertPaymentPackage = z.infer<typeof insertPaymentPackageSchema>;
+export type InsertClaim = z.infer<typeof insertClaimSchema>;
+export type InsertChat = z.infer<typeof insertChatSchema>;
+export type InsertMessage = z.infer<typeof insertMessageSchema>;
+export type InsertModerationReport = z.infer<typeof insertModerationReportSchema>;
 export type InsertClaimAppeal = z.infer<typeof insertClaimAppealSchema>;
-export type ClaimStatusLog = typeof claimStatusLogs.$inferSelect;
 export type InsertClaimStatusLog = z.infer<typeof insertClaimStatusLogSchema>;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
+
+export type User = typeof users.$inferSelect;
+export type Item = typeof items.$inferSelect;
+export type Report = typeof reports.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
+export type Payment = typeof payments.$inferSelect;
+export type Payout = typeof payouts.$inferSelect;
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type UserActivityLog = typeof userActivityLogs.$inferSelect;
+export type AdminActionLog = typeof adminActionLogs.$inferSelect;
+export type Role = typeof roles.$inferSelect;
+export type VerificationRequest = typeof verificationRequests.$inferSelect;
+export type StatusChange = typeof statusChanges.$inferSelect;
+export type UserWarning = typeof userWarnings.$inferSelect;
+export type PaymentPackage = typeof paymentPackages.$inferSelect;
+export type Claim = typeof claims.$inferSelect;
+export type Chat = typeof chats.$inferSelect;
+export type Message = typeof messages.$inferSelect;
+export type ModerationReport = typeof moderationReports.$inferSelect;
+export type ClaimAppeal = typeof claimAppeals.$inferSelect;
+export type ClaimStatusLog = typeof claimStatusLogs.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+
+export type UserLogin = z.infer<typeof userLoginSchema>;
+export type UserRole = typeof userRoles[number];
+export type AccountStatus = typeof accountStatuses[number];
+export type VerificationStatus = typeof verificationStatuses[number];
+export type ActivityLevel = typeof activityLevels[number];
+export type ItemCategory = typeof itemCategories[number];
+export type ItemStatus = typeof itemStatuses[number];
+export type ReportStatus = typeof reportStatuses[number];
+export type PermissionType = typeof permissionTypes[number];
+export type PaymentStatus = typeof paymentStatuses[number];
+export type PaymentType = typeof paymentTypes[number];
+export type PackageStatus = typeof packageStatuses[number];
+export type ClaimStatus = typeof claimStatuses[number];
+export type ReportReason = typeof reportReasons[number];
+export type ModerationStatus = typeof reportModerationStatuses[number];
+
+// Payment validation schemas
+export const initiatePaymentSchema = z.object({
+  amount: z.number().positive("Amount must be positive").optional(),
+  type: z.enum(paymentTypes, {
+    errorMap: () => ({ message: "Payment type must be either 'registration', 'lost_report', or 'bounty'" })
+  }),
+  packageId: z.number().optional(),
+  itemId: z.number().optional(),
+  reportId: z.number().optional(),
+  redirectUrl: z.string().optional(),
+  metadata: z.record(z.any()).optional()
+});

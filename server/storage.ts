@@ -146,6 +146,11 @@ export class DatabaseStorage implements IStorage {
   createNotification = notificationOps.createNotification;
   markNotificationAsRead = notificationOps.markNotificationAsRead;
 
+  // Push Subscription methods
+  createPushSubscription = notificationOps.createPushSubscription;
+  getUserPushSubscriptions = notificationOps.getUserPushSubscriptions;
+  deletePushSubscription = notificationOps.deletePushSubscription;
+
   // Payment methods
   getPayment = paymentOps.getPayment;
   getPaymentByTransactionRef = paymentOps.getPaymentByTransactionRef;

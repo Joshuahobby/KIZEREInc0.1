@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { QuickActionMenu } from "@/components/dashboard/quick-action-menu";
@@ -36,7 +36,8 @@ import {
   HelpCircle,
   Filter,
   X,
-  PackageIcon
+  PackageIcon,
+  Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -66,8 +67,10 @@ import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-s
 import { AuthService } from "@/services/auth.service";
 import { UserPreferences } from "@shared/schema";
 import { GlobalSearch } from "@/components/dashboard/global-search";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSocket } from "@/hooks/use-socket";
 
 
 interface AppLayoutProps {
@@ -89,6 +92,24 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const { onEvent } = useSocket();
+
+  // Fetch unread notification count
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ["/api/notifications/unread-count"],
+    enabled: !!user,
+    refetchInterval: 60000, // fallback polling every 60s
+  });
+  const unreadCount = unreadData?.count ?? 0;
+
+  // Real-time: invalidate unread count when a notification arrives
+  useEffect(() => {
+    const cleanup = onEvent("notification:new", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+    });
+    return cleanup;
+  }, [onEvent, queryClient]);
 
   // Check roles
   const isAdmin = user?.role === "Admin";
@@ -149,13 +170,21 @@ export function AppLayout({ children }: AppLayoutProps) {
     // Management (Admin/Agent)
     if (isAdmin || isAgent) {
       items.push({ title: "User Directory", href: "/admin/users", icon: <Users className="h-5 w-5" /> });
+      if (isAdmin) {
+        items.push({ title: "Client Management", href: "/admin/clients", icon: <Briefcase className="h-5 w-5" /> });
+      }
       items.push({ title: "Identity Verification", href: "/admin/user-verification", icon: <BookCheck className="h-5 w-5" /> });
       items.push({ title: "Moderation Queue", href: "/dashboard?tab=moderation", icon: <Shield className="h-5 w-5" /> });
+      if (isAdmin) {
+        items.push({ title: "Reports & Analytics", href: "/admin/analytics", icon: <BarChart3 className="h-5 w-5" /> });
+        items.push({ title: "Roles & Permissions", href: "/admin/roles", icon: <Shield className="h-5 w-5" /> });
+        items.push({ title: "Audit Logs", href: "/admin/audit-logs", icon: <FileText className="h-5 w-5" /> });
+      }
     }
 
     // Finance (Admin/Subscriber)
     if (isSubscriber || isAdmin) {
-      items.push({ title: isAdmin ? "Financial Insights" : "My Payments", href: isAdmin ? "/admin/payment-dashboard" : "/dashboard?tab=payments", icon: <CreditCard className="h-5 w-5" /> });
+      items.push({ title: isAdmin ? "Financial Insights" : "My Wallet", href: isAdmin ? "/admin/payment-dashboard" : "/wallet", icon: isAdmin ? <CreditCard className="h-5 w-5" /> : <Wallet className="h-5 w-5" /> });
       items.push({ title: "Pricing Plans", href: "/admin/payment-packages", icon: <PackageIcon className="h-5 w-5" /> });
     }
 
@@ -317,7 +346,11 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" className="relative">
                     <Bell className="h-5 w-5" />
-                    <span className="absolute top-1 right-1 flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-background"></span>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white px-1 ring-2 ring-background">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Notifications</TooltipContent>

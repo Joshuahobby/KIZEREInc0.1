@@ -25,13 +25,13 @@ router.get("/users", async (req, res) => {
     const activityLevel = req.query.activityLevel as string || "";
     const sortBy = req.query.sortBy as string || "createdAt";
     const sortOrder = (req.query.sortOrder as "asc" | "desc") || "desc";
-    
+
     let startDate: Date | undefined;
     let endDate: Date | undefined;
-    
+
     if (req.query.startDate) startDate = new Date(req.query.startDate as string);
     if (req.query.endDate) endDate = new Date(req.query.endDate as string);
-    
+
     const result = await storage.getUsersWithFilters({
       page,
       pageSize,
@@ -45,7 +45,7 @@ router.get("/users", async (req, res) => {
       sortBy,
       sortOrder
     });
-    
+
     res.json(result);
   } catch (error) {
     logger.error("Error getting filtered users:", error);
@@ -58,18 +58,18 @@ router.get("/users/export", async (req, res) => {
   try {
     const format = (req.query.format as 'csv' | 'excel') || 'csv';
     const filters: any = {};
-    
+
     if (req.query.search) filters.search = req.query.search as string;
     if (req.query.role) filters.role = req.query.role as string;
     if (req.query.status) filters.status = req.query.status as string;
     if (req.query.verificationStatus) filters.verificationStatus = req.query.verificationStatus as string;
     if (req.query.activityLevel) filters.activityLevel = req.query.activityLevel as string;
-    
+
     if (req.query.startDate) filters.startDate = new Date(req.query.startDate as string);
     if (req.query.endDate) filters.endDate = new Date(req.query.endDate as string);
-    
+
     const csvData = await storage.exportUsers(format, filters);
-    
+
     if (format === 'csv') {
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename=users-export.csv');
@@ -77,7 +77,7 @@ router.get("/users/export", async (req, res) => {
       res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       res.setHeader('Content-Disposition', 'attachment; filename=users-export.xlsx');
     }
-    
+
     res.send(csvData);
   } catch (error) {
     logger.error("Error exporting users:", error);
@@ -104,12 +104,12 @@ router.patch("/users/:id/status", async (req, res) => {
     const userId = parseInt(req.params.id);
     const { status, reason } = req.body;
     const adminId = req.user!.id;
-    
+
     const user = await storage.getUser(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-    
+
     const statusChange = await storage.updateUserStatus(userId, status, reason);
-    
+
     await storage.createAdminActionLog({
       adminId,
       targetUserId: userId,
@@ -117,7 +117,7 @@ router.patch("/users/:id/status", async (req, res) => {
       previousState: { status: user.status || 'active' },
       newState: { status }
     });
-    
+
     res.json({ success: true, statusChange });
   } catch (error) {
     logger.error("Error updating user status:", error);
@@ -131,12 +131,12 @@ router.patch("/users/:id/role", async (req, res) => {
     const userId = parseInt(req.params.id);
     const { role } = req.body;
     const adminId = req.user!.id;
-    
+
     const user = await storage.getUser(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-    
+
     const updatedUser = await storage.updateUserRole(userId, role);
-    
+
     await storage.createAdminActionLog({
       adminId,
       targetUserId: userId,
@@ -144,7 +144,7 @@ router.patch("/users/:id/role", async (req, res) => {
       previousState: { role: user.role || 'Subscriber' },
       newState: { role }
     });
-    
+
     res.json({ success: true, user: updatedUser });
   } catch (error) {
     logger.error("Error updating user role:", error);
@@ -186,16 +186,28 @@ router.get("/users/:id/warnings", async (req, res) => {
   }
 });
 
+// Get user payments
+router.get("/users/:id/payments", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const payments = await storage.getUserPayments(userId);
+    res.json(payments);
+  } catch (error) {
+    logger.error("Error getting user payments:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 // Create user warning
 router.post("/users/:id/warnings", async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const { warningType, severity, message } = req.body;
     const adminId = req.user!.id;
-    
+
     const user = await storage.getUser(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-    
+
     const warning = await storage.createUserWarning({
       userId,
       warningType,
@@ -203,12 +215,12 @@ router.post("/users/:id/warnings", async (req, res) => {
       message,
       issuedBy: adminId
     });
-    
-    await storage.updateUser(userId, { 
+
+    await storage.updateUser(userId, {
       warningCount: (user.warningCount || 0) + 1,
       updatedAt: new Date()
     });
-    
+
     await storage.createAdminActionLog({
       adminId,
       targetUserId: userId,
@@ -217,7 +229,7 @@ router.post("/users/:id/warnings", async (req, res) => {
       newState: { warningCount: (user.warningCount || 0) + 1 },
       reason: message
     });
-    
+
     res.json({ success: true, warning });
   } catch (error) {
     logger.error("Error creating warning:", error);
@@ -230,13 +242,13 @@ router.post("/users", async (req, res) => {
   try {
     const { fullName, email, username, password, role, phoneNumber, status, verificationStatus } = req.body;
     const adminId = req.user!.id;
-    
+
     if (await storage.getUserByUsername(username)) return res.status(400).json({ message: "Username already exists" });
     if (await storage.getUserByEmail(email)) return res.status(400).json({ message: "Email already exists" });
-    
+
     // Harmonized hashing
     const hashedPassword = await hashPassword(password);
-    
+
     const newUser = await storage.createUser({
       fullName,
       username,
@@ -250,7 +262,7 @@ router.post("/users", async (req, res) => {
       activityLevel: 'low',
       preferences: {}
     });
-    
+
     await storage.createAdminActionLog({
       adminId,
       targetUserId: newUser.id,
@@ -258,7 +270,7 @@ router.post("/users", async (req, res) => {
       newState: { fullName, email, role },
       reason: `Created by admin ${adminId}`
     });
-    
+
     const { password: _, ...userResponse } = newUser;
     res.status(201).json({ user: userResponse, success: true });
   } catch (error) {
@@ -295,11 +307,11 @@ router.patch("/verification-requests/:id", async (req, res) => {
     const requestId = parseInt(req.params.id);
     const { status, notes } = req.body;
     const adminId = req.user!.id;
-    
+
     const updatedRequest = await storage.updateVerificationRequestStatus(requestId, status, adminId, notes);
-    
+
     if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
-    
+
     if (status === 'approved') {
       await storage.updateUserVerificationStatus(updatedRequest.userId, 'approved');
       await storage.createAdminActionLog({
@@ -310,7 +322,7 @@ router.patch("/verification-requests/:id", async (req, res) => {
         reason: notes
       });
     }
-    
+
     res.json({ success: true, request: updatedRequest });
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -325,10 +337,10 @@ router.post("/items", async (req, res) => {
   try {
     const { name, category, description, ownerId, status, estimatedValue, lastKnownLocation, serialNumber, modelNumber } = req.body;
     if (!name || !category) return res.status(400).json({ message: "Name and category required" });
-    
+
     const uniqueIdentifier = `KZ-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`.toUpperCase();
     const userId = ownerId ? parseInt(ownerId) : req.user!.id;
-    
+
     const newItem = await storage.createItem({
       userId,
       name,
@@ -346,14 +358,14 @@ router.post("/items", async (req, res) => {
       },
       imageUrls: []
     });
-    
+
     await storage.createAdminActionLog({
       adminId: req.user!.id,
       action: 'item_create',
       targetUserId: userId,
       newState: newItem
     });
-    
+
     res.status(201).json({ success: true, item: newItem });
   } catch (error) {
     res.status(500).json({ message: "Failed to create item" });
@@ -366,9 +378,9 @@ router.patch("/items/:id/status", async (req, res) => {
     const { status } = req.body;
     const item = await storage.getItem(itemId);
     if (!item) return res.status(404).json({ message: "Item not found" });
-    
+
     const updatedItem = await storage.updateItem(itemId, { status });
-    
+
     await storage.createNotification({
       userId: item.userId,
       title: "Item Status Update",
@@ -377,7 +389,7 @@ router.patch("/items/:id/status", async (req, res) => {
       isRead: false,
       relatedItemId: itemId
     });
-    
+
     res.json(updatedItem);
   } catch (error) {
     res.status(500).json({ message: "Failed to update status" });
@@ -389,16 +401,16 @@ router.delete("/items/:id", async (req, res) => {
     const itemId = parseInt(req.params.id);
     const item = await storage.getItem(itemId);
     if (!item) return res.status(404).json({ message: "Item not found" });
-    
+
     await storage.deleteItem(itemId);
-    
+
     await storage.createAdminActionLog({
       adminId: req.user!.id,
       action: 'item_delete',
       targetUserId: item.userId,
       previousState: item
     });
-    
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ message: "Failed to delete item" });
@@ -441,9 +453,9 @@ router.patch("/reports/:id/status", async (req, res) => {
     const { status, notes } = req.body;
     const report = await storage.getReport(reportId);
     if (!report) return res.status(404).json({ message: "Report not found" });
-    
+
     const updated = await storage.updateReport(reportId, { status: status as any });
-    
+
     await storage.createNotification({
       userId: report.userId,
       title: `Report Status Updated: ${status}`,
@@ -452,7 +464,7 @@ router.patch("/reports/:id/status", async (req, res) => {
       isRead: false,
       relatedReportId: reportId
     });
-    
+
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: "Failed to update report" });
@@ -463,9 +475,9 @@ router.get("/reports/:id", async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
     const reportData = await storage.getReportWithRelatedData(reportId);
-    
+
     if (!reportData) return res.status(404).json({ message: "Report not found" });
-    
+
     res.json(reportData);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch report" });
@@ -491,7 +503,7 @@ router.get("/payments/summary", async (req, res) => {
   try {
     const allPayments = await storage.getAllPayments();
     const successful = allPayments.filter(p => p.status === 'successful');
-    
+
     res.json({
       totalRevenue: successful.reduce((sum, p) => sum + Number(p.amount), 0),
       successfulTransactions: successful.length,
@@ -509,12 +521,12 @@ router.get("/payments", async (req, res) => {
       pageSize: parseInt(req.query.pageSize as string) || 10,
       status: req.query.status as string,
     });
-    
+
     const transactions = await Promise.all(result.payments.map(async p => {
       const user = await storage.getUser(p.userId);
       return { ...p, username: user?.username || 'Unknown' };
     }));
-    
+
     res.json({ transactions, total: result.total });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch transactions" });
@@ -539,10 +551,10 @@ router.post("/payment-packages", async (req, res) => {
   try {
     const newPackage = await storage.createPaymentPackage(req.body);
     await storage.createAdminActionLog({
-        adminId: req.user!.id,
-        action: 'package_create',
-        newState: newPackage,
-        targetUserId: req.user!.id 
+      adminId: req.user!.id,
+      action: 'package_create',
+      newState: newPackage,
+      targetUserId: req.user!.id
     });
     res.status(201).json(newPackage);
   } catch (error) {
@@ -557,14 +569,14 @@ router.patch("/payment-packages/:id", async (req, res) => {
     const pkgId = parseInt(req.params.id);
     const updated = await storage.updatePaymentPackage(pkgId, req.body);
     if (!updated) return res.status(404).json({ message: "Package not found" });
-    
+
     await storage.createAdminActionLog({
-        adminId: req.user!.id,
-        action: 'package_update',
-        newState: updated,
-        targetUserId: req.user!.id
+      adminId: req.user!.id,
+      action: 'package_update',
+      newState: updated,
+      targetUserId: req.user!.id
     });
-    
+
     res.json(updated);
   } catch (error) {
     logger.error("Failed to update package", error);
@@ -578,17 +590,17 @@ router.delete("/payment-packages/:id", async (req, res) => {
     const pkgId = parseInt(req.params.id);
     const success = await storage.deletePaymentPackage(pkgId);
     if (!success) return res.status(404).json({ message: "Package not found" });
-    
+
     await storage.createAdminActionLog({
-        adminId: req.user!.id,
-        action: 'package_delete',
-        previousState: { id: pkgId },
-        targetUserId: req.user!.id
+      adminId: req.user!.id,
+      action: 'package_delete',
+      previousState: { id: pkgId },
+      targetUserId: req.user!.id
     });
-    
+
     res.json({ success: true });
   } catch (error) {
-     logger.error("Failed to delete package", error);
+    logger.error("Failed to delete package", error);
     res.status(500).json({ message: "Delete failed" });
   }
 });

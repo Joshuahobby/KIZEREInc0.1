@@ -337,6 +337,7 @@ export default {
   sendMatchNotificationEmail,
   sendExpirationEmail,
   sendFoundNotificationEmail,
+  sendAppealUpdateEmail,
 };
 
 /**
@@ -414,6 +415,61 @@ export async function sendMatchNotificationEmail(
           <a href="${process.env.APP_URL || 'https://kizere.com'}/report/${matchId}" 
              style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             View Match
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>© ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Send claim appeal update email
+ */
+export async function sendAppealUpdateEmail(
+  email: string,
+  userName: string,
+  itemTitle: string,
+  decision: 'approved' | 'rejected',
+  adminNotes?: string
+): Promise<boolean> {
+  const isApproved = decision === 'approved';
+  const statusColor = isApproved ? '#22c55e' : '#ef4444';
+  const statusText = isApproved ? 'Approved' : 'Rejected';
+  const emoji = isApproved ? '🎉' : '🛡️';
+
+  return sendEmail({
+    to: email,
+    subject: `Claim Appeal ${statusText} - ${itemTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: ${statusColor}; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Appeal ${statusText} ${emoji}</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Your appeal for the rejected claim on <strong>${itemTitle}</strong> has been <strong>${decision}</strong> by our administration team.
+          </p>
+          ${adminNotes ? `
+            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
+              <p style="margin: 0; color: #4b5563;"><strong>Admin Notes:</strong> ${adminNotes}</p>
+            </div>
+          ` : ''}
+          ${isApproved ? `
+            <p style="color: #4b5563; line-height: 1.6;">
+              Your claim status has been reset to <strong>Pending</strong>, and the finder has been notified to re-evaluate your claim or proceed with verification.
+            </p>
+          ` : `
+            <p style="color: #4b5563; line-height: 1.6;">
+              This decision is final. If you have further questions, please contact our support team.
+            </p>
+          `}
+          <a href="${process.env.APP_URL || 'https://kizere.com'}/dashboard?tab=claims" 
+             style="display: inline-block; background: ${statusColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
+            View Claim Status
           </a>
         </div>
         <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">

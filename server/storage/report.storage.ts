@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { eq, like, and, or, desc, asc, sql } from "drizzle-orm";
+import { eq, like, and, or, desc, asc, sql, inArray } from "drizzle-orm";
 import {
   reports, type Report, type InsertReport, users, items, type User, type Item, payments, type Payment, type InsertPayment,
   paymentMethods, type PaymentMethod, type InsertPaymentMethod,
@@ -22,8 +22,14 @@ export async function createReport(report: InsertReport): Promise<Report> {
   const randomStr = Math.random().toString(36).substring(2, 7).toUpperCase();
   const receiptNumber = report.receiptNumber || `${prefix}-${randomStr}`;
 
+  if (!report.userId) {
+    throw new Error("User ID is required to create a report");
+  }
+
   const [newReport] = await db.insert(reports).values({
     ...report,
+    userId: report.userId,
+    bountyAmount: report.bountyAmount ? report.bountyAmount.toString() : undefined,
     receiptNumber
   }).returning();
   return newReport;
@@ -77,8 +83,27 @@ export async function getReportsWithFilters(options: {
 
   // Basic filters
   if (type) conditions.push(eq(reports.type, type));
-  if (status) conditions.push(eq(reports.status, status));
-  if (category && category !== 'All Categories') conditions.push(eq(reports.category, category));
+
+  // Status filter (support single or comma-separated list)
+  if (status) {
+    const statuses = status.split(',').map(s => s.trim());
+    if (statuses.length > 1) {
+      conditions.push(inArray(reports.status, statuses));
+    } else {
+      conditions.push(eq(reports.status, statuses[0]));
+    }
+  }
+
+  // Category filter (support single or comma-separated list)
+  if (category && category !== 'All Categories') {
+    const categories = category.split(',').map(c => c.trim());
+    if (categories.length > 1) {
+      conditions.push(inArray(reports.category, categories));
+    } else {
+      conditions.push(eq(reports.category, categories[0]));
+    }
+  }
+
   if (dateRange) conditions.push(and(sql`${reports.date} >= ${dateRange.start}`, sql`${reports.date} <= ${dateRange.end}`));
 
   if (dateFilter) {
