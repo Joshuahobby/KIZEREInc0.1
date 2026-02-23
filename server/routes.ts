@@ -111,6 +111,7 @@ import adminJobsRoutes from './routes/admin-jobs.routes';
 import chatRoutes from './routes/chat.routes';
 import rolesRoutes from './routes/roles';
 import auditRoutes from './routes/audit.routes';
+import resendWebhookRoutes from './routes/resend.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -137,6 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/search', requireAuth, searchRoutes);
   app.use('/api/dashboard', requireAuth, dashboardRoutes);
   app.use('/api/chats', requireAuth, chatRoutes);
+  app.use('/api/webhooks/resend', resendWebhookRoutes);
 
   // Health check endpoint
   app.get("/api/health", async (req, res) => {
