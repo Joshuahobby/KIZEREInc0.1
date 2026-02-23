@@ -20,7 +20,7 @@ export function useSocket() {
 
         const socket = io(window.location.origin, {
             path: "/ws",
-            transports: ["websocket", "polling"],
+            transports: ["polling", "websocket"],
             withCredentials: true,
             reconnection: true,
             reconnectionAttempts: 5,

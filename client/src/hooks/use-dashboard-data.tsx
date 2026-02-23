@@ -86,8 +86,8 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
   });
 
   const { data: myClaims = [], isLoading: myClaimsLoading } = useQuery({
-    queryKey: ['/api/claims'],
-    queryFn: async () => await apiRequest('/api/claims'),
+    queryKey: ['/api/claims/my-claims'],
+    queryFn: async () => await apiRequest('/api/claims/my-claims'),
     enabled: !!user,
     refetchInterval: refreshInterval
   });
