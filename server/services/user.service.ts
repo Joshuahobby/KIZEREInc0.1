@@ -35,9 +35,9 @@ export class UserService {
     try {
       logger.info('Getting user by email', { email });
       return await userRepository.findByEmail(email);
-    } catch (error) {
+    } catch (error: any) {
       logger.error('Error getting user by email', { email, error });
-      throw new DatabaseError('Failed to retrieve user by email');
+      throw new DatabaseError(`Failed to retrieve user by email: ${error.message}`);
     }
   }
 
