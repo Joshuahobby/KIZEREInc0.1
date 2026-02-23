@@ -267,7 +267,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Find or Create User
+      logger.info('Finding or creating user for email', { email });
       let user = await UserService.getUserByEmail(email);
+      logger.info('User lookup result', { exists: !!user, email });
 
       if (!user) {
         try {
@@ -311,6 +313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Initial login establishes the session in memory/store
+      logger.info('Attempting passport login', { userId: user.id });
       req.login(user, (err) => {
         if (err) {
           logger.error('Passport login error', { userId: user!.id, error: err });
@@ -320,6 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // CRITICAL: Explicitly save the session before responding
         // This ensures the session is written to the store (e.g. Postgres) 
         // before the Vercel serverless function freezes/terminates.
+        logger.info('Passport login successful, saving session', { userId: user!.id });
         req.session.save((saveErr) => {
           if (saveErr) {
             logger.error('Session save error', { error: saveErr });
@@ -341,7 +345,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(500).json({
         message: "Internal authentication error",
-        debug_error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        technical_details: error.message,
+        error_stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   });

@@ -12,6 +12,7 @@ if (!admin.apps.length) {
   try {
     // Check if Firebase project ID is available
     const projectId = env.FIREBASE_PROJECT_ID;
+    logger.info('Firebase initialization started', { projectId });
 
     // Check for service account credentials (required for production token verification)
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
@@ -20,6 +21,10 @@ if (!admin.apps.length) {
       try {
         // Parse and use service account credentials
         const serviceAccount = JSON.parse(serviceAccountJson);
+        logger.info('FIREBASE_SERVICE_ACCOUNT parsed successfully', {
+          project_id: serviceAccount.project_id,
+          client_email: serviceAccount.client_email
+        });
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount),
           projectId: serviceAccount.project_id || projectId,
