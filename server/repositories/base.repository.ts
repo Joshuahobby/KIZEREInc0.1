@@ -33,9 +33,9 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
         .limit(1);
 
       return results.length > 0 ? results[0] as T : undefined;
-    } catch (error: any) {
+    } catch (error) {
       logger.error(`Error finding ${this.tableName} by ID`, { id, error });
-      throw new DatabaseError(`Failed to retrieve ${this.tableName}: ${error.message}`);
+      throw new DatabaseError(`Failed to retrieve ${this.tableName}`);
     }
   }
 
@@ -51,9 +51,9 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
         .select()
         .from(this.table)
         .where(eq(field, value)) as T[];
-    } catch (error: any) {
+    } catch (error) {
       logger.error(`Error finding ${this.tableName} by field`, { fieldName: (field as any).name, value, error });
-      throw new DatabaseError(`Failed to retrieve ${this.tableName} by field: ${error.message}`);
+      throw new DatabaseError(`Failed to retrieve ${this.tableName} by field`);
     }
   }
 
@@ -72,9 +72,9 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
         .limit(1);
 
       return results.length > 0 ? results[0] as T : undefined;
-    } catch (error: any) {
+    } catch (error) {
       logger.error(`Error finding ${this.tableName} by field`, { fieldName: (field as any).name, value, error });
-      throw new DatabaseError(`Failed to retrieve ${this.tableName} by field: ${error.message}`);
+      throw new DatabaseError(`Failed to retrieve ${this.tableName} by field`);
     }
   }
 
