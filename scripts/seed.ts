@@ -1,19 +1,23 @@
 import { db } from "../server/db";
-import { 
+import {
   users, items, reports, claims, verificationRequests, moderationReports,
   userRoles, itemCategories, reportStatuses, verificationStatuses,
-  claimStatuses, paymentPackages, notifications, payments, 
-  userActivityLogs, adminActionLogs, statusChanges, userWarnings
+  claimStatuses, paymentPackages, notifications, payments,
+  userActivityLogs, adminActionLogs, statusChanges, userWarnings,
+  chats, messages, payouts
 } from "../shared/schema";
 import { hashPassword } from "../server/utils/auth-crypto";
 import { sql } from "drizzle-orm";
 
 async function seed() {
-  console.log("🌱 Seeding database with realistic data...");
+  console.log("🌱 Seeding database with realistic Rwandan data...");
 
   try {
     // 1. Clear existing data (Order matters for foreign keys)
     console.log("🧹 Clearing existing data...");
+    await db.delete(messages);
+    await db.delete(chats);
+    await db.delete(payouts);
     await db.delete(moderationReports);
     await db.delete(notifications);
     await db.delete(claims);
@@ -29,270 +33,110 @@ async function seed() {
     await db.delete(users);
     console.log("✅ Cleared existing data");
 
-    // 2. Create Payment Packages (Tiered)
+    // 2. Create Payment Packages
     console.log("💳 Creating payment packages...");
-    
-    // Lost Report Packages
     await db.insert(paymentPackages).values([
-      {
-        name: "Standard",
-        description: "Standard report visibility",
-        type: "lost_report",
-        amount: "1000",
-        currency: "RWF",
-        status: "active",
-        isDefault: true,
-        features: ["7 days visibility", "Basic matching", "Email notification"]
-      },
-      {
-        name: "Premium",
-        description: "Enhanced matching and longer duration",
-        type: "lost_report",
-        amount: "3000",
-        currency: "RWF",
-        status: "active",
-        isDefault: false,
-        features: ["30 days visibility", "Priority matching", "WhatsApp alerts", "Ad-free experience"]
-      },
-      {
-        name: "Urgent",
-        description: "Immediate broadcast to all matching users",
-        type: "lost_report",
-        amount: "10000",
-        currency: "RWF",
-        status: "active",
-        isDefault: false,
-        features: ["90 days visibility", "Real-time push broadcasts", "Agent review priority", "Hero section feature"]
-      }
+      { name: "Standard", description: "7 days visibility", type: "lost_report", amount: "1000", currency: "RWF", status: "active", isDefault: true, features: ["Basic matching", "Email notification"] },
+      { name: "Premium", description: "30 days visibility", type: "lost_report", amount: "3000", currency: "RWF", status: "active", isDefault: false, features: ["Priority matching", "WhatsApp alerts"] },
+      { name: "Urgent", description: "90 days visibility", type: "lost_report", amount: "10000", currency: "RWF", status: "active", isDefault: false, features: ["Real-time push", "Home feature"] },
+      { name: "Single Item", description: "Register one item", type: "registration", amount: "2000", currency: "RWF", status: "active", isDefault: true, features: ["QR Code", "Digital Certificate"] }
     ]);
 
-    // Registration Packages
-    await db.insert(paymentPackages).values([
-      {
-        name: "Single Item",
-        description: "Register one valuable item",
-        type: "registration",
-        amount: "2000",
-        currency: "RWF",
-        status: "active",
-        isDefault: true,
-        features: ["Permanent registration", "Digital certificate", "Ownership protection"]
-      },
-      {
-        name: "Family Bundle",
-        description: "Register up to 5 items",
-        type: "registration",
-        amount: "7000",
-        currency: "RWF",
-        status: "active",
-        isDefault: false,
-        features: ["Up to 5 items", "Shared dashboard", "Reduced per-item cost"]
-      }
-    ]);
-    console.log("✅ Created payment packages");
-
-    // 2. Create Users
+    // 3. Create Users
     const password = await hashPassword("Password123!");
-    
+
+    console.log("👤 Creating users...");
     const [admin] = await db.insert(users).values({
-      fullName: "System Admin",
-      username: "admin",
-      email: "admin@kizere.com",
-      password: password,
-      role: "Admin",
-      status: "active",
-      verificationStatus: "approved"
+      fullName: "System Administrator", username: "admin", email: "admin@kizere.rw", password, role: "Admin", status: "active", verificationStatus: "approved"
     }).returning();
 
     const [agent] = await db.insert(users).values({
-      fullName: "Service Agent",
-      username: "agent",
-      email: "agent@kizere.com",
-      password: password,
-      role: "Agent",
-      status: "active",
-      verificationStatus: "approved"
-    }).returning();
-
-    const [moderator] = await db.insert(users).values({
-      fullName: "Moderator X",
-      username: "moderator",
-      email: "mod@kizere.com",
-      password: password,
-      role: "Moderator",
-      status: "active",
-      verificationStatus: "approved"
+      fullName: "Mugisha Eric", username: "mugisha", email: "mugisha@kizere.rw", password, role: "Agent", status: "active", verificationStatus: "approved", phoneNumber: "+250788111222"
     }).returning();
 
     const [john] = await db.insert(users).values({
-      fullName: "John Doe",
-      username: "john_doe",
-      email: "john@example.com",
-      password: password,
-      role: "Subscriber",
-      status: "active",
-      verificationStatus: "approved"
+      fullName: "John Uwase", username: "john_uwase", email: "john@kizere.rw", password, role: "Subscriber", status: "active", verificationStatus: "approved", phoneNumber: "+250788333444"
     }).returning();
 
-    const [jane] = await db.insert(users).values({
-      fullName: "Jane Smith",
-      username: "jane_smith",
-      email: "jane@example.com",
-      password: password,
-      role: "Subscriber",
-      status: "active",
-      verificationStatus: "pending"
+    const [keza] = await db.insert(users).values({
+      fullName: "Keza Diane", username: "keza_diane", email: "keza@example.rw", password, role: "Subscriber", status: "active", verificationStatus: "pending", phoneNumber: "+250788555666"
     }).returning();
 
-    const [businessUser] = await db.insert(users).values({
-      fullName: "Kizere Hotel Group",
-      username: "kizere_hotel",
-      email: "admin@kizerehotel.com",
-      password: password,
-      role: "Subscriber",
-      status: "active",
-      verificationStatus: "approved"
+    const [ganza] = await db.insert(users).values({
+      fullName: "Ganza Patrick", username: "ganza_p", email: "ganza@example.rw", password, role: "Subscriber", status: "active", verificationStatus: "approved", phoneNumber: "+250788777888"
     }).returning();
 
-    console.log("👤 Created users");
-
-    // 3. Create Verification Requests
-    await db.insert(verificationRequests).values({
-      userId: john.id,
-      documentType: "nid",
-      documentUrl: "https://res.cloudinary.com/demo/image/upload/v1624103192/sample.jpg",
-      selfieUrl: "https://res.cloudinary.com/demo/image/upload/v1624103192/sample.jpg",
-      status: "approved",
-      reviewedBy: admin.id,
-      reviewedAt: new Date()
-    });
-
-    await db.insert(verificationRequests).values({
-      userId: jane.id,
-      documentType: "passport",
-      documentUrl: "https://res.cloudinary.com/demo/image/upload/v1624103192/sample.jpg",
-      selfieUrl: "https://res.cloudinary.com/demo/image/upload/v1624103192/sample.jpg",
-      status: "pending"
-    });
-
-    console.log("🛡️ Created verification requests");
+    const [business] = await db.insert(users).values({
+      fullName: "Kigali Marriott Hotel", username: "marriott_kgl", email: "security@marriott.rw", password, role: "Business", status: "active", verificationStatus: "approved"
+    }).returning();
 
     // 4. Create Items
-    const [johnWallet] = await db.insert(items).values({
-      userId: john.id,
-      name: "Brown Leather Wallet",
-      category: "Wallets",
-      uniqueIdentifier: "WLT-7788",
-      description: "A brown leather wallet with some old receipts and a library card.",
-      status: "Lost",
-      location: "Kigali Heights"
+    console.log("📦 Creating items...");
+    const [laptop] = await db.insert(items).values({
+      userId: john.id, name: "MacBook Pro 14\"", category: "Electronics", uniqueIdentifier: "SN-MBP12345", description: "Silver, Space Gray shell case", status: "Lost", location: "Kacyiru"
     }).returning();
 
-    const [hotelItem1] = await db.insert(items).values({
-      userId: businessUser.id,
-      name: "Keys with Keychain",
-      category: "Keys",
-      uniqueIdentifier: "KEY-001",
-      description: "Found in Room 302",
-      status: "Found",
-      location: "Hotel Lobby"
+    const [phone] = await db.insert(items).values({
+      userId: keza.id, name: "Samsung S23 Ultra", category: "Phones", uniqueIdentifier: "IMEI-998877", description: "Green color, cracked screen protector", status: "Recovered", location: "Remera"
     }).returning();
-
-    console.log("📦 Created items");
 
     // 5. Create Reports
-    // John's Lost Report
-    const [johnLostReport] = await db.insert(reports).values({
-      userId: john.id,
-      itemId: johnWallet.id,
-      type: "lost",
-      category: "Wallets",
-      title: "Lost Brown Wallet at Kigali Heights",
-      description: "Lost my wallet yesterday at Kigali Heights. It's brown leather.",
-      location: "Kigali Heights, Entrance",
-      date: new Date(),
-      status: "Open",
-      receiptNumber: "LST-ABC12"
+    console.log("📋 Creating reports...");
+    const [lostLaptopReport] = await db.insert(reports).values({
+      userId: john.id, itemId: laptop.id, type: "lost", category: "Electronics", title: "Lost MacBook Pro in Kacyiru", description: "Left it at a coffee shop in Kacyiru yesterday.", location: "Kacyiru, Kigali", date: new Date(), status: "Open", receiptNumber: "L-1001", bountyAmount: "50000", bountyStatus: "escrowed"
     }).returning();
 
-    // Jane's Found Report (Found a phone)
-    const [janeFoundReport] = await db.insert(reports).values({
-      userId: jane.id,
-      type: "found",
-      category: "Phones",
-      title: "Found iPhone 15 Pro",
-      description: "Found an iPhone 15 Pro near the parking lot. Case is blue.",
-      location: "Kimihurura Parking",
-      date: new Date(),
-      status: "Open",
-      receiptNumber: "FND-XYZ89",
-      imageUrls: ["https://images.unsplash.com/photo-1696446701796-da61225697cc"]
+    const [foundPhoneReport] = await db.insert(reports).values({
+      userId: ganza.id, type: "found", category: "Phones", title: "Found Samsung Phone near Amahoro Stadium", description: "Found it after the game. It's green.", location: "Remera, Amahoro Stadium", date: new Date(), status: "Resolved", receiptNumber: "F-2001", challengeQuestion: "What is the wallpaper?"
     }).returning();
 
-    // Hotel Found Report
-    const [hotelFoundReport] = await db.insert(reports).values({
-      userId: businessUser.id,
-      itemId: hotelItem1.id,
-      type: "found",
-      category: "Keys",
-      title: "Keys found in Suite 302",
-      description: "Found a set of keys with a leather keychain.",
-      location: "Kizere Hotel - Lobby",
-      date: new Date(),
-      status: "Open",
-      receiptNumber: "FND-HOT01"
+    const [foundWalletReport] = await db.insert(reports).values({
+      userId: business.id, type: "found", category: "Wallets", title: "Brown Wallet found in Lobby", description: "Contains multiple cards and some cash.", location: "Kigali Marriott Lobby", date: new Date(), status: "Open", receiptNumber: "F-2002", challengeQuestion: "What is the name on the ID card inside?"
     }).returning();
-
-    // Another Found Report (Someone found John's wallet - for claim testing)
-    const [someoneFoundWallet] = await db.insert(reports).values({
-      userId: agent.id, // Agent found it
-      type: "found",
-      category: "Wallets",
-      title: "Wallet found at Heights",
-      description: "Found a brown wallet. Looks like it has a library card inside.",
-      location: "Kigali Heights, Floor 2",
-      date: new Date(),
-      status: "Open",
-      receiptNumber: "FND-WLT55"
-    }).returning();
-
-    console.log("📋 Created reports");
 
     // 6. Create Claims
-    // John claims the wallet found by Agent
-    const [johnClaim] = await db.insert(claims).values({
-      userId: john.id,
-      reportId: someoneFoundWallet.id,
-      description: "This is my wallet! It has my library card inside with the name John Doe.",
-      status: "pending"
+    console.log("🚩 Creating claims...");
+    // Verified Claim
+    const [claim1] = await db.insert(claims).values({
+      userId: keza.id, reportId: foundPhoneReport.id, description: "I lost my Samsung S23 near the stadium! The wallpaper is a picture of my dog.", status: "resolved", verificationAnswer: "My dog", verifiedAt: new Date(), handedOverAt: new Date()
     }).returning();
 
-    console.log("🚩 Created claims");
+    // Pending Claim
+    const [claim2] = await db.insert(claims).values({
+      userId: john.id, reportId: foundWalletReport.id, description: "I left my brown wallet at the hotel yesterday. It has my NID.", status: "pending", verificationAnswer: "John Uwase"
+    }).returning();
 
-    // 7. Create Moderation Reports
-    await db.insert(moderationReports).values({
-      reportId: janeFoundReport.id,
-      reporterEmail: "suspicious_user@fake.com",
-      reason: "scam",
-      description: "This post looks suspicious. The location is famous for scams.",
-      status: "pending"
+    // 7. Create Chats and Messages
+    console.log("💬 Creating chat history...");
+    const [chat1] = await db.insert(chats).values({
+      reportId: foundPhoneReport.id, claimId: claim1.id, finderId: ganza.id, claimantId: keza.id
+    }).returning();
+
+    await db.insert(messages).values([
+      { chatId: chat1.id, senderId: keza.id, content: "Hello, I think this is my phone. Where can we meet?" },
+      { chatId: chat1.id, senderId: ganza.id, content: "Hi! I am at Remera. Can you confirm the wallpaper color?" },
+      { chatId: chat1.id, senderId: keza.id, content: "It's a photo of my Golden Retriever." },
+      { chatId: chat1.id, senderId: ganza.id, content: "That matches! Please come to Amahoro gate 2." }
+    ]);
+
+    // 8. Create Payouts
+    console.log("💰 Creating payouts...");
+    await db.insert(payouts).values({
+      userId: ganza.id, reportId: foundPhoneReport.id, amount: "5000", currency: "RWF", status: "completed", destination: "+250788777888", processedAt: new Date()
     });
 
-    await db.insert(moderationReports).values({
-      claimId: johnClaim.id,
-      reporterEmail: "finder@example.com",
-      reason: "inappropriate",
-      description: "The claim description contains aggressive language.",
-      status: "pending"
-    });
+    // 9. Activity Logs
+    console.log("📝 Creating activity logs...");
+    await db.insert(userActivityLogs).values([
+      { userId: john.id, action: "login", details: { browser: "Chrome" } },
+      { userId: keza.id, action: "report_filed", details: { type: "found" } }
+    ]);
 
-    console.log("⚖️ Created moderation reports");
-
-    console.log("✨ Seeding complete!");
+    console.log("✨ Seeding complete with high-fidelity Rwandan data!");
   } catch (error) {
     console.error("❌ Seeding failed:", error);
     process.exit(1);
   }
 }
 
-seed();
+seed().then(() => process.exit(0));
