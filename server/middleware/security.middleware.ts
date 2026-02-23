@@ -171,7 +171,7 @@ export function setupSecurityMiddleware(app: Express) {
   // 2. Middleware to protect all other state-changing routes
   app.use((req, res, next) => {
     // Skip CSRF for specific routes if needed (e.g. webhooks)
-    const ignoredPaths = ["/api/payments/webhook", "/api/chat/webhook"];
+    const ignoredPaths = ["/api/payments/webhook", "/api/chat/webhook", "/api/webhooks/resend", "/api/auth/google"];
     if (ignoredPaths.some(path => req.path.startsWith(path))) {
       return next();
     }
