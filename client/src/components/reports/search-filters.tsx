@@ -107,7 +107,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
           variant="outline"
           size="sm"
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 rounded-full border-neutral-200 shadow-sm"
         >
           <Filter className="h-4 w-4" />
           Filters
@@ -119,7 +119,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
         </Button>
 
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters}>
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="rounded-full text-neutral-500 hover:text-neutral-900">
             <X className="h-4 w-4 mr-1" />
             Clear
           </Button>
@@ -129,56 +129,64 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
       {/* Filter Controls */}
       <div className={`flex flex-col md:flex-row gap-3 ${showFilters ? 'block' : 'hidden md:flex'}`}>
         <div className="flex items-center gap-2 flex-1">
-          <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <Select value={category} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="w-full md:w-[180px] bg-white">
-              <SelectValue placeholder="Category" />
+            <SelectTrigger className="w-full md:w-[180px] bg-white/80 backdrop-blur-sm border-neutral-200/60 rounded-full h-12 shadow-sm focus:ring-primary/30 transition-all hover:bg-white text-neutral-700 font-medium">
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary/70" />
+                <SelectValue placeholder="Category" />
+              </div>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-neutral-100 shadow-lg">
               {CATEGORIES.map(cat => (
-                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                <SelectItem key={cat} value={cat} className="rounded-lg">{cat}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
         <div className="flex items-center gap-2 flex-1">
-          <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <Select value={location} onValueChange={handleLocationChange}>
-            <SelectTrigger className="w-full md:w-[180px] bg-white">
-              <SelectValue placeholder="Location" />
+            <SelectTrigger className="w-full md:w-[180px] bg-white/80 backdrop-blur-sm border-neutral-200/60 rounded-full h-12 shadow-sm focus:ring-primary/30 transition-all hover:bg-white text-neutral-700 font-medium">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary/70" />
+                <SelectValue placeholder="Location" />
+              </div>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-neutral-100 shadow-lg">
               {LOCATIONS.map(loc => (
-                <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                <SelectItem key={loc} value={loc} className="rounded-lg">{loc}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
         <div className="flex items-center gap-2 flex-1">
-          <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-full md:w-[160px] bg-white">
-              <SelectValue placeholder="Sort By" />
+            <SelectTrigger className="w-full md:w-[160px] bg-white/80 backdrop-blur-sm border-neutral-200/60 rounded-full h-12 shadow-sm focus:ring-primary/30 transition-all hover:bg-white text-neutral-700 font-medium">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-primary/70" />
+                <SelectValue placeholder="Sort By" />
+              </div>
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="relevance">Most Relevant</SelectItem>
+            <SelectContent className="rounded-xl border-neutral-100 shadow-lg">
+              <SelectItem value="newest" className="rounded-lg">Newest First</SelectItem>
+              <SelectItem value="oldest" className="rounded-lg">Oldest First</SelectItem>
+              <SelectItem value="relevance" className="rounded-lg">Most Relevant</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div className="flex items-center gap-2 flex-1">
-          <Calendar className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           <Select value={dateFilter} onValueChange={handleDateChange}>
-            <SelectTrigger className="w-full md:w-[160px] bg-white">
-              <SelectValue placeholder="Time" />
+            <SelectTrigger className="w-full md:w-[160px] bg-white/80 backdrop-blur-sm border-neutral-200/60 rounded-full h-12 shadow-sm focus:ring-primary/30 transition-all hover:bg-white text-neutral-700 font-medium">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary/70" />
+                <SelectValue placeholder="Time" />
+              </div>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-xl border-neutral-100 shadow-lg">
               {TIME_RANGES.map(range => (
-                <SelectItem key={range.value} value={range.value}>{range.label}</SelectItem>
+                <SelectItem key={range.value} value={range.value} className="rounded-lg">{range.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -190,7 +198,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="hidden md:flex items-center"
+            className="hidden md:flex items-center h-12 px-5 rounded-full text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100/50 transition-colors"
           >
             <X className="h-4 w-4 mr-1" />
             Clear

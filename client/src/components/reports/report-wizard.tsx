@@ -121,12 +121,26 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
 
   return (
     <Card className="border-none shadow-none bg-transparent">
-      <div className="mb-6">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-neutral-500">Step {step} of {totalSteps}</span>
-          <span className="text-sm font-bold text-primary">{Math.round(progress)}% Complete</span>
+      <div className="mb-8 relative pl-2 pr-2">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Step {step} of {totalSteps}</span>
+          <span className="text-sm font-black text-primary bg-primary/10 px-3 py-1 rounded-full">{Math.round(progress)}% Complete</span>
         </div>
-        <Progress value={progress} className="h-2" />
+        <div className="h-2.5 w-full bg-neutral-100 rounded-full overflow-hidden shadow-inner">
+          <div
+            className={cn(
+              "h-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-500 ease-out",
+              progress === 20 ? "w-1/5" :
+                progress === 25 ? "w-1/4" :
+                  progress === 40 ? "w-2/5" :
+                    progress === 50 ? "w-1/2" :
+                      progress === 60 ? "w-3/5" :
+                        progress === 75 ? "w-3/4" :
+                          progress === 80 ? "w-4/5" :
+                            progress === 100 ? "w-full" : "w-0"
+            )}
+          />
+        </div>
       </div>
 
       <Form {...form}>
@@ -465,10 +479,11 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                 </ul>
               </div>
             )}
-            <div className="flex justify-between items-center w-full">
+            <div className="flex justify-between items-center w-full bg-neutral-50/50 p-4 -mx-6 -mb-6 mt-2 rounded-b-2xl border-t border-neutral-100">
               <Button
                 type="button"
                 variant="outline"
+                className="rounded-xl border-neutral-200 hover:bg-white hover:shadow-sm"
                 onClick={prevStep}
                 disabled={step === 1 || isSubmitting}
               >
@@ -477,7 +492,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
               </Button>
 
               {step < totalSteps ? (
-                <Button key="next-step-btn" type="button" onClick={nextStep}>
+                <Button key="next-step-btn" type="button" className="rounded-xl shadow-md bg-primary hover:bg-primary/90" onClick={nextStep}>
                   Next Step
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -488,8 +503,8 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                   onClick={handleFinalSubmit}
                   disabled={isSubmitting}
                   className={cn(
-                    "font-bold px-8",
-                    type === 'lost' ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+                    "font-bold px-8 rounded-xl shadow-lg transition-transform hover:scale-105 active:scale-95",
+                    type === 'lost' ? "bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 shadow-red-500/20" : "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-emerald-500/20"
                   )}
                 >
                   {isSubmitting ? (

@@ -24,7 +24,9 @@ import {
   Package,
   CreditCard,
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  FileUp,
+  FileDown
 } from "lucide-react";
 
 interface QuickActionItemProps {
@@ -76,18 +78,18 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
     <button
       onClick={handleClick}
       disabled={isDisabled}
-      className={`w-full text-left px-4 py-3 rounded-lg mb-2 transition-all duration-200 ease-in-out hover:translate-x-1 group ${colorClass} ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-sm"
+      className={`w-full text-left px-4 py-3 rounded-xl mb-2 transition-all duration-300 ease-in-out hover:translate-x-1 group ${colorClass} ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-md border border-transparent hover:border-white/20"
         }`}
     >
       <div className="flex items-start">
         <div className="flex-shrink-0 mr-3">
-          <div className="h-10 w-10 rounded-full flex items-center justify-center bg-white/90 dark:bg-background/90 shadow-sm">
+          <div className="h-10 w-10 rounded-2xl flex items-center justify-center bg-white/95 dark:bg-background/95 shadow-sm group-hover:scale-110 transition-transform duration-500">
             {icon}
           </div>
         </div>
-        <div>
-          <h3 className="font-medium text-sm">{title}</h3>
-          <p className="text-xs opacity-90">{description}</p>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-sm tracking-tight">{title}</h3>
+          <p className="text-[10px] opacity-80 uppercase font-bold tracking-wider mt-0.5">{description}</p>
         </div>
       </div>
     </button>
@@ -101,32 +103,11 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
   // Common actions for all users
   const commonActions: QuickActionItemProps[] = [
     {
-      icon: <ShieldCheck className="h-5 w-5 text-indigo-600" />,
-      title: "View My Claims",
-      description: "Manage your item ownership claims",
-      href: "/dashboard?tab=claims",
-      color: "blue"
-    },
-    {
-      icon: <Settings className="h-5 w-5 text-slate-600" />,
-      title: "Account Settings",
-      description: "Manage your profile and preferences",
-      href: "/profile",
-      color: "primary"
-    },
-    {
       icon: <PlusCircle className="h-5 w-5 text-blue-600" />,
       title: "Register New Item",
       description: "Add a new item to your inventory",
       href: "/register-item",
       color: "blue"
-    },
-    {
-      icon: <Search className="h-5 w-5 text-purple-600" />,
-      title: "Advanced Search",
-      description: "Find items with detailed filters",
-      href: "/search",
-      color: "purple"
     },
     {
       icon: <AlertTriangle className="h-5 w-5 text-amber-600" />,
@@ -143,23 +124,23 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       color: "green"
     },
     {
-      icon: <LogOut className="h-5 w-5 text-red-600" />,
-      title: "Log Out",
-      description: "Sign out of your account",
-      href: "/auth?logout=true",
-      color: "red"
+      icon: <ShieldCheck className="h-5 w-5 text-indigo-600" />,
+      title: "View My Claims",
+      description: "Manage your item ownership claims",
+      href: "/dashboard?tab=claims",
+      color: "blue"
+    },
+    {
+      icon: <Search className="h-5 w-5 text-purple-600" />,
+      title: "Advanced Search",
+      description: "Find items with detailed filters",
+      href: "/search",
+      color: "purple"
     }
   ];
 
   // Admin-specific actions
   const adminActions: QuickActionItemProps[] = [
-    {
-      icon: <BarChart3 className="h-5 w-5 text-blue-600" />,
-      title: "Analytics Dashboard",
-      description: "View detailed platform statistics",
-      href: "/admin/analytics",
-      color: "blue"
-    },
     {
       icon: <UserCircle className="h-5 w-5 text-purple-600" />,
       title: "User Management",
@@ -245,16 +226,18 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
         </ScrollArea>
       </CardContent>
 
-      <CardFooter className="flex justify-between pt-5 border-t mt-3">
-        <Button variant="outline" size="sm" className="h-8">
-          <Download className="h-4 w-4 mr-1" />
-          <span className="text-xs">Export Data</span>
-        </Button>
-        <Button variant="outline" size="sm" className="h-8">
-          <Upload className="h-4 w-4 mr-1" />
-          <span className="text-xs">Import Data</span>
-        </Button>
-      </CardFooter>
+      {(isAdmin || isAgent) && (
+        <CardFooter className="flex justify-between pt-5 border-t mt-3 gap-3">
+          <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl border-dashed">
+            <FileDown className="h-4 w-4 mr-2 text-primary" />
+            <span className="text-xs font-bold">Export Data</span>
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl border-dashed">
+            <FileUp className="h-4 w-4 mr-2 text-primary" />
+            <span className="text-xs font-bold">Import Data</span>
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };

@@ -13,7 +13,7 @@ export async function setupVite(app: Express, server: Server) {
   const hmrPort = parseInt(process.env.PORT || "5000", 10);
   const serverOptions = {
     middlewareMode: true,
-    hmr: { 
+    hmr: {
       server,
       port: hmrPort,
       clientPort: hmrPort

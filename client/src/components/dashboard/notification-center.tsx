@@ -15,7 +15,7 @@ interface NotificationCenterProps {
   isLoading: boolean;
 }
 
-export const NotificationCenter: React.FC<NotificationCenterProps> = ({ 
+export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   notifications = [],
   isLoading = false
 }) => {
@@ -53,32 +53,32 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const formatDate = (dateInput: string | Date) => {
     // Ensure we have a Date object
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    
+
     // Check if date is valid
     if (isNaN(date.getTime())) {
       return 'Invalid date';
     }
-    
+
     const now = new Date();
-    
+
     // Less than a day
     const diffMs = now.getTime() - date.getTime();
     const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-    
+
     if (diffHrs < 1) {
       const diffMins = Math.floor(diffMs / (1000 * 60));
       return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
     }
-    
+
     if (diffHrs < 24) {
       return `${diffHrs} hour${diffHrs !== 1 ? 's' : ''} ago`;
     }
-    
+
     const diffDays = Math.floor(diffHrs / 24);
     if (diffDays < 7) {
       return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
     }
-    
+
     return date.toLocaleDateString();
   };
 
@@ -110,7 +110,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         </div>
         <CardDescription>Stay updated on system alerts and activity</CardDescription>
       </CardHeader>
-      
+
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
         <div className="px-6">
           <TabsList className="grid grid-cols-4 mb-4">
@@ -120,7 +120,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <TabsTrigger value="system" className="text-xs">System</TabsTrigger>
           </TabsList>
         </div>
-        
+
         <CardContent className="pt-0">
           <TabsContent value={activeTab} className="m-0">
             {isLoading ? (
@@ -139,29 +139,31 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
               </div>
             ) : filteredNotifications.length === 0 ? (
               // Empty state
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <Bell className="h-12 w-12 text-muted-foreground/30 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No notifications</h3>
-                <p className="text-muted-foreground text-sm max-w-xs">
-                  {activeTab === "unread" 
-                    ? "You have no unread notifications at the moment." 
-                    : "You don't have any notifications yet."}
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="h-20 w-20 rounded-full bg-gradient-to-br from-[#00BFFF]/5 to-[#00BFFF]/10 flex items-center justify-center mb-6 animate-pulse">
+                  <Bell className="h-10 w-10 text-[#00BFFF]/40" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 tracking-tight">All caught up!</h3>
+                <p className="text-muted-foreground text-sm max-w-[240px] mx-auto leading-relaxed">
+                  {activeTab === "unread"
+                    ? "You have no unread notifications at the moment. Good job!"
+                    : "You don't have any notifications yet. We'll let you know when something important happens."}
                 </p>
               </div>
             ) : (
               // Notification list
               <div className="space-y-1 max-h-[370px] overflow-y-auto pr-2">
                 {filteredNotifications.map((notification) => (
-                  <motion.div 
-                    key={notification.id} 
+                  <motion.div
+                    key={notification.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.2 }}
                     className={`
                       relative p-3 rounded-lg mb-2 cursor-pointer
-                      ${notification.isRead 
-                        ? "bg-background hover:bg-muted/50" 
+                      ${notification.isRead
+                        ? "bg-background hover:bg-muted/50"
                         : "bg-primary/5 hover:bg-primary/10 border-l-2 border-primary"
                       }
                     `}
@@ -193,9 +195,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             <p>{notification.message}</p>
                             {!notification.isRead && (
                               <div className="flex gap-2">
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   className="mt-2 h-8 text-xs"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -206,9 +208,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                                   Mark as read
                                 </Button>
                                 {notification.type === 'report_match' && notification.relatedReportId && (
-                                  <Button 
-                                    variant="outline" 
-                                    size="sm" 
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     className="mt-2 h-8 text-xs border-purple-200 text-purple-600 hover:bg-purple-50"
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -236,7 +238,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
           </TabsContent>
         </CardContent>
       </Tabs>
-      
+
       <CardFooter className="flex justify-between border-t pt-3 mt-auto">
         <Button variant="ghost" size="sm" className="text-xs">
           Mark all as read

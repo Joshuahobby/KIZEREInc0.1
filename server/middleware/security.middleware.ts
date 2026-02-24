@@ -105,21 +105,33 @@ export function sanitizeContent(content: string, mode: 'strict' | 'default' = 'd
 export function setupSecurityMiddleware(app: Express) {
   // CORS configuration
   const origin = config.FRONTEND_URL || "http://localhost:5000";
-  app.use(
-    cors({
-      origin: isProd ? origin : true,
-      credentials: true,
-      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    })
-  );
 
   // Apply Helmet to secure HTTP headers
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net", "https://apis.google.com", "https://*.firebaseapp.com", "https://*.gstatic.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
-        styleSrc: ["'self'", "https://fonts.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
+        scriptSrc: [
+          "'self'",
+          "blob:",
+          "https://cdn.jsdelivr.net",
+          "https://apis.google.com",
+          "https://*.firebaseapp.com",
+          "https://*.gstatic.com",
+          "https://accounts.google.com",
+          "https://replit.com",
+          "https://*.replit.com",
+          ...(process.env.NODE_ENV !== 'production' ? ["'unsafe-inline'", "'unsafe-eval'"] : [])
+        ],
+        styleSrc: [
+          "'self'",
+          "https://fonts.googleapis.com",
+          "https://*.firebaseapp.com",
+          "https://accounts.google.com",
+          "https://replit.com",
+          "https://*.replit.com",
+          ...(process.env.NODE_ENV !== 'production' ? ["'unsafe-inline'"] : [])
+        ],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co"],
         connectSrc: ["'self'",
@@ -151,7 +163,7 @@ export function setupSecurityMiddleware(app: Express) {
     hsts: isProd,
     // Allow Replit iframe embedding
     crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    crossOriginOpenerPolicy: { policy: "unsafe-none" },
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
 

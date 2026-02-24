@@ -243,7 +243,7 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild className="rounded-full px-6 shadow-md hover:shadow-lg transition-all bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-9 text-sm">
+              <Button asChild className="hidden md:inline-flex rounded-full px-6 shadow-md hover:shadow-lg transition-all bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-9 text-sm">
                 <Link href="/auth">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />

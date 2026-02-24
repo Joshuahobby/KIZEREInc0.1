@@ -4,7 +4,6 @@ import { useAuth } from "../hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "../lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
-import { AuthModal } from "@/components/ui/auth-modal";
 import crowdImage from "../assets/crowd.jpg";
 import mobileMockupImage from "../assets/mobile-mockup.png";
 import {
@@ -26,8 +25,6 @@ export default function LandingPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [_, navigate] = useLocation();
-  const [authModalOpen, setAuthModalOpen] = React.useState<boolean>(false);
-  const [authModalTab, setAuthModalTab] = React.useState<"login" | "register">("login");
 
   // Auto-redirect if already logged in
   React.useEffect(() => {
@@ -36,16 +33,6 @@ export default function LandingPage() {
       navigate(dashboardPath);
     }
   }, [user, navigate]);
-
-  // Open auth modal with specific tab
-  const openAuthModal = (tab: "login" | "register") => {
-    setAuthModalTab(tab);
-    setAuthModalOpen(true);
-  };
-
-
-
-
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -71,13 +58,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        defaultTab={authModalTab}
-      />
-
       {/* Unified Header */}
       <Header />
 
@@ -135,7 +115,7 @@ export default function LandingPage() {
                 transition={{ delay: 0.4, duration: 0.6 }}
               >
                 <Button
-                  onClick={() => openAuthModal("register")}
+                  onClick={() => navigate("/auth?tab=register")}
                   className="yellow-button group relative overflow-hidden h-12"
                   size="lg"
                 >

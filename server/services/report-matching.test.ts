@@ -76,7 +76,7 @@ describe('ReportMatchingService', () => {
 
     expect(storage.createNotification).toHaveBeenCalled();
     const notificationCall = (storage.createNotification as any).mock.calls[0][0];
-    expect(notificationCall.message).toContain('90%');
+    expect(notificationCall.message).toContain('100%');
   });
 
   it('should not notify for low scores', async () => {

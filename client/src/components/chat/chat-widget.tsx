@@ -136,7 +136,8 @@ export function ChatWidget() {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         exit={{ scale: 0 }}
-                        className="fixed bottom-6 right-6 z-50"
+                        className="fixed z-50"
+                        style={{ bottom: '1.5rem', right: '1.5rem' }}
                     >
                         <Button
                             size="lg"
@@ -152,129 +153,132 @@ export function ChatWidget() {
                         )}
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence >
 
             {/* Chat Panel */}
             <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                        className="fixed bottom-6 right-6 z-50 w-[380px] max-h-[500px] flex flex-col"
-                    >
-                        <Card className="shadow-2xl border-border/50 flex flex-col h-[500px]">
-                            <CardHeader className="flex flex-row items-center justify-between p-4 border-b shrink-0">
-                                <CardTitle className="text-base flex items-center gap-2">
-                                    <MessageCircle className="h-4 w-4" />
-                                    {activeChatId ? `Chat #${activeChatId}` : "Messages"}
-                                </CardTitle>
-                                <div className="flex items-center gap-1">
-                                    {activeChatId && (
-                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setActiveChatId(null)}>
-                                            <Minimize2 className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setIsOpen(false); setActiveChatId(null); }}>
-                                        <X className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </CardHeader>
-
-                            <CardContent className="p-0 flex-1 overflow-hidden flex flex-col">
-                                {!activeChatId ? (
-                                    /* Chat List */
-                                    <ScrollArea className="flex-1">
-                                        {chats && chats.length > 0 ? (
-                                            <div className="divide-y">
-                                                {chats.map((chat) => (
-                                                    <button
-                                                        key={chat.id}
-                                                        className="w-full p-4 text-left hover:bg-muted/50 transition-colors"
-                                                        onClick={() => setActiveChatId(chat.id)}
-                                                    >
-                                                        <div className="flex items-center gap-3">
-                                                            <Avatar className="h-9 w-9">
-                                                                <AvatarFallback className="text-xs">C{chat.claimId}</AvatarFallback>
-                                                            </Avatar>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium truncate">
-                                                                    Claim #{chat.claimId}
-                                                                </p>
-                                                                <p className="text-xs text-muted-foreground truncate">
-                                                                    Report #{chat.reportId}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                                                <MessageCircle className="h-10 w-10 text-muted-foreground/30 mb-3" />
-                                                <p className="text-sm text-muted-foreground">No active chats</p>
-                                                <p className="text-xs text-muted-foreground/70 mt-1">Start a chat from a claim page</p>
-                                            </div>
-                                        )}
-                                    </ScrollArea>
-                                ) : (
-                                    /* Active Chat */
-                                    <>
-                                        <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-                                            <div className="space-y-3">
-                                                {activeChat?.messages?.map((msg) => {
-                                                    const isMe = msg.senderId === user.id;
-                                                    return (
-                                                        <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
-                                                            <div className={cn(
-                                                                "max-w-[75%] rounded-2xl px-4 py-2 text-sm",
-                                                                isMe
-                                                                    ? "bg-primary text-primary-foreground rounded-br-sm"
-                                                                    : "bg-muted rounded-bl-sm"
-                                                            )}>
-                                                                {msg.content}
-                                                                <p className={cn("text-[10px] mt-1 opacity-60", isMe ? "text-right" : "text-left")}>
-                                                                    {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                                {isTyping && (
-                                                    <div className="flex justify-start">
-                                                        <div className="bg-muted rounded-2xl px-4 py-2 text-sm text-muted-foreground italic">
-                                                            typing...
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </ScrollArea>
-
-                                        {/* Input area */}
-                                        <div className="p-3 border-t flex items-center gap-2 shrink-0">
-                                            <Input
-                                                placeholder="Type a message..."
-                                                value={messageInput}
-                                                onChange={(e) => handleInputChange(e.target.value)}
-                                                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-                                                className="flex-1 rounded-full"
-                                            />
-                                            <Button
-                                                size="icon"
-                                                className="rounded-full h-9 w-9 shrink-0"
-                                                onClick={handleSend}
-                                                disabled={!messageInput.trim() || sendMessage.isPending}
-                                            >
-                                                {sendMessage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {
+                    isOpen && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                            className="fixed z-50 w-[380px] max-w-[calc(100vw-3rem)] max-h-[500px] flex flex-col"
+                            style={{ bottom: '1.5rem', right: '1.5rem' }}
+                        >
+                            <Card className="shadow-2xl border-border/50 flex flex-col h-[500px]">
+                                <CardHeader className="flex flex-row items-center justify-between p-4 border-b shrink-0">
+                                    <CardTitle className="text-base flex items-center gap-2">
+                                        <MessageCircle className="h-4 w-4" />
+                                        {activeChatId ? `Chat #${activeChatId}` : "Messages"}
+                                    </CardTitle>
+                                    <div className="flex items-center gap-1">
+                                        {activeChatId && (
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setActiveChatId(null)}>
+                                                <Minimize2 className="h-4 w-4" />
                                             </Button>
-                                        </div>
-                                    </>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                                        )}
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { setIsOpen(false); setActiveChatId(null); }}>
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+
+                                <CardContent className="p-0 flex-1 overflow-hidden flex flex-col">
+                                    {!activeChatId ? (
+                                        /* Chat List */
+                                        <ScrollArea className="flex-1">
+                                            {chats && chats.length > 0 ? (
+                                                <div className="divide-y">
+                                                    {chats.map((chat) => (
+                                                        <button
+                                                            key={chat.id}
+                                                            className="w-full p-4 text-left hover:bg-muted/50 transition-colors"
+                                                            onClick={() => setActiveChatId(chat.id)}
+                                                        >
+                                                            <div className="flex items-center gap-3">
+                                                                <Avatar className="h-9 w-9">
+                                                                    <AvatarFallback className="text-xs">C{chat.claimId}</AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium truncate">
+                                                                        Claim #{chat.claimId}
+                                                                    </p>
+                                                                    <p className="text-xs text-muted-foreground truncate">
+                                                                        Report #{chat.reportId}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                                                    <MessageCircle className="h-10 w-10 text-muted-foreground/30 mb-3" />
+                                                    <p className="text-sm text-muted-foreground">No active chats</p>
+                                                    <p className="text-xs text-muted-foreground/70 mt-1">Start a chat from a claim page</p>
+                                                </div>
+                                            )}
+                                        </ScrollArea>
+                                    ) : (
+                                        /* Active Chat */
+                                        <>
+                                            <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+                                                <div className="space-y-3">
+                                                    {activeChat?.messages?.map((msg) => {
+                                                        const isMe = msg.senderId === user.id;
+                                                        return (
+                                                            <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+                                                                <div className={cn(
+                                                                    "max-w-[75%] rounded-2xl px-4 py-2 text-sm",
+                                                                    isMe
+                                                                        ? "bg-primary text-primary-foreground rounded-br-sm"
+                                                                        : "bg-muted rounded-bl-sm"
+                                                                )}>
+                                                                    {msg.content}
+                                                                    <p className={cn("text-[10px] mt-1 opacity-60", isMe ? "text-right" : "text-left")}>
+                                                                        {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                    {isTyping && (
+                                                        <div className="flex justify-start">
+                                                            <div className="bg-muted rounded-2xl px-4 py-2 text-sm text-muted-foreground italic">
+                                                                typing...
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </ScrollArea>
+
+                                            {/* Input area */}
+                                            <div className="p-3 border-t flex items-center gap-2 shrink-0">
+                                                <Input
+                                                    placeholder="Type a message..."
+                                                    value={messageInput}
+                                                    onChange={(e) => handleInputChange(e.target.value)}
+                                                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                                                    className="flex-1 rounded-full"
+                                                />
+                                                <Button
+                                                    size="icon"
+                                                    className="rounded-full h-9 w-9 shrink-0"
+                                                    onClick={handleSend}
+                                                    disabled={!messageInput.trim() || sendMessage.isPending}
+                                                >
+                                                    {sendMessage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                                </Button>
+                                            </div>
+                                        </>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </motion.div>
+                    )
+                }
+            </AnimatePresence >
         </>
     );
 }

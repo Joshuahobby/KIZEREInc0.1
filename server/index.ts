@@ -13,6 +13,7 @@ const logger = createLogger('Server');
 const app = express();
 
 // Handle process-level errors
+// Handle process-level errors
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', { promise, reason });
 });

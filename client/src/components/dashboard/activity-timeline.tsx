@@ -5,16 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Item, Report } from "@shared/schema";
-import { 
-  ClipboardList, 
-  Clock, 
-  Package, 
-  AlertTriangle, 
-  CheckCircle2, 
-  QrCode, 
+import {
+  ClipboardList,
+  Clock,
+  Package,
+  AlertTriangle,
+  CheckCircle2,
+  QrCode,
   FileText,
-  BarChart, 
-  DollarSign 
+  BarChart,
+  DollarSign
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -83,7 +83,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) {
       // Today - show time
       return `Today, ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
@@ -119,9 +119,9 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
   // Get status badge
   const getStatusBadge = (status?: string) => {
     if (!status) return null;
-    
+
     let className = '';
-    
+
     switch (status.toLowerCase()) {
       case 'registered':
         className = 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
@@ -140,7 +140,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
       default:
         className = 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
-    
+
     return (
       <Badge variant="outline" className={`${className} text-xs`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -159,7 +159,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
         </div>
         <CardDescription>Track your recent activity and interactions</CardDescription>
       </CardHeader>
-      
+
       <CardContent className="py-0">
         <ScrollArea className="max-h-[330px] pr-3">
           {isLoading ? (
@@ -180,17 +180,31 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
             </div>
           ) : activityTimeline.length === 0 ? (
             // Empty state
-            <div className="text-center py-8">
-              <ClipboardList className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No recent activity</h3>
-              <p className="text-muted-foreground text-sm max-w-xs mx-auto">
-                Your activity timeline will show your recent items and reports.
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center mb-6 animate-pulse">
+                <ClipboardList className="h-10 w-10 text-muted-foreground/40" />
+              </div>
+              <h3 className="text-xl font-bold mb-2 tracking-tight">Nothing here yet</h3>
+              <p className="text-muted-foreground text-sm max-w-[240px] mx-auto leading-relaxed">
+                Your activity timeline will automatically track your registered items and reports.
               </p>
-              <div className="flex justify-center gap-2 mt-4">
-                <Button variant="outline" size="sm" onClick={() => navigate('/register-item')}>
+              <div className="flex flex-col sm:flex-row justify-center gap-3 mt-8">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-primary/20 hover:bg-primary/5 transition-all"
+                  onClick={() => navigate('/register-item')}
+                >
+                  <Package className="h-4 w-4 mr-2 text-primary" />
                   Register Item
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/lost-found/report')}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl border-amber-200/50 hover:bg-amber-50/50 transition-all"
+                  onClick={() => navigate('/lost-found/report')}
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
                   File Report
                 </Button>
               </div>
@@ -200,7 +214,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
             <div className="relative pl-4">
               {/* Vertical timeline line */}
               <div className="absolute left-4 top-0 bottom-0 w-px bg-border/60" />
-              
+
               <div className="space-y-5">
                 {activityTimeline.map((activity, index) => (
                   <div key={`${activity.type}-${activity.id}`} className="relative pb-1">
@@ -208,9 +222,9 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
                     <div className="absolute -left-4 mt-1.5 h-8 w-8 rounded-full border-4 border-background bg-card flex items-center justify-center">
                       {getActivityIcon(activity)}
                     </div>
-                    
+
                     {/* Timeline content */}
-                    <div 
+                    <div
                       className="ml-6 cursor-pointer hover:bg-muted/50 p-3 rounded-lg transition-colors"
                       onClick={() => navigate(activity.url)}
                     >
@@ -220,17 +234,17 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
                           {getStatusBadge(activity.status)}
                         </div>
                       </div>
-                      
+
                       {activity.description && (
                         <p className="text-muted-foreground text-xs mb-1">
                           {activity.description}
                         </p>
                       )}
-                      
+
                       <div className="flex items-center text-xs text-muted-foreground">
                         <Clock className="h-3 w-3 mr-1" />
                         {formatTimestamp(activity.timestamp)}
-                        
+
                         {activity.category && (
                           <>
                             <span className="mx-1">•</span>
@@ -246,7 +260,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
           )}
         </ScrollArea>
       </CardContent>
-      
+
       <CardFooter className="flex justify-between border-t pt-3 mt-3">
         <Button variant="ghost" size="sm" className="text-xs">
           View All Activity

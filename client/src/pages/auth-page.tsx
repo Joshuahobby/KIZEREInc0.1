@@ -39,7 +39,13 @@ type LoginFormValues = z.infer<typeof AuthModel.loginSchema>;
 type RegisterFormValues = z.infer<typeof AuthModel.registerSchema>;
 
 export default function AuthPage() {
-  const [activeTab, setActiveTab] = React.useState<string>("login");
+  const [activeTab, setActiveTab] = React.useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("tab") || "login";
+    }
+    return "login";
+  });
   const [showPassword, setShowPassword] = React.useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = React.useState<{ isStrong: boolean; message: string; score: number } | null>(null);

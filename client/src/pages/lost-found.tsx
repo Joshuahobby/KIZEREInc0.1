@@ -232,23 +232,38 @@ export default function LostFound() {
 
   return (
     <PageLayout>
-      <div className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">Lost & Found Hub</h1>
-          <p className="mt-2 text-neutral-500 max-w-2xl">Helping Rwanda reunite people with their lost belongings. Report lost items or register what you've found to help others.</p>
+      <div className="py-8 relative isolate">
+        {/* Background Decorative Gradients */}
+        <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
+          <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-[#9089fc] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] [clip-path:polygon(74.1%_44.1%,100%_61.6%,97.5%_26.9%,85.5%_0.1%,80.7%_2%,72.5%_32.5%,60.2%_62.4%,52.4%_68.1%,47.5%_58.3%,45.2%_34.5%,27.5%_76.7%,0.1%_64.9%,17.9%_100%,27.6%_76.8%,76.1%_97.7%,74.1%_44.1%)]"></div>
+        </div>
 
-          {/* Search Bar */}
-          <div className="mt-8 relative max-w-xl">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <SearchIcon className="h-5 w-5 text-neutral-400" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center md:text-left flex flex-col md:flex-row gap-8 items-center justify-between">
+            <div className="max-w-2xl">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-neutral-900 bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-600">
+                Lost & Found Hub
+              </h1>
+              <p className="mt-4 text-lg text-neutral-600">
+                Helping Rwanda reunite people with their lost belongings. Report lost items or register what you've found to help others.
+              </p>
             </div>
-            <Input
-              type="text"
-              placeholder="Search by keywords (e.g. iPhone, Blue Wallet, Passport)..."
-              className="pl-10 h-12 shadow-sm border-neutral-200 focus:ring-primary focus:border-primary"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            {/* Search Bar Blocked Out into Hero */}
+            <div className="w-full max-w-lg mt-4 md:mt-0 relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-primary/30 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <SearchIcon className="h-5 w-5 text-primary/70" />
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Search by keywords (e.g. iPhone, Blue Wallet)..."
+                  className="pl-12 h-14 bg-white/90 backdrop-blur-sm border-white/20 shadow-xl rounded-2xl focus:ring-primary/50 focus:border-primary text-base transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Filters */}
@@ -256,60 +271,69 @@ export default function LostFound() {
             <SearchFilters onFiltersChange={setFilters} />
           </div>
 
-          <div className="mt-6 flex flex-col gap-6 md:flex-row md:gap-8">
+          <div className="mt-10 flex flex-col gap-6 md:flex-row md:gap-6 lg:gap-8">
             {/* Lost Item Card */}
-            <Card className="flex-1">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                  <AlertTriangle className="h-10 w-10 text-red-600" />
+            <Card className="flex-1 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-red-500/10 hover:-translate-y-1 border-red-100 bg-white/50 backdrop-blur-sm group cursor-pointer relative" onClick={() => handleOpenDialog("lost")}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-red-400/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+              <CardContent className="p-8 flex flex-col items-center text-center relative z-10 h-full justify-between">
+                <div>
+                  <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-red-100 to-red-50 shadow-inner flex items-center justify-center mb-6 mx-auto transform transition-transform group-hover:scale-110 group-hover:rotate-3 duration-300">
+                    <AlertTriangle className="h-10 w-10 text-red-600" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-neutral-900">Report Lost Item</h2>
+                  <p className="mt-3 text-neutral-600 text-sm leading-relaxed">Did you lose something? Report it here and our system will match it when someone finds it.</p>
                 </div>
-                <h2 className="text-xl font-medium text-neutral-900">Report Lost Item</h2>
-                <p className="mt-2 text-neutral-500 text-sm">Did you lose something? Report it here and we'll notify you if someone finds it.</p>
                 <Button
-                  onClick={() => handleOpenDialog("lost")}
-                  className="mt-6 bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                  className="mt-8 w-full bg-linear-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 shadow-md shadow-red-500/20 text-white rounded-xl h-12 text-md transition-all group-hover:shadow-lg group-hover:shadow-red-500/40"
                 >
-                  Report Lost Item
+                  Report Now
+                  <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </CardContent>
             </Card>
 
             {/* Found Item Card */}
-            <Card className="flex-1">
-              <CardContent className="p-6 flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                  <svg className="h-10 w-10 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
+            <Card className="flex-1 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1 border-emerald-100 bg-white/50 backdrop-blur-sm group cursor-pointer relative" onClick={() => handleOpenDialog("found")}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+              <CardContent className="p-8 flex flex-col items-center text-center relative z-10 h-full justify-between">
+                <div>
+                  <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 shadow-inner flex items-center justify-center mb-6 mx-auto transform transition-transform group-hover:scale-110 group-hover:-rotate-3 duration-300">
+                    <svg className="h-10 w-10 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-neutral-900">Register Found Item</h2>
+                  <p className="mt-3 text-neutral-600 text-sm leading-relaxed">Found something? Securely register it to help us reunite it with its rightful owner.</p>
                 </div>
-                <h2 className="text-xl font-medium text-neutral-900">Register Found Item</h2>
-                <p className="mt-2 text-neutral-500 text-sm">Found something? Register it here and help reunite the item with its owner.</p>
                 <Button
-                  onClick={() => handleOpenDialog("found")}
-                  className="mt-6 bg-green-600 hover:bg-green-700 focus:ring-green-500"
+                  className="mt-8 w-full bg-linear-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 shadow-md shadow-emerald-500/20 text-white rounded-xl h-12 text-md transition-all group-hover:shadow-lg group-hover:shadow-emerald-500/40"
                 >
-                  Register Found Item
+                  Register Item
+                  <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </CardContent>
             </Card>
 
             {/* Report from My Items Card */}
             {userItems && userItems.length > 0 && (
-              <Card className="flex-1 border-primary/20 bg-primary/5">
-                <CardContent className="p-6 flex flex-col items-center text-center">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Plus className="h-10 w-10 text-primary" />
+              <Card className="flex-1 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1 border-primary/20 bg-gradient-to-b from-primary/5 to-transparent relative group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <CardContent className="p-8 flex flex-col items-center text-center relative z-10 h-full justify-between">
+                  <div>
+                    <div className="h-20 w-20 rounded-2xl bg-white shadow-sm border border-primary/10 flex items-center justify-center mb-6 mx-auto transform transition-transform group-hover:scale-110 duration-300">
+                      <Plus className="h-10 w-10 text-primary" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-neutral-900">Report My Item</h2>
+                    <p className="mt-3 text-neutral-600 text-sm leading-relaxed">Quickly mark one of your pre-registered belongings as lost. Details are pre-filled.</p>
                   </div>
-                  <h2 className="text-xl font-medium text-neutral-900">Report from My Items</h2>
-                  <p className="mt-2 text-neutral-500 text-sm">Quickly report one of your registered items as lost. Details will be pre-filled.</p>
-                  <div className="mt-6 flex flex-wrap justify-center gap-2">
+                  <div className="mt-8 flex flex-wrap justify-center gap-2 w-full">
                     {userItems.slice(0, 3).map(item => (
                       <Button
                         key={item.id}
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenDialog("lost", item)}
-                        className="text-xs"
+                        className="text-xs bg-white text-primary border-primary/20 hover:bg-primary/5 hover:border-primary/40 rounded-full px-4"
                       >
                         {item.name}
                       </Button>
@@ -317,28 +341,28 @@ export default function LostFound() {
                     {userItems.length > 3 && (
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="link" size="sm" className="text-xs text-primary">
-                            View all {userItems.length} items
+                          <Button variant="ghost" size="sm" className="text-xs text-primary font-medium hover:bg-primary/10 rounded-full px-4">
+                            View all {userItems.length}
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
+                        <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-2xl">
                           <DialogHeader>
-                            <DialogTitle>Select an Item to Report</DialogTitle>
+                            <DialogTitle className="text-xl">Select an Item</DialogTitle>
                             <DialogDescription>
-                              Choose one of your registered items to create a report.
+                              Choose one of your registered items to create a fast report.
                             </DialogDescription>
                           </DialogHeader>
-                          <div className="grid gap-2 max-h-[400px] overflow-y-auto p-1">
+                          <div className="grid gap-3 max-h-[400px] overflow-y-auto p-1 mt-2">
                             {userItems.map(item => (
                               <Button
                                 key={item.id}
-                                variant="ghost"
-                                className="justify-start h-auto p-4 border border-neutral-100 hover:border-primary/50"
+                                variant="outline"
+                                className="justify-start h-auto p-4 border border-neutral-200 hover:border-primary/50 hover:bg-primary/5 rounded-xl transition-all w-full text-left font-medium"
                                 onClick={() => {
                                   handleOpenDialog("lost", item);
                                 }}
                               >
-                                <div className="text-left font-medium">{item.name}</div>
+                                {item.name}
                               </Button>
                             ))}
                           </div>
@@ -352,48 +376,53 @@ export default function LostFound() {
           </div>
 
           {/* Recent Lost & Found Items */}
-          <div className="mt-8">
-            <h2 className="text-lg leading-6 font-display font-medium text-neutral-900">Recent Lost & Found Items</h2>
+          <div className="mt-12 mb-20 relative">
+            <h2 className="text-2xl leading-6 font-display font-bold text-neutral-900 border-b border-neutral-100 pb-4">Recent Discoveries & Reports</h2>
 
             {isLoading ? (
-              <div className="mt-4 flex justify-center p-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
+              <div className="mt-12 flex flex-col items-center justify-center p-8">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full"></div>
+                  <Loader2 className="h-10 w-10 animate-spin text-primary relative z-10" />
+                </div>
+                <p className="mt-4 text-neutral-500 font-medium animate-pulse">Scanning the network...</p>
               </div>
             ) : sortedReports && sortedReports.length > 0 ? (
-              <div className="mt-4 grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-8 grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                 {sortedReports.map((report) => (
-                  <Card key={report.id} className="overflow-hidden shadow border border-gray-200">
+                  <Card key={report.id} className="overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 border border-neutral-200/60 bg-white/70 backdrop-blur-md group hover:-translate-y-1">
                     <CardContent className="p-0">
-                      <div className="p-5">
+                      <div className={`relative h-2 bg-gradient-to-r w-full ${report.type === 'lost' ? 'from-red-400 to-red-500' : 'from-emerald-400 to-emerald-500'}`} />
+                      <div className="p-6">
                         <div className="flex justify-between items-start">
                           <div>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${report.type === 'lost'
-                              ? 'bg-red-100 text-red-800'
-                              : 'bg-amber-100 text-amber-800'
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${report.type === 'lost'
+                              ? 'bg-red-50 text-red-600 ring-1 ring-inset ring-red-500/20'
+                              : 'bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-500/20'
                               }`}>
-                              {report.type === 'lost' ? 'Lost' : 'Found'}
+                              {report.type === 'lost' ? 'Missing' : 'Found'}
                             </span>
-                            <h3 className="mt-2 text-lg font-medium text-neutral-900">{report.title}</h3>
+                            <h3 className="mt-3 text-lg font-bold text-neutral-900 line-clamp-1 group-hover:text-primary transition-colors">{report.title}</h3>
                           </div>
-                          <span className="text-xs text-neutral-500">
+                          <span className="text-xs font-medium text-neutral-400 bg-neutral-50 px-2 py-1 rounded-md">
                             {format(new Date(report.date), 'MMM d, yyyy')}
                           </span>
                         </div>
-                        <div className="mt-3 space-y-2">
-                          <p className="text-sm text-neutral-600 line-clamp-2">{report.description}</p>
-                          <div className="flex items-center text-xs text-neutral-500">
-                            <MapPin className="h-4 w-4 text-neutral-400 mr-1" />
-                            <span>{report.location}</span>
+                        <div className="mt-4 space-y-3">
+                          <p className="text-sm text-neutral-600 line-clamp-2 leading-relaxed">{report.description}</p>
+                          <div className="flex items-center text-xs font-medium text-neutral-500 pt-2 border-t border-neutral-100">
+                            <MapPin className="h-4 w-4 text-primary md:mr-1.5 mr-1" />
+                            <span className="truncate">{report.location}</span>
                           </div>
                         </div>
-                        <div className="mt-5">
+                        <div className="mt-6 pt-2">
                           <Button
-                            variant="link"
-                            className="p-0 h-auto text-primary-600 font-bold hover:text-primary-500"
+                            variant="secondary"
+                            className="w-full bg-neutral-50 hover:bg-primary text-neutral-700 hover:text-white border-none shadow-none rounded-xl font-semibold transition-all group-hover:shadow-md"
                             onClick={() => setLocation(`/report/${report.id}`)}
                           >
                             View details
-                            <ChevronRight className="ml-1 h-4 w-4" />
+                            <ChevronRight className="ml-1.5 h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -402,10 +431,16 @@ export default function LostFound() {
                 ))}
               </div>
             ) : (
-              <Card className="mt-4">
-                <CardContent className="p-8 text-center">
-                  <p className="text-neutral-500">No recent lost or found items to display.</p>
-                  <p className="text-sm text-neutral-400 mt-2">Be the first to report a lost or found item.</p>
+              <Card className="mt-8 border-dashed border-2 border-neutral-200 bg-neutral-50/50">
+                <CardContent className="p-16 flex flex-col items-center text-center">
+                  <div className="h-20 w-20 bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
+                    <SearchIcon className="h-8 w-8 text-neutral-300" />
+                  </div>
+                  <h3 className="text-lg font-bold text-neutral-900">No items found</h3>
+                  <p className="text-neutral-500 max-w-sm mt-2">We couldn't find any lost or found items matching your current filters.</p>
+                  <Button variant="outline" className="mt-6 rounded-xl" onClick={() => setFilters({ category: "All Categories", location: "All Locations", sortBy: "newest", dateFilter: "all" })}>
+                    Clear Filters
+                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -415,21 +450,29 @@ export default function LostFound() {
 
       {/* Form Dialog for Lost/Found Items */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {dialogType === "lost" ? "Report Lost Item" : "Register Found Item"}
-            </DialogTitle>
-            <DialogDescription>
-              Please provide the details to help us {dialogType === "lost" ? "find" : "return"} the item.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl p-0 border-0 shadow-2xl">
+          <div className={`p-6 pb-4 ${dialogType === "lost" ? "bg-red-50/50" : "bg-emerald-50/50"} border-b border-neutral-100`}>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                {dialogType === "lost" ? (
+                  <><AlertTriangle className="h-6 w-6 text-red-600" /> Report a Lost Item</>
+                ) : (
+                  <><div className="bg-emerald-100 p-1.5 rounded-md"><Check className="h-4 w-4 text-emerald-700 font-bold" /></div> Register a Found Item</>
+                )}
+              </DialogTitle>
+              <DialogDescription className="text-sm mt-1">
+                Please provide detailed information. Accurate details increase the chances of a successful match.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
 
-          <ReportWizard
-            type={dialogType || "found"}
-            onSubmit={handleWizardSubmit}
-            isSubmitting={reportMutation.isPending}
-          />
+          <div className="flex-1 overflow-y-auto px-6 py-2">
+            <ReportWizard
+              type={dialogType || "found"}
+              onSubmit={handleWizardSubmit}
+              isSubmitting={reportMutation.isPending}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 
