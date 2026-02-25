@@ -44,9 +44,9 @@ const AllProviders = ({ children }: { children: React.ReactNode }) => (
 describe('ItemRegistrationPage', () => {
   it('renders the registration form', async () => {
     render(<ItemRegistrationPage />, { wrapper: AllProviders });
-    
+
     // screen.debug(); // For debugging if it fails again
-    
+
     // Check for some static text that doesn't depend on i18n if possible, 
     // or ensure i18n matches.
     expect(await screen.findByText(/Item Details/i)).toBeInTheDocument();
@@ -54,9 +54,13 @@ describe('ItemRegistrationPage', () => {
 
   it('shows validation errors for empty required fields', async () => {
     render(<ItemRegistrationPage />, { wrapper: AllProviders });
-    
-    const submitButton = screen.getByText(/Complete Registration/i);
-    // Since completion is 0, the button should be disabled
-    expect(submitButton).toBeDisabled();
+
+    // Wait for form to render - there might be multiple (desktop/mobile)
+    const continueButtons = await screen.findAllByText(/Continue/i);
+
+    // Since name is empty, all should be disabled
+    continueButtons.forEach(btn => {
+      expect(btn).toBeDisabled();
+    });
   });
 });

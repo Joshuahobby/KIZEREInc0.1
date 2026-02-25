@@ -1,0 +1,182 @@
+﻿
+> rest-express@1.0.0 test:e2e
+> playwright test --reporter=list
+
+
+Running 15 tests using 4 workers
+
+  Γ£ÿ   1 [chromium] ΓÇ║ tests\e2e\admin.spec.ts:10:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from roles management (5ms)
+  Γ£ÿ   2 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:4:5 ΓÇ║ Authentication Flow ΓÇ║ should display login page (5ms)
+  Γ£ÿ   3 [chromium] ΓÇ║ tests\e2e\admin.spec.ts:4:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from admin routes (7ms)
+  Γ£ÿ   4 [chromium] ΓÇ║ tests\e2e\admin.spec.ts:16:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from audit logs (7ms)
+  Γ£ÿ   5 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:20:5 ΓÇ║ Authentication Flow ΓÇ║ should show validation errors on empty login (6ms)
+  Γ£ÿ   6 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:10:5 ΓÇ║ Authentication Flow ΓÇ║ should show registration form (7ms)
+  Γ£ÿ   7 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:39:5 ΓÇ║ Authentication Flow ΓÇ║ should redirect unauthenticated users from dashboard (7ms)
+  Γ£ÿ   8 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:32:5 ΓÇ║ Authentication Flow ΓÇ║ should have Google OAuth button (6ms)
+  Γ£ÿ   9 [chromium] ΓÇ║ tests\e2e\items.spec.ts:4:5 ΓÇ║ Item Management ΓÇ║ should display the search page (6ms)
+  Γ£ÿ  10 [chromium] ΓÇ║ tests\e2e\items.spec.ts:9:5 ΓÇ║ Item Management ΓÇ║ should load the landing page with feature sections (8ms)
+  Γ£ÿ  11 [chromium] ΓÇ║ tests\e2e\claims.spec.ts:4:5 ΓÇ║ Claims Flow ΓÇ║ should redirect to auth when accessing claims unauthenticated (9ms)
+  Γ£ÿ  12 [chromium] ΓÇ║ tests\e2e\items.spec.ts:16:5 ΓÇ║ Item Management ΓÇ║ should have register item link from landing (7ms)
+  Γ£ô  14 [chromium] ΓÇ║ tests\e2e\payments.spec.ts:12:5 ΓÇ║ API Health & Payments ΓÇ║ should reject unauthenticated payment API access (398ms)
+  Γ£ô  15 [chromium] ΓÇ║ tests\e2e\payments.spec.ts:17:5 ΓÇ║ API Health & Payments ΓÇ║ should reject unauthenticated wallet access (392ms)
+  Γ£ô  13 [chromium] ΓÇ║ tests\e2e\payments.spec.ts:4:5 ΓÇ║ API Health & Payments ΓÇ║ should return healthy from API health check (1.7s)
+
+
+  1) [chromium] ΓÇ║ tests\e2e\admin.spec.ts:4:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from admin routes 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  2) [chromium] ΓÇ║ tests\e2e\admin.spec.ts:10:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from roles management 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  3) [chromium] ΓÇ║ tests\e2e\admin.spec.ts:16:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from audit logs 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  4) [chromium] ΓÇ║ tests\e2e\auth.spec.ts:4:5 ΓÇ║ Authentication Flow ΓÇ║ should display login page ΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  5) [chromium] ΓÇ║ tests\e2e\auth.spec.ts:10:5 ΓÇ║ Authentication Flow ΓÇ║ should show registration form 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  6) [chromium] ΓÇ║ tests\e2e\auth.spec.ts:20:5 ΓÇ║ Authentication Flow ΓÇ║ should show validation errors on empty login 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  7) [chromium] ΓÇ║ tests\e2e\auth.spec.ts:32:5 ΓÇ║ Authentication Flow ΓÇ║ should have Google OAuth button 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  8) [chromium] ΓÇ║ tests\e2e\auth.spec.ts:39:5 ΓÇ║ Authentication Flow ΓÇ║ should redirect unauthenticated users from dashboard 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  9) [chromium] ΓÇ║ tests\e2e\claims.spec.ts:4:5 ΓÇ║ Claims Flow ΓÇ║ should redirect to auth when accessing claims unauthenticated 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  10) [chromium] ΓÇ║ tests\e2e\items.spec.ts:4:5 ΓÇ║ Item Management ΓÇ║ should display the search page ΓöÇΓöÇ
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  11) [chromium] ΓÇ║ tests\e2e\items.spec.ts:9:5 ΓÇ║ Item Management ΓÇ║ should load the landing page with feature sections 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  12) [chromium] ΓÇ║ tests\e2e\items.spec.ts:16:5 ΓÇ║ Item Management ΓÇ║ should have register item link from landing 
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\user\AppData\Local\ms-playwright\chromium_headless_shell-1208\chrome-headless-shell-win64\chrome-headless-shell.exe
+    ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+    Γòæ Looks like Playwright Test or Playwright was just installed or updated. Γòæ
+    Γòæ Please run the following command to download new browsers:              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ     npx playwright install                                              Γòæ
+    Γòæ                                                                         Γòæ
+    Γòæ <3 Playwright Team                                                      Γòæ
+    ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+  12 failed
+    [chromium] ΓÇ║ tests\e2e\admin.spec.ts:4:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from admin routes 
+    [chromium] ΓÇ║ tests\e2e\admin.spec.ts:10:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from roles management 
+    [chromium] ΓÇ║ tests\e2e\admin.spec.ts:16:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from audit logs 
+    [chromium] ΓÇ║ tests\e2e\auth.spec.ts:4:5 ΓÇ║ Authentication Flow ΓÇ║ should display login page ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    [chromium] ΓÇ║ tests\e2e\auth.spec.ts:10:5 ΓÇ║ Authentication Flow ΓÇ║ should show registration form ΓöÇ
+    [chromium] ΓÇ║ tests\e2e\auth.spec.ts:20:5 ΓÇ║ Authentication Flow ΓÇ║ should show validation errors on empty login 
+    [chromium] ΓÇ║ tests\e2e\auth.spec.ts:32:5 ΓÇ║ Authentication Flow ΓÇ║ should have Google OAuth button 
+    [chromium] ΓÇ║ tests\e2e\auth.spec.ts:39:5 ΓÇ║ Authentication Flow ΓÇ║ should redirect unauthenticated users from dashboard 
+    [chromium] ΓÇ║ tests\e2e\claims.spec.ts:4:5 ΓÇ║ Claims Flow ΓÇ║ should redirect to auth when accessing claims unauthenticated 
+    [chromium] ΓÇ║ tests\e2e\items.spec.ts:4:5 ΓÇ║ Item Management ΓÇ║ should display the search page ΓöÇΓöÇΓöÇΓöÇ
+    [chromium] ΓÇ║ tests\e2e\items.spec.ts:9:5 ΓÇ║ Item Management ΓÇ║ should load the landing page with feature sections 
+    [chromium] ΓÇ║ tests\e2e\items.spec.ts:16:5 ΓÇ║ Item Management ΓÇ║ should have register item link from landing 
+  3 passed (18.4s)

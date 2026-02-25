@@ -53,7 +53,7 @@ router.get("/unread-count", async (req, res) => {
 
 // Web Push API
 router.get("/vapid-public-key", (req, res) => {
-  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const publicKey = process.env.VAPID_PUBLIC_KEY?.trim();
   if (!publicKey) {
     return res.status(500).json({ message: "VAPID public key not configured" });
   }

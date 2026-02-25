@@ -175,7 +175,10 @@
     "welcomeMessage": "Karibu kwenye dashibodi yako",
     "registeredItems": "Vitu Vilivyosajiliwa",
     "recentActivity": "Shughuli za Hivi Karibuni",
-    "quickActions": "Vitendo vya Haraka",
+    "quickActions": {
+      "title": "Vitendo vya Haraka",
+      "subtitle": "Zana na njia za mkato zinazotumiwa mara kwa mara"
+    },
     "registerNewItem": "Sajili Kitu Kipya",
     "viewAllItems": "Tazama Vitu Vyote",
     "reportLostItem": "Ripoti Kitu Kilichopotea",

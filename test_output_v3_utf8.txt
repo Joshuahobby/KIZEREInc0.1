@@ -1,0 +1,377 @@
+﻿
+> rest-express@1.0.0 test
+> vitest run
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mF:/Joe/GetRwanda/2026/KIZEREInc0.1[39m
+
+[90mstdout[2m | server/services/report-matching.test.ts[2m > [22m[2mReportMatchingService[2m > [22m[2mshould find a match with exact Unique Identifier
+[22m[39m[2026-02-25T22:23:30.624Z] [INFO] [ReportMatchingService] Starting match scan for report {
+  "reportId": 1,
+  "type": "lost"
+}
+[2026-02-25T22:23:30.627Z] [INFO] [ReportMatchingService] Potential match found {
+  "reportId": 1,
+  "candidateId": 2,
+  "score": 100,
+  "highConfidence": true
+}
+[2026-02-25T22:23:30.628Z] [INFO] [ReportMatchingService] Match scan complete {
+  "reportId": 1,
+  "matchesFound": 1
+}
+
+[90mstdout[2m | server/services/report-matching.test.ts[2m > [22m[2mReportMatchingService[2m > [22m[2mshould prefer Item ID match
+[22m[39m[2026-02-25T22:23:30.632Z] [INFO] [ReportMatchingService] Starting match scan for report {
+  "reportId": 1,
+  "type": "lost"
+}
+[2026-02-25T22:23:30.632Z] [INFO] [ReportMatchingService] Potential match found {
+  "reportId": 1,
+  "candidateId": 3,
+  "score": 100,
+  "highConfidence": true
+}
+[2026-02-25T22:23:30.632Z] [INFO] [ReportMatchingService] Match scan complete {
+  "reportId": 1,
+  "matchesFound": 1
+}
+
+[90mstdout[2m | server/services/report-matching.test.ts[2m > [22m[2mReportMatchingService[2m > [22m[2mshould not notify for low scores
+[22m[39m[2026-02-25T22:23:30.633Z] [INFO] [ReportMatchingService] Starting match scan for report {
+  "reportId": 1,
+  "type": "lost"
+}
+[2026-02-25T22:23:30.634Z] [INFO] [ReportMatchingService] Match scan complete {
+  "reportId": 1,
+  "matchesFound": 0
+}
+
+ [32mΓ£ô[39m server/services/report-matching.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 16[2mms[22m[39m
+[90mstdout[2m | client/src/pages/__tests__/item-registration.test.tsx
+[22m[39m[Firebase] Checking configuration variables: {
+  hasApiKey: [33mtrue[39m,
+  hasProjectId: [33mtrue[39m,
+  hasAppId: [33mtrue[39m,
+  authDomain: [32m'kizere-99ac2.firebaseapp.com'[39m
+}
+[Firebase] Configuration validation passed
+[Firebase] Successfully initialized Firebase app
+[Firebase] Persistence set to browserSessionPersistence
+[useAuth] Created new AuthContext and assigned to global scope
+
+[90mstdout[2m | client/src/pages/__tests__/item-registration.test.tsx[2m > [22m[2mItemRegistrationPage[2m > [22m[2mrenders the registration form
+[22m[39m[Registration] Completion: 0%
+[LanguageContext] Updating document.documentElement.lang to: en
+[Registration] Completion: 17%
+
+[90mstdout[2m | client/src/pages/__tests__/item-registration.test.tsx[2m > [22m[2mItemRegistrationPage[2m > [22m[2mshows validation errors for empty required fields
+[22m[39m[Registration] Completion: 0%
+[LanguageContext] Updating document.documentElement.lang to: en
+[Registration] Completion: 17%
+
+ [31mΓ¥»[39m client/src/pages/__tests__/item-registration.test.tsx [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 816[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m ItemRegistrationPage[2m > [22mrenders the registration form [33m573[2mms[22m[39m
+[31m   [31m├ù[31m ItemRegistrationPage[2m > [22mshows validation errors for empty required fields[90m 241[2mms[22m[31m[39m
+[31m     ΓåÆ Unable to find an element with the text: /Complete Registration/i. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[31m
+  [36m<div>[31m
+    [36m<div[31m
+      [33mclass[31m=[32m"min-h-screen bg-gray-50 dark:bg-gray-900"[31m
+    [36m>[31m
+      [36m<div[31m
+        [33mclass[31m=[32m"flex flex-col min-h-screen"[31m
+      [36m>[31m
+        [36m<header[31m
+          [33mclass[31m=[32m"sticky top-0 z-50 w-full transition-all duration-200 border-b bg-background border-transparent"[31m
+        [36m>[31m
+          [36m<div[31m
+            [33mclass[31m=[32m"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"[31m
+          [36m>[31m
+            [36m<div[31m
+              [33mclass[31m=[32m"flex justify-between items-center h-16"[31m
+            [36m>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"flex items-center"[31m
+              [36m>[31m
+                [36m<a[31m
+                  [33maria-label[31m=[32m"KIZERE Home"[31m
+                  [33mclass[31m=[32m"flex items-center gap-2 group"[31m
+                  [33mhref[31m=[32m"/"[31m
+                [36m>[31m
+                  [36m<svg[31m
+                    [33mclass[31m=[32m"text-primary h-8 w-8 transition-transform group-hover:scale-110"[31m
+                    [33mfill[31m=[32m"none"[31m
+                    [33mstroke[31m=[32m"currentColor"[31m
+                    [33mstroke-linecap[31m=[32m"round"[31m
+                    [33mstroke-linejoin[31m=[32m"round"[31m
+                    [33mstroke-width[31m=[32m"2"[31m
+                    [33mviewBox[31m=[32m"0 0 64 64"[31m
+                    [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                  [36m>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M32 8L16 16L8 32L16 48L32 56L48 48L56 32L48 16L32 8Z"[31m
+                    [36m/>[31m
+                    [36m<circle[31m
+                      [33mcx[31m=[32m"32"[31m
+                      [33mcy[31m=[32m"32"[31m
+                      [33mr[31m=[32m"12"[31m
+                    [36m/>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M32 20V44"[31m
+                    [36m/>[31m
+                    [36m<path[31m
+                      [33md[31m=[32m"M20 32H44"[31m
+                    [36m/>[31m
+                  [36m</svg>[31m
+                  [36m<span[31m
+                    [33mclass[31m=[32m"text-xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tighter"[31m
+                  [36m>[31m
+                    [0mKIZERE[0m
+                  [36m</span>[31m
+                [36m</a>[31m
+                [36m<nav[31m
+                  [33maria-label[31m=[32m"Main Navigation"[31m
+                  [33mclass[31m=[32m"hidden lg:flex lg:items-center lg:gap-1 ml-8"[31m
+                [36m>[31m
+                  [36m<a[31m
+                    [33mclass[31m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-primary bg-primary/10"[31m
+                    [33mhref[31m=[32m"/"[31m
+                  [36m>[31m
+                    [0mHome[0m
+                  [36m</a>[31m
+                  [36m<a[31m
+                    [33mclass[31m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"[31m
+                    [33mhref[31m=[32m"/lost-found"[31m
+                  [36m>[31m
+                    [0mExplore Hub[0m
+                  [36m</a>[31m
+                  [36m<a[31m
+                    [33mclass[31m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"[31m
+                    [33mhref[31m=[32m"/community"[31m
+                  [36m>[31m
+                    [0mCommunity[0m
+                  [36m</a>[31m
+                  [36m<a[31m
+                    [33mclass[31m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"[31m
+                    [33mhref[31m=[32m"/about"[31m
+                  [36m>[31m
+                    [0mAbout[0m
+                  [36m</a>[31m
+                  [36m<a[31m
+                    [33mclass[31m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"[31m
+                    [33mhref[31m=[32m"/contact"[31m
+                  [36m>[31m
+                    [0mContact[0m
+                  [36m</a>[31m
+                [36m</nav>[31m
+              [36m</div>[31m
+              [36m<div[31m
+                [33mclass[31m=[32m"flex items-center gap-2"[31m
+              [36m>[31m
+                [36m<div[31m
+                  [33mclass[31m=[32m"flex items-center gap-1 sm:gap-2 mr-2"[31m
+                [36m>[31m
+                  [36m<button[31m
+                    [33maria-label[31m=[32m"Toggle Theme"[31m
+                    [33mclass[31m=[32m"gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:text-accent-foreground relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 hover:bg-blue-900/20 border border-transparent"[31m
+                  [36m>[31m
+                    [36m<div[31m
+                      [33mclass[31m=[32m"relative h-5 w-5"[31m
+                    [36m>[31m
+                      [36m<div[31m
+                        [33mclass[31m=[32m"absolute inset-0 flex items-center justify-center"[31m
+                        [33mstyle[31m=[32m"opacity: 0; transform: translateY(-10px);"[31m
+                      [36m>[31m
+                        [36m<svg[31m
+                          [33mclass[31m=[32m"lucide lucide-sun h-5 w-5 text-amber-600"[31m
+                          [33mfill[31m=[32m"none"[31m
+                          [33mheight[31m=[32m"24"[31m
+                          [33mstroke[31m=[32m"currentColor"[31m
+                          [33mstroke-linecap[31m=[32m"round"[31m
+                          [33mstroke-linejoin[31m=[32m"round"[31m
+                          [33mstroke-width[31m=[32m"2"[31m
+                          [33mviewBox[31m=[32m"0 0 24 24"[31m
+                          [33mwidth[31m=[32m"24"[31m
+                          [33mxmlns[31m=[32m"http://www.w3.org/2000/svg"[31m
+                        [36m>[31m
+                          [36m<circle[31m
+                            [33mcx[31m=[32m"12"[31m
+                            [33mcy[31m=[32m"12"[...[39m
+
+node.exe : [31mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1m[7m Failed Tests 1 [27m[22mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[39m
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([31mΓÄ»ΓÄ»ΓÄ»Γ...»ΓÄ»ΓÄ»ΓÄ»[39m:String) [], RemoteExcepti 
+   on
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+[31m[1m[7m FAIL [27m[22m[39m client/src/pages/__tests__/item-registration.test.tsx[2m > 
+[22mItemRegistrationPage[2m > [22mshows validation errors for empty required fields
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: /Complete 
+Registration/i. This could be because the text is broken up by multiple elements. In this case, you can 
+provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"min-h-screen bg-gray-50 dark:bg-gray-900"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-col min-h-screen"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"sticky top-0 z-50 w-full transition-all duration-200 border-b 
+bg-background border-transparent"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex justify-between items-center h-16"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center"[39m
+              [36m>[39m
+                [36m<a[39m
+                  [33maria-label[39m=[32m"KIZERE Home"[39m
+                  [33mclass[39m=[32m"flex items-center gap-2 group"[39m
+                  [33mhref[39m=[32m"/"[39m
+                [36m>[39m
+                  [36m<svg[39m
+                    [33mclass[39m=[32m"text-primary h-8 w-8 transition-transform 
+group-hover:scale-110"[39m
+                    [33mfill[39m=[32m"none"[39m
+                    [33mstroke[39m=[32m"currentColor"[39m
+                    [33mstroke-linecap[39m=[32m"round"[39m
+                    [33mstroke-linejoin[39m=[32m"round"[39m
+                    [33mstroke-width[39m=[32m"2"[39m
+                    [33mviewBox[39m=[32m"0 0 64 64"[39m
+                    [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                  [36m>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M32 8L16 16L8 32L16 48L32 56L48 48L56 32L48 16L32 8Z"[39m
+                    [36m/>[39m
+                    [36m<circle[39m
+                      [33mcx[39m=[32m"32"[39m
+                      [33mcy[39m=[32m"32"[39m
+                      [33mr[39m=[32m"12"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M32 20V44"[39m
+                    [36m/>[39m
+                    [36m<path[39m
+                      [33md[39m=[32m"M20 32H44"[39m
+                    [36m/>[39m
+                  [36m</svg>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"text-xl font-display font-bold bg-clip-text text-transparent 
+bg-gradient-to-r from-primary to-primary/70 tracking-tighter"[39m
+                  [36m>[39m
+                    [0mKIZERE[0m
+                  [36m</span>[39m
+                [36m</a>[39m
+                [36m<nav[39m
+                  [33maria-label[39m=[32m"Main Navigation"[39m
+                  [33mclass[39m=[32m"hidden lg:flex lg:items-center lg:gap-1 ml-8"[39m
+                [36m>[39m
+                  [36m<a[39m
+                    [33mclass[39m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium 
+rounded-md transition-colors text-primary bg-primary/10"[39m
+                    [33mhref[39m=[32m"/"[39m
+                  [36m>[39m
+                    [0mHome[0m
+                  [36m</a>[39m
+                  [36m<a[39m
+                    [33mclass[39m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium 
+rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"[39m
+                    [33mhref[39m=[32m"/lost-found"[39m
+                  [36m>[39m
+                    [0mExplore Hub[0m
+                  [36m</a>[39m
+                  [36m<a[39m
+                    [33mclass[39m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium 
+rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"[39m
+                    [33mhref[39m=[32m"/community"[39m
+                  [36m>[39m
+                    [0mCommunity[0m
+                  [36m</a>[39m
+                  [36m<a[39m
+                    [33mclass[39m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium 
+rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"[39m
+                    [33mhref[39m=[32m"/about"[39m
+                  [36m>[39m
+                    [0mAbout[0m
+                  [36m</a>[39m
+                  [36m<a[39m
+                    [33mclass[39m=[32m"inline-flex items-center px-3 py-2 text-sm font-medium 
+rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"[39m
+                    [33mhref[39m=[32m"/contact"[39m
+                  [36m>[39m
+                    [0mContact[0m
+                  [36m</a>[39m
+                [36m</nav>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"flex items-center gap-1 sm:gap-2 mr-2"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Toggle Theme"[39m
+                    [33mclass[39m=[32m"gap-2 whitespace-nowrap text-sm font-medium 
+ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
+focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none 
+[&_svg]:size-4 [&_svg]:shrink-0 hover:text-accent-foreground relative flex items-center justify-center 
+w-10 h-10 rounded-full transition-all duration-300 hover:bg-blue-900/20 border border-transparent"[39m
+                  [36m>[39m
+                    [36m<div[39m
+                      [33mclass[39m=[32m"relative h-5 w-5"[39m
+                    [36m>[39m
+                      [36m<div[39m
+                        [33mclass[39m=[32m"absolute inset-0 flex items-center justify-center"[39m
+                        [33mstyle[39m=[32m"opacity: 0; transform: translateY(-10px);"[39m
+                      [36m>[39m
+                        [36m<svg[39m
+                          [33mclass[39m=[32m"lucide lucide-sun h-5 w-5 text-amber-600"[39m
+                          [33mfill[39m=[32m"none"[39m
+                          [33mheight[39m=[32m"24"[39m
+                          [33mstroke[39m=[32m"currentColor"[39m
+                          [33mstroke-linecap[39m=[32m"round"[39m
+                          [33mstroke-linejoin[39m=[32m"round"[39m
+                          [33mstroke-width[39m=[32m"2"[39m
+                          [33mviewBox[39m=[32m"0 0 24 24"[39m
+                          [33mwidth[39m=[32m"24"[39m
+                          [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                        [36m>[39m
+                          [36m<circle[39m
+                            [33mcx[39m=[32m"12"[39m
+                            [33mcy[39m=[32m"12"[...
+[90m [2mΓ¥»[22m Object.getElementError 
+node_modules/@testing-library/dom/dist/config.js:[2m37:19[22m[39m
+[90m [2mΓ¥»[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m76:38[22m[39m
+[90m [2mΓ¥»[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m52:17[22m[39m
+[90m [2mΓ¥»[22m node_modules/@testing-library/dom/dist/query-helpers.js:[2m95:19[22m[39m
+[36m [2mΓ¥»[22m client/src/pages/__tests__/item-registration.test.tsx:[2m58:33[22m[39m
+    [90m 56| [39m    [34mrender[39m([33m<[39m[33mItemRegistrationPage[39m 
+[33m/[39m[33m>[39m[33m,[39m { wrapper[33m:[39m [33mAllProviders[39m })[33m;[39m
+    [90m 57| [39m    
+    [90m 58| [39m    [35mconst[39m submitButton [33m=[39m 
+screen[33m.[39m[34mgetByText[39m([36m/Complete Registration/i[39m)[33m;[39m
+    [90m   | [39m                                [31m^[39m
+    [90m 59| [39m    [90m// Since completion is 0, the button should be disabled[39m
+    [90m 60| [39m    [34mexpect[39m(submitButton)[33m.[39m[34mtoBeDisabled[39m()[33m;[39m
+
+[31m[2mΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m4 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 00:23:22
+[2m   Duration [22m 13.82s[2m (transform 1.70s, setup 1.78s, collect 6.15s, tests 833ms, environment 7.41s, prepare 1.14s)[22m
+

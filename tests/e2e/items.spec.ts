@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Item Management", () => {
     test("should display the search page", async ({ page }) => {
         await page.goto("/search");
-        await expect(page.locator("input[type='search'], input[placeholder*='search' i]").first()).toBeVisible({ timeout: 10000 });
+        await expect(page.locator("input[placeholder*='Keyword' i]").first()).toBeVisible({ timeout: 10000 });
     });
 
     test("should load the landing page with feature sections", async ({ page }) => {

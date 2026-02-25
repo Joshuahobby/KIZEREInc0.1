@@ -16,8 +16,13 @@ import { config, isProd } from '../config';
 const logger = createLogger('SecurityMiddleware');
 
 // CSRF Protection Configuration
-const csrfUtils = doubleCsrf({
-  getSecret: () => config.SESSION_SECRET || "default-secret-for-csrf",
+const {
+  generateCsrfToken,
+  invalidCsrfTokenError,
+  validateRequest,
+  doubleCsrfProtection
+} = doubleCsrf({
+  getSecret: () => config.SESSION_SECRET || "default-secret-for-csrf-32-chars-at-least-!",
   cookieName: "kizere.x-csrf-token",
   cookieOptions: {
     httpOnly: true,
@@ -26,14 +31,17 @@ const csrfUtils = doubleCsrf({
   },
   size: 64,
   ignoredMethods: ["GET", "HEAD", "OPTIONS"],
-  getSessionIdentifier: (req: Request) => req.session.id,
+  getSessionIdentifier: (req: Request) => {
+    if (!req.session || !req.session.id) {
+      logger.warn('CSRF Token generated/validated without a valid session');
+      return 'missing-session';
+    }
+    return req.session.id;
+  },
   getCsrfTokenFromRequest: (req: Request) => req.headers["x-csrf-token"] as string,
-}) as any;
+});
 
-export const generateToken = csrfUtils.generateToken;
-export const invalidCsrfTokenError = csrfUtils.invalidCsrfTokenError;
-export const validateRequest = csrfUtils.validateRequest;
-export const doubleCsrfProtection = csrfUtils.doubleCsrfProtection;
+export { generateCsrfToken as generateToken, invalidCsrfTokenError, validateRequest, doubleCsrfProtection };
 
 // Rate limiter configurations
 const authLimiter = rateLimit({
@@ -105,8 +113,13 @@ export function sanitizeContent(content: string, mode: 'strict' | 'default' = 'd
 export function setupSecurityMiddleware(app: Express) {
   // CORS configuration
   const origin = config.FRONTEND_URL || "http://localhost:5000";
+  app.use(cors({
+    origin,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token']
+  }));
 
-  // Apply Helmet to secure HTTP headers
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
@@ -163,7 +176,7 @@ export function setupSecurityMiddleware(app: Express) {
     hsts: isProd,
     // Allow Replit iframe embedding
     crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: { policy: "unsafe-none" },
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
 
@@ -176,8 +189,21 @@ export function setupSecurityMiddleware(app: Express) {
   // CSRF Protection
   // 1. Endpoint to get the token
   app.get("/api/csrf-token", (req: Request, res: Response) => {
-    const token = generateToken(req, res);
-    res.json({ csrfToken: token });
+    // Ensure session is initialized to stay consistent with CSRF validation
+    if (req.session) {
+      (req.session as any).initialized = true;
+      req.session.save((err) => {
+        if (err) {
+          logger.error("Failed to save session for CSRF token", { error: err.message });
+          return res.status(500).json({ error: "Session save failed" });
+        }
+        const token = generateCsrfToken(req, res);
+        res.json({ csrfToken: token });
+      });
+    } else {
+      logger.error("No session available for CSRF token generation");
+      res.status(500).json({ error: "No session available" });
+    }
   });
 
   // 2. Middleware to protect all other state-changing routes

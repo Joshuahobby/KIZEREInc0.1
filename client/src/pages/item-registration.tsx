@@ -243,12 +243,12 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
   // Monitor form errors
   useEffect(() => {
     if (Object.keys(form.formState.errors).length > 0) {
-      console.warn("[Registration] Form validation errors:", form.formState.errors);
+      console.debug("[Registration] Form validation errors:", form.formState.errors);
     }
   }, [form.formState.errors]);
 
   useEffect(() => {
-    console.log(`[Registration] Completion: ${completion}%`);
+    console.debug(`[Registration] Completion: ${completion}%`);
   }, [completion]);
 
   const prevStep = (e?: React.MouseEvent) => {

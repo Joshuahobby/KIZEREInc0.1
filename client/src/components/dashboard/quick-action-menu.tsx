@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -32,10 +33,11 @@ export function QuickActionMenu({
   isOpen: propIsOpen,
   onOpenChange,
   className,
-  position = 'bottom-left'
+  position = 'bottom-right'
 }: QuickActionMenuProps) {
   const [isOpen, setIsOpen] = useState(propIsOpen || false);
   const [, navigate] = useLocation();
+  const { t } = useLanguage();
 
   // Toggle menu open/closed
   const toggleMenu = () => {
@@ -52,71 +54,71 @@ export function QuickActionMenu({
   const allActions = [
     {
       icon: <UserPlus className="h-4 w-4" />,
-      label: 'Add User',
-      description: 'Create a new user account',
+      label: t('dashboard.quickActions.addUser'),
+      description: t('dashboard.quickActions.addUserDesc'),
       onClick: () => navigate('/admin/users/new'),
       roles: ['Admin']
     },
     {
       icon: <Package className="h-4 w-4" />,
-      label: 'Register Item',
-      description: 'Register a new valuable item',
+      label: t('dashboard.quickActions.registerItem'),
+      description: t('dashboard.quickActions.registerItemDesc'),
       onClick: () => navigate(isAdmin ? '/admin/items/new' : '/register-item'),
       roles: ['Admin', 'Agent', 'User']
     },
     {
       icon: <AlertTriangle className="h-4 w-4" />,
-      label: 'Report Lost',
-      description: 'File a lost item report',
+      label: t('dashboard.quickActions.reportLost'),
+      description: t('dashboard.quickActions.reportLostDesc'),
       onClick: () => navigate(isAdmin ? '/admin/reports/new?type=lost' : '/lost-found/report/lost'),
       roles: ['Admin', 'Agent', 'User']
     },
     {
       icon: <CheckCircle2 className="h-4 w-4" />,
-      label: 'Report Found',
-      description: 'File a found item report',
+      label: t('dashboard.quickActions.reportFound'),
+      description: t('dashboard.quickActions.reportFoundDesc'),
       onClick: () => navigate(isAdmin ? '/admin/reports/new?type=found' : '/lost-found/report/found'),
       roles: ['Admin', 'Agent', 'User']
     },
     {
       icon: <Plus className="h-4 w-4" />,
-      label: 'Pending Reports',
-      description: 'Review awaiting verification',
+      label: t('dashboard.quickActions.pendingReports'),
+      description: t('dashboard.quickActions.pendingReportsDesc'),
       onClick: () => navigate('/agent/reports/pending'),
       roles: ['Agent']
     },
     {
       icon: <FileEdit className="h-4 w-4" />,
-      label: 'Process Reports',
-      description: 'Verify and update reports',
+      label: t('dashboard.quickActions.processReports'),
+      description: t('dashboard.quickActions.processReportsDesc'),
       onClick: () => navigate('/agent/reports/process'),
       roles: ['Agent']
     },
     {
       icon: <DollarSign className="h-4 w-4" />,
-      label: 'New Package',
-      description: 'Create a payment package',
+      label: t('dashboard.quickActions.newPackage'),
+      description: t('dashboard.quickActions.newPackageDesc'),
       onClick: () => navigate('/admin/payment-packages/new'),
       roles: ['Admin']
     },
     {
       icon: <CreditCard className="h-4 w-4" />,
-      label: 'Payments',
-      description: 'View payment dashboard',
+      label: t('dashboard.quickActions.payments'),
+      description: t('dashboard.quickActions.paymentsDesc'),
       onClick: () => navigate('/admin/payment-dashboard'),
       roles: ['Admin']
     },
     {
       icon: <BarChart3 className="h-4 w-4" />,
-      label: 'Analytics',
-      description: 'View system analytics',
+      label: t('dashboard.quickActions.analytics'),
+      description: t('dashboard.quickActions.analyticsDesc'),
       onClick: () => navigate('/admin/analytics'),
       roles: ['Admin']
     },
     {
       icon: <Settings className="h-4 w-4" />,
-      label: 'Settings',
-      description: 'System configuration',
+      label: t('dashboard.quickActions.settings'),
+      description: t('dashboard.quickActions.settingsDesc'),
       onClick: () => navigate(isAdmin ? '/admin/settings' : '/profile'),
       roles: ['Admin', 'Agent', 'User']
     }

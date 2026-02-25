@@ -137,7 +137,7 @@ export default function LandingPage() {
               </motion.div>
 
               <motion.div
-                className="mt-8 flex items-center gap-8"
+                className="mt-8 flex flex-wrap items-center gap-4 sm:gap-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6, duration: 0.8 }}
@@ -164,7 +164,7 @@ export default function LandingPage() {
                 <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-[var(--yellow-light)] rounded-full opacity-60 filter blur-3xl"></div>
 
                 <motion.div
-                  className="relative bg-card backdrop-blur-sm bg-opacity-95 p-8 rounded-2xl shadow-xl border border-border overflow-hidden"
+                  className="relative bg-card backdrop-blur-sm bg-opacity-95 p-5 sm:p-8 rounded-2xl shadow-xl border border-border overflow-hidden"
                   whileHover={{ y: -5, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" }}
                   transition={{ type: "spring", stiffness: 300 }}
                 >
@@ -432,15 +432,15 @@ export default function LandingPage() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
           >
-            <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
+            <div className="bg-card p-4 sm:p-6 md:p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
               <motion.div
-                className="text-5xl font-bold text-primary mb-2"
+                className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-2"
                 initial={{ scale: 0.8 }}
                 whileInView={{ scale: 1 }}
                 transition={{ delay: 0.1, type: "spring", stiffness: 200 }}

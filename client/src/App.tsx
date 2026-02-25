@@ -93,7 +93,7 @@ function App() {
   return (
     <ErrorBoundary>
       <IframeWarning />
-      <ThemeProvider defaultTheme="system" storageKey="kizere-theme">
+      <ThemeProvider attribute="class" defaultTheme="system" storageKey="kizere-theme" enableSystem disableTransitionOnChange>
         <LanguageProvider defaultLanguage="en">
           <TooltipProvider>
             <React.Suspense fallback={<LoadingOverlay alwaysShow={true} />}>

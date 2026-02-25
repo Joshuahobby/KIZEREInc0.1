@@ -1,38 +1,67 @@
-import * as React from "react";
-import { Moon, Sun } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
-
+import { motion } from "framer-motion";
+import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 export function ThemeToggle() {
-    const { setTheme } = useTheme();
+    const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    // Wait for component to be mounted to avoid hydration mismatch
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    const toggleTheme = () => {
+        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        console.log('[ThemeToggle] Switching theme to:', newTheme);
+        setTheme(newTheme);
+    };
+
+    if (!mounted) {
+        return <div className="w-10 h-10"></div>; // Placeholder to avoid layout shift
+    }
 
     return (
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                    <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                    <span className="sr-only">Toggle theme</span>
-                </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
-                    Light
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
-                    Dark
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
-                    System
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+            className={cn(
+                "relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300",
+                theme === 'light'
+                    ? "bg-amber-50/50 border border-amber-100 hover:bg-amber-100/80"
+                    : "hover:bg-blue-900/20 border border-transparent"
+            )}
+            aria-label="Toggle Theme"
+        >
+            <div className="relative h-5 w-5">
+                <motion.div
+                    initial={false}
+                    animate={{
+                        opacity: theme === 'light' ? 1 : 0,
+                        y: theme === 'light' ? 0 : -10
+                    }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0 flex items-center justify-center"
+                >
+                    <Sun className="h-5 w-5 text-amber-600" />
+                </motion.div>
+
+                <motion.div
+                    initial={false}
+                    animate={{
+                        opacity: theme === 'dark' ? 1 : 0,
+                        y: theme === 'dark' ? 0 : 10
+                    }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0 flex items-center justify-center"
+                >
+                    <Moon className="h-5 w-5 text-blue-400" />
+                </motion.div>
+            </div>
+        </Button>
     );
 }

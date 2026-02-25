@@ -125,7 +125,10 @@ const EnhancedDashboard: React.FC = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold">
-                  {t('dashboard.welcomeBack')}, {user.fullName || user.username}!
+                  {t('dashboard.welcomeBack', { name: "" }).replace(/,?\s*$/, '')}{' '}
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/50">
+                    {user.fullName || user.username}
+                  </span>!
                 </h1>
                 <p className="text-muted-foreground mt-1">
                   {isAdmin

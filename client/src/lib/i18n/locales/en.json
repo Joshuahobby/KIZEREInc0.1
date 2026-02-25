@@ -76,9 +76,9 @@
       "testimonials": "Testimonials"
     },
     "trustedUsers": "Trusted by thousands of users",
-    "heroTitle1": "Secure Digital Protection",
-    "heroTitle2": "For Your Valuable Items",
-    "heroSubtitle": "Register, protect and easily recover your items with our comprehensive digital platform.",
+    "heroTitle1": "Peace of Mind",
+    "heroTitle2": "For Your Valuables",
+    "heroSubtitle": "The leading secure digital registry for protecting your possessions and simplifying recovery in Rwanda.",
     "registerNow": "Register Now",
     "learnMore": "Learn More",
     "secure": "Secure & Private",
@@ -182,7 +182,7 @@
         },
         "lostFound": {
           "question": "How does the lost and found process work?",
-          "answer": "When someone finds your item, they can scan the QR code attached to it. This notifies you immediately and provides the finder with instructions on how to safely return your item to you, while protecting your privacy."
+          "answer": "When someone finds your item, they can scan the QR code attached to it. This notifies you immediately and provides the finder with a secure, private way to initiate the return, keeping your personal contact details hidden until you choose to share them."
         },
         "limits": {
           "question": "Is there a limit to how many items I can register?",
@@ -216,12 +216,55 @@
     "itemMatchedDesc": "A lost item matching your description has been found."
   },
   "dashboard": {
-    "welcomeMessage": "Welcome back, {name}",
-    "welcomeBack": "Welcome back",
+    "welcomeMessage": "Welcome, {name}",
+    "welcomeBack": "Welcome back, {name}",
+    "welcomeSubtitle": "Manage your registered assets, monitor hub activity, and track security status in real-time.",
+    "localTime": "Local Time",
+    "reputationScore": "Reputation Score",
+    "trustedMember": "Trusted Member",
+    "communityMember": "Community Member",
+    "activeHubReports": "Active Hub Reports",
+    "totalPlatformUsers": "Total Platform Users",
+    "pendingVerifications": "Pending Verifications",
+    "exportData": "Export Data",
+    "importData": "Import Data",
+    "viewAll": "View All",
+    "noReportsFound": "No reports found",
+    "myClaims": "My Claims",
+    "claimsDescription": "Items you've claimed as yours.",
+    "noClaimsFiled": "You haven't filed any claims yet.",
+    "claimsReceived": "Claims Received",
+    "claimsReceivedDescription": "People claiming items you found.",
+    "noClaimsReceived": "No claims received yet.",
+    "loadingComponents": "Loading dashboard components...",
     "subtitles": {
       "user": "Manage your registered items and activity",
       "agent": "Track lost & found items and users",
       "admin": "System overview and management"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "subtitle": "Frequently used tools and shortcuts",
+      "addUser": "Add User",
+      "addUserDesc": "Create a new user account",
+      "registerItem": "Register Item",
+      "registerItemDesc": "Register a new valuable item",
+      "reportLost": "Report Lost",
+      "reportLostDesc": "File a lost item report",
+      "reportFound": "Report Found",
+      "reportFoundDesc": "File a found item report",
+      "pendingReports": "Pending Reports",
+      "pendingReportsDesc": "Review awaiting verification",
+      "processReports": "Process Reports",
+      "processReportsDesc": "Verify and update reports",
+      "newPackage": "New Package",
+      "newPackageDesc": "Create a payment package",
+      "payments": "Payments",
+      "paymentsDesc": "View payment dashboard",
+      "analytics": "Analytics",
+      "analyticsDesc": "View system analytics",
+      "settings": "Settings",
+      "settingsDesc": "System configuration"
     },
     "registerNewItem": "Register New Item",
     "tabs": {
@@ -336,7 +379,6 @@
       "selected": "Selected",
       "match": "Match"
     },
-    "quickActions": "Quick Actions",
     "recentActivity": "Recent Activity",
     "notifications": "Notifications",
     "noData": "No data available",

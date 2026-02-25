@@ -5,13 +5,13 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/components/layout/index";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  ShieldCheck, 
-  Upload, 
-  FileText, 
-  CheckCircle, 
-  Clock, 
-  AlertCircle, 
+import {
+  ShieldCheck,
+  Upload,
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertCircle,
   X,
   CreditCard,
   UserCheck,
@@ -38,7 +38,7 @@ export default function IdentityVerificationPage() {
   const { toast } = useToast();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  
+
   const [selectedType, setSelectedType] = useState<string>("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [notes, setNotes] = useState("");
@@ -68,11 +68,9 @@ export default function IdentityVerificationPage() {
       // 1. Upload files
       const formData = new FormData();
       uploadedFiles.forEach(file => formData.append('documents', file));
-      
-      const uploadRes = await fetch('/api/upload/documents', { method: 'POST', body: formData });
-      if (!uploadRes.ok) throw new Error("Failed to upload documents");
-      const { documents } = await uploadRes.json();
-      const documentUrls = documents.map((d: any) => d.url);
+
+      const uploadRes = await apiRequest<{ documents: any[] }>('/api/upload/documents', { method: 'POST', data: formData });
+      const documentUrls = uploadRes.documents.map((d: any) => d.url);
 
       // 2. Submit request
       return apiRequest('/api/me/verification-requests', {
@@ -178,8 +176,8 @@ export default function IdentityVerificationPage() {
                             onClick={() => setSelectedType(type.value)}
                             className={cn(
                               "flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all",
-                              selectedType === type.value 
-                                ? "border-sky-500 bg-sky-50/50 text-sky-700 scale-[1.02]" 
+                              selectedType === type.value
+                                ? "border-sky-500 bg-sky-50/50 text-sky-700 scale-[1.02]"
                                 : "border-neutral-100 bg-white hover:border-neutral-200 text-neutral-500"
                             )}
                           >
@@ -192,8 +190,8 @@ export default function IdentityVerificationPage() {
 
                     <div className="space-y-3">
                       <label className="text-sm font-semibold text-neutral-700">{t('verification_upload_label')}</label>
-                      <div 
-                        {...getRootProps()} 
+                      <div
+                        {...getRootProps()}
                         className={cn(
                           "border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors",
                           isDragActive ? "border-sky-500 bg-sky-50" : "border-neutral-200 hover:border-sky-300"
@@ -207,7 +205,7 @@ export default function IdentityVerificationPage() {
 
                       <AnimatePresence>
                         {uploadedFiles.length > 0 && (
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: "auto" }}
                             exit={{ opacity: 0, height: 0 }}
@@ -219,8 +217,8 @@ export default function IdentityVerificationPage() {
                                   <FileText className="h-4 w-4 text-sky-500" />
                                   <span className="text-xs font-medium truncate max-w-[200px]">{file.name}</span>
                                 </div>
-                                <button 
-                                  onClick={() => removeFile(i)} 
+                                <button
+                                  onClick={() => removeFile(i)}
                                   className="text-neutral-400 hover:text-red-500 p-1"
                                   aria-label={`Remove ${file.name}`}
                                 >
@@ -233,7 +231,7 @@ export default function IdentityVerificationPage() {
                       </AnimatePresence>
                     </div>
 
-                    <Button 
+                    <Button
                       className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white font-bold text-lg"
                       disabled={!selectedType || uploadedFiles.length === 0 || submitMutation.isPending}
                       onClick={() => submitMutation.mutate()}

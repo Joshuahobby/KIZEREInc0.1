@@ -1,0 +1,56 @@
+﻿
+> rest-express@1.0.0 test:e2e
+> playwright test --reporter=list
+
+
+Running 15 tests using 4 workers
+
+  Γ£ô   4 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:4:5 ΓÇ║ Authentication Flow ΓÇ║ should display login page (8.3s)
+  Γ£ô   3 [chromium] ΓÇ║ tests\e2e\admin.spec.ts:4:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from admin routes (9.5s)
+  Γ£ô   1 [chromium] ΓÇ║ tests\e2e\admin.spec.ts:10:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from roles management (10.1s)
+  Γ£ô   2 [chromium] ΓÇ║ tests\e2e\admin.spec.ts:16:5 ΓÇ║ Admin Panel ΓÇ║ should redirect unauthenticated user from audit logs (9.9s)
+  Γ£ô   6 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:20:5 ΓÇ║ Authentication Flow ΓÇ║ should show validation errors on empty login (2.8s)
+  Γ£ô   5 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:10:5 ΓÇ║ Authentication Flow ΓÇ║ should show registration form (6.0s)
+  Γ£ô   7 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:32:5 ΓÇ║ Authentication Flow ΓÇ║ should have Google OAuth button (5.5s)
+  Γ£ô   9 [chromium] ΓÇ║ tests\e2e\claims.spec.ts:4:5 ΓÇ║ Claims Flow ΓÇ║ should redirect to auth when accessing claims unauthenticated (4.3s)
+  Γ£ô   8 [chromium] ΓÇ║ tests\e2e\auth.spec.ts:39:5 ΓÇ║ Authentication Flow ΓÇ║ should redirect unauthenticated users from dashboard (8.3s)
+  Γ£ô  13 [chromium] ΓÇ║ tests\e2e\payments.spec.ts:4:5 ΓÇ║ API Health & Payments ΓÇ║ should return healthy from API health check (2.7s)
+  Γ£ô  14 [chromium] ΓÇ║ tests\e2e\payments.spec.ts:12:5 ΓÇ║ API Health & Payments ΓÇ║ should reject unauthenticated payment API access (28ms)
+  Γ£ô  15 [chromium] ΓÇ║ tests\e2e\payments.spec.ts:17:5 ΓÇ║ API Health & Payments ΓÇ║ should reject unauthenticated wallet access (30ms)
+  Γ£ô  11 [chromium] ΓÇ║ tests\e2e\items.spec.ts:9:5 ΓÇ║ Item Management ΓÇ║ should load the landing page with feature sections (8.7s)
+  Γ£ô  12 [chromium] ΓÇ║ tests\e2e\items.spec.ts:16:5 ΓÇ║ Item Management ΓÇ║ should have register item link from landing (8.0s)
+  Γ£ÿ  10 [chromium] ΓÇ║ tests\e2e\items.spec.ts:4:5 ΓÇ║ Item Management ΓÇ║ should display the search page (12.7s)
+
+
+  1) [chromium] ΓÇ║ tests\e2e\items.spec.ts:4:5 ΓÇ║ Item Management ΓÇ║ should display the search page ΓöÇΓöÇΓöÇ
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('input[type=\'search\'], input[placeholder*=\'search\' i]').first()
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 10000ms[22m
+    [2m  - waiting for locator('input[type=\'search\'], input[placeholder*=\'search\' i]').first()[22m
+
+
+      4 |     test("should display the search page", async ({ page }) => {
+      5 |         await page.goto("/search");
+    > 6 |         await expect(page.locator("input[type='search'], input[placeholder*='search' i]").first()).toBeVisible({ timeout: 10000 });
+        |                                                                                                    ^
+      7 |     });
+      8 |
+      9 |     test("should load the landing page with feature sections", async ({ page }) => {
+        at F:\Joe\GetRwanda\2026\KIZEREInc0.1\tests\e2e\items.spec.ts:6:100
+
+    attachment #1: screenshot (image/png) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+    test-results\items-Item-Management-should-display-the-search-page-chromium\test-failed-1.png
+    ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
+
+    Error Context: test-results\items-Item-Management-should-display-the-search-page-chromium\error-context.md
+
+  1 failed
+    [chromium] ΓÇ║ tests\e2e\items.spec.ts:4:5 ΓÇ║ Item Management ΓÇ║ should display the search page ΓöÇΓöÇΓöÇΓöÇ
+  14 passed (59.8s)

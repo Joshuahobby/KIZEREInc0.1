@@ -5,7 +5,7 @@ import { User, InsertUser, UserPreferences } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { AuthService } from "@/services/auth.service";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest, clearCsrfToken } from "@/lib/queryClient";
 
 export interface AuthContextType {
   user: User | null;
@@ -98,46 +98,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
 
       console.log("[useAuth] Calling /api/auth/google...");
-      const res = await fetch("/api/auth/google", {
+      const userData = await apiRequest<any>("/api/auth/google", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        credentials: "include"
+        data: payload
       });
 
-
-      console.log("[useAuth] /api/auth/google response status:", res.status);
-      if (res.ok) {
-        lastSyncTimeRef.current = Date.now(); // Update last sync time on success
-        const userData = await res.json();
-        console.log("[useAuth] Sync successful, user role:", userData.role);
-        if (isMounted.current) {
-          setUser(userData);
-          setError(null);
-          // Only toast if it's the first login in this session to avoid noise
-          if (!user) {
-            toast({
-              title: "Welcome!",
-              description: `Signed in as ${userData.fullName || userData.email}`,
-            });
-          }
+      console.log("[useAuth] /api/auth/google sync successful, user role:", userData.role);
+      lastSyncTimeRef.current = Date.now(); // Update last sync time on success
+      if (isMounted.current) {
+        setUser(userData);
+        setError(null);
+        // Only toast if it's the first login in this session to avoid noise
+        if (!user) {
+          toast({
+            title: "Welcome!",
+            description: `Signed in as ${userData.fullName || userData.email}`,
+          });
         }
-      } else {
-        const errText = await res.text();
-        let err;
-        try { err = JSON.parse(errText); } catch { err = { message: errText }; }
-        console.error("[useAuth] Session sync failed", err);
-        // If rate limited, respect the retry-after
-        if (res.status === 429 && err.retryAfter) {
-          lastSyncTimeRef.current = Date.now(); // Prevent immediate retry
-          console.log(`[useAuth] Rate limited, retry after ${err.retryAfter}s`);
-        }
-        if (isMounted.current) setError(err.message || "Login failed");
       }
-
     } catch (e: any) {
-      console.error("[useAuth] Sync network error", e);
-      if (isMounted.current) setError("Network error during login: " + e.message);
+      console.error("[useAuth] Sync error", e);
+      if (isMounted.current) setError(e.message || "Login failed");
     } finally {
       syncInProgressRef.current = false;
       if (isMounted.current) {
@@ -208,8 +189,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setIsLoading(false);
             console.log("[useAuth] Session valid from initial check");
           }
+        } else if (sessionResponse.status !== 401) {
+          console.log("[useAuth] Session check status:", sessionResponse.status);
         } else {
-          console.log("[useAuth] No active session on startup");
+          // 401 is expected on first load when not logged in
         }
 
         const { onAuthChange, handleRedirectResult } = await import('@/lib/firebase');
@@ -318,18 +301,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: any) => {
-      const response = await fetch("/api/auth/login", {
+      return await apiRequest("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
+        data: credentials,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Login failed");
-      }
-
-      return await response.json();
     },
     onSuccess: (userData: User) => {
       setUser(userData);
@@ -348,18 +323,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const registerMutation = useMutation({
     mutationFn: async (data: InsertUser) => {
-      const response = await fetch("/api/auth/register", {
+      return await apiRequest("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        data,
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Registration failed");
-      }
-
-      return await response.json();
     },
     onSuccess: (userData: User) => {
       setUser(userData);
@@ -423,9 +390,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await logOut();
       } catch (e) { }
 
-      await fetch("/api/auth/logout", {
+      await apiRequest("/api/auth/logout", {
         method: "POST",
-        credentials: "include",
       });
 
       setUser(null);
@@ -433,6 +399,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Clear all query cache to prevent stale data
       queryClient.clear();
+
+      // Clear cached CSRF token since session is destroyed
+      clearCsrfToken();
 
       // Clear all local and session storage for a fresh start
       localStorage.clear();

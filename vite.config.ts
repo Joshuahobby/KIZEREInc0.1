@@ -24,7 +24,10 @@ export default defineConfig({
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
-    dedupe: ["react", "react-dom"],
+    dedupe: ["react", "react-dom", "wouter", "framer-motion"],
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom", "wouter", "framer-motion"],
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {

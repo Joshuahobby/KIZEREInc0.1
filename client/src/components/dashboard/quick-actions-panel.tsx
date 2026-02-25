@@ -1,6 +1,7 @@
 import React from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -99,41 +100,42 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
 export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) => {
   const isAdmin = user?.role === "Admin";
   const isAgent = user?.role === "Agent";
+  const { t } = useLanguage();
 
   // Common actions for all users
   const commonActions: QuickActionItemProps[] = [
     {
       icon: <PlusCircle className="h-5 w-5 text-blue-600" />,
-      title: "Register New Item",
-      description: "Add a new item to your inventory",
+      title: t('dashboard.registerNewItem'),
+      description: t('dashboard.reports.description') || "Add a new item to your inventory",
       href: "/register-item",
       color: "blue"
     },
     {
       icon: <AlertTriangle className="h-5 w-5 text-amber-600" />,
-      title: "Report Lost Item",
-      description: "File a lost item report",
+      title: t('reports.reportLostItem'),
+      description: t('dashboard.lostReports') || "File a lost item report",
       href: "/lost-found/report/lost",
       color: "amber"
     },
     {
       icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
-      title: "Report Found Item",
-      description: "Submit a found item report",
+      title: t('reports.reportFoundItem'),
+      description: t('dashboard.foundReports') || "Submit a found item report",
       href: "/lost-found/report/found",
       color: "green"
     },
     {
       icon: <ShieldCheck className="h-5 w-5 text-indigo-600" />,
-      title: "View My Claims",
-      description: "Manage your item ownership claims",
+      title: t('dashboard.tabs.claims'),
+      description: t('dashboard.reports.description') || "Manage your item ownership claims",
       href: "/dashboard?tab=claims",
       color: "blue"
     },
     {
       icon: <Search className="h-5 w-5 text-purple-600" />,
-      title: "Advanced Search",
-      description: "Find items with detailed filters",
+      title: t('nav.search'),
+      description: t('dashboard.reports.description') || "Find items with detailed filters",
       href: "/search",
       color: "purple"
     }
@@ -143,29 +145,29 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
   const adminActions: QuickActionItemProps[] = [
     {
       icon: <UserCircle className="h-5 w-5 text-purple-600" />,
-      title: "User Management",
-      description: "Manage users and permissions",
+      title: t('nav.userManagement'),
+      description: t('dashboard.admin.description') || "Manage users and permissions",
       href: "/admin/users",
       color: "purple"
     },
     {
       icon: <DollarSign className="h-5 w-5 text-green-600" />,
-      title: "Payment Dashboard",
-      description: "Monitor transactions and revenue",
+      title: t('dashboard.payments.title'),
+      description: t('dashboard.admin.description') || "Monitor transactions and revenue",
       href: "/admin/payment-dashboard",
       color: "green"
     },
     {
       icon: <Package className="h-5 w-5 text-blue-600" />,
-      title: "Payment Packages",
-      description: "Manage payment packages",
+      title: t('dashboard.tabs.payments'),
+      description: t('dashboard.admin.description') || "Manage payment packages",
       href: "/admin/payment-packages",
       color: "blue"
     },
     {
       icon: <Settings className="h-5 w-5 text-amber-600" />,
-      title: "System Settings",
-      description: "Configure platform settings",
+      title: t('dashboard.settings'),
+      description: t('dashboard.admin.description') || "Configure platform settings",
       href: "/admin/settings",
       color: "amber"
     }
@@ -175,15 +177,15 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
   const agentActions: QuickActionItemProps[] = [
     {
       icon: <FileText className="h-5 w-5 text-amber-600" />,
-      title: "Pending Reports",
-      description: "Review awaiting verification",
+      title: t('dashboard.agent.pendingReports'),
+      description: t('dashboard.agent.description') || "Review awaiting verification",
       href: "/agent/reports/pending",
       color: "amber"
     },
     {
       icon: <FileEdit className="h-5 w-5 text-blue-600" />,
-      title: "Process Reports",
-      description: "Verify and update reports",
+      title: t('dashboard.agent.manageReports'),
+      description: t('dashboard.agent.description') || "Verify and update reports",
       href: "/agent/reports/process",
       color: "blue"
     }
@@ -201,10 +203,10 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-display flex items-center">
           <Bookmark className="h-5 w-5 mr-2 text-primary" />
-          Quick Actions
+          {t('dashboard.quickActions.title') || "Quick Actions"}
         </CardTitle>
         <CardDescription>
-          Frequently used tools and shortcuts
+          {t('dashboard.quickActions.subtitle') || "Frequently used tools and shortcuts"}
         </CardDescription>
       </CardHeader>
 
@@ -230,11 +232,11 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
         <CardFooter className="flex justify-between pt-5 border-t mt-3 gap-3">
           <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl border-dashed">
             <FileDown className="h-4 w-4 mr-2 text-primary" />
-            <span className="text-xs font-bold">Export Data</span>
+            <span className="text-xs font-bold">{t('dashboard.exportData') || "Export Data"}</span>
           </Button>
           <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl border-dashed">
             <FileUp className="h-4 w-4 mr-2 text-primary" />
-            <span className="text-xs font-bold">Import Data</span>
+            <span className="text-xs font-bold">{t('dashboard.importData') || "Import Data"}</span>
           </Button>
         </CardFooter>
       )}

@@ -129,6 +129,15 @@ async function throwIfResNotOk(res: Response) {
 }
 
 /**
+ * Clears the cached CSRF token, forcing re-fetch on next request.
+ * Call this on login/logout/session change.
+ */
+export function clearCsrfToken() {
+  cachedCsrfToken = null;
+  csrfTokenPromise = null;
+}
+
+/**
  * Ensures we have a valid CSRF token.
  * Fetches one from the server if not already cached.
  */
@@ -196,11 +205,45 @@ export async function apiRequest<T = any>(
     credentials: "include",
   });
 
+  // If we get a CSRF error, clear cached token, get a fresh one, and retry once
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase())) {
+    let isCsrfError = false;
+    if (res.status === 403 || res.status === 500) {
+      try {
+        const cloned = res.clone();
+        const text = await cloned.text();
+        isCsrfError = text.toLowerCase().includes('csrf');
+      } catch { /* ignore */ }
+    }
+    if (isCsrfError) {
+      console.warn(`[apiRequest] CSRF token invalid for ${url}, refreshing...`);
+      clearCsrfToken();
+      try {
+        const freshToken = await ensureCsrfToken();
+        headers["X-CSRF-Token"] = freshToken;
+        res = await fetch(url, {
+          method,
+          headers,
+          body,
+          credentials: "include",
+        });
+      } catch (csrfError) {
+        console.error('[apiRequest] CSRF retry failed:', csrfError);
+      }
+    }
+  }
+
   // If we get a 401, try to re-authenticate and retry once
   if (res.status === 401) {
     console.warn(`[apiRequest] 401 Unauthorized for ${url}, attempting sync...`);
     try {
       await ensureAuthenticated(true);
+      // Also refresh CSRF token since session may have changed
+      clearCsrfToken();
+      const freshToken = await ensureCsrfToken();
+      if (["POST", "PUT", "PATCH", "DELETE"].includes(method.toUpperCase())) {
+        headers["X-CSRF-Token"] = freshToken;
+      }
       console.log(`[apiRequest] Sync successful, retrying ${url}`);
       res = await fetch(url, {
         method,

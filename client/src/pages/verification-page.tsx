@@ -4,18 +4,18 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
 import { z } from "zod";
-import { 
-  Loader2, Upload, CheckCircle2, XCircle, AlertCircle, 
-  ShieldCheck, FileText, Camera 
+import {
+  Loader2, Upload, CheckCircle2, XCircle, AlertCircle,
+  ShieldCheck, FileText, Camera
 } from "lucide-react";
-import { 
-  Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter 
+import {
+  Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { 
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue 
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +40,7 @@ export default function VerificationPage() {
 
   const { data: status, isLoading: isLoadingStatus } = useQuery({
     queryKey: ["/api/verification/status"],
-  }) as { data: { status: string, adminComment?: string } | undefined, isLoading: boolean }; 
+  }) as { data: { status: string, adminComment?: string } | undefined, isLoading: boolean };
 
   const form = useForm<VerificationFormData>({
     resolver: zodResolver(verificationSchema),
@@ -63,18 +63,13 @@ export default function VerificationPage() {
     formData.append("selfie", selfieFile);
 
     try {
-      // Use fetch directly for FormData
-      const res = await fetch("/api/verification", {
+      await apiRequest("/api/verification", {
         method: "POST",
-        body: formData,
+        data: formData,
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to submit verification");
-      }
-
       await queryClient.invalidateQueries({ queryKey: ["/api/verification/status"] });
-      
+
       toast({
         title: "Verification Submitted",
         description: "Your documents have been received and are under review.",
@@ -150,7 +145,7 @@ export default function VerificationPage() {
         </CardHeader>
         <CardContent>
           {currentStatus === 'rejected' && (
-             <Alert variant="destructive" className="mb-6">
+            <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Verification Rejected</AlertTitle>
               <AlertDescription>
@@ -163,8 +158,8 @@ export default function VerificationPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="documentType">Document Type</Label>
-                <Select 
-                  onValueChange={(val) => form.setValue("documentType", val as any)} 
+                <Select
+                  onValueChange={(val) => form.setValue("documentType", val as any)}
                   defaultValue={form.getValues("documentType")}
                 >
                   <SelectTrigger>
@@ -183,9 +178,9 @@ export default function VerificationPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors cursor-pointer relative">
-                  <input 
-                    type="file" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    accept="image/*"
                     aria-label="Upload ID Document"
                     className="absolute inset-0 opacity-0 cursor-pointer"
                     onChange={(e) => setDocumentFile(e.target.files?.[0] || null)}
@@ -204,9 +199,9 @@ export default function VerificationPage() {
                 </div>
 
                 <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors cursor-pointer relative">
-                   <input 
-                    type="file" 
-                    accept="image/*" 
+                  <input
+                    type="file"
+                    accept="image/*"
                     aria-label="Upload Selfie"
                     className="absolute inset-0 opacity-0 cursor-pointer"
                     onChange={(e) => setSelfieFile(e.target.files?.[0] || null)}

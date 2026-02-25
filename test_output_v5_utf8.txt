@@ -1,0 +1,160 @@
+﻿
+> rest-express@1.0.0 test
+> vitest run
+
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mF:/Joe/GetRwanda/2026/KIZEREInc0.1[39m
+
+[90mstdout[2m | server/services/report-matching.test.ts[2m > [22m[2mReportMatchingService[2m > [22m[2mshould find a match with exact Unique Identifier
+[22m[39m[2026-02-25T22:44:22.097Z] [INFO] [ReportMatchingService] Starting match scan for report {
+  "reportId": 1,
+  "type": "lost"
+}
+[2026-02-25T22:44:22.101Z] [INFO] [ReportMatchingService] Potential match found {
+  "reportId": 1,
+  "candidateId": 2,
+  "score": 100,
+  "highConfidence": true
+}
+[2026-02-25T22:44:22.102Z] [INFO] [ReportMatchingService] Match scan complete {
+  "reportId": 1,
+  "matchesFound": 1
+}
+
+[90mstdout[2m | server/services/report-matching.test.ts[2m > [22m[2mReportMatchingService[2m > [22m[2mshould prefer Item ID match
+[22m[39m[2026-02-25T22:44:22.107Z] [INFO] [ReportMatchingService] Starting match scan for report {
+  "reportId": 1,
+  "type": "lost"
+}
+[2026-02-25T22:44:22.108Z] [INFO] [ReportMatchingService] Potential match found {
+  "reportId": 1,
+  "candidateId": 3,
+  "score": 100,
+  "highConfidence": true
+}
+[2026-02-25T22:44:22.109Z] [INFO] [ReportMatchingService] Match scan complete {
+  "reportId": 1,
+  "matchesFound": 1
+}
+
+[90mstdout[2m | server/services/report-matching.test.ts[2m > [22m[2mReportMatchingService[2m > [22m[2mshould not notify for low scores
+[22m[39m[2026-02-25T22:44:22.111Z] [INFO] [ReportMatchingService] Starting match scan for report {
+  "reportId": 1,
+  "type": "lost"
+}
+[2026-02-25T22:44:22.112Z] [INFO] [ReportMatchingService] Match scan complete {
+  "reportId": 1,
+  "matchesFound": 0
+}
+
+ [32mΓ£ô[39m server/services/report-matching.test.ts [2m([22m[2m3 tests[22m[2m)[22m[90m 22[2mms[22m[39m
+[90mstdout[2m | client/src/pages/__tests__/item-registration.test.tsx
+[22m[39m[Firebase] Checking configuration variables: {
+  hasApiKey: [33mtrue[39m,
+  hasProjectId: [33mtrue[39m,
+  hasAppId: [33mtrue[39m,
+  authDomain: [32m'kizere-99ac2.firebaseapp.com'[39m
+}
+[Firebase] Configuration validation passed
+[Firebase] Successfully initialized Firebase app
+[Firebase] Persistence set to browserSessionPersistence
+[useAuth] Created new AuthContext and assigned to global scope
+
+[90mstdout[2m | client/src/pages/__tests__/item-registration.test.tsx[2m > [22m[2mItemRegistrationPage[2m > [22m[2mrenders the registration form
+[22m[39m[Registration] Completion: 0%
+[LanguageContext] Updating document.documentElement.lang to: en
+[Registration] Completion: 17%
+
+[90mstdout[2m | client/src/pages/__tests__/item-registration.test.tsx[2m > [22m[2mItemRegistrationPage[2m > [22m[2mshows validation errors for empty required fields
+[22m[39m[Registration] Completion: 0%
+[LanguageContext] Updating document.documentElement.lang to: en
+[Registration] Completion: 17%
+
+ [32mΓ£ô[39m client/src/pages/__tests__/item-registration.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 748[2mms[22m[39m
+   [33m[2mΓ£ô[22m[39m ItemRegistrationPage[2m > [22mrenders the registration form [33m547[2mms[22m[39m
+node.exe : [90mstderr[2m | client/src/pages/__tests__/item-registration.test.tsx
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([90mstderr[2m...ration.test.tsx:String) [], 
+RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[22m[39m[Firebase] Error handling redirect result: {
+  code: [32m'auth/operation-not-supported-in-this-environment'[39m,
+  message: [32m'Firebase: Error (auth/operation-not-supported-in-this-environment).'[39m,
+  email: [1mnull[22m,
+  stack: [32m'FirebaseError: Firebase: Error 
+(auth/operation-not-supported-in-this-environment).\n'[39m +
+    [32m'    at createErrorInternal (file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/@firebase/a
+uth/src/core/util/assert.ts:152:38)\n'[39m +
+    [32m'    at _createError (file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/@firebase/auth/src
+/core/util/assert.ts:83:10)\n'[39m +
+    [32m'    at file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/@firebase/auth/src/platform_node
+/index.ts:65:29\n'[39m +
+    [32m'    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)\n'[39m +
+    [32m'    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n'[39m +
+    [32m'    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)\n'[39m +
+    [32m'    at VitestExecutor.interopedImport 
+(file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/vite-node/dist/client.mjs:421:28)\n'[39m +
+    [32m'    at VitestExecutor.directRequest 
+(file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/vite-node/dist/client.mjs:280:24)\n'[39m +
+    [32m'    at VitestExecutor.cachedRequest 
+(file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/vite-node/dist/client.mjs:206:14)\n'[39m +
+    [32m'    at VitestExecutor.dependencyRequest 
+(file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/vite-node/dist/client.mjs:259:12)'[39m,
+  timestamp: [32m'2026-02-25T22:44:27.845Z'[39m
+}
+
+[90mstdout[2m | client/src/pages/__tests__/item-registration.test.tsx
+[22m[39m[Firebase] Checking for redirect result...
+[Firebase] Redirect context: { hasRedirect: [33mfalse[39m, currentUrl: [32m'http://localhost:3000/'[39m }
+[Firebase] Getting redirect result from auth instance
+[Firebase] Running on standard domain
+
+[90mstdout[2m | handleRedirectResult (F:\Joe\GetRwanda\2026\KIZEREInc0.1\client\src\lib\firebase.ts:154:13)
+[22m[39m[Firebase] Checking for redirect result...
+
+[90mstdout[2m | handleRedirectResult (F:\Joe\GetRwanda\2026\KIZEREInc0.1\client\src\lib\firebase.ts:171:13)
+[22m[39m[Firebase] Redirect context: { hasRedirect: [33mfalse[39m, currentUrl: [32m'http://localhost:3000/'[39m }
+
+[90mstdout[2m | handleRedirectResult (F:\Joe\GetRwanda\2026\KIZEREInc0.1\client\src\lib\firebase.ts:181:13)
+[22m[39m[Firebase] Getting redirect result from auth instance
+
+[90mstdout[2m | handleRedirectResult (F:\Joe\GetRwanda\2026\KIZEREInc0.1\client\src\lib\firebase.ts:187:13)
+[22m[39m[Firebase] Running on standard domain
+
+[90mstderr[2m | handleRedirectResult 
+(F:\Joe\GetRwanda\2026\KIZEREInc0.1\client\src\lib\firebase.ts:284:13)
+[22m[39m[Firebase] Error handling redirect result: {
+  code: [32m'auth/operation-not-supported-in-this-environment'[39m,
+  message: [32m'Firebase: Error (auth/operation-not-supported-in-this-environment).'[39m,
+  email: [1mnull[22m,
+  stack: [32m'FirebaseError: Firebase: Error 
+(auth/operation-not-supported-in-this-environment).\n'[39m +
+    [32m'    at createErrorInternal (file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/@firebase/a
+uth/src/core/util/assert.ts:152:38)\n'[39m +
+    [32m'    at _createError (file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/@firebase/auth/src
+/core/util/assert.ts:83:10)\n'[39m +
+    [32m'    at file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/@firebase/auth/src/platform_node
+/index.ts:65:29\n'[39m +
+    [32m'    at ModuleJob.run (node:internal/modules/esm/module_job:377:25)\n'[39m +
+    [32m'    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n'[39m +
+    [32m'    at onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)\n'[39m +
+    [32m'    at VitestExecutor.interopedImport 
+(file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/vite-node/dist/client.mjs:421:28)\n'[39m +
+    [32m'    at VitestExecutor.directRequest 
+(file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/vite-node/dist/client.mjs:280:24)\n'[39m +
+    [32m'    at VitestExecutor.cachedRequest 
+(file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/vite-node/dist/client.mjs:206:14)\n'[39m +
+    [32m'    at VitestExecutor.dependencyRequest 
+(file:///F:/Joe/GetRwanda/2026/KIZEREInc0.1/node_modules/vite-node/dist/client.mjs:259:12)'[39m,
+  timestamp: [32m'2026-02-25T22:44:27.861Z'[39m
+}
+
+
+[2m Test Files [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m   Start at [22m 00:44:13
+[2m   Duration [22m 14.17s[2m (transform 1.46s, setup 1.61s, collect 5.74s, tests 770ms, environment 5.96s, prepare 1.01s)[22m
+

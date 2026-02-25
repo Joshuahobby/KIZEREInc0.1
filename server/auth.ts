@@ -21,7 +21,7 @@ declare global {
 }
 
 
-export function setupAuth(app: Express) {
+export function setupSessionAccess(app: Express) {
   // SESSION_SECRET is critical for session persistence in serverless environments.
   // If missing, a new secret is generated on every lambda cold start, logging everyone out.
   const sessionSecret = process.env.SESSION_SECRET;
@@ -50,6 +50,9 @@ export function setupAuth(app: Express) {
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
+}
+
+export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {

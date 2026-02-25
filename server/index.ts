@@ -1,6 +1,8 @@
 import express, { type Request, Response, NextFunction } from "express";
 import crypto from "crypto";
+import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
+import { setupSessionAccess } from "./auth";
 import { serveStatic, log } from "./static"; // Reverted to correct import
 import { createLogger } from "./utils/logger";
 import { config, isProd } from "./config";
@@ -25,6 +27,10 @@ process.on('uncaughtException', (error) => {
 // Basic middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+
+// Setup session and passport before security
+setupSessionAccess(app);
 
 // Apply security middleware before route handlers
 setupSecurityMiddleware(app);

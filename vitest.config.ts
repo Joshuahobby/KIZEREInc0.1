@@ -8,6 +8,10 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./client/src/test/setup.ts'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/tests/e2e/**'],
+    testEnvironmentOptions: {
+      url: 'http://localhost:5000',
+    },
     alias: {
       '@': path.resolve(__dirname, './client/src'),
       '@shared': path.resolve(__dirname, './shared'),

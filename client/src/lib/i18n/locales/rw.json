@@ -13,6 +13,22 @@
     "logout": "Gusohoka",
     "language": "Ururimi",
     "returnToHome": "Garuka ku ipaji y'ibanze",
+    "table": {
+      "reportId": "ID ya Raporo",
+      "type": "Ubwoko",
+      "status": "Imimerere",
+      "location": "Aho Biherereye",
+      "date": "Itariki",
+      "actions": "Ibikorwa",
+      "selected": "Byatoranyijwe",
+      "match": "Bihuye",
+      "claimId": "ID y'Inyandiko",
+      "from": "Byatanzwe na",
+      "action": "Igikorwa"
+    },
+    "actions": {
+      "review": "Genzura"
+    },
     "register_item": "Andika Ikintu",
     "complete_registration": "Uzuza Kwandikisha",
     "filter": "Shungura",
@@ -178,20 +194,20 @@
       "description": "Bona ibisubizo ku bibazo bikunze kubazwa ku bijyanye na porogaramu ya KIZERE.",
       "questions": {
         "security": {
-          "question": "How secure is my data on KIZERE?",
-          "answer": "We use industry-standard encryption protocols to protect your data. All personal information and item details are encrypted both in transit and at rest, and we regularly perform security audits to ensure your data remains safe."
+          "question": "Amakuru yanjye arinzwe gute kuri KIZERE?",
+          "answer": "Dukoresha uburyo bwo kurinda amakuru bwo ku rwego rwo hejuru (encryption). Amakuru yawe bwite n'ay'ibintu byawe arinzwe haba igihe yoherezwa cyangwa igihe abitse, kandi dukora igenzura rya hato na hato kugira ngo dusingire umutekano w'amakuru yawe."
         },
         "items": {
-          "question": "What types of items can I register?",
-          "answer": "You can register almost any valuable item including electronics, jewelry, documents, accessories, and more. Our system is particularly effective for items with unique identifiers like serial numbers, IMEI numbers, or other distinguishing characteristics."
+          "question": "Ni ibihe bintu nshobora kwandikisha?",
+          "answer": "Urashobora kwandikisha hafi ya buri kintu cyose cy'agaciro harimo ibikoresho by'ikoranabuhanga, imitako, inyandiko, ibikoresho by'ubwiza, n'ibindi. Sisitemu yacu ikora neza cyane ku bintu bifite ibiranga byihariye nka Serial Number, IMEI, cyangwa ibindi biranga bihari."
         },
         "lostFound": {
-          "question": "How does the lost and found process work?",
-          "answer": "When someone finds your item, they can scan the QR code attached to it. This notifies you immediately and provides the finder with instructions on how to safely return your item to you, while protecting your privacy."
+          "question": "Uburyo bwo kugarura ibyabuze bukora gute?",
+          "answer": "Iyo hari umuntu ubonye ikintu cyawe, asikana (scan) kode QR iri kumwe nacyo. Ibi bihita bikumenyesha kandi bigaha uwakibonye uburyo bwirinzwe bwo kugushakira bitagaragaje amakuru yawe bwite kugeza ubihisemo."
         },
         "limits": {
-          "question": "Is there a limit to how many items I can register?",
-          "answer": "Basic accounts can register up to 5 items. Premium subscribers can register unlimited items and access additional features like priority support and enhanced recovery services."
+          "question": "Ese hari umubare ntarengwa w'ibintu nkwiriye kwandikisha?",
+          "answer": "Konti zisanzwe zishobora kwandikisha kugeza ku bintu 5. Abafatanyabikorwa ba Premium bishobora kwandikisha ibintu bitagira mbibi kandi bakabona izindi serivisi nko gufashwa vuba n'uburyo bwisumbuye bwo kugarura ibyabuze."
         }
       },
       "contactUs": "Ufite ibindi bibazo? Twandikire"
@@ -218,11 +234,54 @@
   },
   "dashboard": {
     "welcomeMessage": "Murakaza neza, {name}",
-    "welcomeBack": "Murakaza neza",
+    "welcomeBack": "Subira uze, {name}",
+    "welcomeSubtitle": "Gucunga ibintu byawe wanditse, gukurikirana ibikorwa mu ihuriro, n'umutekano mu gihe nyacyo.",
+    "localTime": "Isaha y'aho uri",
+    "reputationScore": "Amanota y'Ubwizerane",
+    "trustedMember": "Umunyamuryango Wizerwa",
+    "communityMember": "Umunyamuryango w'Abaturage",
+    "activeHubReports": "Raporo z'Ihuriro Zigikora",
+    "totalPlatformUsers": "Abakoresha bose b'urubuga",
+    "pendingVerifications": "Igenzura ritarangira",
+    "exportData": "Ohereza Amakuru",
+    "importData": "Injiza Amakuru",
+    "viewAll": "Reba Byose",
+    "noReportsFound": "Nta raporo zabonetse",
+    "myClaims": "Ibintu Nasabye",
+    "claimsDescription": "Ibintu wagaragaje ko ari ibyawe.",
+    "noClaimsFiled": "Ntarabona inyandiko usaba ibintu.",
+    "claimsReceived": "Inyandiko Nasabiwe",
+    "claimsReceivedDescription": "Abantu bavuga ko ibintu wabonye ari ibyabo.",
+    "noClaimsReceived": "Nta nyandiko ugasabirwa kugeza ubu.",
+    "loadingComponents": "Gushyiraho ibice by'ikibaho...",
     "subtitles": {
       "user": "Gucunga ibintu byawe wanditse n'ibikorwa",
       "agent": "Gukurikirana ibyabuze n'ibyabonetse",
       "admin": "Igenzura n'imicungire ya sisitemu"
+    },
+    "quickActions": {
+      "title": "Ibikoresho by'Akokanya",
+      "subtitle": "Ibikoresho n'inzira bikunze gukoreshwa",
+      "addUser": "Ongeramo Umukoresha",
+      "addUserDesc": "Fungura konti nshya y'umukoresha",
+      "registerItem": "Andika Ikintu",
+      "registerItemDesc": "Andika ikintu gishya cy'agaciro",
+      "reportLost": "Tanga Raporo y'Icyabuze",
+      "reportLostDesc": "Tanga raporo y'ikintu cyabuze",
+      "reportFound": "Tanga Raporo y'Icyaboneka",
+      "reportFoundDesc": "Tanga raporo y'ikintu cyabonetse",
+      "pendingReports": "Raporo Zitegereje",
+      "pendingReportsDesc": "Genzura raporo zitegereje kwemezwa",
+      "processReports": "Kuvugurura Raporo",
+      "processReportsDesc": "Genzura kandi uvugurure raporo",
+      "newPackage": "Porogaramu Nshya",
+      "newPackageDesc": "Shyiraho porogaramu nshya y'ubwishyu",
+      "payments": "Ubwishyu",
+      "paymentsDesc": "Reba imicungire y'ubwishyu",
+      "analytics": "Iibarurishamibare",
+      "analyticsDesc": "Reba imibare n'isesengura rya sisitemu",
+      "settings": "Igenamiterere",
+      "settingsDesc": "Igenamiterere rya sisitemu"
     },
     "registerNewItem": "Andika Ikintu Gishya",
     "tabs": {
@@ -322,7 +381,6 @@
       "foundReports": "Raporo z'Ibyabonetse",
       "pendingMatches": "Ihuza Rikigererejwe"
     },
-    "quickActions": "Ibikorwa Byihuse",
     "recentActivity": "Ibikorwa Bishya",
     "notifications": "Imenyesha",
     "noData": "Nta makuru ahari",

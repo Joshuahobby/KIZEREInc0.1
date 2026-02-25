@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,48 +53,10 @@ export default function NewUserPage() {
   // Create user mutation
   const createUserMutation = useMutation({
     mutationFn: async (values: CreateUserFormValues) => {
-      try {
-        const response = await fetch("/api/admin/users", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
-        });
-        
-        // Check if the response is ok
-        if (!response.ok) {
-          const errorText = await response.text();
-          let errorMessage = "Failed to create user";
-          
-          try {
-            // Try to parse as JSON
-            const errorJson = JSON.parse(errorText);
-            errorMessage = errorJson.message || errorMessage;
-          } catch (parseError) {
-            // If parsing fails, use the raw text
-            errorMessage = errorText || errorMessage;
-          }
-          
-          throw new Error(errorMessage);
-        }
-        
-        // Try to parse the success response
-        const responseText = await response.text();
-        if (!responseText) {
-          return { success: true };
-        }
-        
-        try {
-          return JSON.parse(responseText);
-        } catch (parseError) {
-          // If JSON parsing fails, return a success object
-          return { success: true };
-        }
-      } catch (error) {
-        console.error("Error creating user:", error);
-        throw error;
-      }
+      return await apiRequest("/api/admin/users", {
+        method: "POST",
+        data: values,
+      });
     },
     onSuccess: () => {
       toast({
@@ -283,7 +246,7 @@ export default function NewUserPage() {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button 
+                  <Button
                     type="button"
                     variant="outline"
                     className="mr-2"
@@ -291,8 +254,8 @@ export default function NewUserPage() {
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={createUserMutation.isPending}
                   >
                     {createUserMutation.isPending ? "Creating..." : "Create User"}

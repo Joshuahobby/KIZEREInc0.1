@@ -78,17 +78,20 @@ const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: a
   <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
     <div className="space-y-1">
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-        Welcome back, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/50">{user?.fullName || user?.username}</span>
+        {t('dashboard.welcomeBack', { name: "" }).replace(/,?\s*$/, '')}{' '}
+        <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/50">
+          {user?.fullName || user?.username}
+        </span>
         {isAdmin && <span className="ml-3 text-[10px] uppercase tracking-[0.2em] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full align-middle">SUDO</span>}
       </h1>
       <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-2xl mt-1">
-        Manage your registered assets, monitor hub activity, and track security status in real-time.
+        {t('dashboard.welcomeSubtitle')}
       </p>
     </div>
     <div className="flex items-center gap-3">
       <div className="h-10 w-px bg-border/50 hidden md:block mx-2" />
       <div className="flex flex-col items-end">
-        <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60">Local Time</span>
+        <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60">{t('dashboard.localTime')}</span>
         <span className="font-bold tabular-nums">{format(new Date(), 'HH:mm')}</span>
       </div>
     </div>
@@ -160,27 +163,7 @@ export default function UnifiedDashboard() {
     claimsReceived = []
   } = dashboardData || {};
 
-  // Helper component for the header
-  const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: any }) => (
-    <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-          Welcome back, <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/50">{user?.fullName || user?.username}</span>
-          {isAdmin && <span className="ml-3 text-[10px] uppercase tracking-[0.2em] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full align-middle">SUDO</span>}
-        </h1>
-        <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-2xl mt-1">
-          Manage your registered assets, monitor hub activity, and track security status in real-time.
-        </p>
-      </div>
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-px bg-border/50 hidden md:block mx-2" />
-        <div className="flex flex-col items-end">
-          <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60">Local Time</span>
-          <span className="font-bold tabular-nums">{format(new Date(), 'HH:mm')}</span>
-        </div>
-      </div>
-    </div>
-  );
+
 
 
 
@@ -303,12 +286,12 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <StatsCard
-                title="Reputation Score"
+                title={t('dashboard.reputationScore')}
                 value={user.reputationScore ?? 0}
                 icon={<ShieldCheck className="h-5 w-5" />}
                 iconBgClass="bg-blue-100 dark:bg-blue-900/30"
                 iconTextClass="text-blue-600 dark:text-blue-400"
-                subtitle={user.isTrusted ? "Trusted Member" : "Community Member"}
+                subtitle={user.isTrusted ? t('dashboard.trustedMember') : t('dashboard.communityMember')}
               />
             </motion.div>
           </div>
@@ -319,7 +302,7 @@ export default function UnifiedDashboard() {
               {userStats.allOpenReports !== undefined && (
                 <motion.div variants={itemVariants}>
                   <StatsCard
-                    title="Active Hub Reports"
+                    title={t('dashboard.activeHubReports')}
                     value={userStats.allOpenReports}
                     icon={<FileText className="h-5 w-5" />}
                     iconBgClass="bg-orange-100 dark:bg-orange-900/30"
@@ -330,7 +313,7 @@ export default function UnifiedDashboard() {
               {isAdmin && userStats.totalUsers !== undefined && (
                 <motion.div variants={itemVariants}>
                   <StatsCard
-                    title="Total Platform Users"
+                    title={t('dashboard.totalPlatformUsers')}
                     value={userStats.totalUsers}
                     icon={<Users className="h-5 w-5" />}
                     iconBgClass="bg-indigo-100 dark:bg-indigo-900/30"
@@ -341,7 +324,7 @@ export default function UnifiedDashboard() {
               {isAdmin && userStats.pendingVerifications !== undefined && (
                 <motion.div variants={itemVariants}>
                   <StatsCard
-                    title="Pending Verifications"
+                    title={t('dashboard.pendingVerifications')}
                     value={userStats.pendingVerifications}
                     icon={<ShieldCheck className="h-5 w-5" />}
                     iconBgClass="bg-cyan-100 dark:bg-cyan-900/30"
@@ -395,7 +378,7 @@ export default function UnifiedDashboard() {
                     </CardDescription>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => setActiveTab('items')}>
-                    View All
+                    {t('dashboard.viewAll')}
                   </Button>
                 </CardHeader>
                 <CardContent>
@@ -641,12 +624,12 @@ export default function UnifiedDashboard() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>{t('dashboard.table.reportId')}</TableHead>
-                                <TableHead>{t('dashboard.table.type')}</TableHead>
-                                <TableHead>{t('dashboard.table.status')}</TableHead>
-                                <TableHead>{t('dashboard.table.location')}</TableHead>
-                                <TableHead>{t('dashboard.table.date')}</TableHead>
-                                <TableHead>{t('dashboard.table.actions')}</TableHead>
+                                <TableHead>{t('common.table.reportId')}</TableHead>
+                                <TableHead>{t('common.table.type')}</TableHead>
+                                <TableHead>{t('common.table.status')}</TableHead>
+                                <TableHead>{t('common.table.location')}</TableHead>
+                                <TableHead>{t('common.table.date')}</TableHead>
+                                <TableHead>{t('common.table.actions')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -833,18 +816,18 @@ export default function UnifiedDashboard() {
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary" />
-                  <CardTitle>My Claims</CardTitle>
+                  <CardTitle>{t('dashboard.myClaims')}</CardTitle>
                 </div>
-                <CardDescription>Items you've claimed as yours.</CardDescription>
+                <CardDescription>{t('dashboard.claimsDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {myClaims.length > 0 ? (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Claim ID</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Date</TableHead>
+                        <TableHead>{t('common.table.claimId')}</TableHead>
+                        <TableHead>{t('common.table.status')}</TableHead>
+                        <TableHead>{t('common.table.date')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -863,7 +846,7 @@ export default function UnifiedDashboard() {
                   </Table>
                 ) : (
                   <div className="text-center py-10">
-                    <p className="text-muted-foreground italic">You haven't filed any claims yet.</p>
+                    <p className="text-muted-foreground italic">{t('dashboard.noClaimsFiled')}</p>
                   </div>
                 )}
               </CardContent>
@@ -873,18 +856,18 @@ export default function UnifiedDashboard() {
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <BellRing className="h-5 w-5 text-primary" />
-                  <CardTitle>Claims Received</CardTitle>
+                  <CardTitle>{t('dashboard.claimsReceived')}</CardTitle>
                 </div>
-                <CardDescription>People claiming items you found.</CardDescription>
+                <CardDescription>{t('dashboard.claimsReceivedDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {claimsReceived.length > 0 ? (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>From</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Action</TableHead>
+                        <TableHead>{t('common.table.from')}</TableHead>
+                        <TableHead>{t('common.table.status')}</TableHead>
+                        <TableHead>{t('common.table.action')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -905,7 +888,7 @@ export default function UnifiedDashboard() {
                                 setReviewOpen(true);
                               }}
                             >
-                              Review
+                              {t('common.actions.review')}
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -914,7 +897,7 @@ export default function UnifiedDashboard() {
                   </Table>
                 ) : (
                   <div className="text-center py-10">
-                    <p className="text-muted-foreground italic">No claims received yet.</p>
+                    <p className="text-muted-foreground italic">{t('dashboard.noClaimsReceived')}</p>
                   </div>
                 )}
               </CardContent>
@@ -1033,7 +1016,7 @@ export default function UnifiedDashboard() {
         <WelcomeHeader user={user} isAdmin={isAdmin} t={t} />
 
         <div className="mt-2">
-          <React.Suspense fallback={<div className="p-8 text-center italic">Loading dashboard components...</div>}>
+          <React.Suspense fallback={<div className="p-8 text-center italic">{t('dashboard.loadingComponents')}</div>}>
             {renderDashboardContent()}
           </React.Suspense>
         </div>

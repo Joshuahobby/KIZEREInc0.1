@@ -108,12 +108,18 @@ export function usePushNotifications() {
 
 // Helper to convert base64 VAPID key to Uint8Array
 function urlBase64ToUint8Array(base64String: string) {
-    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    // Sanitize the input string
+    const sanitizedBase64 = base64String.trim().replace(/\s/g, '');
+    const padding = "=".repeat((4 - (sanitizedBase64.length % 4)) % 4);
+    const base64 = (sanitizedBase64 + padding).replace(/-/g, "+").replace(/_/g, "/");
+
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
+
     for (let i = 0; i < rawData.length; ++i) {
         outputArray[i] = rawData.charCodeAt(i);
     }
+
+    console.log(`[PushManager] VAPID Key converted: length=${outputArray.byteLength} bytes`);
     return outputArray;
 }

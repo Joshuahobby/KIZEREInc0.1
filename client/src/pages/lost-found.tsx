@@ -30,6 +30,7 @@ import {
   MapPinned,
   ChevronRight,
   Plus,
+  Check,
   Search as SearchIcon
 } from "lucide-react";
 import { ReportWizard } from "@/components/reports/report-wizard";

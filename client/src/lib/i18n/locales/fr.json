@@ -224,7 +224,10 @@
     },
     "registeredItems": "Objets Enregistrés",
     "recentActivity": "Activité Récente",
-    "quickActions": "Actions Rapides",
+    "quickActions": {
+      "title": "Actions Rapides",
+      "subtitle": "Outils et raccourcis fréquemment utilisés"
+    },
     "viewAllItems": "Voir Tous les Objets",
     "reportLostItem": "Signaler un Objet Perdu",
     "lostReports": "Signalements de Perte",

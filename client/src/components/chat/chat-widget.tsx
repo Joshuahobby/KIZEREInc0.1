@@ -137,7 +137,7 @@ export function ChatWidget() {
                         animate={{ scale: 1 }}
                         exit={{ scale: 0 }}
                         className="fixed z-50"
-                        style={{ bottom: '1.5rem', right: '1.5rem' }}
+                        style={{ bottom: '1.5rem', left: '1.5rem' }}
                     >
                         <Button
                             size="lg"
@@ -164,7 +164,7 @@ export function ChatWidget() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 20, scale: 0.95 }}
                             className="fixed z-50 w-[380px] max-w-[calc(100vw-3rem)] max-h-[500px] flex flex-col"
-                            style={{ bottom: '1.5rem', right: '1.5rem' }}
+                            style={{ bottom: '1.5rem', left: '1.5rem' }}
                         >
                             <Card className="shadow-2xl border-border/50 flex flex-col h-[500px]">
                                 <CardHeader className="flex flex-row items-center justify-between p-4 border-b shrink-0">

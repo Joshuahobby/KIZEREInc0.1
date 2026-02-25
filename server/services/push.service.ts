@@ -4,8 +4,8 @@ import { createLogger } from "../utils/logger";
 
 const logger = createLogger('PushService');
 
-const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+const vapidPublicKey = process.env.VAPID_PUBLIC_KEY?.trim();
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY?.trim();
 const contactEmail = process.env.CONTACT_EMAIL || "admin@kizere.rw";
 
 if (!vapidPublicKey || !vapidPrivateKey) {
