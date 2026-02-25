@@ -112,9 +112,15 @@ export function sanitizeContent(content: string, mode: 'strict' | 'default' = 'd
  */
 export function setupSecurityMiddleware(app: Express) {
   // CORS configuration
-  const origin = config.FRONTEND_URL || "http://localhost:5000";
+  const configuredOrigin = config.FRONTEND_URL || "http://localhost:5000";
   app.use(cors({
-    origin,
+    origin: function (origin, callback) {
+      if (!origin || origin === configuredOrigin || origin.endsWith('.vercel.app')) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token']
