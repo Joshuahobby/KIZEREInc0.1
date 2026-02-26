@@ -10,11 +10,9 @@ export function useSocket() {
     const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
-        if (!user) return;
-
-        // Reuse existing socket if available
-        if (globalSocket?.connected) {
-            socketRef.current = globalSocket;
+        const isVercel = window.location.hostname.endsWith('vercel.app');
+        if (isVercel) {
+            console.info("[Socket] Skipping connection on Vercel (WebSockets limited)");
             return;
         }
 
@@ -23,8 +21,8 @@ export function useSocket() {
             transports: ["polling", "websocket"],
             withCredentials: true,
             reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 3000,
+            reconnectionAttempts: 3, // Reduced from 5
+            reconnectionDelay: 5000, // Increased from 3000
         });
 
         socket.on("connect", () => {

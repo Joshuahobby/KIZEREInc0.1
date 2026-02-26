@@ -144,9 +144,14 @@ export abstract class BaseRepository<T, InsertT, IdType = number> {
         throw new NotFoundError(this.tableName);
       }
 
+      const updateData = {
+        ...data as any,
+        updatedAt: new Date()
+      };
+
       const [updated] = await db
         .update(this.table)
-        .set(data as any)
+        .set(updateData)
         .where(eq(this.idColumn, id as any))
         .returning();
 

@@ -7,7 +7,7 @@ const configSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   PORT: z.string().transform(Number).default("5000"),
   DATABASE_URL: z.string().url(),
-  SESSION_SECRET: z.string().min(32, "Session secret should be at least 32 characters"),
+  SESSION_SECRET: z.string().min(32, "Session secret should be at least 32 characters").optional(),
 
   // Optional but recommended for production
   FRONTEND_URL: z.string().url().optional(),

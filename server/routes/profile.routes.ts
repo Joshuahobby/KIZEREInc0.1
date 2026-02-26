@@ -21,7 +21,7 @@ router.put("/", async (req, res) => {
   try {
     const userId = req.user!.id;
     const updateData = req.body;
-    
+
     const allowedFields = ['fullName', 'email', 'phoneNumber', 'avatarUrl', 'preferences'];
     const filteredUpdateData = Object.keys(updateData)
       .filter(key => allowedFields.includes(key))
@@ -29,7 +29,7 @@ router.put("/", async (req, res) => {
         obj[key] = updateData[key];
         return obj;
       }, {});
-    
+
     // Special handling for preferences to merge instead of overwrite
     if (filteredUpdateData.preferences && req.user?.preferences) {
       filteredUpdateData.preferences = {
@@ -37,10 +37,10 @@ router.put("/", async (req, res) => {
         ...(filteredUpdateData.preferences || {})
       };
     }
-    
+
     const updatedUser = await UserService.updateUser(userId, filteredUpdateData);
     if (!updatedUser) return res.status(404).json({ message: "User not found" });
-    
+
     const { password, ...userWithoutPassword } = updatedUser;
     res.json(userWithoutPassword);
   } catch (error: any) {
@@ -55,25 +55,25 @@ router.put("/password", async (req, res) => {
   try {
     const userId = req.user!.id;
     const { currentPassword, newPassword } = req.body;
-    
+
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: "Current password and new password are required" });
     }
-    
+
     // Get the current user with password
     const user = await UserService.getUserById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-    
+
     // Verify current password
     const isPasswordValid = await comparePasswords(currentPassword, user.password);
-    
+
     if (!isPasswordValid) {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
-    
+
     // Update with new password
     await UserService.updateUser(userId, { password: newPassword });
-    
+
     logger.info('User changed their password', { userId });
     res.json({ message: "Password updated successfully" });
   } catch (error: any) {
@@ -114,7 +114,7 @@ router.put("/preferences", async (req, res) => {
   try {
     const userId = req.user!.id;
     const preferences = req.body;
-    
+
     // Validate that it's an object
     if (typeof preferences !== 'object' || preferences === null) {
       return res.status(400).json({ message: "Invalid preferences data" });
@@ -125,12 +125,25 @@ router.put("/preferences", async (req, res) => {
     const mergedPreferences = { ...existingPreferences, ...preferences };
 
     const updatedUser = await UserService.updateUser(userId, { preferences: mergedPreferences });
-    if (!updatedUser) return res.status(404).json({ message: "User not found" });
-    
-    res.json(updatedUser);
+    if (!updatedUser) {
+      logger.warn('User not found during preference update', { userId });
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Strip password from response for security and consistency
+    const { password, ...userWithoutPassword } = updatedUser;
+    res.json(userWithoutPassword);
   } catch (error: any) {
-    logger.error('Error updating user preferences', { error, userId: req.user?.id });
-    res.status(500).json({ message: "Failed to update preferences" });
+    logger.error('Error updating user preferences', {
+      message: error.message,
+      stack: error.stack,
+      userId: req.user?.id,
+      body: req.body
+    });
+    res.status(500).json({
+      message: "Failed to update preferences",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

@@ -115,7 +115,7 @@ export function setupSecurityMiddleware(app: Express) {
   const configuredOrigin = config.FRONTEND_URL || "http://localhost:5000";
   app.use(cors({
     origin: function (origin, callback) {
-      if (!origin || origin === configuredOrigin || origin.endsWith('.vercel.app')) {
+      if (!origin || origin === configuredOrigin || origin.endsWith('.vercel.app') || origin.endsWith('kizere.rw')) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

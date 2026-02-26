@@ -27,10 +27,18 @@ export function setupSessionAccess(app: Express) {
   const sessionSecret = process.env.SESSION_SECRET;
 
   if (!sessionSecret && env.NODE_ENV === "production") {
-    console.warn("⚠️ WARNING: SESSION_SECRET is not set in production. Sessions will be volatile across serverless instances.");
+    console.error("❌ CRITICAL ERROR: SESSION_SECRET is not set in production!");
+    console.error("Sessions will be volatile and users will be logged out on every serverless cold start.");
+    console.error("Please set SESSION_SECRET in your Vercel Environment Variables.");
   }
 
-  const finalSecret = sessionSecret || randomBytes(32).toString('hex');
+  // Use a hash of the DATABASE_URL as a semi-stable fallback if secret is missing
+  // This is better than randomBytes which changes on every single cold start.
+  const fallbackSecret = process.env.DATABASE_URL
+    ? require('crypto').createHash('sha256').update(process.env.DATABASE_URL).digest('hex')
+    : randomBytes(32).toString('hex');
+
+  const finalSecret = sessionSecret || fallbackSecret;
 
   const sessionSettings: session.SessionOptions = {
     secret: finalSecret,

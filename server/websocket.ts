@@ -10,7 +10,13 @@ let io: Server | null = null;
 // Map of userId -> Set of socket IDs
 const userSockets = new Map<number, Set<string>>();
 
-export function setupWebSocket(httpServer: HttpServer): Server {
+export function setupWebSocket(httpServer: HttpServer): Server | null {
+    // Socket.io is not compatible with Vercel serverless functions
+    if (process.env.VERCEL === "1") {
+        logger.info("WebSocket: Skipping initialization on Vercel (serverless environment)");
+        return null;
+    }
+
     io = new Server(httpServer, {
         cors: {
             origin: process.env.NODE_ENV === "production"
