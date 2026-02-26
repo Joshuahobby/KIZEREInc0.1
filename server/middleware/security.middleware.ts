@@ -115,9 +115,17 @@ export function setupSecurityMiddleware(app: Express) {
   const configuredOrigin = config.FRONTEND_URL || "http://localhost:5000";
   app.use(cors({
     origin: function (origin, callback) {
-      if (!origin || origin === configuredOrigin || origin.endsWith('.vercel.app') || origin.endsWith('kizere.rw')) {
+      // In development, allow all local origins
+      const isDevelopment = process.env.NODE_ENV !== 'production';
+
+      if (!origin || isDevelopment || origin === configuredOrigin || origin.endsWith('.vercel.app') || origin.endsWith('kizere.rw')) {
         callback(null, true);
       } else {
+        logger.warn('CORS blocked origin', {
+          origin,
+          configuredOrigin,
+          isProd
+        });
         callback(new Error('Not allowed by CORS'));
       }
     },
