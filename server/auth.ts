@@ -2,7 +2,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
 import session from "express-session";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import { storage } from "./storage";
 import { User as SchemaUser, User as SelectUser } from "@shared/schema";
 import { env } from "./config";
@@ -35,7 +35,7 @@ export function setupSessionAccess(app: Express) {
   // Use a hash of the DATABASE_URL as a semi-stable fallback if secret is missing
   // This is better than randomBytes which changes on every single cold start.
   const fallbackSecret = process.env.DATABASE_URL
-    ? require('crypto').createHash('sha256').update(process.env.DATABASE_URL).digest('hex')
+    ? createHash('sha256').update(process.env.DATABASE_URL).digest('hex')
     : randomBytes(32).toString('hex');
 
   const finalSecret = sessionSecret || fallbackSecret;
