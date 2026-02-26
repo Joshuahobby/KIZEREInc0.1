@@ -10,9 +10,18 @@ export function useSocket() {
     const socketRef = useRef<Socket | null>(null);
 
     useEffect(() => {
-        const isVercel = window.location.hostname.endsWith('vercel.app');
-        if (isVercel) {
-            console.info("[Socket] Skipping connection on Vercel (WebSockets limited)");
+        if (!user) return;
+
+        // Skip WebSocket on production domains — not supported in serverless environments
+        const hostname = window.location.hostname;
+        if (hostname.endsWith('vercel.app') || hostname.endsWith('kizere.rw') || hostname === 'kizere.rw') {
+            // Silent skip — no console spam
+            return;
+        }
+
+        // Reuse existing socket if available
+        if (globalSocket?.connected) {
+            socketRef.current = globalSocket;
             return;
         }
 
@@ -21,13 +30,12 @@ export function useSocket() {
             transports: ["polling", "websocket"],
             withCredentials: true,
             reconnection: true,
-            reconnectionAttempts: 3, // Reduced from 5
-            reconnectionDelay: 5000, // Increased from 3000
+            reconnectionAttempts: 3,
+            reconnectionDelay: 5000,
         });
 
         socket.on("connect", () => {
             console.log("[Socket] Connected:", socket.id);
-            // Authenticate with userId
             socket.emit("auth", user.id);
         });
 
