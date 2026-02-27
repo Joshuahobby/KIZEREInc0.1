@@ -1,13 +1,21 @@
 import { v2 as cloudinary, UploadApiResponse, UploadApiErrorResponse } from 'cloudinary';
 import { createLogger } from '../utils/logger';
+import { config } from '../config';
+import { AppError } from '../utils/error-handler';
 
 const logger = createLogger('CloudinaryService');
 
-// Configure Cloudinary
+// Configure Cloudinary using central config
+console.log('[CloudinaryService] Configuring with:', {
+  cloud_name: config.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: config.CLOUDINARY_API_KEY ? 'present' : 'missing',
+  api_secret: config.CLOUDINARY_API_SECRET ? 'present' : 'missing',
+});
+
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: config.CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: config.CLOUDINARY_API_KEY || process.env.CLOUDINARY_API_KEY,
+  api_secret: config.CLOUDINARY_API_SECRET || process.env.CLOUDINARY_API_SECRET,
 });
 
 export interface UploadResult {
@@ -46,9 +54,17 @@ export async function uploadImage(
       width: result.width,
       height: result.height,
     };
-  } catch (error) {
-    logger.error('Failed to upload image to Cloudinary', { error });
-    throw new Error('Failed to upload image');
+  } catch (error: any) {
+    logger.error('Failed to upload image to Cloudinary', {
+      error: error.message || error,
+      details: error.http_code || error.response?.status
+    });
+    throw new AppError(
+      `Image upload failed: ${error.message || 'Unknown error'}`,
+      500,
+      'CLOUDINARY_ERROR',
+      error
+    );
   }
 }
 

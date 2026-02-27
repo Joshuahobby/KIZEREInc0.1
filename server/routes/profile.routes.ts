@@ -128,18 +128,33 @@ router.put("/preferences", async (req, res) => {
     const existingPreferences = (req.user?.preferences as UserPreferences) || {};
 
     // Deep merge for nested objects like notifications
-    const mergedPreferences = {
-      ...existingPreferences,
-      ...preferences,
+    // Fetch the user again to ensure we have the latest preferences, especially if req.user is stale
+    const user = await UserService.getUserById(userId);
+    if (!user) {
+      logger.warn('User not found when attempting to update preferences', { userId });
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update preferences
+    const currentPreferences = (user.preferences as UserPreferences) || {};
+    const updatedPreferences = {
+      ...currentPreferences,
+      ...(preferences || {}),
+      // Deep merge for nested objects like notifications
       notifications: {
-        ...(existingPreferences.notifications || {}),
+        ...(currentPreferences.notifications || {}),
         ...(preferences.notifications || {})
       }
     };
 
-    const updatedUser = await UserService.updateUser(userId, { preferences: mergedPreferences });
+    logger.info(`Updating preferences for user ${userId}`, { old: currentPreferences, new: updatedPreferences });
+
+    const updatedUser = await UserService.updateUser(userId, {
+      preferences: updatedPreferences,
+    });
+
     if (!updatedUser) {
-      logger.warn('User not found during preference update', { userId });
+      logger.warn('User not found during preference update after successful fetch', { userId });
       return res.status(404).json({ message: "User not found" });
     }
 

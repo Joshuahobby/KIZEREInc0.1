@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Link, useLocation } from "wouter";
 import { AvatarWithInitials } from "@/components/ui/avatar-with-initials";
-import { useAuth } from "../../hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ import {
   Phone
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
-import { useLanguage } from "../../lib/i18n/LanguageContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Logo } from "@/components/ui/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";

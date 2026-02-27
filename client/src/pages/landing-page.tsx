@@ -1,8 +1,8 @@
 import * as React from "react";
 import { useLocation, Link } from "wouter";
-import { useAuth } from "../hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "../lib/i18n/LanguageContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import crowdImage from "../assets/crowd.jpg";
 import mobileMockupImage from "../assets/mobile-mockup.png";

@@ -13,11 +13,10 @@ export async function setupVite(app: Express, server: Server) {
   const viteConfig = (await import(viteConfigPath)).default;
   const viteLogger = createLogger();
 
-  const hmrPort = parseInt(process.env.PORT || "5000", 10);
+  const hmrPort = 5001; // Separate port to avoid conflict with Socket.io
   const serverOptions = {
     middlewareMode: true,
     hmr: {
-      server,
       port: hmrPort,
       clientPort: hmrPort
     },

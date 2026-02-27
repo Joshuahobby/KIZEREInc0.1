@@ -3,6 +3,7 @@ import multer from 'multer';
 import { uploadImage, uploadImages, getUploadSignature, deleteImage } from '../services/cloudinary.service';
 import { createLogger } from '../utils/logger';
 import { validateUploadedFile } from '../utils/file-validation';
+import { handleRequestError } from '../utils/error-handler';
 
 const router = Router();
 const logger = createLogger('UploadRoutes');
@@ -105,7 +106,7 @@ router.post('/multiple', upload.array('images', 3), async (req: Request, res: Re
     });
   } catch (error) {
     logger.error('Multiple upload failed', { error });
-    res.status(500).json({ message: 'Failed to upload images' });
+    handleRequestError(error, res);
   }
 });
 
@@ -149,7 +150,7 @@ router.post('/images', (req: Request, res: Response, next: NextFunction) => {
     });
   } catch (error) {
     logger.error('Images upload failed', { error });
-    res.status(500).json({ message: 'Failed to upload images' });
+    handleRequestError(error, res);
   }
 });
 

@@ -168,7 +168,7 @@ export default function UnifiedDashboard() {
 
 
 
-  const dashboardStyle = ((user?.preferences as UserPreferences)?.dashboardStyle || 'standard') as string;
+  const dashboardStyle = ((user?.preferences as UserPreferences)?.dashboardStyle || 'grid') as string;
 
   const getStatsGridClass = () => {
     switch (dashboardStyle) {

@@ -3,9 +3,19 @@
  * Provides consistent logging functionality across the application
  */
 import { Request } from 'express';
+import fs from 'fs';
+import path from 'path';
 
 // Define log levels
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+const logFile = path.resolve(process.cwd(), 'app.log');
+
+function writeToFile(level: string, moduleName: string, message: string, meta?: any) {
+  const timestamp = new Date().toISOString();
+  const logEntry = `[${timestamp}] [${level}] [${moduleName}] ${message} ${meta ? safeStringify(meta) : ''}\n`;
+  fs.appendFileSync(logFile, logEntry);
+}
 
 // Logger interface
 interface Logger {
@@ -55,6 +65,7 @@ export function createLogger(moduleName: string): Logger {
   return {
     debug: (message: string, meta?: any) => {
       if (process.env.NODE_ENV !== 'production') {
+        writeToFile('DEBUG', moduleName, message, meta);
         if (meta !== undefined) {
           console.debug(`[${new Date().toISOString()}] [DEBUG] [${moduleName}] ${message}`, safeStringify(meta));
         } else {
@@ -64,6 +75,7 @@ export function createLogger(moduleName: string): Logger {
     },
 
     info: (message: string, meta?: any) => {
+      writeToFile('INFO', moduleName, message, meta);
       if (meta !== undefined) {
         console.info(`[${new Date().toISOString()}] [INFO] [${moduleName}] ${message}`, safeStringify(meta));
       } else {
@@ -72,6 +84,7 @@ export function createLogger(moduleName: string): Logger {
     },
 
     warn: (message: string, meta?: any) => {
+      writeToFile('WARN', moduleName, message, meta);
       if (meta !== undefined) {
         console.warn(`[${new Date().toISOString()}] [WARN] [${moduleName}] ${message}`, safeStringify(meta));
       } else {
@@ -80,6 +93,7 @@ export function createLogger(moduleName: string): Logger {
     },
 
     error: (message: string, meta?: any) => {
+      writeToFile('ERROR', moduleName, message, meta);
       if (meta !== undefined) {
         console.error(`[${new Date().toISOString()}] [ERROR] [${moduleName}] ${message}`, safeStringify(meta));
       } else {

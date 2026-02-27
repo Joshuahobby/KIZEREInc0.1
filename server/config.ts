@@ -20,6 +20,11 @@ const configSchema = z.object({
   FIREBASE_PROJECT_ID: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().email().optional(),
   FIREBASE_PRIVATE_KEY: z.string().optional(),
+
+  // Cloudinary
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
 });
 
 const _config = configSchema.safeParse(process.env);
@@ -28,6 +33,8 @@ if (!_config.success) {
   console.error("❌ Invalid environment variables:", _config.error.flatten().fieldErrors);
   // DON'T process.exit(1) — let the server start and return useful error messages
   // instead of crashing silently in serverless environments
+} else {
+  console.log("✅ Environment configuration validated successfully");
 }
 
 export const config = _config.success ? _config.data : ({
@@ -36,6 +43,9 @@ export const config = _config.success ? _config.data : ({
   DATABASE_URL: process.env.DATABASE_URL || "",
   SESSION_SECRET: process.env.SESSION_SECRET,
   FRONTEND_URL: process.env.FRONTEND_URL,
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
 } as z.infer<typeof configSchema>);
 
 export const env = config; // Alias for backward compatibility

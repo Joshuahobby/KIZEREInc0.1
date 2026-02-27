@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -48,7 +49,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Hooks & Libs
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { PaymentService } from "@/services/payment.service";
@@ -279,13 +279,12 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
       if (itemImages.length > 0) {
         const formData = new FormData();
         itemImages.forEach(file => formData.append('images', file));
-        const uploadRes = await fetch('/api/upload/images', {
+
+        const { urls } = await apiRequest<{ urls: string[] }>('/api/upload/images', {
           method: 'POST',
-          body: formData,
-          credentials: 'include'
+          data: formData
         });
-        if (!uploadRes.ok) throw new Error("Failed to upload images");
-        const { urls } = await uploadRes.json();
+
         console.log("[Registration] Images uploaded:", urls);
         uploadedImageUrls = urls;
       }
@@ -315,13 +314,10 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
             }));
           }
         });
-        const docRes = await fetch('/api/upload/documents', {
+        const { documents } = await apiRequest<{ documents: any[] }>('/api/upload/documents', {
           method: 'POST',
-          body: formData,
-          credentials: 'include'
+          data: formData
         });
-        if (!docRes.ok) throw new Error("Failed to upload documents");
-        const { documents } = await docRes.json();
         console.log("[Registration] Documents uploaded:", documents);
         uploadedDocUrls = documents;
       }

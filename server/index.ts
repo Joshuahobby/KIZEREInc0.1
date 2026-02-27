@@ -1,11 +1,11 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express, { type Request, Response, NextFunction } from "express"; // Updated
 import crypto from "crypto";
 import cookieParser from "cookie-parser";
+import { config, isProd } from "./config";
 import { registerRoutes } from "./routes";
 import { setupSessionAccess } from "./auth";
 import { serveStatic, log } from "./static"; // Reverted to correct import
 import { createLogger } from "./utils/logger";
-import { config, isProd } from "./config";
 import { setupSecurityMiddleware } from "./middleware/security.middleware";
 import { handleRequestError } from "./utils/error-handler";
 import { startExpirationCron } from "./cron/expiration";
@@ -113,10 +113,25 @@ export const startServer = async () => {
   if (isVercel) {
     process.env.NODE_ENV = "production";
   }
-  if (app.get("env") === "development" && !isVercel) {
+
+  logger.info("Initializing environment-specific middleware", {
+    isDev: !isProd,
+    isVercel,
+    nodeEnv: process.env.NODE_ENV,
+    appEnv: app.get("env")
+  });
+
+  if (!isProd && !isVercel) {
+    logger.info("Setting up Vite for development...");
     const { setupVite } = await import("./vite");
-    await setupVite(app, server);
+    try {
+      await setupVite(app, server);
+      logger.info("Vite middleware initialized successfully");
+    } catch (err: any) {
+      logger.error("Failed to setup Vite", { error: err.message, stack: err.stack });
+    }
   } else {
+    logger.info("Serving static files for production/serverless mode");
     serveStatic(app);
   }
 

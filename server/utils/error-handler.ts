@@ -142,6 +142,22 @@ export function handleRequestError(error: any, res: Response): void {
     };
 
     res.status(error.statusCode).json(responseBody);
+  } else if (error.statusCode || error.status) {
+    // Handle other errors that have a status code (like CSRF errors)
+    const statusCode = error.statusCode || error.status;
+    const logMethod = statusCode >= 500 ? 'error' : 'warn';
+
+    logger[logMethod](`Status Error: ${error.message || 'Error occurred'}`, {
+      errorId,
+      statusCode,
+      stack: error.stack
+    });
+
+    res.status(statusCode).json({
+      status: 'error',
+      message: error.message || 'An error occurred',
+      errorId
+    });
   } else {
     // Handle unexpected errors
     logger.error('Unexpected error', {
