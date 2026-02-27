@@ -94,12 +94,16 @@ router.get("/permissions", (req, res) => {
 
 router.get("/preferences", (req, res) => {
   try {
-    const preferences = req.user?.preferences || {
+    const preferences = (req.user?.preferences as UserPreferences) || {
       theme: 'system',
-      layout: 'default',
+      dashboardStyle: 'standard',
+      dashboardLayout: 'default',
       cardDensity: 'comfortable',
       widgetFavorites: [],
-      notifications: { email: true, inApp: true }
+      notifications: { email: true, sms: false, push: true },
+      language: 'en',
+      currency: 'USD',
+      timezone: 'UTC'
     };
     res.json(preferences);
   } catch (error) {
@@ -122,7 +126,16 @@ router.put("/preferences", async (req, res) => {
 
     // Merge with existing preferences
     const existingPreferences = (req.user?.preferences as UserPreferences) || {};
-    const mergedPreferences = { ...existingPreferences, ...preferences };
+
+    // Deep merge for nested objects like notifications
+    const mergedPreferences = {
+      ...existingPreferences,
+      ...preferences,
+      notifications: {
+        ...(existingPreferences.notifications || {}),
+        ...(preferences.notifications || {})
+      }
+    };
 
     const updatedUser = await UserService.updateUser(userId, { preferences: mergedPreferences });
     if (!updatedUser) {

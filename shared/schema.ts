@@ -51,10 +51,19 @@ export const claimStatuses = ['pending', 'verified', 'rejected', 'resolved'] as 
 
 // User preferences schema
 export const userPreferencesSchema = z.object({
-  theme: z.enum(['light', 'dark', 'system']).optional(),
-  dashboardStyle: z.enum(['standard', 'grid', 'classic', 'command_center']).optional(),
-  notifications: z.boolean().optional(),
-  language: z.enum(['en', 'fr', 'rw']).optional(),
+  theme: z.enum(['light', 'dark', 'system']).optional().default('system'),
+  dashboardStyle: z.enum(['standard', 'grid', 'classic', 'command_center']).optional().default('standard'),
+  dashboardLayout: z.enum(['default', 'compact', 'wide']).optional().default('default'),
+  cardDensity: z.enum(['comfortable', 'compact']).optional().default('comfortable'),
+  widgetFavorites: z.array(z.string()).optional().default([]),
+  notifications: z.object({
+    email: z.boolean().default(true),
+    sms: z.boolean().default(false),
+    push: z.boolean().default(true),
+  }).optional().default({ email: true, sms: false, push: true }),
+  language: z.enum(['en', 'fr', 'rw']).optional().default('en'),
+  currency: z.string().optional().default('USD'),
+  timezone: z.string().optional().default('UTC'),
 });
 
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
