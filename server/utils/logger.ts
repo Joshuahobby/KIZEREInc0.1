@@ -12,9 +12,20 @@ type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 const logFile = path.resolve(process.cwd(), 'app.log');
 
 function writeToFile(level: string, moduleName: string, message: string, meta?: any) {
-  const timestamp = new Date().toISOString();
-  const logEntry = `[${timestamp}] [${level}] [${moduleName}] ${message} ${meta ? safeStringify(meta) : ''}\n`;
-  fs.appendFileSync(logFile, logEntry);
+  // Only write to file if we are not in production
+  // Vercel has a read-only file system (except for /tmp)
+  if (process.env.NODE_ENV === 'production') {
+    return;
+  }
+
+  try {
+    const timestamp = new Date().toISOString();
+    const logEntry = `[${timestamp}] [${level}] [${moduleName}] ${message} ${meta ? safeStringify(meta) : ''}\n`;
+    fs.appendFileSync(logFile, logEntry);
+  } catch (error) {
+    // If we fail to write to the file, log a warning to console
+    console.warn(`[LOGGER] Failed to write to log file: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 // Logger interface
