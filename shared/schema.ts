@@ -68,6 +68,18 @@ export const userPreferencesSchema = z.object({
 
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
 
+export const DEFAULT_USER_PREFERENCES: UserPreferences = {
+  theme: 'system',
+  dashboardStyle: 'standard',
+  dashboardLayout: 'default',
+  cardDensity: 'comfortable',
+  widgetFavorites: [],
+  notifications: { email: true, sms: false, push: true },
+  language: 'en',
+  currency: 'USD',
+  timezone: 'UTC',
+};
+
 // Shared validation fragments for consistency
 export const reportTitleSchema = z.string().min(5, "Title must be at least 5 characters").max(100, "Title is too long");
 export const reportDescriptionSchema = z.string().min(10, "Please provide a detailed description (min. 10 chars)").max(1000, "Description is too long");

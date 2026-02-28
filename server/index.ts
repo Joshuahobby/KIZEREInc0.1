@@ -67,7 +67,7 @@ app.use((req, res, next) => {
 });
 
 // Export app and server for Vercel
-let serverPromise: Promise<any> | null = null;
+let serverPromise: Promise<any>;
 
 export const startServer = async () => {
   // Initialize Monitoring (Sentry)
@@ -146,15 +146,23 @@ export const startServer = async () => {
   return server;
 };
 
-// Start the server initialization
-serverPromise = startServer().catch((err) => {
-  logger.error("Failed to start server", { error: err.message, stack: err.stack });
-  // Don't exit in Vercel, just let the promise reject
-  if (process.env.VERCEL !== "1") {
-    process.exit(1);
+// ⚡ Top-level diagnostic logging for Vercel
+console.log(`[Vercel] Booting KIZERE Server... (ENV: ${isProd ? 'production' : 'development'})`);
+
+serverPromise = (async () => {
+  try {
+    const server = await startServer();
+    console.log(`[Vercel] KIZERE Server fully initialized`);
+    return server;
+  } catch (error: any) {
+    console.error('[Vercel] FATAL CRASH during server initialization:', {
+      message: error.message,
+      stack: error.stack
+    });
+    // Re-throw so the module properly fails and Vercel sees the crash
+    throw error;
   }
-  throw err;
-});
+})();
 
 export { app, serverPromise };
 export default app;

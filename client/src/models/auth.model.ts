@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { InsertUser, UserLogin } from '@shared/schema';
+import { InsertUser, UserLogin, DEFAULT_USER_PREFERENCES } from '@shared/schema';
 
 /**
  * Authentication Model
@@ -17,11 +17,11 @@ class AuthModelClass {
   static usernameValidator = z.string().min(3, "Username is required").refine((value) => {
     // Check if it's an email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     // Check if it's a Rwandan phone number
     // Format: +250 XXX XXX XXX or without spaces
     const rwandaPhoneRegex = /^(\+250|0)?[79][0-9]{8}$/;
-    
+
     return emailRegex.test(value) || rwandaPhoneRegex.test(value);
   }, {
     message: "Enter a valid email or phone number (+250XXXXXXXXX)",
@@ -72,18 +72,18 @@ class AuthModelClass {
    */
   static prepareRegisterData(registerData: z.infer<typeof this.registerSchema>): InsertUser {
     const { confirmPassword, username, ...userData } = registerData;
-    
+
     // Determine if username is email or phone
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isEmail = emailRegex.test(username);
-    
+
     return {
       ...userData,
       username: username, // Keep the original username
       email: isEmail ? username : `${username.replace(/\D/g, '')}@placeholder.kizere.rw`, // Use email or generate placeholder
       phoneNumber: !isEmail ? username : null,
       role: userData.role || 'Subscriber',
-      preferences: {}
+      preferences: DEFAULT_USER_PREFERENCES
     };
   }
 
@@ -109,11 +109,11 @@ class AuthModelClass {
    */
   static validatePasswordStrength(password: string): { isStrong: boolean; message: string; score: number } {
     const score = this.evaluatePasswordStrength(password);
-    
+
     if (score < 3) {
       return { isStrong: false, message: 'Weak password', score };
     }
-    
+
     return { isStrong: true, message: 'Strong password', score };
   }
 
@@ -137,7 +137,7 @@ class AuthModelClass {
 
     // Remove all non-digit characters
     const digits = phone.replace(/\D/g, '');
-    
+
     // Handle different formats
     let normalizedNumber = digits;
     if (digits.length === 9) {
@@ -150,12 +150,12 @@ class AuthModelClass {
       // If it starts with 250, add the + sign
       normalizedNumber = '+' + digits;
     }
-    
+
     // Format as +250 XXX XXX XXX
     if (normalizedNumber.startsWith('+250') && normalizedNumber.length === 13) {
       return `+250 ${normalizedNumber.substring(4, 7)} ${normalizedNumber.substring(7, 10)} ${normalizedNumber.substring(10)}`;
     }
-    
+
     return phone; // Return original if we couldn't format it
   }
 }

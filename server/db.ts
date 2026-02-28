@@ -11,9 +11,18 @@ const logger = createLogger("database");
 // neonConfig.webSocketConstructor = ws;
 
 // 1. HTTP Connection for fast, stateless queries (Drizzle)
-// This is more stable in serverless environments (Vercel) and latest Node versions
-// Using a larger timeout for network stability
-const sql = neon(config.DATABASE_URL);
+if (!config.DATABASE_URL) {
+  logger.error('CRITICAL: DATABASE_URL is missing!');
+}
+
+let sql: any;
+try {
+  sql = neon(config.DATABASE_URL);
+  logger.info('Neon HTTP client initialized');
+} catch (err: any) {
+  logger.error('Failed to initialize Neon HTTP client', { error: err.message });
+}
+
 export const db = drizzle({ client: sql, schema });
 
 // 2. Optimized Connection Pool for persistent needs (like session stores)

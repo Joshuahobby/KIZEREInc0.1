@@ -5,6 +5,7 @@ import { hashPassword } from '../utils/auth-crypto';
 import { z } from 'zod';
 import { dashboardService } from '../services/dashboard.service';
 import { ReportMatchingService } from '../services/report-matching.service';
+import { DEFAULT_USER_PREFERENCES } from '../../shared/schema';
 
 const logger = createLogger('AdminRoutes');
 const router = Router();
@@ -260,7 +261,7 @@ router.post("/users", async (req, res) => {
       verificationStatus: verificationStatus || 'pending',
       warningCount: 0,
       activityLevel: 'low',
-      preferences: {}
+      preferences: DEFAULT_USER_PREFERENCES
     });
 
     await storage.createAdminActionLog({

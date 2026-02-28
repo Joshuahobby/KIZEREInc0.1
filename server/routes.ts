@@ -17,7 +17,8 @@ import {
   reports,
   PaymentType,
   PaymentStatus,
-  PaymentPackage
+  PaymentPackage,
+  DEFAULT_USER_PREFERENCES
 } from "@shared/schema";
 import {
   generateTransactionReference,
@@ -283,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             phoneNumber: null,
             role: 'Subscriber',
             avatarUrl: photoURL || null,
-            preferences: {}
+            preferences: DEFAULT_USER_PREFERENCES
           });
           logger.info('Created new user from Firebase auth', { userId: user.id, email });
         } catch (createError: any) {

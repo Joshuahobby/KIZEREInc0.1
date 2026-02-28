@@ -28,6 +28,11 @@ export class DatabaseStorage implements IStorage {
   constructor() {
     if (process.env.NODE_ENV === "production" && process.env.VERCEL === "1") {
       try {
+        console.log("⚡ Initializing Postgres Session Store...");
+        if (!process.env.DATABASE_URL) {
+          throw new Error("DATABASE_URL missing for Postgres session store");
+        }
+
         const PostgresSessionStore = connectPg(session);
         this.sessionStore = new PostgresSessionStore({
           pool,
@@ -35,8 +40,13 @@ export class DatabaseStorage implements IStorage {
           pruneSessionInterval: 60 * 15 // 15 minutes
         });
         console.log("✓ Using Postgres Session Store");
-      } catch (error) {
-        console.error("⚠️ Failed to initialize Postgres Session Store, falling back to MemoryStore", error);
+      } catch (error: any) {
+        console.error("⚠️ Failed to initialize Postgres Session Store", {
+          message: error.message,
+          code: error.code,
+          stack: error.stack
+        });
+        console.log("🔄 Falling back to MemoryStore for recovery");
         const MemoryStore = MemoryStoreFactory(session);
         this.sessionStore = new MemoryStore({
           checkPeriod: 86400000

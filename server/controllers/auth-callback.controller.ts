@@ -3,6 +3,7 @@ import { createLogger } from '../utils/logger';
 import axios from 'axios';
 import { storage } from '../storage';
 import { hashPassword } from '../utils/auth-crypto';
+import { DEFAULT_USER_PREFERENCES } from '../../shared/schema';
 
 const logger = createLogger('AuthCallbackController');
 
@@ -17,7 +18,7 @@ export class AuthCallbackController {
   static async handleGoogleCallback(req: Request, res: Response) {
     try {
       const { code, state, error } = req.query;
-      
+
       // Check for errors from the OAuth provider
       if (error) {
         logger.error('Error from Google OAuth', { error });
@@ -33,7 +34,7 @@ export class AuthCallbackController {
           </html>
         `);
       }
-      
+
       // Validate state token to prevent CSRF
       if (!state) {
         logger.error('Missing state parameter in OAuth callback');
@@ -49,7 +50,7 @@ export class AuthCallbackController {
           </html>
         `);
       }
-      
+
       // Verify we received a code
       if (!code) {
         logger.error('Missing code parameter in OAuth callback');
@@ -65,30 +66,30 @@ export class AuthCallbackController {
           </html>
         `);
       }
-      
+
       // Exchange code for tokens
       const tokenUrl = 'https://oauth2.googleapis.com/token';
       const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google-callback`;
       const firebaseApiKey = process.env.VITE_FIREBASE_API_KEY;
-      
-      logger.info('Exchanging code for tokens', { 
-        hasCode: !!code, 
+
+      logger.info('Exchanging code for tokens', {
+        hasCode: !!code,
         redirectUri,
         hasApiKey: !!firebaseApiKey
       });
-      
+
       // Get Firebase configuration from environment
       const firebaseProjectId = process.env.VITE_FIREBASE_PROJECT_ID;
-      
+
       // Create OAuth client ID from project ID
       const clientId = `${firebaseProjectId}.apps.googleusercontent.com`;
-      
-      logger.info('Firebase config for OAuth', { 
+
+      logger.info('Firebase config for OAuth', {
         hasProjectId: !!firebaseProjectId,
         hasApiKey: !!firebaseApiKey,
         clientId
       });
-      
+
       // Send request to Google to exchange code for tokens
       const tokenResponse = await axios.post(tokenUrl, {
         code,
@@ -97,16 +98,16 @@ export class AuthCallbackController {
         redirect_uri: redirectUri,
         grant_type: 'authorization_code'
       });
-      
+
       const { access_token, id_token } = tokenResponse.data;
-      
+
       // Get user info with access token
       const userInfoResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${access_token}` }
       });
-      
+
       const userData = userInfoResponse.data;
-      
+
       // Verify we have the minimum required user data
       if (!userData.email) {
         logger.error('User email missing from Google response', { userData });
@@ -122,17 +123,17 @@ export class AuthCallbackController {
           </html>
         `);
       }
-      
+
       // Find or create user
       let user = await storage.getUserByEmail(userData.email);
-      
+
       if (!user) {
         // Create a new user with the data from Google
         try {
           // Generate a secure random password that won't be used for login
           const securePassword = `OAuthUser_${Date.now()}_${Math.random().toString(36).substring(2)}!`;
           const hashedPass = await hashPassword(securePassword);
-          
+
           user = await storage.createUser({
             fullName: userData.name,
             username: userData.email,
@@ -141,9 +142,9 @@ export class AuthCallbackController {
             phoneNumber: null,
             role: 'Subscriber',
             avatarUrl: userData.picture || null,
-            preferences: {}
+            preferences: DEFAULT_USER_PREFERENCES
           });
-          
+
           logger.info('Created new user from Google auth', { userId: user.id, email: userData.email });
         } catch (error) {
           logger.error('Failed to create user from Google auth', { error, email: userData.email });
@@ -160,7 +161,7 @@ export class AuthCallbackController {
           `);
         }
       }
-      
+
       // Update avatar URL if provided and different from what's stored
       if (user && userData.picture && (!user.avatarUrl || user.avatarUrl !== userData.picture)) {
         try {
@@ -174,7 +175,7 @@ export class AuthCallbackController {
           // Non-critical error, continue with login
         }
       }
-      
+
       // Login the user
       req.login(user, (err) => {
         if (err) {
@@ -191,10 +192,10 @@ export class AuthCallbackController {
             </html>
           `);
         }
-        
+
         // Return user data without password
         const { password, ...userData } = user;
-        
+
         // Send success message to parent window and close popup
         return res.send(`
           <html>
@@ -209,7 +210,7 @@ export class AuthCallbackController {
           </html>
         `);
       });
-      
+
     } catch (error) {
       logger.error('Error in Google OAuth callback', { error });
       return res.send(`
