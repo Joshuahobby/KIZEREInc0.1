@@ -71,7 +71,7 @@ export function Header() {
     if (!user) return "/dashboard";
     switch (user.role) {
       case "Admin": return "/admin";
-      case "Agent": return "/lost-found";
+      case "Agent": return "/lost";
       default: return "/dashboard";
     }
   };
@@ -80,11 +80,13 @@ export function Header() {
   const navigation: NavItem[] = isAuthenticated
     ? [
       { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
-      { name: "Explore Hub", href: "/lost-found", icon: Search },
+      { name: "Lost Directory", href: "/lost", icon: Search },
+      { name: "Found Directory", href: "/found", icon: Package },
     ]
     : [
       { name: t('nav.home'), href: "/", icon: Home },
-      { name: "Explore Hub", href: "/lost-found", icon: Search },
+      { name: "Lost Directory", href: "/lost", icon: Search },
+      { name: "Found Directory", href: "/found", icon: Package },
       { name: "Community", href: "/community", icon: Users },
       { name: "About", href: "/about", icon: Info },
       { name: "Contact", href: "/contact", icon: Mail },

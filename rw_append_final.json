@@ -1,0 +1,386 @@
+,
+"idRecognition": {
+    "title": "Shyiraho ifoto y'ikiranga ikintu cyawe",
+    "subtitle": "Ikora ku biranga bifite IMEI, serial numbers, cyangwa inyandiko za ID",
+    "dropInstructions": "Shyira ifoto hano...",
+    "selectImage": "Hitamo Ifoto",
+    "processing": "Irarimo gusesengura ifoto...",
+    "detected": "Ibiranga Byabonetse",
+    "useThis": "Koresha Iki",
+    "fullText": "Reba inyandiko zose zabonetse",
+    "alertTitle": "Gusuzuma Ibiranga (Auto-Scan)",
+    "alertDescription": "Shyiraho ifoto isobanutse y'ikiranga cyangwa agasanduku k'ikintu cyawe. Turahita tugushakira Serial Number cyangwa IMEI mu buryo bwikora."
+},
+"batchUpload": {
+    "title": "Shyiraho Amafoto y'Ikintu",
+    "subtitle": "Ongeraho amafoto menshi y'ikintu cyawe mu bice bitandukanye. Amafoto asobanutse afasha mu kukimenya.",
+    "dropInstructions": "Shyira amafoto yawe hano...",
+    "selectFiles": "Hitamo Amafoto",
+    "fileTypes": "Yemera JPG, PNG, GIF kugeza kuri",
+    "selected": "yatoranyijwe",
+    "addMore": "Ongeraho Ayandi",
+    "clearAll": "Kura ibyo washyizeho byose",
+    "batch_upload_title": "Ohereza Amafoto",
+    "batch_upload_description": "Shyiraho amafoto menshi kuri raporo yawe kugira ngo ufashe mu kumenya ikintu.",
+    "drag_images": "Kurura maze ushyire amafoto hano",
+    "batch_upload_instructions": "Urashobora gushyiraho amafoto kugeza kuri 5 (JPG, PNG, WEBP).",
+    "select_images": "Hitamo Amafoto",
+    "file_types": "Yemera: JPG, PNG, WEBP (Ntarengwa ni 5MB kuri buri foto)",
+    "uploaded_images": "Amafoto Yoherejwe",
+    "add_more_images": "Ongeraho Amafoto Ayandi",
+    "batch_upload_success": "Byoherejwe Neza",
+    "batch_upload_success_desc": "Amafoto yawe yoherejwe neza.",
+    "dropToAdd": "Shyira hano kugira ngo wongereho amafoto menshi!",
+    "batch_upload_cleared": "Amafoto Yakuweho",
+    "batch_upload_cleared_desc": "Amafoto yose yakuweho.",
+    "drag_to_reorder": "Kurura kugira ngo uhindure uko amafoto akurikirana",
+    "tips": "Inama: Shyiraho amafoto asobanutse, afite urumuri rwiza mu bice bitandukanye. Urashobora gukurura amafoto kugira ngo uhindure uko akurikirana, maze ifoto ya mbere ibe ariyo igaragara bwa nyuma."
+},
+"ownershipChain": {
+    "title": "Inyandiko z'Uburenganzira",
+    "subtitle": "Rema amateka y'uburenganzira bishingiye ku nyandiko zemejwe",
+    "documents": "inyandiko",
+    "documents_plural": "inyandiko",
+    "addDocument": "Ongeraho inyandiko y'uburenganzira",
+    "dropInstructions": "Shyira inyandiko hano...",
+    "selectDocument": "Hitamo Inyandiko",
+    "timeline": "Amateka y'Uburenganzira",
+    "documentDate": "Itariki y'Inyandiko",
+    "description": "Ibisobanuro",
+    "documentDetails": "Uzuza amakuru y'inyandiko.",
+    "alertTitle": "Kugenzura Uburenganzira",
+    "alertDescription": "Shyiraho inyandiko zemeza ko uri nyir'ikintu. Ibi birema amateka y'inyandiko ashobora kwifashishwa mu gihe hari amakimbirane cyangwa mu gihe ugiye kugurisha ikintu. Tangira na resiti y'umwimerere maze wongereho izindi nyandiko zikurikirana mu gihe."
+},
+"qrCode": {
+    "title": "Kurema Kode QR",
+    "subtitle": "Rema kode QR yihariye ku kintu cyawe cyanditswe",
+    "needRegistration": "Uzuza kwandikisha ikintu kugira ngo urebe kode QR",
+    "customize": "Hindura Kode QR",
+    "size": "Ingano",
+    "colors": "Amabara",
+    "foreground": "Ibara ry'Imbere",
+    "background": "Ibara ry'Inyuma",
+    "errorCorrection": "Urwego rwo gukosora amakosa (Error Correction)",
+    "errorLevels": {
+        "low": "Hasi (7%)",
+        "medium": "Hagati (15%)",
+        "quartile": "Quartile (25%)",
+        "high": "Hejuru (30%)"
+    },
+    "correctionInfo": "Inzego zo hejuru zituma kode QR yizerwa kurushaho ariko iba nini",
+    "verified": "Witeguye Kwemezwa",
+    "verifiedDesc": "Iyi kode QR itanga uburyo bwihuse bwo kwemeza ko iki kintu ari icy'umwimerere no kugenzura amakuru y'uburenganzira.",
+    "download": "Kumanura",
+    "print": "Gusohora (Print)",
+    "share": "Sangiza",
+    "notSupported": "Gusangiza ntibyemewe"
+},
+"items": {
+    "registerNewItem": "Andika Ikintu Gishya",
+    "itemName": "Izina ry'Ikintu",
+    "category": "Icyiciro",
+    "serialNumber": "Serial Number",
+    "description": "Ibisobanuro",
+    "purchaseDate": "Itariki y'Igurwa",
+    "purchaseValue": "Agaciro k'Igurwa",
+    "uploadImage": "Ohereza Ifoto",
+    "additionalDetails": "Andi Makuru Arambuye"
+},
+"reports": {
+    "reportLostItem": "Menyekanisha Ikintu Cyabuze",
+    "reportFoundItem": "Menyekanisha Ikintu Cyabonetse",
+    "itemDetails": "Amakuru y'Ikintu",
+    "lastSeen": "Cyabonekeye Bwa Nyuma",
+    "contactInformation": "Amakuru yo Kuvugana",
+    "reward": "Ingororano (Bishoboka)",
+    "reportDate": "Itariki yo Kumenyekanisha",
+    "status": "Imimerere",
+    "registeredItemDialog": {
+        "title": "Menyekanisha ko Cyabuze",
+        "description": "Menyekanisha ko <strong>{itemName}</strong> cyabuze.",
+        "freeForRegistered": "Ubuntu ku bintu byanditswe.",
+        "noImage": "NTAFOTO",
+        "dateLost": "Itariki Cyabuzweho",
+        "location": "Aho",
+        "locationPlaceholder": "Ni he cyabuzweho?",
+        "additionalDetails": "Andi Makuru",
+        "additionalDetailsPlaceholder": "Tanga amakuru arambuye ku buryo cyabuzwe...",
+        "contactInfo": "Amakuru yo Gufatanya (Bishoboka)",
+        "contactInfoPlaceholder": "Indi telefoni cyangwa imeyili...",
+        "contactInfoHint": "Siga ubusa kugira ngo ukoreshwe amakuru yawe y'umwirondoro.",
+        "warning": "Ibi bizahindura imimerere y'ikintu bibe <strong>Cyabuze</strong> kandi biremye raporo rusange.",
+        "cancel": "Hagarika",
+        "confirmReport": "Emeza & Menyekanisha",
+        "submitting": "Birimo koherezwa...",
+        "successTitle": "Raporo Yoherejwe",
+        "successDescription": "{itemName} cyagaragajwe ko cyabuze. Twizera ko kizaboneka vuba!",
+        "toastTitle": "Raporo Yoherejwe",
+        "toastDescription": "Ikintu cyawe cyagaragajwe ko cyabuze kandi raporo yaremwe.",
+        "errorTitle": "Kohereza raporo byanze",
+        "receiptNumber": "Inyandiko #"
+    }
+},
+"profile": {
+    "title": "Umwirondoro",
+    "subtitle": "Gucunga amakuru yawe bwite, igenamiterere ry'umutekano, n'ibyo uhitamo",
+    "editProfile": "Guhindura Umwirondoro",
+    "joinedOn": "Yinjiye ku wa {date}",
+    "username": "Izina ry'ukoresha",
+    "email": "Imeyili",
+    "phone": "Nimero ya telefone",
+    "notProvided": "Ntabwo yatanzwe",
+    "memberSince": "Umunyamuryango kuva",
+    "updateSuccess": "Umwirondoro Wavuguruwe",
+    "updateSuccessDesc": "Amakuru y'umwirondoro wawe yavuguruwe neza",
+    "tabs": {
+        "profile": "Amakuru y'Umwirondoro",
+        "security": "Umutekano",
+        "permissions": "Uburenganzira",
+        "preferences": "Ibyo Uhitamo"
+    },
+    "security": {
+        "changePassword": "Guhindura ijambo ry'ibanga",
+        "passwordTitle": "Guhindura ijambo ry'ibanga",
+        "passwordDesc": "Vugurura ijambo ryawe ry'ibanga kugira ngo urinde konti yawe",
+        "currentPassword": "Ijambo ry'ibanga rya none",
+        "newPassword": "Ijambo ry'ibanga rishya",
+        "confirmPassword": "Emeza ijambo ry'ibanga rishya",
+        "passwordChangeSuccess": "Ijambo ry'ibanga ryahinduwe neza",
+        "passwordChangeSuccessDesc": "Ijambo ryawe ry'ibanga ryamaze kuvugururwa. Koresha ijambo rishya igihe winjira ubutaha.",
+        "passwordChangeError": "Guhindura ijambo ry'ibanga byanze",
+        "passwordChangeErrorDesc": "Hagaragaye ikibazo mu guhindura ijambo ryawe ry'ibanga. Reba ijambo ryawe rya none maze wongere ugerageze.",
+        "sessionsTitle": "Ibikorwa biheruka",
+        "sessionsDesc": "Cunga ibikoresho byose winjiriyeho kuri konti yawe",
+        "currentSession": "Ibikoresho winjiriyeho ubu",
+        "active": "Kirimo gukoreshwa",
+        "logoutAllSessions": "Sohoka mu bindi bikoresho byose",
+        "passwordStrength": {
+            "weak": "Roroheje",
+            "fair": "Riringaniye",
+            "good": "Rikomeye",
+            "strong": "Rikomeye cyane",
+            "very-strong": "Rikomeye cyane rwose",
+            "excellent": "Rihagije neza"
+        }
+    },
+    "permissions": {
+        "title": "Uburenganzira & Ukugera kuri Sisitemu",
+        "description": "Reba ibyo wemerewe gukora bishingiye ku nshingano zawe muri sisitemu.",
+        "categories": {
+            "dashboard": "Ikibaho",
+            "items": "Ibintu",
+            "reports": "Raporo",
+            "users": "Abakoresha",
+            "payments": "Ubwishyu",
+            "system": "Sisitemu",
+            "other": "Ibindi"
+        },
+        "noPermissions": "Nta burenganzira bwabonetse",
+        "noPermissionsDesc": "Ntabwo ufite uburenganzira bwihariye wahawe kuri konti yawe."
+    },
+    "preferences": {
+        "title": "Igenamiterere rya Sisitemu",
+        "description": "Hindura uko ubona ikibaho cyawe, ururimi, n'ibindi bijyanye n'akarere.",
+        "appearance": "Isura & Ururimi",
+        "theme": "Uburyo bugaragara",
+        "selectTheme": "Hitamo isura",
+        "themes": {
+            "light": "Hacyeye",
+            "dark": "Hijima",
+            "system": "Bishingiye kuri sisitemu"
+        },
+        "themeDescription": "Hitamo isura ushaka ko urubuga rugira.",
+        "language": "Guhitamo Ururimi",
+        "selectLanguage": "Hitamo ururimi",
+        "languageDescription": "Hitamo ururimi rwakoreshwa ku mibonano, amazina, n'ubutumwa bwa sisitemu.",
+        "notifications": "Igenamiterere ry'Imenyesha",
+        "emailNotifications": "Imenyesha kuri Imeyili",
+        "emailNotificationsDesc": "Jya ubona ubutumwa n'imenyesha by'amasaha kuri imeyili yawe.",
+        "smsNotifications": "Imenyesha kuri SMS",
+        "smsNotificationsDesc": "Jya ubona ubutumwa bw'umutekano n'ibyo kugarura ibintu kuri SMS.",
+        "pushNotifications": "Imenyesha rya Web Push",
+        "pushNotificationsDesc": "Jya ubona ubutumwa bahita batanga muri browser yawe.",
+        "dashboardSettings": "Igenamiterere ry'Ikibaho",
+        "layout": "Uko amakuru ategerejwe",
+        "selectLayout": "Hitamo uko amakuru ategerejwe",
+        "layouts": {
+            "default": "Bisanzwe",
+            "compact": "Bito",
+            "wide": "Bigari"
+        },
+        "layoutDescription": "Hitamo uko amakuru ashaka kugaragara ku kibaho cyawe.",
+        "regionalization": "Akarere & Amayuniti",
+        "currency": "Ifaranga ryifuzwa",
+        "selectCurrency": "Hitamo ifaranga",
+        "currencyDescription": "Rikoreshwa mu kwerekana amafaranga wishyura n'amateka y'ubwishyu.",
+        "timezone": "Isaha y'akarere",
+        "selectTimezone": "Hitamo isaha y'akarere",
+        "timezoneDescription": "Bituma amasaha agaragara bishingiye ku gihe cy'aho uherereye.",
+        "saveSuccess": "Igenamiterere ryabitse",
+        "saveSuccessDesc": "Igenamiterere ryawe rya sisitemu ryavuguruwe neza.",
+        "saveError": "Kuvugurura byanze",
+        "saveErrorDesc": "Ntabwo twabashije kubika igenamiterere ryawe. Ongera ugerageze nyuma."
+    }
+},
+"settings": {
+    "title": "Igenamiterere"
+},
+"faqs_page": {
+    "title": "Ibibazo Bikunze Kubazwa",
+    "subtitle": "Byose ukeneye kumenya kuri KIZERE",
+    "categories": {
+        "general": "Rusange",
+        "registration": "Kwandikisha Ibintu",
+        "lost_found": "Byabuze & Byabonetse",
+        "security": "Umutekano & Ibanga",
+        "payments": "Ubwishyu"
+    },
+    "questions": {
+        "what_is_kizere": "KIZERE ni iki?",
+        "what_is_kizere_ans": "KIZERE ni urubuga rwa mbere rwuzuye mu Rwanda rwo kwandikisha ibintu, kumenyesha ibyabuze n'ibyabonetse, no gucunga uburenganzira bwo gutunga. Dufasha kubaka umuco w'ubwizerane n'umutekano.",
+        "is_it_free": "Ese gukoresha urubuga ni ubuntu?",
+        "is_it_free_ans": "Gufungura konti isanzwe ni ubuntu. Kurinda ikintu cyo mu giciro cy'ibanze bishingiye kuri 2,000 RWF gusa.",
+        "how_to_register": "Ni gute nshobora kwandikisha ikintu?",
+        "how_to_register_ans": "Injira muri konti, kanda 'Andika Ikintu', maze ukurikize intambwe: tanga amakuru, shyiraho amafoto, kandi wemeze inyandiko z'uburenganzira.",
+        "what_is_digital_cert": "Icyemezo cy'Ikoranabuhanga ni iki?",
+        "what_is_digital_cert_ans": "Ni inyandiko yirinzwe mu buryo bw'ikoranabuhanga yemeza ko uri nyir'ikintu. Ikubiyemo amakuru y'ikintu, amafoto, n'ikiranga cyihariye.",
+        "what_if_i_lose_it": "Nyakora iki niba nataye ikintu cyanjye?",
+        "what_if_i_lose_it_ans": "Jya kuri 'Byabuze & Byabonetse', tanga raporo y'ikintu cyabuze, maze ugaragaze aho giheruka kuboneka n'igihe. Ubwenge bukorano bwacu n'abaturage bizagufasha kugishakisha.",
+        "is_my_data_safe": "Ese amakuru yanjye arinzwe?",
+        "is_my_data_safe_ans": "Yego, dukoresha uburyo bwo kurinda amakuru bwo ku rwego rwa banki kandi twubahiriza amateka y'u Rwanda ajyanye no kurinda amakuru bwite."
+    },
+    "contact_us_text": "Uragifite ibindi bibazo? Turi hano kugira n’ugufashe kurinda ibintu byawe by'agaciro."
+},
+"about_page": {
+    "title": "Kuri KIZERE",
+    "mission": "Inshingano Zacu",
+    "mission_text": "Kubaka umuryango ukoresha ukuri kandi wizewe mu gutunga no kugarura ibintu mu Rwanda binyuze mu mishinga y'ikoranabuhanga.",
+    "vision": "Icyerekezo Cyacu",
+    "vision_text": "Kuba icyitegererezo mu kwemeza uburenganzira bwo gutunga no kugarura ibyabuze muri Afurika y'Iburasirazuba.",
+    "story": "Amateka ya KIZERE",
+    "story_text": "Yatangiye i Kigali, KIZERE yavutse biturutse ku kenerwa rya sisitemu imwe yizewe yo gucunga ibikoresho no gufasha kugarura ibyabuze mu mujyi wacu ukura vuba."
+},
+"contact_page": {
+    "title": "Twandikire",
+    "subtitle": "Turi hano kugira ngo tugufashe",
+    "form": {
+        "name": "Izina",
+        "email": "Imeyili",
+        "subject": "Icyo uvugaho",
+        "message": "Ubutumwa",
+        "send": "Yohereza Ubutumwa"
+    },
+    "info": {
+        "address": "Kigali, u Rwanda",
+        "phone": "+250 7XX XXX XXX",
+        "email": "support@kizere.rw"
+    }
+},
+"blog_page": {
+    "title": "Inkuru za KIZERE",
+    "subtitle": "Inama z'umutekano, inkuru z'intsinzi, n'amakuru mashya",
+    "categories": {
+        "all": "Inkuru Zose",
+        "security": "Umutekano",
+        "success": "Inkuru z'Intsinzi",
+        "news": "Amakuru"
+    },
+    "posts": {
+        "post1": {
+            "title": "Uburyo bwo Kurinda Smartphone yawe i Kigali",
+            "excerpt": "Inama zifatika zo kugira ngo telefone yawe y'agaciro igume mu mutekano mu mujyi wacu ukura.",
+            "date": "Mutarama 15, 2026",
+            "category": "Umutekano"
+        },
+        "post2": {
+            "title": "Cyabonetse: Inkuru y'Intsinzi ivuye i Musanze",
+            "excerpt": "Uburyo tableti yari yabuze yasubijwe nyirayo mu masaha 48 hakoreshejwe KIZERE.",
+            "date": "Mutarama 10, 2026",
+            "category": "Inkuru z'Intsinzi"
+        },
+        "post3": {
+            "title": "KIZERE Version 0.1: Ibiranga bishya",
+            "excerpt": "Kureba ibiranga bishya n'iterambere mu kuvugurura urubuga rwacu.",
+            "date": "Mutarama 5, 2026",
+            "category": "Amakuru"
+        }
+    },
+    "readMore": "Soma Ibindi"
+},
+"docs_page": {
+    "title": "Inyandiko",
+    "subtitle": "Inyobora n'ibikoresho byo gukoresha KIZERE",
+    "getting_started": {
+        "title": "Gufungura Konti",
+        "step1": "Kurema konti yawe",
+        "step2": "Gutunganya umwirondoro wawe",
+        "step3": "Kwandikisha ikintu cya mbere"
+    },
+    "guides": {
+        "title": "Inyobora z'Imikoreshereze",
+        "registration": "Inyobora irambuye ku kwandikisha ikintu",
+        "ownership": "Gucunga ibyemezo by'uburenganzira",
+        "lost_found": "Kumenyesha ibyabuze n'ibyabonetse",
+        "qr_codes": "Uburyo bwo gukoresha utag QR za KIZERE"
+    },
+    "welcome_title": "Murakaza neza kuri KIZERE Hub",
+    "welcome_text": "Izi nyandiko zateganyijwe kugira ngo zigufashe gukoresha KIZERE mu buryo bwiza cyane. Waba uri umukoresha mushya ushaka kurinda ibyawe cyangwa uri umukozi ufasha mu kugarura ibyabuze, uzasanga byose hano.",
+    "tip_title": "Inama",
+    "tip_text": "Koresha ahantu ho gushakira hejuru kugira ngo ubone amakuru ku kintu icyo ari cyo cyose cyanditse cyangwa ubufasha ukeneye.",
+    "core_concepts": "Imyumvire y'Ibanze",
+    "concept1_title": "Umwirondoro w'Ikoranabuhanga",
+    "concept1_text": "Buri kintu muri KIZERE gifite umwirondoro wihariye w'ikoranabuhanga ari uwawe bwite.",
+    "concept2_title": "Umuryango w'Ubwizerane",
+    "concept2_text": "Uburyo bwacu bwo kugarura ibintu bishingiye ku baturage bufasha ibintu kubona ba nyirabyo.",
+    "quick_start_title": "Inyobora yo Gutangira Vuba",
+    "quick_start_desc": "Kuva ku busa kugeza wanditse ikintu mu gihe kitageze ku minota 5.",
+    "security_title": "Umutekano kuri KIZERE",
+    "security_desc": "Menya uko turinda ibintu byawe n'amakuru yawe bwite."
+},
+"community_page": {
+    "title": "Umuryango",
+    "subtitle": "Kubaka umuco w'ubwizerane n'umutekano dufatanyije",
+    "network": {
+        "title": "Umuryango w'Ubwizerane",
+        "description": "KIZERE ni rurenga urubuga; ni umuryango w'ubwizerane. Intego yacu ni ukurema ahantu hirinzwe aho ibyabuze bibona inzira itaha mu rugo."
+    },
+    "guidelines": {
+        "title": "Amabwiriza y'Umuryango",
+        "rule1": "Koresha ukuri kandi ugaragarize raporo zawe.",
+        "rule2": "Wubaha ibanga n'amakuru y'abandi bakoresha.",
+        "rule3": "Fasha mu kugarura ibyabonetse bidatinze."
+    },
+    "feed": {
+        "title": "Inkuru z'Abaturage & Integuza",
+        "filter_all": "Byose",
+        "filter_success": "Inkuru z'Intsinzi",
+        "filter_security": "Integuza z'Umutekano",
+        "filter_tips": "Inama zo Kugarura"
+    },
+    "stats": {
+        "likes": "Likes",
+        "comments": "Comments"
+    },
+    "badges": {
+        "title": "Ibirango by'Umuryango",
+        "eagle_eye": "Eagle Eye",
+        "trust_builder": "Trust Builder",
+        "recovery_expert": "Recovery Expert"
+    },
+    "create_post": "Sangiza Inkuru cyangwa Integuza"
+},
+"permissions": {
+    "descriptions": {
+        "fallback": "Uruhushya ruzwi kuri iki gikorwa.",
+        "can_view_dashboard": "Guhabwa uburenganzira bwo kureba ikibaho gikuru n'imibare rusange.",
+        "can_manage_own_items": "Kwemererwa kwandikisha, guhindura, no gucunga ibintu utunze.",
+        "can_create_reports": "Kwemererwa kumenyesha ibyabuze cyangwa ibyabonetse muri sisitemu.",
+        "can_view_own_payments": "Guhabwa uburenganzira bwo kureba amateka y'ubwishyu bwawe n'amakuru abiranga.",
+        "can_view_all_items": "Uburenganzira bw'ubuyobozi bwo kureba ibintu byose byanditswe muri sisitemu.",
+        "can_manage_users": "Uburenganzira bw'ubuyobozi bwo gucunga konti z'abakoresha n'inshingano zabo.",
+        "can_manage_system": "Kugera ku igenamiterere n'ibikoresho byo gucunga sisitemu.",
+        "can_view_reports": "Uburenganzira bwo kureba raporo z'ibyabuze n'ibyabonetse.",
+        "can_manage_reports": "Uburenganzira bwo gucunga no gukemura raporo z'ibyabuze n'ibyabonetse."
+    }
+}
+}

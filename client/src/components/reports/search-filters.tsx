@@ -37,6 +37,7 @@ const LOCATIONS = [
 
 interface SearchFiltersProps {
   onFiltersChange: (filters: FilterState) => void;
+  orientation?: "horizontal" | "vertical";
 }
 
 export interface FilterState {
@@ -53,7 +54,7 @@ const TIME_RANGES = [
   { label: "Last 30 Days", value: "30d" }
 ];
 
-export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
+export function SearchFilters({ onFiltersChange, orientation = "horizontal" }: SearchFiltersProps) {
   const [category, setCategory] = useState("All Categories");
   const [location, setLocation] = useState("All Locations");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "relevance">("newest");
@@ -127,7 +128,7 @@ export function SearchFilters({ onFiltersChange }: SearchFiltersProps) {
       </div>
 
       {/* Filter Controls */}
-      <div className={`flex flex-col md:flex-row gap-3 ${showFilters ? 'block' : 'hidden md:flex'}`}>
+      <div className={`flex gap-3 ${orientation === "vertical" ? "flex-col" : "flex-col md:flex-row"} ${showFilters || orientation === "vertical" ? 'block' : 'hidden md:flex'}`}>
         <div className="flex items-center gap-2 flex-1">
           <Select value={category} onValueChange={handleCategoryChange}>
             <SelectTrigger className="w-full md:w-[180px] bg-white/80 backdrop-blur-sm border-neutral-200/60 rounded-full h-12 shadow-sm focus:ring-primary/30 transition-all hover:bg-white text-neutral-700 font-medium">

@@ -1,10 +1,10 @@
 import * as React from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
 
-import { useAuth } from "../hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { useDashboardData, DashboardData, DashboardStats } from "../hooks/use-dashboard-data";
-import { useLanguage } from "../lib/i18n/LanguageContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,7 +12,6 @@ import { DashboardSkeleton } from "@/components/ui/skeleton-loader";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCard } from "@/components/dashboard/stats-card";
-import { ActivityTimeline } from "@/components/dashboard/activity-timeline";
 import { NotificationCenter } from "@/components/dashboard/notification-center";
 import { PaymentHistoryCard } from "@/components/dashboard/payment-history-card";
 import { ItemsTable } from "@/components/dashboard/items-table";
@@ -79,10 +78,10 @@ const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: a
     <div className="space-y-1">
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
         {t('dashboard.welcomeBack', { name: "" }).replace(/,?\s*$/, '')}{' '}
-        <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary/80 to-primary/50">
+        <span className="text-primary">
           {user?.fullName || user?.username}
         </span>
-        {isAdmin && <span className="ml-3 text-[10px] uppercase tracking-[0.2em] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full align-middle">SUDO</span>}
+        {isAdmin && <span className="ml-2 text-[9px] uppercase tracking-widest font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">SUDO</span>}
       </h1>
       <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-2xl mt-1">
         {t('dashboard.welcomeSubtitle')}
@@ -226,171 +225,76 @@ export default function UnifiedDashboard() {
       return <DashboardSkeleton />;
     }
 
-    // Subscriber and default view
+    // Subscriber and default view (Minimalist Action-First)
     if (activeTab === "overview") {
       return (
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
+          className="max-w-4xl mx-auto space-y-8"
         >
-          {/* Stats Row */}
-          <div className={getStatsGridClass()}>
+          {/* Primary Action Paths */}
+          <div className="grid md:grid-cols-2 gap-4 mt-4">
             <motion.div variants={itemVariants}>
-              <StatsCard
-                title={t('dashboard.registeredItems')}
-                value={userStats.totalItems}
-                icon={<ShoppingBag className="h-5 w-5" />}
-                iconBgClass="bg-blue-100 dark:bg-blue-900/30"
-                iconTextClass="text-blue-600 dark:text-blue-400"
-                trendData={[3, 7, 5, 10, 8, 12, userStats.totalItems]}
-                chartColor="#4f46e5"
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <StatsCard
-                title={t('dashboard.lostReports')}
-                value={userStats.totalLostReports}
-                icon={<AlertTriangle className="h-5 w-5" />}
-                iconBgClass="bg-amber-100 dark:bg-amber-900/30"
-                iconTextClass="text-amber-600 dark:text-amber-400"
-                trendData={[2, 5, 3, 7, 6, 8, userStats.totalLostReports]}
-                chartColor="#eab308"
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <StatsCard
-                title={t('dashboard.foundReports')}
-                value={userStats.totalFoundReports}
-                icon={<CheckCircle2 className="h-5 w-5" />}
-                iconBgClass="bg-green-100 dark:bg-green-900/30"
-                iconTextClass="text-green-600 dark:text-green-400"
-                trendData={[1, 3, 2, 4, 6, 5, userStats.totalFoundReports]}
-                chartColor="#10b981"
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <StatsCard
-                title={t('dashboard.totalSpent')}
-                value={userStats.totalSpent}
-                icon={<DollarSign className="h-5 w-5" />}
-                iconBgClass="bg-purple-100 dark:bg-purple-900/30"
-                iconTextClass="text-purple-600 dark:text-purple-400"
-                trendData={[100, 250, 150, 400, 300, 500, userStats.totalSpent]}
-                chartColor="#8b5cf6"
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <StatsCard
-                title={t('dashboard.reputationScore')}
-                value={user.reputationScore ?? 0}
-                icon={<ShieldCheck className="h-5 w-5" />}
-                iconBgClass="bg-blue-100 dark:bg-blue-900/30"
-                iconTextClass="text-blue-600 dark:text-blue-400"
-                subtitle={user.isTrusted ? t('dashboard.trustedMember') : t('dashboard.communityMember')}
-              />
-            </motion.div>
-          </div>
-
-          {/* Role-Specific Stats Row */}
-          {(isAdmin || isAgent) && (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
-              {userStats.allOpenReports !== undefined && (
-                <motion.div variants={itemVariants}>
-                  <StatsCard
-                    title={t('dashboard.activeHubReports')}
-                    value={userStats.allOpenReports}
-                    icon={<FileText className="h-5 w-5" />}
-                    iconBgClass="bg-orange-100 dark:bg-orange-900/30"
-                    iconTextClass="text-orange-600 dark:text-orange-400"
-                  />
-                </motion.div>
-              )}
-              {isAdmin && userStats.totalUsers !== undefined && (
-                <motion.div variants={itemVariants}>
-                  <StatsCard
-                    title={t('dashboard.totalPlatformUsers')}
-                    value={userStats.totalUsers}
-                    icon={<Users className="h-5 w-5" />}
-                    iconBgClass="bg-indigo-100 dark:bg-indigo-900/30"
-                    iconTextClass="text-indigo-600 dark:text-indigo-400"
-                  />
-                </motion.div>
-              )}
-              {isAdmin && userStats.pendingVerifications !== undefined && (
-                <motion.div variants={itemVariants}>
-                  <StatsCard
-                    title={t('dashboard.pendingVerifications')}
-                    value={userStats.pendingVerifications}
-                    icon={<ShieldCheck className="h-5 w-5" />}
-                    iconBgClass="bg-cyan-100 dark:bg-cyan-900/30"
-                    iconTextClass="text-cyan-600 dark:text-cyan-400"
-                  />
-                </motion.div>
-              )}
-            </div>
-          )}
-
-          {/* Global Search removed - now accessible in the header for a cleaner UI */}
-
-          {/* Main Content Grid */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
-            {/* Quick Actions Panel */}
-            <motion.div variants={itemVariants} className="lg:col-span-1">
-              <QuickActionsPanel user={user} />
-            </motion.div>
-
-            {/* Activity Timeline */}
-            <motion.div variants={itemVariants} className="lg:col-span-1">
-              <ActivityTimeline items={items} reports={reports} />
-            </motion.div>
-
-            {/* Upcoming Tasks - New Component */}
-            <motion.div variants={itemVariants} className="lg:col-span-1">
-              <UpcomingTasksCard />
-            </motion.div>
-
-            {/* Notifications */}
-            <motion.div variants={itemVariants} className="lg:col-span-1">
-              <NotificationCenter notifications={notifications || []} isLoading={false} />
-            </motion.div>
-
-            {/* Dashboard Alerts - New Component */}
-            <motion.div variants={itemVariants} className="lg:col-span-1">
-              <DashboardAlerts />
-            </motion.div>
-          </div>
-
-          {/* Quick Actions & Recent Items */}
-          {/* Recent Items Full Width */}
-          <div className="grid gap-6 mb-6">
-            <motion.div variants={itemVariants}>
-              <Card className="h-full">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <div>
-                    <CardTitle>{t('dashboard.recentItems')}</CardTitle>
-                    <CardDescription>
-                      {t('dashboard.recentItemsDescription')}
-                    </CardDescription>
+              <Card
+                className="overflow-hidden cursor-pointer hover:shadow-md transition-all border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group"
+                onClick={() => navigate('/lost')}
+              >
+                <CardContent className="p-4 md:p-5 flex flex-row items-center gap-4">
+                  <div className="p-2.5 bg-destructive/10 rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setActiveTab('items')}>
-                    {t('dashboard.viewAll')}
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <ItemsTable items={userStats.recentlyAddedItems} isLoading={false} />
+                  <div className="text-left">
+                    <h3 className="text-lg font-bold tracking-tight text-destructive">{t('dashboard.action.lostTitle')}</h3>
+                    <p className="text-muted-foreground text-[11px] leading-tight mt-0.5 font-medium">{t('dashboard.action.lostDesc')}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <Card
+                className="overflow-hidden cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 hover:bg-primary/10 group"
+                onClick={() => navigate('/found')}
+              >
+                <CardContent className="p-4 md:p-5 flex flex-row items-center gap-4">
+                  <div className="p-2.5 bg-primary/10 rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
+                    <Search className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-lg font-bold tracking-tight text-primary">{t('dashboard.action.foundTitle')}</h3>
+                    <p className="text-muted-foreground text-[11px] leading-tight mt-0.5 font-medium">{t('dashboard.action.foundDesc')}</p>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
           </div>
 
-          {/* Payment History */}
-          <motion.div variants={itemVariants}>
-            <PaymentHistoryCard />
+          {/* Secondary Action & Clean List */}
+          <motion.div variants={itemVariants} className="pt-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight">{t('nav.myItems')}</h2>
+                <p className="text-muted-foreground text-sm">{userStats.totalItems} {t('dashboard.registeredItems')}</p>
+              </div>
+              <Button onClick={() => navigate('/register')} className="w-full sm:w-auto">
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                {t('dashboard.action.protectTitle')}
+              </Button>
+            </div>
+
+            <Card className="border-border/50 shadow-sm">
+              <CardContent className="p-0">
+                <ItemsTable items={userStats.recentlyAddedItems} isLoading={false} />
+              </CardContent>
+            </Card>
+
+            <div className="flex justify-center mt-4">
+              <Button variant="ghost" size="sm" onClick={() => setActiveTab('items')} className="text-muted-foreground">
+                {t('dashboard.viewAll')}
+              </Button>
+            </div>
           </motion.div>
         </motion.div>
       );
@@ -776,8 +680,114 @@ export default function UnifiedDashboard() {
                     <TabsTrigger value="found">{t('dashboard.reports.foundItems')}</TabsTrigger>
                   </TabsList>
                   <TabsContent value="all">
-                    {/* Render all reports table */}
-                    <ActivityTimeline items={[]} reports={reports} />
+                    {reports.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>{t('common.table.type')}</TableHead>
+                              <TableHead>{t('common.table.title') || 'Title'}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('common.table.location')}</TableHead>
+                              <TableHead>{t('common.table.status')}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('common.table.date')}</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {reports.map((r: any) => (
+                              <TableRow key={r.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/reports/${r.id}`)}>
+                                <TableCell>
+                                  <Badge variant={r.type === 'lost' ? 'destructive' : 'default'}>
+                                    {r.type === 'lost' ? '🔴 Lost' : '🟢 Found'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="font-medium">{r.title}</TableCell>
+                                <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">{r.location}</TableCell>
+                                <TableCell>
+                                  <Badge variant={r.status === 'active' || r.status === 'Open' ? 'outline' : 'secondary'}>
+                                    {r.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">
+                                  {new Date(r.reportedAt).toLocaleDateString()}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-10">
+                        <p className="text-muted-foreground">{t('dashboard.noReports') || 'No reports yet.'}</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="lost">
+                    {reports.filter((r: any) => r.type === 'lost').length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>{t('common.table.title') || 'Title'}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('common.table.location')}</TableHead>
+                              <TableHead>{t('common.table.status')}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('common.table.date')}</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {reports.filter((r: any) => r.type === 'lost').map((r: any) => (
+                              <TableRow key={r.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/reports/${r.id}`)}>
+                                <TableCell className="font-medium">{r.title}</TableCell>
+                                <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">{r.location}</TableCell>
+                                <TableCell>
+                                  <Badge variant={r.status === 'active' || r.status === 'Open' ? 'outline' : 'secondary'}>{r.status}</Badge>
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">
+                                  {new Date(r.reportedAt).toLocaleDateString()}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-10">
+                        <p className="text-muted-foreground">No lost reports filed yet.</p>
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="found">
+                    {reports.filter((r: any) => r.type === 'found').length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>{t('common.table.title') || 'Title'}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('common.table.location')}</TableHead>
+                              <TableHead>{t('common.table.status')}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('common.table.date')}</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {reports.filter((r: any) => r.type === 'found').map((r: any) => (
+                              <TableRow key={r.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/reports/${r.id}`)}>
+                                <TableCell className="font-medium">{r.title}</TableCell>
+                                <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">{r.location}</TableCell>
+                                <TableCell>
+                                  <Badge variant={r.status === 'active' || r.status === 'Open' ? 'outline' : 'secondary'}>{r.status}</Badge>
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell text-muted-foreground text-xs">
+                                  {new Date(r.reportedAt).toLocaleDateString()}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-10">
+                        <p className="text-muted-foreground">No found reports filed yet.</p>
+                      </div>
+                    )}
                   </TabsContent>
                 </Tabs>
               </CardContent>

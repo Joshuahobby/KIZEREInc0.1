@@ -41,10 +41,7 @@ interface LanguageContextType {
   getLanguages: () => { code: Language; name: string }[];
 }
 
-// Use a global singleton for LanguageContext
-const LANGUAGE_CONTEXT_KEY = Symbol.for("kizere-language-context");
-
-const LanguageContext = ((globalThis as any)[LANGUAGE_CONTEXT_KEY] as React.Context<LanguageContextType>) || React.createContext<LanguageContextType>({
+const LanguageContext = React.createContext<LanguageContextType>({
   language: DEFAULT_LANGUAGE,
   translations,
   setLanguage: () => { },
@@ -53,11 +50,7 @@ const LanguageContext = ((globalThis as any)[LANGUAGE_CONTEXT_KEY] as React.Cont
   },
   getLanguages: () => [],
 });
-
-if (!(globalThis as any)[LANGUAGE_CONTEXT_KEY]) {
-  (globalThis as any)[LANGUAGE_CONTEXT_KEY] = LanguageContext;
-  LanguageContext.displayName = "LanguageContext";
-}
+LanguageContext.displayName = "LanguageContext";
 
 interface LanguageProviderProps {
   children: React.ReactNode;

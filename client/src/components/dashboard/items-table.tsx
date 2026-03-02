@@ -117,92 +117,78 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
   }
 
   return (
-    <div className="overflow-x-auto rounded-md border">
-      <Table>
-        {showHeader && (
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item Name</TableHead>
-              <TableHead>Serial Number</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Registered On</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-        )}
-        <TableBody>
-          {items.map((item) => (
-            <TableRow key={item.id}>
-              <TableCell className="font-medium">
-                <div className="flex items-center">
-                  {item.imageUrls && item.imageUrls.length > 0 ? (
-                    <div className="h-10 w-10 rounded bg-muted mr-3 overflow-hidden flex-shrink-0">
-                      <img
-                        src={item.imageUrls[0]}
-                        alt={item.name}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="h-10 w-10 rounded bg-primary/10 mr-3 flex items-center justify-center flex-shrink-0">
-                      <QrCode className="h-5 w-5 text-primary" />
-                    </div>
-                  )}
-                  <span className="flex-grow truncate">{item.name}</span>
-                </div>
-              </TableCell>
-              <TableCell className="font-mono text-xs">
-                {item.uniqueIdentifier || "N/A"}
-              </TableCell>
-              <TableCell>{item.category}</TableCell>
-              <TableCell>{formatDate(item.registeredAt.toString())}</TableCell>
-              <TableCell>{getStatusBadge(item.status)}</TableCell>
-              <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handleViewItem(item.id)}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      <span>View Details</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      <span>Edit Item</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <QrCode className="mr-2 h-4 w-4" />
-                      <span>Generate QR Code</span>
-                    </DropdownMenuItem>
+    <div className="flex flex-col w-full divide-y divide-border/50 bg-background rounded-md">
+      {items.map((item) => (
+        <div key={item.id} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+          <div className="flex items-center space-x-4 min-w-0">
+            {item.imageUrls && item.imageUrls.length > 0 ? (
+              <div className="h-12 w-12 rounded-md bg-muted overflow-hidden flex-shrink-0 border border-border">
+                <img
+                  src={item.imageUrls[0]}
+                  alt={item.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="h-12 w-12 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 border border-primary/20">
+                <QrCode className="h-6 w-6 text-primary" />
+              </div>
+            )}
+            <div className="flex flex-col overflow-hidden">
+              <span className="font-semibold text-foreground truncate">{item.name}</span>
+              <span className="font-mono text-xs text-muted-foreground truncate opacity-80">
+                {item.uniqueIdentifier ? `SN: ${item.uniqueIdentifier}` : item.category}
+              </span>
+            </div>
+          </div>
 
-                    {item.status === 'Registered' && (
-                      <DropdownMenuItem
-                        onClick={() => handleReportLost(item)}
-                        className="text-amber-600 focus:text-amber-700"
-                      >
-                        <AlertTriangle className="mr-2 h-4 w-4" />
-                        <span>Report as Lost</span>
-                      </DropdownMenuItem>
-                    )}
+          <div className="flex items-center space-x-3 sm:space-x-4 ml-4 shrink-0">
+            <div className="hidden sm:block">
+              {getStatusBadge(item.status)}
+            </div>
 
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-600 dark:text-red-400">
-                      <Trash className="mr-2 h-4 w-4" />
-                      <span>Delete Item</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleViewItem(item.id)}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  <span>View Details</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  <span>Edit Item</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <QrCode className="mr-2 h-4 w-4" />
+                  <span>Generate QR Code</span>
+                </DropdownMenuItem>
+
+                {item.status === 'Registered' && (
+                  <DropdownMenuItem
+                    onClick={() => handleReportLost(item)}
+                    className="text-amber-600 focus:text-amber-700"
+                  >
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    <span>Report as Lost</span>
+                  </DropdownMenuItem>
+                )}
+
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600 dark:text-red-400">
+                  <Trash className="mr-2 h-4 w-4" />
+                  <span>Delete Item</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      ))}
 
       {reportItem && (
         <ReportRegisteredItemDialog

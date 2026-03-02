@@ -58,12 +58,14 @@ const reportFormSchema = z.object({
 
 type ReportFormValues = z.infer<typeof reportFormSchema>;
 
-export default function LostFound() {
-  const [location, setLocation] = useLocation();
-  const [dialogType, setDialogType] = useState<"lost" | "found" | null>(null);
+export default function FoundItems() {
+  const [search, setSearch] = React.useState("");
+  const [filterType, setFilterType] = React.useState<string>("all");
+  const [statusFilter, setStatusFilter] = React.useState<string>("Lost");
+  const [dateFilter, setDateFilter] = React.useState<string>("all");
+  const [, setLocation] = useLocation();
+  // const { t } = useLanguage();false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     category: "All Categories",
@@ -82,15 +84,22 @@ export default function LostFound() {
   });
 
   // Get initial type from URL params
-  const params = new URLSearchParams(location.split('?')[1]);
-  const initialType = params.get('type') || '';
+  // Default query object, override status to only fetch Lost items
+  const params = new URLSearchParams(window.location.search);
+  const queryObj = {
+    ...Object.fromEntries(params.entries()),
+    status: 'Lost', // Force status Lost from server
+    type: 'found' // Force type found
+  };
+  const initialType = queryObj.type;
 
   // Fetch reports based on type and search
   const { data: reports, isLoading } = useQuery<Report[]>({
-    queryKey: ['/api/reports', { type: initialType, search: debouncedSearch, ...filters }],
+    queryKey: ['/api/reports', { type: initialType, search: debouncedSearch, ...filters, status: queryObj.status }],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (initialType) params.append('type', initialType);
+      params.append('type', 'found'); // Always fetch 'found' reports
+      params.append('status', 'Lost'); // Always fetch 'Lost' status reports
       if (debouncedSearch) params.append('search', debouncedSearch);
       if (filters.category !== 'All Categories') params.append('category', filters.category);
       if (filters.location !== 'All Locations') params.append('location', filters.location);
@@ -191,10 +200,8 @@ export default function LostFound() {
         window.location.href = res.payment.paymentUrl;
       } else {
         toast({
-          title: `${dialogType === 'lost' ? 'Lost' : 'Found'} item reported successfully`,
-          description: dialogType === 'found'
-            ? "Your report is pending admin approval."
-            : "Your report has been submitted.",
+          title: `Found item reported successfully`,
+          description: "Your report is pending admin approval.",
         });
         setOpenDialog(false);
       }
@@ -212,18 +219,15 @@ export default function LostFound() {
   });
 
   // Handle dialog open for lost or found items
-  const handleOpenDialog = (type: "lost" | "found", prefillData?: any) => {
-    setDialogType(type);
+  const handleOpenDialog = (type: "found") => {
     form.reset({
       type: type,
-      title: prefillData?.name || '',
-      category: prefillData?.category || 'Other',
-      description: prefillData?.description || '',
-      location: prefillData?.location || '',
+      title: '',
+      category: 'Other',
+      description: '',
+      location: '',
       date: format(new Date(), 'yyyy-MM-dd'),
       contactInfo: '',
-      itemId: prefillData?.id || undefined,
-      uniqueIdentifier: prefillData?.uniqueIdentifier || '',
     } as any);
     setOpenDialog(true);
   };
@@ -243,28 +247,22 @@ export default function LostFound() {
 
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header Section */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-neutral-200/70 pb-6 mb-8 mt-2">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div className="max-w-xl">
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-700">
-                Lost & Found Directory
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2 flex items-center gap-2">
+                <div className="bg-emerald-100 p-2 rounded-xl"><Check className="h-8 w-8 text-emerald-600 font-black" /></div> Found Something?
               </h1>
-              <p className="mt-2 text-base text-neutral-600">
-                Browse found items or search the directory for your lost belongings.
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+                Browse items that others have lost in your community, or report an item you've found to help return it to its owner.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-              <Button
-                onClick={() => handleOpenDialog("lost")}
-                className="flex-1 md:flex-none bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20"
-              >
-                <AlertTriangle className="w-4 h-4 mr-2" /> Report Lost
-              </Button>
+            <div className="flex flex-col md:flex-row gap-3">
               <Button
                 onClick={() => handleOpenDialog("found")}
                 className="flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
               >
-                <Check className="w-4 h-4 mr-2 text-white" /> Report Found
+                <Check className="w-4 h-4 mr-2 text-white" /> Report Found Item
               </Button>
             </div>
           </div>
@@ -279,63 +277,6 @@ export default function LostFound() {
                 </h3>
 
                 <SearchFilters onFiltersChange={setFilters} orientation="vertical" />
-
-                {/* Quick Report (My Items) */}
-                {userItems && userItems.length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-neutral-100">
-                    <h3 className="font-bold text-sm mb-1 text-neutral-900 flex items-center justify-between">
-                      Quick Report
-                      <Badge variant="secondary" className="bg-primary/10 text-primary">{userItems.length}</Badge>
-                    </h3>
-                    <p className="text-[11px] text-neutral-500 mb-4 leading-snug">Report one of your registered items as lost.</p>
-
-                    <div className="grid gap-2">
-                      {userItems.slice(0, 3).map(item => (
-                        <Button
-                          key={item.id}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleOpenDialog("lost", item)}
-                          className="h-9 justify-between text-xs bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 rounded-lg w-full transition-all"
-                        >
-                          <span className="truncate">{item.name}</span>
-                          <ArrowRight className="ml-2 h-3 w-3 shrink-0 text-neutral-400" />
-                        </Button>
-                      ))}
-                      {userItems.length > 3 && (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-9 text-xs text-primary font-medium hover:bg-primary/5 rounded-lg w-full mt-1">
-                              View all {userItems.length} items
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-2xl">
-                            <DialogHeader>
-                              <DialogTitle className="text-xl">Select an Item</DialogTitle>
-                              <DialogDescription>
-                                Choose one of your registered items to create a fast report.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-2 max-h-[400px] overflow-y-auto p-1 mt-2">
-                              {userItems.map(item => (
-                                <Button
-                                  key={item.id}
-                                  variant="outline"
-                                  className="justify-start h-auto p-3 border border-neutral-200 hover:border-primary/50 hover:bg-primary/5 rounded-xl transition-all w-full text-left font-medium text-sm"
-                                  onClick={() => {
-                                    handleOpenDialog("lost", item);
-                                  }}
-                                >
-                                  {item.name}
-                                </Button>
-                              ))}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -425,27 +366,23 @@ export default function LostFound() {
         </div>
       </div>
 
-      {/* Form Dialog for Lost/Found Items */}
+      {/* Form Dialog for Found Items */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl p-0 border-0 shadow-2xl">
-          <div className={`p-6 pb-4 ${dialogType === "lost" ? "bg-red-50/50" : "bg-emerald-50/50"} border-b border-neutral-100`}>
+          <div className="p-6 pb-4 bg-emerald-50/50 border-b border-neutral-100">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                {dialogType === "lost" ? (
-                  <><AlertTriangle className="h-6 w-6 text-red-600" /> Report a Lost Item</>
-                ) : (
-                  <><div className="bg-emerald-100 p-1.5 rounded-md"><Check className="h-4 w-4 text-emerald-700 font-bold" /></div> Report a Found Item</>
-                )}
+                <div className="bg-emerald-100 p-1.5 rounded-md"><Check className="h-4 w-4 text-emerald-700 font-bold" /></div> Report a Found Item
               </DialogTitle>
               <DialogDescription className="text-sm mt-1">
-                Please provide detailed information. Accurate details increase the chances of a successful match.
+                Please provide detailed information to help the owner identify their item.
               </DialogDescription>
             </DialogHeader>
           </div>
 
           <div className="flex-1 overflow-y-auto px-6 py-2">
             <ReportWizard
-              type={dialogType || "found"}
+              type="found"
               onSubmit={handleWizardSubmit}
               isSubmitting={reportMutation.isPending}
             />

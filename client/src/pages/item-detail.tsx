@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Edit
 } from "lucide-react";
+import { ShareWhatsAppButton } from "@/components/ui/share-whatsapp-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -137,7 +138,21 @@ export default function ItemDetailPage() {
             Back
           </Link>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-8">
+            <ShareWhatsAppButton
+              itemName={item?.name || 'Item'}
+              itemUrl={`${window.location.origin}/items/${itemId}`}
+              size="sm"
+              className="h-8"
+              compact
+            />
+            <Button variant="outline" size="sm" className="h-8" onClick={() => {
+              if (navigator.share) {
+                navigator.share({ title: item?.name, url: `${window.location.origin}/items/${itemId}` });
+              } else {
+                navigator.clipboard.writeText(`${window.location.origin}/items/${itemId}`);
+                toast({ title: 'Link copied!' });
+              }
+            }}>
               <Share2 className="h-3.5 w-3.5 mr-1" />
               Share
             </Button>

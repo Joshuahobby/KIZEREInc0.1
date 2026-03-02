@@ -100,7 +100,7 @@ export default function LandingPage() {
               </h1>
 
               <motion.p
-                className="mt-6 text-lg text-gray-700 dark:text-gray-300 max-w-lg"
+                className="mt-6 text-lg text-muted-foreground max-w-lg font-medium"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
@@ -108,8 +108,29 @@ export default function LandingPage() {
                 {t('landing.heroSubtitle')}
               </motion.p>
 
+              {/* Added Stats to Hero */}
               <motion.div
-                className="mt-8 flex flex-col sm:flex-row gap-4"
+                className="mt-8 flex flex-wrap gap-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+              >
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-primary">15,000+</span>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t('landing.statItems')}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-primary">1,230+</span>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t('landing.statRecoveries')}</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-2xl font-bold text-primary">98%</span>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t('landing.statSatisfaction')}</span>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className="mt-10 flex flex-col sm:flex-row gap-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.6 }}
@@ -144,11 +165,11 @@ export default function LandingPage() {
               >
                 <div className="flex items-center">
                   <Lock className="h-5 w-5 text-primary mr-2" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('landing.secure')}</span>
+                  <span className="text-sm text-muted-foreground font-medium">{t('landing.secure')}</span>
                 </div>
                 <div className="flex items-center">
                   <Shield className="h-5 w-5 text-primary mr-2" />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">{t('landing.digitalCertificates')}</span>
+                  <span className="text-sm text-muted-foreground font-medium">{t('landing.digitalCertificates')}</span>
                 </div>
               </motion.div>
             </motion.div>
@@ -426,72 +447,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Statistics Section */}
-      <section className="py-20 bg-background relative overflow-hidden">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <motion.div
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <div className="bg-card p-4 sm:p-6 md:p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
-              <motion.div
-                className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary mb-2"
-                initial={{ scale: 0.8 }}
-                whileInView={{ scale: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                viewport={{ once: true }}
-              >
-                15,000+
-              </motion.div>
-              <p className="text-muted-foreground text-lg">{t('landing.statItems')}</p>
-            </div>
-
-            <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
-              <motion.div
-                className="text-5xl font-bold text-primary mb-2"
-                initial={{ scale: 0.8 }}
-                whileInView={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                viewport={{ once: true }}
-              >
-                1,230+
-              </motion.div>
-              <p className="text-muted-foreground text-lg">{t('landing.statRecoveries')}</p>
-            </div>
-
-            <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
-              <motion.div
-                className="text-5xl font-bold text-primary mb-2"
-                initial={{ scale: 0.8 }}
-                whileInView={{ scale: 1 }}
-                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-                viewport={{ once: true }}
-              >
-                8,500+
-              </motion.div>
-              <p className="text-muted-foreground text-lg">{t('landing.statUsers')}</p>
-            </div>
-
-            <div className="bg-card p-8 rounded-2xl shadow-md border border-border hover:border-primary/30 transition-colors">
-              <motion.div
-                className="text-5xl font-bold text-primary mb-2"
-                initial={{ scale: 0.8 }}
-                whileInView={{ scale: 1 }}
-                transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                viewport={{ once: true }}
-              >
-                98%
-              </motion.div>
-              <p className="text-muted-foreground text-lg">{t('landing.statSatisfaction')}</p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* How It Works Section */}
       <section id="how-it-works" className="py-24 bg-background relative overflow-hidden">
@@ -541,74 +497,74 @@ export default function LandingPage() {
             </div>
 
             <div className="md:w-1/2">
-              <div className="space-y-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10">
                 <motion.div
-                  className="flex gap-4"
+                  className="flex flex-col gap-3"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
                     1
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">{t('landing.howItWorks.step1Title')}</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="text-lg font-bold text-foreground mb-1">{t('landing.howItWorks.step1Title')}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {t('landing.howItWorks.step1Desc')}
                     </p>
                   </div>
                 </motion.div>
 
                 <motion.div
-                  className="flex gap-4"
+                  className="flex flex-col gap-3"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
                   viewport={{ once: true }}
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
                     2
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">{t('landing.howItWorks.step2Title')}</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="text-lg font-bold text-foreground mb-1">{t('landing.howItWorks.step2Title')}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {t('landing.howItWorks.step2Desc')}
                     </p>
                   </div>
                 </motion.div>
 
                 <motion.div
-                  className="flex gap-4"
+                  className="flex flex-col gap-3"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.3 }}
                   viewport={{ once: true }}
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
                     3
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">{t('landing.howItWorks.step3Title')}</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="text-lg font-bold text-foreground mb-1">{t('landing.howItWorks.step3Title')}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {t('landing.howItWorks.step3Desc')}
                     </p>
                   </div>
                 </motion.div>
 
                 <motion.div
-                  className="flex gap-4"
+                  className="flex flex-col gap-3"
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.4 }}
                   viewport={{ once: true }}
                 >
-                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
                     4
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-foreground mb-2">{t('landing.howItWorks.step4Title')}</h3>
-                    <p className="text-muted-foreground">
+                    <h3 className="text-lg font-bold text-foreground mb-1">{t('landing.howItWorks.step4Title')}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {t('landing.howItWorks.step4Desc')}
                     </p>
                   </div>

@@ -64,35 +64,35 @@ export function QuickActionMenu({
       label: t('dashboard.quickActions.registerItem'),
       description: t('dashboard.quickActions.registerItemDesc'),
       onClick: () => navigate(isAdmin ? '/admin/items/new' : '/register-item'),
-      roles: ['Admin', 'Agent', 'User']
+      roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business']
     },
     {
       icon: <AlertTriangle className="h-4 w-4" />,
       label: t('dashboard.quickActions.reportLost'),
       description: t('dashboard.quickActions.reportLostDesc'),
       onClick: () => navigate(isAdmin ? '/admin/reports/new?type=lost' : '/lost-found/report/lost'),
-      roles: ['Admin', 'Agent', 'User']
+      roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business']
     },
     {
       icon: <CheckCircle2 className="h-4 w-4" />,
       label: t('dashboard.quickActions.reportFound'),
       description: t('dashboard.quickActions.reportFoundDesc'),
       onClick: () => navigate(isAdmin ? '/admin/reports/new?type=found' : '/lost-found/report/found'),
-      roles: ['Admin', 'Agent', 'User']
+      roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business']
     },
     {
       icon: <Plus className="h-4 w-4" />,
       label: t('dashboard.quickActions.pendingReports'),
       description: t('dashboard.quickActions.pendingReportsDesc'),
       onClick: () => navigate('/agent/reports/pending'),
-      roles: ['Agent']
+      roles: ['Agent', 'Moderator', 'Admin']
     },
     {
       icon: <FileEdit className="h-4 w-4" />,
       label: t('dashboard.quickActions.processReports'),
       description: t('dashboard.quickActions.processReportsDesc'),
       onClick: () => navigate('/agent/reports/process'),
-      roles: ['Agent']
+      roles: ['Agent', 'Moderator', 'Admin']
     },
     {
       icon: <DollarSign className="h-4 w-4" />,
@@ -120,7 +120,7 @@ export function QuickActionMenu({
       label: t('dashboard.quickActions.settings'),
       description: t('dashboard.quickActions.settingsDesc'),
       onClick: () => navigate(isAdmin ? '/admin/settings' : '/profile'),
-      roles: ['Admin', 'Agent', 'User']
+      roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business']
     }
   ];
 
@@ -128,8 +128,8 @@ export function QuickActionMenu({
   const actions = allActions.filter(action => {
     if (!user) return false;
     // For roles field, if user role is in the list, show it
-    // Default to 'User' if no role specified on user object
-    const userRole = user.role || 'User';
+    // Default to 'Subscriber' if no role specified on user object
+    const userRole = user.role || 'Subscriber';
     return action.roles.includes(userRole);
   });
 
@@ -182,7 +182,7 @@ export function QuickActionMenu({
       <Button
         size="icon"
         className={cn(
-          "fixed z-50 h-12 w-12 rounded-full shadow-lg bg-[#00BFFF] hover:bg-[#00BFFF]/90 transition-all flex",
+          "fixed z-50 h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all flex",
           getPositionClasses(),
           className
         )}
@@ -191,7 +191,7 @@ export function QuickActionMenu({
         {isOpen ? (
           <X className="h-5 w-5" />
         ) : (
-          <Zap className="h-5 w-5" />
+          <Zap className="h-5 w-5 fill-current" />
         )}
       </Button>
 
@@ -204,7 +204,7 @@ export function QuickActionMenu({
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
             className={cn(
-              "fixed z-40 bg-card shadow-xl rounded-lg border border-border w-60",
+              "fixed z-40 bg-card/80 backdrop-blur-xl shadow-2xl rounded-2xl border border-border/50 w-64 overflow-hidden",
               getActionMenuPositionClasses()
             )}
           >
@@ -212,13 +212,13 @@ export function QuickActionMenu({
               {actions.map((action, index) => (
                 <button
                   key={index}
-                  className="flex items-center gap-3 p-2 text-left rounded-md hover:bg-accent text-muted-foreground transition-colors"
+                  className="flex items-center gap-3 p-2.5 text-left rounded-xl hover:bg-primary/10 text-muted-foreground transition-all group"
                   onClick={() => {
                     action.onClick();
                     toggleMenu();
                   }}
                 >
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent flex items-center justify-center text-[#00BFFF]">
+                  <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                     {action.icon}
                   </div>
                   <div className="flex-1 min-w-0">

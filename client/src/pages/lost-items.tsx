@@ -58,9 +58,13 @@ const reportFormSchema = z.object({
 
 type ReportFormValues = z.infer<typeof reportFormSchema>;
 
-export default function LostFound() {
-  const [location, setLocation] = useLocation();
-  const [dialogType, setDialogType] = useState<"lost" | "found" | null>(null);
+export default function LostItems() {
+  const [search, setSearch] = React.useState("");
+  const [filterType, setFilterType] = React.useState<string>("all");
+  const [statusFilter, setStatusFilter] = React.useState<string>("Found");
+  const [dateFilter, setDateFilter] = React.useState<string>("all");
+  const [, setLocation] = useLocation();
+  // const { t } = useLanguage(); // Assuming useLanguage is defined elsewhere if needed
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -82,15 +86,22 @@ export default function LostFound() {
   });
 
   // Get initial type from URL params
-  const params = new URLSearchParams(location.split('?')[1]);
-  const initialType = params.get('type') || '';
+  // Default query object, override status to only fetch Found items
+  const params = new URLSearchParams(window.location.search); // Use window.location.search to get current query params
+  const queryObj = {
+    ...Object.fromEntries(params.entries()),
+    status: 'Found', // Force status Found from server
+    type: 'lost' // Force type lost
+  };
+  const initialType = queryObj.type; // Use the forced type
 
   // Fetch reports based on type and search
   const { data: reports, isLoading } = useQuery<Report[]>({
-    queryKey: ['/api/reports', { type: initialType, search: debouncedSearch, ...filters }],
+    queryKey: ['/api/reports', { type: initialType, search: debouncedSearch, ...filters, status: queryObj.status }],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (initialType) params.append('type', initialType);
+      params.append('type', 'lost'); // Always fetch 'lost' reports
+      params.append('status', 'Found'); // Always fetch 'Found' status reports
       if (debouncedSearch) params.append('search', debouncedSearch);
       if (filters.category !== 'All Categories') params.append('category', filters.category);
       if (filters.location !== 'All Locations') params.append('location', filters.location);
@@ -131,7 +142,7 @@ export default function LostFound() {
     mutationFn: async ({ data, images }: { data: any, images: File[] }) => {
       // Check if offline
       if (!navigator.onLine) {
-        console.log("[LostFound] Offline detected, queuing report...");
+        console.log("[LostItems] Offline detected, queuing report...");
         // For simplicity in this version, we queue metadata.
         // In a full production app, we'd store Blobs in IndexedDB.
         await OfflineSyncService.queue('CREATE_REPORT', data);
@@ -191,10 +202,8 @@ export default function LostFound() {
         window.location.href = res.payment.paymentUrl;
       } else {
         toast({
-          title: `${dialogType === 'lost' ? 'Lost' : 'Found'} item reported successfully`,
-          description: dialogType === 'found'
-            ? "Your report is pending admin approval."
-            : "Your report has been submitted.",
+          title: `Lost item reported successfully`,
+          description: "Your report has been submitted.",
         });
         setOpenDialog(false);
       }
@@ -211,9 +220,8 @@ export default function LostFound() {
     },
   });
 
-  // Handle dialog open for lost or found items
-  const handleOpenDialog = (type: "lost" | "found", prefillData?: any) => {
-    setDialogType(type);
+  // Handle dialog open for lost items
+  const handleOpenDialog = (type: "lost", prefillData?: any) => {
     form.reset({
       type: type,
       title: prefillData?.name || '',
@@ -243,28 +251,22 @@ export default function LostFound() {
 
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header Section */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-neutral-200/70 pb-6 mb-8 mt-2">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div className="max-w-xl">
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-700">
-                Lost & Found Directory
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2 flex items-center gap-2">
+                <AlertTriangle className="h-8 w-8 text-red-600 font-black" /> Did you lose something?
               </h1>
-              <p className="mt-2 text-base text-neutral-600">
-                Browse found items or search the directory for your lost belongings.
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
+                Browse our directory of items that others have found, or report your lost item so our community can help locate it.
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row gap-3">
               <Button
                 onClick={() => handleOpenDialog("lost")}
-                className="flex-1 md:flex-none bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20"
+                className="flex-1 md:flex-none bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-600/20"
               >
-                <AlertTriangle className="w-4 h-4 mr-2" /> Report Lost
-              </Button>
-              <Button
-                onClick={() => handleOpenDialog("found")}
-                className="flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
-              >
-                <Check className="w-4 h-4 mr-2 text-white" /> Report Found
+                <AlertTriangle className="w-4 h-4 mr-2" /> Report Lost Item
               </Button>
             </div>
           </div>
@@ -333,6 +335,17 @@ export default function LostFound() {
                           </DialogContent>
                         </Dialog>
                       )}
+                      <Select onValueChange={(value) => setStatusFilter(value)}>
+                        <SelectTrigger className="h-10 bg-background/50 border-border/50 hidden">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent hidden>
+                          <SelectItem value="all">All Statuses</SelectItem>
+                          <SelectItem value="Lost">Lost</SelectItem>
+                          <SelectItem value="Found">Found</SelectItem>
+                          <SelectItem value="Recovered">Recovered</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 )}
@@ -425,17 +438,13 @@ export default function LostFound() {
         </div>
       </div>
 
-      {/* Form Dialog for Lost/Found Items */}
+      {/* Form Dialog for Lost Items */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl p-0 border-0 shadow-2xl">
-          <div className={`p-6 pb-4 ${dialogType === "lost" ? "bg-red-50/50" : "bg-emerald-50/50"} border-b border-neutral-100`}>
+          <div className="p-6 pb-4 bg-red-50/50 border-b border-neutral-100">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                {dialogType === "lost" ? (
-                  <><AlertTriangle className="h-6 w-6 text-red-600" /> Report a Lost Item</>
-                ) : (
-                  <><div className="bg-emerald-100 p-1.5 rounded-md"><Check className="h-4 w-4 text-emerald-700 font-bold" /></div> Report a Found Item</>
-                )}
+                <AlertTriangle className="h-6 w-6 text-red-600" /> Report a Lost Item
               </DialogTitle>
               <DialogDescription className="text-sm mt-1">
                 Please provide detailed information. Accurate details increase the chances of a successful match.
@@ -445,7 +454,7 @@ export default function LostFound() {
 
           <div className="flex-1 overflow-y-auto px-6 py-2">
             <ReportWizard
-              type={dialogType || "found"}
+              type="lost"
               onSubmit={handleWizardSubmit}
               isSubmitting={reportMutation.isPending}
             />

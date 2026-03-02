@@ -21,21 +21,8 @@ export interface AuthContextType {
   refreshUser: (userData?: User) => Promise<void>;
 }
 
-// Use a global singleton for AuthContext to prevent duplicate instances
-// when the module is loaded multiple times (e.g. via alias vs relative path)
-const AUTH_CONTEXT_KEY = Symbol.for("kizere-auth-context");
-const globalSymbols = Object.getOwnPropertySymbols(globalThis);
-const hasAuthContext = globalSymbols.includes(AUTH_CONTEXT_KEY);
-
-const AuthContext = ((globalThis as any)[AUTH_CONTEXT_KEY] as React.Context<AuthContextType | undefined>) || React.createContext<AuthContextType | undefined>(undefined);
-
-if (!(globalThis as any)[AUTH_CONTEXT_KEY]) {
-  (globalThis as any)[AUTH_CONTEXT_KEY] = AuthContext;
-  AuthContext.displayName = "AuthContext";
-  console.log("[useAuth] Created new AuthContext and assigned to global scope");
-} else {
-  console.log("[useAuth] Reusing existing AuthContext from global scope");
-}
+const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
+AuthContext.displayName = "AuthContext";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = React.useState<User | null>(null);

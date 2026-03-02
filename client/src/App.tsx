@@ -16,7 +16,8 @@ const AuthCallback = React.lazy(() => import("@/pages/auth-callback"));
 const MyItems = React.lazy(() => import("@/pages/my-items"));
 const ItemDetail = React.lazy(() => import("@/pages/item-detail"));
 const Search = React.lazy(() => import("@/pages/search"));
-const LostFound = React.lazy(() => import("@/pages/lost-found"));
+const LostItems = React.lazy(() => import("@/pages/lost-items"));
+const FoundItems = React.lazy(() => import("@/pages/found-items"));
 const ReportDetailPage = React.lazy(() => import("@/pages/report-detail"));
 const ClaimDetailPage = React.lazy(() => import("@/pages/claim-detail"));
 const UserManagement = React.lazy(() => import("@/pages/user-management"));
@@ -116,9 +117,8 @@ function App() {
                 <Route path="/search">
                   <Search />
                 </Route>
-                <ProtectedRoute path="/lost-found" component={LostFound} requiredRole="any" />
-                <ProtectedRoute path="/lost-found/report" component={LostFound} requiredRole="any" />
-                <ProtectedRoute path="/lost-found/report/:type" component={LostFound} requiredRole="any" />
+                <ProtectedRoute path="/lost" component={LostItems} requiredRole="any" />
+                <ProtectedRoute path="/found" component={FoundItems} requiredRole="any" />
                 <ProtectedRoute path="/report/:id" component={ReportDetailPage} requiredRole="any" />
                 <ProtectedRoute path="/reports/:id" component={ReportDetailPage} requiredRole="any" />
                 <ProtectedRoute path="/claims/:id" component={ClaimDetailPage} requiredRole="any" />

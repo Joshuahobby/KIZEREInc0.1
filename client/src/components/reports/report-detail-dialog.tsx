@@ -1,9 +1,9 @@
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Report } from "@shared/schema";
 import { format } from "date-fns";
@@ -22,7 +22,7 @@ interface ReportDetailDialogProps {
 
 export function ReportDetailDialog({ report, isOpen, onClose }: ReportDetailDialogProps) {
   const [showClaimForm, setShowClaimForm] = useState(false);
-  const { user } = useAuth();
+  const { user } = useAuth(); // Call useAuth unconditionally
 
   if (!report) return null;
 
@@ -64,10 +64,10 @@ export function ReportDetailDialog({ report, isOpen, onClose }: ReportDetailDial
             {report.imageUrls && report.imageUrls.length > 0 ? (
               <div className="grid grid-cols-2 gap-2">
                 {report.imageUrls.map((url, i) => (
-                  <img 
-                    key={i} 
-                    src={url} 
-                    alt={report.title} 
+                  <img
+                    key={i}
+                    src={url}
+                    alt={report.title}
                     className="rounded-lg object-cover h-40 w-full border"
                   />
                 ))}
@@ -117,7 +117,7 @@ export function ReportDetailDialog({ report, isOpen, onClose }: ReportDetailDial
             )}
 
             {!isOwner && report.type === 'found' && !showClaimForm && (
-              <Button 
+              <Button
                 onClick={() => setShowClaimForm(true)}
                 className="w-full bg-neutral-900 hover:bg-neutral-800 text-white font-bold h-12 shadow-lg"
               >
@@ -135,7 +135,7 @@ export function ReportDetailDialog({ report, isOpen, onClose }: ReportDetailDial
                 <ClaimForm reportId={report.id} onSuccess={onClose} />
               </div>
             )}
-            
+
             {isOwner && (
               <div className="p-4 bg-primary/5 border border-primary/20 rounded-xl">
                 <p className="text-xs text-primary font-medium text-center">This is your report. You can manage it from your dashboard.</p>

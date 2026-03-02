@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { ShareWhatsAppButton } from '@/components/ui/share-whatsapp-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -53,7 +54,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true, s
   // Generate QR code when value or options change
   useEffect(() => {
     if (!qrValue || !canvasRef.current) return;
-    
+
     const generateQR = async () => {
       try {
         if (canvasRef.current) {
@@ -72,24 +73,24 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true, s
         });
       }
     };
-    
+
     generateQR();
   }, [qrValue, qrOptions, toast, t]);
 
   // Download QR code as PNG
   const downloadQRCode = () => {
     if (!canvasRef.current) return;
-    
+
     try {
       const link = document.createElement('a');
-      const filename = itemName 
+      const filename = itemName
         ? `${itemName.toLowerCase().replace(/\s+/g, '-')}-qr-code.png`
         : `item-${itemIdentifier}-qr-code.png`;
-        
+
       link.download = filename;
       link.href = canvasRef.current.toDataURL('image/png');
       link.click();
-      
+
       toast({
         title: t('registration.qr_download_success'),
         description: t('registration.qr_download_success_desc'),
@@ -110,7 +111,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true, s
     const randomSuffix = Math.random().toString(36).substring(2, 8);
     const qrUrl = `${baseUrl}/items/${itemIdentifier}?ref=${randomSuffix}`;
     setQRValue(qrUrl);
-    
+
     toast({
       title: t('registration.qr_refreshed'),
       description: t('registration.qr_refreshed_desc'),
@@ -129,7 +130,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true, s
         <div className="flex flex-col items-center justify-center mb-4">
           <div className="border p-4 rounded-md bg-white">
             <canvas ref={canvasRef} />
-            
+
             {qrOptions.includeItemName && itemName && (
               <div className="text-center mt-2 text-sm font-medium">
                 {itemName}
@@ -138,89 +139,99 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true, s
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t('registration.qr_size')}</Label>
-            <Slider
-              value={[qrOptions.width]}
-              min={100}
-              max={300}
-              step={10}
-              onValueChange={(values) => setQROptions(prev => ({ ...prev, width: values[0] }))}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>100px</span>
-              <span>{qrOptions.width}px</span>
-              <span>300px</span>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label>{t('registration.qr_margin')}</Label>
-            <Slider
-              value={[qrOptions.margin]}
-              min={0}
-              max={10}
-              step={1}
-              onValueChange={(values) => setQROptions(prev => ({ ...prev, margin: values[0] }))}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>0</span>
-              <span>{qrOptions.margin}</span>
-              <span>10</span>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
+        {showHeader && (
+          <div className="space-y-4">
             <div className="space-y-2">
-              <Label>{t('registration.qr_dark_color')}</Label>
-              <ColorPicker
-                color={qrOptions.color.dark}
-                onChange={(color) => setQROptions(prev => ({ 
-                  ...prev, 
-                  color: { ...prev.color, dark: color } 
-                }))}
+              <Label>{t('registration.qr_size')}</Label>
+              <Slider
+                value={[qrOptions.width]}
+                min={100}
+                max={300}
+                step={10}
+                onValueChange={(values) => setQROptions(prev => ({ ...prev, width: values[0] }))}
               />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>100px</span>
+                <span>{qrOptions.width}px</span>
+                <span>300px</span>
+              </div>
             </div>
-            
+
             <div className="space-y-2">
-              <Label>{t('registration.qr_light_color')}</Label>
-              <ColorPicker
-                color={qrOptions.color.light}
-                onChange={(color) => setQROptions(prev => ({ 
-                  ...prev, 
-                  color: { ...prev.color, light: color } 
-                }))}
+              <Label>{t('registration.qr_margin')}</Label>
+              <Slider
+                value={[qrOptions.margin]}
+                min={0}
+                max={10}
+                step={1}
+                onValueChange={(values) => setQROptions(prev => ({ ...prev, margin: values[0] }))}
               />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>0</span>
+                <span>{qrOptions.margin}</span>
+                <span>10</span>
+              </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('registration.qr_dark_color')}</Label>
+                <ColorPicker
+                  color={qrOptions.color.dark}
+                  onChange={(color) => setQROptions(prev => ({
+                    ...prev,
+                    color: { ...prev.color, dark: color }
+                  }))}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t('registration.qr_light_color')}</Label>
+                <ColorPicker
+                  color={qrOptions.color.light}
+                  onChange={(color) => setQROptions(prev => ({
+                    ...prev,
+                    color: { ...prev.color, light: color }
+                  }))}
+                />
+              </div>
+            </div>
+
+            {itemName && (
+              <div className="flex items-center space-x-2 pt-2">
+                <Switch
+                  id="include-name"
+                  checked={qrOptions.includeItemName}
+                  onCheckedChange={(checked) => setQROptions(prev => ({
+                    ...prev,
+                    includeItemName: checked
+                  }))}
+                />
+                <Label htmlFor="include-name" className="cursor-pointer">
+                  {t('registration.qr_include_name')}
+                </Label>
+              </div>
+            )}
           </div>
-          
-          {itemName && (
-            <div className="flex items-center space-x-2 pt-2">
-              <Switch
-                id="include-name"
-                checked={qrOptions.includeItemName}
-                onCheckedChange={(checked) => setQROptions(prev => ({ 
-                  ...prev, 
-                  includeItemName: checked 
-                }))}
-              />
-              <Label htmlFor="include-name" className="cursor-pointer">
-                {t('registration.qr_include_name')}
-              </Label>
-            </div>
-          )}
-        </div>
+        )}
       </CardContent>
-      <CardFooter className={cn("flex justify-between", !showHeader && "flex-col gap-3")}>
-        <Button type="button" variant="outline" onClick={refreshQRCode} className={cn(!showHeader && "w-full")}>
-          <LuRefreshCw className="mr-2 h-4 w-4" />
-          {t('registration.qr_refresh')}
-        </Button>
-        <Button type="button" onClick={downloadQRCode} className={cn(!showHeader && "w-full")}>
-          <LuDownload className="mr-2 h-4 w-4" />
-          {t('registration.qr_download')}
-        </Button>
+      <CardFooter className={cn("flex justify-between flex-wrap gap-2", !showHeader && "flex-col gap-3")}>
+        <ShareWhatsAppButton
+          itemName={itemName || 'My Item'}
+          itemUrl={qrValue}
+          canvasRef={canvasRef}
+          className={cn(!showHeader && "w-full")}
+        />
+        <div className={cn("flex gap-2", !showHeader && "w-full flex-col")}>
+          <Button type="button" variant="outline" onClick={refreshQRCode} className={cn(!showHeader && "w-full")}>
+            <LuRefreshCw className="mr-2 h-4 w-4" />
+            {t('registration.qr_refresh')}
+          </Button>
+          <Button type="button" onClick={downloadQRCode} className={cn(!showHeader && "w-full")}>
+            <LuDownload className="mr-2 h-4 w-4" />
+            {t('registration.qr_download')}
+          </Button>
+        </div>
       </CardFooter>
     </Card>
   );

@@ -210,7 +210,7 @@ export async function getReportsWithFilters(options: {
 
   if (search) {
     // If searching, prioritize relevance first, then the requested sort
-    query = query.orderBy(desc(sql`relevance`), sortOrder === 'asc' ? asc(sortColumn as any) : desc(sortColumn as any));
+    query = query.orderBy(desc(querySelection.relevance), sortOrder === 'asc' ? asc(sortColumn as any) : desc(sortColumn as any));
   } else {
     query = sortOrder === 'asc' ? query.orderBy(asc(sortColumn as any)) : query.orderBy(desc(sortColumn as any));
   }
