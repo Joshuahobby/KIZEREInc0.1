@@ -1,4 +1,11 @@
 import { useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,10 +66,10 @@ const reportFormSchema = z.object({
 type ReportFormValues = z.infer<typeof reportFormSchema>;
 
 export default function LostItems() {
-  const [search, setSearch] = React.useState("");
-  const [filterType, setFilterType] = React.useState<string>("all");
-  const [statusFilter, setStatusFilter] = React.useState<string>("Found");
-  const [dateFilter, setDateFilter] = React.useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("Found");
+  const [dateFilter, setDateFilter] = useState<string>("all");
   const [, setLocation] = useLocation();
   // const { t } = useLanguage(); // Assuming useLanguage is defined elsewhere if needed
   const [openDialog, setOpenDialog] = useState(false);

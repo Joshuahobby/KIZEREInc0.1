@@ -59,13 +59,14 @@ const reportFormSchema = z.object({
 type ReportFormValues = z.infer<typeof reportFormSchema>;
 
 export default function FoundItems() {
-  const [search, setSearch] = React.useState("");
-  const [filterType, setFilterType] = React.useState<string>("all");
-  const [statusFilter, setStatusFilter] = React.useState<string>("Lost");
-  const [dateFilter, setDateFilter] = React.useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("Lost");
+  const [dateFilter, setDateFilter] = useState<string>("all");
   const [, setLocation] = useLocation();
-  // const { t } = useLanguage();false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     category: "All Categories",
