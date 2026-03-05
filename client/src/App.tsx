@@ -7,6 +7,9 @@ import { ErrorBoundary } from "@/components/error-boundary";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ChatWidget } from "@/components/chat/chat-widget";
+import { GlobalNotice } from "@/components/layout/global-notice";
+import { useLocation } from "wouter";
+
 // Lazy load all pages
 const UnifiedDashboard = React.lazy(() => import("@/pages/unified-dashboard"));
 const ItemRegistration = React.lazy(() => import("@/pages/item-registration"));
@@ -34,8 +37,6 @@ const PaymentHistory = React.lazy(() => import("@/pages/payment-history"));
 const PaymentTest = React.lazy(() => import("@/pages/payment-test"));
 const WalletPage = React.lazy(() => import("@/pages/wallet"));
 const PaymentDashboard = React.lazy(() => import("@/pages/admin/payment-dashboard"));
-const AdminDashboardClassic = React.lazy(() => import("@/pages/admin/dashboard"));
-const AdminDashboard = React.lazy(() => import("@/pages/admin/dashboard-new"));
 const CommandCenter = React.lazy(() => import("@/pages/admin/command-center"));
 const AdminReports = React.lazy(() => import("@/pages/admin/reports"));
 const PaymentPackages = React.lazy(() => import("@/pages/admin/payment-packages"));
@@ -90,104 +91,137 @@ function App() {
     );
   };
 
+  // Announce route changes for screen readers
+  const [location] = useLocation();
+  const announcerRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (announcerRef.current) {
+      announcerRef.current.textContent = `Navigated to ${document.title || location}`;
+    }
+  }, [location]);
+
   return (
     <ErrorBoundary>
+      {/* Skip to main content link for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:z-[200] focus:top-2 focus:left-2 focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-md focus:shadow-lg"
+      >
+        Skip to main content
+      </a>
+      {/* Screen reader route announcer */}
+      <div ref={announcerRef} aria-live="polite" aria-atomic="true" className="sr-only" role="status" />
       <IframeWarning />
       <ThemeProvider attribute="class" defaultTheme="system" storageKey="kizere-theme" enableSystem disableTransitionOnChange>
         <LanguageProvider defaultLanguage="en">
           <TooltipProvider>
             <React.Suspense fallback={<LoadingOverlay alwaysShow={true} />}>
-              <Switch>
-                <Route path="/">
-                  <LandingPage />
-                </Route>
-                <Route path="/auth-callback">
-                  <AuthCallback />
-                </Route>
-                <Route path="/auth">
-                  <AuthPage />
-                </Route>
+              <GlobalNotice />
+              <main id="main-content">
+                <Switch>
+                  <Route path="/">
+                    <LandingPage />
+                  </Route>
+                  <Route path="/auth-callback">
+                    <AuthCallback />
+                  </Route>
+                  <Route path="/auth">
+                    <AuthPage />
+                  </Route>
 
-                {/* Protected routes */}
-                <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
-                <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
-                <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
-                <ProtectedRoute path="/items/:id" component={ItemDetail} requiredRole="any" />
-                <ProtectedRoute path="/items/:id/edit" component={ItemRegistration} requiredRole="any" />
-                <Route path="/search">
-                  <Search />
-                </Route>
-                <ProtectedRoute path="/lost" component={LostItems} requiredRole="any" />
-                <ProtectedRoute path="/found" component={FoundItems} requiredRole="any" />
-                <ProtectedRoute path="/report/:id" component={ReportDetailPage} requiredRole="any" />
-                <ProtectedRoute path="/reports/:id" component={ReportDetailPage} requiredRole="any" />
-                <ProtectedRoute path="/claims/:id" component={ClaimDetailPage} requiredRole="any" />
-                <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
+                  {/* Protected routes */}
+                  <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
+                  <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
+                  <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
+                  <ProtectedRoute path="/items/:id" component={ItemDetail} requiredRole="any" />
+                  <ProtectedRoute path="/items/:id/edit" component={ItemRegistration} requiredRole="any" />
+                  <Route path="/search">
+                    <Search />
+                  </Route>
+                  <Route path="/lost-found">
+                    <Search />
+                  </Route>
+                  <ProtectedRoute path="/lost-found/report" component={ItemRegistration} requiredRole="any" />
+                  <ProtectedRoute path="/lost-found/report/lost" component={ItemRegistration} requiredRole="any" />
+                  <ProtectedRoute path="/lost-found/report/found" component={ItemRegistration} requiredRole="any" />
+                  <ProtectedRoute path="/lost" component={LostItems} requiredRole="any" />
+                  <ProtectedRoute path="/found" component={FoundItems} requiredRole="any" />
+                  <ProtectedRoute path="/report/:id" component={ReportDetailPage} requiredRole="any" />
+                  <ProtectedRoute path="/reports/:id" component={ReportDetailPage} requiredRole="any" />
+                  <ProtectedRoute path="/claims/:id" component={ClaimDetailPage} requiredRole="any" />
+                  <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
 
-                {/* Payment routes */}
-                <Route path="/payment-status">
-                  <PaymentStatus />
-                </Route>
-                <ProtectedRoute path="/payment-history" component={PaymentHistory} requiredRole="any" />
-                <ProtectedRoute path="/wallet" component={WalletPage} requiredRole="any" />
-                <ProtectedRoute path="/payment-test" component={PaymentTest} requiredRole="any" />
+                  {/* Payment routes */}
+                  <Route path="/payment-status">
+                    <PaymentStatus />
+                  </Route>
+                  <ProtectedRoute path="/payment-history" component={PaymentHistory} requiredRole="any" />
+                  <ProtectedRoute path="/wallet" component={WalletPage} requiredRole="any" />
+                  <ProtectedRoute path="/payment-test" component={PaymentTest} requiredRole="any" />
 
-                {/* Admin routes */}
-                <ProtectedRoute path="/admin" component={AdminDashboard} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/command-center" component={CommandCenter} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/classic" component={AdminDashboardClassic} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/analytics" component={AdminAnalytics} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboard} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/payment-packages" component={PaymentPackages} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/payment-packages/new" component={NewPaymentPackage} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/payment-packages/create" component={CreatePackage} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/users" component={AdminUserManagement} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/users/new" component={NewUser} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/item-management" component={AdminItemManagement} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/item-management/new" component={NewItem} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/item-management/:id" component={AdminItemDetail} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/reports" component={AdminReports} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/clients" component={ClientManagement} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/verifications" component={AdminVerifications} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/roles" component={RoleManagementPage} requiredRole="Admin" />
-                <ProtectedRoute path="/admin/audit-logs" component={AuditLogsPage} requiredRole="Admin" />
+                  {/* Admin routes - Consolidated to UnifiedDashboard */}
+                  <ProtectedRoute path="/admin" component={UnifiedDashboard} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/classic" component={UnifiedDashboard} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/command-center" component={CommandCenter} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/analytics" component={AdminAnalytics} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/payment-dashboard" component={PaymentDashboard} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/payment-packages" component={PaymentPackages} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/payment-packages/new" component={NewPaymentPackage} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/payment-packages/create" component={CreatePackage} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/users" component={AdminUserManagement} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/users/new" component={NewUser} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/item-management" component={AdminItemManagement} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/items" component={AdminItemManagement} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/item-management/new" component={NewItem} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/items/new" component={NewItem} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/item-management/:id" component={AdminItemDetail} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/items/:id" component={AdminItemDetail} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/reports" component={AdminReports} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/clients" component={ClientManagement} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/verifications" component={AdminVerifications} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/item-verification" component={AdminVerifications} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/user-verification" component={AdminVerifications} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/roles" component={RoleManagementPage} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/audit-logs" component={AuditLogsPage} requiredRole="Admin" />
 
-                {/* Profile route */}
-                <ProtectedRoute path="/profile" component={ProfilePage} requiredRole="any" />
-                <ProtectedRoute path="/settings" component={SettingsPage} requiredRole="any" />
-                <ProtectedRoute path="/identity-verification" component={IdentityVerification} requiredRole="any" />
+                  {/* Profile route */}
+                  <ProtectedRoute path="/profile" component={ProfilePage} requiredRole="any" />
+                  <ProtectedRoute path="/admin/settings" component={SettingsPage} requiredRole="Admin" />
+                  <ProtectedRoute path="/settings" component={SettingsPage} requiredRole="any" />
+                  <ProtectedRoute path="/identity-verification" component={IdentityVerification} requiredRole="any" />
 
-                {/* Static Pages */}
-                <Route path="/faq">
-                  <FAQPage />
-                </Route>
-                <Route path="/about">
-                  <AboutPage />
-                </Route>
-                <Route path="/contact">
-                  <ContactPage />
-                </Route>
-                <Route path="/privacy">
-                  <PrivacyPage />
-                </Route>
-                <Route path="/terms">
-                  <TermsPage />
-                </Route>
-                <Route path="/blog">
-                  <BlogPage />
-                </Route>
-                <Route path="/docs">
-                  <DocsPage />
-                </Route>
-                <Route path="/community">
-                  <CommunityPage />
-                </Route>
+                  {/* Static Pages */}
+                  <Route path="/faq">
+                    <FAQPage />
+                  </Route>
+                  <Route path="/about">
+                    <AboutPage />
+                  </Route>
+                  <Route path="/contact">
+                    <ContactPage />
+                  </Route>
+                  <Route path="/privacy">
+                    <PrivacyPage />
+                  </Route>
+                  <Route path="/terms">
+                    <TermsPage />
+                  </Route>
+                  <Route path="/blog">
+                    <BlogPage />
+                  </Route>
+                  <Route path="/docs">
+                    <DocsPage />
+                  </Route>
+                  <Route path="/community">
+                    <CommunityPage />
+                  </Route>
 
-                {/* 404 route */}
-                <Route>
-                  <NotFound />
-                </Route>
-              </Switch>
+                  {/* 404 route */}
+                  <Route>
+                    <NotFound />
+                  </Route>
+                </Switch>
+              </main>
               <ChatWidget />
             </React.Suspense>
           </TooltipProvider>

@@ -8,17 +8,18 @@ import { AuthService } from "@/services/auth.service";
 // Type for role requirements
 type RoleRequirement = 'Admin' | 'Agent' | 'Subscriber' | 'any';
 
-// Helper component for loading
+// Helper component for loading with accessibility
 const LoadingComponent = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <Loader2 className="h-8 w-8 animate-spin text-primary-600" />
+  <div className="flex items-center justify-center min-h-screen" role="status" aria-label="Loading page content">
+    <Loader2 className="h-8 w-8 animate-spin text-primary-600" aria-hidden="true" />
+    <span className="sr-only">Loading...</span>
   </div>
 );
 
-// Helper component for unauthorized access
+// Helper component for unauthorized access with accessibility
 const UnauthorizedComponent = () => (
-  <div className="flex flex-col items-center justify-center min-h-screen p-4">
-    <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+  <div className="flex flex-col items-center justify-center min-h-screen p-4" role="alert">
+    <h1 className="text-2xl font-bold mb-2" id="unauthorized-heading">Access Denied</h1>
     <p className="text-muted-foreground mb-4 text-center">
       You don't have the required permissions to access this page.
     </p>

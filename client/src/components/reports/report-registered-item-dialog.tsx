@@ -36,16 +36,17 @@ interface ReportRegisteredItemDialogProps {
 }
 
 // We'll use a subset of the lost item schema, since some fields come from the item itself
-const reportSchema = z.object({
+// Localized report schema
+const getReportSchema = (t: any) => z.object({
     date: z.string().refine((val) => !isNaN(Date.parse(val)), {
-        message: "Please select a valid date",
+        message: t("reports.registeredItemDialog.dateRequired"),
     }),
-    location: z.string().min(2, "Location is required"),
-    description: z.string().min(10, "Please provide more details about how it was lost"),
+    location: z.string().min(2, t("reports.registeredItemDialog.locationRequired")),
+    description: z.string().min(10, t("reports.registeredItemDialog.descMin")),
     contactInfo: z.string().optional(),
 });
 
-type ReportFormValues = z.infer<typeof reportSchema>;
+type ReportFormValues = z.infer<ReturnType<typeof getReportSchema>>;
 
 interface ReportResponse {
     id: number;
@@ -61,11 +62,11 @@ export function ReportRegisteredItemDialog({ item, open, onOpenChange }: ReportR
     const [receiptNumber, setReceiptNumber] = useState<string | null>(null);
 
     const form = useForm<ReportFormValues>({
-        resolver: zodResolver(reportSchema),
+        resolver: zodResolver(getReportSchema(t)),
         defaultValues: {
             date: new Date().toISOString().split("T")[0],
             location: "",
-            description: `Reported lost: ${item.name} (${item.uniqueIdentifier})`, // Pre-fill with item info
+            description: t("reports.registeredItemDialog.defaultDesc", { itemName: item.name, id: item.uniqueIdentifier }),
             contactInfo: "",
         },
     });
@@ -75,7 +76,7 @@ export function ReportRegisteredItemDialog({ item, open, onOpenChange }: ReportR
             // Construct the full report payload
             const payload = {
                 type: "lost",
-                title: `Lost ${item.name}`,
+                title: t("reports.registeredItemDialog.lostTitle", { itemName: item.name }),
                 category: item.category,
                 itemId: item.id, // Link to the registered item
                 uniqueIdentifier: item.uniqueIdentifier,

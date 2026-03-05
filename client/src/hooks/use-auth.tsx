@@ -162,91 +162,77 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Check if user is already authenticated on mount
   React.useEffect(() => {
     let unsubscribe: (() => void) | undefined;
+    let isTerminated = false;
 
     const setupAuth = async () => {
       try {
-        // Check server session once at start
-        const sessionResponse = await fetch("/api/user", { credentials: "include" });
+        console.log("[useAuth] Initializing authentication...");
 
+        // 1. Initial server session check
         let initialUserData = null;
-        if (sessionResponse.ok) {
-          initialUserData = await sessionResponse.json();
-          if (isMounted.current) {
-            setUser(initialUserData);
-            setIsLoading(false);
-            console.log("[useAuth] Session valid from initial check");
+        try {
+          const sessionResponse = await fetch("/api/user", { credentials: "include" });
+          if (sessionResponse.ok) {
+            initialUserData = await sessionResponse.json();
+            if (!isTerminated && isMounted.current) {
+              console.log("[useAuth] Valid session found on startup");
+              setUser(initialUserData);
+              // Don't set isLoading(false) yet, we still want to wait for Firebase
+              // just in case they are different (e.g. user just switched accounts)
+            }
           }
-        } else if (sessionResponse.status !== 401) {
-          console.log("[useAuth] Session check status:", sessionResponse.status);
-        } else {
-          // 401 is expected on first load when not logged in
+        } catch (sessionError) {
+          console.warn("[useAuth] Session check failed:", sessionError);
         }
 
         const { onAuthChange, handleRedirectResult } = await import('@/lib/firebase');
 
-        // Handle Redirect Result FIRST
+        // 2. Handle Redirect Result (popups/redirects)
         try {
           const result = await handleRedirectResult();
-          if (result && result.user) {
-            console.log("[useAuth] Redirect result found");
-            await synchronizeWithServer(result.user);
+          if (result && result.success && result.user) {
+            console.log("[useAuth] Redirect/popup login detected");
+            await performSync(result.user);
+            return; // performSync handles isLoading(false)
           }
         } catch (e) {
-          console.error("[useAuth] Redirect handling error", e);
+          console.error("[useAuth] Redirect results handling error", e);
         }
 
-        // Listen for Auth State Changes
+        // 3. Listen for Auth State Changes (this is the source of truth)
         unsubscribe = onAuthChange(async (firebaseUser) => {
-          if (!isMounted.current) return;
+          if (isTerminated || !isMounted.current) return;
 
           if (firebaseUser) {
-            console.log("[useAuth] Firebase user detected");
-            await synchronizeWithServer(firebaseUser);
+            console.log("[useAuth] Firebase user state: Active (", firebaseUser.email, ")");
+            await performSync(firebaseUser);
           } else {
-            // Firebase says no user, but let's see if we already have a valid server session
-            // If we have a session but NO Firebase user, we'll keep the session until it actually fails
-            console.log("[useAuth] Firebase user signed out or not found");
+            console.log("[useAuth] Firebase user state: Empty");
 
-            // If we don't have a user state yet, OR we were specifically waiting for firebase
-            // then we should set to null. But if we already have a user from the initial 
-            // session check, let's NOT clear it just because Firebase is null.
-            // Using the current user state instead of a fresh fetch saves latency
+            // If we have a server session but no Firebase user, 
+            // we'll TRUST the server session for now to avoid flickering,
+            // but we'll stop loading.
             if (!user && !initialUserData) {
-              console.log("[useAuth] No existing session and no Firebase user, set to null");
               setUser(null);
-            } else {
-              console.log("[useAuth] Keeping existing session despite missing Firebase user");
             }
-            setIsLoading(false);
+            if (isMounted.current) {
+              setIsLoading(false);
+            }
           }
         });
 
       } catch (error) {
-        console.error("[useAuth] Auth setup failed", error);
+        console.error("[useAuth] Auth setup failed:", error);
         if (isMounted.current) setIsLoading(false);
       }
     };
 
     setupAuth();
 
-    // Safety timeout - ensure we don't stay in loading state forever
-    const safetyTimeout = setTimeout(() => {
-      setIsLoading(prev => {
-        if (isMounted.current && prev) {
-          console.warn("[useAuth] Safety timeout reached in AuthProvider, forcing isLoading to false");
-          return false;
-        }
-        return prev;
-      });
-    }, 30000);
-
-
-
     return () => {
+      isTerminated = true;
       if (unsubscribe) unsubscribe();
-      if (safetyTimeout) clearTimeout(safetyTimeout);
     };
-
   }, [toast]);
 
   // Handle redirections based on user role

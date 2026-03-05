@@ -6,8 +6,12 @@ import { PageLayout } from "@/components/layout/page-layout";
 import { UserPreferencesForm } from "@/components/profile/user-preferences-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Bell, Palette, Globe } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Settings, Bell, Palette, Globe, Lock, Shield, KeyRound, Smartphone } from "lucide-react";
 import { PushSubscriptionManager } from "@/components/notifications/push-subscription-manager";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function SettingsPage() {
     const { t } = useLanguage();
@@ -23,23 +27,27 @@ export default function SettingsPage() {
         <PageLayout>
             <DashboardHeader
                 heading={t("profile.tabs.preferences")}
-                text="Manage your platform settings and preferences"
+                text={t("settings_page.subtitle")}
             />
 
             <div className="grid gap-8">
                 <Tabs defaultValue="general" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 max-w-[600px]">
+                    <TabsList className="grid w-full grid-cols-4 max-w-[800px]">
                         <TabsTrigger value="general" className="flex items-center gap-2">
                             <Settings className="h-4 w-4" />
-                            General
+                            {t("settings_page.general")}
                         </TabsTrigger>
                         <TabsTrigger value="notifications" className="flex items-center gap-2">
                             <Bell className="h-4 w-4" />
-                            Notifications
+                            {t("settings_page.notifications")}
                         </TabsTrigger>
                         <TabsTrigger value="appearance" className="flex items-center gap-2">
                             <Palette className="h-4 w-4" />
-                            Appearance
+                            {t("settings_page.appearance")}
+                        </TabsTrigger>
+                        <TabsTrigger value="security" className="flex items-center gap-2">
+                            <Lock className="h-4 w-4" />
+                            {t("settings_page.security")}
                         </TabsTrigger>
                     </TabsList>
 
@@ -57,11 +65,69 @@ export default function SettingsPage() {
                     <TabsContent value="appearance" className="space-y-4 mt-6">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Appearance Settings</CardTitle>
-                                <CardDescription>Customize the look and feel of the application.</CardDescription>
+                                <CardTitle>{t("settings_page.appearance_title")}</CardTitle>
+                                <CardDescription>{t("settings_page.appearance_desc")}</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-sm text-muted-foreground">Theme settings are currently managed within the General Preferences tab.</p>
+                                <p className="text-sm text-muted-foreground">{t("settings_page.appearance_hint")}</p>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="security" className="space-y-6 mt-6">
+                        <Card className="border-primary/10 bg-primary/5">
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-primary/10 rounded-lg">
+                                        <KeyRound className="h-5 w-5 text-primary" />
+                                    </div>
+                                    <div>
+                                        <CardTitle>{t("settings_page.password_title")}</CardTitle>
+                                        <CardDescription>{t("settings_page.password_desc")}</CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="current-password">{t("settings_page.current_password")}</Label>
+                                    <Input id="current-password" type="password" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="new-password">{t("settings_page.new_password")}</Label>
+                                    <Input id="new-password" type="password" />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="confirm-password">{t("settings_page.confirm_password")}</Label>
+                                    <Input id="confirm-password" type="password" />
+                                </div>
+                                <Button className="mt-2">{t("settings_page.update_password")}</Button>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-blue-500/10 rounded-lg">
+                                        <Smartphone className="h-5 w-5 text-blue-500" />
+                                    </div>
+                                    <div>
+                                        <CardTitle>{t("settings_page.twofa_title")}</CardTitle>
+                                        <CardDescription>{t("settings_page.twofa_desc")}</CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="flex items-center justify-between p-4 border rounded-xl bg-muted/30">
+                                    <div className="flex items-center gap-3">
+                                        <Shield className="h-5 w-5 text-muted-foreground" />
+                                        <div>
+                                            <p className="text-sm font-bold">{t("settings_page.authenticator_app")}</p>
+                                            <p className="text-xs text-muted-foreground">{t("settings_page.authenticator_desc")}</p>
+                                        </div>
+                                    </div>
+                                    <Badge variant="secondary">{t("settings_page.disabled")}</Badge>
+                                </div>
+                                <Button variant="outline" className="w-full">{t("settings_page.enable_2fa")}</Button>
                             </CardContent>
                         </Card>
                     </TabsContent>

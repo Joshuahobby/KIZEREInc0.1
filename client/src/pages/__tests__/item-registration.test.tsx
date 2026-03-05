@@ -13,8 +13,8 @@ Object.defineProperty(window, 'matchMedia', {
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(), // Deprecated
-    removeListener: vi.fn(), // Deprecated
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
@@ -45,20 +45,16 @@ describe('ItemRegistrationPage', () => {
   it('renders the registration form', async () => {
     render(<ItemRegistrationPage />, { wrapper: AllProviders });
 
-    // screen.debug(); // For debugging if it fails again
-
-    // Check for some static text that doesn't depend on i18n if possible, 
-    // or ensure i18n matches.
-    expect(await screen.findByText(/Item Details/i)).toBeInTheDocument();
+    // Check for the heading text that appears on step 1
+    expect(await screen.findByText(/Item Information/i)).toBeInTheDocument();
   });
 
   it('shows validation errors for empty required fields', async () => {
     render(<ItemRegistrationPage />, { wrapper: AllProviders });
 
-    // Wait for form to render - there might be multiple (desktop/mobile)
+    // Wait for form to render — Continue buttons should be disabled when name is empty
     const continueButtons = await screen.findAllByText(/Continue/i);
 
-    // Since name is empty, all should be disabled
     continueButtons.forEach(btn => {
       expect(btn).toBeDisabled();
     });

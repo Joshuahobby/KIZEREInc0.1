@@ -103,6 +103,16 @@
   h6 {
     @apply font-bold tracking-tight text-foreground;
   }
+
+  /* Keyboard navigation focus ring */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  /* Remove default outline for mouse users */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
 }
 
 @layer components {
@@ -180,5 +190,21 @@
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
     @apply bg-slate-800 rounded-full hover:bg-slate-700 transition-colors;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+  }
+
+  .dashed-progress-line {
+    background: repeating-linear-gradient(180deg, #e5e7eb 0, #e5e7eb 4px, transparent 4px, transparent 8px);
   }
 }

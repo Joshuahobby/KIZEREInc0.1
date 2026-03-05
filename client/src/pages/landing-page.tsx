@@ -16,10 +16,24 @@ import {
   BarChart2,
   Calendar,
   Lock,
-  ArrowRight
+  ArrowRight,
+  Globe,
+  Mail,
+  Paperclip,
+  Phone
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -58,6 +72,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
+
       {/* Unified Header */}
       <Header />
 
@@ -137,7 +152,7 @@ export default function LandingPage() {
               >
                 <Button
                   onClick={() => navigate("/auth?tab=register")}
-                  className="yellow-button group relative overflow-hidden h-12"
+                  className="yellow-button group relative overflow-hidden h-12 hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
                   size="lg"
                 >
                   <span className="relative z-10 flex items-center gap-2">
@@ -150,7 +165,7 @@ export default function LandingPage() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="border-primary/30 hover:border-primary"
+                  className="border-primary/30 hover:border-primary hover:-translate-y-1 hover:shadow-md transition-all duration-300"
                   onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
                 >
                   {t('landing.learnMore')}
@@ -251,6 +266,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Recruitment Dialog */}
 
       {/* Features Section */}
       <section id="features" className="py-24 bg-background relative overflow-hidden">
@@ -395,55 +412,60 @@ export default function LandingPage() {
       </section>
 
       {/* Call to Action Section */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-700 to-primary-900"></div>
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-grid-pattern opacity-25"></div>
-          <div className="h-full w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary-400/20 via-transparent to-transparent"></div>
+      <section className="py-16 md:py-24 relative overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0">
+          <img src={crowdImage} alt="Background" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-primary/80 dark:bg-black/80 mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center">
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="flex flex-col items-center justify-center p-8 md:p-12 rounded-[2.5rem] border border-white/20 bg-white/10 dark:bg-black/20 backdrop-blur-xl shadow-2xl relative overflow-hidden"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            {/* Inner glass highlights */}
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+            <div className="absolute -top-24 -left-24 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+
+            <span className="inline-block mb-4 px-4 py-1.5 rounded-full bg-white/20 text-white font-bold text-sm backdrop-blur-md border border-white/30 shadow-sm uppercase tracking-wider">
+              {t('landing.startToday')}
+            </span>
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 text-center tracking-tight text-balance drop-shadow-sm">
+              {t('landing.readyToSecure')}
+            </h2>
+            <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-white/90 text-center font-medium">
+              {t('landing.joinThousands')}
+            </p>
+
             <motion.div
-              className="text-center"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 400 }}
+              className="relative z-10"
             >
-              <span className="inline-block mb-3 px-4 py-1 rounded-full bg-white/10 text-white font-semibold text-sm">
-                {t('landing.startToday')}
-              </span>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
-                {t('landing.readyToSecure')}
-              </h2>
-              <p className="text-xl max-w-3xl mx-auto mb-8 text-white/80">
-                {t('landing.joinThousands')}
-              </p>
-
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{ type: "spring", stiffness: 400 }}
+              <Button
+                onClick={() => navigate("/auth")}
+                size="lg"
+                className="bg-[var(--yellow-accent)] hover:bg-[var(--yellow-hover)] text-neutral-900 font-bold text-lg px-8 py-6 md:px-10 md:py-7 rounded-2xl shadow-[0_0_40px_-10px_rgba(255,215,0,0.5)] hover:shadow-[0_0_60px_-15px_rgba(255,215,0,0.7)] group relative overflow-hidden transition-all duration-300"
               >
-                <Button
-                  onClick={() => navigate("/auth")}
-                  size="lg"
-                  className="bg-[#FFDE59] hover:bg-[#FFD60A] text-[#333333] font-bold text-lg px-8 py-6 rounded-xl shadow-lg shadow-primary-900/30 group relative overflow-hidden"
-                >
-                  <span className="relative z-10 flex items-center gap-2">
-                    {t('landing.createFreeAccount')}
-                    <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </span>
-                </Button>
-              </motion.div>
-
-              <div className="mt-6 flex items-center justify-center gap-2 text-white">
-                <CheckCircle2 className="h-5 w-5 text-white" />
-                <span>{t('landing.noCardRequired')}</span>
-              </div>
+                <span className="relative z-10 flex items-center gap-3">
+                  {t('landing.createFreeAccount')}
+                  <ArrowRight className="h-5 w-5 md:h-6 md:w-6 group-hover:translate-x-1.5 transition-transform" />
+                </span>
+                <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out rounded-2xl"></span>
+              </Button>
             </motion.div>
-          </div>
+
+            <div className="mt-8 flex items-center justify-center gap-2 text-white/90 font-medium">
+              <CheckCircle2 className="h-5 w-5 text-[#10B981]" />
+              <span>{t('landing.noCardRequired')}</span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -818,7 +840,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 bg-background relative overflow-hidden">
+      <section id="faq" className="py-24 bg-background relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">

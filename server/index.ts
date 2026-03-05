@@ -8,13 +8,11 @@ import { serveStatic, log } from "./static"; // Reverted to correct import
 import { createLogger } from "./utils/logger";
 import { setupSecurityMiddleware } from "./middleware/security.middleware";
 import { handleRequestError } from "./utils/error-handler";
-import { startExpirationCron } from "./cron/expiration";
 import { initMonitoring, initErrorHandlers } from "./utils/monitoring";
 
 const logger = createLogger('Server');
 const app = express();
 
-// Handle process-level errors
 // Handle process-level errors
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', { promise, reason });

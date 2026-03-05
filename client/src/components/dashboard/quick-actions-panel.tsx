@@ -1,6 +1,5 @@
 import React from "react";
 import { useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,6 @@ import {
   Download,
   Package,
   CreditCard,
-  LogOut,
   ShieldCheck,
   FileUp,
   FileDown
@@ -52,16 +50,10 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
   isDisabled = false
 }) => {
   const [, navigate] = useLocation();
-  const { signOut } = useAuth(); // We need to import useAuth
 
   const handleClick = () => {
     if (isDisabled) return;
-
-    if (href.includes('logout=true')) {
-      signOut();
-    } else {
-      navigate(href);
-    }
+    navigate(href);
   };
 
   const colorVariants: Record<string, string> = {
@@ -107,7 +99,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
     {
       icon: <PlusCircle className="h-5 w-5 text-blue-600" />,
       title: t('dashboard.registerNewItem'),
-      description: t('dashboard.reports.description') || "Add a new item to your inventory",
+      description: t('dashboard.reports.description'),
       href: "/register-item",
       color: "blue"
     },
@@ -115,14 +107,14 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       icon: <AlertTriangle className="h-5 w-5 text-amber-600" />,
       title: t('reports.reportLostItem'),
       description: t('dashboard.lostReports') || "File a lost item report",
-      href: "/lost-found/report/lost",
+      href: "/lost",
       color: "amber"
     },
     {
       icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
       title: t('reports.reportFoundItem'),
       description: t('dashboard.foundReports') || "Submit a found item report",
-      href: "/lost-found/report/found",
+      href: "/found",
       color: "green"
     },
     {
@@ -135,7 +127,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
     {
       icon: <Search className="h-5 w-5 text-purple-600" />,
       title: t('nav.search'),
-      description: t('dashboard.reports.description') || "Find items with detailed filters",
+      description: t('dashboard.reports.description'),
       href: "/search",
       color: "purple"
     }
@@ -179,14 +171,14 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       icon: <FileText className="h-5 w-5 text-amber-600" />,
       title: t('dashboard.agent.pendingReports'),
       description: t('dashboard.agent.description') || "Review awaiting verification",
-      href: "/agent/reports/pending",
+      href: "/dashboard?tab=agent",
       color: "amber"
     },
     {
       icon: <FileEdit className="h-5 w-5 text-blue-600" />,
       title: t('dashboard.agent.manageReports'),
       description: t('dashboard.agent.description') || "Verify and update reports",
-      href: "/agent/reports/process",
+      href: "/dashboard?tab=agent",
       color: "blue"
     }
   ];
@@ -203,10 +195,10 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg font-display flex items-center">
           <Bookmark className="h-5 w-5 mr-2 text-primary" />
-          {t('dashboard.quickActions.title') || "Quick Actions"}
+          {t('dashboard.quickActions.title')}
         </CardTitle>
         <CardDescription>
-          {t('dashboard.quickActions.subtitle') || "Frequently used tools and shortcuts"}
+          {t('dashboard.quickActions.subtitle')}
         </CardDescription>
       </CardHeader>
 
@@ -232,11 +224,11 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
         <CardFooter className="flex justify-between pt-5 border-t mt-3 gap-3">
           <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl border-dashed">
             <FileDown className="h-4 w-4 mr-2 text-primary" />
-            <span className="text-xs font-bold">{t('dashboard.exportData') || "Export Data"}</span>
+            <span className="text-xs font-bold">{t('dashboard.exportData')}</span>
           </Button>
           <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl border-dashed">
             <FileUp className="h-4 w-4 mr-2 text-primary" />
-            <span className="text-xs font-bold">{t('dashboard.importData') || "Import Data"}</span>
+            <span className="text-xs font-bold">{t('dashboard.importData')}</span>
           </Button>
         </CardFooter>
       )}

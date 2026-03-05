@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Link, useLocation } from "wouter";
+import { motion } from "framer-motion";
 import { AvatarWithInitials } from "@/components/ui/avatar-with-initials";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import {
   Home,
   Info,
   Users,
-  Mail,
+  HelpCircle,
   Phone
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
@@ -65,6 +66,7 @@ export function Header() {
     name: string;
     href: string;
     icon?: any;
+    scrollTo?: string; // ID of element to scroll to on the landing page
   };
 
   const getDashboardPath = (): string => {
@@ -76,20 +78,27 @@ export function Header() {
     }
   };
 
+  // Scroll to a section on the landing page
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   // Dynamic navigation based on auth state
   const navigation: NavItem[] = isAuthenticated
     ? [
       { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
-      { name: "Lost Directory", href: "/lost", icon: Search },
-      { name: "Found Directory", href: "/found", icon: Package },
+      { name: t('nav.lostDirectory'), href: "/lost", icon: Search },
+      { name: t('nav.foundDirectory'), href: "/found", icon: Package },
     ]
     : [
-      { name: t('nav.home'), href: "/", icon: Home },
-      { name: "Lost Directory", href: "/lost", icon: Search },
-      { name: "Found Directory", href: "/found", icon: Package },
-      { name: "Community", href: "/community", icon: Users },
-      { name: "About", href: "/about", icon: Info },
-      { name: "Contact", href: "/contact", icon: Mail },
+      { name: t('nav.features'), href: "/#features", scrollTo: "features", icon: Info },
+      { name: t('nav.howItWorks'), href: "/#how-it-works", scrollTo: "how-it-works", icon: Users },
+      { name: t('nav.lostDirectory'), href: "/search?type=lost", icon: Search },
+      { name: t('nav.foundDirectory'), href: "/search?type=found", icon: Package },
+      { name: t('nav.community'), href: "/community", icon: Users },
     ];
 
   // Admin access is now handled via the sidebar in the dashboard layout
@@ -107,25 +116,32 @@ export function Header() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-200 border-b",
+        "sticky top-0 z-50 w-full transition-all duration-300 border-b",
         isScrolled
-          ? "bg-background/80 backdrop-blur-md shadow-sm border-border"
+          ? "bg-background/60 backdrop-blur-xl shadow-sm border-border/50"
           : "bg-background border-transparent"
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            {/* Logo */}
+        <div className="grid grid-cols-3 items-center h-16 w-full">
+          {/* Logo - Left aligned */}
+          <div className="flex items-center justify-start">
             <Link href={isAuthenticated ? getDashboardPath() : "/"} className="flex items-center gap-2 group" aria-label="KIZERE Home">
               <Logo className="h-8 w-8 transition-transform group-hover:scale-110" aria-hidden="true" />
-              <span className="text-xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tighter">
-                KIZERE
-              </span>
+              <div className="flex flex-col items-start leading-none gap-0">
+                <span className="text-xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tighter">
+                  {t('common.brandName')}
+                </span>
+                <span className="text-[8px] uppercase tracking-[0.2em] text-primary font-black opacity-70">
+                  {t('common.brandSubtitle')}
+                </span>
+              </div>
             </Link>
+          </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex lg:items-center lg:gap-1 ml-8" aria-label="Main Navigation">
+          {/* Desktop Navigation - Absolute Centered with space protection */}
+          <div className="justify-self-center">
+            <nav className="hidden lg:flex lg:items-center lg:gap-1" aria-label="Main Navigation">
               {!isOnline && (
                 <Badge variant="outline" className="mr-2 border-amber-500/50 bg-amber-500/10 text-amber-600 animate-pulse gap-1">
                   <WifiOff className="h-3 w-3" />
@@ -137,11 +153,17 @@ export function Header() {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                    "inline-flex items-center px-2 lg:px-3 py-1.5 lg:py-2 text-sm md:text-xs lg:text-sm font-medium rounded-md transition-colors whitespace-nowrap",
                     isActive(item.href)
                       ? "text-primary bg-primary/10"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   )}
+                  onClick={(e) => {
+                    if (item.scrollTo && location === '/') {
+                      e.preventDefault();
+                      scrollToSection(item.scrollTo);
+                    }
+                  }}
                 >
                   {item.name}
                 </Link>
@@ -149,24 +171,30 @@ export function Header() {
 
               {isAuthenticated && (
                 <div className="ml-4 lg:ml-6">
-                  <GlobalSearch variant="navbar" placeholder="Quick search..." />
+                  <GlobalSearch variant="navbar" placeholder={t('common.searchPlaceholder')} />
                 </div>
               )}
             </nav>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Actions grouped together */}
+          {/* Actions - Right aligned */}
+          <div className="flex items-center justify-end gap-2">
             <div className="flex items-center gap-1 sm:gap-2 mr-2">
-              <ThemeToggle />
+              <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.95 }}>
+                <ThemeToggle />
+              </motion.div>
 
               <div className="hidden sm:block">
-                <LanguageSwitcher variant="minimal" />
+                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                  <LanguageSwitcher variant="minimal" />
+                </motion.div>
               </div>
 
               {isAdmin && (
                 <div className="hidden md:block">
-                  <DashboardStyleSwitcher />
+                  <motion.div whileHover={{ scale: 1.1, rotate: -5 }} whileTap={{ scale: 0.95 }}>
+                    <DashboardStyleSwitcher />
+                  </motion.div>
                 </div>
               )}
 
@@ -174,8 +202,20 @@ export function Header() {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="relative group">
-                      <Bell className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                      <Badge className="absolute -right-1 -top-1 h-4 min-w-[1rem] px-1 text-[10px] bg-primary flex items-center justify-center">
+                      <motion.div
+                        animate={{
+                          rotate: [0, -10, 10, -10, 10, 0],
+                          scale: [1, 1.1, 1, 1.1, 1]
+                        }}
+                        transition={{
+                          repeat: Infinity,
+                          duration: 3,
+                          repeatDelay: 5
+                        }}
+                      >
+                        <Bell className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </motion.div>
+                      <Badge className="absolute -right-1 -top-1 h-4 min-w-[1rem] px-1 text-[10px] bg-primary flex items-center justify-center animate-pulse">
                         2
                       </Badge>
                     </Button>
@@ -274,7 +314,7 @@ export function Header() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-md animate-in slide-in-from-top duration-300">
+        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl animate-in slide-in-from-top duration-300">
           <div className="px-4 py-6 space-y-2">
             {navigation.map((item) => (
               <Link
@@ -286,7 +326,13 @@ export function Header() {
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 )}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  if (item.scrollTo && location === '/') {
+                    e.preventDefault();
+                    scrollToSection(item.scrollTo);
+                  }
+                }}
               >
                 {item.icon && <item.icon className="mr-3 h-5 w-5" />}
                 {item.name}

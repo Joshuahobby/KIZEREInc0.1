@@ -50,20 +50,22 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { format } from "date-fns";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 // Report form schema
-const reportFormSchema = z.object({
+// Localized report form schema
+const getReportFormSchema = (t: any) => z.object({
   type: z.string({
-    required_error: "Please select a report type",
+    required_error: t('report_wizard.type_required'),
   }),
-  title: z.string().min(3, "Title must be at least 3 characters"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  location: z.string().min(3, "Location is required"),
-  date: z.string().min(1, "Date is required"),
-  contactInfo: z.string().min(5, "Contact information is required"),
+  title: z.string().min(3, t('report_wizard.title_min')),
+  description: z.string().min(10, t('report_wizard.desc_min')),
+  location: z.string().min(3, t('report_wizard.location_required')),
+  date: z.string().min(1, t('report_wizard.date_required')),
+  contactInfo: z.string().min(5, t('report_wizard.contact_required')),
 });
 
-type ReportFormValues = z.infer<typeof reportFormSchema>;
+type ReportFormValues = z.infer<ReturnType<typeof getReportFormSchema>>;
 
 export default function LostItems() {
   const [search, setSearch] = useState("");
@@ -71,7 +73,7 @@ export default function LostItems() {
   const [statusFilter, setStatusFilter] = useState<string>("Found");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [, setLocation] = useLocation();
-  // const { t } = useLanguage(); // Assuming useLanguage is defined elsewhere if needed
+  const { t } = useTranslation();
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -133,7 +135,7 @@ export default function LostItems() {
 
   // Form for lost/found items
   const form = useForm<ReportFormValues>({
-    resolver: zodResolver(reportFormSchema),
+    resolver: zodResolver(getReportFormSchema(t)),
     defaultValues: {
       type: '',
       title: '',
@@ -189,8 +191,8 @@ export default function LostItems() {
       // Handle offline case
       if (res.offline) {
         toast({
-          title: "Offline Mode",
-          description: "Your report has been queued and will be submitted automatically when you're back online.",
+          title: t('common.offlineMode'),
+          description: t('lostFound_page.offlineReportQueued'),
         });
         setOpenDialog(false);
         form.reset();
@@ -203,14 +205,14 @@ export default function LostItems() {
 
       if (res.payment?.paymentUrl) {
         toast({
-          title: "Payment Required",
-          description: "Redirecting to secure payment page...",
+          title: t('common.paymentRequired'),
+          description: t('lostFound_page.paymentRedirect'),
         });
         window.location.href = res.payment.paymentUrl;
       } else {
         toast({
-          title: `Lost item reported successfully`,
-          description: "Your report has been submitted.",
+          title: t('lostFound_page.reportLostSuccess'),
+          description: t('lostFound_page.reportLostSuccessDesc'),
         });
         setOpenDialog(false);
       }
@@ -220,8 +222,8 @@ export default function LostItems() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Submission failed",
-        description: error.message || "Something went wrong. Please try again.",
+        title: t('common.submissionFailed'),
+        description: error.message || t('lostFound_page.genericError'),
         variant: "destructive",
       });
     },
@@ -249,7 +251,7 @@ export default function LostItems() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout defaultSidebarCollapsed={true}>
       <div className="py-8 relative isolate">
         {/* Background Decorative Gradients */}
         <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
@@ -261,10 +263,10 @@ export default function LostItems() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
             <div className="max-w-xl">
               <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-2 flex items-center gap-2">
-                <AlertTriangle className="h-8 w-8 text-red-600 font-black" /> Did you lose something?
+                <AlertTriangle className="h-8 w-8 text-red-600 font-black" /> {t('lostFound_page.lostTitle')}
               </h1>
               <p className="text-muted-foreground text-sm md:text-base leading-relaxed">
-                Browse our directory of items that others have found, or report your lost item so our community can help locate it.
+                {t('lostFound_page.lostHeroSubtitle')}
               </p>
             </div>
 
@@ -273,7 +275,7 @@ export default function LostItems() {
                 onClick={() => handleOpenDialog("lost")}
                 className="flex-1 md:flex-none bg-red-600 hover:bg-red-700 text-white shadow-md shadow-red-600/20"
               >
-                <AlertTriangle className="w-4 h-4 mr-2" /> Report Lost Item
+                <AlertTriangle className="w-4 h-4 mr-2" /> {t('lostFound_page.reportLostItem')}
               </Button>
             </div>
           </div>
@@ -284,7 +286,7 @@ export default function LostItems() {
               <div className="bg-white/70 backdrop-blur-md border border-neutral-200/60 rounded-2xl p-6 lg:sticky lg:top-24 shadow-sm">
                 <h3 className="font-bold text-lg mb-4 text-neutral-900 flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>
-                  Filters
+                  {t('lostFound_page.filters')}
                 </h3>
 
                 <SearchFilters onFiltersChange={setFilters} orientation="vertical" />
@@ -293,10 +295,10 @@ export default function LostItems() {
                 {userItems && userItems.length > 0 && (
                   <div className="mt-8 pt-6 border-t border-neutral-100">
                     <h3 className="font-bold text-sm mb-1 text-neutral-900 flex items-center justify-between">
-                      Quick Report
+                      {t('lostFound_page.quickReport')}
                       <Badge variant="secondary" className="bg-primary/10 text-primary">{userItems.length}</Badge>
                     </h3>
-                    <p className="text-[11px] text-neutral-500 mb-4 leading-snug">Report one of your registered items as lost.</p>
+                    <p className="text-[11px] text-neutral-500 mb-4 leading-snug">{t('lostFound_page.quickReportDesc')}</p>
 
                     <div className="grid gap-2">
                       {userItems.slice(0, 3).map(item => (
@@ -315,14 +317,14 @@ export default function LostItems() {
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-9 text-xs text-primary font-medium hover:bg-primary/5 rounded-lg w-full mt-1">
-                              View all {userItems.length} items
+                              {t('lostFound_page.viewAllItems', { count: userItems.length })}
                             </Button>
                           </DialogTrigger>
                           <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-2xl">
                             <DialogHeader>
-                              <DialogTitle className="text-xl">Select an Item</DialogTitle>
+                              <DialogTitle className="text-xl">{t('lostFound_page.selectItem')}</DialogTitle>
                               <DialogDescription>
-                                Choose one of your registered items to create a fast report.
+                                {t('lostFound_page.selectItemDesc')}
                               </DialogDescription>
                             </DialogHeader>
                             <div className="grid gap-2 max-h-[400px] overflow-y-auto p-1 mt-2">
@@ -344,13 +346,13 @@ export default function LostItems() {
                       )}
                       <Select onValueChange={(value) => setStatusFilter(value)}>
                         <SelectTrigger className="h-10 bg-background/50 border-border/50 hidden">
-                          <SelectValue placeholder="Status" />
+                          <SelectValue placeholder={t('common.status')} />
                         </SelectTrigger>
                         <SelectContent hidden>
-                          <SelectItem value="all">All Statuses</SelectItem>
-                          <SelectItem value="Lost">Lost</SelectItem>
-                          <SelectItem value="Found">Found</SelectItem>
-                          <SelectItem value="Recovered">Recovered</SelectItem>
+                          <SelectItem value="all">{t('common.allStatuses')}</SelectItem>
+                          <SelectItem value="Lost">{t('common.lost')}</SelectItem>
+                          <SelectItem value="Found">{t('common.found')}</SelectItem>
+                          <SelectItem value="Recovered">{t('common.recovered')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -370,7 +372,7 @@ export default function LostItems() {
                   </div>
                   <Input
                     type="text"
-                    placeholder="Search by keywords (e.g. Passport, Blue Wallet)..."
+                    placeholder={t('lostFound_page.searchPlaceholder')}
                     className="pl-11 h-12 bg-white/90 backdrop-blur-sm border-white/40 shadow-sm rounded-xl focus:ring-primary/40 focus:border-primary/50 text-sm transition-all"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -383,7 +385,7 @@ export default function LostItems() {
                 {isLoading ? (
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary relative z-10" />
-                    <p className="mt-3 text-sm text-neutral-500 font-medium animate-pulse">Scanning the directory...</p>
+                    <p className="mt-3 text-sm text-neutral-500 font-medium animate-pulse">{t('lostFound_page.scanning')}</p>
                   </div>
                 ) : sortedReports && sortedReports.length > 0 ? (
                   <div className="flex flex-col gap-3">
@@ -397,7 +399,7 @@ export default function LostItems() {
                                 ? 'bg-red-50 text-red-600 border border-red-100'
                                 : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                 }`}>
-                                {report.type === 'lost' ? 'Lost' : 'Found'}
+                                {report.type === 'lost' ? t('common.lost') : t('common.found')}
                               </span>
                               <span className="text-[10px] font-medium text-neutral-400 md:hidden">
                                 {format(new Date(report.date), 'MMM d, yyyy')}
@@ -431,10 +433,10 @@ export default function LostItems() {
                       <div className="h-16 w-16 bg-white rounded-full shadow-sm border border-neutral-100 flex items-center justify-center mb-4">
                         <SearchIcon className="h-6 w-6 text-neutral-300" />
                       </div>
-                      <h3 className="text-base font-bold text-neutral-900">No items found</h3>
-                      <p className="text-sm text-neutral-500 max-w-sm mt-1">We couldn't find any items matching your current search terms or filters.</p>
+                      <h3 className="text-base font-bold text-neutral-900">{t('lostFound_page.noItemsFound')}</h3>
+                      <p className="text-sm text-neutral-500 max-w-sm mt-1">{t('lostFound_page.noItemsFoundDesc')}</p>
                       <Button variant="outline" size="sm" className="mt-5 rounded-lg border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 shadow-sm" onClick={() => setFilters({ category: "All Categories", location: "All Locations", sortBy: "newest", dateFilter: "all" })}>
-                        Clear Filters
+                        {t('lostFound_page.clearFilters')}
                       </Button>
                     </CardContent>
                   </Card>
@@ -451,10 +453,10 @@ export default function LostItems() {
           <div className="p-6 pb-4 bg-red-50/50 border-b border-neutral-100">
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                <AlertTriangle className="h-6 w-6 text-red-600" /> Report a Lost Item
+                <AlertTriangle className="h-6 w-6 text-red-600" /> {t('lostFound_page.reportLostDialogTitle')}
               </DialogTitle>
               <DialogDescription className="text-sm mt-1">
-                Please provide detailed information. Accurate details increase the chances of a successful match.
+                {t('lostFound_page.reportDialogDesc')}
               </DialogDescription>
             </DialogHeader>
           </div>

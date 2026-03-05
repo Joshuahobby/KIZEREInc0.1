@@ -235,23 +235,77 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
     }
   }, [existingItem, form]);
 
-  // Load draft
+  const [hasDraft, setHasDraft] = useState(false);
+  const [draftData, setDraftData] = useState<any>(null);
+
+  // Check for draft on mount
   useEffect(() => {
     if (isEditMode) return;
     const savedDraft = localStorage.getItem('itemRegistrationDraft');
     if (savedDraft) {
       try {
         const parsed = JSON.parse(savedDraft);
-        // Filter out rogue date values that somehow got saved as the item name
-        const datePattern = /^\d{1,2}\/\d{1,2}\/\d{2,4}$/;
-        Object.entries(parsed).forEach(([key, value]) => {
-          if (key === "name" && typeof value === "string" && datePattern.test(value.trim())) return;
-          if (value) form.setValue(key as any, value);
+        setDraftData(parsed);
+        setHasDraft(true);
+
+        toast({
+          title: "Saved Draft Found",
+          description: "Would you like to resume your previous registration progress?",
+          action: (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  handleResumeDraft(parsed);
+                  setHasDraft(false);
+                }}
+                className="h-8 text-xs font-bold"
+              >
+                Resume
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  localStorage.removeItem('itemRegistrationDraft');
+                  setHasDraft(false);
+                  toast({
+                    title: "Draft Cleared",
+                    description: "Starting with a fresh registration form.",
+                  });
+                }}
+                className="h-8 text-xs text-muted-foreground"
+              >
+                Clear
+              </Button>
+            </div>
+          ),
+          duration: 10000,
         });
       } catch (e) {
-        console.error("Failed to load draft", e);
+        console.error("Failed to parse draft", e);
       }
     }
+  }, [isEditMode]);
+
+  const handleResumeDraft = (data: any) => {
+    // Filter out rogue date values that somehow got saved as the item name
+    const datePattern = /^\d{1,2}\/\d{1,2}\/\d{2,4}$/;
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === "name" && typeof value === "string" && datePattern.test(value.trim())) return;
+      if (value) form.setValue(key as any, value);
+    });
+
+    toast({
+      title: "Draft Resumed",
+      description: "Previous progress has been loaded successfully.",
+    });
+  };
+
+  // Skip the old auto-load effect
+  useEffect(() => {
+    // We now handle this manually via the toast action above
   }, []);
 
   // Calculate completion
@@ -532,7 +586,10 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
 
   // ──────────────── MAIN REGISTRATION FORM ────────────────
   return (
-    <PageLayout>
+    <PageLayout
+      title={isEditMode ? t("registration.editTitle") : t("registration.title")}
+      defaultSidebarCollapsed={true}
+    >
       <div className="min-h-[70vh] py-4 px-3 sm:py-6 sm:px-4">
         <div className="w-full max-w-6xl mx-auto">
 
@@ -556,7 +613,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
             <div className="px-6 sm:px-10 py-5 border-b border-border/30 flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-bold text-foreground tracking-tight">
-                  {isEditMode ? t("registration.edit_title") : "New Item Registration"}
+                  {isEditMode ? t("registration.edit_title") : t("registration.title")}
                 </h2>
                 <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.15em] mt-1">
                   Global Security Database
@@ -593,6 +650,15 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                         >
                           {/* Primary Item Name */}
                           <div className="space-y-5">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="h-9 w-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                                <Info className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <h2 className="text-lg font-bold tracking-tight">{t("registration.main_details")}</h2>
+                                <p className="text-sm text-muted-foreground">Basic information about your asset</p>
+                              </div>
+                            </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                               {/* Item Name */}
@@ -1044,7 +1110,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                 </h3>
                 <div className="relative flex-1 py-4">
                   <div className="space-y-10 relative">
-                    <div className="absolute left-6 top-6 bottom-6 w-0.5 z-0" style={{ background: "repeating-linear-gradient(180deg, #e5e7eb 0, #e5e7eb 4px, transparent 4px, transparent 8px)" }} />
+                    <div className="absolute left-6 top-6 bottom-6 w-0.5 z-0 dashed-progress-line" />
                     <div className="flex items-start gap-5 relative z-10">
                       <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-lg", currentStep >= 0 ? "bg-[#0db9f2] text-white ring-4 ring-[#0db9f2]/10" : "bg-slate-200 text-slate-400")}>
                         <FileText className="h-5 w-5" />

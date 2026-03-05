@@ -38,23 +38,23 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [, navigate] = useLocation();
-  
+
   // Calculate profile completeness percentage
   const calculateProfileCompleteness = (): number => {
     let completedFields = 0;
     let totalFields = 5; // username, email, fullName, phoneNumber, avatarUrl
-    
+
     if (user.username) completedFields++;
     if (user.email) completedFields++;
     if (user.fullName) completedFields++;
     if (user.phoneNumber) completedFields++;
     if (user.avatarUrl) completedFields++;
-    
+
     return Math.round((completedFields / totalFields) * 100);
   };
-  
+
   const profileCompleteness = calculateProfileCompleteness();
-  
+
   // Get profile completeness level and corresponding color
   const getCompletenessLevel = (percentage: number): { level: string; color: string } => {
     if (percentage >= 80) return { level: 'Excellent', color: 'text-green-500' };
@@ -62,26 +62,26 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
     if (percentage >= 40) return { level: 'Fair', color: 'text-amber-500' };
     return { level: 'Incomplete', color: 'text-red-500' };
   };
-  
+
   const completenessInfo = getCompletenessLevel(profileCompleteness);
-  
+
   // Get avatar fallback text from user's name
   const getAvatarText = (name: string): string => {
     if (!name) return 'U';
-    
+
     const parts = name.split(' ');
     if (parts.length > 1) {
       return `${parts[0][0]}${parts[1][0]}`;
     }
-    
+
     return name.substring(0, 2).toUpperCase();
   };
-  
+
   // Render account status badge
   const renderAccountStatus = () => {
     const isAdmin = user.role === 'Admin';
     const isAgent = user.role === 'Agent';
-    
+
     if (isAdmin) {
       return (
         <Badge variant="outline" className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
@@ -90,7 +90,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
         </Badge>
       );
     }
-    
+
     if (isAgent) {
       return (
         <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
@@ -99,7 +99,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
         </Badge>
       );
     }
-    
+
     return (
       <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
         <CheckCircle2 className="h-3 w-3 mr-1" />
@@ -107,12 +107,12 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
       </Badge>
     );
   };
-  
+
   // Handle profile setup button click
   const handleCompleteProfile = () => {
     navigate('/settings/profile');
   };
-  
+
   return (
     <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className={variant === 'compact' ? 'pb-2' : ''}>
@@ -137,13 +137,13 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
               </AvatarFallback>
             </Avatar>
           </div>
-          
+
           {/* User Information */}
           <div className="flex-1 text-center sm:text-left">
             <h3 className="text-lg font-semibold">{user.fullName || user.username}</h3>
             <p className="text-sm text-muted-foreground">{user.email}</p>
             <div className="mt-2">{renderAccountStatus()}</div>
-            
+
             {/* Profile Completeness */}
             <div className="mt-4">
               <div className="flex justify-between items-center">
@@ -154,9 +154,9 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
               </div>
               <Progress value={profileCompleteness} className="h-2 mt-1" />
               {profileCompleteness < 100 && (
-                <Button 
-                  variant="link" 
-                  className="text-xs mt-1 h-auto p-0" 
+                <Button
+                  variant="link"
+                  className="text-xs mt-1 h-auto p-0"
                   onClick={handleCompleteProfile}
                 >
                   Complete your profile
@@ -165,13 +165,13 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
             </div>
           </div>
         </div>
-        
+
         {variant !== 'compact' && (
           <>
             {/* Action Tabs */}
-            <Tabs 
-              value={activeTab} 
-              onValueChange={setActiveTab} 
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
               className="mt-6"
             >
               <TabsList className="w-full">
@@ -179,7 +179,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
                 <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger>
                 <TabsTrigger value="subscription" className="flex-1">Subscription</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="overview">
                 <div className="space-y-4 mt-4">
                   {/* Account Details */}
@@ -200,7 +200,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Account Status */}
                   <div>
                     <h4 className="text-sm font-medium mb-2">Account Status</h4>
@@ -230,35 +230,35 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
                   </div>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="settings">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-4">
-                  <Button 
-                    variant="outline" 
-                    className="justify-start" 
+                  <Button
+                    variant="outline"
+                    className="justify-start"
                     onClick={() => navigate('/settings/profile')}
                   >
                     <UserIcon className="h-4 w-4 mr-2" />
                     Edit Profile
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="justify-start"
                     onClick={() => navigate('/settings/security')}
                   >
                     <ShieldCheck className="h-4 w-4 mr-2" />
                     Security Settings
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="justify-start"
                     onClick={() => navigate('/settings/notifications')}
                   >
                     <Bell className="h-4 w-4 mr-2" />
                     Notification Preferences
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="justify-start"
                     onClick={() => navigate('/settings/payment')}
                   >
@@ -267,7 +267,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
                   </Button>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="subscription">
                 <div className="space-y-4 mt-4">
                   <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
@@ -293,7 +293,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
                       </Button>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h4 className="text-sm font-medium mb-2">Plan Features</h4>
                     <ul className="space-y-2">
@@ -318,7 +318,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
                 </div>
               </TabsContent>
             </Tabs>
-            
+
             {/* Quick Actions */}
             <div className="mt-6 flex flex-wrap gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate('/settings')}>
@@ -329,14 +329,10 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
                 <HelpCircle className="h-4 w-4 mr-2" />
                 Help Center
               </Button>
-              <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 ml-auto">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
             </div>
           </>
         )}
-        
+
         {variant === 'compact' && (
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => navigate('/settings')}>
@@ -346,10 +342,6 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({
             <Button variant="outline" size="sm" onClick={() => navigate('/settings/profile')}>
               <UserIcon className="h-4 w-4 mr-2" />
               Edit Profile
-            </Button>
-            <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 ml-auto">
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
             </Button>
           </div>
         )}

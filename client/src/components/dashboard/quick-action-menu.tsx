@@ -70,28 +70,28 @@ export function QuickActionMenu({
       icon: <AlertTriangle className="h-4 w-4" />,
       label: t('dashboard.quickActions.reportLost'),
       description: t('dashboard.quickActions.reportLostDesc'),
-      onClick: () => navigate(isAdmin ? '/admin/reports/new?type=lost' : '/lost-found/report/lost'),
+      onClick: () => navigate('/lost'),
       roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business']
     },
     {
       icon: <CheckCircle2 className="h-4 w-4" />,
       label: t('dashboard.quickActions.reportFound'),
       description: t('dashboard.quickActions.reportFoundDesc'),
-      onClick: () => navigate(isAdmin ? '/admin/reports/new?type=found' : '/lost-found/report/found'),
+      onClick: () => navigate('/found'),
       roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business']
     },
     {
       icon: <Plus className="h-4 w-4" />,
       label: t('dashboard.quickActions.pendingReports'),
       description: t('dashboard.quickActions.pendingReportsDesc'),
-      onClick: () => navigate('/agent/reports/pending'),
+      onClick: () => navigate('/dashboard?tab=agent'),
       roles: ['Agent', 'Moderator', 'Admin']
     },
     {
       icon: <FileEdit className="h-4 w-4" />,
       label: t('dashboard.quickActions.processReports'),
       description: t('dashboard.quickActions.processReportsDesc'),
-      onClick: () => navigate('/agent/reports/process'),
+      onClick: () => navigate('/dashboard?tab=agent'),
       roles: ['Agent', 'Moderator', 'Admin']
     },
     {

@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { createWorker } from "tesseract.js";
+
 import { Button } from "@/components/ui/button";
 import { Loader2, ScanLine, Check, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface OCRScannerProps {
     image: File | null;
@@ -12,13 +14,14 @@ interface OCRScannerProps {
 export function OCRScanner({ image, onScanComplete }: OCRScannerProps) {
     const [isScanning, setIsScanning] = useState(false);
     const [progress, setProgress] = useState(0);
+    const { t } = useLanguage();
     const { toast } = useToast();
 
     const handleScan = async () => {
         if (!image) {
             toast({
-                title: "No image selected",
-                description: "Please upload an image first to scan it.",
+                title: t("ocr.no_image"),
+                description: t("ocr.upload_first"),
                 variant: "destructive",
             });
             return;
@@ -29,7 +32,7 @@ export function OCRScanner({ image, onScanComplete }: OCRScannerProps) {
 
         try {
             const worker = await createWorker('eng', 1, {
-                logger: (m) => {
+                logger: (m: any) => {
                     if (m.status === "recognizing text") {
                         setProgress(Math.round(m.progress * 100));
                     }
@@ -51,22 +54,22 @@ export function OCRScanner({ image, onScanComplete }: OCRScannerProps) {
             const uniqueIdentifier = idMatch?.[0] || imeiMatch?.[0] || serialMatch?.[0] || "";
 
             // Try to extract a title from the first line or common keywords
-            const lines = text.split('\n').filter(l => l.trim().length > 5);
+            const lines = text.split('\n').filter((l: string) => l.trim().length > 5);
             const title = lines[0] ? lines[0].substring(0, 30) : "";
 
             onScanComplete({ uniqueIdentifier, title });
 
             toast({
-                title: "Scan Successful",
+                title: t("ocr.scan_success"),
                 description: uniqueIdentifier
-                    ? `Extracted ID/Serial: ${uniqueIdentifier}`
-                    : "Text extracted but no unique ID found.",
+                    ? t("ocr.extracted_id", { id: uniqueIdentifier })
+                    : t("ocr.no_id_found"),
             });
         } catch (error) {
             console.error("OCR Error:", error);
             toast({
-                title: "Scan Failed",
-                description: "Could not extract text from the image.",
+                title: t("ocr.scan_failed"),
+                description: t("ocr.extract_error"),
                 variant: "destructive",
             });
         } finally {
@@ -87,19 +90,19 @@ export function OCRScanner({ image, onScanComplete }: OCRScannerProps) {
                 {isScanning ? (
                     <>
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        Scanning... {progress}%
+                        {t("ocr.scanning")} {progress}%
                     </>
                 ) : (
                     <>
                         <ScanLine className="h-4 w-4" />
-                        Scan for ID/Serial
+                        {t("ocr.scan_button")}
                     </>
                 )}
             </Button>
             {!image && (
                 <p className="text-[10px] text-neutral-400 flex items-center gap-1">
                     <AlertCircle className="h-3 w-3" />
-                    Upload a photo to use AI scan
+                    {t("ocr.upload_hint")}
                 </p>
             )}
         </div>

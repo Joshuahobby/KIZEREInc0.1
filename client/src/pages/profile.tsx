@@ -110,7 +110,7 @@ export default function ProfilePage() {
 
       <div className="grid gap-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               {t("profile.tabs.profile")}
@@ -118,10 +118,6 @@ export default function ProfilePage() {
             <TabsTrigger value="security" className="flex items-center gap-2">
               <Lock className="h-4 w-4" />
               {t("profile.tabs.security")}
-            </TabsTrigger>
-            <TabsTrigger value="permissions" className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" />
-              {t("profile.tabs.permissions")}
             </TabsTrigger>
             <TabsTrigger value="preferences" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -142,7 +138,7 @@ export default function ProfilePage() {
             )}
           </TabsContent>
 
-          {/* Security Tab */}
+          {/* Security & Access Tab (merged Security + Permissions) */}
           <TabsContent value="security" className="space-y-4 mt-6">
             <Card>
               <CardHeader>
@@ -178,10 +174,7 @@ export default function ProfilePage() {
                 </Button>
               </CardFooter>
             </Card>
-          </TabsContent>
 
-          {/* Permissions Tab */}
-          <TabsContent value="permissions" className="space-y-4 mt-6">
             <UserPermissionsPanel
               userRole={user.role as any}
               permissions={(permissionsData as any)?.permissions || []}

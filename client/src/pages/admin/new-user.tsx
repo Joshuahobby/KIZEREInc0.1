@@ -6,6 +6,7 @@ import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +33,7 @@ type CreateUserFormValues = z.infer<typeof createUserSchema>;
 
 export default function NewUserPage() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();
 
@@ -60,15 +62,15 @@ export default function NewUserPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "User created successfully",
+        title: t("admin_pages.success"),
+        description: t("admin_pages.user_created"),
       });
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
       navigate("/admin/users");
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: t("admin_pages.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -88,13 +90,13 @@ export default function NewUserPage() {
           onClick={() => navigate("/admin/users")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to User Management
+          {t("admin_pages.back_to_users")}
         </Button>
 
         <Card>
           <CardHeader>
-            <CardTitle>Add New User</CardTitle>
-            <CardDescription>Enter the details for the new user account</CardDescription>
+            <CardTitle>{t("admin_pages.add_new_user")}</CardTitle>
+            <CardDescription>{t("admin_pages.add_new_user_desc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -104,7 +106,7 @@ export default function NewUserPage() {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>{t("admin_pages.full_name")}</FormLabel>
                       <FormControl>
                         <Input placeholder="John Doe" {...field} />
                       </FormControl>
@@ -119,7 +121,7 @@ export default function NewUserPage() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Email</FormLabel>
+                        <FormLabel>{t("admin_pages.email")}</FormLabel>
                         <FormControl>
                           <Input type="email" placeholder="john.doe@example.com" {...field} />
                         </FormControl>
@@ -133,7 +135,7 @@ export default function NewUserPage() {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>{t("admin_pages.username")}</FormLabel>
                         <FormControl>
                           <Input placeholder="johndoe" {...field} />
                         </FormControl>
@@ -149,11 +151,11 @@ export default function NewUserPage() {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>{t("admin_pages.password")}</FormLabel>
                         <FormControl>
                           <Input type="password" placeholder="••••••••" {...field} />
                         </FormControl>
-                        <FormDescription>At least 8 characters</FormDescription>
+                        <FormDescription>{t("admin_pages.password_hint")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -164,7 +166,7 @@ export default function NewUserPage() {
                     name="phoneNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Phone Number (Optional)</FormLabel>
+                        <FormLabel>{t("admin_pages.phone_optional")}</FormLabel>
                         <FormControl>
                           <Input placeholder="+1234567890" {...field} />
                         </FormControl>
@@ -180,11 +182,11 @@ export default function NewUserPage() {
                     name="role"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Role</FormLabel>
+                        <FormLabel>{t("admin_pages.role")}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a role" />
+                              <SelectValue placeholder={t("admin_pages.select_role")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -203,11 +205,11 @@ export default function NewUserPage() {
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Status</FormLabel>
+                        <FormLabel>{t("admin_pages.status")}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select a status" />
+                              <SelectValue placeholder={t("admin_pages.select_status")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -226,11 +228,11 @@ export default function NewUserPage() {
                     name="verificationStatus"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Verification</FormLabel>
+                        <FormLabel>{t("admin_pages.verification")}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select verification status" />
+                              <SelectValue placeholder={t("admin_pages.select_verification")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -252,13 +254,13 @@ export default function NewUserPage() {
                     className="mr-2"
                     onClick={() => navigate("/admin/users")}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                   <Button
                     type="submit"
                     disabled={createUserMutation.isPending}
                   >
-                    {createUserMutation.isPending ? "Creating..." : "Create User"}
+                    {createUserMutation.isPending ? t("admin_pages.creating") : t("admin_pages.create_user")}
                   </Button>
                 </div>
               </form>

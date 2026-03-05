@@ -9,6 +9,9 @@ import { env } from "./config";
 import { UserService } from "./services/user.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
 import { sendWelcomeEmail } from "./services/email.service";
+import { createLogger } from "./utils/logger";
+
+const logger = createLogger('Auth');
 
 
 declare global {
@@ -78,27 +81,31 @@ export function setupAuth(app: Express) {
   );
 
   passport.serializeUser((user, done) => {
-    console.log("Serializing user:", user.id);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: number, done) => {
     try {
-      console.log("Deserializing user ID:", id);
       const user = await storage.getUser(id);
       if (!user) {
-        console.log("User not found in database:", id);
+        logger.warn('Deserialized user not found in database', { userId: id });
         return done(null, false);
       }
       done(null, user);
     } catch (error) {
-      console.error("Error deserializing user:", error);
+      logger.error('Error deserializing user', { error });
       done(null, false);
     }
   });
 
   app.post("/api/auth/register", async (req, res, next) => {
     try {
+      // Validate password strength
+      const rawPassword = req.body.password;
+      if (!rawPassword || rawPassword.length < 8) {
+        return res.status(400).json({ message: "Password must be at least 8 characters" });
+      }
+
       // Check if username or email already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
@@ -124,14 +131,14 @@ export function setupAuth(app: Express) {
       // Send welcome email
       if (user.email) {
         sendWelcomeEmail(user.email, user.fullName || user.username)
-          .catch(err => console.error('Failed to send welcome email:', err));
+          .catch(err => logger.error('Failed to send welcome email', { error: err }));
       }
 
       // Strip password from response
       const { password, ...userWithoutPassword } = user;
 
       // Log in the new user
-      req.login(user, (err) => {
+      req.login(user as Express.User, (err) => {
         if (err) return next(err);
 
         req.session.save((saveErr) => {
@@ -150,7 +157,7 @@ export function setupAuth(app: Express) {
       if (!user) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
-      req.login(user, (loginErr) => {
+      req.login(user as Express.User, (loginErr) => {
         if (loginErr) return next(loginErr);
 
         req.session.save((saveErr) => {
@@ -191,7 +198,7 @@ export function setupAuth(app: Express) {
       const { password, ...userWithoutPassword } = freshUserData;
       res.json(userWithoutPassword);
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      logger.error('Error fetching fresh user data', { error, userId: req.user?.id });
       // Fallback to session user if service fails
       if (!req.user) {
         return res.status(401).json({ message: "Session user missing" });

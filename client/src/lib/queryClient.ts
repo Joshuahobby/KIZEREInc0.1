@@ -16,6 +16,31 @@ declare global {
 }
 
 /**
+ * Utility to wait for Firebase auth to initialize
+ */
+async function waitForFirebaseAuth(maxWaitMs = 5000): Promise<any> {
+  if (!window.firebase?.auth) return null;
+  const auth = window.firebase.auth();
+
+  // If we already have a user, return immediately
+  if (auth.currentUser) return auth.currentUser;
+
+  // Otherwise wait for the first auth state change
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      unsubscribe();
+      resolve(null);
+    }, maxWaitMs);
+
+    const unsubscribe = auth.onAuthStateChanged((user: any) => {
+      clearTimeout(timeout);
+      unsubscribe();
+      resolve(user);
+    });
+  });
+}
+
+/**
  * Checks that the user is authenticated with the server
  * This creates/refreshes a session if a Firebase token is available
  */
@@ -47,51 +72,46 @@ export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
       }
 
       // If Firebase is available, try to get the current user
-      if (window.firebase?.auth) {
-        const auth = window.firebase.auth();
-        const currentUser = auth.currentUser;
+      // We wait a bit for it to initialize if it's not immediately ready
+      const currentUser = await waitForFirebaseAuth();
 
-        if (currentUser) {
-          console.log('[QueryClient] No valid session but Firebase user found, syncing...');
-          try {
-            // Get ID token
-            const token = await currentUser.getIdToken(true); // Force refresh
+      if (currentUser) {
+        console.log('[QueryClient] No valid session but Firebase user found, syncing...');
+        try {
+          // Get ID token
+          const token = await currentUser.getIdToken(true); // Force refresh
 
-            // Send to server to create session
-            const response = await fetch('/api/auth/google', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                token,
-                email: currentUser.email,
-                name: currentUser.displayName,
-                uid: currentUser.uid,
-                photoURL: currentUser.photoURL
-              }),
-              credentials: 'include',
-            });
+          // Send to server to create session
+          const response = await fetch('/api/auth/google', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              token,
+              email: currentUser.email,
+              name: currentUser.displayName,
+              uid: currentUser.uid,
+              photoURL: currentUser.photoURL
+            }),
+            credentials: 'include',
+          });
 
-            if (response.ok) {
-              console.log('[QueryClient] Successfully synced Firebase auth with server');
-              lastSessionCheckTime = Date.now();
-              resolve();
-            } else {
-              console.error('[QueryClient] Error syncing auth with server:', response.status);
-              reject(new Error(`Failed to sync authentication with server: ${response.status}`));
-            }
-          } catch (err) {
-            console.error('[QueryClient] Error getting Firebase token:', err);
-            reject(err);
+          if (response.ok) {
+            console.log('[QueryClient] Successfully synced Firebase auth with server');
+            lastSessionCheckTime = Date.now();
+            resolve();
+          } else {
+            console.error('[QueryClient] Error syncing auth with server:', response.status);
+            reject(new Error(`Failed to sync authentication with server: ${response.status}`));
           }
-        } else {
-          console.log('[QueryClient] No Firebase user, authentication required');
-          reject(new Error('No authenticated user'));
+        } catch (err) {
+          console.error('[QueryClient] Error getting Firebase token:', err);
+          reject(err);
         }
       } else {
-        console.log('[QueryClient] Firebase not available');
-        reject(new Error('Authentication provider not available'));
+        console.log('[QueryClient] No Firebase user after waiting, authentication required');
+        reject(new Error('No authenticated user'));
       }
     } catch (err) {
       console.error('[QueryClient] Authentication check error:', err);

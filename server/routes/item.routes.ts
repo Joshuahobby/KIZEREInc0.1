@@ -32,8 +32,9 @@ router.get("/:id", async (req, res) => {
     }
 
     // Only allow access to own items unless Admin or Agent
+    // Return 404 (not 403) to avoid revealing item existence to unauthorized users
     if (item.userId !== req.user!.id && !['Admin', 'Agent'].includes(req.user!.role)) {
-      return res.status(403).json({ message: "Access denied" });
+      return res.status(404).json({ message: "Item not found" });
     }
 
     res.json(item);

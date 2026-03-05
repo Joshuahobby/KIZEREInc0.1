@@ -341,6 +341,18 @@ export class DashboardService {
             agentCount: allUsers.filter(u => u.role === 'Agent').length,
             adminCount: allUsers.filter(u => u.role === 'Admin').length,
           };
+
+          // Add payment summary for admin charts
+          const paymentSummary = await this.getAdminPaymentSummary();
+          Object.assign(stats, paymentSummary);
+
+          // Add report breakdown
+          const allReports = await storage.getAllReports();
+          stats.reportBreakdown = {
+            lost: allReports.filter(r => r.type === 'lost').length,
+            found: allReports.filter(r => r.type === 'found').length,
+            resolved: allReports.filter(r => r.status === 'Resolved').length
+          };
         }
       }
 

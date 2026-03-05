@@ -24,9 +24,12 @@ import {
   Lock,
   List,
   ChevronRight,
+  ChevronLeft,
   BookCheck,
   Sliders,
   PanelTop,
+  PanelLeftClose,
+  PanelLeft,
   LayoutGrid,
   Info,
   Calendar,
@@ -75,6 +78,8 @@ import { useSocket } from "@/hooks/use-socket";
 
 interface AppLayoutProps {
   children: ReactNode;
+  hideSidebar?: boolean;
+  defaultSidebarCollapsed?: boolean;
 }
 
 interface NavItem {
@@ -85,13 +90,14 @@ interface NavItem {
   onClick?: () => void;
 }
 
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout({ children, hideSidebar = false, defaultSidebarCollapsed = false }: AppLayoutProps) {
   const [location] = useLocation();
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(defaultSidebarCollapsed);
   const queryClient = useQueryClient();
   const { onEvent } = useSocket();
 
@@ -110,6 +116,18 @@ export function AppLayout({ children }: AppLayoutProps) {
     });
     return cleanup;
   }, [onEvent, queryClient]);
+
+  // Keyboard shortcut: Ctrl+B to toggle sidebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "b") {
+        e.preventDefault();
+        setSidebarCollapsed((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Check roles
   const isAdmin = user?.role === "Admin";
@@ -143,72 +161,59 @@ export function AppLayout({ children }: AppLayoutProps) {
   // Navigation categories and items based on role
   interface NavCategory {
     title: string;
-    icon: React.ReactNode;
     items: NavItem[];
-    badge?: number;
   }
 
-  const getNavItems = (): NavItem[] => {
-    const items: NavItem[] = [];
+  const getCategorizedNavItems = (): NavCategory[] => {
+    const categories: NavCategory[] = [];
 
-    // Core
-    items.push({ title: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> });
-
-    // Assets / Property
+    // CORE Category
+    const coreItems: NavItem[] = [
+      { title: t('nav.dashboard'), href: "/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> }
+    ];
     if (isSubscriber) {
-      items.push({ title: "My Items", href: "/my-items", icon: <List className="h-5 w-5" /> });
-      items.push({ title: "Register New", href: "/register-item", icon: <ArrowRightCircle className="h-5 w-5" /> });
+      coreItems.push({ title: t('nav.myItems'), href: "/my-items", icon: <List className="h-5 w-5" /> });
+      coreItems.push({ title: t('nav.registerItems'), href: "/register-item", icon: <ArrowRightCircle className="h-5 w-5" /> });
     } else if (isAdmin || isAgent) {
-      items.push({ title: "Item Database", href: "/admin/items", icon: <List className="h-5 w-5" /> });
-      items.push({ title: "Verification Queue", href: "/admin/item-verification", icon: <AlertTriangle className="h-5 w-5" />, badge: 3 });
+      coreItems.push({ title: t('nav.adminPanel'), href: "/admin/item-management", icon: <List className="h-5 w-5" /> });
+      coreItems.push({ title: t('nav.verification'), href: "/admin/verifications", icon: <AlertTriangle className="h-5 w-5" />, badge: 3 });
     }
+    categories.push({ title: t('nav.navigation'), items: coreItems });
 
-    // Community
-    items.push({ title: "Search Hub", href: "/lost-found", icon: <Search className="h-5 w-5" /> });
-    items.push({ title: "My Claims", href: "/dashboard?tab=claims", icon: <Shield className="h-5 w-5" /> });
+    // COMMUNITY Category
+    const communityItems: NavItem[] = [
+      { title: t('nav.search'), href: "/search", icon: <Search className="h-5 w-5" /> },
+      { title: t('nav.lostFound'), href: "/dashboard?tab=claims", icon: <Shield className="h-5 w-5" /> }
+    ];
+    categories.push({ title: t('nav.community'), items: communityItems });
 
-    // Management (Admin/Agent)
+    // MANAGEMENT Category (Admin/Agent)
     if (isAdmin || isAgent) {
-      items.push({ title: "User Directory", href: "/admin/users", icon: <Users className="h-5 w-5" /> });
+      const mgmtItems: NavItem[] = [
+        { title: "User Directory", href: "/admin/users", icon: <Users className="h-5 w-5" /> }
+      ];
       if (isAdmin) {
-        items.push({ title: "Client Management", href: "/admin/clients", icon: <Briefcase className="h-5 w-5" /> });
+        mgmtItems.push({ title: "Client Management", href: "/admin/clients", icon: <Briefcase className="h-5 w-5" /> });
       }
-      items.push({ title: "Identity Verification", href: "/admin/user-verification", icon: <BookCheck className="h-5 w-5" /> });
-      items.push({ title: "Moderation Queue", href: "/dashboard?tab=moderation", icon: <Shield className="h-5 w-5" /> });
+      mgmtItems.push({ title: "Identity Verification", href: "/admin/verifications", icon: <BookCheck className="h-5 w-5" /> });
+      mgmtItems.push({ title: "Moderation Queue", href: "/dashboard?tab=moderation", icon: <Shield className="h-5 w-5" /> });
       if (isAdmin) {
-        items.push({ title: "Reports & Analytics", href: "/admin/analytics", icon: <BarChart3 className="h-5 w-5" /> });
-        items.push({ title: "Roles & Permissions", href: "/admin/roles", icon: <Shield className="h-5 w-5" /> });
-        items.push({ title: "Audit Logs", href: "/admin/audit-logs", icon: <FileText className="h-5 w-5" /> });
+        mgmtItems.push({ title: "Analytics", href: "/admin/analytics", icon: <BarChart3 className="h-5 w-5" /> });
+        mgmtItems.push({ title: "Roles", href: "/admin/roles", icon: <Shield className="h-5 w-5" /> });
       }
+      categories.push({ title: "MANAGEMENT", items: mgmtItems });
     }
 
-    // Finance (Admin/Subscriber)
-    if (isSubscriber || isAdmin) {
-      items.push({ title: isAdmin ? "Financial Insights" : "My Wallet", href: isAdmin ? "/admin/payment-dashboard" : "/wallet", icon: isAdmin ? <CreditCard className="h-5 w-5" /> : <Wallet className="h-5 w-5" /> });
-      items.push({ title: "Pricing Plans", href: "/admin/payment-packages", icon: <PackageIcon className="h-5 w-5" /> });
-    }
-
-    // System
-    items.push({ title: "Settings", href: isAdmin ? "/admin/settings" : "/profile", icon: <Settings className="h-5 w-5" /> });
-    items.push({ title: "Security", href: isAdmin ? "/admin/security" : "/settings", icon: <Lock className="h-5 w-5" /> });
-
-    // Logout Item (Added for easy access since card is removed)
-    items.push({
-      title: "Terminate Session",
-      href: "#",
-      icon: <LogOut className="h-5 w-5" />,
-      onClick: handleLogout
-    });
-
-    return items;
+    return categories;
   };
 
-  const navItems = getNavItems();
+  const navCategories = getCategorizedNavItems();
+  const allNavItems = navCategories.flatMap(c => c.items); // For mobile and other lookups
 
   // Top Nav Items (Simplified for quick access)
   const topNavItems: NavItem[] = [
     { title: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { title: "Lost & Found", href: "/lost-found", icon: <Search className="h-4 w-4" /> },
+    { title: "Search Hub", href: "/search", icon: <Search className="h-4 w-4" /> },
     { title: "My Items", href: "/my-items", icon: <PackageIcon className="h-4 w-4" /> },
   ];
 
@@ -217,17 +222,17 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Top navigation bar */}
-      <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm px-4 md:px-8">
-        <div className="flex h-16 items-center w-full max-w-[1600px] mx-auto relative">
-          {/* Logo - Left */}
-          <div className="flex items-center gap-2 md:gap-4 shrink-0">
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] px-4 md:px-8 transition-all duration-300 group/header">
+        <div className="grid grid-cols-3 h-16 items-center w-full max-w-[1600px] mx-auto relative px-4 md:px-0">
+          {/* Column 1: Logo + Sidebar Toggle - Left Aligned */}
+          <div className="flex items-center gap-2 md:gap-4 justify-self-start">
             {/* Mobile menu trigger */}
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
-                  className="md:hidden"
+                  className="md:hidden rounded-xl border-border/50 bg-background/50 shadow-sm"
                   aria-label="Open Menu"
                 >
                   <Menu className="h-5 w-5" />
@@ -244,15 +249,15 @@ export function AppLayout({ children }: AppLayoutProps) {
                       <Shield className="h-6 w-6" />
                     </div>
                     <div>
-                      <span className="text-xl font-black block leading-none tracking-tighter text-white">KIZERE</span>
-                      <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black opacity-80">CENTRAL HUB</span>
+                      <span className="text-xl font-black block leading-none tracking-tighter text-white">{t('common.brandName')}</span>
+                      <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black opacity-80">{t('common.brandSubtitle')}</span>
                     </div>
                   </div>
 
                   <div className="relative group">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
                     <Input
-                      placeholder="Search OS..."
+                      placeholder={t('common.searchPlaceholder')}
                       className="pl-9 bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-primary/40 rounded-2xl h-11 text-sm text-white placeholder:text-muted-foreground/30"
                     />
                   </div>
@@ -260,7 +265,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
                 <div className="flex-1 overflow-y-auto px-4 py-8 custom-scrollbar h-full">
                   <nav className="flex flex-col space-y-2 h-full">
-                    {navItems.map((item) => {
+                    {allNavItems.map((item) => {
                       const isActive = location === item.href;
                       return (
                         <Link
@@ -314,46 +319,67 @@ export function AppLayout({ children }: AppLayoutProps) {
               </SheetContent>
             </Sheet>
 
-            {/* Logo for larger screens */}
-            <Link href="/" className="md:hidden flex items-center space-x-2 mr-4 lg:mr-8 group">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-all duration-300">
-                <Shield className="h-5 w-5 text-primary" />
+            {/* Logo - always visible in header (top-left) */}
+            <Link href="/" className="flex items-center space-x-2 lg:mr-4 group">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform duration-300">
+                <Shield className="h-5 w-5" />
               </div>
-              <span className="hidden font-bold text-lg md:inline-block tracking-tight text-foreground/90 group-hover:text-primary transition-colors">
-                KIZERE <span className="text-primary/80">Hub</span>
-              </span>
+              <div className="hidden sm:block">
+                <span className="text-lg font-black block leading-none tracking-tighter text-foreground group-hover:text-primary transition-colors">
+                  {t('common.brandName')}
+                </span>
+                <span className="text-[8px] uppercase tracking-[0.2em] text-primary font-black opacity-70">
+                  {t('common.brandSubtitle')}
+                </span>
+              </div>
             </Link>
           </div>
 
-          {/* Global search - Centered */}
-          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center w-full max-w-[400px] lg:max-w-xl">
-            <div className="w-full bg-muted/30 hover:bg-muted/50 transition-colors border-none rounded-md overflow-hidden">
-              <GlobalSearch variant="navbar" placeholder="Press ⌘K to search everything..." />
-            </div>
+          {/* Column 2: Global search - Perfectly Centered */}
+          <div className="hidden md:flex justify-self-center w-full max-w-xl transition-all duration-300 focus-within:max-w-2xl px-4">
+            <GlobalSearch variant="navbar" className="w-full h-10 rounded-xl" placeholder={t('common.searchPlaceholder')} />
           </div>
 
-          {/* Right side actions - Right aligned */}
-          <div className="ml-auto flex items-center gap-1.5 md:gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 md:gap-2 pr-2 border-r mr-1.5 md:mr-2">
-              <ThemeToggle />
-              <LanguageSwitcher />
-              <DashboardStyleSwitcher />
+          {/* Column 3: Right side actions - Right Aligned */}
+          <div className="flex items-center gap-2 md:gap-4 justify-self-end">
+            <div className="hidden sm:flex items-center gap-1.5 md:gap-2 pr-3 border-r border-border/50">
+              <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.95 }}>
+                <ThemeToggle />
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
+                <LanguageSwitcher />
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.1, rotate: -5 }} whileTap={{ scale: 0.95 }}>
+                <DashboardStyleSwitcher />
+              </motion.div>
             </div>
 
             {/* Notification bell */}
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="relative group/bell hover:bg-primary/5">
+                    <motion.div
+                      animate={unreadCount > 0 ? {
+                        rotate: [0, -10, 10, -10, 10, 0],
+                        scale: [1, 1.1, 1, 1.1, 1]
+                      } : {}}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 3,
+                        repeatDelay: 5
+                      }}
+                    >
+                      <Bell className="h-5 w-5 text-muted-foreground group-hover/bell:text-primary transition-colors" />
+                    </motion.div>
                     {unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white px-1 ring-2 ring-background">
+                      <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground px-1 ring-2 ring-background animate-pulse">
                         {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Notifications</TooltipContent>
+                <TooltipContent className="bg-primary text-primary-foreground font-bold border-none">Notifications</TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
@@ -362,48 +388,54 @@ export function AppLayout({ children }: AppLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="relative h-10 w-10 rounded-full"
+                  className="relative h-10 w-10 rounded-full p-0 overflow-hidden hover:ring-2 hover:ring-primary/20 transition-all duration-300"
                   aria-label="User menu"
                 >
-                  <Avatar>
+                  <Avatar className="h-full w-full">
                     <AvatarImage
                       src={user?.avatarUrl || undefined}
                       alt={user?.username || "User"}
                     />
-                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{getUserInitials()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-64 p-2 shadow-2xl border-border/50 rounded-2xl animate-in zoom-in-95 duration-200">
+                <DropdownMenuLabel className="px-3 py-4">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
+                    <p className="text-sm font-black leading-none tracking-tight">
                       {user?.fullName || user?.username}
                     </p>
-                    <p className="text-xs leading-none text-muted-foreground">
+                    <p className="text-xs leading-none text-muted-foreground font-medium opacity-60">
                       {user?.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="w-full cursor-pointer">
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="w-full cursor-pointer">
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-red-600 cursor-pointer"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-border/50" />
+                <div className="p-1 space-y-1">
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer focus:bg-primary/10 focus:text-primary transition-colors py-2.5">
+                    <Link href="/profile" className="flex items-center w-full">
+                      <Users className="mr-3 h-4 w-4 opacity-50" />
+                      <span className="font-bold">Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-xl cursor-pointer focus:bg-primary/10 focus:text-primary transition-colors py-2.5">
+                    <Link href="/settings" className="flex items-center w-full">
+                      <Settings className="mr-3 h-4 w-4 opacity-50" />
+                      <span className="font-bold">Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </div>
+                <DropdownMenuSeparator className="bg-border/50" />
+                <div className="p-1">
+                  <DropdownMenuItem
+                    className="rounded-xl cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive font-bold py-2.5"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="mr-3 h-4 w-4" />
+                    <span>{t('auth.logout')}</span>
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -412,81 +444,131 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
-        {/* Left panel: Navigation sidebar - desktop only */}
-        <aside className="hidden md:flex flex-col w-72 h-full p-6">
-          <div className="flex flex-col h-full bg-card/50 backdrop-blur-xl border border-border/60 rounded-[2rem] shadow-xl shadow-neutral-200/20 dark:shadow-none overflow-hidden">
-            <div className="p-8 pb-4">
-              <Link href="/" className="flex items-center space-x-3 group">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 group-hover:scale-105 transition-transform duration-500">
-                  <Shield className="h-6 w-6" />
-                </div>
-                <div className="transition-all duration-500">
-                  <span className="text-xl font-black block leading-none tracking-tighter text-foreground">KIZERE</span>
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-primary font-black opacity-80">CENTRAL HUB</span>
-                </div>
-              </Link>
+        {/* Left panel: Navigation sidebar - desktop only, collapsible */}
+        {!hideSidebar && (
+          <aside
+            className={cn(
+              "hidden md:flex flex-col h-full transition-all duration-300 ease-in-out relative group/sidebar",
+              sidebarCollapsed ? "w-24 p-3" : "w-72 p-6"
+            )}
+          >
+            <div className="flex flex-col h-full bg-card/40 backdrop-blur-2xl border border-white/10 dark:border-white/5 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] overflow-hidden">
+              <div className={cn("flex-1 overflow-y-auto custom-scrollbar", sidebarCollapsed ? "px-2 py-6" : "px-4 py-8")}>
+                <nav className="flex flex-col space-y-8 h-full">
+                  {navCategories.map((category, catIndex) => (
+                    <motion.div
+                      key={category.title}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: catIndex * 0.1, duration: 0.5 }}
+                      className="flex flex-col space-y-2"
+                    >
+                      {!sidebarCollapsed && (
+                        <h3 className="px-5 text-[10px] font-black tracking-[0.2em] text-muted-foreground/40 mb-2 uppercase">
+                          {category.title}
+                        </h3>
+                      )}
+                      {sidebarCollapsed && <Separator className="bg-white/5 mb-4 mx-2" />}
+
+                      <div className="flex flex-col space-y-1">
+                        {category.items.map((item, itemIndex) => {
+                          const isActive = location === item.href;
+                          return (
+                            <TooltipProvider key={item.href}>
+                              <Tooltip delayDuration={0}>
+                                <TooltipTrigger asChild>
+                                  <Link
+                                    href={item.href}
+                                    onClick={(e) => {
+                                      if (item.onClick) {
+                                        e.preventDefault();
+                                        item.onClick();
+                                      }
+                                    }}
+                                    className={cn(
+                                      "group relative flex items-center gap-3 text-sm font-bold transition-all duration-500 outline-none rounded-2xl",
+                                      sidebarCollapsed ? "px-3 py-3 justify-center" : "px-5 py-3.5 hover:translate-x-1",
+                                      isActive
+                                        ? "text-primary font-black"
+                                        : "text-muted-foreground/60 hover:text-foreground hover:bg-white/5"
+                                    )}
+                                  >
+                                    {isActive && (
+                                      <motion.div
+                                        layoutId="active-nav-glow"
+                                        className="absolute inset-0 bg-primary/10 rounded-2xl -z-10 shadow-[inner_0_0_12px_rgba(var(--primary),0.1)] border border-primary/20"
+                                        initial={false}
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                      />
+                                    )}
+                                    <div className={cn(
+                                      "flex h-5 w-5 items-center justify-center transition-all duration-500 shrink-0",
+                                      isActive ? "text-primary scale-110 drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "text-muted-foreground/40 group-hover:text-primary group-hover:scale-110"
+                                    )}>
+                                      {item.icon}
+                                    </div>
+                                    {!sidebarCollapsed && (
+                                      <span className="flex-1 truncate tracking-tight">{item.title}</span>
+                                    )}
+                                    {!sidebarCollapsed && item.badge && (
+                                      <Badge
+                                        variant="secondary"
+                                        className={cn(
+                                          "ml-auto h-5 px-2 text-[9px] font-black min-w-[20px] justify-center transition-all duration-500 border-none rounded-full",
+                                          isActive ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-white/5 text-muted-foreground/40"
+                                        )}
+                                      >
+                                        {item.badge}
+                                      </Badge>
+                                    )}
+                                  </Link>
+                                </TooltipTrigger>
+                                {sidebarCollapsed && (
+                                  <TooltipContent side="right" className="font-bold border-none bg-primary text-primary-foreground backdrop-blur-xl">
+                                    {item.title}
+                                    {item.badge ? ` (${item.badge})` : ""}
+                                  </TooltipContent>
+                                )}
+                              </Tooltip>
+                            </TooltipProvider>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  ))}
+                </nav>
+              </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 py-8 custom-scrollbar">
-              <nav className="flex flex-col space-y-2 h-full">
-                {navItems.map((item) => {
-                  const isActive = location === item.href;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={(e) => {
-                        if (item.onClick) {
-                          e.preventDefault();
-                          item.onClick();
-                        }
-                      }}
-                      className={cn(
-                        "group relative flex items-center gap-3 px-5 py-3 text-sm font-bold transition-all duration-300 outline-none rounded-2xl hover:translate-x-1",
-                        isActive
-                          ? "text-primary font-black bg-primary/10"
-                          : item.title === "Terminate Session"
-                            ? "text-red-500/70 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 mt-auto mb-6 border-t border-border pt-6 mx-2"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
-                      )}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="active-capsule-desktop"
-                          className="absolute inset-0 active-capsule-glow rounded-2xl -z-10"
-                          initial={false}
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 30
-                          }}
-                        />
-                      )}
-                      <div className={cn(
-                        "flex h-5 w-5 items-center justify-center transition-all duration-500",
-                        isActive ? "text-primary scale-110 drop-shadow-[0_0_8px_rgba(var(--primary),0.8)]" : "text-muted-foreground/30 group-hover:text-white group-hover:scale-110"
-                      )}>
-                        {item.icon}
-                      </div>
-                      <span className="flex-1 truncate tracking-tight">{item.title}</span>
-                      {item.badge && (
-                        <Badge
-                          variant="secondary"
-                          className={cn(
-                            "ml-auto h-5 px-2 text-[9px] font-black min-w-[20px] justify-center transition-all duration-500 border-none rounded-full",
-                            isActive ? "bg-primary/20 text-primary" : "bg-white/5 text-muted-foreground/30"
-                          )}
-                        >
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-          </div>
-        </aside>
+            {/* Smart toggle handle — always visible at the top edge */}
+            <TooltipProvider>
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    className={cn(
+                      "absolute top-10 z-20 flex items-center justify-center",
+                      "h-6 w-6 rounded-full",
+                      "bg-primary border border-primary/20 shadow-xl shadow-primary/20",
+                      "text-primary-foreground hover:scale-110 active:scale-95 transition-all duration-300",
+                      "right-[-12px]" // Center over the border
+                    )}
+                    aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                  >
+                    {sidebarCollapsed ? (
+                      <ChevronRight className="h-3 w-3" />
+                    ) : (
+                      <ChevronLeft className="h-3 w-3" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-xs font-black bg-foreground text-background border-none">
+                  {sidebarCollapsed ? "EXPAND" : "COLLAPSE"} <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] font-mono">Ctrl+B</kbd>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </aside>
+        )}
 
         {/* Center panel: Main content area */}
         <main className="flex-1 overflow-y-auto bg-neutral-50/50 dark:bg-background custom-scrollbar">
@@ -497,24 +579,37 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
 
       {/* Footer */}
-      <footer className="border-t py-6">
-        <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} KIZERE Hub. All rights
-            reserved.
-          </p>
-          <nav className="flex gap-4">
+      <footer className="mt-auto pt-16 pb-8 px-8 flex flex-col items-center">
+        <div className="w-full max-w-[1600px] border-t border-border/30 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center gap-4 text-muted-foreground/60 transition-opacity hover:opacity-100 duration-300">
+            <div className="flex items-center justify-center h-5 w-5 rounded-full bg-muted/30 border border-border/20" title={t('footer.systemStatus')}>
+              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <p className="text-[11px] font-medium tracking-wide">
+              &copy; {new Date().getFullYear()} <span className="text-foreground/80 font-bold">{t('common.brandName')}</span>. {t('footer.rightsReserved')}
+            </p>
+          </div>
+
+          <nav className="flex items-center gap-6">
             <Link
               href="/terms"
-              className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-all duration-300 hover:tracking-[0.15em]"
             >
-              Terms
+              {t('footer.terms')}
             </Link>
+            <div className="h-1 w-1 rounded-full bg-border/40" />
             <Link
               href="/privacy"
-              className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-all duration-300 hover:tracking-[0.15em]"
             >
-              Privacy
+              {t('footer.privacy')}
+            </Link>
+            <div className="h-1 w-1 rounded-full bg-border/40" />
+            <Link
+              href="/help"
+              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-all duration-300 hover:tracking-[0.15em]"
+            >
+              {t('footer.help')}
             </Link>
           </nav>
         </div>

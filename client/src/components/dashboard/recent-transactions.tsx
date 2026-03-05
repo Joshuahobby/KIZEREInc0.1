@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { Link } from 'wouter';
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface Transaction {
   id: number;
@@ -23,6 +24,7 @@ interface RecentTransactionsProps {
 }
 
 export function RecentTransactions({ transactions = [], isLoading = false }: RecentTransactionsProps) {
+  const { t } = useLanguage();
   // Function to get status badge variant
   const getStatusBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" | "success" => {
     switch (status) {
@@ -46,8 +48,8 @@ export function RecentTransactions({ transactions = [], isLoading = false }: Rec
   // Function to get payment type display name
   const getPaymentTypeDisplay = (type: string) => {
     switch (type) {
-      case "registration": return "Item Registration";
-      case "lost_report": return "Lost Item Report";
+      case "registration": return t('dashboard.table.itemRegistration');
+      case "lost_report": return t('dashboard.table.lostItemReport');
       default: return type.charAt(0).toUpperCase() + type.slice(1);
     }
   };
@@ -56,12 +58,12 @@ export function RecentTransactions({ transactions = [], isLoading = false }: Rec
     <Card className="col-span-4">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="text-base font-medium">Recent Transactions</CardTitle>
-          <CardDescription>Latest payment activity</CardDescription>
+          <CardTitle className="text-base font-medium">{t('dashboard.admin.recentTransactions')}</CardTitle>
+          <CardDescription>{t('dashboard.table.latestPaymentActivity')}</CardDescription>
         </div>
         <Link href="/admin/payment-dashboard">
           <Button variant="ghost" size="sm" className="gap-1">
-            View All <ArrowRight className="h-4 w-4" />
+            {t('dashboard.table.viewAll')} <ArrowRight className="h-4 w-4" />
           </Button>
         </Link>
       </CardHeader>
@@ -72,7 +74,7 @@ export function RecentTransactions({ transactions = [], isLoading = false }: Rec
           </div>
         ) : transactions.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-center py-8 text-muted-foreground">
-            <p>No recent transactions found</p>
+            <p>{t('dashboard.table.noRecentTransactions')}</p>
           </div>
         ) : (
           <div className="space-y-4">

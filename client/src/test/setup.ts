@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { beforeAll, afterEach, afterAll } from 'vitest';
+import { beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 // Mocking some browser APIs if needed
@@ -38,6 +38,25 @@ Object.defineProperty(global, 'IntersectionObserver', {
   writable: true,
   configurable: true,
   value: IntersectionObserverMock,
+});
+
+// Mock ResizeObserver
+const ResizeObserverMock = vi.fn(() => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn(),
+}));
+
+Object.defineProperty(globalThis, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: ResizeObserverMock,
+});
+
+Object.defineProperty(window, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: ResizeObserverMock,
 });
 
 // Mock fetch to handle relative URLs

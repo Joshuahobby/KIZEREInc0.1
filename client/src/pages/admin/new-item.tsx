@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
 import { CommandCenterLayout } from "@/components/layouts/command-center-layout";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Define form schema
 const itemFormSchema = z.object({
@@ -32,6 +33,7 @@ type ItemFormValues = z.infer<typeof itemFormSchema>;
 export default function NewItem() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Default values for the form
@@ -60,8 +62,8 @@ export default function NewItem() {
 
       if (response && response.success) {
         toast({
-          title: "Item created successfully",
-          description: `Item "${data.name}" has been added to the system.`,
+          title: t("admin_pages.item_created"),
+          description: t("admin_pages.item_created_desc", { name: data.name }),
         });
 
         // Navigate to the item management page
@@ -72,8 +74,8 @@ export default function NewItem() {
     } catch (error) {
       console.error("Error creating item:", error);
       toast({
-        title: "Error creating item",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        title: t("admin_pages.error_creating_item"),
+        description: error instanceof Error ? error.message : t("admin_pages.unexpected_error"),
         variant: "destructive",
       });
     } finally {
@@ -89,16 +91,16 @@ export default function NewItem() {
           className="mb-4"
           onClick={() => navigate('/admin/item-management')}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Item Management
+          <ArrowLeft className="mr-2 h-4 w-4" /> {t("admin_pages.back_to_items")}
         </Button>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <Package className="mr-2 h-5 w-5" /> Add New Item
+              <Package className="mr-2 h-5 w-5" /> {t("admin_pages.add_new_item")}
             </CardTitle>
             <CardDescription>
-              Register a new item in the system
+              {t("admin_pages.add_new_item_desc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -111,7 +113,7 @@ export default function NewItem() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Item Name*</FormLabel>
+                        <FormLabel>{t("admin_pages.item_name")}*</FormLabel>
                         <FormControl>
                           <Input placeholder="Enter item name" {...field} />
                         </FormControl>
@@ -126,7 +128,7 @@ export default function NewItem() {
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Category*</FormLabel>
+                        <FormLabel>{t("admin_pages.category")}*</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
@@ -156,7 +158,7 @@ export default function NewItem() {
                     name="estimatedValue"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Estimated Value</FormLabel>
+                        <FormLabel>{t("admin_pages.estimated_value")}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
@@ -166,7 +168,7 @@ export default function NewItem() {
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>Estimated value in USD</FormDescription>
+                        <FormDescription>{t("admin_pages.estimated_value_hint")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -178,7 +180,7 @@ export default function NewItem() {
                     name="lastKnownLocation"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Last Known Location</FormLabel>
+                        <FormLabel>{t("admin_pages.last_location")}</FormLabel>
                         <FormControl>
                           <Input placeholder="Where was this item last seen?" {...field} />
                         </FormControl>
@@ -193,7 +195,7 @@ export default function NewItem() {
                     name="serialNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Serial Number</FormLabel>
+                        <FormLabel>{t("admin_pages.serial_number")}</FormLabel>
                         <FormControl>
                           <Input placeholder="Serial number (if applicable)" {...field} />
                         </FormControl>
@@ -208,7 +210,7 @@ export default function NewItem() {
                     name="modelNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Model Number</FormLabel>
+                        <FormLabel>{t("admin_pages.model_number")}</FormLabel>
                         <FormControl>
                           <Input placeholder="Model number (if applicable)" {...field} />
                         </FormControl>
@@ -223,11 +225,11 @@ export default function NewItem() {
                     name="ownerId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Owner ID</FormLabel>
+                        <FormLabel>{t("admin_pages.owner_id")}</FormLabel>
                         <FormControl>
                           <Input placeholder="User ID of the owner (optional)" {...field} />
                         </FormControl>
-                        <FormDescription>Leave blank to assign to the system</FormDescription>
+                        <FormDescription>{t("admin_pages.owner_id_hint")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -239,7 +241,7 @@ export default function NewItem() {
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Status</FormLabel>
+                        <FormLabel>{t("admin_pages.status")}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
@@ -269,7 +271,7 @@ export default function NewItem() {
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>{t("admin_pages.description")}</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Provide a detailed description of the item"
@@ -285,7 +287,7 @@ export default function NewItem() {
                 {/* Image upload placeholder - to be implemented */}
                 <div className="border border-dashed rounded-lg p-6 flex flex-col items-center justify-center gap-2 text-muted-foreground">
                   <Upload className="h-8 w-8" />
-                  <p className="text-sm">Image upload will be available in a future update</p>
+                  <p className="text-sm">{t("admin_pages.image_upload_coming")}</p>
                 </div>
 
                 <div className="flex justify-end">
@@ -295,10 +297,10 @@ export default function NewItem() {
                     className="mr-2"
                     onClick={() => navigate('/admin/item-management')}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create Item"}
+                    {isSubmitting ? t("admin_pages.creating") : t("admin_pages.create_item")}
                   </Button>
                 </div>
               </form>

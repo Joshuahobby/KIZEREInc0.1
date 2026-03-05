@@ -2,6 +2,7 @@
  * Security middleware configuration
  * Centralizes security-related middleware for consistent application
  */
+import crypto from 'crypto';
 import helmet from 'helmet';
 import xssClean from 'xss-clean';
 import rateLimit from 'express-rate-limit';
@@ -22,7 +23,12 @@ const {
   validateRequest,
   doubleCsrfProtection
 } = doubleCsrf({
-  getSecret: () => config.SESSION_SECRET || "default-secret-for-csrf-32-chars-at-least-!",
+  getSecret: () => {
+    if (!config.SESSION_SECRET && isProd) {
+      logger.error('CRITICAL: SESSION_SECRET is missing in production! CSRF tokens will not persist across restarts.');
+    }
+    return config.SESSION_SECRET || (isProd ? crypto.randomBytes(32).toString('hex') : 'dev-csrf-secret-not-for-production-use!');
+  },
   cookieName: "kizere.x-csrf-token",
   cookieOptions: {
     httpOnly: true,
@@ -33,7 +39,11 @@ const {
   ignoredMethods: ["GET", "HEAD", "OPTIONS"],
   getSessionIdentifier: (req: Request) => {
     if (!req.session || !req.session.id) {
-      logger.warn('CSRF Token generated/validated without a valid session');
+      logger.warn('CSRF: Session ID missing during identifier check', {
+        path: req.path,
+        hasSession: !!req.session,
+        cookies: req.headers.cookie ? 'present' : 'absent'
+      });
       return 'missing-session';
     }
     return req.session.id;
@@ -152,15 +162,15 @@ export function setupSecurityMiddleware(app: Express) {
         ],
         styleSrc: [
           "'self'",
+          "'unsafe-inline'", // Required for Tailwind CSS / dynamic styles — CSS injection is not an XSS vector
           "https://fonts.googleapis.com",
           "https://*.firebaseapp.com",
           "https://accounts.google.com",
           "https://replit.com",
-          "https://*.replit.com",
-          ...(process.env.NODE_ENV !== 'production' ? ["'unsafe-inline'"] : [])
+          "https://*.replit.com"
         ],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co"],
+        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co", "https://*.tile.openstreetmap.org"],
         connectSrc: ["'self'",
           "blob:",
           "data:",
@@ -207,25 +217,32 @@ export function setupSecurityMiddleware(app: Express) {
   app.get("/api/csrf-token", (req: Request, res: Response) => {
     // Ensure session is initialized to stay consistent with CSRF validation
     if (req.session) {
-      (req.session as any).initialized = true;
+      // Add a property to ensure session is modified and thus saved
+      (req.session as any).csrf_initialized = Date.now();
+
       req.session.save((err) => {
         if (err) {
-          logger.error("Failed to save session for CSRF token", { error: err.message });
+          logger.error("CSRF: Failed to save session during token generation", { error: err.message });
           return res.status(500).json({ error: "Session save failed" });
         }
+
         const token = generateCsrfToken(req, res);
+        logger.info("CSRF: Token generated successfully", {
+          sessionId: req.session.id,
+          path: req.path
+        });
         res.json({ csrfToken: token });
       });
     } else {
-      logger.error("No session available for CSRF token generation");
+      logger.error("CSRF: No session available in token endpoint");
       res.status(500).json({ error: "No session available" });
     }
   });
 
   // 2. Middleware to protect all other state-changing routes
   app.use((req, res, next) => {
-    // Skip CSRF for specific routes if needed (e.g. webhooks)
-    const ignoredPaths = ["/api/payments/webhook", "/api/chat/webhook", "/api/webhooks/resend", "/api/auth/google"];
+    // Skip CSRF for specific routes if needed (e.g. webhooks, public endpoints)
+    const ignoredPaths = ["/api/payments/webhook", "/api/chat/webhook", "/api/webhooks/resend", "/api/auth/google", "/api/recruitment"];
     if (ignoredPaths.some(path => req.path.startsWith(path))) {
       return next();
     }

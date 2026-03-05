@@ -3,7 +3,7 @@ import { Volume2, VolumeX, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { useTranslation } from "react-i18next";
+
 
 interface VoiceHelperProps {
     audioSrc?: string;
@@ -15,8 +15,7 @@ interface VoiceHelperProps {
 export function VoiceHelper({ audioSrc, text, className, size = "sm" }: VoiceHelperProps) {
     const [isPlaying, setIsPlaying] = React.useState(false);
     const audioRef = React.useRef<HTMLAudioElement | null>(null);
-    const { language } = useLanguage();
-    const { t } = useTranslation();
+    const { language, t } = useLanguage();
 
     const togglePlayback = (e: React.MouseEvent) => {
         e.preventDefault();

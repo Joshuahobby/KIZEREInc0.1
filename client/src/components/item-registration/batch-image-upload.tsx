@@ -35,28 +35,28 @@ function SortableItem({ id, url, file, onRemove }: SortableItemProps) {
       containerRef.current.style.setProperty('--dnd-z-index', isDragging ? '10' : '1');
     }
   }, [transform, transition, isDragging]);
-  
+
   return (
-    <div 
-      ref={setCombinedRef} 
+    <div
+      ref={setCombinedRef}
       className="relative group p-2 border border-dashed rounded-md hover:border-primary/50 transition-colors [transform:var(--dnd-transform)] [transition:var(--dnd-transition)] [opacity:var(--dnd-opacity)] [z-index:var(--dnd-z-index)]"
     >
       <div className="relative aspect-square overflow-hidden rounded-md">
         <img src={url} alt={file.name} className="object-cover w-full h-full" />
-        
+
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <Button 
+          <Button
             type="button"
-            variant="ghost" 
-            size="icon" 
+            variant="ghost"
+            size="icon"
             className="h-8 w-8 rounded-full bg-white text-black"
             onClick={() => onRemove(id)}
           >
             <LuTrash2 className="h-4 w-4" />
           </Button>
         </div>
-        
-        <div 
+
+        <div
           className="absolute left-2 top-2 cursor-grab active:cursor-grabbing text-white/70 hover:text-white"
           {...attributes}
           {...listeners}
@@ -77,14 +77,16 @@ export interface BatchImageUploadProps {
   acceptedFileTypes?: string[];
   maxFileSizeMB?: number;
   showHeader?: boolean;
+  className?: string;
 }
 
-export function BatchImageUpload({ 
-  onImagesChange, 
-  maxFiles = 10, 
-  acceptedFileTypes = ['image/jpeg', 'image/png', 'image/webp'], 
+export function BatchImageUpload({
+  onImagesChange,
+  maxFiles = 10,
+  acceptedFileTypes = ['image/jpeg', 'image/png', 'image/webp'],
   maxFileSizeMB = 5,
-  showHeader = true
+  showHeader = true,
+  className
 }: BatchImageUploadProps) {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -92,62 +94,62 @@ export function BatchImageUpload({
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Set up drag sensors for DnD
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
-  
+
   // Validate file type
   const isValidFileType = (file: File) => {
     return acceptedFileTypes.includes(file.type);
   };
-  
+
   // Validate file size
   const isValidFileSize = (file: File) => {
     return file.size <= maxFileSizeMB * 1024 * 1024;
   };
-  
+
   // Generate a preview URL for an image file
   const generatePreview = (file: File): string => {
     return URL.createObjectURL(file);
   };
-  
+
   // Process files by validating and adding them to the state
   const processFiles = useCallback((files: FileList | null) => {
     if (!files) return;
-    
+
     setIsUploading(true);
-    
+
     const filesToAdd: { id: string; file: File; url: string }[] = [];
     const errors: string[] = [];
-    
+
     Array.from(files).forEach(file => {
       // Check if we reached the max number of files
       if (images.length + filesToAdd.length >= maxFiles) {
         errors.push(t('batchUpload.batch_upload_max_files', { count: maxFiles }));
         return;
       }
-      
+
       // Check file type
       if (!isValidFileType(file)) {
         errors.push(t('batchUpload.batch_upload_invalid_type'));
         return;
       }
-      
+
       // Check file size
       if (!isValidFileSize(file)) {
         errors.push(t('batchUpload.batch_upload_max_size', { size: maxFileSizeMB }));
         return;
       }
-      
+
       // Generate preview and add to list
       const id = Math.random().toString(36).substr(2, 9);
       const url = generatePreview(file);
       filesToAdd.push({ id, file, url });
     });
-    
+
     // Show any errors
     if (errors.length > 0) {
       const uniqueErrors = Array.from(new Set(errors));
@@ -159,41 +161,41 @@ export function BatchImageUpload({
         });
       });
     }
-    
+
     // Add validated files to state
     if (filesToAdd.length > 0) {
       const newImages = [...images, ...filesToAdd];
       setImages(newImages);
-      
+
       // Extract just the File objects for the parent component
       const fileObjects = newImages.map(image => image.file);
       onImagesChange(fileObjects);
-      
+
       toast({
         title: t('batchUpload.batch_upload_success'),
         description: t('batchUpload.batch_upload_success_desc', { count: filesToAdd.length }),
       });
     }
-    
+
     setIsUploading(false);
   }, [images, maxFiles, maxFileSizeMB, toast, t, onImagesChange]);
-  
+
   // Handle drag-n-drop
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDraggingOver(true);
   };
-  
+
   const handleDragLeave = () => {
     setIsDraggingOver(false);
   };
-  
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDraggingOver(false);
     processFiles(e.dataTransfer.files);
   };
-  
+
   // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     processFiles(e.target.files);
@@ -202,7 +204,7 @@ export function BatchImageUpload({
       fileInputRef.current.value = '';
     }
   };
-  
+
   // Handle removing an image
   const handleRemoveImage = (id: string) => {
     // Revoke the object URL to avoid memory leaks
@@ -210,43 +212,43 @@ export function BatchImageUpload({
     if (imageToRemove) {
       URL.revokeObjectURL(imageToRemove.url);
     }
-    
+
     // Remove from state
     const newImages = images.filter(img => img.id !== id);
     setImages(newImages);
-    
+
     // Update parent component
     const fileObjects = newImages.map(image => image.file);
     onImagesChange(fileObjects);
-    
+
     toast({
       title: t('batchUpload.batch_upload_removed'),
       description: t('batchUpload.batch_upload_removed_desc'),
     });
   };
-  
+
   // Handle drag end for reordering
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    
+
     if (over && active.id !== over.id) {
       setImages(items => {
         const oldIndex = items.findIndex(item => item.id === active.id);
         const newIndex = items.findIndex(item => item.id === over.id);
-        
+
         const reordered = arrayMove(items, oldIndex, newIndex);
-        
+
         // Update parent component with new order
         const fileObjects = reordered.map(image => image.file);
         onImagesChange(fileObjects);
-        
+
         return reordered;
       });
     }
   };
-  
+
   return (
-    <Card className={cn("w-full", !showHeader && "border-0 shadow-none bg-transparent")}>
+    <Card className={cn("w-full", !showHeader && "border-0 shadow-none bg-transparent", className)}>
       {showHeader && (
         <CardHeader>
           <CardTitle>{t('batchUpload.batch_upload_title')}</CardTitle>
@@ -258,11 +260,10 @@ export function BatchImageUpload({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md text-center transition-colors ${
-            isDraggingOver
-              ? 'border-primary bg-primary/5'
-              : 'border-muted-foreground/30 hover:border-muted-foreground/50'
-          }`}
+          className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md text-center transition-colors ${isDraggingOver
+            ? 'border-primary bg-primary/5'
+            : 'border-muted-foreground/30 hover:border-muted-foreground/50'
+            }`}
         >
           <input
             type="file"
@@ -275,7 +276,7 @@ export function BatchImageUpload({
             title={t('batchUpload.batch_upload_title')}
             aria-label={t('batchUpload.batch_upload_title')}
           />
-          
+
           {isUploading ? (
             <div className="flex flex-col items-center">
               <LuLoader className="h-6 w-6 text-muted-foreground animate-spin mb-1" />
@@ -286,10 +287,10 @@ export function BatchImageUpload({
               <div className="flex flex-col items-center">
                 <LuImage className="h-8 w-8 text-muted-foreground/40 mb-2" />
                 <div className="text-xs font-black uppercase tracking-tight mb-1">
-                  Drag and drop images
+                  {t('batchUpload.drag_images')}
                 </div>
                 <p className="text-[9px] text-muted-foreground mb-3 max-w-[180px] font-medium leading-tight">
-                  Supports JPG, PNG, WEBP (Up to 5MB each)
+                  {t('batchUpload.file_types_desc')}
                 </p>
               </div>
               <Button
@@ -306,12 +307,12 @@ export function BatchImageUpload({
             </>
           )}
         </div>
-        
+
         {images.length > 0 && (
           <div className="mt-4 space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-[10px] font-black uppercase tracking-widest">
-                Media ({images.length}/{maxFiles})
+                {t('batchUpload.media')} ({images.length}/{maxFiles})
               </h3>
               {images.length > 1 && (
                 <p className="text-sm text-muted-foreground">
@@ -319,8 +320,8 @@ export function BatchImageUpload({
                 </p>
               )}
             </div>
-            
-            <DndContext 
+
+            <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
@@ -336,9 +337,9 @@ export function BatchImageUpload({
                       onRemove={handleRemoveImage}
                     />
                   ))}
-                  
+
                   {images.length < maxFiles && (
-                    <div 
+                    <div
                       className="aspect-square flex flex-col items-center justify-center border border-dashed rounded-md hover:border-primary/50 transition-colors cursor-pointer p-2"
                       onClick={() => fileInputRef.current?.click()}
                     >
@@ -369,7 +370,7 @@ export function BatchImageUpload({
               images.forEach(img => URL.revokeObjectURL(img.url));
               setImages([]);
               onImagesChange([]);
-              
+
               toast({
                 title: t('batchUpload.batch_upload_cleared'),
                 description: t('batchUpload.batch_upload_cleared_desc'),

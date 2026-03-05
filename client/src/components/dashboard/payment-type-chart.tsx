@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Loader2 } from 'lucide-react';
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface PaymentTypeData {
   name: string;
@@ -15,9 +16,10 @@ interface PaymentTypeChartProps {
 }
 
 export function PaymentTypeChart({ data = [], isLoading = false }: PaymentTypeChartProps) {
+  const { t } = useLanguage();
   // Filter out zero-value segments
   const chartData = data.filter(item => item.value > 0);
-  
+
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -28,7 +30,7 @@ export function PaymentTypeChart({ data = [], isLoading = false }: PaymentTypeCh
           </p>
           <p className="text-sm">
             Percentage: <span className="font-semibold">
-              {Math.round((payload[0].value / 
+              {Math.round((payload[0].value /
                 data.reduce((sum, item) => sum + item.value, 0)) * 100)}%
             </span>
           </p>
@@ -41,8 +43,8 @@ export function PaymentTypeChart({ data = [], isLoading = false }: PaymentTypeCh
   return (
     <Card className="col-span-2">
       <CardHeader>
-        <CardTitle className="text-base font-medium">Transaction Types</CardTitle>
-        <CardDescription>Payment purpose breakdown</CardDescription>
+        <CardTitle className="text-base font-medium">{t('dashboard.admin.transactionTypes')}</CardTitle>
+        <CardDescription>{t('dashboard.admin.paymentPurposeBreakdown')}</CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -51,7 +53,7 @@ export function PaymentTypeChart({ data = [], isLoading = false }: PaymentTypeCh
           </div>
         ) : chartData.length === 0 ? (
           <div className="h-[300px] flex flex-col items-center justify-center text-center">
-            <p className="text-muted-foreground">No payment type data available</p>
+            <p className="text-muted-foreground">{t('dashboard.admin.noPaymentTypeData')}</p>
           </div>
         ) : (
           <div className="h-[300px]">
@@ -65,7 +67,7 @@ export function PaymentTypeChart({ data = [], isLoading = false }: PaymentTypeCh
                   outerRadius={90}
                   paddingAngle={2}
                   dataKey="value"
-                  label={({ name, percent }) => 
+                  label={({ name, percent }) =>
                     `${name} ${(percent * 100).toFixed(0)}%`
                   }
                   labelLine={false}

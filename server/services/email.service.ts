@@ -32,6 +32,7 @@ export interface EmailOptions {
   subject: string;
   html: string;
   text?: string;
+  attachments?: { filename: string; content: Buffer }[];
 }
 
 /**
@@ -53,6 +54,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       subject: options.subject,
       html: options.html,
       text: options.text,
+      ...(options.attachments?.length ? { attachments: options.attachments } : {}),
     });
 
     logger.info('Email sent successfully', { id: result.data?.id });
@@ -99,6 +101,70 @@ export async function sendWelcomeEmail(email: string, fullName: string): Promise
         </div>
       </div>
     `,
+  });
+}
+
+/**
+ * Send translator application email
+ */
+export async function sendApplicationEmail(
+  name: string,
+  email: string,
+  phone: string,
+  targetLanguage: string,
+  sampleTranslation: string,
+  file?: { originalname: string; buffer: Buffer; mimetype: string }
+): Promise<boolean> {
+  const attachments = file
+    ? [{ filename: file.originalname, content: file.buffer }]
+    : undefined;
+
+  return sendEmail({
+    to: 'career@kizere.rw',
+    subject: `New Translator Application from ${name}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 20px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 20px;">New Application Received</h1>
+        </div>
+        <div style="padding: 30px; background: #ffffff;">
+          <h2 style="color: #1f2937; margin-top: 0;">Applicant Details</h2>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280; width: 40%;">Name:</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #111827; font-weight: 500;">${name}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280;">Email:</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #111827;">
+                <a href="mailto:${email}" style="color: #3b82f6; text-decoration: none;">${email}</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280;">Phone:</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #111827;">
+                <a href="tel:${phone}" style="color: #3b82f6; text-decoration: none;">${phone || 'N/A'}</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280;">Target Language:</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #111827; font-weight: 500;">${targetLanguage}</td>
+            </tr>
+            ${file ? `<tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #6b7280;">Attachment:</td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: #111827;">📎 ${file.originalname}</td>
+            </tr>` : ''}
+          </table>
+          
+          <h3 style="color: #1f2937; margin-top: 30px; margin-bottom: 10px;">Sample Translation:</h3>
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; border: 1px solid #e5e7eb; color: #374151; white-space: pre-wrap; font-family: monospace;">${sampleTranslation}</div>
+        </div>
+        <div style="padding: 15px; text-align: center; color: #9ca3af; font-size: 12px; background: #f9fafb; border-top: 1px solid #e5e7eb;">
+          <p style="margin: 0;">Sent automatically from KIZERE Landing Page</p>
+        </div>
+      </div>
+    `,
+    attachments,
   });
 }
 

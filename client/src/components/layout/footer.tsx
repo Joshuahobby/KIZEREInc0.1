@@ -32,6 +32,16 @@ export function Footer() {
             }
           }
         },
+        {
+          label: t('nav.howItWorks') || "How It Works",
+          href: "/#how-it-works",
+          onClick: (e: React.MouseEvent) => {
+            if (window.location.pathname === '/') {
+              e.preventDefault();
+              document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+            }
+          }
+        },
         { label: t('nav.about') || "About", href: "/about" },
         { label: t('landing.footer.faq') || "FAQ", href: "/faq" },
       ]
@@ -40,8 +50,8 @@ export function Footer() {
       title: t('landing.footer.resources') || "Resources",
       links: [
         { label: t('nav.contact') || "Contact", href: "/contact" },
-        { label: t('landing.footer.blog') || "Blog", href: "/blog" },
-        { label: t('landing.footer.documentation') || "Documentation", href: "/docs" },
+        { label: t('nav.lostDirectory') || "Lost Items", href: "/search?type=lost" },
+        { label: t('nav.foundDirectory') || "Found Items", href: "/search?type=found" },
         { label: t('landing.footer.community') || "Community", href: "/community" },
       ]
     }

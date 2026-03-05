@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface PaymentTrustProps {
     className?: string;
@@ -8,7 +8,7 @@ interface PaymentTrustProps {
 }
 
 export function PaymentTrust({ className, showText = true }: PaymentTrustProps) {
-    const { t } = useTranslation();
+    const { t } = useLanguage();
 
     return (
         <div className={cn("flex flex-col items-center gap-3 py-4", className)}>

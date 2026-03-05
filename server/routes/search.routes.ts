@@ -59,10 +59,13 @@ router.get("/", async (req, res) => {
     };
 
 
-    // 1. Search Registered items
+    // 1. Search Registered items (scoped to the current user's items only)
     // If status filter contains 'Registered' or no status filter is provided or 'all' is provided
     if (statusFilters.length === 0 || statusFilters.includes('all') || statusFilters.some(s => ['Registered'].includes(s))) {
       const itemConditions = [];
+
+      // Only return the current user's items (users can only view their own items)
+      itemConditions.push(eq(items.userId, req.user!.id));
 
       if (keywords.length > 0) {
         keywords.forEach(keyword => {

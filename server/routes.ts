@@ -50,6 +50,7 @@ import { PaymentService } from "./services/payment.service";
 import { dashboardService, DashboardService } from "./services/dashboard.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
 import { ReportMatchingService } from "./services/report-matching.service";
+import { sendApplicationEmail } from "./services/email.service";
 
 
 
@@ -140,6 +141,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/dashboard', requireAuth, dashboardRoutes);
   app.use('/api/chats', requireAuth, chatRoutes);
   app.use('/api/webhooks/resend', resendWebhookRoutes);
+
+  // Recruitment endpoint (with file upload support)
+  const multer = (await import('multer')).default;
+  const recruitUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (_req: any, file: any, cb: any) => {
+      const allowed = ['.pdf', '.doc', '.docx'];
+      const ext = '.' + file.originalname.split('.').pop()?.toLowerCase();
+      cb(null, allowed.includes(ext));
+    }
+  });
+
+  app.post("/api/recruitment/apply", recruitUpload.single('file'), async (req, res) => {
+    try {
+      const { name, email, phone, targetLanguage, sampleTranslation } = req.body;
+
+      if (!name || !email || !targetLanguage || !sampleTranslation) {
+        return res.status(400).json({ message: "All fields are required" });
+      }
+
+      const file = (req as any).file;
+      const success = await sendApplicationEmail(name, email, phone || '', targetLanguage, sampleTranslation, file);
+
+      if (success) {
+        res.json({ message: "Application submitted successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to submit application. Please try again later." });
+      }
+    } catch (error: any) {
+      logger.error('Error submitting application', { error: error.message });
+      res.status(500).json({ message: "An unexpected error occurred" });
+    }
+  });
 
   // Health check endpoint
   app.get("/api/health", async (req, res) => {

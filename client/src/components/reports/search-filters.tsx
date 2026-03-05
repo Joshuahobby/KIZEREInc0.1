@@ -9,17 +9,19 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Calendar, Filter, MapPin, Tag, X, ArrowUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
-// Common item categories in Rwanda
+// Common item categories
 const CATEGORIES = [
-  "All Categories",
-  "Electronics",
-  "Documents",
-  "Clothing",
-  "Jewelry",
-  "Keys",
-  "Bags & Wallets",
-  "Other"
+  { label: "filters.allCategories", value: "All Categories" },
+  { label: "item_category_electronics", value: "Electronics" },
+  { label: "item_category_documents", value: "Documents" },
+  { label: "item_category_clothing", value: "Clothing" },
+  { label: "item_category_jewelry", value: "Jewelry" },
+  { label: "item_category_keys", value: "Keys" },
+  { label: "item_category_bags", value: "Bags & Wallets" },
+  { label: "item_category_other", value: "Other" }
 ];
 
 // Common locations in Rwanda
@@ -55,6 +57,7 @@ const TIME_RANGES = [
 ];
 
 export function SearchFilters({ onFiltersChange, orientation = "horizontal" }: SearchFiltersProps) {
+  const { t } = useTranslation();
   const [category, setCategory] = useState("All Categories");
   const [location, setLocation] = useState("All Locations");
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "relevance">("newest");
@@ -108,87 +111,95 @@ export function SearchFilters({ onFiltersChange, orientation = "horizontal" }: S
           variant="outline"
           size="sm"
           onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2 rounded-full border-neutral-200 shadow-sm"
+          className="flex items-center gap-2 rounded-xl border-neutral-200 shadow-sm"
         >
           <Filter className="h-4 w-4" />
-          Filters
+          {t('filters.title')}
           {hasActiveFilters && (
-            <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+            <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
               !
             </span>
           )}
         </Button>
 
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="rounded-full text-neutral-500 hover:text-neutral-900">
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="rounded-xl text-neutral-500 hover:text-neutral-900">
             <X className="h-4 w-4 mr-1" />
-            Clear
+            {t('filters.clear')}
           </Button>
         )}
       </div>
 
       {/* Filter Controls */}
-      <div className={`flex gap-3 ${orientation === "vertical" ? "flex-col" : "flex-col md:flex-row"} ${showFilters || orientation === "vertical" ? 'block' : 'hidden md:flex'}`}>
-        <div className="flex items-center gap-2 flex-1">
+      <div className={cn(
+        "gap-3",
+        orientation === "vertical" ? "flex flex-col" : "flex flex-col md:flex-row md:items-center",
+        orientation === "horizontal" && "bg-card/50 backdrop-blur-md p-2 rounded-2xl border border-border/50 shadow-sm",
+        showFilters || orientation === "vertical" ? 'flex' : 'hidden md:flex'
+      )}>
+        <div className="flex items-center gap-2 flex-1 min-w-[140px]">
           <Select value={category} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="w-full md:w-[180px] bg-white/80 backdrop-blur-sm border-neutral-200/60 rounded-full h-12 shadow-sm focus:ring-primary/30 transition-all hover:bg-white text-neutral-700 font-medium">
+            <SelectTrigger className="w-full bg-background/50 border-neutral-200/60 rounded-xl h-9 shadow-sm focus:ring-primary/20 transition-all hover:bg-white text-xs text-neutral-700 font-medium">
               <div className="flex items-center gap-2">
-                <Tag className="h-4 w-4 text-primary/70" />
-                <SelectValue placeholder="Category" />
+                <Tag className="h-3.5 w-3.5 text-primary/70" />
+                <SelectValue placeholder={t('filters.category')} />
               </div>
             </SelectTrigger>
             <SelectContent className="rounded-xl border-neutral-100 shadow-lg">
               {CATEGORIES.map(cat => (
-                <SelectItem key={cat} value={cat} className="rounded-lg">{cat}</SelectItem>
+                <SelectItem key={cat.value} value={cat.value} className="rounded-lg text-xs">{t(cat.label)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="flex items-center gap-2 flex-1">
+        <div className="flex items-center gap-2 flex-1 min-w-[140px]">
           <Select value={location} onValueChange={handleLocationChange}>
-            <SelectTrigger className="w-full md:w-[180px] bg-white/80 backdrop-blur-sm border-neutral-200/60 rounded-full h-12 shadow-sm focus:ring-primary/30 transition-all hover:bg-white text-neutral-700 font-medium">
+            <SelectTrigger className="w-full bg-background/50 border-neutral-200/60 rounded-xl h-9 shadow-sm focus:ring-primary/20 transition-all hover:bg-white text-xs text-neutral-700 font-medium">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary/70" />
-                <SelectValue placeholder="Location" />
+                <MapPin className="h-3.5 w-3.5 text-primary/70" />
+                <SelectValue placeholder={t('filters.location')} />
               </div>
             </SelectTrigger>
             <SelectContent className="rounded-xl border-neutral-100 shadow-lg">
               {LOCATIONS.map(loc => (
-                <SelectItem key={loc} value={loc} className="rounded-lg">{loc}</SelectItem>
+                <SelectItem key={loc} value={loc} className="rounded-lg text-xs">
+                  {loc === "All Locations" ? t('filters.allLocations') : loc}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div className="flex items-center gap-2 flex-1">
+        <div className="flex items-center gap-2 flex-1 min-w-[140px]">
           <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-full md:w-[160px] bg-white/80 backdrop-blur-sm border-neutral-200/60 rounded-full h-12 shadow-sm focus:ring-primary/30 transition-all hover:bg-white text-neutral-700 font-medium">
+            <SelectTrigger className="w-full bg-background/50 border-neutral-200/60 rounded-xl h-9 shadow-sm focus:ring-primary/20 transition-all hover:bg-white text-xs text-neutral-700 font-medium">
               <div className="flex items-center gap-2">
-                <ArrowUpDown className="h-4 w-4 text-primary/70" />
-                <SelectValue placeholder="Sort By" />
+                <ArrowUpDown className="h-3.5 w-3.5 text-primary/70" />
+                <SelectValue placeholder={t('filters.sortBy')} />
               </div>
             </SelectTrigger>
             <SelectContent className="rounded-xl border-neutral-100 shadow-lg">
-              <SelectItem value="newest" className="rounded-lg">Newest First</SelectItem>
-              <SelectItem value="oldest" className="rounded-lg">Oldest First</SelectItem>
-              <SelectItem value="relevance" className="rounded-lg">Most Relevant</SelectItem>
+              <SelectItem value="newest" className="rounded-lg text-xs">{t('filters.newest')}</SelectItem>
+              <SelectItem value="oldest" className="rounded-lg text-xs">{t('filters.oldest')}</SelectItem>
+              <SelectItem value="relevance" className="rounded-lg text-xs">{t('filters.relevance')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div className="flex items-center gap-2 flex-1">
+        <div className="flex items-center gap-2 flex-1 min-w-[140px]">
           <Select value={dateFilter} onValueChange={handleDateChange}>
-            <SelectTrigger className="w-full md:w-[160px] bg-white/80 backdrop-blur-sm border-neutral-200/60 rounded-full h-12 shadow-sm focus:ring-primary/30 transition-all hover:bg-white text-neutral-700 font-medium">
+            <SelectTrigger className="w-full bg-background/50 border-neutral-200/60 rounded-xl h-9 shadow-sm focus:ring-primary/20 transition-all hover:bg-white text-xs text-neutral-700 font-medium">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary/70" />
-                <SelectValue placeholder="Time" />
+                <Calendar className="h-3.5 w-3.5 text-primary/70" />
+                <SelectValue placeholder={t('filters.time')} />
               </div>
             </SelectTrigger>
             <SelectContent className="rounded-xl border-neutral-100 shadow-lg">
-              {TIME_RANGES.map(range => (
-                <SelectItem key={range.value} value={range.value} className="rounded-lg">{range.label}</SelectItem>
-              ))}
+              <SelectItem value="all" className="rounded-lg text-xs">{t('filters.allTime')}</SelectItem>
+              <SelectItem value="24h" className="rounded-lg text-xs">{t('filters.last24h')}</SelectItem>
+              <SelectItem value="7d" className="rounded-lg text-xs">{t('filters.last7d')}</SelectItem>
+              <SelectItem value="30d" className="rounded-lg text-xs">{t('filters.last30d')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -199,10 +210,10 @@ export function SearchFilters({ onFiltersChange, orientation = "horizontal" }: S
             variant="ghost"
             size="sm"
             onClick={clearFilters}
-            className="hidden md:flex items-center h-12 px-5 rounded-full text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100/50 transition-colors"
+            className="hidden md:flex items-center h-9 px-4 rounded-xl text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100/50 transition-colors text-xs"
           >
-            <X className="h-4 w-4 mr-1" />
-            Clear
+            <X className="h-3.5 w-3.5 mr-1" />
+            {t('filters.clear')}
           </Button>
         )}
       </div>

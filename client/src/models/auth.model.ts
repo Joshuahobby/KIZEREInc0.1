@@ -80,7 +80,7 @@ class AuthModelClass {
     return {
       ...userData,
       username: username, // Keep the original username
-      email: isEmail ? username : `${username.replace(/\D/g, '')}@placeholder.kizere.rw`, // Use email or generate placeholder
+      email: isEmail ? username : `${username.replace(/[^a-zA-Z0-9]/g, '')}_${Math.floor(Math.random() * 10000)}@placeholder.kizere.rw`, // Use email or generate unique placeholder
       phoneNumber: !isEmail ? username : null,
       role: userData.role || 'Subscriber',
       preferences: DEFAULT_USER_PREFERENCES

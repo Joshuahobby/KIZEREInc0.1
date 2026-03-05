@@ -1,8 +1,8 @@
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface ClaimReviewDialogProps {
   claim: Claim | null;
@@ -20,6 +21,7 @@ interface ClaimReviewDialogProps {
 }
 
 export function ClaimReviewDialog({ claim, isOpen, onClose }: ClaimReviewDialogProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -31,15 +33,15 @@ export function ClaimReviewDialog({ claim, isOpen, onClose }: ClaimReviewDialogP
       });
     },
     onSuccess: () => {
-      toast({ title: "Claim updated successfully" });
+      toast({ title: t("claims.update_success") });
       queryClient.invalidateQueries({ queryKey: ["/api/claims/received"] });
       onClose();
     },
     onError: (e: Error) => {
-      toast({ 
-        title: "Verification failed", 
-        description: e.message, 
-        variant: "destructive" 
+      toast({
+        title: t("claims.update_error"),
+        description: e.message,
+        variant: "destructive"
       });
     }
   });
@@ -50,15 +52,15 @@ export function ClaimReviewDialog({ claim, isOpen, onClose }: ClaimReviewDialogP
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold">Review Ownership Claim</DialogTitle>
+          <DialogTitle className="text-xl font-bold">{t("claims.review_title")}</DialogTitle>
           <DialogDescription>
-            Review the proof provided below to confirm if this item belongs to the claimant.
+            {t("claims.review_desc")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Proof of Ownership</h4>
+            <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{t("claims.proof_of_ownership")}</h4>
             <div className="p-4 bg-neutral-50 rounded-xl border border-neutral-100 text-sm leading-relaxed text-neutral-700">
               {claim.description}
             </div>
@@ -66,14 +68,14 @@ export function ClaimReviewDialog({ claim, isOpen, onClose }: ClaimReviewDialogP
 
           {claim.imageUrls && claim.imageUrls.length > 0 && (
             <div className="space-y-3">
-              <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">Evidence Images</h4>
+              <h4 className="text-xs font-bold text-neutral-400 uppercase tracking-wider">{t("claims.evidence_images")}</h4>
               <div className="grid grid-cols-2 gap-3">
                 {claim.imageUrls.map((url, i) => (
-                  <img 
-                    key={i} 
-                    src={url} 
-                    className="rounded-lg border h-32 w-full object-cover shadow-sm" 
-                    alt="Claim evidence"
+                  <img
+                    key={i}
+                    src={url}
+                    className="rounded-lg border h-32 w-full object-cover shadow-sm"
+                    alt={t("claims.claim_evidence_alt")}
                   />
                 ))}
               </div>
@@ -82,24 +84,24 @@ export function ClaimReviewDialog({ claim, isOpen, onClose }: ClaimReviewDialogP
         </div>
 
         <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="flex-1 text-red-600 border-red-100 hover:bg-red-50 hover:text-red-700"
             disabled={verifyMutation.isPending}
-            onClick={() => verifyMutation.mutate({ 
-              status: 'rejected', 
-              notes: 'The provided information was insufficient or incorrect.' 
+            onClick={() => verifyMutation.mutate({
+              status: 'rejected',
+              notes: t("claims.reject_notes_default")
             })}
           >
             <XCircle className="mr-2 h-4 w-4" />
-            Reject Claim
+            {t("claims.reject_claim")}
           </Button>
-          <Button 
+          <Button
             className="flex-1 bg-green-600 hover:bg-green-700 shadow-md shadow-green-100"
             disabled={verifyMutation.isPending || claim.status !== 'pending'}
-            onClick={() => verifyMutation.mutate({ 
-              status: 'accepted', 
-              notes: 'Claim verified by finder.' 
+            onClick={() => verifyMutation.mutate({
+              status: 'accepted',
+              notes: t("claims.accept_notes_default")
             })}
           >
             {verifyMutation.isPending ? (
@@ -107,7 +109,7 @@ export function ClaimReviewDialog({ claim, isOpen, onClose }: ClaimReviewDialogP
             ) : (
               <CheckCircle className="mr-2 h-4 w-4" />
             )}
-            Confirm Ownership
+            {t("claims.confirm_ownership")}
           </Button>
         </DialogFooter>
       </DialogContent>

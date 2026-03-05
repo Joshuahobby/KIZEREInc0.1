@@ -6,6 +6,7 @@ import { z } from "zod";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthService } from "@/services/auth.service";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,6 +51,7 @@ export default function AuthPage() {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState<boolean>(false);
   const [passwordStrength, setPasswordStrength] = React.useState<{ isStrong: boolean; message: string; score: number } | null>(null);
   const { user, loginMutation, registerMutation, loginWithGoogle, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [location, navigate] = useLocation();
 
   // Redirect if already logged in
@@ -137,7 +139,7 @@ export default function AuthPage() {
           <h1 className="text-3xl font-bold text-foreground">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70">KIZERE</span>
           </h1>
-          <p className="text-muted-foreground mt-1 text-sm sm:text-base">Smart Item Management</p>
+          <p className="text-muted-foreground mt-1 text-sm sm:text-base">{t('dashboard.smartItemManagement') || "Smart Item Management"}</p>
         </motion.div>
 
         {/* Auth Forms with Glass Morphism */}
@@ -151,8 +153,8 @@ export default function AuthPage() {
             <CardContent className="p-3 sm:p-6 pb-2">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-3 h-9">
-                  <TabsTrigger value="login" className="text-xs sm:text-sm">Sign In</TabsTrigger>
-                  <TabsTrigger value="register" className="text-xs sm:text-sm">Create Account</TabsTrigger>
+                  <TabsTrigger value="login" className="text-xs sm:text-sm">{t('auth.signIn')}</TabsTrigger>
+                  <TabsTrigger value="register" className="text-xs sm:text-sm">{t('auth.createAccount')}</TabsTrigger>
                 </TabsList>
 
                 {/* Login Form */}
@@ -166,7 +168,7 @@ export default function AuthPage() {
                       disabled={authLoading || loginMutation.isPending}
                     >
                       <SiGoogle className="mr-3 h-4 w-4 text-[#4285F4]" />
-                      Sign in with Google
+                      {t('auth.signInWithGoogle')}
                     </Button>
 
                     <div className="relative my-4">
@@ -174,7 +176,7 @@ export default function AuthPage() {
                         <span className="w-full border-t border-border/60"></span>
                       </div>
                       <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">Or continue with username</span>
+                        <span className="bg-card px-2 text-muted-foreground">{t('auth.continueWithUsername')}</span>
                       </div>
                     </div>
                   </div>
@@ -186,11 +188,11 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-foreground/80 text-xs sm:text-sm">Username</FormLabel>
+                            <FormLabel className="text-foreground/80 text-xs sm:text-sm">{t('auth.username')}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input className="pl-9 h-9 text-sm" placeholder="Username" {...field} />
+                                <Input className="pl-9 h-9 text-sm" placeholder={t('auth.username')} {...field} />
                               </div>
                             </FormControl>
                             <FormMessage className="text-[10px] mt-0" />
@@ -203,14 +205,14 @@ export default function AuthPage() {
                         name="password"
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-foreground/80 text-xs sm:text-sm">Password</FormLabel>
+                            <FormLabel className="text-foreground/80 text-xs sm:text-sm">{t('auth.password')}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
                                   className="pl-9 pr-9 h-9 text-sm"
                                   type={showPassword ? "text" : "password"}
-                                  placeholder="Password"
+                                  placeholder={t('auth.password')}
                                   {...field}
                                 />
                                 <button
@@ -235,11 +237,11 @@ export default function AuthPage() {
                             className="rounded border-input h-3.5 w-3.5 text-primary focus:ring-primary"
                           />
                           <label htmlFor="remember" className="text-xs text-muted-foreground">
-                            Remember me
+                            {t('auth.rememberMe')}
                           </label>
                         </div>
                         <a href="#" className="text-xs text-primary hover:underline">
-                          Forgot password?
+                          {t('auth.forgotPassword')}
                         </a>
                       </div>
 
@@ -252,10 +254,10 @@ export default function AuthPage() {
                         {loginMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                            Signing in...
+                            {t('auth.signingIn')}
                           </>
                         ) : (
-                          "Sign In"
+                          t('auth.signIn')
                         )}
                       </Button>
                     </form>
@@ -273,7 +275,7 @@ export default function AuthPage() {
                       disabled={authLoading || registerMutation.isPending}
                     >
                       <SiGoogle className="mr-3 h-4 w-4 text-[#4285F4]" />
-                      Sign up with Google
+                      {t('auth.signUpWithGoogle')}
                     </Button>
 
                     <div className="relative my-6">
@@ -281,7 +283,7 @@ export default function AuthPage() {
                         <span className="w-full border-t border-border/60"></span>
                       </div>
                       <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">Or create account</span>
+                        <span className="bg-card px-2 text-muted-foreground">{t('auth.continueWithAccount')}</span>
                       </div>
                     </div>
                   </div>
@@ -293,11 +295,11 @@ export default function AuthPage() {
                         name="fullName"
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-foreground/80 text-xs sm:text-sm">Full Name</FormLabel>
+                            <FormLabel className="text-foreground/80 text-xs sm:text-sm">{t('auth.fullName')}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <User className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input className="pl-9 h-9 text-sm" placeholder="Full name" {...field} />
+                                <Input className="pl-9 h-9 text-sm" placeholder={t('auth.fullNamePlaceholder')} {...field} />
                               </div>
                             </FormControl>
                             <FormMessage className="text-[10px] mt-0" />
@@ -310,11 +312,11 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem className="space-y-1">
-                            <FormLabel className="text-foreground/80 text-xs sm:text-sm">Email / Phone</FormLabel>
+                            <FormLabel className="text-foreground/80 text-xs sm:text-sm">{t('auth.emailPhone')}</FormLabel>
                             <FormControl>
                               <div className="relative">
                                 <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input className="pl-9 h-9 text-sm" placeholder="Email or phone" {...field} />
+                                <Input className="pl-9 h-9 text-sm" placeholder={t('auth.emailPhonePlaceholder')} {...field} />
                               </div>
                             </FormControl>
                             <FormMessage className="text-[10px] mt-0" />
@@ -328,14 +330,14 @@ export default function AuthPage() {
                           name="password"
                           render={({ field }) => (
                             <FormItem className="space-y-1">
-                              <FormLabel className="text-foreground/80 text-xs sm:text-sm">Password</FormLabel>
+                              <FormLabel className="text-foreground/80 text-xs sm:text-sm">{t('auth.password')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                   <Input
                                     className="pl-9 pr-9 h-9 text-sm"
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="Password"
+                                    placeholder={t('auth.password')}
                                     {...field}
                                     onChange={(e) => {
                                       field.onChange(e);
@@ -366,14 +368,14 @@ export default function AuthPage() {
                           name="confirmPassword"
                           render={({ field }) => (
                             <FormItem className="space-y-1">
-                              <FormLabel className="text-foreground/80 text-xs sm:text-sm">Confirm</FormLabel>
+                              <FormLabel className="text-foreground/80 text-xs sm:text-sm">{t('auth.confirmPassword')}</FormLabel>
                               <FormControl>
                                 <div className="relative">
                                   <Lock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                   <Input
                                     className="pl-9 pr-9 h-9 text-sm"
                                     type={showConfirmPassword ? "text" : "password"}
-                                    placeholder="Confirm pwd"
+                                    placeholder={t('auth.confirmPasswordPlaceholder')}
                                     {...field}
                                   />
                                   <button
@@ -398,7 +400,7 @@ export default function AuthPage() {
                           className="rounded border-input h-3.5 w-3.5 text-primary focus:ring-primary"
                         />
                         <label htmlFor="terms" className="text-xs text-muted-foreground leading-tight">
-                          I agree to <a href="#" className="text-primary hover:underline">Terms</a> & <a href="#" className="text-primary hover:underline">Privacy</a>
+                          {t('auth.termsAndPrivacy').split('&')[0]} <a href="#" className="text-primary hover:underline">{t('auth.terms')}</a> & <a href="#" className="text-primary hover:underline">{t('auth.privacy')}</a>
                         </label>
                       </div>
 
@@ -411,10 +413,10 @@ export default function AuthPage() {
                         {registerMutation.isPending ? (
                           <>
                             <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                            Creating Account...
+                            {t('auth.creatingAccount')}
                           </>
                         ) : (
-                          "Create Account"
+                          t('auth.createAccount')
                         )}
                       </Button>
                     </form>

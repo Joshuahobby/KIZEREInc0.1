@@ -1,6 +1,6 @@
-
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useSocket } from "@/hooks/use-socket";
 import { apiRequest } from "@/lib/queryClient";
@@ -13,6 +13,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MessageCircle, X, Send, Loader2, Minimize2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+
+// Paths where the chat widget should always be visible (Support & Dashboard)
+const ALWAYS_VISIBLE_PATHS = [
+    "/dashboard",
+    "/community",
+    "/contact",
+    "/help",
+    "/support"
+];
 
 interface Chat {
     id: number;
@@ -34,6 +43,7 @@ interface Message {
 
 export function ChatWidget() {
     const { user } = useAuth();
+    const [location] = useLocation();
     const { joinChat, leaveChat, sendTyping, onEvent } = useSocket();
     const queryClient = useQueryClient();
     const [isOpen, setIsOpen] = useState(false);
@@ -46,8 +56,15 @@ export function ChatWidget() {
     // Fetch user's chats
     const { data: chats } = useQuery<Chat[]>({
         queryKey: ["/api/chats"],
-        enabled: !!user && isOpen,
+        enabled: !!user, // Always check for chats if logged in to handle visibility
     });
+
+    // Visibility logic
+    const isAlwaysVisiblePath = ALWAYS_VISIBLE_PATHS.includes(location);
+    const hasActiveChats = chats && chats.length > 0;
+    const shouldShow = isAlwaysVisiblePath || hasActiveChats || isOpen;
+
+    // Fetch active chat messages
 
     // Fetch active chat messages
     const { data: activeChat } = useQuery<Chat>({
@@ -125,7 +142,7 @@ export function ChatWidget() {
         }
     };
 
-    if (!user) return null;
+    if (!user || !shouldShow) return null;
 
     return (
         <>

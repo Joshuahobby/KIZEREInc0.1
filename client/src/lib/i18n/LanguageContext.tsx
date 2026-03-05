@@ -2,33 +2,24 @@ import * as React from 'react';
 // Import all translations from JSON files for consistency
 // @ts-ignore - Allow direct import of JSON files
 import en from './locales/en.json';
-// @ts-ignore - Allow direct import of JSON files
-import fr from './locales/fr.json';
-// @ts-ignore - Allow direct import of JSON files
-import rw from './locales/rw.json';
-// @ts-ignore - Allow direct import of JSON files
-import sw from './locales/sw.json';
+
 
 // Define available languages
 export type Language = 'en' | 'fr' | 'rw' | 'sw';
 
-// Create language dictionaries
-const translations = {
+const staticTranslations = {
   en,
-  fr,
-  rw,
-  sw,
 };
 
 // Default to English if no language is set
 const DEFAULT_LANGUAGE: Language = 'en';
 
-// Get initial language from localStorage or use default
 const getInitialLanguage = (): Language => {
   if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
 
   const savedLanguage = localStorage.getItem('language') as Language;
-  return savedLanguage && Object.keys(translations).includes(savedLanguage)
+  const availableLanguages: Language[] = ['en', 'fr', 'rw', 'sw'];
+  return savedLanguage && availableLanguages.includes(savedLanguage)
     ? savedLanguage
     : DEFAULT_LANGUAGE;
 };
@@ -43,7 +34,7 @@ interface LanguageContextType {
 
 const LanguageContext = React.createContext<LanguageContextType>({
   language: DEFAULT_LANGUAGE,
-  translations,
+  translations: { [DEFAULT_LANGUAGE]: en } as any,
   setLanguage: () => { },
   t: (key: string, optionsOrDefault?: Record<string, any> | string, defaultValue?: string) => {
     return typeof optionsOrDefault === 'string' ? optionsOrDefault : key;
@@ -63,6 +54,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
 }) => {
   const initialLang = defaultLanguage || getInitialLanguage();
   const [language, setLanguageState] = React.useState<Language>(initialLang);
+  const [translations, setTranslations] = React.useState<Record<string, any>>({ en });
 
   // Update the language state and save to localStorage
   const setLanguage = (newLanguage: Language) => {
@@ -71,8 +63,34 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     localStorage.setItem('language', newLanguage);
   };
 
-  // Initialize and update HTML lang attribute on mount and on language change
+  // Load translations dynamically
   React.useEffect(() => {
+    const loadTranslations = async () => {
+      if (language === 'en') return;
+
+      if (!translations[language]) {
+        try {
+          console.log(`[LanguageContext] Dynamically loading ${language} bundle...`);
+          let bundle;
+          switch (language) {
+            case 'fr': bundle = await import('./locales/fr.json'); break;
+            case 'rw': bundle = await import('./locales/rw.json'); break;
+            case 'sw': bundle = await import('./locales/sw.json'); break;
+            default: return;
+          }
+
+          setTranslations(prev => ({
+            ...prev,
+            [language]: bundle.default || bundle
+          }));
+        } catch (error) {
+          console.error(`[LanguageContext] Failed to load ${language} bundle:`, error);
+        }
+      }
+    };
+
+    loadTranslations();
+
     console.log(`[LanguageContext] Updating document.documentElement.lang to: ${language}`);
     document.documentElement.lang = language;
   }, [language]);
@@ -109,7 +127,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     // If translation not found in current language, try in default language
     if (value === undefined && language !== DEFAULT_LANGUAGE) {
       console.log(`[LanguageContext] Key "${key}" not found in "${language}", trying fallback to "${DEFAULT_LANGUAGE}"`);
-      const defaultLangObj = translations[DEFAULT_LANGUAGE];
+      const defaultLangObj = translations[DEFAULT_LANGUAGE] || en;
       value = traverse(defaultLangObj, keys);
     }
 

@@ -41,8 +41,10 @@ import { SearchFilters, FilterState } from "@/components/reports/search-filters"
 import { PaymentService } from "@/services/payment.service";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { format } from "date-fns";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useTranslation } from "@/lib/i18n/useTranslation";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 // Report form schema
 const reportFormSchema = z.object({
@@ -74,6 +76,7 @@ export default function LostFound() {
   const debouncedSearch = useDebounce(searchQuery, 300);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   // Fetch user's registered items
   const { data: userItems } = useQuery<any[]>({
@@ -132,8 +135,6 @@ export default function LostFound() {
       // Check if offline
       if (!navigator.onLine) {
         console.log("[LostFound] Offline detected, queuing report...");
-        // For simplicity in this version, we queue metadata.
-        // In a full production app, we'd store Blobs in IndexedDB.
         await OfflineSyncService.queue('CREATE_REPORT', data);
         return { offline: true };
       }
@@ -168,7 +169,6 @@ export default function LostFound() {
       return { report };
     },
     onSuccess: (res: any) => {
-      // Handle offline case
       if (res.offline) {
         toast({
           title: "Offline Mode",
@@ -179,7 +179,6 @@ export default function LostFound() {
         return;
       }
 
-      // Invalidate and refetch reports
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
 
@@ -198,8 +197,6 @@ export default function LostFound() {
         });
         setOpenDialog(false);
       }
-
-      // Reset form
       form.reset();
     },
     onError: (error: Error) => {
@@ -234,7 +231,7 @@ export default function LostFound() {
   };
 
   return (
-    <PageLayout>
+    <PageLayout hideSidebar={true}>
       <div className="py-8 relative isolate">
         {/* Background Decorative Gradients */}
         <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
@@ -242,47 +239,45 @@ export default function LostFound() {
         </div>
 
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Section */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-neutral-200/70 pb-6 mb-8 mt-2">
-            <div className="max-w-xl">
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-900 bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-700">
-                Lost & Found Directory
+          {/* Header Section - Compact and Inline */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-neutral-200/70 pb-6 mb-8 mt-2">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-neutral-900">
+                {t('directoryPage.title')}
               </h1>
-              <p className="mt-2 text-base text-neutral-600">
-                Browse found items or search the directory for your lost belongings.
+              <p className="mt-1 text-sm text-neutral-500 font-medium">
+                {t('directoryPage.subtitle')}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <Button
                 onClick={() => handleOpenDialog("lost")}
-                className="flex-1 md:flex-none bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20"
+                variant="destructive"
+                className="flex-1 md:flex-none h-11 rounded-xl shadow-lg shadow-red-500/20 font-bold"
               >
-                <AlertTriangle className="w-4 h-4 mr-2" /> Report Lost
+                <AlertTriangle className="w-4 h-4 mr-2" /> {t('directoryPage.reportLost')}
               </Button>
               <Button
                 onClick={() => handleOpenDialog("found")}
-                className="flex-1 md:flex-none bg-emerald-500 hover:bg-emerald-600 text-white shadow-md shadow-emerald-500/20"
+                className="flex-1 md:flex-none h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 font-bold"
               >
-                <Check className="w-4 h-4 mr-2 text-white" /> Report Found
+                <Check className="w-4 h-4 mr-2 text-white" /> {t('directoryPage.reportFound')}
               </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-20">
-            {/* Left Sidebar */}
-            <div className="lg:col-span-1 space-y-6">
-              <div className="bg-white/70 backdrop-blur-md border border-neutral-200/60 rounded-2xl p-6 lg:sticky lg:top-24 shadow-sm">
-                <h3 className="font-bold text-lg mb-4 text-neutral-900 flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>
-                  Filters
-                </h3>
+          <div className="space-y-6">
+            {/* Horizontal Filter Bar at Top */}
+            <div className="w-full">
+              <SearchFilters onFiltersChange={setFilters} orientation="horizontal" />
+            </div>
 
-                <SearchFilters onFiltersChange={setFilters} orientation="vertical" />
-
-                {/* Quick Report (My Items) */}
-                {userItems && userItems.length > 0 && (
-                  <div className="mt-8 pt-6 border-t border-neutral-100">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-20">
+              {/* Left Sidebar only for Quick Report (My Items) */}
+              {userItems && userItems.length > 0 && (
+                <div className="lg:col-span-1">
+                  <div className="bg-white/70 backdrop-blur-md border border-neutral-200/60 rounded-2xl p-6 lg:sticky lg:top-24 shadow-sm">
                     <h3 className="font-bold text-sm mb-1 text-neutral-900 flex items-center justify-between">
                       Quick Report
                       <Badge variant="secondary" className="bg-primary/10 text-primary">{userItems.length}</Badge>
@@ -302,143 +297,113 @@ export default function LostFound() {
                           <ArrowRight className="ml-2 h-3 w-3 shrink-0 text-neutral-400" />
                         </Button>
                       ))}
-                      {userItems.length > 3 && (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-9 text-xs text-primary font-medium hover:bg-primary/5 rounded-lg w-full mt-1">
-                              View all {userItems.length} items
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-md border-0 shadow-2xl rounded-2xl">
-                            <DialogHeader>
-                              <DialogTitle className="text-xl">Select an Item</DialogTitle>
-                              <DialogDescription>
-                                Choose one of your registered items to create a fast report.
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-2 max-h-[400px] overflow-y-auto p-1 mt-2">
-                              {userItems.map(item => (
-                                <Button
-                                  key={item.id}
-                                  variant="outline"
-                                  className="justify-start h-auto p-3 border border-neutral-200 hover:border-primary/50 hover:bg-primary/5 rounded-xl transition-all w-full text-left font-medium text-sm"
-                                  onClick={() => {
-                                    handleOpenDialog("lost", item);
-                                  }}
-                                >
-                                  {item.name}
-                                </Button>
-                              ))}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Right Main Content */}
-            <div className="lg:col-span-3">
-              {/* Search Bar */}
-              <div className="mb-6 relative group w-full">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-primary/10 rounded-xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <SearchIcon className="h-5 w-5 text-primary/60" />
-                  </div>
-                  <Input
-                    type="text"
-                    placeholder="Search by keywords (e.g. Passport, Blue Wallet)..."
-                    className="pl-11 h-12 bg-white/90 backdrop-blur-sm border-white/40 shadow-sm rounded-xl focus:ring-primary/40 focus:border-primary/50 text-sm transition-all"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
                 </div>
-              </div>
+              )}
 
-              {/* Items Grid */}
-              <div className="relative min-h-[400px]">
-                {isLoading ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary relative z-10" />
-                    <p className="mt-3 text-sm text-neutral-500 font-medium animate-pulse">Scanning the directory...</p>
+              {/* Right Main Content */}
+              <div className={cn(userItems && userItems.length > 0 ? "lg:col-span-3" : "lg:col-span-4")}>
+                {/* Search Bar - Highlighted */}
+                <div className="mb-6 relative group w-full">
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-primary/10 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <SearchIcon className="h-5 w-5 text-primary/60" />
+                    </div>
+                    <Input
+                      type="text"
+                      placeholder={t('directoryPage.searchPlaceholder')}
+                      className="pl-11 h-12 bg-white border-neutral-200 shadow-sm rounded-2xl focus:ring-primary/20 focus:border-primary/30 text-base transition-all"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                   </div>
-                ) : sortedReports && sortedReports.length > 0 ? (
-                  <div className="flex flex-col gap-3">
-                    {sortedReports.map((report) => (
-                      <Card key={report.id} className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 border border-neutral-200/60 bg-white/80 backdrop-blur-md group hover:-translate-y-1 flex flex-row cursor-pointer" onClick={() => setLocation(`/report/${report.id}`)}>
-                        <div className={`w-1.5 h-auto ${report.type === 'lost' ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                        <CardContent className="p-4 flex flex-col md:flex-row md:items-center w-full gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start mb-2 md:mb-1">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${report.type === 'lost'
+                </div>
+
+                {/* Items Grid */}
+                <div className="relative min-h-[400px]">
+                  {isLoading ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary relative z-10" />
+                      <p className="mt-3 text-sm text-neutral-500 font-bold animate-pulse">{t('directoryPage.allReports')}</p>
+                    </div>
+                  ) : sortedReports && sortedReports.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {sortedReports.map((report) => (
+                        <Card key={report.id} className="overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-neutral-200/60 bg-white/90 backdrop-blur-md group hover:-translate-y-1 flex flex-col cursor-pointer" onClick={() => setLocation(`/report/${report.id}`)}>
+                          <div className={`h-1 w-full ${report.type === 'lost' ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                          <CardContent className="p-5 flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${report.type === 'lost'
                                 ? 'bg-red-50 text-red-600 border border-red-100'
                                 : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                 }`}>
-                                {report.type === 'lost' ? 'Lost' : 'Found'}
+                                {report.type === 'lost' ? t('searchFilters.lost') : t('searchFilters.found')}
                               </span>
-                              <span className="text-[10px] font-medium text-neutral-400 md:hidden">
+                              <span className="text-[10px] font-bold text-neutral-400">
                                 {format(new Date(report.date), 'MMM d, yyyy')}
                               </span>
                             </div>
 
-                            <h3 className="text-base font-bold text-neutral-900 line-clamp-1 group-hover:text-primary transition-colors">{report.title}</h3>
-                            <p className="mt-1 text-xs text-neutral-600 line-clamp-1 md:line-clamp-2 leading-relaxed">{report.description}</p>
-                          </div>
+                            <h3 className="text-base font-black text-neutral-900 line-clamp-1 group-hover:text-primary transition-colors">{report.title}</h3>
+                            <p className="mt-2 text-xs text-neutral-500 line-clamp-2 leading-relaxed flex-1">{report.description}</p>
 
-                          <div className="flex items-center justify-between md:flex-col md:items-end md:justify-center md:min-w-[140px] pt-3 md:pt-0 border-t md:border-t-0 md:border-l border-neutral-100 md:pl-4 mt-3 md:mt-0">
-                            <div className="flex flex-col gap-1 items-start md:items-end w-full">
-                              <span className="hidden md:block text-[10px] font-medium text-neutral-400">
-                                {format(new Date(report.date), 'MMM d, yyyy')}
-                              </span>
-                              <div className="flex items-center text-[11px] font-medium text-neutral-500 w-full justify-start md:justify-end">
-                                <span className="truncate max-w-[140px] md:max-w-full text-right">{report.location}</span>
-                                <MapPin className="h-3 w-3 text-primary ml-1 shrink-0 hidden md:block" />
-                                <MapPin className="h-3 w-3 text-primary mr-1 shrink-0 md:hidden" />
+                            <div className="mt-4 pt-4 border-t border-neutral-50 flex items-center justify-between">
+                              <div className="flex items-center text-[11px] font-bold text-neutral-600">
+                                <MapPin className="h-3.5 w-3.5 text-primary mr-1.5 shrink-0" />
+                                <span className="truncate max-w-[150px]">{report.location}</span>
                               </div>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 p-0 rounded-full group-hover:bg-primary/10 group-hover:text-primary">
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <ChevronRight className="h-4 w-4 text-neutral-300 md:hidden group-hover:text-primary transition-colors mt-2" />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="mt-2 border-dashed border-2 border-neutral-200/70 bg-white/40 backdrop-blur-sm">
-                    <CardContent className="p-16 flex flex-col items-center text-center">
-                      <div className="h-16 w-16 bg-white rounded-full shadow-sm border border-neutral-100 flex items-center justify-center mb-4">
-                        <SearchIcon className="h-6 w-6 text-neutral-300" />
-                      </div>
-                      <h3 className="text-base font-bold text-neutral-900">No items found</h3>
-                      <p className="text-sm text-neutral-500 max-w-sm mt-1">We couldn't find any items matching your current search terms or filters.</p>
-                      <Button variant="outline" size="sm" className="mt-5 rounded-lg border-neutral-200 text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 shadow-sm" onClick={() => setFilters({ category: "All Categories", location: "All Locations", sortBy: "newest", dateFilter: "all" })}>
-                        Clear Filters
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="mt-2 border-dashed border-2 border-neutral-200/70 bg-white/40 backdrop-blur-sm rounded-3xl overflow-hidden">
+                      <CardContent className="p-16 flex flex-col items-center text-center">
+                        <div className="h-20 w-20 bg-white rounded-3xl shadow-xl shadow-neutral-200/50 border border-neutral-100 flex items-center justify-center mb-6 transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                          <PackageSearch className="h-10 w-10 text-neutral-300" />
+                        </div>
+                        <h3 className="text-xl font-black text-neutral-900">{t('directoryPage.noReports')}</h3>
+                        <p className="text-sm text-neutral-500 max-w-sm mt-2 font-medium">{t('directoryPage.noReportsHint')}</p>
+
+                        <div className="flex flex-wrap gap-3 mt-8">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl border-neutral-200 text-neutral-600 hover:bg-white hover:text-neutral-900 shadow-sm"
+                            onClick={() => setFilters({ category: "All Categories", location: "All Locations", sortBy: "newest", dateFilter: "all" })}
+                          >
+                            {t('searchFilters.clearAll')}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Form Dialog for Lost/Found Items */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl p-0 border-0 shadow-2xl">
           <div className={`p-6 pb-4 ${dialogType === "lost" ? "bg-red-50/50" : "bg-emerald-50/50"} border-b border-neutral-100`}>
             <DialogHeader>
               <DialogTitle className="text-2xl font-bold flex items-center gap-2">
                 {dialogType === "lost" ? (
-                  <><AlertTriangle className="h-6 w-6 text-red-600" /> Report a Lost Item</>
+                  <><AlertTriangle className="h-6 w-6 text-red-600" /> {t('directoryPage.reportLost')}</>
                 ) : (
-                  <><div className="bg-emerald-100 p-1.5 rounded-md"><Check className="h-4 w-4 text-emerald-700 font-bold" /></div> Report a Found Item</>
+                  <><div className="bg-emerald-100 p-1.5 rounded-md"><Check className="h-4 w-4 text-emerald-700 font-bold" /></div> {t('directoryPage.reportFound')}</>
                 )}
               </DialogTitle>
               <DialogDescription className="text-sm mt-1">
-                Please provide detailed information. Accurate details increase the chances of a successful match.
+                {dialogType === "lost" ? t('directoryPage.reportLostDesc') : t('directoryPage.reportFoundDesc')}
               </DialogDescription>
             </DialogHeader>
           </div>

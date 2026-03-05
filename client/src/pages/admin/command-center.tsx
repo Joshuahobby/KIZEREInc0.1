@@ -25,13 +25,13 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
 import {
@@ -90,25 +90,25 @@ export default function CommandCenter() {
 
   const triggerJob = async (type: 'matching' | 'expiration') => {
     try {
-       setJobsLoading(true);
-       const url = type === 'matching' 
-         ? '/api/admin/jobs/run-matching' 
-         : '/api/admin/jobs/run-expiration';
-         
-       const res = await apiRequest(url, { method: 'POST' });
-       
-       toast({
-         title: "Job Triggered",
-         description: `Successfully started ${type} job. Result: ${res.message || 'Done'}`,
-       });
+      setJobsLoading(true);
+      const url = type === 'matching'
+        ? '/api/admin/jobs/run-matching'
+        : '/api/admin/jobs/run-expiration';
+
+      const res = await apiRequest(url, { method: 'POST' });
+
+      toast({
+        title: "Job Triggered",
+        description: `Successfully started ${type} job. Result: ${res.message || 'Done'}`,
+      });
     } catch (err: any) {
-       toast({
-         variant: "destructive",
-         title: "Job Failed",
-         description: err.message
-       });
+      toast({
+        variant: "destructive",
+        title: "Job Failed",
+        description: err.message
+      });
     } finally {
-       setJobsLoading(false);
+      setJobsLoading(false);
     }
   };
 
@@ -147,12 +147,12 @@ export default function CommandCenter() {
                 <Menu className="h-5 w-5" />
               </Button>
               <h1 className="text-xl font-bold text-primary">KIZERE Command Center</h1>
-              
+
               {/* Dashboard Navigation */}
               <div className="hidden md:flex items-center ml-4 border-l border-border/50 pl-4">
                 <DashboardStyleSwitcher />
               </div>
-              
+
               <Tabs defaultValue={timeRange} onValueChange={setTimeRange}>
                 <TabsList>
                   <TabsTrigger value="7d">Week</TabsTrigger>
@@ -162,7 +162,7 @@ export default function CommandCenter() {
                 </TabsList>
               </Tabs>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -174,16 +174,16 @@ export default function CommandCenter() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              
+
               <SettingsToggle />
-              
+
               <Button variant="outline" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-white">
                   {activeIssues.length}
                 </span>
               </Button>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
@@ -215,8 +215,8 @@ export default function CommandCenter() {
                     <span>Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    className="text-red-600 focus:text-red-600" 
+                  <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600"
                     onClick={() => signOut()}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
@@ -227,7 +227,7 @@ export default function CommandCenter() {
             </div>
           </div>
         </header>
-      
+
         <div className="flex flex-1">
           {/* Sidebar - hidden on mobile when collapsed */}
           <aside className={`w-64 border-r border-border/40 bg-background/95 backdrop-blur ${sidebarCollapsed ? 'hidden' : 'block'} md:block`}>
@@ -268,7 +268,7 @@ export default function CommandCenter() {
                   </Button>
                 </div>
               </div>
-              
+
               <div className="px-4">
                 <h2 className="mb-2 text-lg font-semibold tracking-tight">System Health</h2>
                 <div className={`${getHealthScoreColor(healthScore)} ${getHealthScoreTextColor(healthScore)} rounded-lg p-4 mb-2`}>
@@ -276,9 +276,9 @@ export default function CommandCenter() {
                     <div className="text-sm font-medium">Health Score</div>
                     <div className="text-lg font-bold">{healthScore}%</div>
                   </div>
-                  <Progress 
-                    value={healthScore} 
-                    className="h-2 bg-background/20" 
+                  <Progress
+                    value={healthScore}
+                    className="h-2 bg-background/20"
                     indicatorClassName={healthScore >= 90 ? 'bg-emerald-500' : healthScore >= 70 ? 'bg-amber-500' : 'bg-red-500'}
                   />
                 </div>
@@ -290,31 +290,31 @@ export default function CommandCenter() {
                   </Alert>
                 )}
               </div>
-              
+
               <div className="px-4">
                 <h2 className="mb-2 text-lg font-semibold tracking-tight">Quick Actions</h2>
                 <div className="space-y-1">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full justify-start"
                     onClick={() => navigate('/admin/users')}
                   >
                     <Users className="mr-2 h-4 w-4" />
                     Manage Users
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full justify-start"
                     onClick={() => navigate('/admin/item-management/new')}
                   >
                     <Plus className="mr-2 h-4 w-4" />
                     New Item
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full justify-start"
                     onClick={() => navigate('/admin/payment-packages/new')}
                   >
@@ -329,7 +329,7 @@ export default function CommandCenter() {
               </div>
             </div>
           </aside>
-          
+
           {/* Main content */}
           <main className="flex-1 overflow-auto p-4 md:p-6">
             <div className="grid gap-6">
@@ -342,19 +342,19 @@ export default function CommandCenter() {
                   </p>
                 </div>
               </div>
-              
+
               {/* Key Metrics */}
               <div className="grid gap-6">
                 <h3 className="text-lg font-medium">Key Performance Metrics</h3>
                 <MetricsDashboard />
               </div>
-              
+
               {/* Revenue Overview */}
               <div className="grid gap-6">
                 <h3 className="text-lg font-medium">Revenue Analytics</h3>
                 <RevenueChart />
               </div>
-              
+
               {/* Distribution Charts */}
               <div className="grid md:grid-cols-2 gap-6">
                 <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
@@ -364,8 +364,8 @@ export default function CommandCenter() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-center py-2">
-                      <PaymentStatusChart 
-                        data={chartData?.paymentStatusData || []} 
+                      <PaymentStatusChart
+                        data={chartData?.paymentStatusData || []}
                       />
                     </div>
                     <div className="space-y-2 mt-2">
@@ -399,7 +399,7 @@ export default function CommandCenter() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
                   <CardHeader>
                     <CardTitle className="text-lg font-medium">User Distribution</CardTitle>
@@ -407,8 +407,8 @@ export default function CommandCenter() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-center py-2">
-                      <UserRoleDistribution 
-                        data={chartData?.userRoleData || []} 
+                      <UserRoleDistribution
+                        data={chartData?.userRoleData || []}
                       />
                     </div>
                     <div className="grid grid-cols-3 gap-2 mt-2">
@@ -431,7 +431,7 @@ export default function CommandCenter() {
                   </CardContent>
                 </Card>
               </div>
-              
+
               {/* Activity & System Status */}
               <div className="grid md:grid-cols-2 gap-6">
                 <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
@@ -441,7 +441,7 @@ export default function CommandCenter() {
                         <CardTitle className="text-lg font-medium">Recent Activity</CardTitle>
                         <CardDescription>Latest actions and events</CardDescription>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => navigate('/admin/activity')}>
+                      <Button variant="outline" size="sm" onClick={() => navigate('/admin/audit-logs')}>
                         View All
                       </Button>
                     </div>
@@ -466,8 +466,8 @@ export default function CommandCenter() {
                             <div className="flex mt-2">
                               <Badge variant={
                                 event.type === 'info' ? 'outline' :
-                                event.type === 'success' ? 'default' :
-                                event.type === 'warning' ? 'secondary' : 'destructive'
+                                  event.type === 'success' ? 'default' :
+                                    event.type === 'warning' ? 'secondary' : 'destructive'
                               } className="text-xs">
                                 {event.category}
                               </Badge>
@@ -478,7 +478,7 @@ export default function CommandCenter() {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
                   <CardHeader>
                     <div className="flex justify-between items-center">
@@ -496,11 +496,10 @@ export default function CommandCenter() {
                       {systemStatus.services.map(service => (
                         <div key={service.id} className="flex items-center justify-between">
                           <div className="flex items-center">
-                            <div className={`w-3 h-3 rounded-full mr-2 ${
-                              service.status === 'operational' ? 'bg-green-500' : 
-                              service.status === 'degraded' ? 'bg-yellow-500' :
-                              service.status === 'maintenance' ? 'bg-blue-500' : 'bg-red-500'
-                            }`}></div>
+                            <div className={`w-3 h-3 rounded-full mr-2 ${service.status === 'operational' ? 'bg-green-500' :
+                                service.status === 'degraded' ? 'bg-yellow-500' :
+                                  service.status === 'maintenance' ? 'bg-blue-500' : 'bg-red-500'
+                              }`}></div>
                             <span>{service.name}</span>
                           </div>
                           <span className="text-sm text-muted-foreground">{service.status}</span>
@@ -521,44 +520,44 @@ export default function CommandCenter() {
 
               {/* System Jobs Control */}
               <div className="grid md:grid-cols-2 gap-6">
-                 <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
-                    <CardHeader>
-                       <CardTitle className="text-lg font-medium">System Maintenance Jobs</CardTitle>
-                       <CardDescription>Manually trigger scheduled batch jobs</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                       <div className="flex items-center justify-between p-3 border border-border/50 rounded-lg bg-background/50">
-                          <div>
-                             <h4 className="font-medium text-sm">Report Matching Engine</h4>
-                             <p className="text-xs text-muted-foreground">Finds matches for lost/found items</p>
-                          </div>
-                          <Button 
-                            size="sm" 
-                            onClick={() => triggerJob('matching')}
-                            disabled={jobsLoading}
-                          >
-                            <Server className="h-4 w-4 mr-2" />
-                            {jobsLoading ? "Running..." : "Run Matching"}
-                          </Button>
-                       </div>
-                       
-                       <div className="flex items-center justify-between p-3 border border-border/50 rounded-lg bg-background/50">
-                          <div>
-                             <h4 className="font-medium text-sm">Expiration Cleaner</h4>
-                             <p className="text-xs text-muted-foreground">Archives expired reports</p>
-                          </div>
-                          <Button 
-                            size="sm" 
-                            variant="secondary"
-                            onClick={() => triggerJob('expiration')}
-                            disabled={jobsLoading}
-                          >
-                            <Calendar className="h-4 w-4 mr-2" />
-                            {jobsLoading ? "Running..." : "Run Cleanup"}
-                          </Button>
-                       </div>
-                    </CardContent>
-                 </Card>
+                <Card className="border border-border/50 bg-card/50 backdrop-blur-sm">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-medium">System Maintenance Jobs</CardTitle>
+                    <CardDescription>Manually trigger scheduled batch jobs</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-3 border border-border/50 rounded-lg bg-background/50">
+                      <div>
+                        <h4 className="font-medium text-sm">Report Matching Engine</h4>
+                        <p className="text-xs text-muted-foreground">Finds matches for lost/found items</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => triggerJob('matching')}
+                        disabled={jobsLoading}
+                      >
+                        <Server className="h-4 w-4 mr-2" />
+                        {jobsLoading ? "Running..." : "Run Matching"}
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 border border-border/50 rounded-lg bg-background/50">
+                      <div>
+                        <h4 className="font-medium text-sm">Expiration Cleaner</h4>
+                        <p className="text-xs text-muted-foreground">Archives expired reports</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => triggerJob('expiration')}
+                        disabled={jobsLoading}
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {jobsLoading ? "Running..." : "Run Cleanup"}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </main>

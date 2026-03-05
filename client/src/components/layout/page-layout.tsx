@@ -10,14 +10,16 @@ interface PageLayoutProps {
   children: ReactNode;
   title?: string;
   description?: string;
+  hideSidebar?: boolean;
+  defaultSidebarCollapsed?: boolean;
 }
 
-export function PageLayout({ children, title, description }: PageLayoutProps) {
+export function PageLayout({ children, title, description, hideSidebar, defaultSidebarCollapsed }: PageLayoutProps) {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
     return (
-      <DashboardLayout>
+      <DashboardLayout hideSidebar={hideSidebar} defaultSidebarCollapsed={defaultSidebarCollapsed}>
         <SEO title={title} description={description} />
         <motion.div
           initial={{ opacity: 0 }}

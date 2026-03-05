@@ -53,19 +53,15 @@ interface UserPreferencesFormProps {
 }
 
 export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesFormProps) {
-  const { t, language, setLanguage } = useLanguage();
+  const { t, language, setLanguage, getLanguages } = useLanguage();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
 
   // Available languages for the application
-  const availableLanguages = [
-    { value: "en", label: "English" },
-    { value: "fr", label: "Français" },
-    { value: "es", label: "Español" },
-    { value: "de", label: "Deutsch" },
-    { value: "pt", label: "Português" },
-    { value: "ar", label: "العربية" },
-  ];
+  const availableLanguages = getLanguages().map(lang => ({
+    value: lang.code,
+    label: lang.name
+  }));
 
   // Timezones - limited selection for simplicity
   const timezones = [
@@ -82,6 +78,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
 
   // Currencies - limited selection for simplicity
   const currencies = [
+    { value: "RWF", label: "Rwandan Franc (RWF)" },
     { value: "USD", label: "US Dollar ($)" },
     { value: "EUR", label: "Euro (€)" },
     { value: "GBP", label: "British Pound (£)" },
@@ -194,9 +191,9 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t("profile.preferences.theme")}</FormLabel>
-                        <Select 
+                        <Select
                           disabled={isSaving}
-                          onValueChange={field.onChange} 
+                          onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -223,9 +220,9 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t("profile.preferences.language")}</FormLabel>
-                        <Select 
+                        <Select
                           disabled={isSaving}
-                          onValueChange={field.onChange} 
+                          onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -250,7 +247,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="text-lg font-medium">{t("profile.preferences.notifications")}</h3>
                 <Separator />
@@ -326,7 +323,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="text-lg font-medium">{t("profile.preferences.dashboardSettings")}</h3>
                 <Separator />
@@ -337,9 +334,9 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t("profile.preferences.layout")}</FormLabel>
-                        <Select 
+                        <Select
                           disabled={isSaving}
-                          onValueChange={field.onChange} 
+                          onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -366,9 +363,9 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Dashboard Style</FormLabel>
-                        <Select 
+                        <Select
                           disabled={isSaving}
-                          onValueChange={field.onChange} 
+                          onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -391,7 +388,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="text-lg font-medium">{t("profile.preferences.regionalization")}</h3>
                 <Separator />
@@ -402,9 +399,9 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t("profile.preferences.currency")}</FormLabel>
-                        <Select 
+                        <Select
                           disabled={isSaving}
-                          onValueChange={field.onChange} 
+                          onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -433,9 +430,9 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t("profile.preferences.timezone")}</FormLabel>
-                        <Select 
+                        <Select
                           disabled={isSaving}
-                          onValueChange={field.onChange} 
+                          onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
@@ -461,7 +458,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                 </div>
               </div>
             </div>
-            
+
             <CardFooter className="flex justify-end gap-2 px-0">
               <Button
                 type="submit"

@@ -7,4 +7,6 @@ vite.config.ts.*
 .vercel
 
 .env
+.env.production
+.env.local
 app.log

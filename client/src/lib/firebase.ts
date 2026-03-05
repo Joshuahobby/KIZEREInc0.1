@@ -1,10 +1,10 @@
 import { initializeApp } from "firebase/app";
-import { 
-  getAuth, 
+import {
+  getAuth,
   signInWithPopup,
-  GoogleAuthProvider, 
-  signOut, 
-  onAuthStateChanged, 
+  GoogleAuthProvider,
+  signOut,
+  onAuthStateChanged,
   getRedirectResult,
   setPersistence,
   browserSessionPersistence,
@@ -30,22 +30,22 @@ const validateFirebaseConfig = () => {
     { key: 'VITE_FIREBASE_PROJECT_ID', value: firebaseConfig.projectId },
     { key: 'VITE_FIREBASE_APP_ID', value: firebaseConfig.appId }
   ];
-  
+
   console.log('[Firebase] Checking configuration variables:', {
     hasApiKey: !!firebaseConfig.apiKey,
     hasProjectId: !!firebaseConfig.projectId,
     hasAppId: !!firebaseConfig.appId,
     authDomain: firebaseConfig.authDomain
   });
-  
+
   const missingVars = requiredVars.filter(v => !v.value);
-  
+
   if (missingVars.length > 0) {
     const missingKeys = missingVars.map(v => v.key).join(', ');
     console.error(`[Firebase] Missing required configuration variables: ${missingKeys}`);
     throw new Error(`Firebase configuration incomplete: ${missingKeys}`);
   }
-  
+
   console.log('[Firebase] Configuration validation passed');
 };
 
@@ -89,11 +89,11 @@ export async function signInWithGoogle(redirectUrl?: string) {
     const result = await signInWithPopup(auth, googleProvider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     const user = result.user;
-    
+
     if (user?.email) {
       localStorage.setItem('last_email', user.email);
     }
-    
+
     return {
       success: true,
       user,
@@ -114,11 +114,11 @@ export async function logOut() {
   try {
     console.log('[Firebase] Signing out user');
     await signOut(auth);
-    
+
     // Explicitly clear auth-related localStorage items
     localStorage.removeItem('last_email');
     localStorage.removeItem('firebase_auth_redirect');
-    
+
     console.log('[Firebase] User signed out and storage cleared successfully');
     return true;
   } catch (error) {
@@ -152,7 +152,7 @@ export function onAuthChange(callback: (user: User | null) => void) {
 export async function handleRedirectResult() {
   try {
     console.log('[Firebase] Checking for redirect result...');
-    
+
     // Check if auth instance is valid
     if (!auth) {
       console.error('[Firebase] Auth instance is not available');
@@ -162,74 +162,68 @@ export async function handleRedirectResult() {
         handled: true
       };
     }
-    
+
     // Retrieve the authentication context from localStorage
     // This is used for debugging and to ensure the redirect flow works correctly
     // Retrieve the authentication context from localStorage if available
     const savedRedirect = localStorage.getItem('firebase_auth_redirect');
-    
+
     console.log('[Firebase] Redirect context:', {
       hasRedirect: !!savedRedirect,
       currentUrl: window.location.href,
     });
-    
+
     // Use Promise.race with a timeout to prevent hanging
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Redirect result timeout')), 15000);
+      setTimeout(() => reject(new Error('Redirect result timeout')), 10000); // Reduced to 10s
     });
-    
+
     console.log('[Firebase] Getting redirect result from auth instance');
-    
+
     // Check if we're on a Replit domain - may need special handling
-    const isReplitDomain = window.location.hostname.includes('replit') || 
-                           window.location.hostname.includes('repl.co');
-    
-    console.log(`[Firebase] Running on ${isReplitDomain ? 'Replit' : 'standard'} domain`);
-    
+    const isReplitDomain = window.location.hostname.includes('replit') ||
+      window.location.hostname.includes('repl.co');
+
     // Get the redirect result
-    const result = await Promise.race([
-      getRedirectResult(auth),
-      timeoutPromise
-    ]) as any;
-    
-    if (result) {
+    let result = null;
+    try {
+      result = await Promise.race([
+        getRedirectResult(auth),
+        timeoutPromise
+      ]) as any;
+    } catch (raceError: any) {
+      if (raceError.message === 'Redirect result timeout') {
+        console.warn('[Firebase] Redirect result timed out, checking currentUser...');
+        // If timeout, just return null so we can check currentUser instead
+        return null;
+      }
+      throw raceError;
+    }
+
+    if (result && result.user) {
       console.log('[Firebase] Received redirect result, processing...');
-      
-      // This gives you a Google Access Token
+
       const credential = GoogleAuthProvider.credentialFromResult(result);
       const token = credential?.accessToken;
-      const idToken = await result.user?.getIdToken();
-      
-      // Get the user info
+      const idToken = await result.user.getIdToken(true); // Force refresh token
+
       const user = result.user;
-      if (!user) {
-        console.warn('[Firebase] Redirect result missing user data');
-        return {
-          success: false,
-          error: { message: 'Redirect result missing user data' },
-          handled: true
-        };
-      }
-      
-      // Log successful authentication
-      console.log('[Firebase] Successfully handled redirect result', { 
+
+      console.log('[Firebase] Successfully handled redirect result', {
         email: user.email,
         uid: user.uid,
-        hasToken: !!token,
         hasIdToken: !!idToken,
-        displayName: user.displayName || 'No display name'
       });
-      
-      // Verify we have the minimum required user data
+
       if (!user.email) {
         console.warn('[Firebase] User email missing from authentication result');
         return {
-          success: false, 
+          success: false,
           error: { message: 'User email missing from authentication result' },
           handled: true
         };
       }
-      
+
       return {
         success: true,
         user,
@@ -238,21 +232,20 @@ export async function handleRedirectResult() {
         idToken
       };
     }
-    
+
     // No redirect result (normal case when not coming from a redirect)
     console.log('[Firebase] No redirect result found');
-    
-    // Check if user is already logged in
+
+    // Check if user is already logged in (essential for page refreshes)
     const currentUser = auth.currentUser;
     if (currentUser) {
       console.log('[Firebase] User is already logged in:', {
         email: currentUser.email,
-        uid: currentUser.uid,
-        displayName: currentUser.displayName || 'No display name'
+        uid: currentUser.uid
       });
-      
-      const idToken = await currentUser.getIdToken(true);
-      
+
+      const idToken = await currentUser.getIdToken(false); // Don't force refresh if already have one
+
       return {
         success: true,
         user: currentUser,
@@ -261,9 +254,9 @@ export async function handleRedirectResult() {
         alreadyLoggedIn: true
       };
     }
-    
+
     return null;
-    
+
   } catch (error: any) {
     // Enhanced structured error logging with proper type
     const errorData: {
@@ -280,9 +273,9 @@ export async function handleRedirectResult() {
       stack: error.stack || 'No stack trace',
       timestamp: new Date().toISOString()
     };
-    
+
     console.error('[Firebase] Error handling redirect result:', errorData);
-    
+
     // Handle specific Firebase error codes
     if (error.code === 'auth/internal-error') {
       console.warn('[Firebase] Internal auth error - possible Firebase configuration issue');
@@ -293,7 +286,7 @@ export async function handleRedirectResult() {
     } else if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
       console.info('[Firebase] Authentication popup closed or cancelled by user');
     }
-    
+
     // Get credential from error if possible
     try {
       const credential = GoogleAuthProvider.credentialFromError(error);
@@ -304,7 +297,7 @@ export async function handleRedirectResult() {
     } catch (credError) {
       console.warn('[Firebase] Could not retrieve credential from error');
     }
-    
+
     // Return a structured error object instead of throwing
     return {
       success: false,

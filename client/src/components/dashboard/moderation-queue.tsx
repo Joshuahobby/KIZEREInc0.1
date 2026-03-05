@@ -1,11 +1,12 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,21 +14,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { format } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { ModerationReport } from "@shared/schema";
 
 export function ModerationQueue() {
   const { toast } = useToast();
-  
+  const { t } = useLanguage();
+
   const { data: reports, isLoading } = useQuery<ModerationReport[]>({
     queryKey: ["/api/moderation/reports"],
   });
 
   const mutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const res = await apiRequest(`/api/moderation/reports/${id}`, { 
-        method: "PATCH", 
-        data: { status } 
+      const res = await apiRequest(`/api/moderation/reports/${id}`, {
+        method: "PATCH",
+        data: { status }
       });
       return res;
     },
@@ -59,24 +61,24 @@ export function ModerationQueue() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Moderation Queue</CardTitle>
-        <CardDescription>Review and resolve flags across the platform.</CardDescription>
+        <CardTitle>{t('dashboard.moderation.title') || "Moderation Queue"}</CardTitle>
+        <CardDescription>{t('dashboard.moderation.description') || "Review and resolve flags across the platform."}</CardDescription>
       </CardHeader>
       <CardContent>
         {!reports || reports.length === 0 ? (
           <div className="text-center py-10">
-            <p className="text-muted-foreground italic">No reports found in the queue.</p>
+            <p className="text-muted-foreground italic">{t('dashboard.moderation.noReports') || "No reports found in the queue."}</p>
           </div>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Reporter</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('dashboard.moderation.table.type') || "Type"}</TableHead>
+                <TableHead>{t('dashboard.moderation.table.reason') || "Reason"}</TableHead>
+                <TableHead>{t('dashboard.moderation.table.reporter') || "Reporter"}</TableHead>
+                <TableHead>{t('dashboard.moderation.table.status') || "Status"}</TableHead>
+                <TableHead>{t('dashboard.moderation.table.date') || "Date"}</TableHead>
+                <TableHead className="text-right">{t('dashboard.moderation.table.actions') || "Actions"}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -107,21 +109,21 @@ export function ModerationQueue() {
                   <TableCell className="text-right space-x-2">
                     {report.status === 'pending' && (
                       <>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="h-8 text-green-600 border-green-200 hover:bg-green-50"
                           onClick={() => mutation.mutate({ id: report.id, status: 'resolved' })}
                         >
-                          <CheckCircle className="h-4 w-4 mr-1" /> Resolve
+                          <CheckCircle className="h-4 w-4 mr-1" /> {t('common.actions.resolve') || "Resolve"}
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
+                        <Button
+                          size="sm"
+                          variant="outline"
                           className="h-8 text-amber-600 border-amber-200 hover:bg-amber-50"
                           onClick={() => mutation.mutate({ id: report.id, status: 'dismissed' })}
                         >
-                          <XCircle className="h-4 w-4 mr-1" /> Dismiss
+                          <XCircle className="h-4 w-4 mr-1" /> {t('common.actions.dismiss') || "Dismiss"}
                         </Button>
                       </>
                     )}

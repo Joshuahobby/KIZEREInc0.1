@@ -84,7 +84,7 @@ export default function ReportDetailPage() {
 
   // Check if I have already claimed this (if not owner)
   const { data: myClaims } = useQuery<Claim[]>({
-    queryKey: ['/api/claims'],
+    queryKey: ['/api/claims/my-claims'],
     enabled: !!user && !!report && user.id !== report.userId,
   });
 
@@ -99,7 +99,7 @@ export default function ReportDetailPage() {
       setShowAppealDialog(false);
       setAppealReason("");
       toast({ title: "Appeal submitted successfully", description: "An admin will review your case." });
-      queryClient.invalidateQueries({ queryKey: ['/api/claims'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/claims/my-claims'] });
     },
     onError: (err: Error) => {
       toast({ variant: "destructive", title: "Failed to submit appeal", description: err.message });
@@ -468,7 +468,7 @@ export default function ReportDetailPage() {
                             setShowClaimForm(false);
                             toast({ title: "Claim submitted successfully!" });
                             queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
-                            queryClient.invalidateQueries({ queryKey: ['/api/claims'] });
+                            queryClient.invalidateQueries({ queryKey: ['/api/claims/my-claims'] });
                           }}
                         />
                       </div>

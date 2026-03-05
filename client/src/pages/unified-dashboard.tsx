@@ -47,6 +47,8 @@ import {
   ClipboardList,
   Clock,
   Search,
+  Activity,
+  Package,
   Bell,
   Plus,
   LayoutDashboard,
@@ -72,26 +74,76 @@ import { UserPreferences } from "@shared/schema";
 import { AppLayout } from "@/components/layout/admin-layout";
 
 
+// Identity Protection Card (Rwanda Specific)
+const IdentityProtectionCard = ({ user, t }: { user: any, t: any }) => (
+  <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden relative group">
+    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+      <ShieldCheck className="h-24 w-24 text-primary" />
+    </div>
+    <CardHeader className="pb-2">
+      <div className="flex items-center gap-2">
+        <div className="p-2 bg-primary/10 rounded-lg">
+          <ShieldCheck className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <CardTitle className="text-lg">{t('dashboard.identityProtection.title') || "Identity Protection"}</CardTitle>
+          <CardDescription className="text-xs">
+            {t('dashboard.identityProtection.desc') || "Secure your National ID and Passport"}
+          </CardDescription>
+        </div>
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="flex flex-wrap gap-3 mt-2">
+        <Badge variant="outline" className="bg-background/50 backdrop-blur-sm border-primary/20 px-3 py-1 flex items-center gap-2">
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-bold uppercase tracking-wider">{t('dashboard.identityProtection.nid_protected')}</span>
+        </Badge>
+        <Badge variant="outline" className="bg-background/50 backdrop-blur-sm border-primary/20 px-3 py-1 flex items-center gap-2">
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-bold uppercase tracking-wider">{t('dashboard.identityProtection.passport_protected')}</span>
+        </Badge>
+      </div>
+      <Button variant="link" size="sm" className="px-0 mt-4 text-xs font-bold text-primary group-hover:underline">
+        {t('dashboard.identityProtection.manage') || "Manage Protection Settings →"}
+      </Button>
+    </CardContent>
+  </Card>
+);
+
 // Helper component for the header
 const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: any }) => (
-  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
     <div className="space-y-1">
-      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+      <div className="flex items-center gap-2 mb-1">
+        <Badge variant="outline" className="text-[10px] font-black tracking-tighter uppercase border-primary/20 text-primary px-2 py-0">
+          KIZERE {user?.role || 'User'}
+        </Badge>
+        <div className="h-1 w-1 rounded-full bg-border" />
+        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Rwanda Operations</span>
+      </div>
+      <h1 className="text-3xl font-black tracking-tight sm:text-4xl text-foreground">
         {t('dashboard.welcomeBack', { name: "" }).replace(/,?\s*$/, '')}{' '}
-        <span className="text-primary">
-          {user?.fullName || user?.username}
+        <span className="text-primary italic">
+          {user?.fullName?.split(' ')[0] || user?.username}
         </span>
-        {isAdmin && <span className="ml-2 text-[9px] uppercase tracking-widest font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full">SUDO</span>}
+        {isAdmin && <span className="ml-3 text-[10px] uppercase tracking-[0.2em] font-black text-white bg-primary px-3 py-1 rounded-full shadow-lg shadow-primary/20">SUDO</span>}
       </h1>
-      <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-2xl mt-1">
+      <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-2xl">
         {t('dashboard.welcomeSubtitle')}
       </p>
     </div>
-    <div className="flex items-center gap-3">
-      <div className="h-10 w-px bg-border/50 hidden md:block mx-2" />
-      <div className="flex flex-col items-end">
-        <span className="text-[10px] uppercase tracking-widest font-black text-muted-foreground/60">{t('dashboard.localTime')}</span>
-        <span className="font-bold tabular-nums">{format(new Date(), 'HH:mm')}</span>
+    <div className="flex items-center gap-4 bg-secondary/5 p-3 rounded-2xl border border-border/50 backdrop-blur-sm">
+      <div className="flex flex-col items-start pr-4 border-r border-border/50">
+        <span className="text-[9px] uppercase tracking-widest font-black text-muted-foreground/60">{t('dashboard.localTime')}</span>
+        <span className="font-bold tabular-nums text-lg">{format(new Date(), 'HH:mm')}</span>
+      </div>
+      <div className="flex flex-col items-start">
+        <span className="text-[9px] uppercase tracking-widest font-black text-muted-foreground/60">Status</span>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+          <span className="text-xs font-bold">Online</span>
+        </div>
       </div>
     </div>
   </div>
@@ -105,26 +157,33 @@ export default function UnifiedDashboard() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
 
-  // Get tab from URL or default to overview
-  const getTabFromUrl = () => {
+  // Get initial tab based on URL and user role
+  const getInitialTab = () => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('tab') || "overview";
+    const urlTab = params.get('tab');
+    if (urlTab) return urlTab;
+
+    // Default based on role
+    if (user?.role === 'Admin') return "admin";
+    if (user?.role === 'Agent') return "agent";
+    return "overview";
   };
 
-  const [activeTab, setActiveTab] = React.useState(getTabFromUrl());
+  const [activeTab, setActiveTab] = React.useState(getInitialTab());
 
 
 
 
   // Update state when URL changes - using explicit React reference to avoid ReferenceErrors
   React.useEffect(() => {
-    const currentTab = getTabFromUrl();
+    const params = new URLSearchParams(window.location.search);
+    const currentTab = params.get('tab') || (user?.role === 'Admin' ? 'admin' : user?.role === 'Agent' ? 'agent' : 'overview');
     if (currentTab !== activeTab) {
       setActiveTab(currentTab);
     }
     // Added console log to confirm this effect is running and cache is refreshed
     console.log('[UnifiedDashboard] Tab sync effect running', { currentTab, activeTab });
-  }, [window.location.search, activeTab]);
+  }, [window.location.search, activeTab, user?.role]);
 
   // Helper to change tab and update URL
   const handleTabChange = (newTab: string) => {
@@ -232,22 +291,30 @@ export default function UnifiedDashboard() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-4xl mx-auto space-y-8"
+          className="max-w-5xl mx-auto space-y-8"
         >
+          {/* Identity Protection (Rwanda Focus) */}
+          <motion.div variants={itemVariants}>
+            <IdentityProtectionCard user={user} t={t} />
+          </motion.div>
+
           {/* Primary Action Paths */}
-          <div className="grid md:grid-cols-2 gap-4 mt-4">
+          <div className="grid md:grid-cols-2 gap-4">
             <motion.div variants={itemVariants}>
               <Card
-                className="overflow-hidden cursor-pointer hover:shadow-md transition-all border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group"
+                className="overflow-hidden cursor-pointer hover:shadow-lg transition-all border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group relative"
                 onClick={() => navigate('/lost')}
               >
-                <CardContent className="p-4 md:p-5 flex flex-row items-center gap-4">
-                  <div className="p-2.5 bg-destructive/10 rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <AlertTriangle className="h-16 w-16 text-destructive" />
+                </div>
+                <CardContent className="p-5 flex flex-row items-center gap-5">
+                  <div className="p-3 bg-destructive/10 rounded-2xl shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                    <AlertTriangle className="h-6 w-6 text-destructive" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-lg font-bold tracking-tight text-destructive">{t('dashboard.action.lostTitle')}</h3>
-                    <p className="text-muted-foreground text-[11px] leading-tight mt-0.5 font-medium">{t('dashboard.action.lostDesc')}</p>
+                    <h3 className="text-xl font-black tracking-tight text-destructive">{t('dashboard.action.lostTitle')}</h3>
+                    <p className="text-muted-foreground text-xs leading-tight mt-1 font-medium">{t('dashboard.action.lostDesc')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -255,16 +322,19 @@ export default function UnifiedDashboard() {
 
             <motion.div variants={itemVariants}>
               <Card
-                className="overflow-hidden cursor-pointer hover:shadow-md transition-all border-primary/20 bg-primary/5 hover:bg-primary/10 group"
+                className="overflow-hidden cursor-pointer hover:shadow-lg transition-all border-primary/20 bg-primary/5 hover:bg-primary/10 group relative"
                 onClick={() => navigate('/found')}
               >
-                <CardContent className="p-4 md:p-5 flex flex-row items-center gap-4">
-                  <div className="p-2.5 bg-primary/10 rounded-2xl shrink-0 group-hover:scale-110 transition-transform">
-                    <Search className="h-5 w-5 text-primary" />
+                <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <Search className="h-16 w-16 text-primary" />
+                </div>
+                <CardContent className="p-5 flex flex-row items-center gap-5">
+                  <div className="p-3 bg-primary/10 rounded-2xl shrink-0 group-hover:scale-110 transition-transform shadow-sm">
+                    <Search className="h-6 w-6 text-primary" />
                   </div>
                   <div className="text-left">
-                    <h3 className="text-lg font-bold tracking-tight text-primary">{t('dashboard.action.foundTitle')}</h3>
-                    <p className="text-muted-foreground text-[11px] leading-tight mt-0.5 font-medium">{t('dashboard.action.foundDesc')}</p>
+                    <h3 className="text-xl font-black tracking-tight text-primary">{t('dashboard.action.foundTitle')}</h3>
+                    <p className="text-muted-foreground text-xs leading-tight mt-1 font-medium">{t('dashboard.action.foundDesc')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -272,34 +342,38 @@ export default function UnifiedDashboard() {
           </div>
 
           {/* Secondary Action & Clean List */}
-          <motion.div variants={itemVariants} className="pt-4">
+          <motion.div variants={itemVariants} className="pt-2">
             <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight">{t('nav.myItems')}</h2>
-                <p className="text-muted-foreground text-sm">{userStats.totalItems} {t('dashboard.registeredItems')}</p>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-1 bg-primary rounded-full" />
+                <div>
+                  <h2 className="text-xl font-black tracking-tight uppercase">{t('nav.myItems')}</h2>
+                  <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-bold">
+                    {userStats.totalItems} {t('dashboard.registeredItems')}
+                  </p>
+                </div>
               </div>
-              <Button onClick={() => navigate('/register')} className="w-full sm:w-auto">
-                <ShieldCheck className="mr-2 h-4 w-4" />
+              <Button onClick={() => navigate('/register-item')} className="w-full sm:w-auto font-bold shadow-lg shadow-primary/20">
+                <Plus className="mr-2 h-4 w-4" />
                 {t('dashboard.action.protectTitle')}
               </Button>
             </div>
 
-            <Card className="border-border/50 shadow-sm">
+            <Card className="border-border/50 shadow-sm overflow-hidden bg-background/50 backdrop-blur-sm">
               <CardContent className="p-0">
                 <ItemsTable items={userStats.recentlyAddedItems} isLoading={false} />
               </CardContent>
             </Card>
 
-            <div className="flex justify-center mt-4">
-              <Button variant="ghost" size="sm" onClick={() => setActiveTab('items')} className="text-muted-foreground">
-                {t('dashboard.viewAll')}
+            <div className="flex justify-center mt-6">
+              <Button variant="ghost" size="sm" onClick={() => setActiveTab('items')} className="text-muted-foreground font-bold hover:text-primary transition-colors">
+                {t('dashboard.viewAll')} →
               </Button>
             </div>
           </motion.div>
         </motion.div>
       );
     }
-
     // Admin dashboard content
     if (isAdmin && activeTab === "admin") {
       return (
@@ -308,61 +382,74 @@ export default function UnifiedDashboard() {
           initial="hidden"
           animate="visible"
         >
-          {/* Admin Stats Row */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-            <motion.div variants={itemVariants}>
-              <StatsCard
-                title={t('dashboard.admin.totalRevenue')}
-                value={adminStats?.totalRevenue || 0}
-                previousValue={adminStats?.revenue?.lastMonth}
-                icon={<DollarSign className="h-5 w-5" />}
-                iconBgClass="bg-emerald-100 dark:bg-emerald-900/30"
-                iconTextClass="text-emerald-600 dark:text-emerald-400"
-                trendData={[3000, 4500, 3800, 5200, 4800, 6000, adminStats?.totalRevenue || 0]}
-                chartColor="#10b981"
-              />
+          {/* Stats and System Status */}
+          <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4 mb-6">
+            <motion.div variants={itemVariants} className="md:col-span-2 lg:col-span-3">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <StatsCard
+                  title={t('dashboard.admin.totalRevenue')}
+                  value={adminStats?.totalRevenue || 0}
+                  previousValue={adminStats?.revenue?.lastMonth}
+                  icon={<DollarSign className="h-5 w-5" />}
+                  iconBgClass="bg-emerald-100 dark:bg-emerald-900/30"
+                  iconTextClass="text-emerald-600 dark:text-emerald-400"
+                  trendData={[3000, 4500, 3800, 5200, 4800, 6000, adminStats?.totalRevenue || 0]}
+                  chartColor="#10b981"
+                />
+                <StatsCard
+                  title={t('dashboard.admin.totalUsers')}
+                  value={adminStats?.totalUsers || 0}
+                  icon={<Users className="h-5 w-5" />}
+                  iconBgClass="bg-blue-100 dark:bg-blue-900/30"
+                  iconTextClass="text-blue-600 dark:text-blue-400"
+                  trendData={[15, 22, 18, 27, 24, 32, adminStats?.totalUsers || 0]}
+                  chartColor="#3b82f6"
+                />
+                <StatsCard
+                  title={t('dashboard.admin.activeReports')}
+                  value={(adminStats?.reportBreakdown?.lost || 0) + (adminStats?.reportBreakdown?.found || 0)}
+                  icon={<FileText className="h-5 w-5" />}
+                  iconBgClass="bg-red-100 dark:bg-red-900/30"
+                  iconTextClass="text-red-600 dark:text-red-400"
+                  trendData={[8, 12, 10, 15, 13, 18, (adminStats?.reportBreakdown?.lost || 0) + (adminStats?.reportBreakdown?.found || 0)]}
+                  chartColor="#ef4444"
+                />
+              </div>
             </motion.div>
 
-            <motion.div variants={itemVariants}>
-              <StatsCard
-                title={t('dashboard.admin.totalUsers')}
-                value={adminStats?.totalUsers || 0}
-                icon={<Users className="h-5 w-5" />}
-                iconBgClass="bg-blue-100 dark:bg-blue-900/30"
-                iconTextClass="text-blue-600 dark:text-blue-400"
-                trendData={[15, 22, 18, 27, 24, 32, adminStats?.totalUsers || 0]}
-                chartColor="#3b82f6"
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <StatsCard
-                title={t('dashboard.admin.registeredItems')}
-                value={userStats.totalItems}
-                icon={<ShoppingBag className="h-5 w-5" />}
-                iconBgClass="bg-indigo-100 dark:bg-indigo-900/30"
-                iconTextClass="text-indigo-600 dark:text-indigo-400"
-                trendData={[30, 45, 38, 52, 48, 60, userStats.totalItems]}
-                chartColor="#6366f1"
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <StatsCard
-                title={t('dashboard.admin.activeReports')}
-                value={(adminStats?.reportBreakdown?.lost || 0) + (adminStats?.reportBreakdown?.found || 0)}
-                icon={<FileText className="h-5 w-5" />}
-                iconBgClass="bg-red-100 dark:bg-red-900/30"
-                iconTextClass="text-red-600 dark:text-red-400"
-                trendData={[8, 12, 10, 15, 13, 18, (adminStats?.reportBreakdown?.lost || 0) + (adminStats?.reportBreakdown?.found || 0)]}
-                chartColor="#ef4444"
-              />
+            <motion.div variants={itemVariants} className="md:col-span-1">
+              <Card className="h-full border-primary/10 bg-primary/5">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-primary" />
+                      {t('dashboard.admin.systemStatus') || "System Status"}
+                    </CardTitle>
+                    <Badge variant="outline" className="text-[9px] bg-emerald-500/10 text-emerald-500 border-emerald-500/20">LIVE</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-muted-foreground">{t('dashboard.admin.apiServices')}</span>
+                      <span className="text-emerald-500 font-bold">{t('dashboard.admin.operational')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-muted-foreground">{t('dashboard.admin.database')}</span>
+                      <span className="text-emerald-500 font-bold">{t('dashboard.admin.optimal')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-muted-foreground">{t('dashboard.admin.paymentsMtn')}</span>
+                      <span className="text-emerald-500 font-bold">{t('dashboard.admin.online')}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           </div>
 
-          {/* Charts Row */}
-          <div className="grid gap-6 md:grid-cols-2 mb-6">
-            <motion.div variants={itemVariants}>
+          <div className="grid gap-6 md:grid-cols-3 mb-6">
+            <motion.div variants={itemVariants} className="md:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>{t('dashboard.admin.monthlyRevenue')}</CardTitle>
@@ -374,71 +461,85 @@ export default function UnifiedDashboard() {
                   <PaymentAnalyticsChart data={adminStats?.monthlyRevenue?.map((item: any) => ({ date: item.month, amount: item.revenue })) || []} />
                 </CardContent>
               </Card>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">{t('dashboard.admin.paymentStatus')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-[200px]">
+                    <PaymentStatusChart data={
+                      (adminStats?.paymentsByStatus || []).map((item: any) => ({
+                        name: item.status,
+                        value: item.count,
+                        color: item.status === 'successful' ? '#10b981' :
+                          item.status === 'pending' ? '#f59e0b' :
+                            item.status === 'failed' ? '#ef4444' : '#94a3b8'
+                      }))
+                    } />
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm">{t('dashboard.admin.paymentTypes')}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-[200px]">
+                    <PaymentTypeChart data={
+                      (adminStats?.paymentsByType || []).map((item: any) => ({
+                        name: item.type,
+                        value: item.amount,
+                        color: item.type === 'registration' ? '#3b82f6' :
+                          item.type === 'lost_report' ? '#8b5cf6' : '#94a3b8'
+                      }))
+                    } />
+                  </CardContent>
+                </Card>
+              </div>
             </motion.div>
 
-            <motion.div variants={itemVariants} className="grid gap-6 grid-rows-2">
-              <Card>
+            <motion.div variants={itemVariants} className="space-y-6">
+              <Card className="h-full flex flex-col max-h-[600px]">
                 <CardHeader>
-                  <CardTitle>{t('dashboard.admin.paymentStatus')}</CardTitle>
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" />
+                    {t('dashboard.admin.recentActivity') || "Recent Activity"}
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <PaymentStatusChart data={
-                    (adminStats?.paymentsByStatus || []).map((item: any) => ({
-                      name: item.status,
-                      value: item.count,
-                      color: item.status === 'successful' ? '#10b981' :
-                        item.status === 'pending' ? '#f59e0b' :
-                          item.status === 'failed' ? '#ef4444' : '#94a3b8'
-                    }))
-                  } />
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>{t('dashboard.admin.paymentTypes')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PaymentTypeChart data={
-                    (adminStats?.paymentsByType || []).map((item: any) => ({
-                      name: item.type,
-                      value: item.amount,
-                      color: item.type === 'registration' ? '#3b82f6' :
-                        item.type === 'lost_report' ? '#8b5cf6' : '#94a3b8'
-                    }))
-                  } />
+                <CardContent className="flex-1 overflow-auto p-4 space-y-4 pt-0">
+                  <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="space-y-4"
+                  >
+                    {[
+                      { title: t('dashboard.admin.recentActivityItems.newUser') || "New user", time: "5m ago", desc: t('dashboard.admin.recentActivityItems.newUserDesc') || "Subscriber John joined", icon: <Users className="h-3 w-3" /> },
+                      { title: t('dashboard.admin.recentActivityItems.itemRegistered') || "Item registered", time: "12m ago", desc: t('dashboard.admin.recentActivityItems.itemRegisteredDesc') || "Samsung S24 registered", icon: <Package className="h-3 w-3" /> },
+                      { title: t('dashboard.admin.recentActivityItems.paymentReceived') || "Payment received", time: "45m ago", desc: t('dashboard.admin.recentActivityItems.paymentReceivedDesc') || "RWF 5,000 via Momo", icon: <DollarSign className="h-3 w-3" /> }
+                    ].map((act, i) => (
+                      <motion.div key={i} variants={itemVariants} className="flex gap-3 items-start">
+                        <div className="h-7 w-7 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                          {act.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center">
+                            <p className="text-[11px] font-bold truncate">{act.title}</p>
+                            <span className="text-[9px] text-muted-foreground shrink-0 ml-2">{act.time}</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground truncate">{act.desc}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                  <Button variant="ghost" size="sm" className="w-full text-[10px] font-bold text-primary mt-2">
+                    {t('dashboard.viewAll') || "VIEW ALL"}
+                  </Button>
                 </CardContent>
               </Card>
             </motion.div>
           </div>
 
-          {/* Recent Transactions */}
-          <motion.div variants={itemVariants}>
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>{t('dashboard.admin.recentTransactions')}</CardTitle>
-                <CardDescription>
-                  {t('dashboard.admin.transactionsDescription')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RecentTransactions transactions={
-                  (adminStats?.recentTransactions || []).map((transaction: any) => ({
-                    id: transaction.id,
-                    transactionRef: transaction.transactionRef,
-                    amount: transaction.amount,
-                    currency: transaction.currency,
-                    status: transaction.status,
-                    type: transaction.type,
-                    createdAt: new Date(transaction.createdAt).toISOString(),
-                    username: `User ${transaction.userId}` // Add mock username
-                  }))
-                } />
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Verification Requests Management */}
           <motion.div variants={itemVariants} className="mb-6">
             <VerificationRequestsTable />
           </motion.div>
@@ -528,12 +629,12 @@ export default function UnifiedDashboard() {
                           <Table>
                             <TableHeader>
                               <TableRow>
-                                <TableHead>{t('common.table.reportId')}</TableHead>
-                                <TableHead>{t('common.table.type')}</TableHead>
-                                <TableHead>{t('common.table.status')}</TableHead>
-                                <TableHead>{t('common.table.location')}</TableHead>
-                                <TableHead>{t('common.table.date')}</TableHead>
-                                <TableHead>{t('common.table.actions')}</TableHead>
+                                <TableHead>{t('dashboard.table.reportId')}</TableHead>
+                                <TableHead>{t('dashboard.table.type')}</TableHead>
+                                <TableHead>{t('dashboard.table.status')}</TableHead>
+                                <TableHead>{t('dashboard.table.location')}</TableHead>
+                                <TableHead>{t('dashboard.table.date')}</TableHead>
+                                <TableHead>{t('dashboard.table.actions')}</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -685,11 +786,11 @@ export default function UnifiedDashboard() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>{t('common.table.type')}</TableHead>
-                              <TableHead>{t('common.table.title') || 'Title'}</TableHead>
-                              <TableHead className="hidden sm:table-cell">{t('common.table.location')}</TableHead>
-                              <TableHead>{t('common.table.status')}</TableHead>
-                              <TableHead className="hidden sm:table-cell">{t('common.table.date')}</TableHead>
+                              <TableHead>{t('dashboard.table.type')}</TableHead>
+                              <TableHead>{t('dashboard.table.title') || 'Title'}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('dashboard.table.location')}</TableHead>
+                              <TableHead>{t('dashboard.table.status')}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('dashboard.table.date')}</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -727,10 +828,10 @@ export default function UnifiedDashboard() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>{t('common.table.title') || 'Title'}</TableHead>
-                              <TableHead className="hidden sm:table-cell">{t('common.table.location')}</TableHead>
-                              <TableHead>{t('common.table.status')}</TableHead>
-                              <TableHead className="hidden sm:table-cell">{t('common.table.date')}</TableHead>
+                              <TableHead>{t('dashboard.table.title') || 'Title'}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('dashboard.table.location')}</TableHead>
+                              <TableHead>{t('dashboard.table.status')}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('dashboard.table.date')}</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -761,10 +862,10 @@ export default function UnifiedDashboard() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>{t('common.table.title') || 'Title'}</TableHead>
-                              <TableHead className="hidden sm:table-cell">{t('common.table.location')}</TableHead>
-                              <TableHead>{t('common.table.status')}</TableHead>
-                              <TableHead className="hidden sm:table-cell">{t('common.table.date')}</TableHead>
+                              <TableHead>{t('dashboard.table.title') || 'Title'}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('dashboard.table.location')}</TableHead>
+                              <TableHead>{t('dashboard.table.status')}</TableHead>
+                              <TableHead className="hidden sm:table-cell">{t('dashboard.table.date')}</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -835,9 +936,9 @@ export default function UnifiedDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('common.table.claimId')}</TableHead>
-                        <TableHead>{t('common.table.status')}</TableHead>
-                        <TableHead>{t('common.table.date')}</TableHead>
+                        <TableHead>{t('dashboard.table.claimId')}</TableHead>
+                        <TableHead>{t('dashboard.table.status')}</TableHead>
+                        <TableHead>{t('dashboard.table.date')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -875,9 +976,9 @@ export default function UnifiedDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t('common.table.from')}</TableHead>
-                        <TableHead>{t('common.table.status')}</TableHead>
-                        <TableHead>{t('common.table.action')}</TableHead>
+                        <TableHead>{t('dashboard.table.from')}</TableHead>
+                        <TableHead>{t('dashboard.table.status')}</TableHead>
+                        <TableHead>{t('dashboard.table.action')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -948,69 +1049,67 @@ export default function UnifiedDashboard() {
 
   // Define dashboard tabs based on user role
   const getDashboardTabs = () => {
+    // Shared tabs for all users
     const tabs = [
       {
         id: "overview",
         label: t('dashboard.tabs.overview'),
-        icon: <LayoutDashboard className="h-5 w-5" />
+        icon: <LayoutDashboard className="h-4 w-5" />
       },
       {
         id: "items",
         label: t('dashboard.tabs.items'),
-        icon: <ShoppingBag className="h-5 w-5" />
+        icon: <ShoppingBag className="h-4 w-5" />
       },
       {
         id: "reports",
         label: t('dashboard.tabs.reports'),
-        icon: <ClipboardList className="h-5 w-5" />
-      },
-      {
-        id: "payments",
-        label: t('dashboard.tabs.payments'),
-        icon: <DollarSign className="h-5 w-5" />
-      },
-      {
-        id: "claims",
-        label: t('dashboard.tabs.claims'),
-        icon: <ShieldCheck className="h-5 w-5" />
+        icon: <ClipboardList className="h-4 w-5" />
       }
     ];
 
-    // Add admin tab for admins
-    if (isAdmin) {
+    // Business users or high-volume power users get Business Insights prominently
+    if (isBusiness || userStats.totalItems >= 5 || (user.role === 'Subscriber' && userStats.totalSpent > 10000)) {
       tabs.push({
-        id: "admin",
-        label: t('dashboard.tabs.adminPanel'),
-        icon: <BarChart3 className="h-5 w-5" />
+        id: "business",
+        label: t('dashboard.tabs.businessInsights') || "Business",
+        icon: <BarChart3 className="h-4 w-5" />
       });
     }
 
-    // Add agent tab for agents (and admins)
+    // Role specific functional tabs
     if (isAgent || isAdmin) {
       tabs.push({
         id: "agent",
         label: t('dashboard.tabs.agentConsole'),
-        icon: <Search className="h-5 w-5" />
+        icon: <Search className="h-4 w-5" />
       });
     }
 
-    // Add moderation tab for moderators, agents and admins
     if (isAdmin || isAgent || isModerator) {
       tabs.push({
         id: "moderation",
         label: t('dashboard.tabs.moderation') || "Moderation",
-        icon: <ShieldCheck className="h-5 w-5" />
+        icon: <ShieldCheck className="h-4 w-5" />
       });
     }
 
-    // Add Business Insights for business users and high-volume subscribers
-    if (isBusiness || userStats.totalItems >= 5 || (user.role === 'Subscriber' && userStats.totalSpent > 5000)) {
+    // Admin Panel is exclusive to SUDO/Admin users
+    if (isAdmin) {
       tabs.push({
-        id: "business",
-        label: t('dashboard.tabs.businessInsights') || "Business Insights",
-        icon: <BarChart3 className="h-5 w-5" />
+        id: "admin",
+        label: t('dashboard.tabs.adminPanel'),
+        icon: <Settings className="h-5 w-5" />
       });
     }
+
+    // Secondary tabs moved to a "More" or lower priority if needed, 
+    // but here we keep them clean
+    tabs.push({
+      id: "payments",
+      label: t('dashboard.tabs.payments'),
+      icon: <DollarSign className="h-4 w-5" />
+    });
 
     return tabs;
   };

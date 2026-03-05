@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2, Send, ShieldCheck } from "lucide-react";
 import { BatchImageUpload } from "@/components/item-registration/batch-image-upload";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface ClaimFormProps {
   reportId: number;
@@ -30,6 +31,7 @@ export function ClaimForm({ reportId, challengeQuestion, onSuccess }: ClaimFormP
   const [images, setImages] = useState<File[]>([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const form = useForm({
     resolver: zodResolver(insertClaimSchema),
@@ -62,16 +64,16 @@ export function ClaimForm({ reportId, challengeQuestion, onSuccess }: ClaimFormP
     },
     onSuccess: () => {
       toast({
-        title: "Claim Submitted",
-        description: "The finder has been notified. You'll receive a notification once they review it.",
+        title: t('claims.success_title'),
+        description: t('claims.success_desc'),
       });
       queryClient.invalidateQueries({ queryKey: ["/api/claims/my-claims"] });
       onSuccess();
     },
     onError: (error: Error) => {
       toast({
-        title: "Submission failed",
-        description: error.message || "Could not submit claim. Please try again.",
+        title: t('claims.error_title'),
+        description: error.message || t('common.submissionFailed'),
         variant: "destructive",
       });
     },
@@ -82,8 +84,8 @@ export function ClaimForm({ reportId, challengeQuestion, onSuccess }: ClaimFormP
       <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg flex gap-3">
         <ShieldCheck className="h-5 w-5 text-amber-600 shrink-0" />
         <div className="text-xs text-amber-800">
-          <p className="font-bold mb-1">Ownership Verification</p>
-          <p>Please provide specific details only the owner would know (e.g., lock screen wallpaper, specific contents, unique marks). Uploading photos of your purchase receipt or the item in your possession helps tremendously.</p>
+          <p className="font-bold mb-1">{t('claims.verify_title')}</p>
+          <p>{t('claims.verify_desc')}</p>
         </div>
       </div>
 
@@ -94,15 +96,15 @@ export function ClaimForm({ reportId, challengeQuestion, onSuccess }: ClaimFormP
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Detailed Proof of Ownership</FormLabel>
+                <FormLabel>{t('claims.proof_label')}</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Describe the item in detail, including unique identifiers, contents, or circumstances of loss..."
+                    placeholder={t('claims.proof_placeholder')}
                     className="min-h-[150px]"
                     {...field}
                   />
                 </FormControl>
-                <FormDescription>Min 50 characters for a valid claim.</FormDescription>
+                <FormDescription>{t('claims.proof_hint')}</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -116,14 +118,14 @@ export function ClaimForm({ reportId, challengeQuestion, onSuccess }: ClaimFormP
                 <FormItem className="p-4 bg-primary/5 border border-primary/10 rounded-lg">
                   <FormLabel className="text-primary font-bold flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4" />
-                    Verification Question
+                    {t('claims.question_label')}
                   </FormLabel>
                   <FormDescription className="text-neutral-700 font-medium mb-2">
-                    The finder asks: "{challengeQuestion}"
+                    {challengeQuestion}
                   </FormDescription>
                   <FormControl>
                     <Input
-                      placeholder="Enter your answer here..."
+                      placeholder={t('claims.question_placeholder')}
                       className="bg-white"
                       {...field}
                     />
@@ -135,9 +137,9 @@ export function ClaimForm({ reportId, challengeQuestion, onSuccess }: ClaimFormP
           )}
 
           <div className="space-y-2">
-            <FormLabel>Upload Evidence (Optional)</FormLabel>
+            <FormLabel>{t('claims.evidence_label')}</FormLabel>
             <BatchImageUpload onImagesChange={setImages} maxFiles={2} />
-            <p className="text-[10px] text-neutral-400">Upload receipts, old photos of the item, or ID scans.</p>
+            <p className="text-[10px] text-neutral-400">{t('claims.evidence_hint')}</p>
           </div>
 
           <Button
@@ -148,11 +150,11 @@ export function ClaimForm({ reportId, challengeQuestion, onSuccess }: ClaimFormP
             {claimMutation.isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting Claim...
+                {t('claims.submitting_claim')}
               </>
             ) : (
               <>
-                Submit Claim
+                {t('claims.submit_claim')}
                 <Send className="ml-2 h-4 w-4" />
               </>
             )}

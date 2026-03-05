@@ -43,6 +43,7 @@ import { foundItemReportSchema, lostItemReportSchema, itemCategories } from "@sh
 import { cn } from "@/lib/utils";
 import { OCRScanner } from "./ocr-scanner";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface ReportWizardProps {
   type: "lost" | "found";
@@ -51,6 +52,7 @@ interface ReportWizardProps {
 }
 
 export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1);
   const [images, setImages] = useState<File[]>([]);
 
@@ -86,15 +88,22 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
     }
   }, [form.formState.errors]);
 
-  const totalSteps = type === 'lost' ? 5 : 4;
+  const totalSteps = 2;
   const progress = (step / totalSteps) * 100;
 
   const nextStep = async () => {
     let fieldsToValidate: string[] = [];
-    if (step === 1) fieldsToValidate = ["title", "category", "description", "uniqueIdentifier"];
-    else if (step === 2) fieldsToValidate = ["location", "date", "custodyLocation"];
-    else if (step === 3) fieldsToValidate = []; // Images are optional
-    else if (step === 4) fieldsToValidate = ["contactInfo", "challengeQuestion"];
+    if (step === 1) {
+      fieldsToValidate = [
+        "title",
+        "category",
+        "description",
+        "uniqueIdentifier",
+        "location",
+        "date",
+        "custodyLocation"
+      ].filter(Boolean);
+    }
 
     const isValid = await form.trigger(fieldsToValidate as any);
     if (isValid) {
@@ -123,21 +132,19 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
     <Card className="border-none shadow-none bg-transparent">
       <div className="mb-8 relative pl-2 pr-2">
         <div className="flex justify-between items-center mb-3">
-          <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">Step {step} of {totalSteps}</span>
-          <span className="text-sm font-black text-primary bg-primary/10 px-3 py-1 rounded-full">{Math.round(progress)}% Complete</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
+            {t('report_wizard.step', { current: step, total: totalSteps })}
+          </span>
+          <span className="text-sm font-black text-primary bg-primary/10 px-3 py-1 rounded-full">
+            {t('report_wizard.complete', { percentage: Math.round(progress) })}
+          </span>
         </div>
         <div className="h-2.5 w-full bg-neutral-100 rounded-full overflow-hidden shadow-inner">
           <div
             className={cn(
               "h-full bg-gradient-to-r from-primary/80 to-primary transition-all duration-500 ease-out",
-              progress === 20 ? "w-1/5" :
-                progress === 25 ? "w-1/4" :
-                  progress === 40 ? "w-2/5" :
-                    progress === 50 ? "w-1/2" :
-                      progress === 60 ? "w-3/5" :
-                        progress === 75 ? "w-3/4" :
-                          progress === 80 ? "w-4/5" :
-                            progress === 100 ? "w-full" : "w-0"
+              progress === 50 ? "w-1/2" :
+                progress === 100 ? "w-full" : "w-0"
             )}
           />
         </div>
@@ -155,81 +162,161 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                 className="space-y-4"
               >
                 <ScrollArea className="h-[450px] pr-4">
-                  <div className="space-y-4 pb-4">
+                  <div className="space-y-6 pb-6">
                     <div className="space-y-1 mb-4">
-                      <h3 className="text-lg font-semibold">Basic Information</h3>
-                      <p className="text-sm text-neutral-500">Tell us what you {type === 'lost' ? 'lost' : 'found'}.</p>
+                      <h3 className="text-lg font-semibold">{t('report_wizard.step_1_title', 'What, Where & When')}</h3>
+                      <p className="text-sm text-neutral-500">
+                        {t('report_wizard.step_1_desc', 'Provide details about the item and where it was lost/found')}
+                      </p>
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Item Name <span className="text-red-500">*</span></FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. Black Leather Wallet" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="category"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category <span className="text-red-500">*</span></FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    {/* Section: Basic Info */}
+                    <div className="space-y-4 bg-neutral-50/50 p-4 rounded-2xl border border-neutral-100">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('report_wizard.item_name')} <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
+                              <Input placeholder={t('report_wizard.item_name_placeholder')} {...field} />
                             </FormControl>
-                            <SelectContent>
-                              {itemCategories.map((c) => (
-                                <SelectItem key={c} value={c}>{c}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description <span className="text-red-500">*</span></FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Include distinguishing features like brand, color, scratches, etc."
-                              className="min-h-[120px]"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>Min 10 characters.</FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                      <FormField
+                        control={form.control}
+                        name="category"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('filters.category')} <span className="text-red-500">*</span></FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t('report_wizard.select_category')} />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {itemCategories.map((c) => (
+                                  <SelectItem key={c} value={c}>
+                                    {t(`item_category_${c.toLowerCase().replace(/ & /g, '_').replace(/ /g, '_')}`)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="uniqueIdentifier"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('report_wizard.unique_id')}</FormLabel>
+                            <FormControl>
+                              <Input placeholder={t('report_wizard.unique_id_placeholder')} {...field} />
+                            </FormControl>
+                            <FormDescription>{t('report_wizard.unique_id_hint')}</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    {/* Section: Location & Time */}
+                    <div className="space-y-4 bg-neutral-50/50 p-4 rounded-2xl border border-neutral-100">
+                      <FormField
+                        control={form.control}
+                        name="location"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('filters.location')} <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input placeholder={t('report_wizard.location_placeholder')} {...field} />
+                                <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="date"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t('report_wizard.date')} <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Input type="date" {...field} />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      {type === 'found' && (
+                        <FormField
+                          control={form.control}
+                          name="custodyLocation"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('report_wizard.custody')} <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <Input placeholder={t('report_wizard.custody_placeholder')} {...field} />
+                                  <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                                </div>
+                              </FormControl>
+                              <FormDescription>{t('report_wizard.custody_hint')}</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="uniqueIdentifier"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Unique Identifier (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. Serial Number, IMEI, ID Number" {...field} />
-                          </FormControl>
-                          <FormDescription>Helping us find an exact match faster.</FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    </div>
+
+                    {/* Section: Images */}
+                    <div className="space-y-4 bg-neutral-50/50 p-4 rounded-2xl border border-neutral-100">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="space-y-1">
+                          <h4 className="text-sm font-semibold">{t('report_wizard.images')}</h4>
+                          <p className="text-xs text-neutral-500">{t('report_wizard.images_desc')}</p>
+                        </div>
+                        <OCRScanner
+                          image={images[0] || null}
+                          onScanComplete={(data) => {
+                            if (data.uniqueIdentifier) form.setValue('uniqueIdentifier', data.uniqueIdentifier);
+                            if (data.title && !form.getValues('title')) form.setValue('title', data.title);
+                          }}
+                        />
+                      </div>
+                      <BatchImageUpload onImagesChange={setImages} maxFiles={3} />
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem className="mt-4">
+                            <FormLabel>{t('common.description')} <span className="text-red-500">*</span></FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder={t('report_wizard.description_placeholder')}
+                                className="min-h-[100px]"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 </ScrollArea>
               </motion.div>
@@ -246,217 +333,99 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                 <ScrollArea className="h-[450px] pr-4">
                   <div className="space-y-4 pb-4">
                     <div className="space-y-1 mb-4">
-                      <h3 className="text-lg font-semibold">Location & Time</h3>
-                      <p className="text-sm text-neutral-500">When and where did this happen?</p>
+                      <h3 className="text-lg font-semibold">{t('report_wizard.step_2_title', 'Contact & Rewards')}</h3>
+                      <p className="text-sm text-neutral-500">{t('report_wizard.step_2_desc', 'Enter your contact details and claim information')}</p>
                     </div>
 
-                    <FormField
-                      control={form.control}
-                      name="location"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Location <span className="text-red-500">*</span></FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Input placeholder="e.g. Downtown Taxi Park, Near Bank of Kigali" {...field} />
-                              <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="date"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Input type="date" {...field} />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {type === 'found' && (
+                    <div className="space-y-4 bg-neutral-50/50 p-4 rounded-2xl border border-neutral-100">
                       <FormField
                         control={form.control}
-                        name="custodyLocation"
+                        name="contactInfo"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Current Item Custody <span className="text-red-500">*</span></FormLabel>
+                            <FormLabel>{t('report_wizard.contact_details')} <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
-                              <div className="relative">
-                                <Input placeholder="e.g. Left at Security Desk, With me, Police Station" {...field} />
-                                <Info className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                              </div>
+                              <Input placeholder={t('report_wizard.contact_details_placeholder')} {...field} />
                             </FormControl>
-                            <FormDescription>Where can the owner find the item or meet you?</FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-                  </div>
-                </ScrollArea>
-              </motion.div>
-            )}
-
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <ScrollArea className="h-[450px] pr-4">
-                  <div className="space-y-4 pb-4">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="space-y-1">
-                        <h3 className="text-lg font-semibold">Images</h3>
-                        <p className="text-sm text-neutral-500">Photos help identify the item faster.</p>
-                      </div>
-                      <OCRScanner
-                        image={images[0] || null}
-                        onScanComplete={(data) => {
-                          if (data.uniqueIdentifier) form.setValue('uniqueIdentifier', data.uniqueIdentifier);
-                          if (data.title && !form.getValues('title')) form.setValue('title', data.title);
-                        }}
-                      />
-                    </div>
-
-                    <BatchImageUpload onImagesChange={setImages} maxFiles={3} />
-                    <p className="text-xs text-neutral-400">Max 3 images. JPG, PNG allowed.</p>
-                  </div>
-                </ScrollArea>
-              </motion.div>
-            )}
-
-            {step === 4 && (
-              <motion.div
-                key="step4"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <ScrollArea className="h-[450px] pr-4">
-                  <div className="space-y-4 pb-4">
-                    <div className="space-y-1 mb-4">
-                      <h3 className="text-lg font-semibold">Contact Information</h3>
-                      <p className="text-sm text-neutral-500">How should people reach you?</p>
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="contactInfo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Contact Details <span className="text-red-500">*</span></FormLabel>
-                          <FormControl>
-                            <Input placeholder="Phone number or specific instructions" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            {type === 'found'
-                              ? "This will be hidden until a claim is verified."
-                              : "This will be visible to potential finders."}
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {type === 'found' && (
-                      <FormField
-                        control={form.control}
-                        name="challengeQuestion"
-                        render={({ field }) => (
-                          <FormItem className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
-                            <FormLabel className="text-amber-900 font-bold flex items-center gap-2">
-                              <ShieldCheck className="h-4 w-4" />
-                              Security Challenge Question
-                            </FormLabel>
-                            <FormDescription className="text-amber-800 text-xs mb-2">
-                              Ask something only the real owner would know (e.g. "What is the lock screen wallpaper?").
+                            <FormDescription>
+                              {type === 'found'
+                                ? t('report_wizard.contact_hint_found')
+                                : t('report_wizard.contact_hint_lost')}
                             </FormDescription>
-                            <FormControl>
-                              <Input placeholder="Verification question for claimants..." className="bg-white" {...field} />
-                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    )}
-                  </div>
-                </ScrollArea>
-              </motion.div>
-            )}
 
-            {step === 5 && type === 'lost' && (
-              <motion.div
-                key="step5"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                <ScrollArea className="h-[450px] pr-4">
-                  <div className="space-y-4 pb-4">
-                    <div className="space-y-1 mb-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Banknote className="h-5 w-5 text-green-600" />
-                        Add a Bounty (Optional)
-                      </h3>
-                      <p className="text-sm text-neutral-500">Offer a reward to incentivize finders.</p>
-                    </div>
-
-                    <div className="p-4 bg-green-50 border border-green-100 rounded-lg mb-4">
-                      <p className="text-sm text-green-800">
-                        Bounties are held safely in escrow and are <strong>only released</strong> when you confirm receipt of your item via OTP.
-                      </p>
-                    </div>
-
-                    <FormField
-                      control={form.control}
-                      name="bountyAmount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Reward Amount (RWF)</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Input
-                                type="number"
-                                placeholder="e.g. 5000"
-                                {...field}
-                                onChange={(e) => field.onChange(Number(e.target.value))}
-                              />
-                              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">RWF</span>
-                            </div>
-                          </FormControl>
-                          <FormDescription>Leave 0 if you don't want to offer a reward.</FormDescription>
-                          <FormMessage />
-                        </FormItem>
+                      {type === 'found' && (
+                        <FormField
+                          control={form.control}
+                          name="challengeQuestion"
+                          render={({ field }) => (
+                            <FormItem className="p-4 bg-amber-50 border border-amber-100 rounded-lg">
+                              <FormLabel className="text-amber-900 font-bold flex items-center gap-2">
+                                <ShieldCheck className="h-4 w-4" />
+                                {t('report_wizard.security_title')}
+                              </FormLabel>
+                              <FormDescription className="text-amber-800 text-xs mb-2">
+                                {t('report_wizard.security_desc')}
+                              </FormDescription>
+                              <FormControl>
+                                <Input placeholder={t('report_wizard.security_placeholder')} className="bg-white" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       )}
-                    />
-
-                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg flex gap-3 mt-6">
-                      <Info className="h-5 w-5 text-blue-600 shrink-0" />
-                      <div className="text-xs text-blue-800">
-                        <p>Reporting a lost item costs **1,000 RWF**.</p>
-                        {form.getValues('bountyAmount') > 0 && (
-                          <p className="mt-1 font-semibold">
-                            Total Payment: {(1000 + (form.getValues('bountyAmount') || 0)).toLocaleString()} RWF
-                          </p>
-                        )}
-
-                      </div>
                     </div>
+
+                    {type === 'lost' && (
+                      <div className="space-y-4 bg-green-50/50 p-4 rounded-2xl border border-green-100 mt-4">
+                        <div className="space-y-1 mb-2">
+                          <h3 className="text-base font-semibold flex items-center gap-2 text-green-700">
+                            <Banknote className="h-4 w-4" />
+                            {t('report_wizard.bounty_title')}
+                          </h3>
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="bountyAmount"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t('report_wizard.reward_amount')}</FormLabel>
+                              <FormControl>
+                                <div className="relative">
+                                  <Input
+                                    type="number"
+                                    placeholder="e.g. 5000"
+                                    className="bg-white"
+                                    {...field}
+                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                  />
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-sm">RWF</span>
+                                </div>
+                              </FormControl>
+                              <FormDescription>{t('report_wizard.reward_hint')}</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl flex gap-3">
+                          <Info className="h-4 w-4 text-blue-600 shrink-0" />
+                          <div className="text-[10px] text-blue-800">
+                            <p>{t('report_wizard.payment_info')}</p>
+                            {form.getValues('bountyAmount') > 0 && (
+                              <p className="mt-1 font-semibold">
+                                {t('report_wizard.total_payment', { amount: (1000 + (form.getValues('bountyAmount') || 0)).toLocaleString() })}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
               </motion.div>
@@ -468,7 +437,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
               <div className="p-3 bg-red-50 border border-red-200 rounded-md text-xs text-red-600 space-y-1">
                 <p className="font-bold flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
-                  Please fix the following errors before submitting:
+                  {t('report_wizard.fix_errors')}
                 </p>
                 <ul className="list-disc pl-4">
                   {Object.entries(form.formState.errors).map(([field, error]: [string, any]) => (
@@ -488,12 +457,12 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                 disabled={step === 1 || isSubmitting}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                {t('common.back')}
               </Button>
 
               {step < totalSteps ? (
                 <Button key="next-step-btn" type="button" className="rounded-xl shadow-md bg-primary hover:bg-primary/90" onClick={nextStep}>
-                  Next Step
+                  {t('report_wizard.next_step')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
@@ -510,11 +479,11 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
+                      {t('report_wizard.submitting')}
                     </>
                   ) : (
                     <>
-                      {type === 'lost' ? 'Pay & Submit' : 'Submit Report'}
+                      {type === 'lost' ? t('report_wizard.pay_submit') : t('report_wizard.submit_report')}
                       {type === 'lost' ? <Receipt className="ml-2 h-4 w-4" /> : <Check className="ml-2 h-4 w-4" />}
                     </>
                   )}

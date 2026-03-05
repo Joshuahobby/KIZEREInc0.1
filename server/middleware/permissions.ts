@@ -3,8 +3,15 @@ import { Request, Response, NextFunction } from "express";
 import { db } from "../db";
 import { roles, PermissionType } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { createLogger } from '../utils/logger';
+
+const logger = createLogger('PermissionsMiddleware');
 
 // Note: User interface is augmented in server/auth.ts
+
+// In-memory cache for role permissions (TTL: 5 minutes)
+const rolePermissionCache = new Map<string, { permissions: string[]; cachedAt: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 export function checkPermission(requiredPermission: PermissionType) {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -19,19 +26,29 @@ export function checkPermission(requiredPermission: PermissionType) {
             return next();
         }
 
-        // 2. Check Role-based permissions
+        // 2. Check Role-based permissions (with caching)
         try {
-            // We need to fetch the role definition from DB to get its permissions
-            // In a production app, we should cache this
-            const userRole = await db.query.roles.findFirst({
-                where: eq(roles.name, user.role)
-            });
+            let rolePermissions: string[] = [];
+            const cached = rolePermissionCache.get(user.role);
 
-            if (userRole) {
-                const rolePermissions = userRole.permissions as string[];
-                if (rolePermissions.includes(requiredPermission)) {
-                    return next();
+            if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
+                rolePermissions = cached.permissions;
+            } else {
+                const userRole = await db.query.roles.findFirst({
+                    where: eq(roles.name, user.role)
+                });
+
+                if (userRole) {
+                    rolePermissions = userRole.permissions as string[];
+                    rolePermissionCache.set(user.role, {
+                        permissions: rolePermissions,
+                        cachedAt: Date.now()
+                    });
                 }
+            }
+
+            if (rolePermissions.includes(requiredPermission)) {
+                return next();
             }
 
             // 3. Check Custom User Permissions (overrides)
@@ -48,7 +65,7 @@ export function checkPermission(requiredPermission: PermissionType) {
             });
 
         } catch (error) {
-            console.error("Permission check error:", error);
+            logger.error("Permission check error", { error, userId: user.id, role: user.role });
             return res.status(500).json({ message: "Internal Server Error during permission check" });
         }
     };
