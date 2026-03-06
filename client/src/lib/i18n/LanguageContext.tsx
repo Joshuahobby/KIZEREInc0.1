@@ -151,8 +151,8 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
         const escapedKey = paramKey.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const replacement = String(paramValue);
         value = (value as string)
-          .replace(new RegExp(`{${escapedKey}}`, "g"), replacement)
-          .replace(new RegExp(`{{${escapedKey}}}`, "g"), replacement);
+          .replace(new RegExp(`{{${escapedKey}}}`, "g"), replacement)
+          .replace(new RegExp(`{${escapedKey}}`, "g"), replacement);
       });
     }
 

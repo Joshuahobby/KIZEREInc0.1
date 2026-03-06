@@ -404,6 +404,9 @@ export default {
   sendExpirationEmail,
   sendFoundNotificationEmail,
   sendAppealUpdateEmail,
+  sendAdminAppealNotification,
+  sendAdminVerificationNotification,
+  sendUserVerificationStatusEmail,
 };
 
 /**
@@ -536,6 +539,121 @@ export async function sendAppealUpdateEmail(
           <a href="${process.env.APP_URL || 'https://kizere.com'}/dashboard?tab=claims" 
              style="display: inline-block; background: ${statusColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             View Claim Status
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>© ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Send admin notification when a new claim appeal is submitted
+ */
+export async function sendAdminAppealNotification(
+  adminEmail: string,
+  claimId: number,
+  claimantName: string,
+  reason: string
+): Promise<boolean> {
+  return sendEmail({
+    to: adminEmail,
+    subject: `New Claim Appeal Requires Review - Claim #${claimId}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #ef4444; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">New Claim Appeal ⚖️</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Admin Alert,</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            <strong>${claimantName}</strong> has appealed the rejection of Claim #${claimId}.
+          </p>
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="margin: 0; color: #4b5563;"><strong>Appeal Reason:</strong></p>
+            <p style="margin-top: 8px; color: #1f2937; white-space: pre-wrap;">${reason}</p>
+          </div>
+          <a href="${process.env.APP_URL || 'https://kizere.com'}/admin" 
+             style="display: inline-block; background: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
+            Review Appeal in Admin Panel
+          </a>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Send admin notification when a new identity verification is submitted
+ */
+export async function sendAdminVerificationNotification(
+  adminEmail: string,
+  userId: number,
+  userName: string
+): Promise<boolean> {
+  return sendEmail({
+    to: adminEmail,
+    subject: `New Identity Verification Submitted - ${userName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #3b82f6; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Identity Verification 🛡️</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Admin Alert,</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            <strong>${userName}</strong> (User ID: ${userId}) has submitted their identity documents for review.
+          </p>
+          <a href="${process.env.APP_URL || 'https://kizere.com'}/admin" 
+             style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
+            Review in Admin Panel
+          </a>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Send user notification when their identity verification is approved or rejected
+ */
+export async function sendUserVerificationStatusEmail(
+  userEmail: string,
+  userName: string,
+  status: 'approved' | 'rejected',
+  adminNotes?: string
+): Promise<boolean> {
+  const isApproved = status === 'approved';
+  const statusColor = isApproved ? '#22c55e' : '#ef4444';
+  const statusText = isApproved ? 'Approved' : 'Rejected';
+  const emoji = isApproved ? '✅' : '❌';
+
+  return sendEmail({
+    to: userEmail,
+    subject: `Identity Verification ${statusText}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: ${statusColor}; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Verification ${statusText} ${emoji}</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Your identity verification request has been <strong>${status}</strong>.
+          </p>
+          ${!isApproved && adminNotes ? `
+            <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
+              <p style="margin: 0; color: #4b5563;"><strong>Reason:</strong> ${adminNotes}</p>
+            </div>
+            <p style="color: #4b5563; line-height: 1.6;">
+              Please review the feedback and submit a new verification request if needed.
+            </p>
+          ` : ''}
+          <a href="${process.env.APP_URL || 'https://kizere.com'}/profile" 
+             style="display: inline-block; background: ${statusColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
+            View Profile
           </a>
         </div>
         <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">

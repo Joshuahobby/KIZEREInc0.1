@@ -5,6 +5,7 @@ import { uploadImage } from '../services/cloudinary.service';
 import { storage } from '../storage';
 import { z } from 'zod';
 import { insertVerificationRequestSchema } from '@shared/schema';
+import { sendAdminVerificationNotification, sendUserVerificationStatusEmail } from '../services/email.service';
 
 const router = Router();
 const logger = createLogger('VerificationRoutes');
@@ -65,6 +66,18 @@ router.post(
         // status is pending by default
       });
 
+      // Notify admins via email
+      const admins = await storage.getUsersByRole(['Admin', 'Moderator']);
+      for (const admin of admins) {
+        if (admin.email) {
+          sendAdminVerificationNotification(
+            admin.email,
+            req.user!.id,
+            req.user!.fullName || 'User'
+          ).catch(err => logger.error('Failed to send admin verification email', { error: err }));
+        }
+      }
+
       logger.info('Verification request created', { userId: req.user!.id, requestId: request.id });
       res.json(request);
 
@@ -94,6 +107,9 @@ router.get('/status', async (req: Request, res: Response) => {
  */
 router.get('/admin/list', async (req: Request, res: Response) => {
   try {
+    if (req.user!.role !== 'Admin') {
+      return res.status(403).json({ message: 'Forbidden: Admin access required' });
+    }
     const requests = await storage.getPendingVerificationRequests();
     res.json(requests);
   } catch (error) {
@@ -108,6 +124,10 @@ router.get('/admin/list', async (req: Request, res: Response) => {
  */
 router.post('/admin/:id/review', async (req: Request, res: Response) => {
   try {
+    if (req.user!.role !== 'Admin') {
+      return res.status(403).json({ message: 'Forbidden: Admin access required' });
+    }
+
     const { status, comment } = req.body;
     if (!['approved', 'rejected'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
@@ -122,7 +142,18 @@ router.post('/admin/:id/review', async (req: Request, res: Response) => {
 
     if (!updated) return res.status(404).json({ message: 'Request not found' });
 
-    // TODO: Send email notification (Verification approved/rejected)
+    // Send email notification (Verification approved/rejected)
+    const targetUser = await storage.getUser(updated.userId);
+    if (targetUser?.email) {
+      sendUserVerificationStatusEmail(
+        targetUser.email,
+        targetUser.fullName || 'User',
+        status as 'approved' | 'rejected',
+        comment
+      ).catch(err => logger.error('Failed to send verification status email', { error: err }));
+    }
+
+    logger.info(`Sending email notification for verification ${status} to User ID: ${updated.userId}`);
 
     res.json(updated);
   } catch (error) {

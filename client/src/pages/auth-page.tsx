@@ -57,12 +57,19 @@ export default function AuthPage() {
   // Redirect if already logged in
   React.useEffect(() => {
     if (user) {
-      // Use role-specific dashboard instead of landing page
-      const dashboardPath = AuthService.getDashboardPathByRole(
-        user.role,
-        (user.preferences as UserPreferences)?.dashboardStyle
-      );
-      navigate(dashboardPath);
+      const params = new URLSearchParams(window.location.search);
+      const returnUrl = params.get("returnUrl");
+
+      if (returnUrl) {
+        navigate(returnUrl);
+      } else {
+        // Use role-specific dashboard instead of landing page
+        const dashboardPath = AuthService.getDashboardPathByRole(
+          user.role,
+          (user.preferences as UserPreferences)?.dashboardStyle
+        );
+        navigate(dashboardPath);
+      }
     }
   }, [user, navigate]);
 

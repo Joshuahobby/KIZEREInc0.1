@@ -135,10 +135,11 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
 
   return useMemo(() => {
     // Basic user stats
+    const reportList = Array.isArray(reports) ? reports : (reports as any)?.reports || [];
     const userStats: DashboardStats = {
       totalItems: items.length || 0,
-      totalLostReports: reports.filter((r: Report) => r.type === 'lost').length || 0,
-      totalFoundReports: reports.filter((r: Report) => r.type === 'found').length || 0,
+      totalLostReports: reportList.filter((r: Report) => r.type === 'lost').length || 0,
+      totalFoundReports: reportList.filter((r: Report) => r.type === 'found').length || 0,
       totalSpent: payments.reduce((acc: number, p: Payment) => p.status === 'completed' ? acc + Number(p.amount) : acc, 0) || 0,
       recentlyAddedItems: [...items].sort((a: Item, b: Item) =>
         new Date(b.registeredAt || '').getTime() - new Date(a.registeredAt || '').getTime()

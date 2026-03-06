@@ -152,7 +152,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const response = await fetch("/api/user");
       if (response.ok) {
         const data = await response.json();
-        setUser(data);
+        setUser(data || null);
       }
     } catch (error) {
       console.error("[useAuth] Failed to refresh user:", error);
@@ -174,7 +174,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const sessionResponse = await fetch("/api/user", { credentials: "include" });
           if (sessionResponse.ok) {
             initialUserData = await sessionResponse.json();
-            if (!isTerminated && isMounted.current) {
+            if (initialUserData && !isTerminated && isMounted.current) {
               console.log("[useAuth] Valid session found on startup");
               setUser(initialUserData);
               // Don't set isLoading(false) yet, we still want to wait for Firebase

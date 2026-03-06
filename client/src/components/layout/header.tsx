@@ -73,7 +73,7 @@ export function Header() {
     if (!user) return "/dashboard";
     switch (user.role) {
       case "Admin": return "/admin";
-      case "Agent": return "/lost";
+      case "Agent": return "/lost-found?type=lost";
       default: return "/dashboard";
     }
   };
@@ -90,14 +90,14 @@ export function Header() {
   const navigation: NavItem[] = isAuthenticated
     ? [
       { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
-      { name: t('nav.lostDirectory'), href: "/lost", icon: Search },
-      { name: t('nav.foundDirectory'), href: "/found", icon: Package },
+      { name: t('nav.lostDirectory'), href: "/lost-found?type=lost", icon: Search },
+      { name: t('nav.foundDirectory'), href: "/lost-found?type=found", icon: Package },
     ]
     : [
       { name: t('nav.features'), href: "/#features", scrollTo: "features", icon: Info },
       { name: t('nav.howItWorks'), href: "/#how-it-works", scrollTo: "how-it-works", icon: Users },
-      { name: t('nav.lostDirectory'), href: "/search?type=lost", icon: Search },
-      { name: t('nav.foundDirectory'), href: "/search?type=found", icon: Package },
+      { name: t('nav.lostDirectory'), href: "/lost-found?type=lost", icon: Search },
+      { name: t('nav.foundDirectory'), href: "/lost-found?type=found", icon: Package },
       { name: t('nav.community'), href: "/community", icon: Users },
     ];
 

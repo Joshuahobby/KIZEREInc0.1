@@ -128,6 +128,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/admin/jobs', requireAdmin, adminJobsRoutes);
   app.use('/api/admin/roles', requireAdmin, rolesRoutes);
   app.use('/api/admin/audit-logs', requireAdmin, auditRoutes);
+
+  // Public/Semi-public routes
+
+  // Authenticated routes
   app.use('/api/items', requireAuth, itemRoutes);
   app.use('/api/reports', requireAuth, reportRoutes);
   app.use('/api/notifications', requireAuth, notificationRoutes);

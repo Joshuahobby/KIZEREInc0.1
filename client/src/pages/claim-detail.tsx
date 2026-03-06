@@ -64,7 +64,7 @@ interface ClaimDetail {
 export default function ClaimDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const { toast } = useToast();
 
   // Dialog states
@@ -81,7 +81,7 @@ export default function ClaimDetailPage() {
   // Fetch claim logic
   const { data: claim, isLoading, error } = useQuery<ClaimDetail>({
     queryKey: [`/api/claims/${id}`],
-    enabled: !!id,
+    enabled: !!id && !!user,
   });
 
   // Fetch report logic (to check ownership/role precisely)
@@ -174,7 +174,22 @@ export default function ClaimDetailPage() {
     }
   });
 
-  if (isLoading) {
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="flex flex-col items-center justify-center p-8 text-center py-20">
+          <ShieldCheck className="h-16 w-16 text-primary mb-4" />
+          <h1 className="text-2xl font-bold text-neutral-900 mb-2">Authentication Required</h1>
+          <p className="text-neutral-500 mb-6">You need to be logged in to view claim details.</p>
+          <Button onClick={() => navigate('/auth')}>
+            Go to Login
+          </Button>
+        </div>
+      </PageLayout>
+    );
+  }
+
+  if (isLoading || isLoadingAuth) {
     return (
       <PageLayout>
         <div className="flex items-center justify-center py-20">

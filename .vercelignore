@@ -1,0 +1,8 @@
+node_modules
+dist
+.vercel
+app.log
+*.tar.gz
+server/public
+.env*
+! .env.example

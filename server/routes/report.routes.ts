@@ -12,15 +12,11 @@ import { OCRService } from "../services/ocr.service";
 const logger = createLogger('ReportRoutes');
 const router = Router();
 
-/**
- * GET /api/reports
- * Fetch reports with filters
- * Phase 1.5: Hide contact info for non-owners until claim verified
- */
 router.get("/", async (req, res) => {
   try {
     const { type, search, status, category, dateFilter, page, limit } = req.query;
-    const userId = req.user!.id;
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
 
     // If it's a general search (type or search provided) or a specific filter
     // Admin/Moderator might see all, but for now we filter by user unless it's a "hub" view
@@ -43,8 +39,8 @@ router.get("/", async (req, res) => {
       // 1. Report owner
       // 2. Admin/Moderator
       // 3. Users with verified claims on the report
-      const isOwner = report.userId === userId;
-      const isAdmin = ['Admin', 'Moderator'].includes(req.user!.role);
+      const isOwner = userId && report.userId === userId;
+      const isAdmin = userRole && ['Admin', 'Moderator'].includes(userRole);
 
       if (!isOwner && !isAdmin) {
         return {
@@ -55,7 +51,10 @@ router.get("/", async (req, res) => {
       return report;
     });
 
-    res.json(sanitizedReports);
+    res.json({
+      reports: sanitizedReports,
+      pagination: result.pagination
+    });
   } catch (error) {
     console.error("DEBUG: /api/reports error:", error);
     logger.error('Failed to fetch reports', { error: error });
@@ -285,15 +284,17 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Report not found" });
     }
 
-    const isOwner = report.userId === req.user!.id;
-    const isAdmin = ['Admin', 'Moderator'].includes(req.user!.role);
+    const userId = req.user?.id;
+    const userRole = req.user?.role;
+    const isOwner = userId && report.userId === userId;
+    const isAdmin = userRole && ['Admin', 'Moderator'].includes(userRole);
 
     // Reports are public but contact info is protected
     // Phase 1.5: Check if user has a verified claim to reveal contact info
     let canSeeContactInfo = isOwner || isAdmin;
 
-    if (!canSeeContactInfo && report.type === 'found') {
-      const userClaim = await storage.getUserClaimForReport(req.user!.id, report.id);
+    if (!canSeeContactInfo && report.type === 'found' && userId) {
+      const userClaim = await storage.getUserClaimForReport(userId, report.id);
       if (userClaim && userClaim.status === 'verified') {
         canSeeContactInfo = true;
       }

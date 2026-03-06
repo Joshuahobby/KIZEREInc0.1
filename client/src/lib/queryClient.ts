@@ -65,10 +65,13 @@ export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
 
       // If session is valid, we're good
       if (sessionCheck.ok) {
-        console.log('[QueryClient] User already has valid session');
-        lastSessionCheckTime = Date.now();
-        resolve();
-        return;
+        const data = await sessionCheck.json();
+        if (data) {
+          console.log('[QueryClient] User already has valid session');
+          lastSessionCheckTime = Date.now();
+          resolve();
+          return;
+        }
       }
 
       // If Firebase is available, try to get the current user

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,7 +33,9 @@ import {
   Check,
   Search as SearchIcon,
   PackageSearch,
-  ArrowRight
+  ArrowRight,
+  Lock,
+  User
 } from "lucide-react";
 import { ReportWizard } from "@/components/reports/report-wizard";
 import { ReportDetailDialog } from "@/components/reports/report-detail-dialog";
@@ -84,12 +86,23 @@ export default function LostFound() {
     enabled: !!user,
   });
 
-  // Get initial type from URL params
-  const params = new URLSearchParams(location.split('?')[1]);
-  const initialType = params.get('type') || '';
+  // Get initial type from URL params - use window.location.search to get current query string
+  const [initialType, setInitialType] = useState(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.get('type') || '';
+  });
+
+  // Re-sync initialType when location changes
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const newType = searchParams.get('type') || '';
+    if (newType !== initialType) {
+      setInitialType(newType);
+    }
+  }, [location, initialType]);
 
   // Fetch reports based on type and search
-  const { data: reports, isLoading } = useQuery<Report[]>({
+  const { data: reportsData, isLoading } = useQuery<any>({
     queryKey: ['/api/reports', { type: initialType, search: debouncedSearch, ...filters }],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -104,7 +117,10 @@ export default function LostFound() {
       if (!res.ok) throw new Error('Failed to fetch reports');
       return res.json();
     },
+    enabled: !!user,
   });
+
+  const reports = reportsData?.reports || [];
 
   // Sort reports locally
   const sortedReports = reports ? [...reports].sort((a, b) => {
@@ -225,27 +241,52 @@ export default function LostFound() {
     setOpenDialog(true);
   };
 
+  // Handle form state restoration after login
+  useEffect(() => {
+    const savedData = localStorage.getItem('pending_report_wizard');
+    if (savedData && user) {
+      try {
+        const { data, type: savedType } = JSON.parse(savedData);
+        setDialogType(savedType);
+        form.reset(data);
+        setOpenDialog(true);
+        localStorage.removeItem('pending_report_wizard');
+
+        toast({
+          title: "Wizard Restored",
+          description: "We've restored your progress. You can now submit your report.",
+        });
+      } catch (e) {
+        console.error("Failed to restore wizard state", e);
+        localStorage.removeItem('pending_report_wizard');
+      }
+    }
+  }, [user]);
+
   // Handle form submission from wizard
   const handleWizardSubmit = (data: any, images: File[]) => {
     reportMutation.mutate({ data, images });
   };
 
   return (
-    <PageLayout hideSidebar={true}>
-      <div className="py-8 relative isolate">
-        {/* Background Decorative Gradients */}
+    <PageLayout hideSidebar={false} defaultSidebarCollapsed={true}>
+      <div className="py-8 relative isolate overflow-hidden">
+        {/* Background Decorative Gradients - Enhanced for depth */}
         <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-          <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-[#9089fc] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] [clip-path:polygon(74.1%_44.1%,100%_61.6%,97.5%_26.9%,85.5%_0.1%,80.7%_2%,72.5%_32.5%,60.2%_62.4%,52.4%_68.1%,47.5%_58.3%,45.2%_34.5%,27.5%_76.7%,0.1%_64.9%,17.9%_100%,27.6%_76.8%,76.1%_97.7%,74.1%_44.1%)]"></div>
+          <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary/30 to-[#9089fc]/20 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] [clip-path:polygon(74.1%_44.1%,100%_61.6%,97.5%_26.9%,85.5%_0.1%,80.7%_2%,72.5%_32.5%,60.2%_62.4%,52.4%_68.1%,47.5%_58.3%,45.2%_34.5%,27.5%_76.7%,0.1%_64.9%,17.9%_100%,27.6%_76.8%,76.1%_97.7%,74.1%_44.1%)]"></div>
+        </div>
+        <div className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]" aria-hidden="true">
+          <div className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-primary/20 to-secondary/10 opacity-20 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem] [clip-path:polygon(74.1%_44.1%,100%_61.6%,97.5%_26.9%,85.5%_0.1%,80.7%_2%,72.5%_32.5%,60.2%_62.4%,52.4%_68.1%,47.5%_58.3%,45.2%_34.5%,27.5%_76.7%,0.1%_64.9%,17.9%_100%,27.6%_76.8%,76.1%_97.7%,74.1%_44.1%)]"></div>
         </div>
 
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header Section - Compact and Inline */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-neutral-200/70 pb-6 mb-8 mt-2">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-border/50 pb-6 mb-8 mt-2">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-neutral-900">
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70">
                 {t('directoryPage.title')}
               </h1>
-              <p className="mt-1 text-sm text-neutral-500 font-medium">
+              <p className="mt-1.5 text-sm text-muted-foreground font-medium">
                 {t('directoryPage.subtitle')}
               </p>
             </div>
@@ -306,15 +347,15 @@ export default function LostFound() {
               <div className={cn(userItems && userItems.length > 0 ? "lg:col-span-3" : "lg:col-span-4")}>
                 {/* Search Bar - Highlighted */}
                 <div className="mb-6 relative group w-full">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-primary/10 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-secondary/20 rounded-[2rem] blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <SearchIcon className="h-5 w-5 text-primary/60" />
+                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                      <SearchIcon className="h-5 w-5 text-primary" />
                     </div>
                     <Input
                       type="text"
                       placeholder={t('directoryPage.searchPlaceholder')}
-                      className="pl-11 h-12 bg-white border-neutral-200 shadow-sm rounded-2xl focus:ring-primary/20 focus:border-primary/30 text-base transition-all"
+                      className="pl-12 h-14 bg-background/60 backdrop-blur-xl border-border/40 shadow-inner rounded-2xl focus:ring-primary/30 focus:border-primary/40 text-lg transition-all placeholder:text-muted-foreground/50"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
@@ -323,64 +364,90 @@ export default function LostFound() {
 
                 {/* Items Grid */}
                 <div className="relative min-h-[400px]">
-                  {isLoading ? (
+                  {!user ? (
+                    <Card className="mt-2 border-dashed border-2 border-muted/50 bg-background/40 backdrop-blur-lg rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/5">
+                      <CardContent className="p-20 flex flex-col items-center text-center">
+                        <div className="relative h-24 w-24 mb-6 bg-gradient-to-br from-background to-muted/30 rounded-[2rem] shadow-xl border border-border/60 flex items-center justify-center">
+                          <Lock className="h-10 w-10 text-primary/60" />
+                        </div>
+                        <h3 className="text-2xl font-black text-foreground mb-3">{t('directoryPage.loginRequired') || 'Authentication Required'}</h3>
+                        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8 font-medium leading-relaxed">
+                          {t('directoryPage.loginRequiredDesc') || 'For data security and privacy, the reported items directory is only accessible to authenticated users. Please log in to view and search the directory.'}
+                        </p>
+                        <Button
+                          size="lg"
+                          className="rounded-xl px-8"
+                          onClick={() => window.location.href = `/auth?returnUrl=${encodeURIComponent(window.location.pathname)}`}
+                        >
+                          <User className="mr-2 h-4 w-4" />
+                          {t('auth.signIn') || 'Sign In'}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : isLoading ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
                       <Loader2 className="h-8 w-8 animate-spin text-primary relative z-10" />
-                      <p className="mt-3 text-sm text-neutral-500 font-bold animate-pulse">{t('directoryPage.allReports')}</p>
+                      <p className="mt-3 text-sm text-neutral-500 font-bold animate-pulse">{t('directoryPage.loadingReports') || 'Loading reports...'}</p>
                     </div>
                   ) : sortedReports && sortedReports.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {sortedReports.map((report) => (
-                        <Card key={report.id} className="overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-neutral-200/60 bg-white/90 backdrop-blur-md group hover:-translate-y-1 flex flex-col cursor-pointer" onClick={() => setLocation(`/report/${report.id}`)}>
-                          <div className={`h-1 w-full ${report.type === 'lost' ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                          <CardContent className="p-5 flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-3">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider ${report.type === 'lost'
-                                ? 'bg-red-50 text-red-600 border border-red-100'
-                                : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                        <Card key={report.id} className="overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-border/50 bg-background/60 backdrop-blur-lg group hover:-translate-y-2 flex flex-col cursor-pointer rounded-[1.5rem]" onClick={() => setLocation(`/report/${report.id}`)}>
+                          <div className={`h-1.5 w-full ${report.type === 'lost' ? 'bg-gradient-to-r from-red-500 to-orange-400' : 'bg-gradient-to-r from-emerald-500 to-teal-400'}`} />
+                          <CardContent className="p-6 flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-4">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest leading-none ${report.type === 'lost'
+                                ? 'bg-red-500/10 text-red-500 border border-red-500/20'
+                                : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                                 }`}>
                                 {report.type === 'lost' ? t('searchFilters.lost') : t('searchFilters.found')}
                               </span>
-                              <span className="text-[10px] font-bold text-neutral-400">
+                              <span className="text-[10px] font-bold text-muted-foreground/60 flex items-center">
+                                <Calendar className="h-3 w-3 mr-1" />
                                 {format(new Date(report.date), 'MMM d, yyyy')}
                               </span>
                             </div>
 
-                            <h3 className="text-base font-black text-neutral-900 line-clamp-1 group-hover:text-primary transition-colors">{report.title}</h3>
-                            <p className="mt-2 text-xs text-neutral-500 line-clamp-2 leading-relaxed flex-1">{report.description}</p>
+                            <h3 className="text-lg font-black text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-300">{report.title}</h3>
+                            <p className="mt-2.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed flex-1 font-medium italic opacity-80">{report.description}</p>
 
-                            <div className="mt-4 pt-4 border-t border-neutral-50 flex items-center justify-between">
-                              <div className="flex items-center text-[11px] font-bold text-neutral-600">
-                                <MapPin className="h-3.5 w-3.5 text-primary mr-1.5 shrink-0" />
+                            <div className="mt-5 pt-5 border-t border-border/30 flex items-center justify-between">
+                              <div className="flex items-center text-[11px] font-bold text-foreground/70">
+                                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center mr-2 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
+                                  <MapPin className="h-3 w-3" />
+                                </div>
                                 <span className="truncate max-w-[150px]">{report.location}</span>
                               </div>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 p-0 rounded-full group-hover:bg-primary/10 group-hover:text-primary">
+                              <div className="h-8 w-8 rounded-full bg-muted/30 flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:translate-x-1 transition-all duration-500">
                                 <ChevronRight className="h-4 w-4" />
-                              </Button>
+                              </div>
                             </div>
                           </CardContent>
                         </Card>
                       ))}
                     </div>
                   ) : (
-                    <Card className="mt-2 border-dashed border-2 border-neutral-200/70 bg-white/40 backdrop-blur-sm rounded-3xl overflow-hidden">
-                      <CardContent className="p-16 flex flex-col items-center text-center">
-                        <div className="h-20 w-20 bg-white rounded-3xl shadow-xl shadow-neutral-200/50 border border-neutral-100 flex items-center justify-center mb-6 transform rotate-3 hover:rotate-0 transition-transform duration-300">
-                          <PackageSearch className="h-10 w-10 text-neutral-300" />
+                    <Card className="mt-2 border-dashed border-2 border-muted/50 bg-background/40 backdrop-blur-lg rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/5">
+                      <CardContent className="p-20 flex flex-col items-center text-center">
+                        <div className="relative mb-8">
+                          <div className="absolute -inset-4 bg-primary/10 rounded-full blur-2xl animate-pulse"></div>
+                          <div className="relative h-24 w-24 bg-gradient-to-br from-background to-muted/30 rounded-[2rem] shadow-xl border border-border/60 flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <PackageSearch className="h-12 w-12 text-primary/40" />
+                          </div>
                         </div>
-                        <h3 className="text-xl font-black text-neutral-900">{t('directoryPage.noReports')}</h3>
-                        <p className="text-sm text-neutral-500 max-w-sm mt-2 font-medium">{t('directoryPage.noReportsHint')}</p>
+                        <h3 className="text-2xl font-black text-foreground mb-2">{t('directoryPage.noReports')}</h3>
+                        <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-10 leading-relaxed font-medium">
+                          {t('directoryPage.noReportsHint')}
+                        </p>
 
-                        <div className="flex flex-wrap gap-3 mt-8">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="rounded-xl border-neutral-200 text-neutral-600 hover:bg-white hover:text-neutral-900 shadow-sm"
-                            onClick={() => setFilters({ category: "All Categories", location: "All Locations", sortBy: "newest", dateFilter: "all" })}
-                          >
-                            {t('searchFilters.clearAll')}
-                          </Button>
-                        </div>
+                        <Button
+                          variant="outline"
+                          size="lg"
+                          className="rounded-2xl border-border/60 bg-background/50 hover:bg-background text-foreground shadow-sm px-8 h-12 transition-all hover:scale-105 active:scale-95"
+                          onClick={() => setFilters({ category: "All Categories", location: "All Locations", sortBy: "newest", dateFilter: "all" })}
+                        >
+                          {t('searchFilters.clearAll')}
+                        </Button>
                       </CardContent>
                     </Card>
                   )}
@@ -423,6 +490,6 @@ export default function LostFound() {
         isOpen={detailOpen}
         onClose={() => setDetailOpen(false)}
       />
-    </PageLayout>
+    </PageLayout >
   );
 }

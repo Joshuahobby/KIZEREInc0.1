@@ -139,9 +139,9 @@ export function SearchFilters({ onFiltersChange, orientation = "horizontal" }: S
       )}>
         <div className="flex items-center gap-2 flex-1 min-w-[140px]">
           <Select value={category} onValueChange={handleCategoryChange}>
-            <SelectTrigger className="w-full bg-background/50 border-neutral-200/60 rounded-xl h-9 shadow-sm focus:ring-primary/20 transition-all hover:bg-white text-xs text-neutral-700 font-medium">
+            <SelectTrigger className="w-full bg-background/40 backdrop-blur-md border-border/50 rounded-xl h-10 shadow-sm focus:ring-primary/20 transition-all hover:bg-background/60 text-xs font-semibold">
               <div className="flex items-center gap-2">
-                <Tag className="h-3.5 w-3.5 text-primary/70" />
+                <Tag className="h-3.5 w-3.5 text-primary" />
                 <SelectValue placeholder={t('filters.category')} />
               </div>
             </SelectTrigger>
@@ -155,9 +155,9 @@ export function SearchFilters({ onFiltersChange, orientation = "horizontal" }: S
 
         <div className="flex items-center gap-2 flex-1 min-w-[140px]">
           <Select value={location} onValueChange={handleLocationChange}>
-            <SelectTrigger className="w-full bg-background/50 border-neutral-200/60 rounded-xl h-9 shadow-sm focus:ring-primary/20 transition-all hover:bg-white text-xs text-neutral-700 font-medium">
+            <SelectTrigger className="w-full bg-background/40 backdrop-blur-md border-border/50 rounded-xl h-10 shadow-sm focus:ring-primary/20 transition-all hover:bg-background/60 text-xs font-semibold">
               <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-primary/70" />
+                <MapPin className="h-3.5 w-3.5 text-primary" />
                 <SelectValue placeholder={t('filters.location')} />
               </div>
             </SelectTrigger>
@@ -173,9 +173,9 @@ export function SearchFilters({ onFiltersChange, orientation = "horizontal" }: S
 
         <div className="flex items-center gap-2 flex-1 min-w-[140px]">
           <Select value={sortBy} onValueChange={handleSortChange}>
-            <SelectTrigger className="w-full bg-background/50 border-neutral-200/60 rounded-xl h-9 shadow-sm focus:ring-primary/20 transition-all hover:bg-white text-xs text-neutral-700 font-medium">
+            <SelectTrigger className="w-full bg-background/40 backdrop-blur-md border-border/50 rounded-xl h-10 shadow-sm focus:ring-primary/20 transition-all hover:bg-background/60 text-xs font-semibold">
               <div className="flex items-center gap-2">
-                <ArrowUpDown className="h-3.5 w-3.5 text-primary/70" />
+                <ArrowUpDown className="h-3.5 w-3.5 text-primary" />
                 <SelectValue placeholder={t('filters.sortBy')} />
               </div>
             </SelectTrigger>
@@ -189,9 +189,9 @@ export function SearchFilters({ onFiltersChange, orientation = "horizontal" }: S
 
         <div className="flex items-center gap-2 flex-1 min-w-[140px]">
           <Select value={dateFilter} onValueChange={handleDateChange}>
-            <SelectTrigger className="w-full bg-background/50 border-neutral-200/60 rounded-xl h-9 shadow-sm focus:ring-primary/20 transition-all hover:bg-white text-xs text-neutral-700 font-medium">
+            <SelectTrigger className="w-full bg-background/40 backdrop-blur-md border-border/50 rounded-xl h-10 shadow-sm focus:ring-primary/20 transition-all hover:bg-background/60 text-xs font-semibold">
               <div className="flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 text-primary/70" />
+                <Calendar className="h-3.5 w-3.5 text-primary" />
                 <SelectValue placeholder={t('filters.time')} />
               </div>
             </SelectTrigger>

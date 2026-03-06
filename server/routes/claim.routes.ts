@@ -3,7 +3,7 @@ import { storage } from "../storage";
 import { insertClaimSchema, claimStatuses } from "@shared/schema";
 import { z } from "zod";
 import { createLogger } from "../utils/logger";
-import { sendClaimNotificationEmail, sendClaimStatusEmail } from "../services/email.service";
+import { sendClaimNotificationEmail, sendClaimStatusEmail, sendAdminAppealNotification } from "../services/email.service";
 import { claimSubmissionLimiter, claimVerificationLimiter } from "../middleware/claim-rate-limit.middleware";
 import { ReputationService } from "../services/reputation.service";
 
@@ -340,6 +340,7 @@ router.post("/:id/appeal", claimSubmissionLimiter, async (req, res) => {
     // Notify admins
     const admins = await storage.getUsersByRole(['Admin', 'Moderator']);
     for (const admin of admins) {
+      // In-app notification
       await storage.createNotification({
         userId: admin.id,
         title: "New Claim Appeal",
@@ -348,6 +349,16 @@ router.post("/:id/appeal", claimSubmissionLimiter, async (req, res) => {
         isRead: false,
         relatedReportId: claim.reportId
       });
+
+      // Email notification
+      if (admin.email) {
+        sendAdminAppealNotification(
+          admin.email,
+          claimId,
+          req.user!.fullName || 'User',
+          reason
+        ).catch(err => logger.error('Failed to send admin appeal email', { error: err }));
+      }
     }
 
     logger.info('Claim appeal submitted', { claimId, userId: req.user!.id });
