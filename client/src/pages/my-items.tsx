@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import {
   PlusCircle, Search, Package, AlertTriangle, X, Eye,
-  Calendar, Tag, MapPin, Activity, LayoutGrid, List, MoreVertical, Edit2, CheckCircle
+  Calendar, Tag, MapPin, Activity, LayoutGrid, List, MoreVertical, Edit2, CheckCircle, CreditCard
 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { cn } from "@/lib/utils";
@@ -37,10 +37,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { ReportRegisteredItemDialog } from "@/components/reports/report-registered-item-dialog";
+import { PaymentModal } from "@/components/payment/payment-modal";
 
 // Status badge variations based on item status
 const getStatusBadgeVariant = (status: ItemStatus) => {
   switch (status) {
+    case 'Pending_Payment':
+      return 'warning';
     case 'Registered':
       return 'outline';
     case 'Lost':
@@ -72,6 +75,8 @@ export default function MyItemsPage() {
   // Mark found dialog state
   const [itemToMarkFound, setItemToMarkFound] = React.useState<Item | null>(null);
   const [isMarkFoundDialogOpen, setIsMarkFoundDialogOpen] = React.useState(false);
+  const [paymentItem, setPaymentItem] = React.useState<Item | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = React.useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -269,6 +274,7 @@ export default function MyItemsPage() {
         <div className="flex items-center gap-1.5 pb-2 overflow-x-auto no-scrollbar mask-fade-right justify-center">
           {[
             { id: 'all', label: 'All', count: items?.length || 0 },
+            { id: 'Pending_Payment', label: 'Pending', count: items?.filter(i => i.status === "Pending_Payment").length || 0 },
             { id: 'Registered', label: 'Reg', count: items?.filter(i => i.status === "Registered").length || 0 },
             { id: 'Lost', label: 'Lost', count: items?.filter(i => i.status === "Lost").length || 0 },
             { id: 'Recovered', label: 'Rec', count: items?.filter(i => i.status === "Recovered" || i.status === "Found").length || 0 },
@@ -317,43 +323,62 @@ export default function MyItemsPage() {
               setSearchQuery('');
               setStatusTab('all');
             }}
+            onPayNow={(item) => {
+              setPaymentItem(item);
+              setIsPaymentModalOpen(true);
+            }}
           />
         </div>
+
+        {paymentItem && (
+          <PaymentModal
+            open={isPaymentModalOpen}
+            onOpenChange={setIsPaymentModalOpen}
+            paymentDetails={{
+              type: 'registration',
+              itemId: paymentItem.id,
+              amount: 2000
+            }}
+            onPaymentSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["/api/items"] });
+            }}
+          />
+        )}
+
+        {/* Mark Found Dialog */}
+        <AlertDialog open={isMarkFoundDialogOpen} onOpenChange={setIsMarkFoundDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Mark "{itemToMarkFound?.name}" as found?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will update the item status to "Recovered" and resolve any active lost reports.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (itemToMarkFound) markAsFoundMutation.mutate(itemToMarkFound.id);
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700"
+                disabled={markAsFoundMutation.isPending}
+              >
+                {markAsFoundMutation.isPending ? "Updating..." : "Mark Found"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Report Lost Dialog */}
+        {reportItem && (
+          <ReportRegisteredItemDialog
+            item={reportItem}
+            open={isReportDialogOpen}
+            onOpenChange={setIsReportDialogOpen}
+          />
+        )}
       </div>
-
-      {/* Mark Found Dialog */}
-      <AlertDialog open={isMarkFoundDialogOpen} onOpenChange={setIsMarkFoundDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Mark "{itemToMarkFound?.name}" as found?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will update the item status to "Recovered" and resolve any active lost reports.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                if (itemToMarkFound) markAsFoundMutation.mutate(itemToMarkFound.id);
-              }}
-              className="bg-emerald-600 hover:bg-emerald-700"
-              disabled={markAsFoundMutation.isPending}
-            >
-              {markAsFoundMutation.isPending ? "Updating..." : "Mark Found"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Report Lost Dialog */}
-      {reportItem && (
-        <ReportRegisteredItemDialog
-          item={reportItem}
-          open={isReportDialogOpen}
-          onOpenChange={setIsReportDialogOpen}
-        />
-      )}
     </PageLayout>
   );
 }
@@ -366,9 +391,10 @@ interface ItemsGridProps {
   onViewItem: (itemId: number) => void;
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
+  onPayNow: (item: Item) => void;
 }
 
-function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, hasActiveFilters, onClearFilters }: ItemsGridProps) {
+function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, hasActiveFilters, onClearFilters, onPayNow }: ItemsGridProps) {
   const [, navigate] = useLocation();
 
   if (items.length === 0) {
@@ -458,12 +484,13 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                       <Badge
                         className={cn(
                           "sm:hidden text-[8px] px-1.5 py-0 border-none font-black uppercase tracking-widest",
+                          item.status === 'Pending_Payment' && "bg-amber-500/80 text-white",
                           item.status === 'Registered' && "bg-blue-500/80 text-white",
                           item.status === 'Lost' && "bg-destructive/80 text-white animate-pulse",
                           (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-500/80 text-white",
                         )}
                       >
-                        {item.status}
+                        {item.status === 'Pending_Payment' ? 'Unpaid' : item.status}
                       </Badge>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -488,13 +515,14 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                     <Badge
                       className={cn(
                         "hidden sm:flex shadow-sm transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 border-none",
+                        item.status === 'Pending_Payment' && "bg-amber-500/80 text-white",
                         item.status === 'Registered' && "bg-blue-500/80 text-white",
                         item.status === 'Lost' && "bg-destructive/80 text-white animate-pulse",
                         (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-500/80 text-white",
                         item.status === 'Archived' && "bg-muted text-muted-foreground"
                       )}
                     >
-                      {item.status}
+                      {item.status === 'Pending_Payment' ? 'Pending Payment' : item.status}
                     </Badge>
 
                     <div className="flex items-center gap-1">
@@ -516,6 +544,17 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
+                      {item.status === 'Pending_Payment' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 rounded-full text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                          onClick={() => onPayNow(item)}
+                          title="Pay Now"
+                        >
+                          <CreditCard className="h-4 w-4" />
+                        </Button>
+                      )}
                       {item.status === 'Registered' && (
                         <Button
                           variant="ghost"
@@ -585,13 +624,14 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                   <Badge
                     className={cn(
                       "shadow-xl backdrop-blur-xl transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 border-none",
+                      item.status === 'Pending_Payment' && "bg-amber-500/80 text-white",
                       item.status === 'Registered' && "bg-blue-500/80 text-white",
                       item.status === 'Lost' && "bg-destructive/80 text-white animate-pulse",
                       (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-500/80 text-white",
                       item.status === 'Archived' && "bg-muted text-muted-foreground"
                     )}
                   >
-                    {item.status}
+                    {item.status === 'Pending_Payment' ? 'Unpaid' : item.status}
                   </Badge>
                 </div>
 
@@ -649,7 +689,16 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                   Edit
                 </Button>
 
-                {item.status === 'Registered' ? (
+                {item.status === 'Pending_Payment' ? (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="flex-1 rounded-lg h-9 bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/20 transition-all font-bold text-[11px]"
+                    onClick={() => onPayNow(item)}
+                  >
+                    Pay Now
+                  </Button>
+                ) : item.status === 'Registered' ? (
                   <Button
                     variant="ghost"
                     size="sm"

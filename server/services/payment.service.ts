@@ -9,10 +9,11 @@ import { storage } from '../storage';
 import { Payment, InsertPayment, PaymentType, PaymentStatus } from '@shared/schema';
 import { createLogger } from '../utils/logger';
 import {
-  generateTransactionReference,
-  initializePayment,
-  verifyTransaction
-} from '../utils/flutterwave';
+  generateDepositId,
+  initiateDeposit,
+  checkDepositStatus,
+  mapPawaPayStatus
+} from '../utils/pawapay';
 import { getPaymentAmount, DEFAULT_CURRENCY } from '../config/payment.config';
 import { getPaymentDescription } from '../config/payment.config';
 import { UserService } from './user.service';
@@ -29,7 +30,8 @@ export interface PaymentInitializationRequest {
   packageId?: number;
   itemId?: number;
   reportId?: number;
-  redirectUrl?: string;
+  phoneNumber: string; // Required for PawaPay Direct Deposit
+  provider?: string;   // Optional — auto-detected if not provided
 }
 
 /**
@@ -40,8 +42,8 @@ export interface PaymentInitializationResponse {
   transactionRef: string;
   amount: number;
   currency: string;
-  paymentUrl: string;
-  redirectUrl: string;
+  depositId: string;
+  depositStatus: string;
 }
 
 /**
@@ -75,6 +77,12 @@ export class PaymentService {
       if (!user) {
         logger.warn('User not found for payment initialization', { userId: paymentData.userId });
         throw new Error('User not found');
+      }
+
+      // Require phone number for PawaPay Direct Deposit
+      const phoneNumber = paymentData.phoneNumber || user.phoneNumber;
+      if (!phoneNumber) {
+        throw new Error('Phone number is required for mobile money payment');
       }
 
       let packageData = null;
@@ -113,11 +121,8 @@ export class PaymentService {
         amount = await getPaymentAmount(paymentData.type);
       }
 
-      // Generate transaction reference
-      const transactionRef = generateTransactionReference();
-
-      // Set up redirect URL (use provided or default)
-      const redirectUrl = paymentData.redirectUrl || `${process.env.APP_URL || 'http://localhost:5000'}/api/payments/callback`;
+      // Generate a UUID-based deposit ID (used as transactionRef)
+      const depositId = generateDepositId();
 
       // Create payment record in database
       const paymentRecord = await storage.createPayment({
@@ -126,60 +131,49 @@ export class PaymentService {
         currency: DEFAULT_CURRENCY,
         type: paymentData.type,
         status: 'pending',
-        transactionRef,
+        transactionRef: depositId,
         itemId: paymentData.itemId,
         reportId: paymentData.reportId,
         packageId: packageData?.id
       });
 
-      // Get payment description based on package or type
-      const description = await getPaymentDescription(
-        paymentData.type,
-        packageData?.id
-      );
-
-      // Initialize payment with Flutterwave
-      const flutterwaveResponse = await initializePayment({
+      // Initiate deposit with PawaPay (triggers USSD/push prompt on customer's phone)
+      const depositResponse = await initiateDeposit({
         amount,
         currency: DEFAULT_CURRENCY,
-        tx_ref: transactionRef,
-        redirect_url: redirectUrl,
-        customer: {
-          email: user.email,
-          phone_number: user.phoneNumber || undefined,
-          name: user.fullName
-        },
-        customizations: {
-          title: 'KIZERE Platform',
-          description
-        },
-        meta: {
-          payment_id: paymentRecord.id,
-          user_id: user.id,
+        depositId,
+        phoneNumber,
+        provider: paymentData.provider,
+        metadata: {
+          payment_id: paymentRecord.id.toString(),
+          user_id: user.id.toString(),
           payment_type: paymentData.type,
-          package_id: packageData?.id
+          package_id: packageData?.id?.toString(),
         }
       });
 
-      if (!flutterwaveResponse.data?.link) {
-        logger.error('No payment URL returned from payment provider', { transactionRef });
-        throw new Error('Failed to initialize payment with provider');
+      if (depositResponse.status === 'REJECTED') {
+        logger.error('Deposit rejected by PawaPay', {
+          depositId,
+          reason: depositResponse.rejectionReason,
+        });
+        throw new Error(`Payment rejected: ${depositResponse.rejectionReason?.rejectionMessage || 'Unknown reason'}`);
       }
 
       logger.info('Payment initialized successfully', {
         paymentId: paymentRecord.id,
-        transactionRef,
+        depositId,
         amount,
         packageId: packageData?.id
       });
 
       return {
         paymentId: paymentRecord.id,
-        transactionRef,
+        transactionRef: depositId,
         amount,
         currency: DEFAULT_CURRENCY,
-        paymentUrl: flutterwaveResponse.data.link,
-        redirectUrl
+        depositId,
+        depositStatus: depositResponse.status,
       };
     } catch (error) {
       logger.error('Error initializing payment', { error });
@@ -230,68 +224,53 @@ export class PaymentService {
         };
       }
 
-      // If payment has a transactionId, verify with payment provider
-      if (payment.transactionId) {
-        try {
-          logger.info('Verifying payment with provider', { transactionId: payment.transactionId });
+      // Check deposit status with PawaPay using the transactionRef (which is the depositId)
+      try {
+        logger.info('Checking deposit status with PawaPay', { depositId: transactionRef });
 
-          const verificationResponse = await verifyTransaction(payment.transactionId);
+        const depositStatus = await checkDepositStatus(transactionRef);
+        const newStatus: PaymentStatus = mapPawaPayStatus(depositStatus.status) as PaymentStatus;
 
-          // Update payment status based on verification
-          const newStatus: PaymentStatus = verificationResponse.data.status === 'successful' ? 'successful' :
-            verificationResponse.data.status === 'cancelled' ? 'cancelled' :
-              verificationResponse.data.status === 'failed' ? 'failed' : 'pending';
+        // If payment is successful, update payment date
+        const updateData: Partial<Payment> = {
+          status: newStatus,
+          providerRef: depositStatus.providerTransactionId || null
+        };
 
-          // If payment is successful, update payment date
-          const updateData: Partial<Payment> = {
-            status: newStatus,
-            flutterwaveRef: verificationResponse.data.flw_ref
-          };
-
-          if (newStatus === 'successful' && !payment.paymentDate) {
-            updateData.paymentDate = new Date();
-          }
-
-          // Update payment in database
-          await storage.updatePayment(payment.id, updateData);
-
-          logger.info('Payment verified with provider', {
-            transactionRef,
-            status: newStatus
-          });
-
-          return {
-            status: newStatus,
-            message: newStatus === 'successful' ? 'Payment completed successfully' :
-              newStatus === 'failed' ? 'Payment failed' :
-                newStatus === 'cancelled' ? 'Payment was cancelled' : 'Payment is still pending',
-            transactionRef,
-            amount: Number(payment.amount),
-            paymentDate: updateData.paymentDate?.toISOString()
-          };
-        } catch (verificationError) {
-          logger.error('Error verifying payment with provider', {
-            transactionRef,
-            transactionId: payment.transactionId,
-            error: verificationError
-          });
-
-          // If verification failed, return current status
-          return {
-            status: payment.status as any,
-            message: 'Unable to verify payment status',
-            transactionRef
-          };
+        if (newStatus === 'successful' && !payment.paymentDate) {
+          updateData.paymentDate = new Date();
         }
-      }
 
-      // If payment doesn't have a transactionId yet, it's still pending
-      logger.info('Payment pending verification', { transactionRef });
-      return {
-        status: 'pending',
-        message: 'Payment is still being processed',
-        transactionRef
-      };
+        // Update payment in database
+        await storage.updatePayment(payment.id, updateData);
+
+        logger.info('Payment verified with PawaPay', {
+          transactionRef,
+          status: newStatus
+        });
+
+        return {
+          status: newStatus,
+          message: newStatus === 'successful' ? 'Payment completed successfully' :
+            newStatus === 'failed' ? 'Payment failed' :
+              newStatus === 'cancelled' ? 'Payment was cancelled' : 'Payment is still pending',
+          transactionRef,
+          amount: Number(payment.amount),
+          paymentDate: updateData.paymentDate?.toISOString()
+        };
+      } catch (verificationError) {
+        logger.error('Error verifying payment with PawaPay', {
+          transactionRef,
+          error: verificationError
+        });
+
+        // If verification failed, return current status
+        return {
+          status: payment.status as any,
+          message: 'Unable to verify payment status',
+          transactionRef
+        };
+      }
     } catch (error) {
       logger.error('Error verifying payment', { transactionRef, error });
       throw error;

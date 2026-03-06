@@ -10,3 +10,8 @@ vite.config.ts.*
 .env.production
 .env.local
 app.log
+
+# Security: never commit private keys or temp debug files
+*.pem
+tmp_*
+diag.txt

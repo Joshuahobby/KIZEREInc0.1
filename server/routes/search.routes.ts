@@ -113,7 +113,7 @@ router.get("/", async (req, res) => {
           title: item.name, // Unify title
           description: item.description,
           category: item.category,
-          status: 'Registered',
+          status: item.status,
           location: item.location,
           date: item.registeredAt, // Unify date
           imageUrls: item.imageUrls,

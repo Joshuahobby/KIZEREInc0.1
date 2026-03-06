@@ -20,14 +20,6 @@ import {
   PaymentPackage,
   DEFAULT_USER_PREFERENCES
 } from "@shared/schema";
-import {
-  generateTransactionReference,
-  verifyTransaction,
-  verifyWebhookSignature,
-  initializePayment,
-  PAYMENT_FEES,
-  getPaymentAmount
-} from "./utils/flutterwave";
 import { getPaymentDescription } from "./config/payment.config";
 import { createLogger } from "./utils/logger";
 import { DEFAULT_CURRENCY } from "./config/payment.config";
@@ -135,7 +127,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/items', requireAuth, itemRoutes);
   app.use('/api/reports', requireAuth, reportRoutes);
   app.use('/api/notifications', requireAuth, notificationRoutes);
-  app.use('/api/payments', requireAuth, paymentRoutes);
+  // Payment routes (webhook must be public)
+  app.use('/api/payments', (req: any, res: any, next: any) => {
+    if (req.method === 'POST' && req.path === '/webhook') return next();
+    requireAuth(req, res, next);
+  }, paymentRoutes);
   app.use('/api/payment-packages', requireAuth, paymentRoutes);
   app.use('/api/claims', requireAuth, claimRoutes);
   app.use('/api/me', requireAuth, profileRoutes);

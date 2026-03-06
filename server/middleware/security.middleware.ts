@@ -273,6 +273,45 @@ export function setupSecurityMiddleware(app: Express) {
 }
 
 /**
+ * Validates if the request IP is from PawaPay's infrastructure
+ */
+export function validatePawaPayIP(req: Request, res: Response, next: NextFunction) {
+  // Always allow for local development if MOCK_PAYMENTS is true
+  if (config.MOCK_PAYMENTS || !isProd) {
+    return next();
+  }
+
+  const clientIP = req.ip || req.socket.remoteAddress || '';
+
+  // PawaPay Production IPs
+  const productionIPs = [
+    '52.19.141.144',
+    '52.209.117.150',
+    '52.209.155.158',
+    '52.214.15.30',
+    '52.51.109.213',
+    '54.171.181.162',
+    '54.217.152.181'
+  ];
+
+  // PawaPay Sandbox IPs
+  const sandboxIPs = [
+    '44.201.127.186',
+    '52.202.164.21',
+    '54.161.80.252'
+  ];
+
+  const allowedIPs = [...productionIPs, ...sandboxIPs];
+
+  if (allowedIPs.includes(clientIP)) {
+    return next();
+  }
+
+  logger.warn('PawaPay Webhook: Restricted IP attempt', { ip: clientIP });
+  res.status(403).json({ error: 'Forbidden: IP not in whitelist' });
+}
+
+/**
  * Deep sanitize an object's string properties
  * @param obj Object to sanitize
  * @returns Sanitized object

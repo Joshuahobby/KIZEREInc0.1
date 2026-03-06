@@ -20,9 +20,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Eye, MoreHorizontal, Pencil, Trash, QrCode, AlertTriangle } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Trash, QrCode, AlertTriangle, DollarSign } from "lucide-react";
 import { ReportRegisteredItemDialog } from "@/components/reports/report-registered-item-dialog";
+import { PaymentModal } from "@/components/payment/payment-modal";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ItemsTableProps {
   items: Item[];
@@ -38,6 +40,9 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
   const [, navigate] = useLocation();
   const [reportItem, setReportItem] = useState<Item | null>(null);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
+  const [paymentItem, setPaymentItem] = useState<Item | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleReportLost = (item: Item) => {
     setReportItem(item);
@@ -66,6 +71,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
       case 'registered':
         className = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
         break;
+      case 'pending_payment':
       case 'pending':
         className = 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300';
         break;
@@ -78,7 +84,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
 
     return (
       <Badge variant="outline" className={className}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {status === 'Pending_Payment' ? 'Unpaid' : status.charAt(0).toUpperCase() + status.slice(1)}
       </Badge>
     );
   };
@@ -179,6 +185,19 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                   </DropdownMenuItem>
                 )}
 
+                {item.status === 'Pending_Payment' && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setPaymentItem(item);
+                      setIsPaymentModalOpen(true);
+                    }}
+                    className="text-amber-600 font-bold focus:text-amber-700 bg-amber-50 dark:bg-amber-900/10"
+                  >
+                    <DollarSign className="mr-2 h-4 w-4" />
+                    <span>Pay Now</span>
+                  </DropdownMenuItem>
+                )}
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-red-600 dark:text-red-400">
                   <Trash className="mr-2 h-4 w-4" />
@@ -195,6 +214,21 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
           item={reportItem}
           open={isReportDialogOpen}
           onOpenChange={setIsReportDialogOpen}
+        />
+      )}
+
+      {paymentItem && (
+        <PaymentModal
+          open={isPaymentModalOpen}
+          onOpenChange={setIsPaymentModalOpen}
+          paymentDetails={{
+            type: 'registration',
+            itemId: paymentItem.id,
+            amount: 2000
+          }}
+          onPaymentSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["/api/items"] });
+          }}
         />
       )}
     </div>

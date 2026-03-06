@@ -2,20 +2,33 @@ import { Router } from "express";
 import { storage } from "../storage";
 import {
   insertPaymentPackageSchema,
-  initiatePaymentSchema
+  initiatePaymentSchema,
+  payouts
 } from "@shared/schema";
+import { db } from "../db";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createLogger } from "../utils/logger";
+import { validatePawaPayIP } from "../middleware/security.middleware";
+import { verifyPawaPaySignature } from "../utils/pawapay-signature";
 import {
-  generateTransactionReference,
-  initializePayment,
-  getPaymentAmount
-} from "../utils/flutterwave";
+  generateDepositId,
+  initiateDeposit,
+  getPaymentAmount,
+  checkDepositStatus,
+  mapPawaPayStatus,
+  predictProvider,
+  getFailureMessage
+} from "../utils/pawapay";
+import type { PawaPayDepositCallback } from "../utils/pawapay";
 import { getPaymentDescription } from "../config/payment.config";
 import { sendPaymentConfirmationEmail } from "../services/email.service";
-import { verifyWebhookSignature, verifyTransaction } from "../utils/flutterwave";
 
 const logger = createLogger('PaymentRoutes');
+import { config as serverConfig } from "../config";
+import fs from "fs";
+fs.writeFileSync("diag.txt", `MOCK_PAYMENTS is ${serverConfig.MOCK_PAYMENTS} at ${new Date().toISOString()}\n`);
+logger.info("Payment routes initialized", { MOCK_PAYMENTS: serverConfig.MOCK_PAYMENTS });
 const router = Router();
 
 const requireRole = (roles: string[]) => (req: any, res: any, next: any) => {
@@ -76,19 +89,44 @@ router.get("/history", async (req, res) => {
   }
 });
 
+// Predict MoMo provider from phone number (used by client before initiating payment)
+router.post("/predict-provider", async (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    if (!phoneNumber) {
+      return res.status(400).json({ message: "Phone number is required" });
+    }
+    const prediction = await predictProvider(phoneNumber);
+    res.json(prediction);
+  } catch (error) {
+    logger.error("Provider prediction failed", { error });
+    res.status(500).json({ message: "Failed to predict provider" });
+  }
+});
+
 router.post("/initiate", async (req, res) => {
-  logger.info("Received payment initiation request", { body: req.body, user: req.user?.id });
+  logger.info("Received payment initiation request", {
+    body: req.body,
+    user: req.user?.id,
+    MOCK_PAYMENTS: serverConfig.MOCK_PAYMENTS
+  });
   try {
     const validatedData = initiatePaymentSchema.parse(req.body);
     const amount = await getPaymentAmount(validatedData.type as 'registration' | 'lost_report');
-    const txRef = generateTransactionReference();
+    const depositId = generateDepositId();
+
+    // Require phone number for PawaPay Direct Deposit
+    const phoneNumber = req.body.phoneNumber || req.user?.phoneNumber;
+    if (!phoneNumber) {
+      return res.status(400).json({ message: "Phone number is required for mobile money payment" });
+    }
 
     const payment = await storage.createPayment({
       userId: req.user!.id,
       amount: amount.toString(),
       currency: "RWF",
       status: "pending",
-      transactionRef: txRef,
+      transactionRef: depositId,
       type: validatedData.type,
       itemId: validatedData.itemId || null,
       reportId: validatedData.reportId || null,
@@ -96,27 +134,34 @@ router.post("/initiate", async (req, res) => {
       metadata: null
     });
 
-    const flutterwaveResponse = await initializePayment({
+    // Initiate deposit with PawaPay
+    const depositResponse = await initiateDeposit({
       amount,
       currency: "RWF",
-      tx_ref: txRef,
-      redirect_url: validatedData.redirectUrl || `${process.env.APP_URL || 'http://localhost:5000'}/payment-status`,
-      customer: {
-        email: req.user!.email,
-        name: req.user!.fullName || req.user!.username
-      },
-
-      customizations: {
-        title: "KIZERE Inc Payment",
-        description: await getPaymentDescription(validatedData.type)
+      depositId,
+      phoneNumber,
+      provider: req.body.provider, // Optional — auto-detected if not provided
+      metadata: {
+        payment_id: payment.id.toString(),
+        user_id: req.user!.id.toString(),
+        payment_type: validatedData.type,
       }
     });
 
-    logger.info("Payment initiated successfully", { txRef, checkoutUrl: flutterwaveResponse.data?.link });
+    logger.info("Payment initiated successfully", {
+      depositId,
+      status: depositResponse.status,
+      rawResponse: depositResponse
+    });
 
     res.json({
-      payment,
-      paymentUrl: flutterwaveResponse.data?.link
+      paymentId: payment.id,
+      transactionRef: depositId,
+      amount: amount,
+      currency: "RWF",
+      depositId: depositId,
+      depositStatus: depositResponse.status,
+      payment: payment
     });
   } catch (error) {
     logger.error("Payment initiation failed", { error, body: req.body });
@@ -124,60 +169,31 @@ router.post("/initiate", async (req, res) => {
   }
 });
 
-// Webhook for Flutterwave
-router.post("/webhook", async (req, res) => {
+// Webhook / callback for PawaPay deposit and payout status updates
+// PawaPay uses IP whitelisting + RFC-9421 signed callback verification
+router.post("/webhook", validatePawaPayIP, verifyPawaPaySignature, async (req, res) => {
   try {
-    const signature = req.headers['verif-hash'];
-    if (!signature || !verifyWebhookSignature(signature as string, JSON.stringify(req.body))) {
-      // Note: req.body might be an object, but verifyWebhookSignature expects stringified body usually
-      // However, our verifyWebhookSignature implementation takes 'data: string'. 
-      // Express parses body to JSON. We should ideally use the raw body for signature verification.
-      // For now, assuming standard setup.
-      return res.status(401).json({ message: "Invalid signature" });
-    }
-
     const payload = req.body;
-    logger.info("Received Webhook", { event: payload.event, type: payload.event?.type });
 
-    // Handle different event types
-    // Standard structure: { event: 'charge.completed', data: { ... } }
-    // Or sometimes just the data if it's a legacy hook? 
-    // We will support the standard 'event' property.
+    // Handle Deposit Callback
+    if (payload.depositId) {
+      logger.info("Received PawaPay deposit callback", { depositId: payload.depositId, status: payload.status });
 
-    const eventType = payload.event;
-    const data = payload.data;
+      const payment = await storage.getPaymentByTransactionRef(payload.depositId);
+      if (!payment) {
+        logger.warn("Payment not found for callback", { depositId: payload.depositId });
+        return res.sendStatus(200);
+      }
 
-    if (eventType === 'charge.completed' && data.status === 'successful') {
-      const { tx_ref, id, amount, currency } = data;
-
-      const transaction = await verifyTransaction(id.toString());
-
-      if (transaction.status === 'success' && transaction.data.status === 'successful') {
-        const payment = await storage.getPaymentByTransactionRef(tx_ref);
-
-        if (payment) {
-          // Verify amount and currency
-          if (payment.currency !== currency) {
-            logger.error("Currency mismatch in webhook", { expected: payment.currency, received: currency });
-            return res.sendStatus(400);
-          }
-
-          // Verify amount (allow small epsilon for float diffs if needed, but strings are safer)
-          if (parseFloat(payment.amount) > amount) {
-            logger.warn("Partial payment received", { expected: payment.amount, received: amount });
-            // We could mark as 'partial' or 'failed' depending on logic.
-            // For now, we only complete if full amount.
-            return res.sendStatus(200);
-          }
-
+      if (payload.status === 'COMPLETED') {
+        if (payment.currency === payload.currency && parseFloat(payment.amount) <= parseFloat(payload.amount)) {
           if (payment.status !== 'completed') {
             await storage.updatePayment(payment.id, {
               status: 'completed',
-              transactionId: id.toString(),
-              flutterwaveRef: data.flw_ref
+              transactionId: payload.depositId,
+              providerRef: payload.providerTransactionId || null
             });
 
-            // Send confirmation email
             const user = await storage.getUser(payment.userId);
             if (user?.email) {
               sendPaymentConfirmationEmail(
@@ -189,15 +205,47 @@ router.post("/webhook", async (req, res) => {
                 payment.type
               ).catch(err => logger.error('Failed to send payment email', { error: err }));
             }
+
+            // Phase: Finalize item registration if this was a registration payment
+            if (payment.type === 'registration' && payment.itemId) {
+              logger.info("Finalizing item registration after successful payment", { itemId: payment.itemId });
+              await storage.updateItem(payment.itemId, { status: 'Registered' });
+            }
           }
-        } else {
-          logger.warn("Payment not found for webhook", { tx_ref });
+        }
+      } else if (payload.status === 'FAILED') {
+        if (payment.status !== 'completed') {
+          await storage.updatePayment(payment.id, {
+            status: 'failed' as any,
+            providerRef: payload.providerTransactionId || null,
+            metadata: payload.failureReason ? {
+              failureCode: payload.failureReason.failureCode,
+              failureMessage: payload.failureReason.failureMessage,
+            } : null
+          });
         }
       }
-    } else if (eventType === 'transfer.completed') {
-      // Handle payout completion
-      // TODO: Implement payout status updates
-      logger.info("Transfer completed webhook received", { data });
+    }
+    // Handle Payout (Refund) Callback
+    else if (payload.payoutId) {
+      logger.info("Received PawaPay payout callback", { payoutId: payload.payoutId, status: payload.status });
+
+      const [payout] = await db.select().from(payouts).where(eq(payouts.providerRef, payload.payoutId));
+
+      if (payout) {
+        const newStatus = payload.status === 'COMPLETED' ? 'completed' :
+          payload.status === 'FAILED' ? 'failed' : 'processing';
+
+        await db.update(payouts)
+          .set({
+            status: newStatus,
+            processedAt: new Date(),
+            failureReason: payload.failureReason?.failureMessage || null
+          })
+          .where(eq(payouts.id, payout.id));
+
+        logger.info(`Payout ${payout.id} updated to ${newStatus}`);
+      }
     }
 
     res.sendStatus(200);
@@ -207,7 +255,7 @@ router.post("/webhook", async (req, res) => {
   }
 });
 
-// Verify a payment by transaction reference
+// Verify a payment by transaction reference (depositId)
 router.get("/verify/:txRef", async (req, res) => {
   const { txRef } = req.params;
   logger.info("Manual verification requested", { txRef });
@@ -218,34 +266,35 @@ router.get("/verify/:txRef", async (req, res) => {
       return res.status(404).json({ message: "Payment not found" });
     }
 
-    // Call Flutterwave to verify
-    // Using txRef as ID for mock mode compatibility, or use getTransacitonId mechanism in real flow
-    // In real FW flow, we might need to search by tx_ref first to get ID, or use verify by tx_ref if supported.
-    // Our utility 'verifyTransaction' expects an ID usually, but for Mock it takes txRef.
-    // Let's assume we can pass txRef and the utility handles it, or we need to look it up.
+    // Call PawaPay to check deposit status
+    const depositStatus = await checkDepositStatus(txRef);
+    const internalStatus = mapPawaPayStatus(depositStatus.status);
 
-    // For now, let's try to verify using the ref (which works in our Mock).
-    // In production, we should probably store the FW ID if we have it, or query FW for it.
+    logger.info("Verification result", {
+      txRef,
+      pawaPayStatus: depositStatus.status,
+      internalStatus,
+      MOCK_PAYMENTS: serverConfig.MOCK_PAYMENTS
+    });
 
-    const transaction = await verifyTransaction(txRef);
-
-    if (transaction.status === 'success' && transaction.data.status === 'successful') {
-      // Verify amount and currency
-      if (payment.currency !== transaction.data.currency) {
-        logger.error("Currency mismatch in verification", { expected: payment.currency, received: transaction.data.currency });
+    if (internalStatus === 'successful') {
+      // Verify currency
+      if (depositStatus.currency && payment.currency !== depositStatus.currency) {
+        logger.error("Currency mismatch in verification", { expected: payment.currency, received: depositStatus.currency });
         return res.status(400).json({ message: "Currency mismatch" });
       }
 
-      if (parseFloat(payment.amount) > transaction.data.amount) {
-        logger.warn("Partial payment found", { expected: payment.amount, received: transaction.data.amount });
+      // Verify amount
+      if (depositStatus.amount && parseFloat(payment.amount) > parseFloat(depositStatus.amount)) {
+        logger.warn("Partial payment found", { expected: payment.amount, received: depositStatus.amount });
         return res.status(400).json({ message: "Payment amount insufficient" });
       }
 
       if (payment.status !== 'completed') {
         await storage.updatePayment(payment.id, {
           status: 'completed',
-          transactionId: transaction.data.id.toString(),
-          flutterwaveRef: transaction.data.flw_ref
+          transactionId: depositStatus.depositId,
+          providerRef: depositStatus.providerTransactionId || null
         });
 
         // Send confirmation email if not already sent
@@ -260,24 +309,41 @@ router.get("/verify/:txRef", async (req, res) => {
             payment.type
           ).catch(err => logger.error('Failed to send payment email', { error: err }));
         }
+
+        // Phase: Finalize item registration if this was a registration payment
+        if (payment.type === 'registration' && payment.itemId) {
+          logger.info("Finalizing item registration after manual verification", { itemId: payment.itemId });
+          await storage.updateItem(payment.itemId, { status: 'Registered' });
+        }
       }
 
       return res.json({
         status: "successful",
         message: "Payment verified successfully",
         transactionRef: txRef,
-        amount: transaction.data.amount
+        amount: depositStatus.amount ? parseFloat(depositStatus.amount) : parseFloat(payment.amount)
       });
     }
 
+    if (internalStatus === 'failed') {
+      if (payment.status !== 'completed' && payment.status !== 'failed') {
+        await storage.updatePayment(payment.id, {
+          status: 'failed' as any,
+          providerRef: depositStatus.providerTransactionId || null
+        });
+      }
+    }
+
     res.json({
-      status: transaction.data.status || "pending",
-      message: "Payment verification returned non-success status",
+      status: internalStatus,
+      message: internalStatus === 'failed'
+        ? getFailureMessage(depositStatus.failureReason?.failureCode, depositStatus.failureReason?.failureMessage)
+        : "Payment is still being processed",
+      failureCode: internalStatus === 'failed' ? depositStatus.failureReason?.failureCode : undefined,
       transactionRef: txRef
     });
   } catch (error) {
     logger.error("Verification failed", { error, txRef });
-    // Don't expose internal errors
     res.status(500).json({ message: "Verification failed. Please try again or contact support." });
   }
 });

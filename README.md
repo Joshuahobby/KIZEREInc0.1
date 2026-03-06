@@ -39,7 +39,7 @@ The application follows a service-oriented architecture with the following layer
 - User authentication and role-based access control
 - Item registration and tracking
 - Lost and found item reporting
-- Payment processing (Flutterwave)
+- Payment processing (PawaPay)
 - Admin dashboard for monitoring and management
 - Secure API endpoints with rate limiting
 
@@ -63,10 +63,12 @@ The application follows a service-oriented architecture with the following layer
 We use a multi-environment CI/CD pipeline to ensure data safety and feature reliability.
 
 ### Environments
+
 - **Staging**: `staging.kizere.rw` - Used for final QA and E2E testing.
 - **Production**: `kizere.rw` - The live user-facing application.
 
 ### CI/CD Workflow
+
 1. **Pull Requests**: Every PR triggers automated type checks, unit tests, and E2E tests via GitHub Actions.
 2. **Staging Review**: Once tests pass and code is merged to `main`, it is automatically deployed to the Staging environment.
 3. **Production Promotion**: After manual verification on Staging, the build is promoted to Production.

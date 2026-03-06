@@ -12,7 +12,8 @@ export interface InitializePaymentRequest {
   itemId?: number;
   reportId?: number;
   packageId?: number; // Optional, reference to the selected payment package
-  redirectUrl?: string; // Optional, will use default if not provided
+  phoneNumber: string; // Required for PawaPay Direct Deposit
+  provider?: string; // Optional — auto-detected from phone number
 }
 
 /**
@@ -23,8 +24,8 @@ export interface InitializePaymentResponse {
   transactionRef: string;
   amount: number;
   currency: string;
-  paymentUrl: string;
-  redirectUrl: string;
+  depositId: string;
+  depositStatus: string;
 }
 
 /**
@@ -105,7 +106,7 @@ export class PaymentService {
       } catch (innerError) {
         console.warn("Could not fetch from /api/payments/history, trying /api/payments", innerError);
       }
-      
+
       // Fall back to /api/payments endpoint
       return await apiRequest("/api/payments", { method: "GET" });
     } catch (error) {

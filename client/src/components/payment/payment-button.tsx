@@ -31,18 +31,18 @@ export function PaymentButton({
 }: PaymentButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Calculate payment amount if not provided
   const paymentAmount = amount ?? PaymentService.getPaymentAmount(paymentType);
-  
+
   // Payment details for the modal
-  const paymentDetails: Omit<InitializePaymentRequest, "amount"> & { amount: number } = {
+  const paymentDetails: Omit<InitializePaymentRequest, "amount" | "phoneNumber"> & { amount: number } = {
     type: paymentType,
     amount: paymentAmount,
     ...(itemId ? { itemId } : {}),
     ...(reportId ? { reportId } : {})
   };
-  
+
   // Handle button click to open payment modal
   const handleClick = () => {
     setIsLoading(true);
@@ -52,21 +52,21 @@ export function PaymentButton({
     setIsModalOpen(true);
     setIsLoading(false);
   };
-  
+
   // Handle payment success
   const handlePaymentSuccess = (transactionRef: string) => {
     if (onPaymentSuccess) {
       onPaymentSuccess(transactionRef);
     }
   };
-  
+
   // Handle payment cancel
   const handlePaymentCancel = () => {
     if (onPaymentCancel) {
       onPaymentCancel();
     }
   };
-  
+
   return (
     <>
       <Button
@@ -84,7 +84,7 @@ export function PaymentButton({
           </>
         )}
       </Button>
-      
+
       <PaymentModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}

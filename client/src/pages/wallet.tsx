@@ -69,7 +69,7 @@ export default function WalletPage() {
                 actions={
                     <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border">
                         <CreditCard className="w-4 h-4" />
-                        <span>Secure Payments via Flutterwave</span>
+                        <span>Secure Payments via PawaPay</span>
                     </div>
                 }
             />

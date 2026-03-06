@@ -1,7 +1,7 @@
 import { db } from "../db";
 import { payouts, reports, users, Payout, Report } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
-import { initiateTransfer, generateTransactionReference, TransferInitialization } from "../utils/flutterwave";
+import { initiatePayout, generateDepositId } from "../utils/pawapay";
 import { createLogger } from "../utils/logger";
 
 const logger = createLogger("PayoutService");
@@ -29,7 +29,7 @@ export class PayoutService {
     }
 
     /**
-     * Process a pending payout
+     * Process a pending payout via PawaPay
      */
     async processPayout(payoutId: number): Promise<Payout> {
         const payout = await db.query.payouts.findFirst({
@@ -51,26 +51,20 @@ export class PayoutService {
             .where(eq(payouts.id, payoutId));
 
         try {
-            // Prepare transfer data
-            const reference = generateTransactionReference('PAYOUT');
-            const transferData: TransferInitialization = {
-                account_bank: 'MPS', // Mobile Money (needs to be dynamic based on provider if we support multiple)
-                account_number: payout.destination,
+            // Initiate payout via PawaPay
+            const payoutResponse = await initiatePayout({
+                payoutId: generateDepositId(),
+                phoneNumber: payout.destination,
                 amount: Number(payout.amount),
                 currency: payout.currency,
                 narration: `Bounty payout for Report #${payout.reportId}`,
-                reference,
-                debit_currency: payout.currency
-            };
+            });
 
-            // Initiate transfer
-            const transferResponse = await initiateTransfer(transferData);
-
-            if (transferResponse.status === 'success') {
+            if (payoutResponse.status === 'ACCEPTED') {
                 const [updatedPayout] = await db.update(payouts)
                     .set({
-                        status: 'completed', // Or 'processing' if we wait for webhook, but FW instant transfers are often synchronous success
-                        providerRef: transferResponse.data?.id.toString(),
+                        status: 'processing', // PawaPay payouts are async — final status comes via callback
+                        providerRef: payoutResponse.payoutId,
                         processedAt: new Date()
                     })
                     .where(eq(payouts.id, payoutId))
@@ -83,7 +77,7 @@ export class PayoutService {
 
                 return updatedPayout;
             } else {
-                throw new Error(transferResponse.message);
+                throw new Error(payoutResponse.rejectionReason?.rejectionMessage || 'Payout rejected');
             }
 
         } catch (error) {

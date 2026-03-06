@@ -224,6 +224,7 @@ export class DashboardService {
       const totalItems = allItems.length;
       const itemStats = {
         registeredItems: allItems.filter(i => i.status === 'Registered').length,
+        unpaidItems: allItems.filter(i => i.status === 'Pending_Payment').length,
         lostItems: allItems.filter(i => i.status === 'Lost').length,
         foundItems: allItems.filter(i => i.status === 'Found').length,
       };
@@ -290,8 +291,14 @@ export class DashboardService {
         new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
       const recentlyAddedItems = sortedItems.slice(0, 5);
 
-      // Count pending payments
-      const pendingPayments = payments.filter(p => p.status === 'pending').length;
+      // Count items awaiting payment completion
+      const itemsPendingPayment = items.filter(i => i.status === 'Pending_Payment').length;
+
+      // Count pending payment transactions (to avoid double counting, we could filter but usually transactions and item statuses align eventually)
+      const pendingPaymentTransactions = payments.filter(p => p.status === 'pending').length;
+
+      // We'll count both as total "pending financial actions"
+      const pendingPayments = itemsPendingPayment + pendingPaymentTransactions;
 
       // Count unread notifications
       const unreadNotifications = notifications.filter(n => !n.isRead).length;

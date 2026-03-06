@@ -173,15 +173,9 @@ export default function LostFound() {
         data: { ...data, imageUrls }
       });
 
-      // 3. Handle payment for lost items
-      if (data.type === 'lost' && report.paymentStatus !== 'successful') {
-        const payment = await PaymentService.initializePayment({
-          type: "lost_report",
-          reportId: report.id
-        });
-        return { report, payment };
-      }
-
+      // 3. Payment will be handled separately via PaymentModal
+      // PawaPay Direct Deposit requires phone number + USSD approval,
+      // so payment is initiated from the dashboard/payment modal after report creation.
       return { report };
     },
     onSuccess: (res: any) => {
@@ -198,21 +192,13 @@ export default function LostFound() {
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
 
-      if (res.payment?.paymentUrl) {
-        toast({
-          title: "Payment Required",
-          description: "Redirecting to secure payment page...",
-        });
-        window.location.href = res.payment.paymentUrl;
-      } else {
-        toast({
-          title: `${dialogType === 'lost' ? 'Lost' : 'Found'} item reported successfully`,
-          description: dialogType === 'found'
-            ? "Your report is pending admin approval."
-            : "Your report has been submitted.",
-        });
-        setOpenDialog(false);
-      }
+      toast({
+        title: `${dialogType === 'lost' ? 'Lost' : 'Found'} item reported successfully`,
+        description: dialogType === 'found'
+          ? "Your report is pending admin approval."
+          : "Your report has been submitted. Proceed to payment from your dashboard.",
+      });
+      setOpenDialog(false);
       form.reset();
     },
     onError: (error: Error) => {

@@ -67,6 +67,7 @@ import { QRCodeGenerator } from "@/components/item-registration/qr-code-generato
 import { ShareWhatsAppButton } from "@/components/ui/share-whatsapp-button";
 import { VoiceHelper } from "@/components/ui/voice-helper";
 import { PaymentTrust } from "@/components/ui/payment-trust";
+import { PaymentModal } from "@/components/payment/payment-modal";
 
 // Schema & Constants
 import { insertItemSchema } from "@shared/schema";
@@ -153,6 +154,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
   const [autoSaving, setAutoSaving] = useState(false);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [registeredItemData, setRegisteredItemData] = useState<any>(null);
 
   const isEditMode = !!params?.id;
@@ -174,7 +176,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
       model: "",
       uniqueIdentifier: "",
       description: "",
-      status: "Registered",
+      status: "Pending_Payment",
       imageUrls: [],
       details: {},
     },
@@ -445,16 +447,10 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
         }
       });
 
-      // 4. Initialize Payment (Only new registrations)
-      let paymentResponse: { paymentUrl: string | null } = { paymentUrl: null };
-      if (!isEditMode) {
-        paymentResponse = await PaymentService.initializePayment({
-          type: "registration",
-          itemId: itemResponse.id
-        });
-      }
-
-      return { item: itemResponse, payment: paymentResponse };
+      // 4. Payment will be handled separately via PaymentModal
+      // PawaPay Direct Deposit requires phone number + USSD approval,
+      // so payment is initiated from the dashboard/payment modal after registration.
+      return { item: itemResponse };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/items"] });
@@ -465,16 +461,14 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
 
       toast({
         title: isEditMode ? "Success!" : "Item Registered",
-        description: isEditMode ? "Item updated successfully." : "Redirecting to payment...",
+        description: isEditMode ? "Item updated successfully." : "Your item has been registered. Proceed to payment from your dashboard.",
         variant: "default",
         duration: 3000,
       });
 
-      if (!isEditMode && data.payment.paymentUrl) {
-        window.location.href = data.payment.paymentUrl;
-      } else if (!isEditMode) {
+      if (!isEditMode) {
         setRegisteredItemData(data.item);
-        setShowSuccess(true);
+        setShowPaymentModal(true);
       } else {
         setTimeout(() => {
           setLocation(`/items/${itemId}`);
@@ -591,6 +585,25 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
       defaultSidebarCollapsed={true}
     >
       <div className="min-h-[70vh] py-4 px-3 sm:py-6 sm:px-4">
+        {registeredItemData && (
+          <PaymentModal
+            open={showPaymentModal}
+            onOpenChange={setShowPaymentModal}
+            paymentDetails={{
+              type: 'registration',
+              itemId: registeredItemData.id,
+              amount: 2000 // Standard registration fee
+            }}
+            onPaymentSuccess={() => {
+              setShowSuccess(true);
+              setShowPaymentModal(false);
+              toast({
+                title: "Registration Complete",
+                description: "Your item is now fully registered and protected.",
+              });
+            }}
+          />
+        )}
         <div className="w-full max-w-6xl mx-auto">
 
           {/* Auto-save indicator (floating) */}

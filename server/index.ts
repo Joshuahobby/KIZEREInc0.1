@@ -13,6 +13,9 @@ import { initMonitoring, initErrorHandlers } from "./utils/monitoring";
 const logger = createLogger('Server');
 const app = express();
 
+// Trust proxy is required for correct IP detection on Vercel/proxies
+app.set('trust proxy', true);
+
 // Handle process-level errors
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection at:', { promise, reason });

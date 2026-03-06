@@ -25,6 +25,10 @@ const configSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
+
+  // PawaPay
+  PAWAPAY_API_TOKEN: z.string().optional(),
+  MOCK_PAYMENTS: z.string().transform(v => v === 'true').default('false'),
 });
 
 const _config = configSchema.safeParse(process.env);
@@ -46,6 +50,8 @@ export const config = _config.success ? _config.data : ({
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  PAWAPAY_API_TOKEN: process.env.PAWAPAY_API_TOKEN,
+  MOCK_PAYMENTS: process.env.MOCK_PAYMENTS === 'true',
 } as z.infer<typeof configSchema>);
 
 export const env = config; // Alias for backward compatibility

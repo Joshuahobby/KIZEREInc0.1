@@ -22,7 +22,7 @@ export const itemCategories = [
 ] as const;
 
 // Define item statuses
-export const itemStatuses = ['Registered', 'Lost', 'Found', 'Recovered', 'Archived'] as const;
+export const itemStatuses = ['Pending_Payment', 'Registered', 'Lost', 'Found', 'Recovered', 'Archived'] as const;
 
 // Define report statuses
 export const reportStatuses = ['Open', 'In_Progress', 'Resolved', 'Closed', 'Expired'] as const;
@@ -130,7 +130,7 @@ export const items = pgTable("items", {
   category: text("category").notNull(),
   uniqueIdentifier: text("unique_identifier").notNull(),
   description: text("description"),
-  status: text("status").notNull().default('Registered'),
+  status: text("status").notNull().default('Pending_Payment'),
   location: text("location"),
   registeredAt: timestamp("registered_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -248,7 +248,7 @@ export const payments = pgTable("payments", {
   status: text("status").notNull().default('pending'),
   transactionId: text("transaction_id"),
   transactionRef: text("transaction_ref").notNull().unique(),
-  flutterwaveRef: text("flutterwave_ref"),
+  providerRef: text("provider_ref"),
   itemId: integer("item_id").references(() => items.id),
   reportId: integer("report_id").references(() => reports.id),
   paymentDate: timestamp("payment_date"),
@@ -265,7 +265,7 @@ export const payouts = pgTable("payouts", {
   amount: numeric("amount").notNull(),
   currency: text("currency").notNull().default('RWF'),
   status: text("status").notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed'
-  providerRef: text("provider_ref"), // Reference from transfer provider (e.g., Flutterwave)
+  providerRef: text("provider_ref"), // Reference from transfer provider (e.g., PawaPay)
   destination: text("destination").notNull(), // Mobile Money number
   createdAt: timestamp("created_at").defaultNow().notNull(),
   processedAt: timestamp("processed_at"),
@@ -407,7 +407,7 @@ export const insertItemSchema = createInsertSchema(items)
     }),
     status: z.enum(itemStatuses, {
       errorMap: () => ({ message: "Item status must be valid" })
-    }).default('Registered'),
+    }).default('Pending_Payment'),
     imageUrls: z.array(z.string().url("Must be a valid URL")).optional().default([])
   });
 
@@ -495,7 +495,7 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   id: true,
   createdAt: true,
   paymentDate: true,
-  flutterwaveRef: true,
+  providerRef: true,
   transactionId: true
 });
 

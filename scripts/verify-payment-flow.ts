@@ -4,13 +4,16 @@ import { hashPassword } from "../server/utils/auth-crypto";
 import { db, pool } from "../server/db";
 import { sql } from "drizzle-orm";
 
-async function runVerification() {
-    console.log("🚀 Starting Payment Flow Verification (Mock Mode)...");
+import { config } from "../server/config";
 
-    // Force mock mode
-    process.env.MOCK_PAYMENTS = 'true';
-    process.env.FLUTTERWAVE_SECRET_KEY = 'mock_secret_key';
-    process.env.FLUTTERWAVE_PUBLIC_KEY = 'mock_public_key';
+async function runVerification() {
+    const mode = config.MOCK_PAYMENTS ? "Mock" : "Real (Sandbox/Prod)";
+    console.log(`🚀 Starting Payment Flow Verification (${mode} Mode)...`);
+
+    if (!config.PAWAPAY_API_TOKEN && !config.MOCK_PAYMENTS) {
+        console.error("❌ PAWAPAY_API_TOKEN is missing and MOCK_PAYMENTS is false.");
+        process.exit(1);
+    }
 
     try {
         // Test DB Connection
@@ -33,30 +36,24 @@ async function runVerification() {
         });
         console.log(`✅ User created: ${user.id} (${user.username})`);
 
-        // 2. Mock Payment Initialization
-        // We can't easily call the API route via 'fetch' here because we'd need the server running and auth cookie.
-        // Instead, we'll verify the UTILS directly, which the route uses.
+        // 2. Mock Payment Initialization via PawaPay Direct Deposit
+        console.log("Testing initiateDeposit utility...");
+        const { initiateDeposit, checkDepositStatus, generateDepositId } = await import("../server/utils/pawapay");
 
-        console.log("Testing initializePayment utility...");
-        const { initializePayment, verifyTransaction, generateTransactionReference } = await import("../server/utils/flutterwave");
-
-        const txRef = generateTransactionReference();
-        const initResponse = await initializePayment({
+        const depositId = generateDepositId();
+        const initResponse = await initiateDeposit({
             amount: 5000,
             currency: 'RWF',
-            tx_ref: txRef,
-            redirect_url: 'http://localhost:5000/callback',
-            customer: {
-                email: user.email,
-                name: user.fullName,
-            }
+            depositId,
+            phoneNumber: '250780000000',
+            provider: 'MTN_MOMO_RWA',
         });
 
-        if (initResponse.status === 'success' && initResponse.data?.link) {
-            console.log("✅ Payment initialization successful (Mock).");
-            console.log(`   - Link: ${initResponse.data.link}`);
+        if (initResponse.status === 'ACCEPTED') {
+            console.log("✅ Deposit initiation successful (Mock).");
+            console.log(`   - Deposit ID: ${initResponse.depositId}`);
         } else {
-            console.error("❌ Payment initialization failed.");
+            console.error("❌ Deposit initiation failed.");
             process.exit(1);
         }
 
@@ -68,22 +65,19 @@ async function runVerification() {
             currency: "RWF",
             type: "registration",
             status: "pending",
-            transactionRef: txRef,
+            transactionRef: depositId,
             metadata: { plan: "Standard" }
         });
         console.log(`✅ Payment record created: ${payment.id} (Status: ${payment.status})`);
 
-        // 4. Simulate Webhook / Verification
-        console.log("Testing verifyTransaction utility...");
-        // In a real flow, Flutterwave sends a webhook or we verify manually.
-        // Let's simulate verifying the transaction ID that would come back.
+        // 4. Check deposit status (mock)
+        console.log("Testing checkDepositStatus utility...");
+        const statusResponse = await checkDepositStatus(depositId);
 
-        const verificationResponse = await verifyTransaction(txRef); // Passing txRef as ID for mock logic
-
-        if (verificationResponse.status === 'success' && verificationResponse.data.status === 'successful') {
-            console.log("✅ Transaction verification successful (Mock).");
+        if (statusResponse.status === 'COMPLETED') {
+            console.log("✅ Deposit status check successful (Mock).");
         } else {
-            console.error("❌ Transaction verification failed.");
+            console.error("❌ Deposit status check failed.");
             process.exit(1);
         }
 
@@ -91,8 +85,8 @@ async function runVerification() {
         console.log("Updating payment status to 'completed'...");
         const updatedPayment = await storage.updatePayment(payment.id, {
             status: 'completed',
-            transactionId: verificationResponse.data.id.toString(),
-            flutterwaveRef: verificationResponse.data.flw_ref
+            transactionId: statusResponse.depositId,
+            providerRef: statusResponse.providerTransactionId || null
         });
 
         if (updatedPayment?.status === 'completed') {

@@ -1,6 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
-import { useParams, Link, useLocation } from "wouter";
-import { useState } from "react";
 import {
   ArrowLeft,
   Package,
@@ -16,11 +13,22 @@ import {
   Share2,
   Printer,
   ChevronRight,
-  Edit
+  Edit,
+  CreditCard
 } from "lucide-react";
-import { ShareWhatsAppButton } from "@/components/ui/share-whatsapp-button";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { motion } from "framer-motion";
+import { PaymentModal } from "@/components/payment/payment-modal";
+import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { useParams, Link, useLocation } from "wouter";
+import { useState } from "react";
+import { PageLayout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -33,14 +41,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PageLayout } from "@/components/layout";
-import { useToast } from "@/hooks/use-toast";
-import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
+import { ShareWhatsAppButton } from "@/components/ui/share-whatsapp-button";
 import { ReportRegisteredItemDialog } from "@/components/reports/report-registered-item-dialog";
-import { format } from "date-fns";
-import { motion } from "framer-motion";
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -51,6 +53,7 @@ export default function ItemDetailPage() {
   const queryClient = useQueryClient();
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [showMarkFoundDialog, setShowMarkFoundDialog] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   const { data: item, isLoading, error } = useQuery<any>({
     queryKey: [`/api/items/${itemId}`],
@@ -123,6 +126,8 @@ export default function ItemDetailPage() {
         return <Badge className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border-blue-200 shadow-none">Found</Badge>;
       case 'recovered':
         return <Badge className="bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 border-purple-200 shadow-none">Recovered</Badge>;
+      case 'pending_payment':
+        return <Badge className="bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border-amber-200 shadow-none">Unpaid</Badge>;
       default:
         return <Badge variant="outline" className="text-muted-foreground">{status}</Badge>;
     }
@@ -166,6 +171,27 @@ export default function ItemDetailPage() {
         <div className="grid md:grid-cols-5 gap-6 md:gap-8">
           {/* Main Content - Left Side */}
           <div className="md:col-span-3 space-y-6">
+            {item.status === 'Pending_Payment' && (
+              <Card className="bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-900/20 shadow-none">
+                <CardContent className="p-4 flex items-center gap-4">
+                  <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+                    <AlertTriangle className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-bold text-amber-900 dark:text-amber-100">Registration Payment Required</p>
+                    <p className="text-xs text-amber-700 dark:text-amber-300">Your item is registered but pending payment. Complete payment to activate full protection and access your smart label.</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-amber-600 hover:bg-amber-700 text-white font-bold whitespace-nowrap"
+                    onClick={() => setIsPaymentModalOpen(true)}
+                  >
+                    Pay Now
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Image Section */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -239,14 +265,29 @@ export default function ItemDetailPage() {
                   <Shield className="h-5 w-5 text-emerald-500" />
                 </div>
 
-                <div className="bg-white dark:bg-black p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 flex items-center gap-4">
+                <div className={cn(
+                  "p-3 rounded-lg border flex items-center gap-4",
+                  item.status === 'Pending_Payment'
+                    ? "bg-neutral-100 dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-800 opacity-60"
+                    : "bg-white dark:bg-black border-neutral-200 dark:border-neutral-800"
+                )}>
                   <div className="h-12 w-12 bg-neutral-100 dark:bg-neutral-800 rounded flex items-center justify-center shrink-0">
-                    <QrCode className="h-8 w-8 text-neutral-900 dark:text-white" />
+                    <QrCode className={cn(
+                      "h-8 w-8",
+                      item.status === 'Pending_Payment' ? "text-neutral-400" : "text-neutral-900 dark:text-white"
+                    )} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">Smart Tag Active</p>
-                    <Button variant="link" size="sm" className="h-auto p-0 text-sky-600 text-xs">
-                      Download Label
+                    <p className="text-xs font-medium truncate">
+                      {item.status === 'Pending_Payment' ? 'Smart Tag Inactive' : 'Smart Tag Active'}
+                    </p>
+                    <Button
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-sky-600 text-xs"
+                      disabled={item.status === 'Pending_Payment'}
+                    >
+                      {item.status === 'Pending_Payment' ? 'Payment Required' : 'Download Label'}
                     </Button>
                   </div>
                 </div>
@@ -281,6 +322,19 @@ export default function ItemDetailPage() {
                   <span className="flex items-center">
                     <CheckCircle className="mr-2 h-4 w-4" />
                     {markAsFoundMutation.isPending ? "Updating..." : "Mark Found"}
+                  </span>
+                  <ChevronRight className="h-4 w-4 opacity-50" />
+                </Button>
+              )}
+
+              {item.status === 'Pending_Payment' && (
+                <Button
+                  className="w-full justify-between bg-amber-600 hover:bg-amber-700 text-white border-none shadow-md shadow-amber-500/20"
+                  onClick={() => setIsPaymentModalOpen(true)}
+                >
+                  <span className="flex items-center font-bold">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Complete Registration
                   </span>
                   <ChevronRight className="h-4 w-4 opacity-50" />
                 </Button>
@@ -338,6 +392,22 @@ export default function ItemDetailPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {item && (
+        <PaymentModal
+          open={isPaymentModalOpen}
+          onOpenChange={setIsPaymentModalOpen}
+          paymentDetails={{
+            type: 'registration',
+            itemId: item.id,
+            amount: 2000
+          }}
+          onPaymentSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: [`/api/items/${itemId}`] });
+            queryClient.invalidateQueries({ queryKey: ['/api/items'] });
+          }}
+        />
+      )}
     </PageLayout >
   );
 }
