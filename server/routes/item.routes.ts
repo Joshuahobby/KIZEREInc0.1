@@ -5,6 +5,16 @@ import { z } from "zod";
 import { createLogger } from "../utils/logger";
 import { OCRService } from "../services/ocr.service";
 
+// Schema for updating an item - restricts fields that can be modified
+const updateItemSchema = z.object({
+  name: z.string().optional(),
+  category: z.string().optional(),
+  description: z.string().optional(),
+  location: z.string().optional(),
+  imageUrls: z.array(z.string()).optional(),
+  details: z.record(z.any()).optional(),
+});
+
 const logger = createLogger('ItemRoutes');
 const router = Router();
 
@@ -103,7 +113,15 @@ router.put("/:id", async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const updatedItem = await storage.updateItem(itemId, req.body);
+    const validation = updateItemSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({
+        message: "Invalid update data",
+        errors: validation.error.errors
+      });
+    }
+
+    const updatedItem = await storage.updateItem(itemId, validation.data);
     res.json(updatedItem);
   } catch (error) {
     res.status(500).json({ message: "Failed to update item" });
@@ -147,37 +165,25 @@ router.post("/:id/transfer", async (req, res) => {
       return res.status(400).json({ message: "Recipient email is required" });
     }
 
-    // Check if item exists
     const item = await storage.getItem(itemId);
     if (!item) {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    // Ensure user is the current owner of the item
-    if (item.userId !== req.user!.id) {
-      return res.status(403).json({ message: "You do not own this item" });
+    if (item.userId !== req.user!.id && req.user!.role !== 'Admin') {
+      return res.status(403).json({ message: "Access denied" });
     }
 
-    // Find recipient user by email
-    const recipientUser = await storage.getUserByEmail(recipientEmail);
-    if (!recipientUser) {
+    const recipient = await storage.getUserByEmail(recipientEmail);
+    if (!recipient) {
       return res.status(404).json({ message: "Recipient user not found" });
     }
 
-    // Prevent self-transfer
-    if (recipientUser.id === req.user!.id) {
-      return res.status(400).json({ message: "Cannot transfer item to yourself" });
-    }
+    const updatedItem = await storage.updateItem(itemId, { userId: recipient.id });
 
-    // Transfer ownership by updating the item's userId
-    const updatedItem = await storage.updateItem(itemId, {
-      userId: recipientUser.id,
-      updatedAt: new Date()
-    });
-
-    // Create notification for the recipient
+    // Create notification for recipient
     await storage.createNotification({
-      userId: recipientUser.id,
+      userId: recipient.id,
       title: `New Item: ${item.name}`,
       message: `${req.user!.fullName || req.user!.username} has transferred ownership of ${item.name} to you.`,
       type: 'ownership_transfer',
@@ -252,7 +258,7 @@ router.post("/:id/mark-found", async (req, res) => {
         name: item.name,
         reportId: reports.length > 0 ? reports[0].id : null
       },
-      ipAddress: req.ip || null,
+      ipAddress: (req.ip as string) || null,
       userAgent: req.headers['user-agent'] || null
     });
 

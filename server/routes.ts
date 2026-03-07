@@ -38,54 +38,22 @@ import {
 // Import service layer
 import { UserService } from "./services/user.service";
 import { PaymentService } from "./services/payment.service";
-
 import { dashboardService, DashboardService } from "./services/dashboard.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
 import { ReportMatchingService } from "./services/report-matching.service";
 import { sendApplicationEmail } from "./services/email.service";
+import {
+  requireAuth,
+  requireAdmin,
+  requireAdminOrAgent
+} from "./middleware/auth.middleware";
 
 
 
 // Create logger for routes
 const logger = createLogger('Routes');
 
-// Middleware to check authentication and roles
-function requireRole(roles: string[] | 'any') {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.isAuthenticated()) {
-      logger.warn('Authentication required but not present', {
-        path: req.path,
-        cookies: !!req.headers.cookie,
-        sessionId: req.sessionID
-      });
-      return res.status(401).json({ message: "Authentication required" });
-    }
-
-    if (roles === 'any') {
-      return next();
-    }
-
-    if (!req.user || !roles.includes(req.user.role)) {
-      logger.warn('Access denied: insufficient permissions', {
-        userId: req.user?.id,
-        userRole: req.user?.role,
-        requiredRoles: roles,
-        path: req.path
-      });
-      return res.status(403).json({
-        message: "Insufficient permissions",
-        required: roles
-      });
-    }
-
-    next();
-  };
-}
-
-// Simplified aliases for common uses
-const requireAuth = requireRole('any');
-const requireAdmin = requireRole(['Admin']);
-const requireAdminOrAgent = requireRole(['Admin', 'Agent']);
+// Authentication middleware is imported from centralized auth.middleware.ts
 
 
 // Import domain routes
@@ -199,7 +167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Debug ENV presence (names only)
-  app.get("/api/debug-env", (req, res) => {
+  app.get("/api/debug-env", requireAdmin, (req, res) => {
     res.json({
       DATABASE_URL: !!process.env.DATABASE_URL,
       SESSION_SECRET: !!process.env.SESSION_SECRET,
@@ -213,7 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Debug DB connection
-  app.get("/api/debug-db", async (req, res) => {
+  app.get("/api/debug-db", requireAdmin, async (req, res) => {
     try {
       const { db } = await import("./db");
       const { sql } = await import("drizzle-orm");

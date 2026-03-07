@@ -26,18 +26,11 @@ import { sendPaymentConfirmationEmail } from "../services/email.service";
 
 const logger = createLogger('PaymentRoutes');
 import { config as serverConfig } from "../config";
-import fs from "fs";
-fs.writeFileSync("diag.txt", `MOCK_PAYMENTS is ${serverConfig.MOCK_PAYMENTS} at ${new Date().toISOString()}\n`);
+import { requireAdmin } from "../middleware/auth.middleware";
 logger.info("Payment routes initialized", { MOCK_PAYMENTS: serverConfig.MOCK_PAYMENTS });
 const router = Router();
 
-const requireRole = (roles: string[]) => (req: any, res: any, next: any) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ message: "Authentication required" });
-  if (!roles.includes(req.user.role)) return res.status(403).json({ message: "Insufficient permissions" });
-  next();
-};
-
-const requireAdmin = requireRole(['Admin']);
+// Authentication middleware is imported from centralized auth.middleware.ts
 
 
 // Payments & Packages API
