@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { eq } from 'drizzle-orm';
 import { db } from './server/db';
-import { users, reports, claims, claimAppeals } from '@shared/schema';
+import { users, reports, claims, claimAppeals } from './shared/schema';
 
 async function verifyClaims() {
     console.log('--- Starting QA test for Claim Appeals ---');
@@ -52,7 +52,7 @@ async function verifyClaims() {
         title: 'Found a QA phone',
         description: 'A phone found during QA testing',
         location: 'QA Lab',
-        date: new Date().toISOString().split('T')[0],
+        date: new Date(),
         status: 'active'
     }).returning();
 
@@ -61,7 +61,7 @@ async function verifyClaims() {
         reportId: report.id,
         userId: userB.id,
         status: 'pending',
-        proofDescription: 'I lost my QA phone'
+        description: 'I lost my QA phone'
     }).returning();
 
     console.log('4. User A rejects the claim...');

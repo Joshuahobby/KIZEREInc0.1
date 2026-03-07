@@ -29,23 +29,24 @@ export default function PaymentTestPage() {
 
     try {
       setIsLoading(true);
-      
+
       // Log to help debug
       console.log("Initializing test payment for user:", user);
-      
+
       // Use the test amount (or default to half the regular amount)
       const testAmount = Math.floor(getPaymentAmount("registration") * 0.25);
-      
+
       const response = await PaymentService.initializePayment({
         type: "registration",
         amount: testAmount, // Small test amount in the default currency
+        phoneNumber: "250780000000", // Test phone number
       });
-      
+
       console.log("Payment initialization response:", response);
-      
-      setPaymentUrl(response.paymentUrl);
+
+      setPaymentUrl(response.depositId ? `https://pay.pawapay.io/${response.depositId}` : null);
       setTransactionRef(response.transactionRef);
-      
+
       toast({
         title: "Payment initialized",
         description: `Test payment of ${testAmount} ${DEFAULT_CURRENCY} has been initialized successfully`,
@@ -65,18 +66,18 @@ export default function PaymentTestPage() {
   // Open payment window
   const openPaymentWindow = () => {
     if (!paymentUrl) return;
-    
+
     window.open(paymentUrl, '_blank', 'width=500,height=600');
   };
 
   // Verify payment
   const verifyPayment = async () => {
     if (!transactionRef) return;
-    
+
     try {
       setIsLoading(true);
       const response = await PaymentService.verifyPayment(transactionRef);
-      
+
       toast({
         title: "Payment verification",
         description: `Payment status: ${response.status}`,
@@ -96,22 +97,22 @@ export default function PaymentTestPage() {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      
+
       <main className="flex-1 container max-w-4xl py-10">
         <h1 className="text-3xl font-bold mb-6">Payment Test Page</h1>
         <p className="text-muted-foreground mb-8">
           This page allows you to test the payment functionality without going through the registration process.
         </p>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Test Payment Integration</CardTitle>
             <CardDescription>Initialize a test payment and verify its status</CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-6">
             {!paymentUrl ? (
-              <Button 
+              <Button
                 onClick={initializeTestPayment}
                 disabled={isLoading}
                 className="w-full"
@@ -139,16 +140,16 @@ export default function PaymentTestPage() {
                     Test Amount: {Math.floor(getPaymentAmount("registration") * 0.25)} {DEFAULT_CURRENCY}
                   </p>
                 </div>
-                
+
                 <div className="flex flex-col sm:flex-row gap-3">
-                  <Button 
+                  <Button
                     onClick={openPaymentWindow}
                     className="flex-1"
                   >
                     Proceed to Payment
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
-                  
+
                   <Button
                     variant="outline"
                     onClick={verifyPayment}
@@ -170,7 +171,7 @@ export default function PaymentTestPage() {
           </CardContent>
         </Card>
       </main>
-      
+
       <Footer />
     </div>
   );

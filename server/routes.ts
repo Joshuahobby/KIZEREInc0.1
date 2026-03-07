@@ -79,10 +79,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
-  // Middleware for authenticated routes
-  const requireAuth = requireRole('any');
-  const requireAdmin = requireRole(['Admin']);
-
   // Register domain routes
   app.use('/api/admin', requireAdmin, adminRoutes);
   app.use('/api/admin/jobs', requireAdmin, adminJobsRoutes);

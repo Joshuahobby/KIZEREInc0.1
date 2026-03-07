@@ -53,7 +53,9 @@ router.get("/", async (req, res) => {
 
     res.json({
       reports: sanitizedReports,
-      pagination: result.pagination
+      total: result.total,
+      page: result.page,
+      totalPages: result.totalPages
     });
   } catch (error) {
     console.error("DEBUG: /api/reports error:", error);
