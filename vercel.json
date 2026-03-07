@@ -15,11 +15,7 @@
       "destination": "/api/index.js"
     },
     {
-      "source": "/auth/(.*)",
-      "destination": "/api/index.js"
-    },
-    {
-      "source": "/((?!api|auth|assets|.*\\..*).*)",
+      "source": "/((?!api|assets|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
