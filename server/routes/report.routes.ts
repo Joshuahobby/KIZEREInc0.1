@@ -100,6 +100,17 @@ router.post("/", reportSubmissionLimiter, async (req, res) => {
 
     // Logic for reporting a registered item
     let paymentStatus = 'pending';
+    
+    // Found reports and Lost reports with no reward/zero reward are marked as successful immediately
+    if (
+      validatedData.type === 'found' || 
+      validatedData.bountyAmount === undefined || 
+      validatedData.bountyAmount === null ||
+      Number(validatedData.bountyAmount) === 0
+    ) {
+      paymentStatus = 'successful';
+    }
+
     let itemToUpdate = null;
 
     if (validatedData.itemId) {

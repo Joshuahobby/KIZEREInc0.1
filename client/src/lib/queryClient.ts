@@ -103,6 +103,8 @@ export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
           if (response.ok) {
             console.log('[QueryClient] Successfully synced Firebase auth with server');
             lastSessionCheckTime = Date.now();
+            // Clear CSRF token after session sync to ensure fresh token for next request
+            clearCsrfToken();
             resolve();
           } else {
             console.error('[QueryClient] Error syncing auth with server:', response.status);
@@ -257,7 +259,9 @@ export async function apiRequest<T = any>(
   }
 
   // If we get a 401, try to re-authenticate and retry once
-  if (res.status === 401) {
+  // But NOT for auth endpoints — a 401 there means wrong credentials, not expired session
+  const isAuthEndpoint = url.startsWith('/api/auth/');
+  if (res.status === 401 && !isAuthEndpoint) {
     console.warn(`[apiRequest] 401 Unauthorized for ${url}, attempting sync...`);
     try {
       await ensureAuthenticated(true);

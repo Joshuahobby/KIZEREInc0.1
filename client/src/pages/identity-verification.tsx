@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { PageLayout } from "@/components/layout/index";
+import { AuthWall } from "@/components/ui/auth-wall";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ShieldCheck,
@@ -42,6 +43,16 @@ export default function IdentityVerificationPage() {
   const [selectedType, setSelectedType] = useState<string>("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [notes, setNotes] = useState("");
+
+  if (!user) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/identity-verification" />
+        </div>
+      </PageLayout>
+    );
+  }
 
   const { data: requests, isLoading: isLoadingRequests } = useQuery<VerificationRequest[]>({
     queryKey: ["/api/me/verification-requests"],
@@ -119,7 +130,7 @@ export default function IdentityVerificationPage() {
         <div className="space-y-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-neutral-900 flex items-center">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center">
                 <UserCheck className="mr-3 h-8 w-8 text-sky-600" />
                 {t('verification_title')}
               </h1>
@@ -189,7 +200,7 @@ export default function IdentityVerificationPage() {
                     </div>
 
                     <div className="space-y-3">
-                      <label className="text-sm font-semibold text-neutral-700">{t('verification_upload_label')}</label>
+                      <label className="text-sm font-semibold text-muted-foreground">{t('verification_upload_label')}</label>
                       <div
                         {...getRootProps()}
                         className={cn(

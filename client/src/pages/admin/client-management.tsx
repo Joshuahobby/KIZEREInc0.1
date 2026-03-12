@@ -5,6 +5,8 @@ import { User, AccountStatus } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import UserTable from "@/components/user-management/UserTable";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +34,17 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function ClientManagementPage() {
-    const { user: currentUser } = useAuth();
+    const { user: currentUser, isLoading: isLoadingAuth } = useAuth();
+
+    if (!currentUser && !isLoadingAuth) {
+        return (
+            <PageLayout>
+                <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+                    <AuthWall returnUrl="/admin/client-management" />
+                </div>
+            </PageLayout>
+        );
+    }
     const queryClient = useQueryClient();
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(10);
@@ -41,7 +53,7 @@ export default function ClientManagementPage() {
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
     const [statusReason, setStatusReason] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState<AccountStatus>("active");
+    const [selectedStatus, setSelectedStatus] = useState<AccountStatus>("active" as AccountStatus);
 
     // Fetching ONLY business users
     const {
@@ -149,78 +161,80 @@ export default function ClientManagementPage() {
     }
 
     return (
-        <div className="container mx-auto p-4 space-y-6">
-            <DashboardPageHeader
-                title="Client Management"
-                description="Manage business partners, verification, and subscriptions"
-                actions={
-                    <Button onClick={() => window.location.href = "/admin/users/new"}>
-                        Add New Business
-                    </Button>
-                }
-            />
+        <PageLayout>
+            <div className="container mx-auto p-4 space-y-6">
+                <DashboardPageHeader
+                    title="Client Management"
+                    description="Manage business partners, verification, and subscriptions"
+                    actions={
+                        <Button onClick={() => window.location.href = "/admin/users/new"}>
+                            Add New Business
+                        </Button>
+                    }
+                />
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Business Directory</CardTitle>
-                    <CardDescription>
-                        View and manage all registered business clients
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {isLoading ? (
-                        <div className="space-y-4 mt-6">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-24 w-full" />
-                            <Skeleton className="h-24 w-full" />
-                            <Skeleton className="h-24 w-full" />
-                            <Skeleton className="h-10 w-48 ml-auto" />
-                        </div>
-                    ) : (
-                        <UserTable
-                            users={usersData?.users || []}
-                            totalCount={usersData?.total || 0}
-                            currentPage={currentPage}
-                            pageSize={pageSize}
-                            onPageChange={handlePageChange}
-                            onViewUser={handleViewUser}
-                            onEditUser={(user) => window.location.href = `/admin/users/${user.id}`}
-                            onChangeStatus={handleStatusChange}
-                            onChangeRole={() => { }} // Disabled for this view
-                        />
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Status Change Dialog */}
-            <AlertDialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Change Client Status</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            You are about to change the status of {selectedUser?.fullName} to{" "}
-                            <strong>{selectedStatus}</strong>. This action will be logged.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="status-reason">Reason for status change</Label>
-                            <Textarea
-                                id="status-reason"
-                                placeholder="Provide a reason for this status change..."
-                                value={statusReason}
-                                onChange={(e) => setStatusReason(e.target.value)}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Business Directory</CardTitle>
+                        <CardDescription>
+                            View and manage all registered business clients
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoading ? (
+                            <div className="space-y-4 mt-6">
+                                <Skeleton className="h-10 w-full" />
+                                <Skeleton className="h-24 w-full" />
+                                <Skeleton className="h-24 w-full" />
+                                <Skeleton className="h-24 w-full" />
+                                <Skeleton className="h-10 w-48 ml-auto" />
+                            </div>
+                        ) : (
+                            <UserTable
+                                users={usersData?.users || []}
+                                totalCount={usersData?.total || 0}
+                                currentPage={currentPage}
+                                pageSize={pageSize}
+                                onPageChange={handlePageChange}
+                                onViewUser={handleViewUser}
+                                onEditUser={(user) => window.location.href = `/admin/users/${user.id}`}
+                                onChangeStatus={handleStatusChange}
+                                onChangeRole={() => { }} // Disabled for this view
                             />
+                        )}
+                    </CardContent>
+                </Card>
+
+                {/* Status Change Dialog */}
+                <AlertDialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Change Client Status</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                You are about to change the status of {selectedUser?.fullName} to{" "}
+                                <strong>{selectedStatus}</strong>. This action will be logged.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="status-reason">Reason for status change</Label>
+                                <Textarea
+                                    id="status-reason"
+                                    placeholder="Provide a reason for this status change..."
+                                    value={statusReason}
+                                    onChange={(e) => setStatusReason(e.target.value)}
+                                />
+                            </div>
                         </div>
-                    </div>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmStatusChange}>
-                            {updateUserStatusMutation.isPending ? "Updating..." : "Confirm Change"}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-        </div>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={confirmStatusChange}>
+                                {updateUserStatusMutation.isPending ? "Updating..." : "Confirm Change"}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        </PageLayout>
     );
 }

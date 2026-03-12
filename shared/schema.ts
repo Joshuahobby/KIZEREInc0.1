@@ -190,6 +190,11 @@ export const claims = pgTable("claims", {
   verificationAnswer: text("verification_answer"), // Claimant's answer to challenge question
   handoverOtp: text("handover_otp"), // Generated for secure handover
   handedOverAt: timestamp("handed_over_at"), // Completion timestamp
+  // Phase 1.9: Appeals and Extensions
+  appealStatus: text("appeal_status"), // 'pending', 'approved', 'rejected'
+  appealReason: text("appeal_reason"),
+  appealAdminNotes: text("appeal_admin_notes"),
+  appealResolvedAt: timestamp("appeal_resolved_at"),
 }, (table) => [
   index("claim_user_idx").on(table.userId),
   index("claim_report_idx").on(table.reportId),
@@ -476,11 +481,16 @@ export const foundItemReportSchema = insertReportSchema.extend({
 // Claim schemas
 export const insertClaimSchema = createInsertSchema(claims).omit({
   id: true,
+  userId: true,
+  status: true,
   createdAt: true,
   updatedAt: true,
   verifiedAt: true,
   handoverOtp: true,
   handedOverAt: true
+}).extend({
+  description: z.string().min(10, "Please provide a detailed description (min. 10 chars)").max(1000, "Description is too long"),
+  verificationAnswer: z.string().min(3, "Answer must be at least 3 characters").optional().or(z.literal("")),
 });
 
 // Chat & Message schemas

@@ -4,17 +4,22 @@ import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Item, Report } from "@shared/schema";
 import { Link, useLocation } from "wouter";
-import { Loader2, Calendar, Tag, MapPin, ChevronRight, List, Map as MapIcon, Layers, Search as SearchIcon, Smartphone, FileText, Hash } from "lucide-react";
-import { motion } from "framer-motion";
+import { Loader2, Calendar, Tag as TagIcon, MapPin, ChevronRight, List, Map as MapIcon, Layers, Search as SearchIcon, Smartphone, FileText, Hash, Package, Eye, PackageSearch, Lock, Shield } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { SearchFilters } from "@/components/search/search-filters";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import MapView from "@/components/search/map-view";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
 import { cn } from "@/lib/utils";
 
 export default function Search() {
   const { t } = useLanguage();
+  const { user, isLoading: isLoadingAuth } = useAuth();
+  const [, navigate] = useLocation();
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
   const [filters, setFilters] = useState<any>({});
   const [, setLocation] = useLocation();
@@ -51,8 +56,8 @@ export default function Search() {
     isLoading
   } = useQuery<(Item | Report)[]>({
     queryKey: [`/api/search?${buildQueryParams()}`],
-    // Always load results — show all lost & found items by default
-    enabled: true,
+    // Only fetch search results if the user is authenticated
+    enabled: user !== null, // Changed from isAuthenticated to user !== null
   });
 
   const handleSearch = (newFilters: any) => {
@@ -69,196 +74,262 @@ export default function Search() {
     <PageLayout hideSidebar={true}>
       <div className="py-4 min-h-[calc(100vh-4rem)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col">
-          {/* Compact Header — title + view toggle on one line */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                "flex h-9 w-9 items-center justify-center rounded-xl",
-                filters.type === 'lost' ? "bg-red-500/10" :
-                  filters.type === 'found' ? "bg-green-500/10" :
-                    "bg-primary/10"
-              )}>
-                <SearchIcon className={cn(
-                  "h-4 w-4",
-                  filters.type === 'lost' ? "text-red-500" :
-                    filters.type === 'found' ? "text-green-500" :
-                      "text-primary"
-                )} />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold tracking-tight text-foreground leading-none">
-                  {filters.type === 'lost' ? t('searchPage.lostTitle') :
-                    filters.type === 'found' ? t('searchPage.foundTitle') :
-                      t('searchPage.title')}
-                </h1>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {filters.type === 'lost' ? t('searchPage.lostSubtitle') :
-                    filters.type === 'found' ? t('searchPage.foundSubtitle') :
-                      t('searchPage.subtitle')}
-                </p>
-              </div>
+          {!user && !isLoadingAuth ? (
+            <div className="flex-1 flex items-center justify-center py-20">
+              <AuthWall returnUrl="/search" />
             </div>
+          ) : (
+            <>
+              {/* Spatial Hero Search Section */}
+              <div className="relative overflow-hidden rounded-[2rem] bg-card/40 backdrop-blur-3xl border border-border/40 p-6 sm:p-10 mb-6 shadow-2xl group transition-all duration-700 hover:shadow-primary/5">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background/50 to-primary/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
 
-            <div className="flex items-center space-x-1 bg-muted/50 p-0.5 rounded-xl border border-border/30">
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="gap-1.5 h-8 rounded-lg text-xs font-bold px-3"
-              >
-                <List className="w-3.5 h-3.5" /> {t('searchPage.list')}
-              </Button>
-              <Button
-                variant={viewMode === 'map' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('map')}
-                className="gap-1.5 h-8 rounded-lg text-xs font-bold px-3"
-              >
-                <MapIcon className="w-3.5 h-3.5" /> {t('searchPage.map')}
-              </Button>
-            </div>
-          </div>
+                {/* Glowing orbs for depth */}
+                <div className="absolute -top-32 -right-32 w-80 h-80 bg-primary/20 rounded-full blur-[100px] opacity-60 mix-blend-screen" />
+                <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-primary/20 rounded-full blur-[100px] opacity-60 mix-blend-screen" />
 
-          <div className="flex flex-col gap-4 h-full">
-            {/* Top Bar: Horizontal Filters */}
-            <div className="w-full">
-              <SearchFilters onSearch={handleSearch} initialFilters={filters} layout="horizontal" />
-            </div>
+                <div className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto space-y-5">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-wide uppercase shadow-inner">
+                    <SearchIcon className="w-4 h-4" />
+                    <span>{t('nav.exploreHeader')}</span>
+                  </div>
 
-            {/* Content: Results */}
-            <div className="h-full flex flex-col">
-              {isLoading ? (
-                <div className="flex justify-center p-12 h-64 items-center">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-foreground leading-[1.1]">
+                    {filters.type === 'lost' ? t('searchPage.lostTitle') :
+                      filters.type === 'found' ? t('searchPage.foundTitle') :
+                        t('searchPage.title')}
+                  </h1>
+
+                  <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl font-medium tracking-wide">
+                    {filters.type === 'lost' ? t('searchPage.lostSubtitle') :
+                      filters.type === 'found' ? t('searchPage.foundSubtitle') :
+                        t('searchPage.subtitle')}
+                  </p>
+
+                  <div className="w-full max-w-2xl relative mt-4 group/search">
+                    <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground/70" />
+                    <Input
+                      className="w-full h-14 pl-14 pr-6 rounded-2xl bg-background/90 backdrop-blur-xl border-2 border-border/50 hover:border-primary/40 focus:border-primary transition-all text-lg shadow-xl font-medium placeholder:text-muted-foreground/60"
+                      placeholder={t('searchFilters.searchPlaceholder')}
+                      value={filters.q || ''}
+                      onChange={(e) => handleSearch({ ...filters, q: e.target.value })}
+                    />
+                  </div>
+
+                  {/* View Toggle (moved into hero bottom) */}
+                  <div className="flex items-center space-x-1.5 bg-background/50 backdrop-blur-md p-1.5 rounded-xl border border-border/30 mt-4">
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('list')}
+                      className="gap-2 h-10 rounded-xl text-sm font-bold px-5"
+                    >
+                      <List className="w-4 h-4" /> {t('searchPage.list')}
+                    </Button>
+                    <Button
+                      variant={viewMode === 'map' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setViewMode('map')}
+                      className="gap-2 h-10 rounded-xl text-sm font-bold px-5"
+                    >
+                      <MapIcon className="w-4 h-4" /> {t('searchPage.map')}
+                    </Button>
+                  </div>
                 </div>
-              ) : (
-                <>
-                  {viewMode === 'list' ? (
-                    <div className="space-y-3">
-                      {searchResults && searchResults.length > 0 ? (
-                        <>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">
-                              {searchResults.length} {t('searchPage.resultsFound')}
-                            </span>
-                          </div>
-                          <motion.div
-                            className="grid gap-3"
-                            initial="hidden"
-                            animate="visible"
-                            variants={{
-                              hidden: { opacity: 0 },
-                              visible: {
-                                opacity: 1,
-                                transition: {
-                                  staggerChildren: 0.07
-                                }
-                              }
-                            }}
-                          >
-                            {searchResults.map((item: any) => {
-                              // Determine link based on type
-                              const link = item.type === 'registered' ? `/items/${item.id}` : `/reports/${item.id}`;
-                              const badgeClass = item.status === 'Open' || item.status === 'Registered' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                                item.status === 'Lost' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400';
+              </div>
 
-                              return (
-                                <motion.div key={`${item.type}-${item.id}`} variants={{
-                                  hidden: { opacity: 0, y: 15 },
-                                  visible: { opacity: 1, y: 0 }
-                                }}>
-                                  <Link href={link}>
-                                    <Card className="hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group">
-                                      <CardContent className="p-4">
-                                        <div className="flex justify-between items-start">
-                                          <div>
-                                            <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">{item.title}</h3>
-                                            <p className="text-sm text-muted-foreground line-clamp-1">{item.description}</p>
+              <div className="flex flex-col gap-6 h-full">
+                {/* Top Bar: Horizontal Filters (Dock Style) */}
+                <div className="w-full sticky top-20 z-30">
+                  <SearchFilters onSearch={handleSearch} initialFilters={filters} layout="horizontal" hideSearchInput={true} />
+                </div>
 
-                                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                                              {item.location && (
-                                                <span className="flex items-center gap-1">
-                                                  <MapPin className="w-3 h-3" /> {item.location}
-                                                </span>
-                                              )}
-                                              <span className="flex items-center gap-1">
-                                                <Calendar className="w-3 h-3" /> {format(new Date(item.date), 'MMM d, yyyy')}
-                                              </span>
-                                              <span className="flex items-center gap-1">
-                                                <Tag className="w-3 h-3" /> {item.category}
-                                              </span>
-                                            </div>
-                                          </div>
-                                          <div className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${badgeClass}`}>
-                                            {item.status}
-                                          </div>
-                                        </div>
-                                      </CardContent>
-                                    </Card>
-                                  </Link>
-                                </motion.div>
-                              );
-                            })}
-                          </motion.div>
-                        </>
-                      ) : (
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Card className="bg-muted/20 border-dashed border-border/50">
-                            <CardContent className="flex flex-col items-center justify-center p-16 text-center">
-                              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 mb-5">
-                                <SearchIcon className="w-7 h-7 text-primary/40" />
-                              </div>
-                              <p className="text-lg font-bold text-foreground/80 mb-1">{t('searchPage.noResults')}</p>
-                              <p className="text-sm text-muted-foreground mb-6 max-w-md">{t('searchPage.noResultsHint')}</p>
-
-                              {/* Actionable Suggestions */}
-                              <div className="flex flex-wrap justify-center gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-xl gap-2 text-xs font-bold border-border/50 hover:border-primary/30 hover:bg-primary/5"
-                                  onClick={() => handleSearch({ q: 'IMEI:', type: 'lost' })}
-                                >
-                                  <Smartphone className="h-3.5 w-3.5 text-primary" />
-                                  {t('searchPage.tryIMEI')}
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-xl gap-2 text-xs font-bold border-border/50 hover:border-primary/30 hover:bg-primary/5"
-                                  onClick={() => handleSearch({ q: '', type: 'found' })}
-                                >
-                                  <Layers className="h-3.5 w-3.5 text-primary" />
-                                  {t('searchPage.browseFound')}
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-xl gap-2 text-xs font-bold border-border/50 hover:border-primary/30 hover:bg-primary/5"
-                                  onClick={() => handleSearch({ q: '', type: 'lost' })}
-                                >
-                                  <FileText className="h-3.5 w-3.5 text-primary" />
-                                  {t('searchPage.browseLost')}
-                                </Button>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </motion.div>
-                      )}
+                {/* Content: Results */}
+                <div className="h-full flex flex-col">
+                  {isLoading ? (
+                    <div className="flex justify-center p-12 h-64 items-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   ) : (
-                    <div className="h-[600px] w-full border rounded-xl overflow-hidden shadow-sm relative">
-                      {searchResults && <MapView items={searchResults} className="h-full w-full" />}
-                    </div>
+                    <>
+                      {viewMode === 'list' ? (
+                        <div className="space-y-3">
+                          {searchResults && searchResults.length > 0 ? (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">
+                                  {searchResults.length} {t('searchPage.resultsFound')}
+                                </span>
+                              </div>
+                              <motion.div
+                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 pt-2 pb-10"
+                                initial="hidden"
+                                animate="visible"
+                                variants={{
+                                  hidden: { opacity: 0 },
+                                  visible: {
+                                    opacity: 1,
+                                    transition: {
+                                      staggerChildren: 0.07
+                                    }
+                                  }
+                                }}
+                              >
+                                {searchResults.map((item: any) => {
+                                  // Determine link based on type
+                                  const link = item.type === 'registered' ? `/items/${item.id}` : `/reports/${item.id}`;
+                                  const badgeClass = item.status === 'Open' || item.status === 'Registered' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                                    item.status === 'Lost' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400';
+
+                                  return (
+                                    <motion.div key={`${item.type}-${item.id}`} variants={{
+                                      hidden: { opacity: 0, y: 15 },
+                                      visible: { opacity: 1, y: 0 }
+                                    }}>
+                                      <Link href={link}>
+                                        <Card className="h-full flex flex-col overflow-hidden bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 dark:hover:border-white/20 transition-all duration-500 hover:-translate-y-1 hover:shadow-premium group cursor-pointer relative">
+                                          {/* Image Header / Top Banner */}
+                                          <div className="relative h-48 sm:h-52 w-full overflow-hidden rounded-t-xl bg-slate-50 dark:bg-slate-800/50 flex flex-col justify-center items-center p-4">
+                                            {item.imageUrls && item.imageUrls.length > 0 ? (
+                                              <img
+                                                src={item.imageUrls[0]}
+                                                alt={item.title || item.name}
+                                                className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal transition-transform duration-1000 group-hover:scale-110 drop-shadow-md"
+                                              />
+                                            ) : (
+                                              <div className="flex items-center justify-center h-full">
+                                                <Package className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-700" />
+                                              </div>
+                                            )}
+
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                                            <div className="absolute top-3 right-3">
+                                              <div className={`px-2.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl backdrop-blur-md flex items-center gap-1.5 z-10 ${(item.status === 'Open' || item.status === 'Registered') ? 'bg-white/95 text-blue-600 dark:bg-black/70 dark:text-blue-400 border border-blue-500/20' :
+                                                item.status === 'Lost' ? 'bg-red-50 text-destructive dark:bg-black/80 dark:text-destructive border border-destructive/30 animate-pulse' :
+                                                  'bg-white/95 text-emerald-600 dark:bg-black/70 dark:text-emerald-400 border border-emerald-500/20'
+                                                }`}>
+                                                <div className={`h-1.5 w-1.5 rounded-full ${(item.status === 'Open' || item.status === 'Registered') ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.6)]' :
+                                                  item.status === 'Lost' ? 'bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.6)]' :
+                                                    'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]'
+                                                  }`} />
+                                                {item.status}
+                                              </div>
+                                            </div>
+
+                                            {/* Quick view button on hover */}
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-4 group-hover:translate-y-0">
+                                              <Button variant="secondary" size="sm" className="rounded-full h-9 px-5 backdrop-blur-md bg-white/20 text-white border border-white/30 hover:bg-white/40 font-bold transition-all" asChild>
+                                                <div>
+                                                  <Eye className="h-3.5 w-3.5 mr-2" />
+                                                  View Details
+                                                </div>
+                                              </Button>
+                                            </div>
+                                          </div>
+
+                                          <CardContent className="p-4 pt-4 flex-1 flex flex-col">
+                                            <h3 className="text-base font-black line-clamp-1 group-hover:text-primary transition-colors duration-300">
+                                              {item.title || item.name}
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 min-h-[32px]">{item.description}</p>
+
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-4 text-[10px] sm:text-xs text-muted-foreground">
+                                              <span className="flex items-center gap-1">
+                                                <Calendar className="w-3.5 h-3.5 text-primary/40" /> {format(new Date(item.date || item.registeredAt || new Date()), 'MMM d, yyyy')}
+                                              </span>
+                                              {item.location && (
+                                                <span className="flex items-center gap-1">
+                                                  <MapPin className="w-3.5 h-3.5 text-primary/40" /> {item.location}
+                                                </span>
+                                              )}
+                                            </div>
+                                            <div className="flex items-center mt-3 pt-3 border-t border-border/50">
+                                              <div className="flex items-center text-[9px] font-black text-muted-foreground/50 tracking-widest uppercase">
+                                                <TagIcon className="h-3 w-3 mr-1.5 text-primary/50" />
+                                                {item.category}
+                                              </div>
+                                            </div>
+                                          </CardContent>
+                                        </Card>
+                                      </Link>
+                                    </motion.div>
+                                  );
+                                })}
+                              </motion.div>
+                            </>
+                          ) : (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <div className="w-full rounded-3xl border border-border/10 bg-card/60 backdrop-blur-xl p-16 md:p-24 flex flex-col items-center text-center shadow-premium relative overflow-hidden transition-all duration-300">
+                                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
+
+                                <div className="relative mb-8 group">
+                                  <motion.div
+                                    className="absolute -inset-8 bg-gradient-to-br from-primary/10 to-blue-500/10 rounded-full blur-2xl pointer-events-none"
+                                    animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+                                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                                  />
+                                  <motion.div
+                                    className="relative h-20 w-20 rounded-2xl bg-secondary/10 border border-border/20 flex items-center justify-center backdrop-blur-md shadow-2xl"
+                                    animate={{ y: [0, -8, 0] }}
+                                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                  >
+                                    <PackageSearch className="w-10 h-10 text-muted-foreground/80 group-hover:text-primary transition-colors duration-500" />
+                                  </motion.div>
+                                </div>
+
+                                <p className="text-2xl font-heading font-bold tracking-tight text-foreground mb-3 relative z-10">{t('searchPage.noResults')}</p>
+                                <p className="text-muted-foreground text-base max-w-sm mb-10 font-medium leading-relaxed opacity-80 relative z-10">{t('searchPage.noResultsHint')}</p>
+
+                                {/* Actionable Suggestions */}
+                                <div className="flex flex-wrap justify-center gap-3 relative z-10">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="rounded-xl gap-2 text-xs font-bold border-border/50 hover:border-primary/30 hover:bg-primary/5"
+                                    onClick={() => handleSearch({ q: 'IMEI:', type: 'lost' })}
+                                  >
+                                    <Smartphone className="h-3.5 w-3.5 text-primary" />
+                                    {t('searchPage.tryIMEI')}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="rounded-xl gap-2 text-xs font-bold border-border/50 hover:border-primary/30 hover:bg-primary/5"
+                                    onClick={() => handleSearch({ q: '', type: 'found' })}
+                                  >
+                                    <Layers className="h-3.5 w-3.5 text-primary" />
+                                    {t('searchPage.browseFound')}
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="rounded-xl gap-2 text-xs font-bold border-border/50 hover:border-primary/30 hover:bg-primary/5"
+                                    onClick={() => handleSearch({ q: '', type: 'lost' })}
+                                  >
+                                    <FileText className="h-3.5 w-3.5 text-primary" />
+                                    {t('searchPage.browseLost')}
+                                  </Button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="h-[600px] w-full border rounded-xl overflow-hidden shadow-sm relative">
+                          {searchResults && <MapView items={searchResults} className="h-full w-full" />}
+                        </div>
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </div>
-          </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </PageLayout>

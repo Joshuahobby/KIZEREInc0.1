@@ -7,8 +7,11 @@ import { Button } from "../ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Badge } from "../ui/badge";
 import { Notification } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Skeleton } from "../ui/skeleton";
+import { useLocation } from "wouter";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface NotificationCenterProps {
   notifications: Notification[];
@@ -22,14 +25,37 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const [activeTab, setActiveTab] = useState("all");
   const [openNotification, setOpenNotification] = useState<string | null>(null);
 
+  const [, setLocation] = useLocation();
+  const { t } = useLanguage();
+  const { toast } = useToast();
+
   // Mark notification as read
   const markAsRead = async (id: number) => {
     try {
-      await apiRequest(`/api/notifications/${id}`, { method: 'PATCH', data: { isRead: true } });
-      // Update cache to reflect the change
-      // This would typically be handled by react-query's mutation API
+      await apiRequest(`/api/notifications/${id}/read`, { method: 'PATCH' });
+      // Invalidate the notifications query to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
     } catch (error) {
       console.error("Failed to mark notification as read", error);
+    }
+  };
+
+  // Mark all notifications as read
+  const markAllAsRead = async () => {
+    try {
+      await apiRequest("/api/notifications/mark-all-read", { method: 'POST' });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      toast({
+        title: t('notifications.markAllReadSuccess'),
+        description: t('notifications.markAllReadSuccess'),
+      });
+    } catch (error) {
+      console.error("Failed to mark all notifications as read", error);
+      toast({
+        variant: "destructive",
+        title: t('common.error'),
+        description: t('notifications.markAllReadError'),
+      });
     }
   };
 
@@ -97,10 +123,10 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-display flex items-center">
             <BellRing className="h-5 w-5 mr-2 text-[#00BFFF]" />
-            Notifications
+            {t('notifications.title')}
             {unreadCount > 0 && (
               <Badge variant="secondary" className="ml-2 bg-primary text-white">
-                {unreadCount} new
+                {unreadCount} {t('common.new')}
               </Badge>
             )}
           </CardTitle>
@@ -108,16 +134,16 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
             <Settings className="h-4 w-4" />
           </Button>
         </div>
-        <CardDescription>Stay updated on system alerts and activity</CardDescription>
+        <CardDescription>{t('notifications.subtitle')}</CardDescription>
       </CardHeader>
 
       <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
         <div className="px-6">
           <TabsList className="grid grid-cols-4 mb-4">
-            <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
-            <TabsTrigger value="unread" className="text-xs">Unread</TabsTrigger>
-            <TabsTrigger value="alert" className="text-xs">Alerts</TabsTrigger>
-            <TabsTrigger value="system" className="text-xs">System</TabsTrigger>
+            <TabsTrigger value="all" className="text-xs">{t('notifications.tabs.all')}</TabsTrigger>
+            <TabsTrigger value="unread" className="text-xs">{t('notifications.tabs.unread')}</TabsTrigger>
+            <TabsTrigger value="alert" className="text-xs">{t('notifications.tabs.alerts')}</TabsTrigger>
+            <TabsTrigger value="system" className="text-xs">{t('notifications.tabs.system')}</TabsTrigger>
           </TabsList>
         </div>
 
@@ -143,11 +169,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                 <div className="h-20 w-20 rounded-full bg-gradient-to-br from-[#00BFFF]/5 to-[#00BFFF]/10 flex items-center justify-center mb-6 animate-pulse">
                   <Bell className="h-10 w-10 text-[#00BFFF]/40" />
                 </div>
-                <h3 className="text-xl font-bold mb-2 tracking-tight">All caught up!</h3>
+                <h3 className="text-xl font-bold mb-2 tracking-tight">{t('notifications.empty')}</h3>
                 <p className="text-muted-foreground text-sm max-w-[240px] mx-auto leading-relaxed">
                   {activeTab === "unread"
-                    ? "You have no unread notifications at the moment. Good job!"
-                    : "You don't have any notifications yet. We'll let you know when something important happens."}
+                    ? t('notifications.emptyUnread')
+                    : t('notifications.emptyDesc')}
                 </p>
               </div>
             ) : (
@@ -205,7 +231,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                                   }}
                                 >
                                   <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                                  Mark as read
+                                  {t('notifications.markAsRead')}
                                 </Button>
                                 {notification.type === 'report_match' && notification.relatedReportId && (
                                   <Button
@@ -217,7 +243,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                                       window.location.href = `/reports/${notification.relatedReportId}`;
                                     }}
                                   >
-                                    View Match
+                                    {t('notifications.viewMatch')}
                                   </Button>
                                 )}
                               </div>
@@ -239,12 +265,23 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         </CardContent>
       </Tabs>
 
-      <CardFooter className="flex justify-between border-t pt-3 mt-auto">
-        <Button variant="ghost" size="sm" className="text-xs">
-          Mark all as read
+      <CardFooter className="flex justify-between border-t pt-3 mt-auto bg-muted/5">
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs font-semibold"
+          onClick={markAllAsRead}
+          disabled={unreadCount === 0}
+        >
+          {t('notifications.markAllRead')}
         </Button>
-        <Button variant="ghost" size="sm" className="text-xs">
-          View all
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs hover:bg-primary/10 hover:text-primary transition-colors"
+          onClick={() => setLocation("/dashboard/notifications")}
+        >
+          {t('common.viewAll')}
         </Button>
       </CardFooter>
     </Card>

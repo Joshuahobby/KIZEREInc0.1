@@ -15,7 +15,10 @@
     "saveChanges": "Enregistrer les modifications",
     "saving": "Enregistrement...",
     "updating": "Mise à jour...",
-    "update": "Mettre à jour"
+    "update": "Mettre à jour",
+    "securityLabel": "Sécurité",
+    "secureLabel": "Sécurisé",
+    "cancel": "Annuler"
   },
   "nav": {
     "home": "Accueil",
@@ -27,7 +30,12 @@
     "registerItem": "Enregistrer un Objet",
     "registerItems": "Enregistrer des Objets",
     "myItems": "Mes Objets",
-    "userManagement": "Gestion des Utilisateurs"
+    "directory": "Objets Perdus & Trouvés",
+    "userManagement": "Gestion des Utilisateurs",
+    "mainHeader": "PRINCIPAL",
+    "portfolioHeader": "INVENTAIRE",
+    "exploreHeader": "EXPLORER",
+    "adminHeader": "ADMINISTRATION"
   },
   "item_category_electronics": "Électronique",
   "item_category_phones": "Téléphones",
@@ -215,6 +223,86 @@
       "termsOfService": "Conditions d'Utilisation",
       "cookiePolicy": "Politique de Cookies"
     }
+  },
+  "community_page": {
+    "title": "Communauté",
+    "subtitle": "Bâtir ensemble une culture de confiance et de sécurité",
+    "banner_badge": "Construire la Confiance Ensemble",
+    "network": {
+      "title": "Réseau de Confiance",
+      "description": "KIZERE est plus qu'une plateforme ; c'est un réseau de confiance. Notre mission est de créer un environnement sécurisé où les objets perdus retrouvent leur chemin vers chez eux."
+    },
+    "guidelines": {
+      "title": "Règles de la Communauté",
+      "rule1": "Soyez honnête et précis dans vos signalements.",
+      "rule2": "Respectez la vie privée et les informations des autres utilisateurs.",
+      "rule3": "Facilitez le retour des objets trouvés sans délai."
+    },
+    "feed": {
+      "title": "Histoires & Alertes de la Communauté",
+      "filter_all": "Tous les Messages",
+      "filter_success": "Success Stories",
+      "filter_security": "Alertes de Sécurité",
+      "filter_tips": "Conseils de Récupération",
+      "share_story": "Partagez Votre Histoire",
+      "no_posts": "Aucun message trouvé correspondant à vos critères.",
+      "search_placeholder": "Rechercher des histoires et alertes de la communauté..."
+    },
+    "stats": {
+      "active_members": "Membres Actifs",
+      "items_recovered": "Objets Récupérés",
+      "security_alerts": "Alertes de Sécurité",
+      "trust_score": "Indice de Confiance",
+      "likes": "J'aime",
+      "comments": "Commentaires"
+    },
+    "badges": {
+      "title": "Badges de la Communauté",
+      "eagle_eye": "Œil de Lynx",
+      "trust_builder": "Bâtisseur de Confiance",
+      "recovery_expert": "Expert en Récupération"
+    },
+    "create_post": "Partager une Histoire ou Alerte",
+    "create_post_dialog": {
+      "description": "Partagez vos expériences ou vos conseils de sécurité avec les autres membres de KIZERE.",
+      "category": "Catégorie",
+      "title_label": "Titre",
+      "title_placeholder": "Entrez un titre descriptif...",
+      "content_label": "Contenu",
+      "content_placeholder": "Que souhaitez-vous partager ?",
+      "submit": "Publier dans la Communauté",
+      "success_title": "Publication Créée",
+      "success_desc": "Votre histoire a été partagée avec la communauté."
+    },
+    "activity": {
+      "title": "Activité en Direct",
+      "liked_story": "a aimé une histoire de réussite",
+      "joined": "a rejoint la communauté",
+      "shared_tip": "a partagé un conseil de sécurité"
+    },
+    "recognition": {
+      "title": "L'Œil de Lynx de Kigali",
+      "description": "Reconnaissance de notre membre le plus vigilant ce mois-ci."
+    },
+    "join": {
+      "title": "Rejoignez le Mouvement",
+      "description": "Soutenez la culture de la confiance au Rwanda.",
+      "button": "Vérifier en tant que Contributeur",
+      "success_title": "Bienvenue !",
+      "success_desc": "Vous faites maintenant partie du réseau de confiance KIZERE.",
+      "verified_title": "Membre Vérifié",
+      "verified_desc": "Merci de nous aider à maintenir le Rwanda en sécurité !"
+    },
+    "times": {
+      "just_now": "À l'instant",
+      "2m_ago": "il y a 2m",
+      "15m_ago": "il y a 15m",
+      "45m_ago": "il y a 45m",
+      "2h_ago": "il y a 2h",
+      "5h_ago": "il y a 5h",
+      "1d_ago": "il y a 1j"
+    },
+    "author_you": "Vous"
   },
   "dashboard": {
     "welcomeMessage": "Bon retour, {name}!",
@@ -438,6 +526,64 @@
     "reportDate": "Date du Signalement",
     "status": "Statut"
   },
+  "report_wizard": {
+    "step": "Étape {{current}} sur {{total}}",
+    "complete": "{{percentage}}% Terminé",
+    "step_1_title": "Quoi, Où & Quand",
+    "step_1_desc": "Fournissez des détails sur l'objet et où il a été perdu/trouvé",
+    "step_2_title": "Contact & Récompenses",
+    "step_2_desc": "Entrez vos coordonnées et informations de réclamation",
+    "basic_info": "Informations de Base",
+    "basic_info_desc": "Dites-nous ce que vous {{type}}.",
+    "item_name": "Nom de l'Objet",
+    "item_name_placeholder": "ex: Portefeuille en cuir noir",
+    "select_category": "Sélectionnez une catégorie",
+    "description": "Description",
+    "description_placeholder": "Incluez des caractéristiques distinctives comme la marque, la couleur, etc.",
+    "description_hint": "Min 10 caractères.",
+    "unique_id": "Identifiant Unique (Optionnel)",
+    "unique_id_placeholder": "ex: Numéro de série, IMEI, Numéro ID",
+    "unique_id_hint": "Nous aide à trouver une correspondance exacte plus rapidement.",
+    "location_time": "Lieu & Heure",
+    "location_time_desc": "Quand et où cela s'est-il produit ?",
+    "location": "Emplacement",
+    "location_placeholder": "ex: Downtown Taxi Park",
+    "date": "Date",
+    "custody": "Garde Actuelle de l'Objet",
+    "custody_placeholder": "ex: Laissé à la sécurité, Avec moi, Poste de police",
+    "custody_hint": "Où le propriétaire peut-il trouver l'objet ou vous rencontrer ?",
+    "images": "Images",
+    "images_desc": "Les photos aident à identifier l'objet plus rapidement.",
+    "max_images": "Max 3 images. JPG, PNG autorisés.",
+    "contact_info": "Coordonnées",
+    "contact_info_desc": "Comment les gens doivent-ils vous joindre ?",
+    "contact_details": "Détails de Contact",
+    "contact_details_placeholder": "Numéro de téléphone ou instructions spécifiques",
+    "go_back": "Retour",
+    "contact_hint_found": "Cela sera masqué jusqu'à ce qu'une réclamation soit vérifiée.",
+    "contact_hint_lost": "Cela sera visible pour les trouveurs potentiels.",
+    "security_title": "Question de Défi de Sécurité",
+    "security_desc": "Posez une question que seul le vrai propriétaire connaîtrait.",
+    "security_placeholder": "Question de vérification pour les réclamants...",
+    "bounty_title": "Ajouter une Récompense (Optionnel)",
+    "bounty_desc": "Offrez une récompense pour inciter les trouveurs.",
+    "bounty_escrow": "Les récompenses sont conservées en toute sécurité et ne sont **libérées que** lorsque vous confirmez la réception via OTP.",
+    "reward_amount": "Montant de la Récompense (RWF)",
+    "reward_hint": "Laissez 0 si vous ne souhaitez pas offrir de récompense.",
+    "payment_info": "Signaler un objet perdu coûte **1 000 RWF**.",
+    "total_payment": "Paiement Total : {{amount}} RWF",
+    "fix_errors": "Veuillez corriger les erreurs suivantes avant de soumettre :",
+    "next_step": "Étape Suivante",
+    "pay_submit": "Payer & Soumettre",
+    "submit_report": "Soumettre le Rapport",
+    "submitting": "Soumission...",
+    "type_required": "Veuillez sélectionner un type de rapport",
+    "title_min": "Le titre doit comporter au moins 3 caractères",
+    "desc_min": "La description doit comporter au moins 10 caractères",
+    "location_required": "Le lieu est requis",
+    "date_required": "La date est requise",
+    "contact_required": "Les informations de contact sont requises"
+  },
   "footer": {
     "copyright": "© 2025 KIZERE. Tous droits réservés.",
     "terms": "Conditions",
@@ -499,8 +645,62 @@
       "can_manage_reports": "Accès pour gérer et résoudre les signalements d'objets perdus et trouvés."
     }
   },
+  "filters": {
+    "title": "Filtres",
+    "clear": "Effacer",
+    "category": "Catégorie",
+    "location": "Lieu",
+    "sortBy": "Trier par",
+    "time": "Période",
+    "allTime": "Tout temps",
+    "last24h": "Dernières 24h",
+    "last7d": "Derniers 7 jours",
+    "last30d": "Derniers 30 jours",
+    "newest": "Plus récents",
+    "oldest": "Plus anciens",
+    "relevance": "Plus pertinent",
+    "allCategories": "Toutes les catégories",
+    "allLocations": "Tous les lieux",
+    "apply": "Appliquer",
+    "clearAll": "Effacer tous les filtres"
+  },
   "directoryPage": {
+    "title": "Répertoire des Objets Perdus & Trouvés",
+    "subtitle": "Parcourez les objets trouvés ou recherchez dans le répertoire vos biens perdus",
+    "reportLost": "Signaler un Objet Perdu",
+    "reportLostDesc": "Fournissez des détails sur votre objet perdu.",
+    "reportFound": "Signaler un Objet Trouvé",
+    "reportFoundDesc": "Fournissez des détails sur l'objet que vous avez trouvé.",
+    "searchPlaceholder": "Rechercher par mots-clés (ex: Passeport, portefeuille bleu)...",
+    "searchButton": "Rechercher",
+    "loadingReports": "Analyse du répertoire...",
+    "allReports": "Analyse du répertoire...",
+    "noReports": "Aucun objet trouvé",
+    "noReportsHint": "Aucun objet trouvé correspondant à vos filtres. Essayez une autre recherche.",
     "loginRequired": "Authentification Requise",
     "loginRequiredDesc": "Pour des raisons de sécurité et de confidentialité, le répertoire des objets signalés n'est accessible qu'aux utilisateurs authentifiés. Veuillez vous connecter pour consulter et rechercher dans le répertoire."
+  },
+  "howItWorksPage": {
+    "heroTitle": "Comment KIZERE Fonctionne",
+    "heroSubtitle": "Le registre numérique le plus fiable au Rwanda pour protéger vos objets de valeur et assurer leur retour en toute sécurité.",
+    "processTitle": "Un Processus en 4 Étapes",
+    "processSubtitle": "De l'enregistrement à la récupération, nous facilitons la sécurisation de ce qui compte le plus.",
+    "step1_title": "S'inscrire",
+    "step1LongDesc": "Commencez par créer une empreinte numérique de votre objet de valeur. Saisissez les numéros de série, les codes IMEI ou d'autres identifiants uniques. Cet enregistrement est stocké en toute sécurité et lié à votre identité.",
+    "step2_title": "Vérifier",
+    "step2LongDesc": "La vérification ajoute une couche de certitude absolue. Téléchargez des reçus d'achat, des certificats ou des photos d'identification claires. Notre système crée un certificat numérique de propriété vérifié.",
+    "step3_title": "Étiqueter",
+    "step3LongDesc": "Générez et attachez une étiquette QR KIZERE unique à votre article. Cette étiquette agit comme un lien sécurisé entre votre article physique et son enregistrement numérique sans exposer vos informations personnelles.",
+    "step4_title": "Récupérer",
+    "step4LongDesc": "Si votre article est perdu, un chercheur peut simplement scanner l'étiquette. Vous recevez une alerte instantanée et nous facilitons un canal de communication sécurisé pour un processus de récupération sûr.",
+    "benefitsTitle": "Pourquoi Choisir KIZERE ?",
+    "benefit1Title": "Preuve Numérique",
+    "benefit1Desc": "Éliminez les litiges avec des preuves de propriété vérifiables qui résistent à l'examen.",
+    "benefit2Title": "Alertes Instantanées",
+    "benefit2Desc": "Soyez notifié dès qu'une personne scanne votre objet perdu, n'importe où dans le monde.",
+    "benefit3Title": "Confidentialité d'Abord",
+    "benefit3Desc": "Récupérez vos objets sans jamais révéler vos coordonnées personnelles à des inconnus.",
+    "ctaTitle": "Prêt à Protéger Votre Premier Objet ?",
+    "ctaButton": "Protéger Maintenant"
   }
 }

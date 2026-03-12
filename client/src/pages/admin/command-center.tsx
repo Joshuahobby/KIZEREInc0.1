@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -87,6 +89,19 @@ export default function CommandCenter() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { toast } = useToast();
   const [jobsLoading, setJobsLoading] = useState(false);
+
+  if (!user) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/admin" />
+        </div>
+      </PageLayout>
+    );
+  }
+
+  // Also verify admin role if needed (but user requested strict auth wall for now)
+  // if (user.role !== 'Admin' && user.role !== 'Moderator') { ... }
 
   const triggerJob = async (type: 'matching' | 'expiration') => {
     try {
@@ -497,8 +512,8 @@ export default function CommandCenter() {
                         <div key={service.id} className="flex items-center justify-between">
                           <div className="flex items-center">
                             <div className={`w-3 h-3 rounded-full mr-2 ${service.status === 'operational' ? 'bg-green-500' :
-                                service.status === 'degraded' ? 'bg-yellow-500' :
-                                  service.status === 'maintenance' ? 'bg-blue-500' : 'bg-red-500'
+                              service.status === 'degraded' ? 'bg-yellow-500' :
+                                service.status === 'maintenance' ? 'bg-blue-500' : 'bg-red-500'
                               }`}></div>
                             <span>{service.name}</span>
                           </div>

@@ -1,4 +1,7 @@
 import { useDashboardStats } from "@/hooks/use-dashboard-stats";
+import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { AppLayout } from "@/components/layout/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -39,7 +42,18 @@ const STATUS_COLORS = {
 };
 
 export default function AnalyticsPage() {
+    const { user, isLoading: isLoadingAuth } = useAuth();
     const { stats, chartData, isLoading } = useDashboardStats();
+
+    if (!user && !isLoadingAuth) {
+        return (
+            <PageLayout>
+                <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+                    <AuthWall returnUrl="/admin/analytics" />
+                </div>
+            </PageLayout>
+        );
+    }
 
     if (isLoading) {
         return (

@@ -38,7 +38,9 @@ import { cn } from "@/lib/utils";
 import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
 import { GlobalSearch } from "@/components/dashboard/global-search";
 import { useOnlineStatus } from "@/hooks/use-online-status";
-import { WifiOff } from "lucide-react";
+import { WifiOff, BellRing } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Notification } from "@shared/schema";
 
 export function Header() {
   const [location] = useLocation();
@@ -50,6 +52,21 @@ export function Header() {
 
   const isAdmin = user?.role === "Admin";
   const isAuthenticated = !!user;
+
+  // Fetch unread count
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ["/api/notifications/unread-count"],
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // Refresh every 30s
+  });
+  const unreadCount = unreadData?.count ?? 0;
+
+  // Fetch recent notifications
+  const { data: notifications = [] } = useQuery<Notification[]>({
+    queryKey: ["/api/notifications"],
+    enabled: isAuthenticated,
+    select: (data) => data.slice(0, 5), // Only show 5 most recent in dropdown
+  });
 
   // Handle scroll events to change header appearance
   React.useEffect(() => {
@@ -90,14 +107,13 @@ export function Header() {
   const navigation: NavItem[] = isAuthenticated
     ? [
       { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
-      { name: t('nav.lostDirectory'), href: "/lost-found?type=lost", icon: Search },
-      { name: t('nav.foundDirectory'), href: "/lost-found?type=found", icon: Package },
+      { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
+      { name: t('nav.directory'), href: "/lost-found", icon: Search },
     ]
     : [
       { name: t('nav.features'), href: "/#features", scrollTo: "features", icon: Info },
-      { name: t('nav.howItWorks'), href: "/#how-it-works", scrollTo: "how-it-works", icon: Users },
-      { name: t('nav.lostDirectory'), href: "/lost-found?type=lost", icon: Search },
-      { name: t('nav.foundDirectory'), href: "/lost-found?type=found", icon: Package },
+      { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
+      { name: t('nav.directory'), href: "/lost-found", icon: Search },
       { name: t('nav.community'), href: "/community", icon: Users },
     ];
 
@@ -116,9 +132,9 @@ export function Header() {
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300 border-b",
+        "sticky top-0 z-50 w-full transition-all duration-500 border-b",
         isScrolled
-          ? "bg-background/60 backdrop-blur-xl shadow-sm border-border/50"
+          ? "glass"
           : "bg-background border-transparent"
       )}
     >
@@ -129,10 +145,10 @@ export function Header() {
             <Link href={isAuthenticated ? getDashboardPath() : "/"} className="flex items-center gap-2 group" aria-label="KIZERE Home">
               <Logo className="h-8 w-8 transition-transform group-hover:scale-110" aria-hidden="true" />
               <div className="flex flex-col items-start leading-none gap-0">
-                <span className="text-xl font-display font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tighter">
+                <span className="text-xl font-heading font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tighter">
                   {t('common.brandName')}
                 </span>
-                <span className="text-[8px] uppercase tracking-[0.2em] text-primary font-black opacity-70">
+                <span className="text-[9px] uppercase tracking-[0.25em] text-primary font-bold opacity-80">
                   {t('common.brandSubtitle')}
                 </span>
               </div>
@@ -215,9 +231,11 @@ export function Header() {
                       >
                         <Bell className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                       </motion.div>
-                      <Badge className="absolute -right-1 -top-1 h-4 min-w-[1rem] px-1 text-[10px] bg-primary flex items-center justify-center animate-pulse">
-                        2
-                      </Badge>
+                      {unreadCount > 0 && (
+                        <Badge className="absolute -right-1 -top-1 h-4 min-w-[1rem] px-1 text-[10px] bg-primary flex items-center justify-center animate-pulse">
+                          {unreadCount > 99 ? '99+' : unreadCount}
+                        </Badge>
+                      )}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-80 p-0 shadow-xl border-border rounded-xl">
@@ -226,17 +244,36 @@ export function Header() {
                       <Badge variant="secondary" className="text-[10px]">{t('common.new') || "New"}</Badge>
                     </div>
                     <div className="max-h-80 overflow-y-auto p-2">
-                      <div className="flex gap-3 p-3 rounded-lg hover:bg-accent transition-colors cursor-pointer">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Shield className="h-4 w-4 text-primary" />
+                      {notifications.length > 0 ? (
+                        notifications.map((notif) => (
+                          <div 
+                            key={notif.id} 
+                            className={cn(
+                              "flex gap-3 p-3 rounded-lg hover:bg-accent transition-colors cursor-pointer mb-1",
+                              !notif.isRead && "bg-primary/5"
+                            )}
+                          >
+                            <div className={cn(
+                              "h-8 w-8 rounded-full flex items-center justify-center",
+                              !notif.isRead ? "bg-primary/20" : "bg-muted"
+                            )}>
+                              <BellRing className={cn("h-4 w-4", !notif.isRead ? "text-primary" : "text-muted-foreground")} />
+                            </div>
+                            <div className="flex-1 space-y-1">
+                              <p className={cn("text-xs font-medium line-clamp-1", !notif.isRead ? "text-foreground" : "text-muted-foreground")}>
+                                {notif.title}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground line-clamp-2">
+                                {notif.message}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-xs text-muted-foreground">
+                          {t('notifications.empty') || "No new notifications"}
                         </div>
-                        <div className="flex-1 space-y-1">
-                          <p className="text-xs font-medium line-clamp-1">{t('notifications.itemMatched') || "Item Matched"}</p>
-                          <p className="text-[10px] text-muted-foreground line-clamp-2">
-                            {t('notifications.itemMatchedDesc') || "A matching item has been found in the system."}
-                          </p>
-                        </div>
-                      </div>
+                      )}
                     </div>
                     <div className="p-2 border-t">
                       <Button variant="ghost" size="sm" className="w-full text-xs h-8" asChild>
@@ -285,7 +322,7 @@ export function Header() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild className="hidden md:inline-flex rounded-full px-6 shadow-md hover:shadow-lg transition-all bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-9 text-sm">
+              <Button asChild variant="premium" className="hidden md:inline-flex rounded-full px-6 shadow-md h-9 text-sm">
                 <Link href="/auth">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />

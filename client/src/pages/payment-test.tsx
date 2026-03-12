@@ -8,10 +8,22 @@ import { useToast } from "@/hooks/use-toast";
 import { PaymentService } from "@/services/payment.service";
 import { getPaymentAmount, DEFAULT_CURRENCY } from "@/config/payment.config";
 import { Loader2, ArrowRight } from "lucide-react";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 
 export default function PaymentTestPage() {
-  const { user } = useAuth();
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const { toast } = useToast();
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/payment-test" />
+        </div>
+      </PageLayout>
+    );
+  }
   const [isLoading, setIsLoading] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const [transactionRef, setTransactionRef] = useState<string | null>(null);
@@ -95,7 +107,7 @@ export default function PaymentTestPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <PageLayout>
       <Header />
 
       <main className="flex-1 container max-w-4xl py-10">
@@ -172,7 +184,6 @@ export default function PaymentTestPage() {
         </Card>
       </main>
 
-      <Footer />
-    </div>
+    </PageLayout>
   );
 }

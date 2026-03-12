@@ -72,6 +72,22 @@ router.post('/jobs/run-expiration', async (req, res) => {
 });
 
 /**
+ * GET /api/admin/claims
+ * Get all claims with details (for admin overview)
+ * Supports ?status= filter (pending, verified, rejected, needs_info, withdrawn, resolved, appeals, all)
+ */
+router.get('/claims', async (req, res) => {
+  try {
+    const statusFilter = (req.query.status as string) || 'all';
+    const allClaims = await storage.getAllClaimsWithDetails(statusFilter);
+    res.json(allClaims);
+  } catch (error) {
+    logger.error('Failed to fetch all claims', { error });
+    res.status(500).json({ message: 'Failed to fetch claims' });
+  }
+});
+
+/**
  * GET /api/admin/claims/appeals
  * Get all pending claim appeals
  */
@@ -91,61 +107,55 @@ router.get('/claims/appeals', async (req, res) => {
  */
 router.patch('/claims/appeals/:id', async (req, res) => {
   try {
-    const appealId = parseInt(req.params.id);
+    const claimId = parseInt(req.params.id);
     const { decision, adminNotes } = req.body;
 
     if (!['approved', 'rejected'].includes(decision)) {
       return res.status(400).json({ message: 'Decision must be approved or rejected' });
     }
 
-    const appeal = await storage.getAppeal(appealId);
+    const claim = await storage.getClaim(claimId);
 
-    if (!appeal) {
-      return res.status(404).json({ message: 'Appeal not found' });
+    if (!claim) {
+      return res.status(404).json({ message: 'Claim not found' });
     }
 
-    // Update appeal status
-    const updatedAppeal = await storage.updateClaimAppeal(appealId, {
-      status: decision,
-      resolvedBy: req.user!.id,
-      resolvedAt: new Date(),
-      adminNotes: adminNotes,
+    // Update claim appeal status
+    const updatedClaim = await storage.updateClaim(claimId, {
+      appealStatus: decision,
+      appealAdminNotes: adminNotes,
+      appealResolvedAt: new Date(),
+      status: decision === 'approved' ? 'pending' : 'rejected'
     });
 
-    if (!updatedAppeal) {
+    if (!updatedClaim) {
       return res.status(500).json({ message: 'Failed to update appeal' });
     }
 
-    // If approved, re-open the claim
+    // If approved, log the transition
     if (decision === 'approved') {
-      const currentClaim = await storage.getClaim(appeal.claimId);
-      if (currentClaim) {
-        await storage.updateClaim(appeal.claimId, { status: 'pending' });
-
-        // Log the transition
-        await storage.createClaimStatusLog({
-          claimId: appeal.claimId,
-          previousStatus: currentClaim.status,
-          newStatus: 'pending',
-          changedBy: req.user!.id,
-          notes: `Re-opened via appeal approval: ${adminNotes || 'No notes'}`
-        });
-      }
+      await storage.createClaimStatusLog({
+        claimId: claim.id,
+        previousStatus: claim.status,
+        newStatus: 'pending',
+        changedBy: req.user!.id,
+        notes: `Re-opened via appeal approval: ${adminNotes || 'No notes'}`
+      });
     }
 
     // Log admin action
     await storage.createAdminActionLog({
       adminId: req.user!.id,
       action: 'resolve_claim_appeal',
-      targetUserId: appeal.userId,
-      details: JSON.stringify({ appealId, decision, claimId: appeal.claimId }),
+      targetUserId: claim.userId,
+      details: JSON.stringify({ claimId: claim.id, decision }),
       ipAddress: req.ip || null,
       userAgent: req.headers['user-agent'] || null
     });
 
     // Notify the user via in-app notification
     await storage.createNotification({
-      userId: appeal.userId,
+      userId: claim.userId,
       title: `Appeal ${decision === 'approved' ? 'Approved' : 'Rejected'}`,
       message: `Your claim appeal has been ${decision}. ${adminNotes ? `Note: ${adminNotes}` : ''}`,
       type: 'claim_update',
@@ -155,9 +165,8 @@ router.patch('/claims/appeals/:id', async (req, res) => {
     // Notify the user via email
     try {
       const { sendAppealUpdateEmail } = await import("../services/email.service");
-      const user = await storage.getUser(appeal.userId);
-      const claim = await storage.getClaim(appeal.claimId);
-      const report = claim ? await storage.getReport(claim.reportId) : null;
+      const user = await storage.getUser(claim.userId);
+      const report = await storage.getReport(claim.reportId);
 
       if (user && user.email && report) {
         sendAppealUpdateEmail(
@@ -175,7 +184,7 @@ router.patch('/claims/appeals/:id', async (req, res) => {
     res.json({
       success: true,
       message: `Appeal ${decision}`,
-      appeal
+      appeal: updatedClaim
     });
   } catch (error) {
     logger.error('Failed to resolve appeal', { error });

@@ -95,17 +95,17 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl">
+      <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b border-border/50 pb-6 mb-6">
         <CardTitle>{t("profile.editProfile")}</CardTitle>
         <CardDescription>{t("profile.editProfileDesc")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center space-y-4 mb-6">
           <Avatar className="h-24 w-24">
-            <AvatarImage 
-              src={user.avatarUrl || ""} 
-              alt={user.fullName || ""} 
+            <AvatarImage
+              src={user.avatarUrl || ""}
+              alt={user.fullName || ""}
             />
             <AvatarFallback className="text-xl">
               {getInitials(user.fullName || "")}
@@ -165,9 +165,9 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
                   <FormItem>
                     <FormLabel>{t("profile.phone")}</FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder={t("profile.phonePlaceholder")} 
-                        {...field} 
+                      <Input
+                        placeholder={t("profile.phonePlaceholder")}
+                        {...field}
                         value={field.value || ''}
                         onChange={(e) => field.onChange(e.target.value || null)}
                       />
@@ -178,16 +178,16 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
               />
             </div>
             <CardFooter className="flex justify-end gap-2 px-0">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={onCancel} 
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onCancel}
                 disabled={isSubmitting}
               >
                 {t("common.cancel")}
               </Button>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isSubmitting || !form.formState.isDirty}
               >
                 {isSubmitting ? t("common.saving") : t("common.save")}

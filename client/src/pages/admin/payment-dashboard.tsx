@@ -2,24 +2,24 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableRow, 
-  TableHead, 
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
   TableCell,
   TableFooter
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import {
   Select,
@@ -37,6 +37,8 @@ import {
 import { Loader2, Search, Download, MoreHorizontal, RefreshCw, AlertCircle, Calendar, DollarSign, CreditCard, Users, BarChart3 } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { DEFAULT_CURRENCY } from "@/config/payment.config";
 import { CommandCenterLayout } from "@/components/layouts/command-center-layout";
 
@@ -65,8 +67,18 @@ interface RevenueSummary {
 }
 
 export default function AdminPaymentDashboard() {
-  const { user } = useAuth();
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const { toast } = useToast();
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/admin/payment-dashboard" />
+        </div>
+      </PageLayout>
+    );
+  }
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("_all_statuses");
   const [typeFilter, setTypeFilter] = useState<string>("_all_types");
@@ -79,10 +91,10 @@ export default function AdminPaymentDashboard() {
   const isAdmin = user?.role === "Admin";
 
   // Revenue summary query
-  const { 
-    data: revenueSummary, 
-    isLoading: isRevenueSummaryLoading, 
-    refetch: refetchRevenueSummary 
+  const {
+    data: revenueSummary,
+    isLoading: isRevenueSummaryLoading,
+    refetch: refetchRevenueSummary
   } = useQuery<RevenueSummary>({
     queryKey: ["/api/admin/payments/summary"],
     queryFn: async () => {
@@ -92,9 +104,9 @@ export default function AdminPaymentDashboard() {
   });
 
   // Payments table query with pagination and filters
-  const { 
-    data: paymentsData, 
-    isLoading: isPaymentsLoading, 
+  const {
+    data: paymentsData,
+    isLoading: isPaymentsLoading,
     error: paymentsError,
     refetch: refetchPayments
   } = useQuery<{ transactions: PaymentTransaction[], total: number }>({
@@ -104,12 +116,12 @@ export default function AdminPaymentDashboard() {
       const params = new URLSearchParams();
       params.append("page", page.toString());
       params.append("pageSize", pageSize.toString());
-      
+
       if (searchTerm) params.append("search", searchTerm);
       if (statusFilter && !statusFilter.startsWith("_all_")) params.append("status", statusFilter);
       if (typeFilter && !typeFilter.startsWith("_all_")) params.append("type", typeFilter);
       if (dateRange && dateRange !== "all") params.append("dateRange", dateRange);
-      
+
       const data = await apiRequest(`/api/admin/payments?${params.toString()}`);
       setTotalPages(Math.ceil(data.total / pageSize));
       return data;
@@ -122,8 +134,8 @@ export default function AdminPaymentDashboard() {
     if (paymentsError) {
       toast({
         title: "Error",
-        description: paymentsError instanceof Error 
-          ? paymentsError.message 
+        description: paymentsError instanceof Error
+          ? paymentsError.message
           : "Failed to load payment data",
         variant: "destructive"
       });
@@ -135,17 +147,17 @@ export default function AdminPaymentDashboard() {
     if (!confirm(`Are you sure you want to process a refund for transaction ${transactionRef}?`)) {
       return;
     }
-    
+
     try {
       await apiRequest(`/api/admin/payments/refund/${transactionId}`, {
         method: "POST"
       });
-      
+
       toast({
         title: "Refund processed",
         description: "The refund has been successfully processed",
       });
-      
+
       // Refresh data
       refetchPayments();
       refetchRevenueSummary();
@@ -167,17 +179,17 @@ export default function AdminPaymentDashboard() {
       if (statusFilter && !statusFilter.startsWith("_all_")) params.append("status", statusFilter);
       if (typeFilter && !typeFilter.startsWith("_all_")) params.append("type", typeFilter);
       if (dateRange && dateRange !== "all") params.append("dateRange", dateRange);
-      
+
       // We need to handle this differently as we need text data, not JSON
       const res = await fetch(`/api/admin/payments/export?${params.toString()}`, {
         method: "GET",
         credentials: "include"
       });
-      
+
       if (!res.ok) {
         throw new Error("Failed to export payment data");
       }
-      
+
       // Get the CSV data and create a download link
       const csvData = await res.text();
       const blob = new Blob([csvData], { type: 'text/csv' });
@@ -189,7 +201,7 @@ export default function AdminPaymentDashboard() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       toast({
         title: "Export successful",
         description: "Payment data has been exported as CSV",
@@ -297,7 +309,7 @@ export default function AdminPaymentDashboard() {
                 )}
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Registration Revenue</CardTitle>
@@ -321,7 +333,7 @@ export default function AdminPaymentDashboard() {
                 )}
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Lost Report Revenue</CardTitle>
@@ -345,7 +357,7 @@ export default function AdminPaymentDashboard() {
                 )}
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Transaction Stats</CardTitle>
@@ -360,9 +372,9 @@ export default function AdminPaymentDashboard() {
                 ) : (
                   <>
                     <div className="text-2xl font-bold">
-                      {((revenueSummary?.successfulTransactions || 0) / 
-                       ((revenueSummary?.successfulTransactions || 0) + 
-                        (revenueSummary?.failedTransactions || 0)) * 100).toFixed(1)}%
+                      {((revenueSummary?.successfulTransactions || 0) /
+                        ((revenueSummary?.successfulTransactions || 0) +
+                          (revenueSummary?.failedTransactions || 0)) * 100).toFixed(1)}%
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Success rate ({revenueSummary?.pendingTransactions || 0} pending)
@@ -396,7 +408,7 @@ export default function AdminPaymentDashboard() {
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
                     </div>
-                    
+
                     <Button
                       variant="outline"
                       size="icon"
@@ -409,7 +421,7 @@ export default function AdminPaymentDashboard() {
                       <RefreshCw className="h-4 w-4" />
                     </Button>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     {/* Status filter */}
                     <Select
@@ -428,7 +440,7 @@ export default function AdminPaymentDashboard() {
                         <SelectItem value="refunded">Refunded</SelectItem>
                       </SelectContent>
                     </Select>
-                    
+
                     {/* Type filter */}
                     <Select
                       value={typeFilter}
@@ -443,7 +455,7 @@ export default function AdminPaymentDashboard() {
                         <SelectItem value="lost_report">Lost Report</SelectItem>
                       </SelectContent>
                     </Select>
-                    
+
                     {/* Date Range filter */}
                     <Select
                       value={dateRange}
@@ -465,9 +477,9 @@ export default function AdminPaymentDashboard() {
 
                     {/* Clear Filters */}
                     {(searchTerm || statusFilter !== "_all_statuses" || typeFilter !== "_all_types" || dateRange !== "all") && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={clearFilters}
                         className="h-10"
                       >
@@ -476,7 +488,7 @@ export default function AdminPaymentDashboard() {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Export button */}
                 <Button
                   variant="outline"
@@ -498,7 +510,7 @@ export default function AdminPaymentDashboard() {
                   <CreditCard className="h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-1">No transactions found</h3>
                   <p className="text-sm text-muted-foreground max-w-md">
-                    {searchTerm || statusFilter !== "_all_statuses" || typeFilter !== "_all_types" || dateRange !== "all" 
+                    {searchTerm || statusFilter !== "_all_statuses" || typeFilter !== "_all_types" || dateRange !== "all"
                       ? "Try adjusting your search filters to find what you're looking for."
                       : "There are no payment transactions recorded in the system yet."}
                   </p>
@@ -553,8 +565,8 @@ export default function AdminPaymentDashboard() {
                                   View details
                                 </DropdownMenuItem>
                                 {transaction.status === "successful" && (
-                                  <DropdownMenuItem 
-                                    className="text-red-600 focus:text-red-600" 
+                                  <DropdownMenuItem
+                                    className="text-red-600 focus:text-red-600"
                                     onClick={() => handleRefund(transaction.id, transaction.transactionRef)}
                                   >
                                     Process refund
@@ -569,7 +581,7 @@ export default function AdminPaymentDashboard() {
                   </Table>
                 </div>
               )}
-              
+
               {/* Pagination */}
               {!isPaymentsLoading && (paymentsData?.transactions?.length ?? 0) > 0 && (
                 <div className="flex items-center justify-between space-x-2 py-4">
@@ -577,7 +589,7 @@ export default function AdminPaymentDashboard() {
                     Showing <span className="font-medium">{paymentsData?.transactions?.length ?? 0}</span>{" "}
                     of <span className="font-medium">{paymentsData?.total ?? 0}</span> transactions
                   </div>
-                  
+
                   {totalPages > 1 && (
                     <div className="space-x-2">
                       <Button

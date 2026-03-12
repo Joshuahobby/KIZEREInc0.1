@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart3, 
-  Clock, 
-  Bell, 
-  Users, 
-  Package, 
-  FileText, 
+import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
+import {
+  BarChart3,
+  Clock,
+  Bell,
+  Users,
+  Package,
+  FileText,
   AlertTriangle,
   ChevronRight,
   CreditCard,
@@ -197,27 +200,38 @@ const MOCK_TIMELINE_EVENTS: TimelineEvent[] = [
 ];
 
 export function MissionControl() {
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const [activeWorkspace, setActiveWorkspace] = useState('dashboard');
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/admin/mission-control" />
+        </div>
+      </PageLayout>
+    );
+  }
   const [contextualData, setContextualData] = useState<any>(null);
   const [contextualType, setContextualType] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [aiAssistEnabled, setAiAssistEnabled] = useState(false);
-  
+
   // Command bar handlers
   const handleCommand = (command: string) => {
     console.log('Command entered:', command);
     // Process command logic here
   };
-  
+
   const handleSearch = (query: string) => {
     console.log('Search query:', query);
     // Search logic here
   };
-  
+
   const handleWorkspaceChange = (workspace: string) => {
     setActiveWorkspace(workspace);
   };
-  
+
   // Timeline event handlers
   const handleTimelineEventClick = (event: TimelineEvent) => {
     console.log('Timeline event clicked:', event);
@@ -225,7 +239,7 @@ export function MissionControl() {
     setContextualType(event.type);
     setIsSidebarOpen(true);
   };
-  
+
   // Render dashboard metrics
   const renderMetricsContent = () => {
     return (
@@ -248,7 +262,7 @@ export function MissionControl() {
             </p>
           </CardContent>
         </Card>
-        
+
         {/* Registered Items */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -267,7 +281,7 @@ export function MissionControl() {
             </p>
           </CardContent>
         </Card>
-        
+
         {/* Pending Reports */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -286,7 +300,7 @@ export function MissionControl() {
             </p>
           </CardContent>
         </Card>
-        
+
         {/* Revenue */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -308,7 +322,7 @@ export function MissionControl() {
       </div>
     );
   };
-  
+
   // Render analytics content
   const renderAnalyticsContent = () => {
     return (
@@ -322,7 +336,7 @@ export function MissionControl() {
             <UserRoleDistribution data={MOCK_USER_ROLES_DATA} />
           </CardContent>
         </Card>
-        
+
         {/* Payment Status */}
         <Card>
           <CardHeader>
@@ -332,7 +346,7 @@ export function MissionControl() {
             <PaymentStatusChart data={MOCK_PAYMENT_STATUS_DATA} />
           </CardContent>
         </Card>
-        
+
         {/* Item Categories */}
         <Card>
           <CardHeader>
@@ -342,7 +356,7 @@ export function MissionControl() {
             <ItemCategoryChart data={MOCK_ITEM_CATEGORIES_DATA} />
           </CardContent>
         </Card>
-        
+
         {/* Payment Analytics */}
         <Card>
           <CardHeader>
@@ -355,20 +369,20 @@ export function MissionControl() {
       </div>
     );
   };
-  
+
   // Render activity content
   const renderActivityContent = () => {
     return (
       <div>
-        <ActivityTimeline 
-          events={MOCK_TIMELINE_EVENTS} 
+        <ActivityTimeline
+          events={MOCK_TIMELINE_EVENTS}
           onEventClick={handleTimelineEventClick}
           maxEvents={5}
         />
       </div>
     );
   };
-  
+
   // Define workspace panels
   const dashboardPanels: WorkspacePanel[] = [
     {
@@ -400,38 +414,40 @@ export function MissionControl() {
       content: renderActivityContent()
     }
   ];
-  
+
   return (
-    <div className="flex flex-col h-screen">
-      {/* Command Bar */}
-      <CommandBar 
-        activeWorkspace={activeWorkspace}
-        onWorkspaceChange={handleWorkspaceChange}
-        onCommand={handleCommand}
-        onSearch={handleSearch}
-      />
-      
-      {/* Main Content */}
-      <div className="flex-1 overflow-hidden p-4">
-        <Workspace panels={dashboardPanels} />
+    <PageLayout>
+      <div className="flex flex-col h-screen">
+        {/* Command Bar */}
+        <CommandBar
+          activeWorkspace={activeWorkspace}
+          onWorkspaceChange={handleWorkspaceChange}
+          onCommand={handleCommand}
+          onSearch={handleSearch}
+        />
+
+        {/* Main Content */}
+        <div className="flex-1 overflow-hidden p-4">
+          <Workspace panels={dashboardPanels} />
+        </div>
+
+        {/* Quick Action Menu */}
+        <QuickActionMenu position="bottom-right" />
+
+        {/* Contextual Sidebar */}
+        <ContextualSidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
+          title={contextualData?.title || 'Details'}
+          icon={contextualData?.type === 'user' ? <Users className="h-5 w-5" /> :
+            contextualData?.type === 'item' ? <Package className="h-5 w-5" /> :
+              contextualData?.type === 'report' ? <FileText className="h-5 w-5" /> :
+                contextualData?.type === 'payment' ? <CreditCard className="h-5 w-5" /> :
+                  <AlertTriangle className="h-5 w-5" />}
+          data={contextualData || {}}
+          type={contextualType}
+        />
       </div>
-      
-      {/* Quick Action Menu */}
-      <QuickActionMenu position="bottom-right" />
-      
-      {/* Contextual Sidebar */}
-      <ContextualSidebar
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-        title={contextualData?.title || 'Details'}
-        icon={contextualData?.type === 'user' ? <Users className="h-5 w-5" /> : 
-              contextualData?.type === 'item' ? <Package className="h-5 w-5" /> : 
-              contextualData?.type === 'report' ? <FileText className="h-5 w-5" /> : 
-              contextualData?.type === 'payment' ? <CreditCard className="h-5 w-5" /> : 
-              <AlertTriangle className="h-5 w-5" />}
-        data={contextualData || {}}
-        type={contextualType}
-      />
-    </div>
+    </PageLayout>
   );
 }

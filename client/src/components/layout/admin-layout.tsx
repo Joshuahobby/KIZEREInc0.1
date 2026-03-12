@@ -167,42 +167,48 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
   const getCategorizedNavItems = (): NavCategory[] => {
     const categories: NavCategory[] = [];
 
-    // CORE Category
-    const coreItems: NavItem[] = [
+    // MAIN Category
+    const mainItems: NavItem[] = [
       { title: t('nav.dashboard'), href: "/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> }
     ];
-    if (isSubscriber) {
-      coreItems.push({ title: t('nav.myItems'), href: "/my-items", icon: <List className="h-5 w-5" /> });
-      coreItems.push({ title: t('nav.registerItems'), href: "/register-item", icon: <ArrowRightCircle className="h-5 w-5" /> });
-    } else if (isAdmin || isAgent) {
-      coreItems.push({ title: t('nav.adminPanel'), href: "/admin/item-management", icon: <List className="h-5 w-5" /> });
-      coreItems.push({ title: t('nav.verification'), href: "/admin/verifications", icon: <AlertTriangle className="h-5 w-5" />, badge: 3 });
-    }
-    categories.push({ title: t('nav.navigation'), items: coreItems });
+    categories.push({ title: t('nav.mainHeader'), items: mainItems });
 
-    // COMMUNITY Category
-    const communityItems: NavItem[] = [
-      { title: t('nav.search'), href: "/search", icon: <Search className="h-5 w-5" /> },
-      { title: t('nav.lostFound'), href: "/dashboard?tab=claims", icon: <Shield className="h-5 w-5" /> }
+    // PORTFOLIO Category (Available to all users to see My Items and Claims)
+    const portfolioItems: NavItem[] = [
+      { title: t('nav.myItems'), href: "/my-items", icon: <List className="h-5 w-5" /> },
+      { title: t('dashboard.tabs.claims') || "Claims", href: "/my-claims", icon: <FileText className="h-5 w-5" /> },
+      { title: t('nav.registerItems'), href: "/register-item", icon: <ArrowRightCircle className="h-5 w-5" /> }
     ];
-    categories.push({ title: t('nav.community'), items: communityItems });
+    categories.push({ title: t('nav.portfolioHeader'), items: portfolioItems });
 
-    // MANAGEMENT Category (Admin/Agent)
+    // EXPLORE Category
+    const exploreItems: NavItem[] = [
+      { title: t('nav.search'), href: "/search", icon: <Search className="h-5 w-5" /> },
+      { title: t('nav.lostFound'), href: "/lost-found", icon: <AlertTriangle className="h-5 w-5" /> }
+    ];
+    categories.push({ title: t('nav.exploreHeader'), items: exploreItems });
+
+    // ADMINISTRATION Category (Admin/Agent)
     if (isAdmin || isAgent) {
-      const mgmtItems: NavItem[] = [
-        { title: "User Directory", href: "/admin/users", icon: <Users className="h-5 w-5" /> }
+      const adminItems: NavItem[] = [
+        { title: "User Directory", href: "/admin/users", icon: <Users className="h-5 w-5" /> },
+        { title: "Verification Requests", href: "/admin/verifications", icon: <Shield className="h-5 w-5" />, badge: 3 },
+        { title: "Claims", href: "/admin/claims", icon: <FileText className="h-5 w-5" /> }
       ];
+
       if (isAdmin) {
-        mgmtItems.push({ title: "Client Management", href: "/admin/clients", icon: <Briefcase className="h-5 w-5" /> });
+        adminItems.push({ title: "Command Center", href: "/admin/command-center", icon: <Database className="h-5 w-5" /> });
+        adminItems.push({ title: "Analytics", href: "/admin/analytics", icon: <BarChart3 className="h-5 w-5" /> });
+        adminItems.push({ title: "Settings", href: "/admin/settings", icon: <Settings className="h-5 w-5" /> });
       }
-      mgmtItems.push({ title: "Identity Verification", href: "/admin/verifications", icon: <BookCheck className="h-5 w-5" /> });
-      mgmtItems.push({ title: "Moderation Queue", href: "/dashboard?tab=moderation", icon: <Shield className="h-5 w-5" /> });
-      if (isAdmin) {
-        mgmtItems.push({ title: "Analytics", href: "/admin/analytics", icon: <BarChart3 className="h-5 w-5" /> });
-        mgmtItems.push({ title: "Roles", href: "/admin/roles", icon: <Shield className="h-5 w-5" /> });
-      }
-      categories.push({ title: "MANAGEMENT", items: mgmtItems });
+      categories.push({ title: t('nav.adminHeader'), items: adminItems });
     }
+
+    // ACCOUNT Category
+    const accountItems: NavItem[] = [
+      { title: t('auth.logout'), href: "#logout", icon: <LogOut className="h-5 w-5" />, onClick: handleLogout }
+    ];
+    categories.push({ title: "Account", items: accountItems });
 
     return categories;
   };
@@ -220,7 +226,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
   // AdminLayout is now role-aware and available to all authenticated users
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background font-sans overflow-x-hidden">
       {/* Top navigation bar */}
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] px-4 md:px-8 transition-all duration-300 group/header">
         <div className="grid grid-cols-3 h-16 items-center w-full max-w-[1600px] mx-auto relative px-4 md:px-0">
@@ -431,6 +437,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
                   <DropdownMenuItem
                     className="rounded-xl cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive font-bold py-2.5"
                     onClick={handleLogout}
+                    aria-label="Logout"
                   >
                     <LogOut className="mr-3 h-4 w-4" />
                     <span>{t('auth.logout')}</span>
@@ -443,180 +450,173 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
       </header>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-64px)] overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row">
         {/* Left panel: Navigation sidebar - desktop only, collapsible */}
         {!hideSidebar && (
           <aside
             className={cn(
-              "hidden md:flex flex-col h-full transition-all duration-300 ease-in-out relative group/sidebar",
-              sidebarCollapsed ? "w-24 p-3" : "w-72 p-6"
+              "hidden md:flex flex-col sticky top-16 h-[calc(100vh-4rem)] transition-all duration-500 ease-in-out z-30 group/sidebar shrink-0",
+              sidebarCollapsed ? "w-20" : "w-72"
             )}
           >
-            <div className="flex flex-col h-full bg-card/40 backdrop-blur-2xl border border-white/10 dark:border-white/5 rounded-[2.5rem] shadow-[0_8px_32px_0_rgba(0,0,0,0.1)] overflow-hidden">
-              <div className={cn("flex-1 overflow-y-auto custom-scrollbar", sidebarCollapsed ? "px-2 py-6" : "px-4 py-8")}>
-                <nav className="flex flex-col space-y-8 h-full">
-                  {navCategories.map((category, catIndex) => (
-                    <motion.div
-                      key={category.title}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: catIndex * 0.1, duration: 0.5 }}
-                      className="flex flex-col space-y-2"
-                    >
-                      {!sidebarCollapsed && (
-                        <h3 className="px-5 text-[10px] font-black tracking-[0.2em] text-muted-foreground/40 mb-2 uppercase">
-                          {category.title}
-                        </h3>
-                      )}
-                      {sidebarCollapsed && <Separator className="bg-white/5 mb-4 mx-2" />}
+            <div className={cn(
+              "flex-1 flex flex-col w-full h-full backdrop-blur-3xl border-r shadow-2xl overflow-hidden relative transition-colors duration-500",
+              "bg-[#e4f2f9]/95 border-slate-200 dark:bg-slate-900/50 dark:border-white/5"
+            )}>
+              {/* Subtle Glow Background */}
+              <div className="absolute top-0 left-0 w-full h-[500px] bg-primary/5 blur-[120px] -z-10 dark:block hidden" />
+              <div className="absolute top-0 left-0 w-full h-[500px] bg-primary/[0.02] blur-[100px] -z-10 dark:hidden block" />
 
-                      <div className="flex flex-col space-y-1">
-                        {category.items.map((item, itemIndex) => {
-                          const isActive = location === item.href;
-                          return (
-                            <TooltipProvider key={item.href}>
-                              <Tooltip delayDuration={0}>
-                                <TooltipTrigger asChild>
-                                  <Link
-                                    href={item.href}
-                                    onClick={(e) => {
-                                      if (item.onClick) {
-                                        e.preventDefault();
-                                        item.onClick();
-                                      }
-                                    }}
-                                    className={cn(
-                                      "group relative flex items-center gap-3 text-sm font-bold transition-all duration-500 outline-none rounded-2xl",
-                                      sidebarCollapsed ? "px-3 py-3 justify-center" : "px-5 py-3.5 hover:translate-x-1",
-                                      isActive
-                                        ? "text-primary font-black"
-                                        : "text-muted-foreground/60 hover:text-foreground hover:bg-white/5"
-                                    )}
-                                  >
-                                    {isActive && (
-                                      <motion.div
-                                        layoutId="active-nav-glow"
-                                        className="absolute inset-0 bg-primary/10 rounded-2xl -z-10 shadow-[inner_0_0_12px_rgba(var(--primary),0.1)] border border-primary/20"
-                                        initial={false}
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                      />
-                                    )}
-                                    <div className={cn(
-                                      "flex h-5 w-5 items-center justify-center transition-all duration-500 shrink-0",
-                                      isActive ? "text-primary scale-110 drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "text-muted-foreground/40 group-hover:text-primary group-hover:scale-110"
-                                    )}>
-                                      {item.icon}
-                                    </div>
-                                    {!sidebarCollapsed && (
-                                      <span className="flex-1 truncate tracking-tight">{item.title}</span>
-                                    )}
-                                    {!sidebarCollapsed && item.badge && (
-                                      <Badge
-                                        variant="secondary"
-                                        className={cn(
-                                          "ml-auto h-5 px-2 text-[9px] font-black min-w-[20px] justify-center transition-all duration-500 border-none rounded-full",
-                                          isActive ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" : "bg-white/5 text-muted-foreground/40"
-                                        )}
-                                      >
-                                        {item.badge}
-                                      </Badge>
-                                    )}
-                                  </Link>
-                                </TooltipTrigger>
-                                {sidebarCollapsed && (
-                                  <TooltipContent side="right" className="font-bold border-none bg-primary text-primary-foreground backdrop-blur-xl">
-                                    {item.title}
-                                    {item.badge ? ` (${item.badge})` : ""}
-                                  </TooltipContent>
-                                )}
-                              </Tooltip>
-                            </TooltipProvider>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  ))}
+              <div className={cn("flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar py-8", sidebarCollapsed ? "px-2" : "px-4")}>
+                <nav className="flex flex-col space-y-1">
+                  {navCategories.flatMap(category => category.items).map((item) => {
+                    const isActive = location === item.href;
+                    return (
+                      <TooltipProvider key={item.href}>
+                        <Tooltip delayDuration={0}>
+                          <TooltipTrigger asChild>
+                            <Link
+                              href={item.href}
+                              onClick={(e) => {
+                                if (item.onClick) {
+                                  e.preventDefault();
+                                  item.onClick();
+                                }
+                              }}
+                              role={item.onClick ? "button" : undefined}
+                              data-testid={item.title === t('auth.logout') ? "logout-button" : undefined}
+                              className={cn(
+                                "group relative flex items-center gap-4 py-4 transition-all duration-500 outline-none",
+                                sidebarCollapsed ? "px-4 justify-center" : "px-6 hover:translate-x-1",
+                                isActive
+                                  ? "text-black font-semibold dark:text-primary"
+                                  : "text-black hover:text-primary dark:text-white/70 dark:hover:text-white"
+                              )}
+                            >
+                              {/* Active Neon Line Indicator */}
+                              {isActive && (
+                                <motion.div
+                                  layoutId="active-nav-neon"
+                                  className={cn(
+                                    "absolute left-0 top-1/4 bottom-1/4 w-0.5 rounded-full transition-all duration-300",
+                                    "bg-black dark:bg-primary dark:shadow-[0_0_10px_rgba(var(--primary),0.8)]"
+                                  )}
+                                  initial={false}
+                                />
+                              )}
+
+                              <div className={cn(
+                                "flex h-6 w-6 items-center justify-center transition-all duration-500 shrink-0",
+                                isActive
+                                  ? "text-black dark:text-primary dark:drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]"
+                                  : "text-black group-hover:text-primary dark:text-white/70 dark:group-hover:text-white"
+                              )}>
+                                {item.icon}
+                              </div>
+
+                              {!sidebarCollapsed && (
+                                <span className="flex-1 truncate tracking-tight text-sm font-medium">
+                                  {item.title}
+                                </span>
+                              )}
+
+                              {!sidebarCollapsed && item.badge && (
+                                <Badge
+                                  variant="outline"
+                                  className="ml-auto h-5 px-1.5 text-[9px] font-semibold bg-primary/10 border-primary/20 text-primary"
+                                >
+                                  {item.badge}
+                                </Badge>
+                              )}
+                            </Link>
+                          </TooltipTrigger>
+                          {sidebarCollapsed && (
+                            <TooltipContent side="right" className="font-medium border-none bg-primary text-primary-foreground backdrop-blur-xl">
+                              {item.title}
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                    );
+                  })}
                 </nav>
+              </div>
+
+              {/* Bottom Decorative Element / Switcher Trigger */}
+              <div className={cn(
+                "p-6 mt-auto border-t backdrop-blur-md transition-colors duration-500 shrink-0",
+                "bg-slate-100/50 border-slate-200 dark:bg-slate-900/60 dark:border-white/5"
+              )}>
+                {!sidebarCollapsed ? (
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border border-slate-300 dark:border-white/10">
+                      <AvatarImage src={user?.avatarUrl || undefined} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">{getUserInitials()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-xs font-black truncate text-black dark:text-foreground">{user?.fullName || user?.username}</p>
+                      <p className="text-[10px] text-black/50 truncate opacity-50 uppercase tracking-tighter dark:text-muted-foreground">
+                        {user?.role || 'User'} Level
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex justify-center">
+                    <Avatar className="h-8 w-8 border border-slate-300 dark:border-white/10">
+                      <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold">{getUserInitials()}</AvatarFallback>
+                    </Avatar>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Smart toggle handle — always visible at the top edge */}
-            <TooltipProvider>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                    className={cn(
-                      "absolute top-10 z-20 flex items-center justify-center",
-                      "h-6 w-6 rounded-full",
-                      "bg-primary border border-primary/20 shadow-xl shadow-primary/20",
-                      "text-primary-foreground hover:scale-110 active:scale-95 transition-all duration-300",
-                      "right-[-12px]" // Center over the border
-                    )}
-                    aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                  >
-                    {sidebarCollapsed ? (
-                      <ChevronRight className="h-3 w-3" />
-                    ) : (
-                      <ChevronLeft className="h-3 w-3" />
-                    )}
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="text-xs font-black bg-foreground text-background border-none">
-                  {sidebarCollapsed ? "EXPAND" : "COLLAPSE"} <kbd className="ml-1 px-1 py-0.5 rounded bg-muted/20 text-[10px] font-mono">Ctrl+B</kbd>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {/* Smart Expand/Collapse Handle */}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className={cn(
+                "absolute top-10 -right-3 z-50 flex items-center justify-center h-6 w-6 rounded-full border border-slate-200 dark:border-white/10",
+                "bg-primary text-primary-foreground shadow-2xl shadow-primary/40",
+                "hover:scale-110 active:scale-95 transition-all duration-300"
+              )}
+            >
+              {sidebarCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+            </button>
           </aside>
         )}
 
-        {/* Center panel: Main content area */}
-        <main className="flex-1 overflow-y-auto bg-neutral-50/50 dark:bg-background custom-scrollbar">
-          <div className="p-8 pb-12 max-w-[1600px] mx-auto min-h-full flex flex-col">
-            {children}
-          </div>
-        </main>
-      </div>
-
-      {/* Footer */}
-      <footer className="mt-auto pt-16 pb-8 px-8 flex flex-col items-center">
-        <div className="w-full max-w-[1600px] border-t border-border/30 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex flex-col md:flex-row items-center gap-4 text-muted-foreground/60 transition-opacity hover:opacity-100 duration-300">
-            <div className="flex items-center justify-center h-5 w-5 rounded-full bg-muted/30 border border-border/20" title={t('footer.systemStatus')}>
-              <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        {/* Right side wrapper for Main Content and Footer */}
+        <div className="flex-1 flex flex-col min-w-0 bg-neutral-50/50 dark:bg-background">
+          {/* Center panel: Main content area */}
+          <main className="flex-1 flex flex-col">
+            <div className="p-8 pb-12 max-w-[1600px] w-full mx-auto min-h-[calc(100vh-4rem)] flex flex-col">
+              {children}
             </div>
-            <p className="text-[11px] font-medium tracking-wide">
-              &copy; {new Date().getFullYear()} <span className="text-foreground/80 font-bold">{t('common.brandName')}</span>. {t('footer.rightsReserved')}
-            </p>
-          </div>
+          </main>
 
-          <nav className="flex items-center gap-6">
-            <Link
-              href="/terms"
-              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-all duration-300 hover:tracking-[0.15em]"
-            >
-              {t('footer.terms')}
-            </Link>
-            <div className="h-1 w-1 rounded-full bg-border/40" />
-            <Link
-              href="/privacy"
-              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-all duration-300 hover:tracking-[0.15em]"
-            >
-              {t('footer.privacy')}
-            </Link>
-            <div className="h-1 w-1 rounded-full bg-border/40" />
-            <Link
-              href="/help"
-              className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-all duration-300 hover:tracking-[0.15em]"
-            >
-              {t('footer.help')}
-            </Link>
-          </nav>
+          {/* Footer */}
+          <footer className="w-full border-t border-border/30 bg-background/50 pt-16 pb-8 px-8 flex flex-col items-center z-20 relative">
+            <div className="w-full max-w-[1600px] flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex flex-col md:flex-row items-center gap-4 text-muted-foreground/60 transition-opacity hover:opacity-100 duration-300">
+                <div className="flex items-center justify-center h-5 w-5 rounded-full bg-muted/30 border border-border/20" title={t('footer.systemStatus')}>
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+                <p className="text-[11px] font-medium tracking-wide">
+                  &copy; {new Date().getFullYear()} <span className="text-foreground/80 font-bold">{t('common.brandName')}</span>. {t('footer.rightsReserved')}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-6">
+                <Link href="/privacy" className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-colors">
+                  {t('footer.privacyPolicy')}
+                </Link>
+                <Link href="/terms" className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/40 hover:text-primary transition-colors">
+                  {t('footer.termsOfService')}
+                </Link>
+              </div>
+            </div>
+          </footer>
         </div>
-      </footer>
-
-      {/* Quick action floating menu */}
-      <QuickActionMenu />
+      </div>
     </div>
   );
 }

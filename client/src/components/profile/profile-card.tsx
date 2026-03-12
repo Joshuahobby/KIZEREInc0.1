@@ -23,7 +23,7 @@ export function ProfileCard({ user, onEdit }: ProfileCardProps) {
       return dateString;
     }
   };
-  
+
   // Get the initials from the user's name
   const getInitials = (name: string) => {
     if (!name) return "?";
@@ -36,23 +36,26 @@ export function ProfileCard({ user, onEdit }: ProfileCardProps) {
   };
 
   return (
-    <Card>
-      <CardHeader className="relative pb-8">
+    <Card className="border-border/50 shadow-lg overflow-hidden bg-background/60 backdrop-blur-xl transition-all duration-300">
+      <CardHeader className="relative pb-8 bg-gradient-to-br from-primary/5 via-primary/5 to-transparent">
         <div className="absolute top-8 right-8">
-          <Badge variant="outline" className="font-medium capitalize">
+          <Badge variant="outline" className="font-medium capitalize bg-background/80 backdrop-blur-md border-primary/20 text-primary shadow-sm">
             {user.role}
           </Badge>
         </div>
         <div className="flex flex-col items-center space-y-3">
-          <Avatar className="h-24 w-24">
-            <AvatarImage 
-              src={user.avatarUrl || ""} 
-              alt={user.fullName || ""} 
-            />
-            <AvatarFallback className="text-xl">
-              {getInitials(user.fullName || "")}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/20 rounded-full blur-[20px] -z-10"></div>
+            <Avatar className="h-24 w-24 border-2 border-background shadow-xl">
+              <AvatarImage
+                src={user.avatarUrl || ""}
+                alt={user.fullName || ""}
+              />
+              <AvatarFallback className="text-xl">
+                {getInitials(user.fullName || "")}
+              </AvatarFallback>
+            </Avatar>
+          </div>
           <div className="space-y-1 text-center">
             <CardTitle className="text-2xl">{user.fullName}</CardTitle>
             <CardDescription>

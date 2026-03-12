@@ -107,14 +107,14 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       icon: <AlertTriangle className="h-5 w-5 text-amber-600" />,
       title: t('reports.reportLostItem'),
       description: t('dashboard.lostReports') || "File a lost item report",
-      href: "/lost-found?type=lost",
+      href: "/lost-found?action=report-lost",
       color: "amber"
     },
     {
       icon: <CheckCircle2 className="h-5 w-5 text-green-600" />,
       title: t('reports.reportFoundItem'),
       description: t('dashboard.foundReports') || "Submit a found item report",
-      href: "/lost-found?type=found",
+      href: "/lost-found?action=report-found",
       color: "green"
     },
     {

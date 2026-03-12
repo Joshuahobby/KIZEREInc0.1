@@ -4,6 +4,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { useLocation } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -32,7 +35,18 @@ const createUserSchema = z.object({
 type CreateUserFormValues = z.infer<typeof createUserSchema>;
 
 export default function NewUserPage() {
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const { toast } = useToast();
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/admin/users/new" />
+        </div>
+      </PageLayout>
+    );
+  }
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [, navigate] = useLocation();

@@ -21,6 +21,10 @@ export async function markNotificationAsRead(id: number): Promise<Notification |
   return updatedNotification;
 }
 
+export async function markAllNotificationsAsRead(userId: number): Promise<void> {
+  await db.update(notifications).set({ isRead: true }).where(eq(notifications.userId, userId));
+}
+
 // Push Subscription methods
 import { pushSubscriptions, type PushSubscription, type InsertPushSubscription } from "@shared/schema";
 

@@ -1,6 +1,9 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { AppLayout } from "@/components/layout/admin-layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +54,18 @@ const actionColors: Record<string, string> = {
 };
 
 function AuditLogsPage() {
+    const { user, isLoading: isLoadingAuth } = useAuth();
     const [page, setPage] = useState(1);
+
+    if (!user && !isLoadingAuth) {
+        return (
+            <PageLayout>
+                <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+                    <AuthWall returnUrl="/admin/audit-logs" />
+                </div>
+            </PageLayout>
+        );
+    }
     const [actionFilter, setActionFilter] = useState("");
     const [entityFilter, setEntityFilter] = useState("");
     const [searchQuery, setSearchQuery] = useState("");

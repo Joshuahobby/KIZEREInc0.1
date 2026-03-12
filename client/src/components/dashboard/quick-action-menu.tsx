@@ -70,14 +70,14 @@ export function QuickActionMenu({
       icon: <AlertTriangle className="h-4 w-4" />,
       label: t('dashboard.quickActions.reportLost'),
       description: t('dashboard.quickActions.reportLostDesc'),
-      onClick: () => navigate('/lost'),
+      onClick: () => navigate('/lost-found?action=report-lost'),
       roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business']
     },
     {
       icon: <CheckCircle2 className="h-4 w-4" />,
       label: t('dashboard.quickActions.reportFound'),
       description: t('dashboard.quickActions.reportFoundDesc'),
-      onClick: () => navigate('/found'),
+      onClick: () => navigate('/lost-found?action=report-found'),
       roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business']
     },
     {

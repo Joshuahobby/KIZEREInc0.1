@@ -1,9 +1,11 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Payment } from "@shared/schema";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import {
     Table,
     TableBody,
@@ -18,13 +20,26 @@ import { Loader2, CreditCard, CheckCircle, XCircle, Clock } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export default function WalletPage() {
+    const { user, isLoading: isLoadingAuth } = useAuth();
+
     const { data: payments, isLoading } = useQuery<Payment[]>({
         queryKey: ["/api/payments/history"],
         queryFn: async () => {
             const res = await apiRequest<Payment[]>("/api/payments/history");
             return res;
-        }
+        },
+        enabled: !!user
     });
+
+    if (!user && !isLoadingAuth) {
+        return (
+            <PageLayout>
+                <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+                    <AuthWall returnUrl="/wallet" />
+                </div>
+            </PageLayout>
+        );
+    }
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -62,69 +77,71 @@ export default function WalletPage() {
     };
 
     return (
-        <div className="container mx-auto p-4 space-y-6">
-            <DashboardPageHeader
-                title="My Wallet"
-                description="Manage your payments and transaction history"
-                actions={
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border">
-                        <CreditCard className="w-4 h-4" />
-                        <span>Secure Payments via PawaPay</span>
-                    </div>
-                }
-            />
+        <PageLayout>
+            <div className="container mx-auto p-4 space-y-6">
+                <DashboardPageHeader
+                    title="My Wallet"
+                    description="Manage your payments and transaction history"
+                    actions={
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1 rounded-full border">
+                            <CreditCard className="w-4 h-4" />
+                            <span>Secure Payments via PawaPay</span>
+                        </div>
+                    }
+                />
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Transaction History</CardTitle>
-                    <CardDescription>All your past payments and transactions on KIZERE.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {isLoading ? (
-                        <div className="flex justify-center py-8">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        </div>
-                    ) : !payments || payments.length === 0 ? (
-                        <div className="text-center py-12 text-muted-foreground">
-                            <CreditCard className="mx-auto h-12 w-12 opacity-20 mb-3" />
-                            <p>No transactions found.</p>
-                        </div>
-                    ) : (
-                        <div className="rounded-md border overflow-hidden">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Reference</TableHead>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Amount</TableHead>
-                                        <TableHead>Status</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {payments.map((payment) => (
-                                        <TableRow key={payment.id}>
-                                            <TableCell className="font-mono text-xs text-muted-foreground">
-                                                {payment.transactionRef}
-                                            </TableCell>
-                                            <TableCell>
-                                                {format(new Date(payment.createdAt), "MMM d, yyyy HH:mm")}
-                                            </TableCell>
-                                            <TableCell className="font-medium">
-                                                {getTypeLabel(payment.type)}
-                                            </TableCell>
-                                            <TableCell>
-                                                {formatCurrency(Number(payment.amount), payment.currency)}
-                                            </TableCell>
-                                            <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Transaction History</CardTitle>
+                        <CardDescription>All your past payments and transactions on KIZERE.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {isLoading ? (
+                            <div className="flex justify-center py-8">
+                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                        ) : !payments || payments.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground">
+                                <CreditCard className="mx-auto h-12 w-12 opacity-20 mb-3" />
+                                <p>No transactions found.</p>
+                            </div>
+                        ) : (
+                            <div className="rounded-md border overflow-hidden">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Reference</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Type</TableHead>
+                                            <TableHead>Amount</TableHead>
+                                            <TableHead>Status</TableHead>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-        </div>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {payments.map((payment) => (
+                                            <TableRow key={payment.id}>
+                                                <TableCell className="font-mono text-xs text-muted-foreground">
+                                                    {payment.transactionRef}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {format(new Date(payment.createdAt), "MMM d, yyyy HH:mm")}
+                                                </TableCell>
+                                                <TableCell className="font-medium">
+                                                    {getTypeLabel(payment.type)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {formatCurrency(Number(payment.amount), payment.currency)}
+                                                </TableCell>
+                                                <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
+        </PageLayout>
     );
 }

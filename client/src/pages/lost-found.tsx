@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { PageLayout } from "@/components/layout/page-layout";
+import { AuthWall } from "@/components/ui/auth-wall";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,10 +31,12 @@ import {
   MapPinned,
   ChevronRight,
   Plus,
+  PlusCircle,
   Check,
   Search as SearchIcon,
   PackageSearch,
   ArrowRight,
+  Tag as TagIcon,
   Lock,
   User
 } from "lucide-react";
@@ -42,11 +45,13 @@ import { ReportDetailDialog } from "@/components/reports/report-detail-dialog";
 import { SearchFilters, FilterState } from "@/components/reports/search-filters";
 import { PaymentService } from "@/services/payment.service";
 import { Badge } from "@/components/ui/badge";
+import { ShareWhatsAppButton } from "@/components/ui/share-whatsapp-button";
 import { useAuth } from "@/hooks/use-auth";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 // Report form schema
 const reportFormSchema = z.object({
@@ -212,6 +217,10 @@ export default function LostFound() {
 
   // Handle dialog open for lost or found items
   const handleOpenDialog = (type: "lost" | "found", prefillData?: any) => {
+    if (!user) {
+      window.location.href = `/auth?returnUrl=${encodeURIComponent(window.location.pathname)}&action=report-${type}`;
+      return;
+    }
     setDialogType(type);
     form.reset({
       type: type,
@@ -226,6 +235,22 @@ export default function LostFound() {
     } as any);
     setOpenDialog(true);
   };
+
+  // Check for action param to auto-open dialog
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const action = searchParams.get('action');
+
+    if (action === 'report-lost' && !openDialog && !dialogType) {
+      handleOpenDialog('lost');
+      // Clean up URL so it doesn't reopen on refresh
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (action === 'report-found' && !openDialog && !dialogType) {
+      handleOpenDialog('found');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location, openDialog, dialogType]);
 
   // Handle form state restoration after login
   useEffect(() => {
@@ -256,212 +281,244 @@ export default function LostFound() {
 
   return (
     <PageLayout hideSidebar={false} defaultSidebarCollapsed={true}>
-      <div className="py-8 relative isolate overflow-hidden">
-        {/* Background Decorative Gradients - Enhanced for depth */}
-        <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-          <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary/30 to-[#9089fc]/20 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem] [clip-path:polygon(74.1%_44.1%,100%_61.6%,97.5%_26.9%,85.5%_0.1%,80.7%_2%,72.5%_32.5%,60.2%_62.4%,52.4%_68.1%,47.5%_58.3%,45.2%_34.5%,27.5%_76.7%,0.1%_64.9%,17.9%_100%,27.6%_76.8%,76.1%_97.7%,74.1%_44.1%)]"></div>
-        </div>
-        <div className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]" aria-hidden="true">
-          <div className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-primary/20 to-secondary/10 opacity-20 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem] [clip-path:polygon(74.1%_44.1%,100%_61.6%,97.5%_26.9%,85.5%_0.1%,80.7%_2%,72.5%_32.5%,60.2%_62.4%,52.4%_68.1%,47.5%_58.3%,45.2%_34.5%,27.5%_76.7%,0.1%_64.9%,17.9%_100%,27.6%_76.8%,76.1%_97.7%,74.1%_44.1%)]"></div>
-        </div>
-
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header Section - Compact and Inline */}
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-b border-border/50 pb-6 mb-8 mt-2">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70">
-                {t('directoryPage.title')}
-              </h1>
-              <p className="mt-1.5 text-sm text-muted-foreground font-medium">
-                {t('directoryPage.subtitle')}
-              </p>
+      <div className="py-12 md:py-20 bg-background min-h-screen text-foreground transition-colors duration-500">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+          {!user ? (
+            <div className="flex items-center justify-center py-20">
+              <AuthWall returnUrl="/lost-found" />
             </div>
+          ) : (
+            <>
+              {/* Vercel-inspired Premium Hero */}
+              <div className="flex flex-col items-center justify-center text-center pb-16 relative w-full mx-auto overflow-hidden">
+                {/* Subtle Hero Spotlight */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[800px] h-[300px] bg-primary/5 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <Button
-                onClick={() => handleOpenDialog("lost")}
-                variant="destructive"
-                className="flex-1 md:flex-none h-11 rounded-xl shadow-lg shadow-red-500/20 font-bold"
-              >
-                <AlertTriangle className="w-4 h-4 mr-2" /> {t('directoryPage.reportLost')}
-              </Button>
-              <Button
-                onClick={() => handleOpenDialog("found")}
-                className="flex-1 md:flex-none h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 font-bold"
-              >
-                <Check className="w-4 h-4 mr-2 text-white" /> {t('directoryPage.reportFound')}
-              </Button>
-            </div>
-          </div>
+                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-heading font-bold tracking-tighter text-foreground mb-8 bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                  {t('directoryPage.title')}
+                </h1>
+                <p className="max-w-3xl lg:max-w-none text-lg md:text-xl text-muted-foreground font-medium mb-8 opacity-80 leading-relaxed tracking-tight animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-200">
+                  {t('directoryPage.subtitle')}
+                </p>
 
-          <div className="space-y-6">
-            {/* Horizontal Filter Bar at Top */}
-            <div className="w-full">
-              <SearchFilters onFiltersChange={setFilters} orientation="horizontal" />
-            </div>
+                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-1000 delay-300">
+                  <span className="h-px w-8 bg-border/60" />
+                  <button
+                    onClick={() => handleOpenDialog("found")}
+                    className="text-sm font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-2 group"
+                  >
+                    <span>Found something?</span>
+                    <PlusCircle className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+                  </button>
+                  <span className="h-px w-8 bg-border/60" />
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-20">
-              {/* Left Sidebar only for Quick Report (My Items) */}
-              {userItems && userItems.length > 0 && (
-                <div className="lg:col-span-1">
-                  <div className="bg-white/70 backdrop-blur-md border border-neutral-200/60 rounded-2xl p-6 lg:sticky lg:top-24 shadow-sm">
-                    <h3 className="font-bold text-sm mb-1 text-neutral-900 flex items-center justify-between">
-                      Quick Report
-                      <Badge variant="secondary" className="bg-primary/10 text-primary">{userItems.length}</Badge>
-                    </h3>
-                    <p className="text-[11px] text-neutral-500 mb-4 leading-snug">Report one of your registered items as lost.</p>
-
-                    <div className="grid gap-2">
-                      {userItems.slice(0, 3).map(item => (
+              {/* Clean Command Center */}
+              <div className="mb-12">
+                <div className="glass shadow-premium rounded-2xl p-4 md:p-6 transition-all">
+                  <div className="flex flex-col gap-6">
+                    {/* Search Bar */}
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <SearchIcon className="h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      </div>
+                      <Input
+                        type="text"
+                        placeholder={t('directoryPage.searchPlaceholder')}
+                        className="pl-12 pr-28 h-12 bg-background/50 border-border/40 rounded-xl focus-visible:ring-1 focus-visible:ring-primary focus-visible:border-primary text-base transition-all placeholder:text-muted-foreground/60 font-medium shadow-sm"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                      <div className="absolute inset-y-0 right-1 flex items-center">
                         <Button
-                          key={item.id}
-                          variant="outline"
                           size="sm"
-                          onClick={() => handleOpenDialog("lost", item)}
-                          className="h-9 justify-between text-xs bg-white text-neutral-700 border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 rounded-lg w-full transition-all"
+                          className="h-10 px-4 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-semibold"
+                          onClick={() => {
+                            // Search is automatic via debounce, but this provides visual feedback
+                            toast({
+                              title: t('directoryPage.searchButton'),
+                              description: `${t('common.search')}...`,
+                              duration: 1500,
+                            });
+                          }}
                         >
-                          <span className="truncate">{item.name}</span>
-                          <ArrowRight className="ml-2 h-3 w-3 shrink-0 text-neutral-400" />
+                          {t('directoryPage.searchButton')}
                         </Button>
+                      </div>
+                    </div>
+
+                    {/* Filters */}
+                    <SearchFilters onFiltersChange={setFilters} orientation="horizontal" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-12 pb-24">
+                {/* Vercel-style Quick Report Cards */}
+                {userItems && userItems.length > 0 && (
+                  <div className="w-full">
+                    <div className="flex items-center justify-between mb-6 px-1">
+                      <h3 className="font-semibold text-lg text-zinc-900 tracking-tight">Your Registry</h3>
+                      <Badge variant="outline" className="border-zinc-200 text-zinc-600 font-medium bg-white px-2.5 py-0.5 rounded-full">{userItems.length} Total</Badge>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {userItems.slice(0, 4).map(item => (
+                        <div
+                          key={item.id}
+                          onClick={() => handleOpenDialog("lost", item)}
+                          className="group bg-card/60 backdrop-blur-sm border border-border/40 rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:border-primary/40 hover:shadow-premium flex flex-col justify-between min-h-[160px] relative overflow-hidden"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="flex justify-between items-start mb-4 relative z-10">
+                            <div className="h-9 w-9 rounded-xl bg-secondary/10 border border-border/20 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-all duration-300">
+                              <TagIcon className="w-4.5 h-4.5" />
+                            </div>
+                            <div className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20 opacity-0 transform translate-y-1 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                              Report Lost
+                            </div>
+                          </div>
+                          <div className="relative z-10">
+                            <h4 className="font-heading font-bold text-foreground truncate tracking-tight">{item.name}</h4>
+                            <p className="text-muted-foreground text-sm line-clamp-1 mt-1 font-medium opacity-70">{item.description || 'Verified Asset'}</p>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Right Main Content */}
-              <div className={cn(userItems && userItems.length > 0 ? "lg:col-span-3" : "lg:col-span-4")}>
-                {/* Search Bar - Highlighted */}
-                <div className="mb-6 relative group w-full">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-secondary/20 rounded-[2rem] blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                      <SearchIcon className="h-5 w-5 text-primary" />
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder={t('directoryPage.searchPlaceholder')}
-                      className="pl-12 h-14 bg-background/60 backdrop-blur-xl border-border/40 shadow-inner rounded-2xl focus:ring-primary/30 focus:border-primary/40 text-lg transition-all placeholder:text-muted-foreground/50"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Items Grid */}
-                <div className="relative min-h-[400px]">
+                {/* Items Space Grid */}
+                <div className="w-full">
                   {!user ? (
-                    <Card className="mt-2 border-dashed border-2 border-muted/50 bg-background/40 backdrop-blur-lg rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/5">
-                      <CardContent className="p-20 flex flex-col items-center text-center">
-                        <div className="relative h-24 w-24 mb-6 bg-gradient-to-br from-background to-muted/30 rounded-[2rem] shadow-xl border border-border/60 flex items-center justify-center">
-                          <Lock className="h-10 w-10 text-primary/60" />
-                        </div>
-                        <h3 className="text-2xl font-black text-foreground mb-3">{t('directoryPage.loginRequired') || 'Authentication Required'}</h3>
-                        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-8 font-medium leading-relaxed">
-                          {t('directoryPage.loginRequiredDesc') || 'For data security and privacy, the reported items directory is only accessible to authenticated users. Please log in to view and search the directory.'}
-                        </p>
-                        <Button
-                          size="lg"
-                          className="rounded-xl px-8"
-                          onClick={() => window.location.href = `/auth?returnUrl=${encodeURIComponent(window.location.pathname)}`}
-                        >
-                          <User className="mr-2 h-4 w-4" />
-                          {t('auth.signIn') || 'Sign In'}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <AuthWall returnUrl="/lost-found" />
                   ) : isLoading ? (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary relative z-10" />
-                      <p className="mt-3 text-sm text-neutral-500 font-bold animate-pulse">{t('directoryPage.loadingReports') || 'Loading reports...'}</p>
+                    <div className="w-full py-32 flex flex-col items-center justify-center space-y-4">
+                      <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+                      <p className="text-zinc-500 text-sm animate-pulse font-medium">
+                        {t('directoryPage.loadingReports') || "Scanning registry..."}
+                      </p>
                     </div>
                   ) : sortedReports && sortedReports.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                       {sortedReports.map((report) => (
-                        <Card key={report.id} className="overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-border/50 bg-background/60 backdrop-blur-lg group hover:-translate-y-2 flex flex-col cursor-pointer rounded-[1.5rem]" onClick={() => setLocation(`/report/${report.id}`)}>
-                          <div className={`h-1.5 w-full ${report.type === 'lost' ? 'bg-gradient-to-r from-red-500 to-orange-400' : 'bg-gradient-to-r from-emerald-500 to-teal-400'}`} />
-                          <CardContent className="p-6 flex flex-col h-full">
-                            <div className="flex justify-between items-start mb-4">
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest leading-none ${report.type === 'lost'
-                                ? 'bg-red-500/10 text-red-500 border border-red-500/20'
-                                : 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                                }`}>
+                        <div
+                          key={report.id}
+                          onClick={() => setLocation(`/report/${report.id}`)}
+                          className="group bg-card border border-border/40 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-premium hover:border-primary/40 flex flex-col min-h-[300px] relative"
+                        >
+                          <div className={`h-1.5 w-full ${report.type === 'lost' ? 'bg-destructive' : 'bg-emerald-500'} relative z-10`} />
+
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                          <div className="p-5 flex flex-col flex-1">
+                            <div className="flex justify-between items-start w-full mb-4">
+                              <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-[0.1em] uppercase border ${report.type === 'lost'
+                                ? 'bg-destructive/10 text-destructive border-destructive/20'
+                                : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                } relative z-10`}>
                                 {report.type === 'lost' ? t('searchFilters.lost') : t('searchFilters.found')}
-                              </span>
-                              <span className="text-[10px] font-bold text-muted-foreground/60 flex items-center">
-                                <Calendar className="h-3 w-3 mr-1" />
-                                {format(new Date(report.date), 'MMM d, yyyy')}
-                              </span>
-                            </div>
-
-                            <h3 className="text-lg font-black text-foreground line-clamp-1 group-hover:text-primary transition-colors duration-300">{report.title}</h3>
-                            <p className="mt-2.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed flex-1 font-medium italic opacity-80">{report.description}</p>
-
-                            <div className="mt-5 pt-5 border-t border-border/30 flex items-center justify-between">
-                              <div className="flex items-center text-[11px] font-bold text-foreground/70">
-                                <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center mr-2 text-primary group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                                  <MapPin className="h-3 w-3" />
-                                </div>
-                                <span className="truncate max-w-[150px]">{report.location}</span>
                               </div>
-                              <div className="h-8 w-8 rounded-full bg-muted/30 flex items-center justify-center group-hover:bg-primary group-hover:text-white group-hover:translate-x-1 transition-all duration-500">
-                                <ChevronRight className="h-4 w-4" />
+
+                              <div onClick={(e) => e.stopPropagation()} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ShareWhatsAppButton
+                                  itemName={report.title}
+                                  itemUrl={`${window.location.origin}/report/${report.id}`}
+                                  compact={true}
+                                />
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
+
+                            <div className="mt-auto relative z-10">
+                              <h3 className="text-xl font-heading font-bold tracking-tight text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">{report.title}</h3>
+
+                              <p className="text-sm text-muted-foreground line-clamp-2 font-medium leading-relaxed mb-6 opacity-80">
+                                {report.description}
+                              </p>
+
+                              <div className="flex items-center justify-between text-muted-foreground text-xs font-bold pt-4 border-t border-border/40">
+                                <span className="flex items-center truncate max-w-[140px]">
+                                  <MapPin className="w-3.5 h-3.5 mr-1.5 text-primary/70" />
+                                  {report.location}
+                                </span>
+                                <span className="flex items-center shrink-0">
+                                  <Calendar className="w-3.5 h-3.5 mr-1.5 text-primary/70" />
+                                  {format(new Date(report.date), 'MMM d, yy')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   ) : (
-                    <Card className="mt-2 border-dashed border-2 border-muted/50 bg-background/40 backdrop-blur-lg rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/5">
-                      <CardContent className="p-20 flex flex-col items-center text-center">
-                        <div className="relative mb-8">
-                          <div className="absolute -inset-4 bg-primary/10 rounded-full blur-2xl animate-pulse"></div>
-                          <div className="relative h-24 w-24 bg-gradient-to-br from-background to-muted/30 rounded-[2rem] shadow-xl border border-border/60 flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-500">
-                            <PackageSearch className="h-12 w-12 text-primary/40" />
-                          </div>
-                        </div>
-                        <h3 className="text-2xl font-black text-foreground mb-2">{t('directoryPage.noReports')}</h3>
-                        <p className="text-sm text-muted-foreground max-w-xs mx-auto mb-10 leading-relaxed font-medium">
-                          {t('directoryPage.noReportsHint')}
-                        </p>
+                    <div className="w-full rounded-3xl border border-border/10 bg-card/60 backdrop-blur-xl p-16 md:p-24 flex flex-col items-center text-center shadow-premium relative overflow-hidden transition-all duration-300">
+                      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
 
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          className="rounded-2xl border-border/60 bg-background/50 hover:bg-background text-foreground shadow-sm px-8 h-12 transition-all hover:scale-105 active:scale-95"
-                          onClick={() => setFilters({ category: "All Categories", location: "All Locations", sortBy: "newest", dateFilter: "all" })}
+                      <div className="relative mb-8 group">
+                        <motion.div
+                          className="absolute -inset-8 bg-gradient-to-br from-primary/10 to-blue-500/10 rounded-full blur-2xl pointer-events-none"
+                          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.6, 0.3] }}
+                          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        <motion.div
+                          className="relative h-20 w-20 rounded-2xl bg-secondary/10 border border-border/20 flex items-center justify-center backdrop-blur-md shadow-2xl"
+                          animate={{ y: [0, -8, 0] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                         >
-                          {t('searchFilters.clearAll')}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                          <PackageSearch className="w-10 h-10 text-muted-foreground/80 group-hover:text-primary transition-colors duration-500" />
+                        </motion.div>
+                      </div>
+
+                      <h3 className="text-2xl font-heading font-bold tracking-tight text-foreground mb-3 relative z-10">
+                        {t('directoryPage.noReports')}
+                      </h3>
+                      <p className="text-muted-foreground text-base max-w-sm mb-10 font-medium leading-relaxed opacity-80 relative z-10">
+                        {t('directoryPage.noReportsHint')}
+                      </p>
+
+                      <Button
+                        variant="premium"
+                        className="h-11 px-8 rounded-full font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform duration-300 relative z-10"
+                        onClick={() => setFilters({ category: "All Categories", location: "All Locations", sortBy: "newest", dateFilter: "all" })}
+                      >
+                        {t('searchFilters.clearAll')}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </div>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col rounded-2xl p-0 border-0 shadow-2xl">
-          <div className={`p-6 pb-4 ${dialogType === "lost" ? "bg-red-50/50" : "bg-emerald-50/50"} border-b border-neutral-100`}>
+        <DialogContent className="sm:max-w-xl max-h-[95vh] overflow-hidden flex flex-col rounded-3xl p-0 border border-border/50 dark:border-white/10 shadow-premium dark:shadow-[0_0_50px_-12px_rgba(255,255,255,0.1)] bg-background/95 dark:bg-zinc-950/90 backdrop-blur-xl focus:outline-none">
+          <div className="p-6 pb-2">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                {dialogType === "lost" ? (
-                  <><AlertTriangle className="h-6 w-6 text-red-600" /> {t('directoryPage.reportLost')}</>
-                ) : (
-                  <><div className="bg-emerald-100 p-1.5 rounded-md"><Check className="h-4 w-4 text-emerald-700 font-bold" /></div> {t('directoryPage.reportFound')}</>
-                )}
-              </DialogTitle>
-              <DialogDescription className="text-sm mt-1">
-                {dialogType === "lost" ? t('directoryPage.reportLostDesc') : t('directoryPage.reportFoundDesc')}
-              </DialogDescription>
+              <div className="flex items-center gap-4 mb-2">
+                <div className={cn(
+                  "h-12 w-12 rounded-2xl flex items-center justify-center transition-colors shadow-lg",
+                  dialogType === "lost"
+                    ? "bg-red-500/10 text-red-600 dark:text-red-500 border border-red-500/20"
+                    : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border border-emerald-500/20"
+                )}>
+                  {dialogType === "lost" ? <AlertTriangle className="h-6 w-6" /> : <Check className="h-6 w-6" />}
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-bold tracking-tight text-foreground dark:text-white leading-none mb-1.5">
+                    {dialogType === "lost" ? t('directoryPage.reportLost') : t('directoryPage.reportFound')}
+                  </DialogTitle>
+                  <DialogDescription className="text-sm text-muted-foreground dark:text-zinc-400 font-medium leading-relaxed max-w-[280px]">
+                    {dialogType === "lost" ? t('directoryPage.reportLostDesc') : t('directoryPage.reportFoundDesc')}
+                  </DialogDescription>
+                </div>
+              </div>
             </DialogHeader>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 py-2">
+          <div className="flex-1 overflow-y-auto px-6 pb-6 pt-0">
             <ReportWizard
               type={dialogType || "found"}
               onSubmit={handleWizardSubmit}
@@ -476,6 +533,6 @@ export default function LostFound() {
         isOpen={detailOpen}
         onClose={() => setDetailOpen(false)}
       />
-    </PageLayout >
+    </PageLayout>
   );
 }

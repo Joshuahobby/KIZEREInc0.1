@@ -22,6 +22,7 @@ import { PageLayout } from "@/components/layout/page-layout";
 
 // Icons
 import { User, Settings, ShieldCheck, Bell, Palette, Lock, Phone, Mail, Edit } from "lucide-react";
+import { AuthWall } from "@/components/ui/auth-wall";
 
 // Form handling
 import { useForm } from "react-hook-form";
@@ -79,16 +80,8 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <PageLayout>
-        <DashboardHeader
-          heading={t("profile.title")}
-          text={t("profile.subtitle")}
-        />
-        <div className="grid gap-4">
-          <Card>
-            <CardContent className="py-10 text-center">
-              <p>{t("auth.loginRequired")}</p>
-            </CardContent>
-          </Card>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/profile" />
         </div>
       </PageLayout>
     );
@@ -110,16 +103,17 @@ export default function ProfilePage() {
 
       <div className="grid gap-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-3 w-full">
-            <TabsTrigger value="profile" className="flex items-center gap-2">
+          <TabsList className="grid grid-cols-3 w-full max-w-[600px] h-14 bg-background/50 backdrop-blur-md border border-border/50 p-1 rounded-2xl relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl pointer-events-none" />
+            <TabsTrigger value="profile" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10">
               <User className="h-4 w-4" />
               {t("profile.tabs.profile")}
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
+            <TabsTrigger value="security" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10">
               <Lock className="h-4 w-4" />
               {t("profile.tabs.security")}
             </TabsTrigger>
-            <TabsTrigger value="preferences" className="flex items-center gap-2">
+            <TabsTrigger value="preferences" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10">
               <Settings className="h-4 w-4" />
               {t("profile.tabs.preferences")}
             </TabsTrigger>
@@ -139,10 +133,14 @@ export default function ProfilePage() {
           </TabsContent>
 
           {/* Security & Access Tab (merged Security + Permissions) */}
-          <TabsContent value="security" className="space-y-4 mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("profile.security.passwordTitle")}</CardTitle>
+          <TabsContent value="security" className="space-y-6 mt-6">
+            <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-bl-full pointer-events-none"></div>
+              <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent pb-6">
+                <CardTitle className="flex items-center gap-2">
+                  <Lock className="h-5 w-5 text-primary" />
+                  {t("profile.security.passwordTitle")}
+                </CardTitle>
                 <CardDescription>{t("profile.security.passwordDesc")}</CardDescription>
               </CardHeader>
               <CardContent>
@@ -150,9 +148,12 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>{t("profile.security.sessionsTitle")}</CardTitle>
+            <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl">
+              <CardHeader className="border-b border-border/50 bg-muted/20 pb-6">
+                <CardTitle className="flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-green-500" />
+                  {t("profile.security.sessionsTitle")}
+                </CardTitle>
                 <CardDescription>{t("profile.security.sessionsDesc")}</CardDescription>
               </CardHeader>
               <CardContent>

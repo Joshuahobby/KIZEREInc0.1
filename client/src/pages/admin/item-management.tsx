@@ -4,6 +4,8 @@ import { Link, useLocation } from 'wouter';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { CommandCenterLayout } from '@/components/layouts/command-center-layout';
 import { AdvancedItemFilters, FilterFormValues } from '@/components/item-management/AdvancedItemFilters';
 
@@ -88,8 +90,18 @@ const formatDate = (dateString: string) => {
 };
 
 export default function AdminItemManagement() {
-  const { user } = useAuth();
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const { toast } = useToast();
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/admin/item-management" />
+        </div>
+      </PageLayout>
+    );
+  }
   const [, navigate] = useLocation();
 
   // State for filters and pagination

@@ -240,18 +240,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user || isRedirecting || isLoading) return;
 
     const pathname = window.location.pathname;
-
-    if (
-      pathname === "/login" ||
-      pathname === "/register" ||
-      pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/admin") ||
-      pathname.startsWith("/agent")
-    ) {
-      return;
-    }
-
-    if (user) {
+    
+    // Only redirect if they are on auth pages or root
+    const authPaths = ["/", "/auth", "/login", "/register"];
+    
+    if (authPaths.includes(pathname)) {
       const preferredStyle = (user.preferences as UserPreferences)?.dashboardStyle;
       const dashboardPath = AuthService.getDashboardPathByRole(user.role, preferredStyle);
       console.log("[useAuth] Redirecting to dashboard:", dashboardPath);
@@ -358,23 +351,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     setIsLoading(true);
     try {
+      // 1. Log out from Firebase first
       try {
         const { logOut } = await import('@/lib/firebase');
         await logOut();
-      } catch (e) { }
+        console.log("[useAuth] Firebase logout successful");
+      } catch (e) {
+        console.warn("[useAuth] Firebase logout failed or already out:", e);
+      }
 
-      await apiRequest("/api/auth/logout", {
-        method: "POST",
-      });
+      // 2. Clear cached CSRF token before logout to ensure we don't use a stale one
+      // this helps prevent the 403 Forbidden error on logout
+      clearCsrfToken();
 
+      // 3. Attempt server-side logout
+      try {
+        await apiRequest("/api/auth/logout", {
+          method: "POST",
+        });
+        console.log("[useAuth] Server logout successful");
+      } catch (error) {
+        console.error("[useAuth] Server logout failed (expected if session expired):", error);
+        // We continue anyway as we want to clear client state
+      }
+
+      // 4. ALWAYS clear client-side state regardless of server response
       setUser(null);
       setError(null);
 
       // Clear all query cache to prevent stale data
       queryClient.clear();
-
-      // Clear cached CSRF token since session is destroyed
-      clearCsrfToken();
 
       // Clear all local and session storage for a fresh start
       localStorage.clear();
@@ -388,7 +394,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: "You have been successfully logged out",
       });
     } catch (error) {
-      console.error("[useAuth] Logout error:", error);
+      console.error("[useAuth] Critical logout error:", error);
+      // Even in a critical error, try to at least clear user and redirect
+      setUser(null);
+      setLocation("/");
     } finally {
       setIsLoading(false);
     }

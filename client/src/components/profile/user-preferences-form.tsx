@@ -172,8 +172,8 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
   }
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl">
+      <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b border-border/50 pb-6">
         <CardTitle>{t("profile.preferences.title")}</CardTitle>
         <CardDescription>{t("profile.preferences.description")}</CardDescription>
       </CardHeader>

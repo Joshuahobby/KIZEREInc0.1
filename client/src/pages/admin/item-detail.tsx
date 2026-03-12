@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
-import { apiRequest, queryClient } from '@/lib/queryClient';
 import { useAuth } from '@/hooks/use-auth';
+import { apiRequest, queryClient } from '@/lib/queryClient';
+import { AuthWall } from '@/components/ui/auth-wall';
+import { PageLayout } from '@/components/layout/page-layout';
 import { useToast } from '@/hooks/use-toast';
 import { CommandCenterLayout } from '@/components/layouts/command-center-layout';
 import { format } from 'date-fns';
@@ -110,9 +112,19 @@ const getInitials = (name: string): string => {
 export default function AdminItemDetail() {
   const { id } = useParams<{ id: string }>();
   const itemId = parseInt(id);
-  const { user } = useAuth();
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const { toast } = useToast();
   const [, navigate] = useLocation();
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl={`/admin/items/${itemId}`} />
+        </div>
+      </PageLayout>
+    );
+  }
 
   // Status change and delete dialogs
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);

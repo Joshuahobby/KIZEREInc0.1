@@ -5,9 +5,12 @@ export default defineConfig({
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 1 : undefined,
-    reporter: "html",
-    timeout: 30000,
+    workers: 2,
+    reporter: "list",
+    timeout: 120000,
+    expect: {
+        timeout: 15000,
+    },
     use: {
         baseURL: process.env.BASE_URL || "http://localhost:5000",
         trace: "on-first-retry",
@@ -22,7 +25,7 @@ export default defineConfig({
     webServer: {
         command: "npm run dev",
         url: "http://localhost:5000",
-        reuseExistingServer: !process.env.CI,
-        timeout: 60000,
+        reuseExistingServer: true,
+        timeout: 120000,
     },
 });

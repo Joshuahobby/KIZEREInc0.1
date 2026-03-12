@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Settings, Bell, Palette, Globe, Lock, Shield, KeyRound, Smartphone } from "lucide-react";
 import { PushSubscriptionManager } from "@/components/notifications/push-subscription-manager";
+import { AuthWall } from "@/components/ui/auth-wall";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,16 @@ export default function SettingsPage() {
         enabled: !!user,
     });
 
+    if (!user) {
+        return (
+            <PageLayout>
+                <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+                    <AuthWall returnUrl="/settings" />
+                </div>
+            </PageLayout>
+        );
+    }
+
     return (
         <PageLayout>
             <DashboardHeader
@@ -32,20 +43,21 @@ export default function SettingsPage() {
 
             <div className="grid gap-8">
                 <Tabs defaultValue="general" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 max-w-[800px]">
-                        <TabsTrigger value="general" className="flex items-center gap-2">
+                    <TabsList className="grid grid-cols-4 w-full max-w-[800px] h-14 bg-background/50 backdrop-blur-md border border-border/50 p-1 rounded-2xl relative">
+                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl pointer-events-none" />
+                        <TabsTrigger value="general" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10">
                             <Settings className="h-4 w-4" />
                             {t("settings_page.general")}
                         </TabsTrigger>
-                        <TabsTrigger value="notifications" className="flex items-center gap-2">
+                        <TabsTrigger value="notifications" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10">
                             <Bell className="h-4 w-4" />
                             {t("settings_page.notifications")}
                         </TabsTrigger>
-                        <TabsTrigger value="appearance" className="flex items-center gap-2">
+                        <TabsTrigger value="appearance" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10">
                             <Palette className="h-4 w-4" />
                             {t("settings_page.appearance")}
                         </TabsTrigger>
-                        <TabsTrigger value="security" className="flex items-center gap-2">
+                        <TabsTrigger value="security" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10">
                             <Lock className="h-4 w-4" />
                             {t("settings_page.security")}
                         </TabsTrigger>
@@ -63,8 +75,8 @@ export default function SettingsPage() {
                     </TabsContent>
 
                     <TabsContent value="appearance" className="space-y-4 mt-6">
-                        <Card>
-                            <CardHeader>
+                        <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl">
+                            <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b border-border/50 pb-6">
                                 <CardTitle>{t("settings_page.appearance_title")}</CardTitle>
                                 <CardDescription>{t("settings_page.appearance_desc")}</CardDescription>
                             </CardHeader>
@@ -75,8 +87,9 @@ export default function SettingsPage() {
                     </TabsContent>
 
                     <TabsContent value="security" className="space-y-6 mt-6">
-                        <Card className="border-primary/10 bg-primary/5">
-                            <CardHeader>
+                        <Card className="border-primary/20 shadow-lg bg-primary/5 backdrop-blur-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-bl-full pointer-events-none"></div>
+                            <CardHeader className="border-b border-primary/10 pb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-primary/10 rounded-lg">
                                         <KeyRound className="h-5 w-5 text-primary" />
@@ -104,8 +117,8 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card>
-                            <CardHeader>
+                        <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl">
+                            <CardHeader className="border-b border-border/50 bg-muted/20 pb-6">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 bg-blue-500/10 rounded-lg">
                                         <Smartphone className="h-5 w-5 text-blue-500" />

@@ -19,10 +19,13 @@ const router = Router();
  */
 router.post("/", claimSubmissionLimiter, async (req, res) => {
   try {
-    const validatedData = insertClaimSchema.parse({
-      ...req.body,
-      userId: req.user!.id
-    });
+    const validatedData = insertClaimSchema.parse(req.body);
+
+    const claimData = {
+      ...validatedData,
+      userId: req.user!.id,
+      status: 'pending'
+    };
 
     // Check if report exists
     const report = await storage.getReport(validatedData.reportId);
@@ -57,7 +60,7 @@ router.post("/", claimSubmissionLimiter, async (req, res) => {
       });
     }
 
-    const newClaim = await storage.createClaim(validatedData);
+    const newClaim = await storage.createClaim(claimData);
 
     // Logic for challenge question: the finder sees the answer in their dashboard
     // We already updated the storage to return verificationAnswer.
@@ -177,7 +180,7 @@ router.patch("/:id/verify", claimVerificationLimiter, async (req, res) => {
     const { status, finderNotes } = req.body;
 
     // Validate status transition
-    const validStatuses = ['verified', 'rejected', 'resolved'];
+    const validStatuses = ['verified', 'rejected', 'resolved', 'needs_info'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         message: "Invalid status. Must be one of: " + validStatuses.join(', ')
@@ -204,10 +207,12 @@ router.patch("/:id/verify", claimVerificationLimiter, async (req, res) => {
 
     // Validate status transitions (state machine)
     const validTransitions: Record<string, string[]> = {
-      'pending': ['verified', 'rejected'],
+      'pending': ['verified', 'rejected', 'needs_info', 'withdrawn'],
+      'needs_info': ['pending', 'verified', 'rejected', 'withdrawn'],
       'verified': ['resolved', 'rejected'], // Can be resolved after verification
       'rejected': ['pending'], // Appeal: Can be re-opened
-      'resolved': [] // Final state
+      'resolved': [], // Final state
+      'withdrawn': []
     };
 
     const currentStatus = claim.status;
@@ -323,18 +328,16 @@ router.post("/:id/appeal", claimSubmissionLimiter, async (req, res) => {
     }
 
     // Check for existing appeal
-    const existingAppeal = await storage.getClaimAppeal(claimId);
-    if (existingAppeal) {
+    if (claim.appealStatus) {
       return res.status(409).json({
         message: "You have already submitted an appeal for this claim"
       });
     }
 
-    const appeal = await storage.createClaimAppeal({
-      claimId,
-      userId: req.user!.id,
-      reason,
-      status: 'pending'
+    const updatedClaim = await storage.updateClaim(claimId, {
+      appealStatus: 'pending',
+      appealReason: reason,
+      status: 'pending' // Re-open the claim temporarily while appealing
     });
 
     // Notify admins
@@ -365,11 +368,132 @@ router.post("/:id/appeal", claimSubmissionLimiter, async (req, res) => {
 
     res.status(201).json({
       message: "Appeal submitted successfully. An administrator will review your case.",
-      appealId: appeal.id
+      claim: updatedClaim
     });
   } catch (error) {
     logger.error("Failed to submit appeal:", error);
     res.status(500).json({ message: "Failed to submit appeal" });
+  }
+});
+
+/**
+ * POST /api/claims/:id/withdraw
+ * Allows a claimant to withdraw their pending claim
+ */
+router.post("/:id/withdraw", claimSubmissionLimiter, async (req, res) => {
+  try {
+    const claimId = parseInt(req.params.id);
+    const claim = await storage.getClaim(claimId);
+
+    if (!claim) {
+      return res.status(404).json({ message: "Claim not found" });
+    }
+
+    if (claim.userId !== req.user!.id) {
+      return res.status(403).json({ message: "Only the original claimant can withdraw this claim" });
+    }
+
+    const withdrawableStatuses = ['pending', 'needs_info'];
+    if (!withdrawableStatuses.includes(claim.status)) {
+      return res.status(400).json({ message: `Cannot withdraw a claim that is currently "${claim.status}"` });
+    }
+
+    const updatedClaim = await storage.updateClaim(claimId, {
+      status: 'withdrawn',
+      updatedAt: new Date()
+    });
+
+    await storage.createClaimStatusLog({
+      claimId,
+      previousStatus: claim.status,
+      newStatus: 'withdrawn',
+      changedBy: req.user!.id,
+      notes: "Claimant withdrew the claim"
+    });
+
+    // Notify the finder that claim was withdrawn
+    const report = await storage.getReport(claim.reportId);
+    if (report) {
+       await storage.createNotification({
+         userId: report.userId,
+         title: "Claim Withdrawn",
+         message: `The claim filed for "${report.title}" has been withdrawn by the claimant.`,
+         type: 'claim_update',
+         isRead: false,
+         relatedReportId: report.id
+       });
+    }
+
+    res.json({ message: "Claim withdrawn successfully", claim: updatedClaim });
+  } catch (error) {
+    logger.error("Failed to withdraw claim:", error);
+    res.status(500).json({ message: "Failed to withdraw claim" });
+  }
+});
+
+/**
+ * PATCH /api/claims/:id/request-info
+ * Allows a claimant to append more info/images if the finder requested more info
+ */
+router.patch("/:id/request-info", claimSubmissionLimiter, async (req, res) => {
+  try {
+    const claimId = parseInt(req.params.id);
+    const { additionalDescription, additionalImageUrls } = req.body;
+
+    const claim = await storage.getClaim(claimId);
+    if (!claim) {
+      return res.status(404).json({ message: "Claim not found" });
+    }
+
+    if (claim.userId !== req.user!.id) {
+      return res.status(403).json({ message: "Only the claimant can update this info" });
+    }
+
+    if (claim.status !== 'needs_info') {
+      return res.status(400).json({ message: "Can only update if status is 'needs_info'" });
+    }
+
+    let newDesc = claim.description;
+    if (additionalDescription) {
+      newDesc += `\n\n--- Additional Info ---\n${additionalDescription}`;
+    }
+
+    let newImages = claim.imageUrls || [];
+    if (additionalImageUrls && Array.isArray(additionalImageUrls)) {
+      newImages = [...newImages, ...additionalImageUrls];
+    }
+
+    const updatedClaim = await storage.updateClaim(claimId, {
+      status: 'pending', // Revert to pending so finder can review again
+      description: newDesc,
+      imageUrls: newImages,
+      updatedAt: new Date()
+    });
+
+    await storage.createClaimStatusLog({
+      claimId,
+      previousStatus: 'needs_info',
+      newStatus: 'pending',
+      changedBy: req.user!.id,
+      notes: "Claimant provided additional information"
+    });
+
+    const report = await storage.getReport(claim.reportId);
+    if (report) {
+      await storage.createNotification({
+        userId: report.userId,
+        title: "Claim Updated",
+        message: `The claimant for "${report.title}" provided additional info.`,
+        type: 'claim_update',
+        isRead: false,
+        relatedReportId: report.id
+      });
+    }
+
+    res.json({ message: "Information updated successfully", claim: updatedClaim });
+  } catch (error) {
+    logger.error("Failed to append info:", error);
+    res.status(500).json({ message: "Failed to update info" });
   }
 });
 
@@ -434,7 +558,7 @@ router.post("/:id/handover", async (req, res) => {
 
     // Verify OTP
     if (claim.handoverOtp !== otp) {
-      return res.status(401).json({ message: "Invalid handover OTP" });
+      return res.status(400).json({ message: "Invalid handover OTP" });
     }
 
     // Update claim to resolved

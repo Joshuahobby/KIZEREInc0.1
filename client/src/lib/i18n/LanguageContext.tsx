@@ -136,11 +136,6 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
       if (finalDefaultValue) return finalDefaultValue;
 
       console.warn(`[LanguageContext] Translation key not found: "${key}" (Language: ${language})`);
-      // To help debug, let's see what keys ARE available at top level
-      const root = getRoot(currentLangObj || translations[DEFAULT_LANGUAGE]);
-      if (root) {
-        console.log(`[LanguageContext] Available top-level keys:`, Object.keys(root).slice(0, 5));
-      }
       return key;
     }
 

@@ -38,6 +38,20 @@ export async function setupVite(app: Express, server: Server) {
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
+    // Skip assets that should be handled by Vite or static middleware
+    // This prevents "MIME type text/html" errors for failing asset requests
+    if (
+      url.startsWith("/api") ||
+      url.match(/\.(js|ts|tsx|jsx|css|scss|sass|less|json|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|mp4|webm|ogg|mp3|wav|flac|aac)$/) ||
+      url.includes("/src/") ||
+      url.includes("/node_modules/") ||
+      url.includes("@vite") ||
+      url.includes("@id") ||
+      url.includes("?v=")
+    ) {
+      return next();
+    }
+
     try {
       const clientTemplate = path.resolve(
         __dirname,

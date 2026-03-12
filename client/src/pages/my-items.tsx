@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import {
   PlusCircle, Search, Package, AlertTriangle, X, Eye,
-  Calendar, Tag, MapPin, Activity, LayoutGrid, List, MoreVertical, Edit2, CheckCircle, CreditCard
+  Calendar, Tag as TagIcon, MapPin, Activity, LayoutGrid, List, MoreVertical, Edit2, CheckCircle, CreditCard
 } from "lucide-react";
 import { PageLayout } from "@/components/layout";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
 import { apiRequest } from "@/lib/queryClient";
 import { ReportRegisteredItemDialog } from "@/components/reports/report-registered-item-dialog";
 import { PaymentModal } from "@/components/payment/payment-modal";
@@ -66,7 +67,14 @@ export default function MyItemsPage() {
   const [statusTab, setStatusTab] = React.useState<ItemStatus | "all">("all");
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortBy, setSortBy] = React.useState<"newest" | "oldest" | "alpha">("newest");
-  const [viewMode, setViewMode] = React.useState<"grid" | "list">("list");
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 8;
+
+  // Reset page when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, statusTab, searchQuery, sortBy]);
 
   // Report lost dialog state
   const [reportItem, setReportItem] = React.useState<Item | null>(null);
@@ -131,6 +139,9 @@ export default function MyItemsPage() {
     return 0;
   }) || [];
 
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   // Get unique categories from items for the filter dropdown
   const uniqueCategories = items ? Array.from(new Set(items.map(item => item.category))) : [];
 
@@ -145,6 +156,16 @@ export default function MyItemsPage() {
   const handleViewItem = (itemId: number) => {
     navigate(`/items/${itemId}`);
   };
+
+  if (!user) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/my-items" />
+        </div>
+      </PageLayout>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -211,15 +232,15 @@ export default function MyItemsPage() {
 
         {/* Single Inlined Filter Row - Easy & Direct */}
         <div className="relative group w-full max-w-xl mx-auto mb-1">
-          <div className="relative flex items-center gap-1 p-1 bg-background/20 backdrop-blur-xl border border-muted/20 rounded-full shadow-sm">
+          <div className="relative flex items-center gap-1 p-1 bg-white dark:bg-slate-900/80 backdrop-blur-xl border border-border/50 rounded-full shadow-sm">
             {/* Search */}
             <div className="flex-1 relative flex items-center">
-              <Search className="absolute left-3 h-3 w-3 text-primary opacity-40" />
+              <Search className="absolute left-3 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search..."
-                className="w-full h-8 pl-8 bg-transparent border-none focus-visible:ring-0 text-[11px] font-bold placeholder:text-muted-foreground/30"
+                className="w-full h-8 pl-8 bg-transparent border-none focus-visible:ring-0 text-[12px] font-medium placeholder:text-muted-foreground"
               />
             </div>
 
@@ -228,7 +249,7 @@ export default function MyItemsPage() {
             {/* Direct Selects */}
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
               <SelectTrigger className="w-auto h-8 px-2 border-none bg-transparent rounded-full text-[10px] font-black uppercase tracking-wider">
-                <Tag className="h-3 w-3 sm:mr-1 text-primary opacity-40 shrink-0" />
+                <TagIcon className="h-3 w-3 sm:mr-1 text-primary opacity-40 shrink-0" />
                 <span className="hidden sm:inline">
                   <SelectValue placeholder="Cat" />
                 </span>
@@ -271,7 +292,7 @@ export default function MyItemsPage() {
         </div>
 
         {/* Status Pill Tabs - Centered & Ultra-Slim */}
-        <div className="flex items-center gap-1.5 pb-2 overflow-x-auto no-scrollbar mask-fade-right justify-center">
+        <div className="flex items-center gap-2 pb-2 overflow-x-auto no-scrollbar mask-fade-right justify-center sticky top-20 z-20 backdrop-blur-md bg-background/50 py-2 rounded-full">
           {[
             { id: 'all', label: 'All', count: items?.length || 0 },
             { id: 'Pending_Payment', label: 'Pending', count: items?.filter(i => i.status === "Pending_Payment").length || 0 },
@@ -294,13 +315,13 @@ export default function MyItemsPage() {
                 )}
               </AnimatePresence>
               <span className={cn(
-                "relative z-10 transition-colors duration-300 flex items-center gap-1",
-                statusTab === tab.id ? (window.innerWidth < 640 ? "text-primary" : "text-primary-foreground") : "text-muted-foreground group-hover:text-foreground"
+                "relative z-10 transition-colors duration-300 flex items-center gap-1.5",
+                statusTab === tab.id ? "text-primary-foreground sm:text-primary-foreground drop-shadow-sm" : "text-muted-foreground/70 hover:text-foreground dark:text-slate-400 dark:hover:text-slate-200"
               )}>
                 {tab.label}
                 <span className={cn(
-                  "text-[8px] py-0.5 px-1 rounded-full transition-colors duration-300 font-bold",
-                  statusTab === tab.id ? (window.innerWidth < 640 ? "bg-primary/20 text-primary" : "bg-white/20 text-white") : "bg-muted text-muted-foreground"
+                  "text-[9px] py-0.5 px-1.5 rounded-full transition-colors duration-300 font-bold",
+                  statusTab === tab.id ? "bg-white/20 text-white dark:bg-black/20 dark:text-white" : "bg-muted text-muted-foreground"
                 )}>
                   {tab.count}
                 </span>
@@ -312,7 +333,7 @@ export default function MyItemsPage() {
         {/* Content Area */}
         <div className="min-h-[300px]">
           <ItemsGrid
-            items={filteredItems}
+            items={paginatedItems}
             viewMode={viewMode}
             onReportLost={handleReportLost}
             onMarkFound={handleMarkFound}
@@ -329,6 +350,61 @@ export default function MyItemsPage() {
             }}
           />
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-center items-center gap-2 mt-8 mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="rounded-full shadow-sm bg-background/50 backdrop-blur-sm border-border/40"
+            >
+              Previous
+            </Button>
+            <div className="flex items-center gap-1 mx-2">
+              {Array.from({ length: totalPages }).map((_, i) => {
+                // Show at most 5 page buttons
+                if (
+                  totalPages > 5 &&
+                  i !== 0 &&
+                  i !== totalPages - 1 &&
+                  Math.abs(currentPage - 1 - i) > 1
+                ) {
+                  if (Math.abs(currentPage - 1 - i) === 2) {
+                    return <span key={i} className="text-muted-foreground text-xs">...</span>;
+                  }
+                  return null;
+                }
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={cn(
+                      "w-8 h-8 rounded-full text-xs font-bold flex items-center justify-center transition-all",
+                      currentPage === i + 1
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "text-muted-foreground hover:bg-muted dark:hover:bg-slate-800"
+                    )}
+                  >
+                    {i + 1}
+                  </button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="rounded-full shadow-sm bg-background/50 backdrop-blur-sm border-border/40"
+            >
+              Next
+            </Button>
+          </div>
+        )}
 
         {paymentItem && (
           <PaymentModal
@@ -458,21 +534,26 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="overflow-hidden bg-background/40 hover:bg-background/80 backdrop-blur-md border border-muted/30 hover:border-primary/20 transition-all duration-300 group">
-                <div className="p-3 flex items-center gap-4">
+              <Card className="overflow-hidden bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 dark:hover:border-white/20 transition-all duration-300 group shadow-sm">
+                <div
+                  className="p-3 flex items-center gap-4 cursor-pointer"
+                  onClick={() => navigate(`/items/${item.id}`)}
+                >
                   {/* Small Thumbnail */}
-                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl overflow-hidden shrink-0 bg-muted/20 border border-muted/30">
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-xl overflow-hidden shrink-0 bg-muted/20 dark:bg-muted/10 border border-muted/30 relative flex items-center justify-center p-1.5">
                     {item.imageUrls && item.imageUrls.length > 0 ? (
                       <img
                         src={item.imageUrls[0]}
                         alt={item.name}
-                        className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
+                        className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-700"
                       />
                     ) : (
                       <div className="flex items-center justify-center h-full">
                         <Package className="h-6 w-6 text-muted-foreground/20" />
                       </div>
                     )}
+                    {/* Visual Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-xl" />
                   </div>
 
                   {/* Name & Subtitle */}
@@ -483,24 +564,27 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                       </h3>
                       <Badge
                         className={cn(
-                          "sm:hidden text-[8px] px-1.5 py-0 border-none font-black uppercase tracking-widest",
-                          item.status === 'Pending_Payment' && "bg-amber-500/80 text-white",
-                          item.status === 'Registered' && "bg-blue-500/80 text-white",
-                          item.status === 'Lost' && "bg-destructive/80 text-white animate-pulse",
-                          (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-500/80 text-white",
+                          "sm:hidden text-[8px] px-2 py-0.5 border font-black uppercase tracking-widest flex items-center gap-1 shadow-sm backdrop-blur-md",
+                          item.status === 'Pending_Payment' && "bg-amber-100 text-amber-700 dark:bg-black/70 dark:text-amber-400 border-amber-200 dark:border-amber-500/20",
+                          item.status === 'Registered' && "bg-blue-100 text-blue-700 dark:bg-black/70 dark:text-blue-400 border-blue-200 dark:border-blue-500/20",
+                          item.status === 'Lost' && "bg-red-100 text-destructive dark:bg-black/80 dark:text-destructive border-destructive/30 animate-pulse",
+                          (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-100 text-emerald-700 dark:bg-black/70 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20",
                         )}
                       >
+                        <div className={cn(
+                          "h-1 w-1 rounded-full",
+                          item.status === 'Pending_Payment' && "bg-amber-400",
+                          item.status === 'Registered' && "bg-blue-400",
+                          item.status === 'Lost' && "bg-destructive",
+                          (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-400"
+                        )} />
                         {item.status === 'Pending_Payment' ? 'Unpaid' : item.status}
                       </Badge>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                       <div className="flex items-center text-[10px] font-black text-muted-foreground/50 tracking-widest uppercase">
-                        <Tag className="h-2.5 w-2.5 mr-1 text-primary/40" />
+                        <TagIcon className="h-2.5 w-2.5 mr-1 text-primary/40" />
                         {item.category}
-                      </div>
-                      <div className="hidden sm:flex items-center text-[10px] text-muted-foreground/40 font-bold">
-                        <Calendar className="h-2.5 w-2.5 mr-1" />
-                        {new Date(item.registeredAt).toLocaleDateString()}
                       </div>
                       {item.uniqueIdentifier && (
                         <div className="hidden md:flex items-center text-[10px] text-primary/40 font-black tracking-tighter uppercase px-1.5 py-0.5 rounded-md bg-primary/5 border border-primary/10">
@@ -514,15 +598,23 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                   <div className="flex items-center gap-2 sm:gap-4">
                     <Badge
                       className={cn(
-                        "hidden sm:flex shadow-sm transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 border-none",
-                        item.status === 'Pending_Payment' && "bg-amber-500/80 text-white",
-                        item.status === 'Registered' && "bg-blue-500/80 text-white",
-                        item.status === 'Lost' && "bg-destructive/80 text-white animate-pulse",
-                        (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-500/80 text-white",
-                        item.status === 'Archived' && "bg-muted text-muted-foreground"
+                        "hidden sm:flex shadow-sm backdrop-blur-md transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1.5 border items-center gap-1.5",
+                        item.status === 'Pending_Payment' && "bg-amber-100 text-amber-700 dark:bg-black/70 dark:text-amber-400 border-amber-200 dark:border-amber-500/20",
+                        item.status === 'Registered' && "bg-blue-100 text-blue-700 dark:bg-black/70 dark:text-blue-400 border-blue-200 dark:border-blue-500/20",
+                        item.status === 'Lost' && "bg-red-100 text-destructive dark:bg-black/80 dark:text-destructive border-destructive/30 animate-pulse",
+                        (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-100 text-emerald-700 dark:bg-black/70 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20",
+                        item.status === 'Archived' && "bg-muted text-muted-foreground dark:bg-black/70 dark:border-white/10"
                       )}
                     >
-                      {item.status === 'Pending_Payment' ? 'Pending Payment' : item.status}
+                      <div className={cn(
+                        "h-1.5 w-1.5 rounded-full",
+                        item.status === 'Pending_Payment' && "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]",
+                        item.status === 'Registered' && "bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.6)]",
+                        item.status === 'Lost' && "bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.6)]",
+                        (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]",
+                        item.status === 'Archived' && "bg-muted-foreground"
+                      )} />
+                      {item.status === 'Pending_Payment' ? 'Unpaid' : item.status}
                     </Badge>
 
                     <div className="flex items-center gap-1">
@@ -548,7 +640,7 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                          className="h-8 w-8 rounded-full text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 hover:text-amber-700 dark:hover:text-amber-300 transition-colors"
                           onClick={() => onPayNow(item)}
                           title="Pay Now"
                         >
@@ -559,7 +651,7 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/5 hover:text-destructive"
+                          className="h-8 w-8 rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive transition-colors"
                           onClick={() => onReportLost(item.id)}
                           title="Report Loss"
                         >
@@ -601,18 +693,21 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             className="group"
           >
-            <Card className="h-full flex flex-col overflow-hidden bg-background/40 hover:bg-background/80 backdrop-blur-md border border-muted/30 hover:border-primary/20 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_-12px_rgba(var(--primary),0.15)]">
+            <Card
+              className="h-full flex flex-col overflow-hidden bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 dark:hover:border-white/20 transition-all duration-500 hover:-translate-y-1 hover:shadow-premium group cursor-pointer"
+              onClick={() => navigate(`/items/${item.id}`)}
+            >
               {/* Image Header */}
-              <div className="relative aspect-[16/10] overflow-hidden">
+              <div className="relative h-48 sm:h-52 w-full overflow-hidden rounded-t-xl bg-slate-50 dark:bg-slate-800/50 flex flex-col justify-center items-center p-4">
                 {item.imageUrls && item.imageUrls.length > 0 ? (
                   <img
                     src={item.imageUrls[0]}
                     alt={item.name}
-                    className="object-cover w-full h-full transition-transform duration-1000 group-hover:scale-110"
+                    className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal transition-transform duration-1000 group-hover:scale-110 drop-shadow-md"
                   />
                 ) : (
-                  <div className="flex items-center justify-center h-full bg-muted/20">
-                    <Package className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-700" />
+                  <div className="flex items-center justify-center h-full">
+                    <Package className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-700" />
                   </div>
                 )}
 
@@ -620,17 +715,25 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 {/* Status badge */}
-                <div className="absolute top-2.5 right-2.5">
+                <div className="absolute top-3 right-3">
                   <Badge
                     className={cn(
-                      "shadow-xl backdrop-blur-xl transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1 border-none",
-                      item.status === 'Pending_Payment' && "bg-amber-500/80 text-white",
-                      item.status === 'Registered' && "bg-blue-500/80 text-white",
-                      item.status === 'Lost' && "bg-destructive/80 text-white animate-pulse",
-                      (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-500/80 text-white",
-                      item.status === 'Archived' && "bg-muted text-muted-foreground"
+                      "shadow-xl backdrop-blur-md transition-all duration-300 font-black text-[9px] uppercase tracking-widest px-2.5 py-1.5 border flex items-center gap-1.5 z-10",
+                      item.status === 'Pending_Payment' && "bg-white/95 text-amber-600 dark:bg-black/70 dark:text-amber-400 border-amber-500/20",
+                      item.status === 'Registered' && "bg-white/95 text-blue-600 dark:bg-black/70 dark:text-blue-400 border-blue-500/20",
+                      item.status === 'Lost' && "bg-red-50 text-destructive dark:bg-black/80 dark:text-destructive animate-pulse border-destructive/30",
+                      (item.status === 'Recovered' || item.status === 'Found') && "bg-white/95 text-emerald-600 dark:bg-black/70 dark:text-emerald-400 border-emerald-500/20",
+                      item.status === 'Archived' && "bg-muted text-muted-foreground dark:bg-black/70 dark:border-white/10"
                     )}
                   >
+                    <div className={cn(
+                      "h-1.5 w-1.5 rounded-full",
+                      item.status === 'Pending_Payment' && "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]",
+                      item.status === 'Registered' && "bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.6)]",
+                      item.status === 'Lost' && "bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.6)]",
+                      (item.status === 'Recovered' || item.status === 'Found') && "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]",
+                      item.status === 'Archived' && "bg-muted-foreground"
+                    )} />
                     {item.status === 'Pending_Payment' ? 'Unpaid' : item.status}
                   </Badge>
                 </div>
@@ -649,75 +752,15 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                 </div>
               </div>
 
-              <CardHeader className="p-4 pb-1">
+              <CardHeader className="p-4 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black line-clamp-1 group-hover:text-primary transition-colors duration-300">
                   {item.name}
                 </CardTitle>
-                <div className="flex items-center text-[10px] font-black text-muted-foreground/50 tracking-widest uppercase mt-0.5">
-                  <Tag className="h-2.5 w-2.5 mr-1.5 text-primary/40" />
+                <div className="flex items-center text-[10px] font-black text-muted-foreground/50 tracking-widest uppercase mt-1">
+                  <TagIcon className="h-3 w-3 mr-1.5 text-primary/50" />
                   {item.category}
                 </div>
               </CardHeader>
-
-              <CardContent className="p-4 pt-1 flex-grow space-y-3">
-                <p className="text-[13px] text-muted-foreground line-clamp-2 leading-relaxed opacity-70 font-medium">
-                  {item.description ?? "No description provided"}
-                </p>
-
-                <div className="grid grid-cols-1 gap-1.5 pt-1">
-                  <div className="flex items-center text-[10px] text-muted-foreground/60 bg-muted/10 rounded-md py-1.5 px-2">
-                    <Calendar className="h-3 w-3 mr-2 text-primary/30" />
-                    <span className="font-bold">{new Date(item.registeredAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span>
-                  </div>
-
-                  {item.location && (
-                    <div className="flex items-center text-[10px] text-muted-foreground/60 bg-muted/10 rounded-md py-1.5 px-2">
-                      <MapPin className="h-3 w-3 mr-2 text-emerald-500/30" />
-                      <span className="line-clamp-1 font-bold">{item.location}</span>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-
-              <CardFooter className="p-4 pt-2 border-t border-muted/10 flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="flex-1 rounded-lg h-9 hover:bg-primary/5 hover:text-primary transition-all font-bold text-[11px]"
-                  onClick={() => navigate(`/items/${item.id}/edit`)}
-                >
-                  Edit
-                </Button>
-
-                {item.status === 'Pending_Payment' ? (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="flex-1 rounded-lg h-9 bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-500/20 transition-all font-bold text-[11px]"
-                    onClick={() => onPayNow(item)}
-                  >
-                    Pay Now
-                  </Button>
-                ) : item.status === 'Registered' ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex-1 rounded-lg h-9 text-destructive hover:bg-destructive/5 hover:text-destructive transition-all font-bold text-[11px]"
-                    onClick={() => onReportLost(item.id)}
-                  >
-                    Report Loss
-                  </Button>
-                ) : item.status === 'Lost' ? (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="flex-1 rounded-lg h-9 bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 transition-all font-bold text-[11px]"
-                    onClick={() => onMarkFound(item)}
-                  >
-                    Found!
-                  </Button>
-                ) : null}
-              </CardFooter>
             </Card>
           </motion.div>
         ))}

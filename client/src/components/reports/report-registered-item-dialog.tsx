@@ -151,7 +151,7 @@ export function ReportRegisteredItemDialog({ item, open, onOpenChange }: ReportR
             <DialogContent className="sm:max-w-md">
                 {success ? (
                     <div className="flex flex-col items-center justify-center py-10 text-center space-y-4">
-                        <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-2">
+                        <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-emerald-500/20 flex items-center justify-center text-green-600 dark:text-emerald-400 mb-2">
                             <CheckCircle2 className="h-8 w-8" />
                         </div>
                         <DialogTitle className="text-2xl font-bold text-green-700">
@@ -284,7 +284,7 @@ export function ReportRegisteredItemDialog({ item, open, onOpenChange }: ReportR
                                     )}
                                 />
 
-                                <div className="bg-yellow-50 p-3 rounded-md flex gap-2 text-xs text-yellow-800 border border-yellow-200">
+                                <div className="bg-yellow-50 dark:bg-yellow-500/10 p-3 rounded-md flex gap-2 text-xs text-yellow-800 dark:text-yellow-500 border border-yellow-200 dark:border-yellow-500/20">
                                     <AlertTriangle className="h-4 w-4 shrink-0" />
                                     <p dangerouslySetInnerHTML={{ __html: t("reports.registeredItemDialog.warning") }} />
                                 </div>

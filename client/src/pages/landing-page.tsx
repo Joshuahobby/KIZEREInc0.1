@@ -77,7 +77,11 @@ export default function LandingPage() {
       <Header />
 
       {/* Hero Section */}
-      <section className="hero-section">
+      <section className="relative pt-24 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
+        {/* Ambient Dark Mode Glows */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/10 dark:bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-emerald-500/5 dark:bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row gap-12 items-center">
             <motion.div
@@ -95,7 +99,7 @@ export default function LandingPage() {
                 {t('landing.trustedUsers')}
               </motion.span>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-tight">
                 <motion.span
                   className="text-gradient block"
                   initial={{ opacity: 0, y: 20 }}
@@ -152,14 +156,14 @@ export default function LandingPage() {
               >
                 <Button
                   onClick={() => navigate("/auth?tab=register")}
-                  className="yellow-button group relative overflow-hidden h-12 hover:-translate-y-1 hover:shadow-lg transition-all duration-300"
+                  variant="premium"
+                  className="h-12 px-8"
                   size="lg"
                 >
                   <span className="relative z-10 flex items-center gap-2">
                     {t('landing.registerNow')}
                     <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </span>
-                  <span className="absolute inset-0 bg-[var(--yellow-accent)] group-hover:bg-[var(--yellow-hover)] transition-colors duration-300"></span>
                 </Button>
 
                 <Button
@@ -301,7 +305,7 @@ export default function LandingPage() {
             viewport={{ once: true, amount: 0.2 }}
           >
             <motion.div
-              className="feature-card group"
+              className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/60 dark:border-white/10 shadow-sm transition-all duration-500 overflow-hidden hover:shadow-[0_0_30px_rgba(var(--primary),0.15)] dark:hover:shadow-[0_0_30px_rgba(var(--primary),0.1)]"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -319,7 +323,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              className="feature-card group"
+              className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/60 dark:border-white/10 shadow-sm transition-all duration-500 overflow-hidden hover:shadow-[0_0_30px_rgba(var(--primary),0.15)] dark:hover:shadow-[0_0_30px_rgba(var(--primary),0.1)]"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -337,7 +341,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              className="feature-card group"
+              className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/60 dark:border-white/10 shadow-sm transition-all duration-500 overflow-hidden hover:shadow-[0_0_30px_rgba(var(--primary),0.15)] dark:hover:shadow-[0_0_30px_rgba(var(--primary),0.1)]"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -355,7 +359,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              className="feature-card group"
+              className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/60 dark:border-white/10 shadow-sm transition-all duration-500 overflow-hidden hover:shadow-[0_0_30px_rgba(var(--primary),0.15)] dark:hover:shadow-[0_0_30px_rgba(var(--primary),0.1)]"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -373,7 +377,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              className="feature-card group"
+              className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/60 dark:border-white/10 shadow-sm transition-all duration-500 overflow-hidden hover:shadow-[0_0_30px_rgba(var(--primary),0.15)] dark:hover:shadow-[0_0_30px_rgba(var(--primary),0.1)]"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -391,7 +395,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              className="feature-card group"
+              className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/60 dark:border-white/10 shadow-sm transition-all duration-500 overflow-hidden hover:shadow-[0_0_30px_rgba(var(--primary),0.15)] dark:hover:shadow-[0_0_30px_rgba(var(--primary),0.1)]"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -451,13 +455,13 @@ export default function LandingPage() {
               <Button
                 onClick={() => navigate("/auth")}
                 size="lg"
-                className="bg-[var(--yellow-accent)] hover:bg-[var(--yellow-hover)] text-neutral-900 font-bold text-lg px-8 py-6 md:px-10 md:py-7 rounded-2xl shadow-[0_0_40px_-10px_rgba(255,215,0,0.5)] hover:shadow-[0_0_60px_-15px_rgba(255,215,0,0.7)] group relative overflow-hidden transition-all duration-300"
+                variant="default"
+                className="font-bold text-lg px-8 py-6 md:px-10 md:py-7 rounded-2xl shadow-xl hover:shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-all duration-500 bg-white text-primary hover:bg-slate-50 border-transparent dark:bg-white dark:text-black"
               >
                 <span className="relative z-10 flex items-center gap-3">
                   {t('landing.createFreeAccount')}
                   <ArrowRight className="h-5 w-5 md:h-6 md:w-6 group-hover:translate-x-1.5 transition-transform" />
                 </span>
-                <span className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out rounded-2xl"></span>
               </Button>
             </motion.div>
 
@@ -592,14 +596,31 @@ export default function LandingPage() {
                   </div>
                 </motion.div>
               </div>
+
+              <motion.div
+                className="mt-12 flex justify-center md:justify-start"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                viewport={{ once: true }}
+              >
+                <Button
+                  onClick={() => navigate("/how-it-works")}
+                  variant="outline"
+                  className="rounded-full px-8 group border-primary/30 hover:border-primary transition-all duration-300"
+                >
+                  {t('landing.learnMoreAction')}
+                  <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </motion.div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-background to-transparent"></div>
+      <section className="py-24 bg-background relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-transparent to-transparent"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
@@ -665,7 +686,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              className="bg-card p-8 rounded-xl shadow-md border border-border relative"
+              className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/60 dark:border-white/10 shadow-sm transition-all duration-500 overflow-hidden hover:shadow-[0_0_30px_rgba(var(--primary),0.15)] dark:hover:shadow-[0_0_30px_rgba(var(--primary),0.1)]"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -701,7 +722,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              className="bg-card p-8 rounded-xl shadow-md border border-border relative"
+              className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-xl p-8 rounded-[2rem] border border-slate-200/60 dark:border-white/10 shadow-sm transition-all duration-500 overflow-hidden hover:shadow-[0_0_30px_rgba(var(--primary),0.15)] dark:hover:shadow-[0_0_30px_rgba(var(--primary),0.1)]"
               variants={itemVariants}
               whileHover={{ y: -8, transition: { type: "spring", stiffness: 200 } }}
             >
@@ -750,8 +771,8 @@ export default function LandingPage() {
       </section>
 
       {/* Mobile App Section */}
-      <section className="py-24 bg-white dark:bg-gray-900 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-gray-50 dark:from-gray-900 to-transparent"></div>
+      <section className="py-24 bg-background relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-transparent to-transparent"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_right,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">

@@ -163,13 +163,13 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
       adminStats: revenueSummary,
       isLoading: combinedIsLoading,
       items,
-      reports,
-      allReports,
-      notifications,
-      payments,
-      myClaims,
-      claimsReceived,
-      allUsers
+      reports: Array.isArray(reports) ? reports : (reports as any)?.reports || [],
+      allReports: Array.isArray(allReports) ? allReports : (allReports as any)?.reports || [],
+      notifications: Array.isArray(notifications) ? notifications : (notifications as any)?.notifications || [],
+      payments: Array.isArray(payments) ? payments : (payments as any)?.payments || [],
+      myClaims: Array.isArray(myClaims) ? myClaims : (myClaims as any)?.claims || [],
+      claimsReceived: Array.isArray(claimsReceived) ? claimsReceived : (claimsReceived as any)?.claims || [],
+      allUsers: Array.isArray(allUsers) ? allUsers : (allUsers as any)?.users || []
     };
   }, [
     user, isAdmin, isAgent, isModerator, isBusiness, items, reports,

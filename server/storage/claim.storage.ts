@@ -1,8 +1,8 @@
 import { db } from "../db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import {
-  claims, reports, users, claimAppeals, claimStatusLogs,
-  type Claim, type InsertClaim, type ClaimAppeal, type InsertClaimAppeal,
+  claims, reports, users, claimStatusLogs,
+  type Claim, type InsertClaim,
   type ClaimStatusLog, type InsertClaimStatusLog
 } from "@shared/schema";
 
@@ -36,15 +36,14 @@ export async function getClaimWithDetails(id: number): Promise<any> {
     reportType: reports.type,
     claimantName: users.fullName,
     claimantEmail: users.email,
-    appealStatus: claimAppeals.status,
-    appealReason: claimAppeals.reason,
-    appealAdminNotes: claimAppeals.adminNotes,
-    appealResolvedAt: claimAppeals.resolvedAt
+    appealStatus: claims.appealStatus,
+    appealReason: claims.appealReason,
+    appealAdminNotes: claims.appealAdminNotes,
+    appealResolvedAt: claims.appealResolvedAt
   })
     .from(claims)
     .leftJoin(reports, eq(claims.reportId, reports.id))
     .leftJoin(users, eq(claims.userId, users.id))
-    .leftJoin(claimAppeals, eq(claims.id, claimAppeals.claimId))
     .where(eq(claims.id, id));
 
   return result[0];
@@ -188,8 +187,8 @@ export async function getUserClaimForReport(userId: number, reportId: number): P
 /**
  * Create a new claim
  */
-export async function createClaim(claim: InsertClaim): Promise<Claim> {
-  const [newClaim] = await db.insert(claims).values(claim).returning();
+export async function createClaim(claim: InsertClaim & { userId: number; status?: string }): Promise<Claim> {
+  const [newClaim] = await db.insert(claims).values(claim as any).returning();
   return newClaim;
 }
 
@@ -246,52 +245,63 @@ export async function getClaimStatusHistory(claimId: number): Promise<ClaimStatu
     .where(eq(claimStatusLogs.claimId, claimId))
     .orderBy(desc(claimStatusLogs.timestamp));
 }
-
-/**
- * Create a claim appeal
- */
-export async function createClaimAppeal(appeal: InsertClaimAppeal): Promise<ClaimAppeal> {
-  const [newAppeal] = await db.insert(claimAppeals).values(appeal).returning();
-  return newAppeal;
-}
-
-/**
- * Get appeal for a claim
- */
-export async function getClaimAppeal(claimId: number): Promise<ClaimAppeal | undefined> {
-  const [appeal] = await db.select()
-    .from(claimAppeals)
-    .where(eq(claimAppeals.claimId, claimId));
-  return appeal;
-}
-
-/**
- * Get a specific appeal by ID
- */
-export async function getAppeal(id: number): Promise<ClaimAppeal | undefined> {
-  const [appeal] = await db.select()
-    .from(claimAppeals)
-    .where(eq(claimAppeals.id, id));
-  return appeal;
-}
-
 /**
  * Get all pending appeals (for admin)
  */
-export async function getPendingAppeals(): Promise<ClaimAppeal[]> {
+export async function getPendingAppeals(): Promise<Claim[]> {
   return await db.select()
-    .from(claimAppeals)
-    .where(eq(claimAppeals.status, 'pending'))
-    .orderBy(desc(claimAppeals.createdAt));
+    .from(claims)
+    .where(eq(claims.appealStatus, 'pending'))
+    .orderBy(desc(claims.createdAt));
 }
 
 /**
- * Update a claim appeal (for resolution)
+ * Get all claims with claimant, report, and finder details (for admin overview)
  */
-export async function updateClaimAppeal(id: number, appealData: Partial<ClaimAppeal>): Promise<ClaimAppeal | undefined> {
-  const [updatedAppeal] = await db.update(claimAppeals)
-    .set(appealData)
-    .where(eq(claimAppeals.id, id))
-    .returning();
-  return updatedAppeal;
+export async function getAllClaimsWithDetails(statusFilter?: string): Promise<any[]> {
+  // Create an alias for the finder user
+  const claimant = users;
+
+  let query = db.select({
+    id: claims.id,
+    userId: claims.userId,
+    reportId: claims.reportId,
+    description: claims.description,
+    imageUrls: claims.imageUrls,
+    status: claims.status,
+    finderNotes: claims.finderNotes,
+    createdAt: claims.createdAt,
+    updatedAt: claims.updatedAt,
+    verifiedAt: claims.verifiedAt,
+    handedOverAt: claims.handedOverAt,
+    appealStatus: claims.appealStatus,
+    appealReason: claims.appealReason,
+    appealAdminNotes: claims.appealAdminNotes,
+    appealResolvedAt: claims.appealResolvedAt,
+    // Claimant info
+    claimantName: claimant.fullName,
+    claimantEmail: claimant.email,
+    claimantUsername: claimant.username,
+    // Report info
+    reportTitle: reports.title,
+    reportType: reports.type,
+    reportStatus: reports.status,
+    reportLocation: reports.location,
+    finderUserId: reports.userId,
+  })
+    .from(claims)
+    .leftJoin(claimant, eq(claims.userId, claimant.id))
+    .leftJoin(reports, eq(claims.reportId, reports.id))
+    .$dynamic();
+
+  if (statusFilter && statusFilter !== 'all') {
+    if (statusFilter === 'appeals') {
+      query = query.where(eq(claims.appealStatus, 'pending'));
+    } else {
+      query = query.where(eq(claims.status, statusFilter));
+    }
+  }
+
+  return await query.orderBy(desc(claims.createdAt));
 }
+

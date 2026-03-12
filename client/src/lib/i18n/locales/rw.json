@@ -1,7 +1,7 @@
-﻿{
+{
   "common": {
     "brandName": "KIZERE",
-    "brandSubtitle": "IHURIRO RIKURU",
+    "brandSubtitle": "Rinda Ibigufitiye Agaciro",
     "searchPlaceholder": "Shakisha ibyabuze, ibyabonetse...",
     "darkMode": "Uburyo bw'Ijoro",
     "lightMode": "Uburyo bugaragara",
@@ -11,6 +11,7 @@
     "viewAll": "Reba Byose",
     "returnToHome": "Garuka Ahabanza",
     "language": "Ururimi",
+    "search": "Shakisha",
     "register_item": "Andika Ikintu",
     "complete_registration": "Uzuza Kwandikisha",
     "filter": "Shungura",
@@ -22,6 +23,8 @@
     "shareSuccess": "Ikintu cyawe cyasangijwe neza.",
     "shareOpened": "WhatsApp irafunguka...",
     "shareCopied": "Ihuza ryakorewe kopi!",
+    "securityLabel": "Umutekano",
+    "secureLabel": "Byizewe",
     "shareMessage": "✅ Naherutse kurinda *{{itemName}}* yanjye kuri KIZERE! Sura ihuza cyangwa usuzume ikiranga kuri: {{itemUrl}}",
     "shareSuccessMessage": "✅ Naherutse kurinda *{{itemName}}* yanjye kuri KIZERE! Niba ujya uyibona, usuzume ikiranga cyangwa usure ihuza kuri: {{itemUrl}}",
     "voiceInstructions": "Umva amabwiriza",
@@ -53,6 +56,7 @@
     "submit": "Kohereza",
     "processing": "Iririmo gutegurwa...",
     "description": "Ibisobanuro",
+    "date": "Itariki",
     "recentActivity": "Ibikorwa biheruka"
   },
   "claims": {
@@ -105,6 +109,10 @@
     "profile": "Umwirondoro",
     "settings": "Igenamiterere",
     "navigation": "Cungura",
+    "mainHeader": "IBY'INGENZI",
+    "portfolioHeader": "IBIKORESHO",
+    "exploreHeader": "SHAKISHA",
+    "adminHeader": "UBUYOBOZI",
     "account": "Konti",
     "blog": "Amakuru",
     "docs": "Inyandiko",
@@ -112,6 +120,7 @@
     "verification": "Genzura",
     "lostDirectory": "Urutonde ry'Ibyabuze",
     "foundDirectory": "Urutonde ry'Ibyabonetse",
+    "directory": "Byabuze & Byabonetse",
     "howItWorks": "Uko Bikora",
     "faq": "Ibibazo"
   },
@@ -337,7 +346,23 @@
   },
   "notifications": {
     "itemMatched": "Ikimenyetso kigaragaza ko ikintu cyabonetse",
-    "itemMatchedDesc": "Ikintu cyabuze gihuye n'igisobanuro cyawe cyabonetse."
+    "itemMatchedDesc": "Ikintu cyabuze gihuye n'igisobanuro cyawe cyabonetse.",
+    "title": "Imenyesha ryawe",
+    "subtitle": "Hura n'amakuru y'ibintu byawe, raporo, n'ibikorwa bya sisitemu.",
+    "markAllRead": "Byose bikureho",
+    "markAllReadSuccess": "Imenyesha ryose ryasomwe",
+    "markAllReadError": "Kusoma imenyesha ryose byanze",
+    "empty": "Nta menyesha rishya rihari",
+    "markAsRead": "Soma",
+    "viewMatch": "Reba Ibihuye",
+    "tabs": {
+      "all": "Byose",
+      "unread": "Ibitarasomwa",
+      "alerts": "Imenyesha-kurira",
+      "system": "Sisitemu"
+    },
+    "emptyUnread": "Nta menyesha rishya ufite ubu. Akazi keza!",
+    "emptyDesc": "Ntarahura n'imenyesha na rito. Tuzakumenyesha nibigera igihe."
   },
   "dashboard": {
     "welcomeMessage": "Murakaza neza, {name}",
@@ -418,7 +443,7 @@
       "items": "Ibintu",
       "reports": "Raporo",
       "payments": "Ubwishyu",
-      "claims": "Inzandiko",
+      "claims": "Ibyanjye n'Ibyandi",
       "admin": "Admin",
       "adminPanel": "Igice cy'Umuyobozi",
       "agent": "Umukozi",
@@ -556,6 +581,38 @@
       },
       "actions": {
         "review": "Genzura"
+      }
+    },
+    "review": "Genzura",
+    "dashboard": {
+      "tabs": {
+        "claims": "Inzandiko Zanjye"
+      },
+      "myClaims": "Inzandiko Zanjye",
+      "claimsDescription": "Niba wifuza kwandikisha cyangwa gukurikirana ibyabuze",
+      "claimsReceived": "Inzandiko Zakiriwe",
+      "claimsReceivedDescription": "Urutonde rw'inzandiko z'abantu bifuza ikintu cyawe",
+      "noClaimsReceived": "Nta nzandiko zirwakirwa.",
+      "noClaimsFiled": "Nta nzandiko uratanga."
+    },
+    "search": {
+      "actions": {
+        "typeId": "Andika ID kugira urinde / ushakishe",
+        "scan": "Sikana ID y'Ikoranabuhanga",
+        "quickId": "Andika ID Yihuse Hano..."
+      },
+      "filters": {
+        "all": "Byose",
+        "items": "Ibikoresho",
+        "reports": "Raporo",
+        "users": "Abakoresha",
+        "advanced": "Ibishakishwamo Byimbitse"
+      },
+      "labels": {
+        "imei": "Ifoto y'ifoto y'igikoresho cyawe",
+        "nid": "Indangamuntu",
+        "serial": "Inomero y'Itekinoloji y'Ikoranabuhanga",
+        "docId": "Indangamuntu y'Idosiye"
       }
     },
     "matching": {
@@ -718,7 +775,7 @@
     "voice_ownership_hint": "Shyiraho inyandiko z'ubwishyu cyangwa ibindi byemezo byerekana ko iki kintu ari icyawe.",
     "review": {
       "label_title": "Ikiranga Gishyizweho",
-      "summary_title": "Incamake y'Uburinzi",
+      "summary_title": "Incamake y'Upurinzi",
       "info_level": "Urwego rw'Amakuru",
       "protection_fee": "Ikiguzi cy'Uburinzi",
       "lifetime_badge": "Uburenganzira bwo gutunga igihe cyose no kumenyeshwa vuba biriteguye.",
@@ -727,47 +784,55 @@
       "guide_step2": "Amafoto meza mu bice bitandukanye atuma uwakibonye akimenya mu kanya ko guhumbya.",
       "guide_step3": "Igenzura rya nyuma! Umaze kucyuzuza, ikintu cyawe gihuzwa burundu na konti yawe ya Kizere."
     },
+    "actions": {
+      "detect_id": "Gusoma Ibiranga",
+      "review": "Isuzugure",
+      "review_submit": "Isuzugure & Wohereze",
+      "review_changes": "Isuzugure Iyahinduwe",
+      "reset": "Tangira Bushya",
+      "register": "Andika Nonaha",
+      "processing": "Irarimo gutunganywa..."
+    },
+    "steps": {
+      "details": "Intambwe ya 1: Amakuru",
+      "verification": "Intambwe ya 2: Isuzuma",
+      "confirm": "Intambwe ya 3: Kwemeza",
+      "itemInfo": "Amakuru y'Ikintu",
+      "media": "Amafoto",
+      "photos": "Amafoto n'Ibyemezo",
+      "ownership": "Kugenzura Uburenganzira",
+      "review_pay": "Gusuzuma n'Ishyura",
+      "qrCode": "Kurema Kode QR",
+      "payment": "Amafaranga yo Kwandika"
+    },
+    "status": {
+      "auto_saving": "Birabikwa...",
+      "encrypted": "Ububiko Burinzwe",
+      "verified": "Amakuru yemejwe",
+      "bank_security": "Umutekano wo ku rwego rwo hejuru"
+    },
+    "fields": {
+      "upload_photo": "Shyiraho Ifoto y'Ikintu",
+      "additional_details": "Ibindi Bisobanuro",
+      "additional_details_hint": "+ Ongeraho andi makuru (ibara, ibiranga)",
+      "type_model": "Ubwoko / Model birambuye",
+      "type_model_placeholder": "urugero: Galaxy S22, MacBook Pro",
+      "color": "Ibara",
+      "color_placeholder": "urugero: Umukara",
+      "notes": "Ibindi biranga byihariye",
+      "notes_placeholder": "Sobanura niba hari ibonwa byihariye, ibishushanyo, cyangwa ibindi bimenyetso...",
+      "ownership_optional_hint": "+ Ongeraho resiti cyangwa ibyemezo (Bihishemo)",
+      "uuid_label": "Ikiranga cyihariye (IMEI / Serial Number)",
+      "uuid_placeholder": "urugero: 352849102938472",
+      "name": "Izina ry'Ikintu",
+      "category": "Icyiciro",
+      "subCategory": "Icyiciro Gitoya",
+      "uniqueIdentifier": "Ikiranga Ikintu",
+      "description": "Ibisobanuro",
+      "optional": "Bishoboka",
+      "required": "Bisabwa"
+    },
     "item_location": "Aho Cyaherutse Kuboneka",
-    "item_category_electronics": "Iby'ikoranabuhanga",
-    "item_category_phones": "Telefoni",
-    "item_category_computers": "Mudasobwa",
-    "item_category_documents": "Inyandiko",
-    "item_category_jewelry": "Imitako",
-    "item_category_accessories": "Ibikoresho",
-    "item_category_clothing": "Imyenda",
-    "item_category_bags": "Imisanduku",
-    "item_category_keys": "Imfunguzo",
-    "item_category_wallets": "Ibikapu",
-    "item_category_transportation": "Ibinyabiziga",
-    "item_category_other": "Ibindi",
-    "item_subcategory_smartphone": "Smartphone",
-    "item_subcategory_laptop": "Laptop",
-    "item_subcategory_camera": "Camera",
-    "item_subcategory_tablet": "Tableti",
-    "item_subcategory_smartwatch": "Smartwatch",
-    "item_subcategory_headphones": "Headphones",
-    "item_subcategory_feature_phone": "Telefoni isanzwe",
-    "item_subcategory_desktop": "Mudasobwa ishinguye",
-    "item_subcategory_monitor": "Monitor",
-    "item_subcategory_id_card": "Indangamuntu",
-    "item_subcategory_passport": "Urwandiko rw'inzira (Passport)",
-    "item_subcategory_drivers_license": "Permis de conduire",
-    "item_subcategory_certificate": "Icyemezo",
-    "item_subcategory_ring": "Impeta",
-    "item_subcategory_necklace": "Urunigi",
-    "item_subcategory_bracelet": "Icyuma cyo ku maboko",
-    "item_subcategory_watch": "Isaha",
-    "item_subcategory_bag": "Igikapu",
-    "item_subcategory_wallet": "Igapu",
-    "item_subcategory_glasses": "Amadarubindi",
-    "item_subcategory_outerwear": "Ikanzu",
-    "item_subcategory_formal": "Imyenda y'abacye",
-    "item_subcategory_casual": "Imyenda isanzwe",
-    "item_subcategory_sports": "Imyenda ya siporo",
-    "item_subcategory_bicycle": "Igare",
-    "item_subcategory_motorcycle": "Ikinyamitende (Moto)",
-    "item_subcategory_car": "Imodoka",
-    "item_subcategory_other": "Ibindi",
     "item_color": "Ibara",
     "item_tips": "Inama zo Kwandika",
     "tip_1": "Shyiraho amafoto asobanutse y'ibiranga byihariye.",
@@ -830,30 +895,7 @@
     "qr_generation_error": "Byanze kurema kode QR.",
     "qr_refreshed": "Kode QR Yavuguruwe",
     "qr_refreshed_desc": "Inzira (URL) nshya yihariye yaremwe.",
-    "steps": {
-      "details": "Amakuru y'Ikintu",
-      "itemInfo": "Amakuru y'Ikintu",
-      "media": "Amafoto",
-      "photos": "Amafoto n'Ibyemezo",
-      "ownership": "Kugenzura Uburenganzira",
-      "review": "Gusuzuma n'Ishyura",
-      "qrCode": "Kurema Kode QR",
-      "payment": "Amafaranga yo Kwandika"
-    },
-    "fields": {
-      "name": "Izina ry'Ikintu",
-      "category": "Icyiciro",
-      "subCategory": "Icyiciro Gitoya",
-      "uniqueIdentifier": "Ikiranga Ikintu",
-      "description": "Ibisobanuro",
-      "optional": "Bishoboka",
-      "required": "Bisabwa"
-    },
-    "actions": {
-      "reset": "Tangira Bushya",
-      "register": "Andika Nonaha",
-      "processing": "Irarimo gutunganywa..."
-    },
+
     "preview": {
       "title": "Igaragaza ry'Ikintu",
       "item": "Ikintu",
@@ -904,6 +946,11 @@
     "selected": "yatoranyijwe",
     "addMore": "Ongeraho Ayandi",
     "clearAll": "Kura ibyo washyizeho byose",
+    "remove": "Kura",
+    "add": "Ongeraho",
+    "add_images": "Ongeraho Amafoto",
+    "max_files": "Ntarengwa ni amadosiye {{count}}",
+    "max_size": "Ntarengwa ni {{size}}MB kuri buri foto",
     "batch_upload_title": "Ohereza Amafoto",
     "batch_upload_description": "Shyiraho amafoto menshi kuri raporo yawe kugira ngo ufashe mu kumenya ikintu.",
     "drag_images": "Kurura maze ushyire amafoto hano",
@@ -1257,6 +1304,7 @@
   "community_page": {
     "title": "Umuryango",
     "subtitle": "Kubaka umuco w'ubwizerane n'umutekano dufatanyije",
+    "banner_badge": "Kubaka Ubwizerane Dufatanyije",
     "network": {
       "title": "Umuryango w'Ubwizerane",
       "description": "KIZERE ni rurenga urubuga; ni umuryango w'ubwizerane. Intego yacu ni ukurema ahantu hirinzwe aho ibyabuze bibona inzira itaha mu rugo."
@@ -1272,9 +1320,16 @@
       "filter_all": "Byose",
       "filter_success": "Inkuru z'Intsinzi",
       "filter_security": "Integuza z'Umutekano",
-      "filter_tips": "Inama zo Kugarura"
+      "filter_tips": "Inama zo Kugarura",
+      "share_story": "Sangiza Inkuru Cyawe",
+      "no_posts": "Nta nkurunziza zagaragaye zijyanye n'ibyo ushakisha.",
+      "search_placeholder": "Shakisha inkuru n'integuza z'abaturage..."
     },
     "stats": {
+      "active_members": "Abanyamuryango Bahoraho",
+      "items_recovered": "Ibyasubijwe ba Nyirabyo",
+      "security_alerts": "Integuza z'Umutekano",
+      "trust_score": "Amanota y'Ubwizerane",
       "likes": "Likes",
       "comments": "Comments"
     },
@@ -1284,7 +1339,47 @@
       "trust_builder": "Trust Builder",
       "recovery_expert": "Recovery Expert"
     },
-    "create_post": "Sangiza Inkuru cyangwa Integuza"
+    "create_post": "Sangiza Inkuru cyangwa Integuza",
+    "create_post_dialog": {
+      "description": "Sangiza abandi bakoresha ba KIZERE ibyo wanyuzemo cyangwa inama z'umutekano.",
+      "category": "Icyiciro",
+      "title_label": "Umutwe",
+      "title_placeholder": "Andika umutwe usobanura...",
+      "content_label": "Ibirimo",
+      "content_placeholder": "Ni iki wifuza gusangiza abandi?",
+      "submit": "Ohereza mu Muryango",
+      "success_title": "Inkuru Yohererejwe",
+      "success_desc": "Inkuru yawe yasangijwe abandi bakoresha."
+    },
+    "activity": {
+      "title": "Ibikorwa Bihari Ubu",
+      "liked_story": "yakunze inkuru y'intsinzi",
+      "joined": "yinjiye mu muryango",
+      "shared_tip": "yasangije inama y'ikoranabuhanga"
+    },
+    "recognition": {
+      "title": "Irecognition y'Umuryango",
+      "description": "Jean Bosco yafashije kugarura ibintu 5 byari byabuze muri uku kwezi. Ubu niwe Trust Builder wacu wa mbere."
+    },
+    "join": {
+      "title": "Injira mu Rugendo",
+      "description": "Ba umwe mu bagize ihuriro ryizewe rya mbere mu Rwanda ry'ibyamaze n'ibyakabonetse. Rinda ibyawe.",
+      "button": "Ba Umuryango Wemejwe",
+      "success_title": "Murakaza neza mu Muryango!",
+      "success_desc": "Ubu uri umunyamuryango wemejwe wa KIZERE.",
+      "verified_title": "Umunyamuryango Wemejwe",
+      "verified_desc": "Urakoze kuba umwe mu bagize ihuriro ryacu."
+    },
+    "times": {
+      "just_now": "Ubu ngubu",
+      "2m_ago": "iminota 2 ishize",
+      "15m_ago": "iminota 15 ishize",
+      "45m_ago": "iminota 45 ishize",
+      "2h_ago": "amasaha 2 ashize",
+      "5h_ago": "amasaha 5 ashize",
+      "1d_ago": "umunsi 1 ushize"
+    },
+    "author_you": "Wowe"
   },
   "permissions": {
     "descriptions": {
@@ -1393,10 +1488,10 @@
     "genericError": "Hari ikintu kigende nabi. Ongera ugerageze."
   },
   "filters": {
-    "title": "Kuyungurura",
-    "clear": "Gusiba",
-    "category": "Icyiciro",
-    "location": "Aho giherereye",
+    "title": "Shungura",
+    "clear": "Siba",
+    "category": "Ikiciro",
+    "location": "Ahantu",
     "sortBy": "Kurutanya nk'uko",
     "time": "Igihe",
     "allTime": "Igihe cyose",
@@ -1421,6 +1516,7 @@
     "item_name": "Izina ry'ikintu",
     "item_name_placeholder": "urugero: Igikapu cy'umukara",
     "select_category": "Hitamo icyiciro",
+    "description": "Ibisobanuro",
     "description_placeholder": "Shyiraho ibiranga ikintu nk'izina, ibara, aho cyanduye, n'ibindi.",
     "description_hint": "Nibura inyuguti 10.",
     "unique_id": "Ikiranga cyihariye (Niba gihari)",
@@ -1428,6 +1524,7 @@
     "unique_id_hint": "Bidufasha kubona ikintu gihuye n'icyawe vuba cyane.",
     "location_time": "Ahantu n'Igihe",
     "location_time_desc": "Byabaye ryari kandi he?",
+    "location": "Aho byabereye",
     "location_placeholder": "urugero: Gare ya Nyabugogo, Hafi ya Bank of Kigali",
     "date": "Itariki",
     "custody": "Aho ikintu giherereye ubu",
@@ -1440,6 +1537,7 @@
     "contact_info_desc": "Abantu bakubona gute?",
     "contact_details": "Amakuru yo kukubona",
     "contact_details_placeholder": "Nimero ya telefoni cyangwa andi mabwiriza",
+    "go_back": "Subira Inyuma",
     "contact_hint_found": "Ibi bizahishwa kugeza igihe icyemezo cy'uburyo bwo kukubona cyemejwe.",
     "contact_hint_lost": "Ibi bizagaragara ku bantu bashobora kuba bagutoreye ikintu.",
     "security_title": "Ikibazo cy'umutekano",
@@ -1465,10 +1563,68 @@
     "contact_required": "Amakuru yo kukubariza arakenewe"
   },
   "report_detail": {
+    "reportNotFoundTitle": "Raporo Ntibonetse",
+    "reportNotFoundDesc": "Raporo ushaka ntibaho cyangwa yakuweho.",
+    "backToLostFound": "Subira ku Byabuze & Byabonetse",
+    "expiredTitle": "Iyi raporo yarangije igihe",
+    "expiredDesc": "Raporo zarangije igihe ntizongera kugaragara mu ishakiro rusange.",
+    "expiredDescOwner": " Urashobora kuvugurura iyi raporo ikongera gukora.",
+    "renewReport": "Vugurura Raporo (Iminsi 30)",
+    "renewSuccess": "Raporo yavuguruwe neza",
+    "renewFailed": "Kuvugurura raporo byanze",
+    "dateLabel": "Itariki:",
+    "locationLabel": "Ahantu:",
+    "categoryLabel": "Icyiciro:",
+    "heldAtLabel": "Ibitswe aha:",
+    "contactLabel": "Kugushakaho:",
+    "contactHidden": "Amakuru yo kugushakaho arahishe",
+    "contactHiddenOwner": "Bikugaragarira wowe n'abemejwe basabye ikintu.",
+    "contactHiddenFinder": "Tanga ikirego kandi wemezwe kugira ngo ubone amakuru yo kuvugana.",
+    "finderReputation": "Ubwizerwe bw'Uwatoye",
+    "trusted": "Yizewe",
+    "score": "Amanota: {{score}}",
+    "itemsReturnedCount": "Yatanze ibintu {{count}}",
+    "descriptionLabel": "Ibisobanuro",
+    "potentialMatchesFound": "Ibintu bishobora guhuza byabonetse",
+    "potentialMatchesDesc": "Twabonye ikintu/ibintu {{count}} bishobora guhuza na raporo yawe.",
+    "yourClaimStatus": "Imimerere y'Ikirego Cyawe",
+    "statusLabel": "Imimerere: {{status}}",
+    "statusVerifiedMsg": "Urakoze! Ikirego cyawe cyemejwe. Ubu urashobora kubona amakuru yo kuvugana hejuru.",
+    "statusRejectedMsg": "Ikirego cyawe cyanzwe n'uwatoye ikintu.",
+    "statusPendingMsg": "Ikirego cyawe kirimo gusuzumwa n'uwatoye ikintu.",
+    "appealDecision": "Juririra Icyemezo",
+    "viewFullClaim": "Reba Ikirego Kose",
+    "claimsReceived": "Ibirego Byakiriwe",
+    "claimsReceivedDesc": "Reba ibirego byatanzwe n'abakoresha bemeza ko iki kintu ari icyabo.",
+    "claimant": "Uwasabye #{{id}}",
+    "viewDetails": "Reba Amakuru Arambuye",
+    "isThisYourItem": "Ese iki kintu ni icyawe?",
+    "isThisYourItemDesc": "Niba wemeza ko iki kintu ari icyawe, tanga ikirego hamwe n'ibimenyetso.",
+    "fileOwnershipClaim": "Tanga Ikirego cy'Akarusho",
+    "claimFormTitle": "Ifishi y'Ikirego",
+    "cancel": "Kureka",
+    "claimSubmittedSuccess": "Ikirego cyatanzwe neza!",
+    "youSubmittedReport": "Watanze iyi raporo",
+    "markAsFound": "Emeza ko Cyabonetse",
+    "markAsFoundDialogTitle": "Emeza ko ikintu cyawe cyabonetse?",
+    "markAsFoundDialogDesc": "Ibi biza kugaragaza ko icyabuze cyabonetse. Niba iyi raporo ihujwe n'ikintu wandikishije, imimerere yacyo izahinduka \"Cyabonetse\".",
+    "confirmFound": "Emeza ko Cyabonetse",
+    "updating": "Birikuvugururwa...",
+    "reportUpdated": "Raporo yavuguruwe",
+    "reportMarkedFound": "Ikintu cyawe cyemejwe ko cyabonetse.",
+    "updateFailed": "Kuvugurura raporo byanze",
+    "appealDialogTitle": "Juririra Icyemezo cy'Ikirego",
+    "appealDialogDesc": "Niba wemeza ko ikirego cyawe cyanzwe mu buryo butari bwo, ushobora kuregera ubuyobozi.",
+    "reasonForAppeal": "Impamvu z'Ubujurire",
+    "reasonPlaceholder": "Nyamuneka sobanura impamvu iki kintu ari icyawe kandi utange andi makuru yose akenewe...",
+    "submitAppeal": "Ohereza Ubujurire",
+    "submitting": "Birimo koherezwa...",
+    "appealSubmittedSuccess": "Ubujurire bwoherejwe neza",
+    "appealReviewDetails": "Ubuyobozi buzasuzuma ibibazo byawe.",
+    "appealFailed": "Kohereza ubujurire byanze",
     "reported_on": "Raporo yatanzwe ku itariki ya {{date}}",
-    "receipt": "Nimero y'inyandiko #",
+    "receipt": "Nimero y'inyandiko: {{receiptNumber}}",
     "no_images": "Nta mafoto yatanzwe",
-    "description": "Ibisobanuro",
     "is_my_item": "Iki ni icyanjye",
     "file_claim": "Tanga ikirego",
     "is_your_report": "Iyi ni raporo yawe. Urashobora kuyicunga mu mbonerahamwe yawe."
@@ -1592,10 +1748,35 @@
     "reportFound": "Rapura Icyabonetse",
     "reportFoundDesc": "Andika ibisobanuro by'icyo wabonye.",
     "searchPlaceholder": "Shakisha ukoresheje amagambo (urugero: Pasiporo, Agakapu k'ubururu)...",
+    "searchButton": "Shakisha",
+    "loadingReports": "Ishakiro ririmo gusuzumwa...",
     "allReports": "Ishakiro ririmo gusuzumwa...",
     "noReports": "Nta bikoresho bibonetse",
     "noReportsHint": "Nta bikoresho bibonetse bihuye n'ibyo washakishije.",
     "loginRequired": "Urasabwa Kwinjira",
     "loginRequiredDesc": "Kubera umutekano w'amakuru, ishakiro ry'ibikoresho ryemererwa gusa abakoresha binjiye. Injira kugira ngo urebe ishakiro."
+  },
+  "howItWorksPage": {
+    "heroTitle": "Uko KIZERE Ikora",
+    "heroSubtitle": "Rejisitiri y'ikoranabuhanga yizewe cyane mu Rwanda mu kurinda ibyawe by'agaciro n'uko byakugarukira mu mutekano.",
+    "processTitle": "Intambwe 4 Zoroshye",
+    "processSubtitle": "Kuva ku kwandikisha kugeza ku kugarura, twatworoshya uburyo bwo kurinda ibigufitiye agaciro.",
+    "step1_title": "Kwandikisha",
+    "step1LongDesc": "Tangira uha ikintu cyawe ikimenyetso cy'ikoranabuhanga. Andika serial numbers, IMEI kode, cyangwa ibindi biranga byihariye. Izi nyandiko zibikwa mu buryo bwizewe kandi zihujwe n'umwirondoro wawe.",
+    "step2_title": "Kwemeza",
+    "step2LongDesc": "Kwemeza nongeramo urundi rwego rw'ubwizerane bwuzuye. Shyiraho inyandiko z'ubugure, icyemezo, cyangwa amafoto asobanutse aranga ikintu. Sisitemu yacu irema icyemezo cy'umutungo cy'ikoranabuhanga cyemejwe.",
+    "step3_title": "Gushyiraho akamenyetso",
+    "step3LongDesc": "Rema kandi ushyire akamenyetso ka QR ka KIZERE kihariye ku kintu cyawe. Aka kamenyetso gakora nk'ihuza rizewe hagati y'ikintu cyawe n'inyandiko yacyo y'ikoranabuhanga bitagaragaje amakuru yawe bwite.",
+    "step4_title": "Kugaruza",
+    "step4LongDesc": "Niba ikintu cyawe cyabuze, uwakibonye asikana (scan) akamenyetso gusa. Uhita uha ubutumwa bw'ako kanya, kandi twatworoshya inzira y'itumanaho ririnzwe kugira ngo ukigaruze mu mutekano.",
+    "benefitsTitle": "Kuki Wahitamo KIZERE?",
+    "benefit1Title": "Gihamya y'Ikoranabuhanga",
+    "benefit1Desc": "Kuraho impaka ukoresheje gihamya y'umutungo ishobora kwemezwa kandi yizerwa.",
+    "benefit2Title": "Integuza z'ako kanya",
+    "benefit2Desc": "Menyeshwa mu gihe hari umuntu usikanaye (scan) ikintu cyawe cyabuze, aho ari ho hose ku isi.",
+    "benefit3Title": "Ibanga Mbere na Mbere",
+    "benefit3Desc": "Garuza ibintu byawe utarinze kugaragaza amakuru yawe y'itumanaho ku bantu utazi.",
+    "ctaTitle": "Witeguye Kurinda Ikintu Cyawe cya Mbere?",
+    "ctaButton": "Rinda Ubu"
   }
 }

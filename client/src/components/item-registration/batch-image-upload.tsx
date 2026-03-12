@@ -1,12 +1,11 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
 import { DndContext, DragEndEvent, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { SortableContext, sortableKeyboardCoordinates, useSortable, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { LuImage, LuUpload, LuX, LuGripVertical, LuTrash2, LuLoader, LuPlus } from 'react-icons/lu';
+import { LuImage, LuPlus, LuTrash2, LuLoader, LuGripVertical } from 'react-icons/lu';
 import { cn } from '@/lib/utils';
 
 interface SortableItemProps {
@@ -16,56 +15,42 @@ interface SortableItemProps {
   onRemove: (id: string) => void;
 }
 
-// The sortable thumbnail component
 function SortableItem({ id, url, file, onRemove }: SortableItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Use a cumulative ref for both DnD and our manual style updates
-  const setCombinedRef = useCallback((node: HTMLDivElement | null) => {
-    setNodeRef(node);
-    (containerRef as any).current = node;
-  }, [setNodeRef]);
-
-  React.useLayoutEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.style.setProperty('--dnd-transform', CSS.Transform.toString(transform) || 'none');
-      containerRef.current.style.setProperty('--dnd-transition', transition || 'none');
-      containerRef.current.style.setProperty('--dnd-opacity', isDragging ? '0.5' : '1');
-      containerRef.current.style.setProperty('--dnd-z-index', isDragging ? '10' : '1');
-    }
-  }, [transform, transition, isDragging]);
+  // These inline styles are required for dnd-kit's dynamic positioning
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   return (
     <div
-      ref={setCombinedRef}
-      className="relative group p-2 border border-dashed rounded-md hover:border-primary/50 transition-colors [transform:var(--dnd-transform)] [transition:var(--dnd-transition)] [opacity:var(--dnd-opacity)] [z-index:var(--dnd-z-index)]"
+      ref={setNodeRef}
+      {...{ style }}
+      className={cn(
+        "relative group w-20 h-20 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 shadow-sm transition-all hover:border-zinc-300 dark:hover:border-zinc-700",
+        isDragging ? "opacity-50 z-10" : "opacity-100 z-1"
+      )}
     >
-      <div className="relative aspect-square overflow-hidden rounded-md">
-        <img src={url} alt={file.name} className="object-cover w-full h-full" />
+      <img src={url} alt={file.name} className="object-cover w-full h-full" />
 
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full bg-white text-black"
-            onClick={() => onRemove(id)}
-          >
-            <LuTrash2 className="h-4 w-4" />
-          </Button>
-        </div>
-
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
         <div
-          className="absolute left-2 top-2 cursor-grab active:cursor-grabbing text-white/70 hover:text-white"
+          className="p-1.5 rounded-lg bg-white/20 hover:bg-white/40 text-white cursor-grab active:cursor-grabbing transition-colors"
           {...attributes}
           {...listeners}
         >
-          <LuGripVertical className="h-5 w-5 drop-shadow-md" />
+          <LuGripVertical className="h-3.5 w-3.5" />
         </div>
-      </div>
-      <div className="text-xs truncate mt-1 text-center">
-        {file.name.length > 20 ? file.name.substring(0, 17) + '...' : file.name}
+        <button
+          type="button"
+          className="p-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+          onClick={() => onRemove(id)}
+          title={useLanguage().t('batchUpload.remove')}
+        >
+          <LuTrash2 className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   );
@@ -82,7 +67,7 @@ export interface BatchImageUploadProps {
 
 export function BatchImageUpload({
   onImagesChange,
-  maxFiles = 10,
+  maxFiles = 5,
   acceptedFileTypes = ['image/jpeg', 'image/png', 'image/webp'],
   maxFileSizeMB = 5,
   showHeader = true,
@@ -91,297 +76,124 @@ export function BatchImageUpload({
   const { t } = useLanguage();
   const { toast } = useToast();
   const [images, setImages] = useState<{ id: string; file: File; url: string }[]>([]);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Set up drag sensors for DnD
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // Validate file type
-  const isValidFileType = (file: File) => {
-    return acceptedFileTypes.includes(file.type);
-  };
-
-  // Validate file size
-  const isValidFileSize = (file: File) => {
-    return file.size <= maxFileSizeMB * 1024 * 1024;
-  };
-
-  // Generate a preview URL for an image file
-  const generatePreview = (file: File): string => {
-    return URL.createObjectURL(file);
-  };
-
-  // Process files by validating and adding them to the state
   const processFiles = useCallback((files: FileList | null) => {
     if (!files) return;
-
     setIsUploading(true);
 
     const filesToAdd: { id: string; file: File; url: string }[] = [];
-    const errors: string[] = [];
-
     Array.from(files).forEach(file => {
-      // Check if we reached the max number of files
-      if (images.length + filesToAdd.length >= maxFiles) {
-        errors.push(t('batchUpload.batch_upload_max_files', { count: maxFiles }));
-        return;
-      }
+      if (images.length + filesToAdd.length >= maxFiles) return;
+      if (!acceptedFileTypes.includes(file.type)) return;
+      if (file.size > maxFileSizeMB * 1024 * 1024) return;
 
-      // Check file type
-      if (!isValidFileType(file)) {
-        errors.push(t('batchUpload.batch_upload_invalid_type'));
-        return;
-      }
-
-      // Check file size
-      if (!isValidFileSize(file)) {
-        errors.push(t('batchUpload.batch_upload_max_size', { size: maxFileSizeMB }));
-        return;
-      }
-
-      // Generate preview and add to list
       const id = Math.random().toString(36).substr(2, 9);
-      const url = generatePreview(file);
+      const url = URL.createObjectURL(file);
       filesToAdd.push({ id, file, url });
     });
 
-    // Show any errors
-    if (errors.length > 0) {
-      const uniqueErrors = Array.from(new Set(errors));
-      uniqueErrors.forEach(error => {
-        toast({
-          title: t('error_title'),
-          description: error,
-          variant: 'destructive',
-        });
-      });
-    }
-
-    // Add validated files to state
     if (filesToAdd.length > 0) {
       const newImages = [...images, ...filesToAdd];
       setImages(newImages);
-
-      // Extract just the File objects for the parent component
-      const fileObjects = newImages.map(image => image.file);
-      onImagesChange(fileObjects);
-
-      toast({
-        title: t('batchUpload.batch_upload_success'),
-        description: t('batchUpload.batch_upload_success_desc', { count: filesToAdd.length }),
-      });
+      onImagesChange(newImages.map(img => img.file));
     }
-
     setIsUploading(false);
-  }, [images, maxFiles, maxFileSizeMB, toast, t, onImagesChange]);
+  }, [images, maxFiles, acceptedFileTypes, maxFileSizeMB, onImagesChange]);
 
-  // Handle drag-n-drop
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDraggingOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDraggingOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDraggingOver(false);
-    processFiles(e.dataTransfer.files);
-  };
-
-  // Handle file input change
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    processFiles(e.target.files);
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  // Handle removing an image
   const handleRemoveImage = (id: string) => {
-    // Revoke the object URL to avoid memory leaks
     const imageToRemove = images.find(img => img.id === id);
-    if (imageToRemove) {
-      URL.revokeObjectURL(imageToRemove.url);
-    }
-
-    // Remove from state
+    if (imageToRemove) URL.revokeObjectURL(imageToRemove.url);
     const newImages = images.filter(img => img.id !== id);
     setImages(newImages);
-
-    // Update parent component
-    const fileObjects = newImages.map(image => image.file);
-    onImagesChange(fileObjects);
-
-    toast({
-      title: t('batchUpload.batch_upload_removed'),
-      description: t('batchUpload.batch_upload_removed_desc'),
-    });
+    onImagesChange(newImages.map(img => img.file));
   };
 
-  // Handle drag end for reordering
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (over && active.id !== over.id) {
       setImages(items => {
         const oldIndex = items.findIndex(item => item.id === active.id);
         const newIndex = items.findIndex(item => item.id === over.id);
-
         const reordered = arrayMove(items, oldIndex, newIndex);
-
-        // Update parent component with new order
-        const fileObjects = reordered.map(image => image.file);
-        onImagesChange(fileObjects);
-
+        onImagesChange(reordered.map(img => img.file));
         return reordered;
       });
     }
   };
 
   return (
-    <Card className={cn("w-full", !showHeader && "border-0 shadow-none bg-transparent", className)}>
-      {showHeader && (
-        <CardHeader>
-          <CardTitle>{t('batchUpload.batch_upload_title')}</CardTitle>
-          <CardDescription>{t('batchUpload.batch_upload_description')}</CardDescription>
-        </CardHeader>
-      )}
-      <CardContent className="space-y-4">
-        <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-md text-center transition-colors ${isDraggingOver
-            ? 'border-primary bg-primary/5'
-            : 'border-muted-foreground/30 hover:border-muted-foreground/50'
-            }`}
-        >
-          <input
-            type="file"
-            accept={acceptedFileTypes.join(',')}
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-            ref={fileInputRef}
-            disabled={isUploading || images.length >= maxFiles}
-            title={t('batchUpload.batch_upload_title')}
-            aria-label={t('batchUpload.batch_upload_title')}
-          />
+    <div className={cn("w-full", className)}>
+      <input
+        type="file"
+        accept={acceptedFileTypes.join(',')}
+        multiple
+        onChange={(e) => { processFiles(e.target.files); e.target.value = ''; }}
+        className="hidden"
+        ref={fileInputRef}
+        disabled={isUploading || images.length >= maxFiles}
+        title={t('batchUpload.selectFiles')}
+      />
 
-          {isUploading ? (
-            <div className="flex flex-col items-center">
-              <LuLoader className="h-6 w-6 text-muted-foreground animate-spin mb-1" />
-              <p className="text-[10px] font-bold uppercase tracking-tight">{t('common.uploading')}</p>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col items-center">
-                <LuImage className="h-8 w-8 text-muted-foreground/40 mb-2" />
-                <div className="text-xs font-black uppercase tracking-tight mb-1">
-                  {t('batchUpload.drag_images')}
+      <div className="flex flex-wrap gap-3 items-center">
+        {/* Sortable Previews */}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={images.map(img => img.id)} strategy={horizontalListSortingStrategy}>
+            {images.map((image) => (
+              <SortableItem
+                key={image.id}
+                id={image.id}
+                url={image.url}
+                file={image.file}
+                onRemove={handleRemoveImage}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
+
+        {/* Compact Upload Trigger */}
+        {images.length < maxFiles && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className={cn(
+              "w-20 h-20 rounded-xl border border-dashed flex flex-col items-center justify-center transition-all",
+              "border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:border-zinc-400 dark:hover:border-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800 active:scale-95 group",
+              isUploading && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            {isUploading ? (
+              <LuLoader className="h-5 w-5 animate-spin text-zinc-400" />
+            ) : (
+              <>
+                <div className="p-1.5 rounded-lg bg-zinc-800 group-hover:bg-zinc-700 transition-colors mb-1.5 shadow-sm">
+                  <LuPlus className="h-4 w-4 text-zinc-300" />
                 </div>
-                <p className="text-[9px] text-muted-foreground mb-3 max-w-[180px] font-medium leading-tight">
-                  {t('batchUpload.file_types_desc')}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-8 rounded-lg px-4 text-[10px] font-black uppercase tracking-widest border-muted-foreground/20"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={images.length >= maxFiles}
-              >
-                <LuUpload className="mr-2 h-3 w-3" />
-                {t('batchUpload.select_images')}
-              </Button>
-            </>
-          )}
-        </div>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-tighter">
+                  {t('batchUpload.add')}
+                </span>
+              </>
+            )}
+          </button>
+        )}
 
-        {images.length > 0 && (
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-[10px] font-black uppercase tracking-widest">
-                {t('batchUpload.media')} ({images.length}/{maxFiles})
-              </h3>
-              {images.length > 1 && (
-                <p className="text-sm text-muted-foreground">
-                  {t('batchUpload.drag_to_reorder')}
-                </p>
-              )}
-            </div>
-
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext items={images.map(img => img.id)} strategy={verticalListSortingStrategy}>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {images.map((image) => (
-                    <SortableItem
-                      key={image.id}
-                      id={image.id}
-                      url={image.url}
-                      file={image.file}
-                      onRemove={handleRemoveImage}
-                    />
-                  ))}
-
-                  {images.length < maxFiles && (
-                    <div
-                      className="aspect-square flex flex-col items-center justify-center border border-dashed rounded-md hover:border-primary/50 transition-colors cursor-pointer p-2"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <LuPlus className="h-6 w-6 text-muted-foreground mb-2" />
-                      <span className="text-xs text-center text-muted-foreground">
-                        {t('batchUpload.add_more_images')}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </SortableContext>
-            </DndContext>
+        {/* Empty State / Hint if no images */}
+        {images.length === 0 && !isUploading && (
+          <div className="flex flex-col gap-0.5 ml-1">
+            <span className="text-[11px] font-bold text-zinc-200">{t('batchUpload.add_images')}</span>
+            <span className="text-[10px] text-zinc-500 font-medium">
+              {t('batchUpload.max_files', { count: maxFiles })} · {t('batchUpload.max_size', { size: maxFileSizeMB })}MB
+            </span>
           </div>
         )}
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <div className="text-sm text-muted-foreground">
-          {t('batchUpload.file_types')}
-        </div>
-        {images.length > 0 && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="text-destructive hover:text-destructive/90 hover:bg-destructive/10"
-            onClick={() => {
-              // Revoke all object URLs
-              images.forEach(img => URL.revokeObjectURL(img.url));
-              setImages([]);
-              onImagesChange([]);
-
-              toast({
-                title: t('batchUpload.batch_upload_cleared'),
-                description: t('batchUpload.batch_upload_cleared_desc'),
-              });
-            }}
-          >
-            <LuX className="mr-2 h-4 w-4" />
-            {t('batchUpload.clearAll')}
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

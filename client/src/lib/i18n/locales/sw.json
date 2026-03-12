@@ -17,7 +17,10 @@
     "updating": "Inasasisha...",
     "update": "Sasisha",
     "filter": "Chuja",
-    "returnToHome": "Rudi Nyumbani"
+    "returnToHome": "Rudi Nyumbani",
+    "securityLabel": "Usalama",
+    "secureLabel": "Salama",
+    "cancel": "Ghairi"
   },
   "nav": {
     "home": "Nyumbani",
@@ -29,7 +32,12 @@
     "registerItem": "Sajili Kitu",
     "registerItems": "Sajili Vitu",
     "myItems": "Vitu Vyangu",
-    "userManagement": "Usimamizi wa Watumiaji"
+    "directory": "Vipotea & Vipatikana",
+    "userManagement": "Usimamizi wa Watumiaji",
+    "mainHeader": "KUU",
+    "portfolioHeader": "IMILIKI",
+    "exploreHeader": "GUNDUA",
+    "adminHeader": "UTAWALA"
   },
   "item_category_electronics": "Elektroniki",
   "item_category_phones": "Simu",
@@ -217,6 +225,86 @@
       "cookiePolicy": "Sera ya Vidakuzi"
     }
   },
+  "community_page": {
+    "title": "Jamii",
+    "subtitle": "Kujenga utamaduni wa kuaminiana na usalama pamoja",
+    "banner_badge": "Kujenga Imani Pamoja",
+    "network": {
+      "title": "Mtandao wa Imani",
+      "description": "KIZERE ni zaidi ya jukwaa; ni mtandao wa imani. Dhamira yetu ni kuunda mazingira salama ambapo vitu vilivyopotea vinapata njia ya kurudi nyumbani."
+    },
+    "guidelines": {
+      "title": "Mwongozo wa Jamii",
+      "rule1": "Kuwa mwaminifu na mkweli katika ripoti zako.",
+      "rule2": "Heshimu faragha na habari za watumiaji wengine.",
+      "rule3": "Rahisisha urejeshaji wa vitu vilivyopatikana bila kuchelewa."
+    },
+    "feed": {
+      "title": "Hadithi & Arifa za Jamii",
+      "filter_all": "Machapisho Yote",
+      "filter_success": "Hadithi za Mafanikio",
+      "filter_security": "Arifa za Usalama",
+      "filter_tips": "Vidokezo vya Urejeshaji",
+      "share_story": "Shiriki Hadithi Yako",
+      "no_posts": "Hakuna machapisho yaliyopatikana yanayolingana na vigezo vyako.",
+      "search_placeholder": "Tafuta hadithi na arifa za jamii..."
+    },
+    "stats": {
+      "active_members": "Wanachama Hai",
+      "items_recovered": "Vitu Vilivyorejeshwa",
+      "security_alerts": "Arifa za Usalama",
+      "trust_score": "Alama ya Imani",
+      "likes": "Likes",
+      "comments": "Comments"
+    },
+    "badges": {
+      "title": "Beji za Jamii",
+      "eagle_eye": "Jicho la Tai",
+      "trust_builder": "Mjenzi wa Imani",
+      "recovery_expert": "Mtaalamu wa Urejeshaji"
+    },
+    "create_post": "Shiriki Hadithi au Arifa",
+    "create_post_dialog": {
+      "description": "Shiriki uzoefu wako au vidokezo vya usalama na wanachama wengine wa KIZERE.",
+      "category": "Kitengo",
+      "title_label": "Kichwa cha Habari",
+      "title_placeholder": "Ingiza kichwa cha habari kinachoelezea...",
+      "content_label": "Yaliyomo",
+      "content_placeholder": "Ungependa kushiriki nini?",
+      "submit": "Tuma kwenye Jamii",
+      "success_title": "Chapisho Limeundwa",
+      "success_desc": "Hadithi yako imeshirikiwa na jamii."
+    },
+    "activity": {
+      "title": "Shughuli za Moja kwa Moja",
+      "liked_story": "alipenda hadithi ya mafanikio",
+      "joined": "alijiunga na jamii",
+      "shared_tip": "alishiriki kidokezo cha usalama"
+    },
+    "recognition": {
+      "title": "Jicho la Tai la Kigali",
+      "description": "Kumtambua mwanachama wetu mwangalifu zaidi mwezi huu."
+    },
+    "join": {
+      "title": "Jiunge na Harakati",
+      "description": "Saidia utamaduni wa kuaminiana nchini Rwanda.",
+      "button": "Thibitisha kama Mchangiaji",
+      "success_title": "Karibu!",
+      "success_desc": "Sasa wewe ni sehemu ya Mtandao wa Imani wa KIZERE.",
+      "verified_title": "Mwanachama Aliyethibitishwa",
+      "verified_desc": "Asante kwa kusaidia kuifanya Rwanda kuwa salama!"
+    },
+    "times": {
+      "just_now": "Sasa hivi",
+      "2m_ago": "dakika 2 zilizopita",
+      "15m_ago": "dakika 15 zilizopita",
+      "45m_ago": "dakika 45 zilizopita",
+      "2h_ago": "saa 2 zilizopita",
+      "5h_ago": "saa 5 zilizopita",
+      "1d_ago": "siku 1 iliyopita"
+    },
+    "author_you": "Wewe"
+  },
   "dashboard": {
     "welcomeMessage": "Karibu kwenye dashibodi yako",
     "registeredItems": "Vitu Vilivyosajiliwa",
@@ -356,6 +444,64 @@
     "reportDate": "Tarehe ya Ripoti",
     "status": "Hali"
   },
+  "report_wizard": {
+    "step": "Hatua ya {{current}} ya {{total}}",
+    "complete": "{{percentage}}% Imekamilika",
+    "step_1_title": "Nini, Wapi & Lini",
+    "step_1_desc": "Toa maelezo kuhusu kitu na wapi kilipotea/kupatikana",
+    "step_2_title": "Mawasiliano & Zawadi",
+    "step_2_desc": "Ingiza maelezo yako ya mawasiliano",
+    "basic_info": "Maelezo ya Msingi",
+    "basic_info_desc": "Tuambie nini wewe {{type}}.",
+    "item_name": "Jina la Kitu",
+    "item_name_placeholder": "mfano: Pochi nyeusi ya ngozi",
+    "select_category": "Chagua kitengo",
+    "description": "Maelezo",
+    "description_placeholder": "Jumuisha vipengele tofauti kama chapa, rangi, mikwaruzo, n.k.",
+    "description_hint": "Kima cha chini herufi 10.",
+    "unique_id": "Kitambulisho cha Kipekee (Hiari)",
+    "unique_id_placeholder": "mfano: Namba ya Usajili, IMEI",
+    "unique_id_hint": "Hutusaidia kupata inayofanana haswa kwa haraka.",
+    "location_time": "Mahali & Muda",
+    "location_time_desc": "Hili lilitokea lini na wapi?",
+    "location": "Mahali",
+    "location_placeholder": "mfano: Downtown Taxi Park",
+    "date": "Tarehe",
+    "custody": "Malezi ya Sasa ya Kitu",
+    "custody_placeholder": "mfano: Kimeachwa kwenye Dawati la Usalama",
+    "custody_hint": "Wapi mmiliki anaweza kupata kitu au kukutana nawe?",
+    "images": "Picha",
+    "images_desc": "Picha husaidia kutambua kitu kwa haraka.",
+    "max_images": "Picha 3 pekee. JPG, PNG zinaruhusiwa.",
+    "contact_info": "Maelezo ya Mawasiliano",
+    "contact_info_desc": "Watu wanapaswa kukufikiaje?",
+    "contact_details": "Maelezo ya Mawasiliano",
+    "contact_details_placeholder": "Namba ya simu au maelekezo",
+    "go_back": "Rudi Nyuma",
+    "contact_hint_found": "Hii itafichwa hadi madai yathibitishwe.",
+    "contact_hint_lost": "Hii itaonekana kwa wapataji watarajiwa.",
+    "security_title": "Swali Nyingi la Usalama",
+    "security_desc": "Uliza kitu ambacho mmiliki halisi pekee angejua.",
+    "security_placeholder": "Swali la uthibitisho kwa wadai...",
+    "bounty_title": "Ongeza Zawadi (Hiari)",
+    "bounty_desc": "Toa zawadi kuwahamasisha wapataji.",
+    "bounty_escrow": "Zawadi huhifadhiwa salama kwenye akaunti ya dhamana na **hutolewa tu** unapothibitisha kupokea kitu chako kwa OTP.",
+    "reward_amount": "Kiasi cha Zawadi (RWF)",
+    "reward_hint": "Acha 0 kama hutaki kutoa zawadi.",
+    "payment_info": "Kuripoti kitu kilichopotea hugharimu **1,000 RWF**.",
+    "total_payment": "Jumla ya Malipo: {{amount}} RWF",
+    "fix_errors": "Tafadhali rekebisha makosa yafuatayo kabla ya kuwasilisha:",
+    "next_step": "Hatua Inayofuata",
+    "pay_submit": "Lipa na Wasilisha",
+    "submit_report": "Wasilisha Ripoti",
+    "submitting": "Inawasilisha...",
+    "type_required": "Tafadhali chagua aina ya ripoti",
+    "title_min": "Jina lazima liwe na angalau herufi 3",
+    "desc_min": "Maelezo lazima yawe na angalau herufi 10",
+    "location_required": "Mahali panahitajika",
+    "date_required": "Tarehe inahitajika",
+    "contact_required": "Maelezo ya mawasiliano yanahitajika"
+  },
   "footer": {
     "copyright": "© 2025 KIZERE. Haki zote zimehifadhiwa.",
     "terms": "Masharti",
@@ -376,8 +522,62 @@
       "can_manage_reports": "Ufikiaji wa kusimamia na kutatua ripoti za vitu vilivyopotea na kupatikana."
     }
   },
+  "filters": {
+    "title": "Vichujio",
+    "clear": "Futa",
+    "category": "Jamii",
+    "location": "Mahali",
+    "sortBy": "Panga kwa",
+    "time": "Muda",
+    "allTime": "Muda Wote",
+    "last24h": "Saa 24 Zilizoizopita",
+    "last7d": "Siku 7 Zilizoizopita",
+    "last30d": "Siku 30 Zilizoizopita",
+    "newest": "Mpya Zaidi",
+    "oldest": "Zamani Zaidi",
+    "relevance": "Husika Zaidi",
+    "allCategories": "Jamii Zote",
+    "allLocations": "Mahali Pote",
+    "apply": "Tumia",
+    "clearAll": "Futa vichungi vyote"
+  },
   "directoryPage": {
+    "title": "Orodha ya Vipotea & Vipatikana",
+    "subtitle": "Tazama vitu vilivyopatikana au tafuta kwenye orodha mali zako zilizopotea",
+    "reportLost": "Ripoti Kitu Kilichopotea",
+    "reportLostDesc": "Toa maelezo ya kitu chako kilichopotea.",
+    "reportFound": "Ripoti Kitu Kilichopatikana",
+    "reportFoundDesc": "Toa maelezo ya kitu ulichokipata.",
+    "searchPlaceholder": "Tafuta kwa maneno (mfano. Pasipoti, Pochi ya bluu)...",
+    "searchButton": "Tafuta",
+    "loadingReports": "Inatafuta kwenye orodha...",
+    "allReports": "Inatafuta kwenye orodha...",
+    "noReports": "Hakuna vitu vilivyopatikana",
+    "noReportsHint": "Hakuna vitu vilivyopatikana vinavyolingana na vichujio vyako. Jaribu utafutaji mwingine.",
     "loginRequired": "Uthibitisho Unahitajika",
     "loginRequiredDesc": "Kwa sababu za usalama wa data na faragha, folda ya vitu vilivyoripotiwa inapatikana tu kwa watumiaji waliothibitishwa. Tafadhali ingia ili kutazama na kutafuta folda."
+  },
+  "howItWorksPage": {
+    "heroTitle": "Jinsi KIZERE Inavyofanya Kazi",
+    "heroSubtitle": "Rejista ya kidijitali inayoaminika zaidi nchini Rwanda kwa kulinda vitu vyako vya thamani na kuhakikisha vinarejeshwa salama.",
+    "processTitle": "Mchakato Rahisi wa Hatua 4",
+    "processSubtitle": "Kuanzia usajili hadi urejeshaji, tunafanya iwe rahisi kulinda yaliyo muhimu zaidi.",
+    "step1_title": "Sajili",
+    "step1LongDesc": "Anza kwa kuunda alama ya kidijitali ya mali yako ya thamani. Ingiza namba za usajili, namba za IMEI, au vitambulisho vingine vya kipekee. Rekodi hii inahifadhiwa kwa usalama na kuunganishwa na utambulisho wako.",
+    "step2_title": "Thibitisha",
+    "step2LongDesc": "Uthibitishaji huongeza kiwango cha uhakika kamili. Pakia risiti za ununuzi, vyeti, au picha za wazi za utambulisho. Mfumo wetu huunda cheti kama hicho cha umiliki wa kidijitali kilichothibitishwa.",
+    "step3_title": "Weka Lebo",
+    "step3LongDesc": "Tengeneza na ambatisha lebo ya kipekee ya QR ya KIZERE kwenye kitu chako. Lebo hii inafanya kazi kama kiungo salama kati ya kitu chako cha kimwili na rekodi yake ya kidijitali bila kuonyesha maelezo yako ya kibinafsi.",
+    "step4_title": "Rejesha",
+    "step4LongDesc": "Kama kitu chako kitapotea, mtu aliyekipata anaweza kuscan lebo hiyo kwa urahisi. Unapokea arifa ya papo hapo, na tunarahisisha njia salama ya mawasiliano kwa mchakato wa kurejesha salama.",
+    "benefitsTitle": "Kwa Nini Uchague KIZERE?",
+    "benefit1Title": "Uthibitisho wa Kidijitali",
+    "benefit1Desc": "Ondoa mizozo kwa ushahidi unaoweza kuthibitishwa wa umiliki unaostahimili ukaguzi.",
+    "benefit2Title": "Arifa za Papo Hapo",
+    "benefit2Desc": "Pata taarifa sekunde ambayo mtu anascan kitu chako kilichopotea, mahali popote duniani.",
+    "benefit3Title": "Faragha Kwanza",
+    "benefit3Desc": "Rejesha vitu vyako bila kutoa maelezo yako ya mawasiliano ya kibinafsi kwa wageni.",
+    "ctaTitle": "Uko Tayari Kulinda Kitu Chako Chako cha Kwanza?",
+    "ctaButton": "Linda Sasa"
   }
 }

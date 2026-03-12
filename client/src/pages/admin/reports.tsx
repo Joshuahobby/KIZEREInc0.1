@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { adminApi } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { useToast } from "@/hooks/use-toast";
 import { CommandCenterLayout } from "@/components/layouts/command-center-layout";
 import {
@@ -38,7 +40,7 @@ import {
   Map,
   ExternalLink,
   User,
-  Tag
+  Tag as TagIcon
 } from "lucide-react";
 import {
   AlertDialog,
@@ -83,7 +85,7 @@ import {
 } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -91,11 +93,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // Stats Card component for the dashboard
-const StatCard = ({ title, value, icon, className = "", color = "blue" }: { 
-  title: string; 
-  value: string | number; 
-  icon: React.ReactNode; 
-  className?: string; 
+const StatCard = ({ title, value, icon, className = "", color = "blue" }: {
+  title: string;
+  value: string | number;
+  icon: React.ReactNode;
+  className?: string;
   color?: string;
 }) => {
   const colorMap: Record<string, { bg: string; text: string; border: string }> = {
@@ -120,9 +122,9 @@ const StatCard = ({ title, value, icon, className = "", color = "blue" }: {
       border: "border-red-100 dark:border-red-900/50"
     },
   };
-  
+
   const colors = colorMap[color as keyof typeof colorMap] || colorMap.blue;
-  
+
   return (
     <Card className={`shadow-sm hover:shadow transition-shadow ${colors.border} ${className}`}>
       <CardContent className="p-6">
@@ -148,9 +150,9 @@ const StatusBadge = ({ status }: { status: string }) => {
     Resolved: { color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300", icon: <CheckCircle2 className="h-3 w-3 mr-1" /> },
     Closed: { color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300", icon: <FileText className="h-3 w-3 mr-1" /> }
   };
-  
+
   const style = (statusStyles as any)[status] || statusStyles.Open;
-  
+
   return (
     <Badge variant="outline" className={`flex items-center ${style.color}`}>
       {style.icon}
@@ -165,9 +167,9 @@ const TypeBadge = ({ type }: { type: string }) => {
     lost: { color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300", label: "Lost" },
     found: { color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300", label: "Found" }
   };
-  
+
   const style = (typeStyles as any)[type] || typeStyles.lost;
-  
+
   return (
     <Badge variant="outline" className={style.color}>
       {style.label}
@@ -192,10 +194,10 @@ const ReportStatusChangeDialog = ({ isOpen, onClose, report, onStatusChange }: {
       setStatus(report.status);
     }
   }, [report]);
-  
+
   const handleSubmit = async () => {
     if (!report || !status) return;
-    
+
     setIsSubmitting(true);
     try {
       await adminApi.updateReportStatus(report.id, { status, notes });
@@ -216,7 +218,7 @@ const ReportStatusChangeDialog = ({ isOpen, onClose, report, onStatusChange }: {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
@@ -226,14 +228,14 @@ const ReportStatusChangeDialog = ({ isOpen, onClose, report, onStatusChange }: {
             Change the status for report "{report?.title}".
           </AlertDialogDescription>
         </AlertDialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
             <label htmlFor="status" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Status
             </label>
-            <Select 
-              value={status} 
+            <Select
+              value={status}
               onValueChange={setStatus}
             >
               <SelectTrigger>
@@ -247,7 +249,7 @@ const ReportStatusChangeDialog = ({ isOpen, onClose, report, onStatusChange }: {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <label htmlFor="notes" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Admin Notes
@@ -261,7 +263,7 @@ const ReportStatusChangeDialog = ({ isOpen, onClose, report, onStatusChange }: {
             />
           </div>
         </div>
-        
+
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
@@ -287,7 +289,7 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
     queryFn: () => reportId ? adminApi.getReportById(reportId) : Promise.resolve(null),
     enabled: isOpen && reportId !== null,
   });
-  
+
   const formatDate = (dateString: any) => {
     try {
       return format(new Date(dateString), 'PPP');
@@ -295,7 +297,7 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
       return 'Invalid date';
     }
   };
-  
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent className="max-w-3xl">
@@ -305,7 +307,7 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
             Detailed view of report information including item and user details
           </AlertDialogDescription>
         </AlertDialogHeader>
-        
+
         {isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-4 w-full" />
@@ -330,18 +332,18 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
                   {(reportData as any)?.report?.type && <TypeBadge type={(reportData as any).report.type} />}
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="text-sm font-medium">Description</h3>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                   {(reportData as any)?.report?.description}
                 </p>
               </div>
-              
+
               {(reportData as any)?.item && (
                 <div className="space-y-2 border-t pt-4">
                   <h3 className="text-sm font-medium flex items-center">
-                    <Tag className="h-4 w-4 mr-1" />
+                    <TagIcon className="h-4 w-4 mr-1" />
                     Associated Item
                   </h3>
                   <div className="bg-secondary/30 p-3 rounded-md">
@@ -358,7 +360,7 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
                   </div>
                 </div>
               )}
-              
+
               {(reportData as any)?.user && (
                 <div className="space-y-2 border-t pt-4">
                   <h3 className="text-sm font-medium flex items-center">
@@ -366,22 +368,22 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
                     Report Owner
                   </h3>
                   <div className="bg-secondary/30 p-3 rounded-md">
-                  <p className="font-medium">{(reportData as any)?.user?.fullName}</p>
-                  <p className="text-xs text-muted-foreground">{(reportData as any)?.user?.email}</p>
-                  {(reportData as any)?.user?.phoneNumber && (
-                    <p className="text-xs text-muted-foreground">Phone: {(reportData as any)?.user?.phoneNumber}</p>
-                  )}
+                    <p className="font-medium">{(reportData as any)?.user?.fullName}</p>
+                    <p className="text-xs text-muted-foreground">{(reportData as any)?.user?.email}</p>
+                    {(reportData as any)?.user?.phoneNumber && (
+                      <p className="text-xs text-muted-foreground">Phone: {(reportData as any)?.user?.phoneNumber}</p>
+                    )}
                   </div>
                 </div>
               )}
-              
+
               <div className="space-y-2 border-t pt-4">
                 <h3 className="text-sm font-medium">Contact Information</h3>
                 <p className="text-sm text-muted-foreground">
                   {(reportData as any)?.report?.contactInfo || "No contact information provided"}
                 </p>
               </div>
-              
+
               <div className="space-y-2 border-t pt-4">
                 <h3 className="text-sm font-medium">Report Timeline</h3>
                 <div className="space-y-2">
@@ -395,7 +397,7 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
             </div>
           </ScrollArea>
         )}
-        
+
         <AlertDialogFooter>
           <AlertDialogCancel>Close</AlertDialogCancel>
         </AlertDialogFooter>
@@ -405,10 +407,20 @@ const ReportDetailDialog = ({ isOpen, onClose, reportId }: {
 };
 
 export default function AdminReports() {
-  const { user } = useAuth();
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const [location, navigate] = useLocation();
   const { toast } = useToast();
-  
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/admin/reports" />
+        </div>
+      </PageLayout>
+    );
+  }
+
   // Filters and search state
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState({
@@ -419,25 +431,25 @@ export default function AdminReports() {
     sortBy: "reportedAt",
     sortOrder: "desc",
   });
-  
+
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  
+
   // Dialog states
   const [selectedReport, setSelectedReport] = useState(null);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
-  
+
   // Query for report statistics
-  const { 
-    data: reportStats, 
-    isLoading: isLoadingStats 
+  const {
+    data: reportStats,
+    isLoading: isLoadingStats
   } = useQuery({
     queryKey: ['/api/admin/reports/stats'],
     queryFn: adminApi.getReportStats,
   });
-  
+
   // Query for reports with filters
   const {
     data: reportData,
@@ -452,7 +464,7 @@ export default function AdminReports() {
       ...filters
     }) as any,
   });
-  
+
   // Handle filter changes
   const handleFilterChange = (key: string, value: string) => {
     // Convert the special "all" filter values to empty string for the API
@@ -461,7 +473,7 @@ export default function AdminReports() {
     // Reset to first page when filters change
     setPage(1);
   };
-  
+
   // Clear all filters
   const clearFilters = () => {
     setFilters({
@@ -475,7 +487,7 @@ export default function AdminReports() {
     setSearch("");
     setPage(1);
   };
-  
+
   // Handle export
   const handleExport = () => {
     adminApi.exportReportsCsv();
@@ -485,19 +497,19 @@ export default function AdminReports() {
       variant: "default",
     });
   };
-  
+
   // Handle status update dialog
   const openStatusDialog = (report: any) => {
     setSelectedReport(report);
     setIsStatusDialogOpen(true);
   };
-  
+
   // Handle report detail dialog
   const openDetailDialog = (report: any) => {
     setSelectedReport(report);
     setIsDetailDialogOpen(true);
   };
-  
+
   return (
     <CommandCenterLayout>
       <div className="flex items-center justify-between mb-6">
@@ -520,14 +532,14 @@ export default function AdminReports() {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          
+
           <Button variant="outline" className="flex items-center gap-2" onClick={handleExport}>
             <Download className="h-4 w-4" />
             <span>Export</span>
           </Button>
         </div>
       </div>
-      
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
@@ -536,21 +548,21 @@ export default function AdminReports() {
           icon={<FileText className="h-5 w-5" />}
           color="blue"
         />
-        
+
         <StatCard
           title="Lost Reports"
           value={isLoadingStats ? "—" : (reportStats as any)?.lostReports || 0}
           icon={<AlertCircle className="h-5 w-5" />}
           color="red"
         />
-        
+
         <StatCard
           title="Found Reports"
           value={isLoadingStats ? "—" : (reportStats as any)?.foundReports || 0}
           icon={<CheckCircle2 className="h-5 w-5" />}
           color="green"
         />
-        
+
         <StatCard
           title="Open Reports"
           value={isLoadingStats ? "—" : (reportStats as any)?.openReports || 0}
@@ -558,7 +570,7 @@ export default function AdminReports() {
           color="amber"
         />
       </div>
-      
+
       {/* Reports Section */}
       <Card className="shadow-sm mb-6">
         <CardHeader className="pb-3">
@@ -567,7 +579,7 @@ export default function AdminReports() {
             View, filter, and manage all reports in the system
           </CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
@@ -583,10 +595,10 @@ export default function AdminReports() {
                 />
               </div>
             </div>
-            
+
             <div className="flex flex-wrap gap-2 items-center">
-              <Select 
-                value={filters.type} 
+              <Select
+                value={filters.type}
                 onValueChange={(value) => handleFilterChange('type', value)}
               >
                 <SelectTrigger className="w-[140px]">
@@ -598,9 +610,9 @@ export default function AdminReports() {
                   <SelectItem value="found">Found</SelectItem>
                 </SelectContent>
               </Select>
-              
-              <Select 
-                value={filters.status} 
+
+              <Select
+                value={filters.status}
                 onValueChange={(value) => handleFilterChange('status', value)}
               >
                 <SelectTrigger className="w-[140px]">
@@ -614,12 +626,12 @@ export default function AdminReports() {
                   <SelectItem value="Closed">Closed</SelectItem>
                 </SelectContent>
               </Select>
-              
+
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="icon"
                       onClick={clearFilters}
                       disabled={!search && Object.values(filters).every(val => val === "" || val === "reportedAt" || val === "desc")}
@@ -634,7 +646,7 @@ export default function AdminReports() {
               </TooltipProvider>
             </div>
           </div>
-          
+
           {/* Reports Table */}
           <div className="rounded-md border">
             <div className="overflow-x-auto">
@@ -671,7 +683,7 @@ export default function AdminReports() {
                           <FileText className="h-8 w-8 mb-2 text-muted-foreground/60" />
                           <p>No reports found</p>
                           <p className="text-xs text-muted-foreground/60 mt-1">
-                            {search || Object.values(filters).some(val => val !== "" && val !== "reportedAt" && val !== "desc") 
+                            {search || Object.values(filters).some(val => val !== "" && val !== "reportedAt" && val !== "desc")
                               ? "Try adjusting your filters"
                               : "There are no reports in the system yet"
                             }
@@ -735,7 +747,7 @@ export default function AdminReports() {
               </table>
             </div>
           </div>
-          
+
           {/* Pagination */}
           {reportData && (reportData as any).totalPages > 0 && (
             <div className="flex items-center justify-between mt-4">
@@ -767,7 +779,7 @@ export default function AdminReports() {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Help Card */}
       <Card>
         <CardHeader className="pb-3">
@@ -798,17 +810,17 @@ export default function AdminReports() {
           </Tabs>
         </CardContent>
       </Card>
-      
+
       {/* Dialogs */}
       {selectedReport && (
         <>
-          <ReportStatusChangeDialog 
+          <ReportStatusChangeDialog
             isOpen={isStatusDialogOpen}
             onClose={() => setIsStatusDialogOpen(false)}
             report={selectedReport}
             onStatusChange={refetchReports}
           />
-          
+
           <ReportDetailDialog
             isOpen={isDetailDialogOpen}
             onClose={() => setIsDetailDialogOpen(false)}

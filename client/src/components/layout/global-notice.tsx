@@ -25,6 +25,14 @@ export function GlobalNotice() {
     const [location] = useLocation();
     const { t } = useLanguage();
     const [showRecruitmentDialog, setShowRecruitmentDialog] = React.useState(false);
+    const [isDismissed, setIsDismissed] = React.useState(false);
+
+    React.useEffect(() => {
+        if (typeof window !== "undefined") {
+            const dismissed = localStorage.getItem("hide-recruitment") === "true";
+            setIsDismissed(dismissed);
+        }
+    }, []);
     const [recruitmentStep, setRecruitmentStep] = React.useState<'info' | 'form'>('info');
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isSuccess, setIsSuccess] = React.useState(false);
@@ -40,7 +48,7 @@ export function GlobalNotice() {
 
     // Hide on auth page and any other pages where it doesn't make sense
     const hiddenRoutes = ["/auth"];
-    if (hiddenRoutes.includes(location)) {
+    if (hiddenRoutes.includes(location) || isDismissed) {
         return null;
     }
 

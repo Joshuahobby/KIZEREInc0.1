@@ -4,6 +4,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { ArrowLeft, Package, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +34,18 @@ const itemFormSchema = z.object({
 type ItemFormValues = z.infer<typeof itemFormSchema>;
 
 export default function NewItem() {
+  const { user, isLoading: isLoadingAuth } = useAuth();
   const [, navigate] = useLocation();
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/admin/item-management/new" />
+        </div>
+      </PageLayout>
+    );
+  }
   const { toast } = useToast();
   const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);

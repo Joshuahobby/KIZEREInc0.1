@@ -58,6 +58,7 @@ import { PaymentService } from "@/services/payment.service";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { PageLayout } from "@/components/layout/page-layout";
+import { AuthWall } from "@/components/ui/auth-wall";
 
 // Custom Registration Components
 import { SmartIDRecognizer } from "@/components/item-registration/smart-id-recognizer";
@@ -66,7 +67,6 @@ import { OwnershipChain, OwnershipDocument as OwnershipDoc } from "@/components/
 import { QRCodeGenerator } from "@/components/item-registration/qr-code-generator";
 import { ShareWhatsAppButton } from "@/components/ui/share-whatsapp-button";
 import { VoiceHelper } from "@/components/ui/voice-helper";
-import { PaymentTrust } from "@/components/ui/payment-trust";
 import { PaymentModal } from "@/components/payment/payment-modal";
 
 // Schema & Constants
@@ -153,6 +153,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
   const [isMounted, setIsMounted] = useState(false);
   const [autoSaving, setAutoSaving] = useState(false);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
+  const [showOwnershipDocs, setShowOwnershipDocs] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [registeredItemData, setRegisteredItemData] = useState<any>(null);
@@ -353,21 +354,9 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
     if (currentStep < maxSteps - 1) setCurrentStep(currentStep + 1);
   };
 
-  // Manual save draft
-  const saveDraft = () => {
-    const values = form.getValues();
-    localStorage.setItem('itemRegistrationDraft', JSON.stringify(values));
-    setAutoSaving(true);
-    setTimeout(() => setAutoSaving(false), 1500);
-    toast({
-      title: "Draft Saved",
-      description: "Your registration progress has been saved locally.",
-    });
-  };
-
   // Step validation
-  const canProceedStep0 = !!(watchedName && watchedCategory && watchedIdentifier);
-  const canProceedStep1 = (itemImages.length >= 1 || existingImages.length >= 1);
+  const canProceedStep0 = !!(watchedName && watchedCategory);
+  const canProceedStep1 = !!(watchedIdentifier && (itemImages.length >= 1 || existingImages.length >= 1));
 
   // OCR/Smart ID detection handler
   const handleIdentifierDetected = (value: string) => {
@@ -489,6 +478,16 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
     registerMutation.mutate(data);
   };
 
+  if (!user) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/register-item" />
+        </div>
+      </PageLayout>
+    );
+  }
+
   // ──────────────── LOADING STATE ────────────────
   if (isEditMode && isLoadingItem) {
     return (
@@ -604,7 +603,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
             }}
           />
         )}
-        <div className="w-full max-w-6xl mx-auto">
+        <div className="w-full max-w-3xl mx-auto">
 
           {/* Auto-save indicator (floating) */}
           {autoSaving && (
@@ -638,11 +637,11 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
               </div>
             </div>
 
-            {/* ──── Content: 60/40 Split ──── */}
-            <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+            {/* ──── Content ──── */}
+            <div className="flex-1 overflow-hidden">
 
-              {/* ──── LEFT: Form (60%) ──── */}
-              <div className="lg:w-3/5 p-6 sm:p-10 overflow-y-auto lg:border-r border-border/30">
+              {/* ──── Form Container ──── */}
+              <div className="w-full p-6 sm:p-10 overflow-y-auto">
                 <Form {...form}>
                   <form
                     id="item-registration-form"
@@ -659,7 +658,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 30 }}
                           transition={{ duration: 0.3, ease: "easeInOut" }}
-                          className="space-y-8"
+                          className="space-y-5"
                         >
                           {/* Primary Item Name */}
                           <div className="space-y-5">
@@ -673,7 +672,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div className="grid grid-cols-1 gap-5">
                               {/* Item Name */}
                               <FormField
                                 control={form.control}
@@ -698,46 +697,6 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                   </FormItem>
                                 )}
                               />
-
-                              {/* Unique Identifier */}
-                              <FormField
-                                control={form.control}
-                                name="uniqueIdentifier"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-sm font-semibold flex items-center justify-between">
-                                      <span className="flex items-center gap-1.5">
-                                        {t("registration.item_uuid")}
-                                        <span className="text-primary text-xs">*</span>
-                                      </span>
-                                      <VoiceHelper text={t("registration.voice_uuid_hint")} />
-                                    </FormLabel>
-                                    <FormControl>
-                                      <div className="relative group">
-                                        <Input
-                                          placeholder="e.g. 352849102938472"
-                                          className="h-12 bg-muted/5 border-border/60 focus:border-primary/50 rounded-xl text-sm font-mono tracking-wide pr-24"
-                                          {...field}
-                                          disabled={isEditMode}
-                                        />
-                                        <button
-                                          type="button"
-                                          onClick={() => (document.getElementById('smart-ai-trigger') as HTMLElement)?.click()}
-                                          className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200 text-xs font-bold"
-                                          title="Smart AI OCR"
-                                        >
-                                          <Camera className="h-3.5 w-3.5" />
-                                          Smart AI
-                                        </button>
-                                        <div className="hidden">
-                                          <SmartIDRecognizer onIdentifierSelected={handleIdentifierDetected} showHeader={false} />
-                                        </div>
-                                      </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
                             </div>
                           </div>
 
@@ -753,40 +712,25 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                     <span className="text-[10px] text-muted-foreground italic">Select one category</span>
                                   </div>
 
-                                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-3">
-                                    {CATEGORY_VISUALS.map((cat) => {
-                                      const isSelected = field.value === cat.id;
-                                      return (
-                                        <button
-                                          key={cat.id}
-                                          type="button"
-                                          onClick={() => field.onChange(cat.id)}
-                                          className={cn(
-                                            "relative flex flex-col items-center justify-center gap-1.5 aspect-square rounded-xl transition-all duration-200 bg-gradient-to-br shadow-md",
-                                            cat.gradient,
-                                            isSelected
-                                              ? "border-2 border-white ring-2 ring-primary/30 scale-[1.03]"
-                                              : "hover:scale-105 active:scale-95"
-                                          )}
-                                        >
-                                          <cat.icon className="h-6 w-6 text-white" />
-                                          <span className="text-[10px] font-bold text-white">
-                                            {t(`categories.${cat.id}`)}
-                                          </span>
-
-                                          {isSelected && (
-                                            <motion.div
-                                              initial={{ scale: 0 }}
-                                              animate={{ scale: 1 }}
-                                              className="absolute top-2 right-2 h-5 w-5 bg-white rounded-full flex items-center justify-center shadow-md"
-                                            >
-                                              <Check className="h-3 w-3 text-gray-800" />
-                                            </motion.div>
-                                          )}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
+                                    <FormControl>
+                                      <SelectTrigger className="mt-3 h-14 bg-muted/5 border-border/60 rounded-xl focus:ring-primary/50 text-sm font-medium">
+                                        <SelectValue placeholder="Select a category..." />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent className="max-h-[300px] rounded-xl border-border/60">
+                                      {CATEGORY_VISUALS.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.id} className="cursor-pointer rounded-lg my-0.5">
+                                          <div className="flex items-center gap-3 py-1">
+                                            <div className={cn("p-1.5 rounded-lg flex items-center justify-center bg-gradient-to-br", cat.gradient)}>
+                                              <cat.icon className="h-4 w-4 text-white" />
+                                            </div>
+                                            <span className="font-medium text-[13px]">{t(`categories.${cat.id}`)}</span>
+                                          </div>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                   <FormMessage />
                                 </FormItem>
                               )}
@@ -794,26 +738,33 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           </div>
 
                           {/* Optional Fields */}
-                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden">
-                            <button
-                              type="button"
+                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden mt-6">
+                            <div
+                              role="button"
+                              tabIndex={0}
                               onClick={() => setShowOptionalFields(!showOptionalFields)}
-                              className="w-full flex items-center justify-between p-5 sm:p-6 hover:bg-muted/5 transition-colors"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setShowOptionalFields(!showOptionalFields);
+                                }
+                              }}
+                              className="w-full flex items-center justify-between p-5 sm:p-6 hover:bg-muted/5 transition-colors cursor-pointer"
                             >
                               <div className="flex items-center gap-3">
                                 <div className="h-8 w-8 bg-muted/20 rounded-lg flex items-center justify-center text-muted-foreground">
                                   <Info className="h-4 w-4" />
                                 </div>
                                 <div className="text-left">
-                                  <p className="text-sm font-semibold">Additional Details</p>
-                                  <p className="text-xs text-muted-foreground">Color, model, notes & markings</p>
+                                  <p className="text-sm font-semibold">{t("registration.fields.additional_details")}</p>
+                                  <p className="text-xs text-muted-foreground">{t("registration.fields.additional_details_hint")}</p>
                                 </div>
                               </div>
                               <ChevronDown className={cn(
                                 "h-4 w-4 text-muted-foreground transition-transform duration-300",
                                 showOptionalFields && "rotate-180"
                               )} />
-                            </button>
+                            </div>
 
                             <AnimatePresence>
                               {showOptionalFields && (
@@ -831,10 +782,10 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                         name="subCategory"
                                         render={({ field }) => (
                                           <FormItem>
-                                            <FormLabel className="text-sm font-medium text-muted-foreground">Detailed Type / Model</FormLabel>
+                                            <FormLabel className="text-sm font-medium text-muted-foreground">{t("registration.fields.type_model")}</FormLabel>
                                             <FormControl>
                                               <Input
-                                                placeholder="e.g. Galaxy S22, MacBook Pro"
+                                                placeholder={t("registration.fields.type_model_placeholder")}
                                                 className="h-12 bg-muted/5 border-border/60 rounded-xl text-sm"
                                                 {...field}
                                               />
@@ -848,10 +799,10 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                         name="color"
                                         render={({ field }) => (
                                           <FormItem>
-                                            <FormLabel className="text-sm font-medium text-muted-foreground">Color</FormLabel>
+                                            <FormLabel className="text-sm font-medium text-muted-foreground">{t("registration.fields.color")}</FormLabel>
                                             <FormControl>
                                               <Input
-                                                placeholder="e.g. Midnight Black"
+                                                placeholder={t("registration.fields.color_placeholder")}
                                                 className="h-12 bg-muted/5 border-border/60 rounded-xl text-sm"
                                                 {...field}
                                               />
@@ -866,10 +817,225 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                       name="description"
                                       render={({ field }) => (
                                         <FormItem>
-                                          <FormLabel className="text-sm font-medium text-muted-foreground">Notes / Unique Markings</FormLabel>
+                                          <FormLabel className="text-sm font-medium text-muted-foreground">{t("registration.fields.notes")}</FormLabel>
                                           <FormControl>
                                             <Textarea
-                                              placeholder="Describe any scratches, special features, or markings that could help identify this item..."
+                                              placeholder={t("registration.fields.notes_placeholder")}
+                                              className="min-h-[100px] bg-muted/5 border-border/60 rounded-xl text-sm resize-none"
+                                              {...field}
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* ━━━━━━━━━━━━━━━━ STEP 1: VERIFICATION & PHOTOS ━━━━━━━━━━━━━━━━ */}
+                      {currentStep === 1 && (
+                        <motion.div
+                          key="step-photos"
+                          initial={{ opacity: 0, x: -30 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 30 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                          className="space-y-5"
+                        >
+                          {/* ──── OWNERSHIP VERIFICATION ──── */}
+                          <div className="space-y-6">
+                            <div className="flex items-center gap-3 mb-4">
+                              <div className="h-9 w-9 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
+                                <Shield className="h-5 w-5" />
+                              </div>
+                              <div>
+                                <h2 className="text-lg font-bold tracking-tight">Ownership Verification</h2>
+                                <p className="text-sm text-muted-foreground">Identifiers and physical proof</p>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-6">
+                              {/* Unique Identifier */}
+                              <FormField
+                                control={form.control}
+                                name="uniqueIdentifier"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-sm font-semibold flex items-center justify-between">
+                                      <span className="flex items-center gap-1.5">
+                                        {t("registration.fields.uuid_label")}
+                                        <span className="text-primary text-xs">*</span>
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>This helps verify ownership if your item is found.</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      </span>
+                                      <VoiceHelper text={t("registration.voice_uuid_hint")} />
+                                    </FormLabel>
+                                    <FormControl>
+                                      <div className="relative group">
+                                        <Input
+                                          placeholder={t("registration.fields.uuid_placeholder")}
+                                          className="h-12 bg-muted/5 border-border/60 focus:border-primary/50 rounded-xl text-sm font-mono tracking-wide pr-32"
+                                          {...field}
+                                          disabled={isEditMode}
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => (document.getElementById('smart-ai-trigger') as HTMLElement)?.click()}
+                                          className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200 text-xs font-bold"
+                                          title="Detect item details automatically / Scan serial number"
+                                        >
+                                          <Camera className="h-3.5 w-3.5" />
+                                          {t("registration.actions.detect_id")}
+                                        </button>
+                                        <div className="hidden">
+                                          <SmartIDRecognizer onIdentifierSelected={handleIdentifierDetected} showHeader={false} />
+                                        </div>
+                                      </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              {/* Upload Photo in Step 0 */}
+                              <div className="space-y-3">
+                                <FormLabel className="text-sm font-semibold flex items-center gap-1.5">
+                                  {t("registration.fields.upload_photo")}
+                                  <span className="text-primary text-xs">*</span>
+                                </FormLabel>
+
+                                {/* Existing images */}
+                                {existingImages.length > 0 && (
+                                  <div className="p-4 bg-muted/10 rounded-xl mb-3">
+                                    <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">{t("registration.item_existing_images")}</p>
+                                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                                      {existingImages.map((url, idx) => (
+                                        <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-border/30">
+                                          <img src={url} alt="Item" className="w-full h-full object-cover" />
+                                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <Button
+                                              type="button"
+                                              variant="destructive"
+                                              size="icon"
+                                              className="h-7 w-7 rounded-lg"
+                                              onClick={() => setExistingImages(prev => prev.filter((_, i) => i !== idx))}
+                                            >
+                                              <X className="h-3.5 w-3.5" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                <BatchImageUpload
+                                  onImagesChange={setItemImages}
+                                  maxFiles={5 - existingImages.length}
+                                  showHeader={false}
+                                  className="py-2"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Optional Fields */}
+                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden mt-6">
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => setShowOptionalFields(!showOptionalFields)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setShowOptionalFields(!showOptionalFields);
+                                }
+                              }}
+                              className="w-full flex items-center justify-between p-5 sm:p-6 hover:bg-muted/5 transition-colors cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 bg-muted/20 rounded-lg flex items-center justify-center text-muted-foreground">
+                                  <Info className="h-4 w-4" />
+                                </div>
+                                <div className="text-left">
+                                  <p className="text-sm font-semibold">Additional Details</p>
+                                  <p className="text-xs text-muted-foreground">+ Add more information (color, marks, stickers)</p>
+                                </div>
+                              </div>
+                              <ChevronDown className={cn(
+                                "h-4 w-4 text-muted-foreground transition-transform duration-300",
+                                showOptionalFields && "rotate-180"
+                              )} />
+                            </div>
+
+                            <AnimatePresence>
+                              {showOptionalFields && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4 border-t border-border/30 pt-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                      <FormField
+                                        control={form.control}
+                                        name="subCategory"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel className="text-sm font-medium text-muted-foreground">{t("registration.fields.additional_details")}</FormLabel>
+                                            <FormControl>
+                                              <Input
+                                                placeholder={t("registration.fields.type_model_placeholder")}
+                                                className="h-12 bg-muted/5 border-border/60 rounded-xl text-sm"
+                                                {...field}
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                      <FormField
+                                        control={form.control}
+                                        name="color"
+                                        render={({ field }) => (
+                                          <FormItem>
+                                            <FormLabel className="text-sm font-medium text-muted-foreground">{t("registration.fields.color")}</FormLabel>
+                                            <FormControl>
+                                              <Input
+                                                placeholder={t("registration.fields.color_placeholder")}
+                                                className="h-12 bg-muted/5 border-border/60 rounded-xl text-sm"
+                                                {...field}
+                                              />
+                                            </FormControl>
+                                            <FormMessage />
+                                          </FormItem>
+                                        )}
+                                      />
+                                    </div>
+                                    <FormField
+                                      control={form.control}
+                                      name="description"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className="text-sm font-medium text-muted-foreground">{t("registration.fields.notes")}</FormLabel>
+                                          <FormControl>
+                                            <Textarea
+                                              placeholder={t("registration.fields.notes_placeholder")}
                                               className="min-h-[100px] bg-muted/5 border-border/60 rounded-xl text-sm resize-none"
                                               {...field}
                                             />
@@ -884,89 +1050,59 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                             </AnimatePresence>
                           </div>
 
-                        </motion.div>
-                      )}
-
-                      {/* ━━━━━━━━━━━━━━━━ STEP 1: PHOTOS & PROOF ━━━━━━━━━━━━━━━━ */}
-                      {currentStep === 1 && (
-                        <motion.div
-                          key="step-photos"
-                          initial={{ opacity: 0, x: -30 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: 30 }}
-                          transition={{ duration: 0.3, ease: "easeInOut" }}
-                          className="space-y-6"
-                        >
-                          {/* Item Photos */}
-                          <div className="bg-background border border-border/40 rounded-2xl p-5 sm:p-7 shadow-sm space-y-5">
-                            <div className="flex items-center justify-between">
+                          {/* Ownership Documents - Collapsible */}
+                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden mt-6">
+                            <div
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => setShowOwnershipDocs(!showOwnershipDocs)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setShowOwnershipDocs(!showOwnershipDocs);
+                                }
+                              }}
+                              className="w-full flex items-center justify-between p-5 sm:p-6 hover:bg-muted/5 transition-colors cursor-pointer"
+                            >
                               <div className="flex items-center gap-3">
-                                <div className="h-9 w-9 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
-                                  <ImageIcon className="h-4 w-4" />
+                                <div className="h-8 w-8 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500">
+                                  <FileStack className="h-4 w-4" />
                                 </div>
-                                <div>
-                                  <h2 className="text-lg font-bold tracking-tight">{t("registration.item_images")}</h2>
-                                  <p className="text-sm text-muted-foreground">Upload clear photos from different angles</p>
+                                <div className="text-left">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-sm font-semibold">{t("registration.item_ownership_proof")}</p>
+                                    <VoiceHelper text={t("registration.voice_ownership_hint")} />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">{t("registration.fields.ownership_optional_hint")}</p>
                                 </div>
                               </div>
-                              <Badge variant="secondary" className="text-xs font-medium">Min 2 photos</Badge>
+                              <ChevronDown className={cn(
+                                "h-4 w-4 text-muted-foreground transition-transform duration-300",
+                                showOwnershipDocs && "rotate-180"
+                              )} />
                             </div>
 
-                            {/* Existing images */}
-                            {existingImages.length > 0 && (
-                              <div className="p-4 bg-muted/10 rounded-xl">
-                                <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">{t("registration.item_existing_images")}</p>
-                                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                                  {existingImages.map((url, idx) => (
-                                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-border/30">
-                                      <img src={url} alt="Item" className="w-full h-full object-cover" />
-                                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <Button
-                                          type="button"
-                                          variant="destructive"
-                                          size="icon"
-                                          className="h-7 w-7 rounded-lg"
-                                          onClick={() => setExistingImages(prev => prev.filter((_, i) => i !== idx))}
-                                        >
-                                          <X className="h-3.5 w-3.5" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            <BatchImageUpload
-                              onImagesChange={setItemImages}
-                              maxFiles={5 - existingImages.length}
-                              showHeader={false}
-                              className="py-2"
-                            />
+                            <AnimatePresence>
+                              {showOwnershipDocs && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="px-5 sm:px-6 pb-5 sm:pb-6 border-t border-border/30 pt-4">
+                                    <p className="text-sm text-muted-foreground mb-4">{t("registration.item_ownership_docs")}</p>
+                                    <OwnershipChain
+                                      onDocumentsChange={setOwnershipDocuments}
+                                      initialDocuments={ownershipDocuments}
+                                      showHeader={false}
+                                    />
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </div>
-
-                          {/* Ownership Documents */}
-                          <div className="bg-background border border-border/40 rounded-2xl p-5 sm:p-7 shadow-sm space-y-5">
-                            <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-500">
-                                <FileStack className="h-4 w-4" />
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h2 className="text-lg font-bold tracking-tight">{t("registration.item_ownership_proof")}</h2>
-                                  <VoiceHelper text={t("registration.voice_ownership_hint")} />
-                                </div>
-                                <p className="text-sm text-muted-foreground">{t("registration.item_ownership_docs")}</p>
-                              </div>
-                            </div>
-
-                            <OwnershipChain
-                              onDocumentsChange={setOwnershipDocuments}
-                              initialDocuments={ownershipDocuments}
-                              showHeader={false}
-                            />
-                          </div>
-
 
                         </motion.div>
                       )}
@@ -1084,30 +1220,6 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                             </div>
                           </div>
 
-                          {/* Payment Card */}
-                          {!isEditMode && (
-                            <div className="bg-gradient-to-br from-primary/5 via-primary/3 to-transparent border border-primary/20 rounded-2xl p-5 sm:p-7 shadow-sm space-y-5">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="h-9 w-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                                    <CreditCard className="h-4 w-4" />
-                                  </div>
-                                  <div>
-                                    <h3 className="text-base font-bold">{t("registration.review.protection_fee")}</h3>
-                                    <p className="text-xs text-muted-foreground">{t("registration.item_fee_description")}</p>
-                                  </div>
-                                </div>
-                                <span className="text-2xl font-black tracking-tight">2,000 <span className="text-sm font-semibold text-muted-foreground">RWF</span></span>
-                              </div>
-
-                              <div className="flex items-center gap-3 p-3 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
-                                <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
-                                <p className="text-xs text-muted-foreground leading-relaxed">{t("registration.review.lifetime_badge")}</p>
-                              </div>
-
-                              <PaymentTrust className="py-1" showText={false} />
-                            </div>
-                          )}
 
                         </motion.div>
                       )}
@@ -1115,56 +1227,20 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                     </AnimatePresence>
                   </form>
                 </Form>
-              </div>
-              <div className="hidden lg:flex lg:w-2/5 bg-slate-50/50 p-8 flex-col border-l border-border/30">
-                <h3 className="text-sm font-bold text-foreground mb-6 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-[#0db9f2]" />
-                  Asset Lifecycle Visualizer
-                </h3>
-                <div className="relative flex-1 py-4">
-                  <div className="space-y-10 relative">
-                    <div className="absolute left-6 top-6 bottom-6 w-0.5 z-0 dashed-progress-line" />
-                    <div className="flex items-start gap-5 relative z-10">
-                      <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-lg", currentStep >= 0 ? "bg-[#0db9f2] text-white ring-4 ring-[#0db9f2]/10" : "bg-slate-200 text-slate-400")}>
-                        <FileText className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1 pt-1">
-                        <h4 className={cn("text-xs font-bold uppercase tracking-wider", currentStep >= 0 ? "text-[#0db9f2]" : "text-slate-800")}>Step 01: Registered</h4>
-                        <p className="text-[11px] text-slate-500 mt-1 leading-normal">Your asset's metadata is hashed and prepared for secure timestamping.</p>
-                        {currentStep === 0 && <div className="mt-2 flex items-center text-[10px] font-bold text-[#0db9f2]"><span className="animate-pulse mr-1.5">●</span> IN PROGRESS</div>}
-                        {currentStep > 0 && <div className="mt-2 flex items-center text-[10px] font-bold text-emerald-500"><Check className="h-3 w-3 mr-1" /> COMPLETE</div>}
-                      </div>
-                    </div>
-                    <div className={cn("flex items-start gap-5 relative z-10", currentStep < 1 && "opacity-50")}>
-                      <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0", currentStep >= 1 ? "bg-[#0db9f2] text-white shadow-lg ring-4 ring-[#0db9f2]/10" : "bg-slate-200 text-slate-400")}>
-                        <Shield className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1 pt-1">
-                        <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Step 02: Protected</h4>
-                        <p className="text-[11px] text-slate-500 mt-1 leading-normal">Photographic evidence and purchase proof are encrypted with your private key.</p>
-                        {currentStep === 1 && <div className="mt-2 flex items-center text-[10px] font-bold text-[#0db9f2]"><span className="animate-pulse mr-1.5">●</span> IN PROGRESS</div>}
-                        {currentStep > 1 && <div className="mt-2 flex items-center text-[10px] font-bold text-emerald-500"><Check className="h-3 w-3 mr-1" /> COMPLETE</div>}
-                      </div>
-                    </div>
-                    <div className={cn("flex items-start gap-5 relative z-10", currentStep < 2 && "opacity-50")}>
-                      <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0", currentStep >= 2 ? "bg-[#0db9f2] text-white shadow-lg ring-4 ring-[#0db9f2]/10" : "bg-slate-200 text-slate-400")}>
-                        <CheckCircle className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1 pt-1">
-                        <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Step 03: Verified</h4>
-                        <p className="text-[11px] text-slate-500 mt-1 leading-normal">KIZERE Certificate of Authenticity is issued for insurance and recovery.</p>
-                        {currentStep === 2 && <div className="mt-2 flex items-center text-[10px] font-bold text-[#0db9f2]"><span className="animate-pulse mr-1.5">●</span> IN PROGRESS</div>}
-                      </div>
-                    </div>
+
+                {/* ──── SECURITY BADGES ──── */}
+                <div className="mt-8 flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-6 border-t border-border/10">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider border border-emerald-100">
+                    <Shield className="h-3 w-3" />
+                    {t("registration.status.encrypted")}
                   </div>
-                  <div className="mt-8 pt-4">
-                    <div className="bg-background p-4 rounded-xl border border-border/50 shadow-sm">
-                      <div className="flex items-center gap-2.5 mb-2">
-                        <div className="p-1.5 bg-[#0db9f2]/10 rounded-lg"><Shield className="h-4 w-4 text-[#0db9f2]" /></div>
-                        <span className="text-xs font-bold text-foreground uppercase tracking-tight">Why Unique IDs Matter?</span>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground leading-relaxed italic">"Providing a unique identifier is the single most effective way to prove ownership if your item is recovered by law enforcement."</p>
-                    </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider border border-blue-100">
+                    <CheckCircle className="h-3 w-3" />
+                    {t("registration.status.verified")}
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-50 text-violet-700 text-[10px] font-bold uppercase tracking-wider border border-violet-100">
+                    <Fingerprint className="h-3 w-3" />
+                    {t("registration.status.bank_security")}
                   </div>
                 </div>
               </div>
@@ -1173,7 +1249,11 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
             {/* ──── Footer Bar ──── */}
             <footer className="px-6 sm:px-10 py-4 border-t border-border/30 flex items-center justify-between bg-background">
               <div className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wider">
-                <span className="block mb-1">Progress</span>
+                <span className="block mb-1 font-bold text-foreground">
+                  {currentStep === 0 && t("registration.steps.details")}
+                  {currentStep === 1 && t("registration.steps.verification")}
+                  {currentStep === 2 && t("registration.steps.confirm")}
+                </span>
                 <div className="w-28 h-1.5 bg-muted/20 rounded-full overflow-hidden">
                   <motion.div className="h-full bg-[#0db9f2] rounded-full" initial={{ width: 0 }} animate={{ width: `${completion}%` }} transition={{ duration: 0.5, ease: "easeOut" }} />
                 </div>
@@ -1182,13 +1262,17 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                 {currentStep > 0 && (
                   <Button type="button" variant="ghost" onClick={prevStep} className="h-12 px-5 rounded-xl text-sm font-semibold">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back
+                    {t("common.back")}
                   </Button>
                 )}
-                <button type="button" onClick={saveDraft} className="text-muted-foreground hover:text-foreground font-bold text-xs uppercase tracking-widest px-4 transition-colors">Save Draft</button>
+                {autoSaving && (
+                  <span className="text-muted-foreground/60 font-bold text-xs uppercase tracking-widest px-4 flex items-center gap-2 animate-pulse">
+                    <Loader2 className="h-3 w-3 animate-spin" /> {t("registration.status.auto_saving")}
+                  </span>
+                )}
                 {currentStep < maxSteps - 1 ? (
                   <Button type="button" onClick={nextStep} disabled={currentStep === 0 ? !canProceedStep0 : !canProceedStep1} className="h-12 px-8 rounded-xl text-sm font-bold bg-[#0db9f2] hover:bg-[#0a94c2] text-white shadow-lg shadow-[#0db9f2]/20 transition-all group">
-                    Continue to Step {currentStep + 2}
+                    {isEditMode ? t("registration.actions.review_changes") : t("registration.actions.review_submit")}
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 ) : (
@@ -1203,43 +1287,45 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
       </div>
 
       {/* ──── Floating Mobile Action Bar ──── */}
-      {isMounted && !showSuccess && typeof document !== 'undefined' && createPortal(
-        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-[100]">
-          <div className="bg-background/90 backdrop-blur-2xl p-2.5 rounded-2xl border border-border/30 shadow-2xl flex items-center gap-2 max-w-md mx-auto">
-            {currentStep > 0 && (
-              <Button type="button" variant="outline" size="icon" onClick={prevStep} className="rounded-xl h-12 w-12 shrink-0 border-border/30">
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-            )}
+      {
+        isMounted && !showSuccess && typeof document !== 'undefined' && createPortal(
+          <div className="lg:hidden fixed bottom-6 left-4 right-4 z-[100]">
+            <div className="bg-background/90 backdrop-blur-2xl p-2.5 rounded-2xl border border-border/30 shadow-2xl flex items-center gap-2 max-w-md mx-auto">
+              {currentStep > 0 && (
+                <Button type="button" variant="outline" size="icon" onClick={prevStep} className="rounded-xl h-12 w-12 shrink-0 border-border/30">
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              )}
 
-            {currentStep < maxSteps - 1 ? (
-              <Button
-                type="button"
-                onClick={nextStep}
-                disabled={currentStep === 0 ? !canProceedStep0 : !canProceedStep1}
-                className="flex-1 h-12 rounded-xl text-sm font-bold shadow-lg shadow-primary/20"
-              >
-                Next Step
-                <ChevronRight className="ml-1.5 h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                form="item-registration-form"
-                disabled={completion < 30 || registerMutation.isPending}
-                className="flex-1 h-12 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 bg-primary flex items-center justify-between px-5"
-              >
-                <div className="flex flex-col items-start leading-none gap-0.5">
-                  {!isEditMode && <span className="text-[9px] opacity-70">2,000 RWF</span>}
-                  <span>{isEditMode ? t("common.saveChanges") : t("common.finish")}</span>
-                </div>
-                {registerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
-              </Button>
-            )}
-          </div>
-        </div>,
-        document.body
-      )}
-    </PageLayout>
+              {currentStep < maxSteps - 1 ? (
+                <Button
+                  type="button"
+                  onClick={nextStep}
+                  disabled={currentStep === 0 ? !canProceedStep0 : !canProceedStep1}
+                  className="flex-1 h-12 rounded-xl text-sm font-bold shadow-lg shadow-primary/20"
+                >
+                  {isEditMode ? t("registration.actions.review_changes") : t("registration.actions.review")}
+                  <ChevronRight className="ml-1.5 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  form="item-registration-form"
+                  disabled={completion < 30 || registerMutation.isPending}
+                  className="flex-1 h-12 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 bg-primary flex items-center justify-between px-5"
+                >
+                  <div className="flex flex-col items-start leading-none gap-0.5">
+                    {!isEditMode && <span className="text-[9px] opacity-70">2,000 RWF</span>}
+                    <span>{isEditMode ? t("common.saveChanges") : t("common.finish")}</span>
+                  </div>
+                  {registerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              )}
+            </div>
+          </div>,
+          document.body
+        )
+      }
+    </PageLayout >
   );
 }

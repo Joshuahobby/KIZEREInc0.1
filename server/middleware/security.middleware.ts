@@ -56,7 +56,7 @@ export { generateCsrfToken as generateToken, invalidCsrfTokenError, validateRequ
 // Rate limiter configurations
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Max 10 requests per window
+  max: process.env.NODE_ENV === 'production' ? 10 : 100, // Increased for dev/testing
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many authentication attempts, please try again later' },
@@ -77,7 +77,7 @@ const authLimiter = rateLimit({
 // General API rate limiter
 const apiLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  max: 300, // Increased to 300 for better dashboard experience
+  max: process.env.NODE_ENV === 'production' ? 300 : 1000, 
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Too many requests, please try again later' }

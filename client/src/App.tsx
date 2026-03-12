@@ -9,11 +9,13 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { ChatWidget } from "@/components/chat/chat-widget";
 import { GlobalNotice } from "@/components/layout/global-notice";
 import { useLocation } from "wouter";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 
 // Lazy load all pages
 const UnifiedDashboard = React.lazy(() => import("@/pages/unified-dashboard"));
 const ItemRegistration = React.lazy(() => import("@/pages/item-registration"));
 const LandingPage = React.lazy(() => import("@/pages/landing-page"));
+const HowItWorks = React.lazy(() => import("@/pages/how-it-works-v2"));
 const AuthPage = React.lazy(() => import("@/pages/auth-page"));
 const AuthCallback = React.lazy(() => import("@/pages/auth-callback"));
 const MyItems = React.lazy(() => import("@/pages/my-items"));
@@ -22,6 +24,7 @@ const Search = React.lazy(() => import("@/pages/search"));
 const LostFound = React.lazy(() => import("@/pages/lost-found"));
 const ReportDetailPage = React.lazy(() => import("@/pages/report-detail"));
 const ClaimDetailPage = React.lazy(() => import("@/pages/claim-detail"));
+const MyClaims = React.lazy(() => import("@/pages/my-claims"));
 const UserManagement = React.lazy(() => import("@/pages/user-management"));
 const AdminUserManagement = React.lazy(() => import("@/pages/admin/user-management"));
 const RoleManagementPage = React.lazy(() => import("@/pages/admin/role-management"));
@@ -45,6 +48,7 @@ const ProfilePage = React.lazy(() => import("@/pages/profile"));
 const SettingsPage = React.lazy(() => import("@/pages/settings"));
 const IdentityVerification = React.lazy(() => import("@/pages/verification-page"));
 const AdminVerifications = React.lazy(() => import("@/pages/admin/verifications"));
+const AdminClaimsManagement = React.lazy(() => import("@/pages/admin/claims-management"));
 const ClientManagement = React.lazy(() => import("@/pages/admin/client-management"));
 const BlogPage = React.lazy(() => import("@/pages/blog"));
 const DocsPage = React.lazy(() => import("@/pages/docs"));
@@ -54,6 +58,7 @@ const AboutPage = React.lazy(() => import("@/pages/about"));
 const ContactPage = React.lazy(() => import("@/pages/contact"));
 const PrivacyPage = React.lazy(() => import("@/pages/privacy"));
 const TermsPage = React.lazy(() => import("@/pages/terms"));
+const Notifications = React.lazy(() => import("@/pages/notifications"));
 const NotFound = React.lazy(() => import("@/pages/not-found"));
 
 function App() {
@@ -132,7 +137,9 @@ function App() {
                   <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
                   <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
                   <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
-                  <ProtectedRoute path="/items/:id" component={ItemDetail} requiredRole="any" />
+                  <Route path="/items/:id">
+                    <ItemDetail />
+                  </Route>
                   <ProtectedRoute path="/items/:id/edit" component={ItemRegistration} requiredRole="any" />
                   <Route path="/search">
                     <Search />
@@ -143,8 +150,13 @@ function App() {
                   <ProtectedRoute path="/lost-found/report" component={ItemRegistration} requiredRole="any" />
                   <ProtectedRoute path="/lost-found/report/lost" component={ItemRegistration} requiredRole="any" />
                   <ProtectedRoute path="/lost-found/report/found" component={ItemRegistration} requiredRole="any" />
-                  <ProtectedRoute path="/report/:id" component={ReportDetailPage} requiredRole="any" />
-                  <ProtectedRoute path="/reports/:id" component={ReportDetailPage} requiredRole="any" />
+                  <Route path="/report/:id">
+                    <ReportDetailPage />
+                  </Route>
+                  <Route path="/reports/:id">
+                    <ReportDetailPage />
+                  </Route>
+                  <ProtectedRoute path="/my-claims" component={MyClaims} requiredRole="any" />
                   <ProtectedRoute path="/claims/:id" component={ClaimDetailPage} requiredRole="any" />
                   <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
 
@@ -176,6 +188,7 @@ function App() {
                   <ProtectedRoute path="/admin/reports" component={AdminReports} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/clients" component={ClientManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/verifications" component={AdminVerifications} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/claims" component={AdminClaimsManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/item-verification" component={AdminVerifications} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/user-verification" component={AdminVerifications} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/roles" component={RoleManagementPage} requiredRole="Admin" />
@@ -185,9 +198,13 @@ function App() {
                   <ProtectedRoute path="/profile" component={ProfilePage} requiredRole="any" />
                   <ProtectedRoute path="/admin/settings" component={SettingsPage} requiredRole="Admin" />
                   <ProtectedRoute path="/settings" component={SettingsPage} requiredRole="any" />
+                  <ProtectedRoute path="/dashboard/notifications" component={Notifications} requiredRole="any" />
                   <ProtectedRoute path="/identity-verification" component={IdentityVerification} requiredRole="any" />
 
                   {/* Static Pages */}
+                  <Route path="/how-it-works">
+                    <HowItWorks />
+                  </Route>
                   <Route path="/faq">
                     <FAQPage />
                   </Route>
@@ -213,11 +230,10 @@ function App() {
                     <CommunityPage />
                   </Route>
 
-                  {/* 404 route */}
-                  <Route>
-                    <NotFound />
-                  </Route>
+                  {/* Catch-all 404 Route */}
+                  <Route component={NotFound} />
                 </Switch>
+                <ScrollToTop />
               </main>
               <ChatWidget />
             </React.Suspense>

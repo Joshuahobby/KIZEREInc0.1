@@ -16,7 +16,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/:id/read", async (req, res) => {
+router.patch("/:id/read", async (req, res) => {
   try {
     const notificationId = parseInt(req.params.id);
     if (isNaN(notificationId)) {
@@ -36,6 +36,16 @@ router.post("/:id/read", async (req, res) => {
     res.json(updated);
   } catch (error) {
     res.status(500).json({ message: "Failed to update notification" });
+  }
+});
+
+router.post("/mark-all-read", async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    await storage.markAllNotificationsAsRead(userId);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to mark all notifications as read" });
   }
 });
 

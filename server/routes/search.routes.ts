@@ -10,7 +10,7 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const { q, status, category, location, dateFilter, startDate, endDate } = req.query;
+    const { q, status, category, location, dateFilter, startDate, endDate, type: typeFilter } = req.query;
     const queryStr = (q as string || '').toLowerCase().trim();
     const keywords = queryStr.split(/\s+/).filter(k => k.length > 1);
 
@@ -58,129 +58,16 @@ router.get("/", async (req, res) => {
       return conditions;
     };
 
+    // Use typeFilter from search query
 
-    // 1. Search Registered items (scoped to the current user's items only)
-    // If status filter contains 'Registered' or no status filter is provided or 'all' is provided
-    if (statusFilters.length === 0 || statusFilters.includes('all') || statusFilters.some(s => ['Registered'].includes(s))) {
-      const itemConditions = [];
-
-      // Only return the current user's items (users can only view their own items)
-      itemConditions.push(eq(items.userId, req.user!.id));
-
-      if (keywords.length > 0) {
-        keywords.forEach(keyword => {
-          const pattern = `%${keyword}%`;
-          itemConditions.push(or(
-            like(sql`lower(${items.name})`, pattern),
-            like(sql`lower(${items.description})`, pattern),
-            like(sql`lower(${items.uniqueIdentifier})`, pattern),
-            like(sql`lower(${items.ocrText})`, pattern)
-          ));
-        });
-      }
-
-      if (categoryFilters.length > 0 && !categoryFilters.includes('any')) {
-        // Use manual OR logic for multiple categories if inArray implies strict single column check against list (works fine usually)
-        // But for clarity let's just use sql in
-        const cats = categoryFilters.map(c => `'${c}'`).join(',');
-        if (cats) {
-          itemConditions.push(sql`${items.category} IN (${sql.raw(cats)})`);
-        }
-      }
-
-      if (location) {
-        itemConditions.push(like(items.location, `%${location as string}%`));
-      }
-
-      const dateConditions = getDateRangeConditions(items.registeredAt);
-      itemConditions.push(...dateConditions);
-
-      const registeredItems = await db.select().from(items).where(itemConditions.length ? and(...itemConditions) : undefined);
-
-      results.push(...registeredItems.map(item => {
-        let score = 0;
-        if (queryStr) {
-          if (item.name.toLowerCase().includes(queryStr)) score += 10;
-          if (item.uniqueIdentifier?.toLowerCase().includes(queryStr)) score += 15;
-          keywords.forEach(k => {
-            if (item.name.toLowerCase().includes(k)) score += 2;
-            if (item.description?.toLowerCase().includes(k)) score += 1;
-            if (item.ocrText?.toLowerCase().includes(k)) score += 3;
-          });
-        }
-        return {
-          id: item.id,
-          title: item.name, // Unify title
-          description: item.description,
-          category: item.category,
-          status: item.status,
-          location: item.location,
-          date: item.registeredAt, // Unify date
-          imageUrls: item.imageUrls,
-          type: 'registered',
-          score
-        };
-      }));
-    }
-
-    // 2. Search Lost/Found reports
-    // If status filter contains 'Lost', 'Found', 'Open', 'Resolved' etc, or no status filter
-    const reportStatusFilters = statusFilters.filter(s => !['Registered', 'all'].includes(s));
-
-    // Logic: 
-    // If status includes 'lost' -> search reports with type='lost'
-    // If status includes 'found' -> search reports with type='found'
-    // If status includes 'Open', 'Resolved' -> filtering by report status
-    // If NO status filter -> search all reports
-
-    const searchLost = statusFilters.length === 0 || statusFilters.includes('all') || statusFilters.includes('lost');
-    const searchFound = statusFilters.length === 0 || statusFilters.includes('all') || statusFilters.includes('found');
-
-
-    if (searchLost || searchFound) {
-      const reportConditions = [];
-
-      // Filter by Type (lost vs found)
-      const types = [];
-      if (searchLost) types.push('lost');
-      if (searchFound) types.push('found');
-
-      if (types.length > 0) {
-        reportConditions.push(sql`${reports.type} IN (${sql.raw(types.map(t => `'${t}'`).join(','))})`);
-      }
-
-      // Filter by Status (Open, Resolved, etc) IF specifically requested
-      // For now, let's assume if they search "Lost", they mean type=lost. 
-      // If they search "Open", they mean status=Open.
-      // The UI sends "lost", "found", "registered" as "searchType" which maps to our `status` param here.
-      // However, the `SearchFilters` component sends ACTUAL statuses like "Open", "Resolved" too?
-      // Let's check `SearchFilters.tsx`.
-      // It has `statuses = ["Open", "In_Progress", "Resolved", "Closed"]`
-      // And it sends `status: status.join(',')`
-      // AND it sends `type: type`.
-      // Wait, `SearchFilters` sends `type` separate from `status`.
-      // My previous analysis of `search.tsx` was based on the OLD simple filter. The NEW `SearchFilters` sends `type` AND `status`.
-      // `server/routes/search.routes.ts` receives `q, status, category, location, dateFilter`... AND `type`?
-      // Let's ensure we read `type` from query. `req.query` has `type`.
-
-      // RE-READ: `req.query` in line 13 destructures: `q, status, category, location, dateFilter`. It MISSES `type`.
-      // I should add `type` to destructuring.
-    }
-
-    // Let's restart the logic block to correctly use `type` AND `status` inputs.
-    // The `SearchFilters` sends: `q`, `type` (all, lost, found), `status` (Open, Closed...), `category`, `location`, `startDate`, `endDate`.
-
-    const { type: typeFilter } = req.query; // Capture type from query
-
-    // 2. Search Lost/Found reports
-    // Conditions:
-    // - If typeFilter is 'all', 'lost', or 'found' -> relevant reports.
-    // - If typeFilter is 'registered' -> checked above (but we need to ensure we don't duplicate logic).
-
+    // Only search Lost/Found reports (do not search registered items in global search)
     const shouldSearchReports = !typeFilter || typeFilter === 'all' || typeFilter === 'lost' || typeFilter === 'found';
 
     if (shouldSearchReports) {
       const reportConditions = [];
+
+      // Only show fully paid items
+      reportConditions.push(eq(reports.paymentStatus, 'successful'));
 
       if (typeFilter && typeFilter !== 'all') {
         reportConditions.push(eq(reports.type, typeFilter as string));
@@ -255,7 +142,7 @@ router.get("/", async (req, res) => {
     if (queryStr) {
       results.sort((a, b) => b.score - a.score);
     } else {
-      results.sort((a, b) => new Date(b.registeredAt).getTime() - new Date(a.registeredAt).getTime());
+      results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
 
     res.json(results);

@@ -4,11 +4,10 @@ import {
   Notification, InsertNotification, Payment, InsertPayment,
   PaymentMethod, InsertPaymentMethod, UserActivityLog, InsertUserActivityLog,
   AdminActionLog, InsertAdminActionLog, Role, InsertRole,
-  VerificationRequest, InsertVerificationRequest, StatusChange, InsertStatusChange,
-  UserWarning, InsertUserWarning, PaymentPackage, InsertPaymentPackage,
-  Claim, InsertClaim, ClaimAppeal, InsertClaimAppeal, ClaimStatusLog, InsertClaimStatusLog,
-  Chat, InsertChat, Message, InsertMessage,
-  PushSubscription, InsertPushSubscription,
+  StatusChange, InsertStatusChange, UserWarning, InsertUserWarning,
+  PaymentPackage, InsertPaymentPackage, Claim, InsertClaim,
+  ClaimStatusLog, InsertClaimStatusLog, Chat, InsertChat, Message, InsertMessage,
+  PushSubscription, InsertPushSubscription, VerificationRequest, InsertVerificationRequest,
   AccountStatus, VerificationStatus, PaymentType
 } from "@shared/schema";
 
@@ -103,6 +102,7 @@ export interface IStorage {
   getUserNotifications(userId: number): Promise<Notification[]>;
   createNotification(notification: InsertNotification): Promise<Notification>;
   markNotificationAsRead(id: number): Promise<Notification | undefined>;
+  markAllNotificationsAsRead(userId: number): Promise<void>;
 
   // Push Subscription methods
   createPushSubscription(subscription: InsertPushSubscription): Promise<PushSubscription>;
@@ -125,11 +125,7 @@ export interface IStorage {
   getClaimsByStatus(status: string): Promise<Claim[]>;
   createClaimStatusLog(log: InsertClaimStatusLog): Promise<ClaimStatusLog>;
   getClaimStatusHistory(claimId: number): Promise<ClaimStatusLog[]>;
-  createClaimAppeal(appeal: InsertClaimAppeal): Promise<ClaimAppeal>;
-  getClaimAppeal(claimId: number): Promise<ClaimAppeal | undefined>;
-  getAppeal(id: number): Promise<ClaimAppeal | undefined>;
-  getPendingAppeals(): Promise<ClaimAppeal[]>;
-  updateClaimAppeal(id: number, appealData: Partial<ClaimAppeal>): Promise<ClaimAppeal | undefined>;
+  getPendingAppeals(): Promise<Claim[]>;
 
   // User lookup
   getUsersByRole(roles: string[]): Promise<User[]>;

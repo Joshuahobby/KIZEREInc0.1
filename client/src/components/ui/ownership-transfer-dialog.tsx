@@ -41,11 +41,11 @@ const transferSchema = z.object({
 
 type TransferFormValues = z.infer<typeof transferSchema>;
 
-export function OwnershipTransferDialog({ 
+export function OwnershipTransferDialog({
   itemId,
   itemName,
   onSuccess
-}: { 
+}: {
   itemId: number;
   itemName: string;
   onSuccess?: () => void;
@@ -76,7 +76,7 @@ export function OwnershipTransferDialog({
       setTransferStep('success');
       queryClient.invalidateQueries({ queryKey: ['/api/items'] });
       queryClient.invalidateQueries({ queryKey: ['/api/items', itemId] });
-      
+
       if (onSuccess) {
         onSuccess();
       }
@@ -97,7 +97,7 @@ export function OwnershipTransferDialog({
       setTransferStep('confirmation');
       return;
     }
-    
+
     // Then actually submit
     if (transferStep === 'confirmation') {
       transferMutation.mutate(data);
@@ -121,7 +121,7 @@ export function OwnershipTransferDialog({
           Transfer Ownership
         </Button>
       </DialogTrigger>
-      
+
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
@@ -162,7 +162,7 @@ export function OwnershipTransferDialog({
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="confirmTransfer"
@@ -184,7 +184,7 @@ export function OwnershipTransferDialog({
                       </FormItem>
                     )}
                   />
-                  
+
                   <DialogFooter>
                     <Button type="submit">Continue</Button>
                   </DialogFooter>
@@ -192,7 +192,7 @@ export function OwnershipTransferDialog({
               </Form>
             </motion.div>
           )}
-          
+
           {transferStep === 'confirmation' && (
             <motion.div
               key="confirmation"
@@ -206,22 +206,22 @@ export function OwnershipTransferDialog({
                 <div className="grid grid-cols-[auto_1fr] gap-x-2 text-sm">
                   <span className="text-muted-foreground">Item:</span>
                   <span className="font-medium">{itemName}</span>
-                  
+
                   <span className="text-muted-foreground">New owner:</span>
                   <span className="font-medium">{form.getValues().recipientEmail}</span>
-                  
+
                   <span className="text-muted-foreground">Current owner:</span>
                   <span className="font-medium">You</span>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-2 py-2 px-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md">
+
+              <div className="flex items-center gap-2 py-2 px-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-500 rounded-md">
                 <Shield className="h-5 w-5 flex-shrink-0" />
                 <p className="text-sm">
                   This action is permanent. After transferring, you will no longer be the owner of this item.
                 </p>
               </div>
-              
+
               <DialogFooter className="gap-2 sm:gap-0 mt-4">
                 <Button
                   variant="outline"
@@ -230,7 +230,7 @@ export function OwnershipTransferDialog({
                 >
                   Back
                 </Button>
-                <Button 
+                <Button
                   onClick={form.handleSubmit(onSubmit)}
                   disabled={transferMutation.isPending}
                   className="gap-2"
@@ -241,7 +241,7 @@ export function OwnershipTransferDialog({
               </DialogFooter>
             </motion.div>
           )}
-          
+
           {transferStep === 'success' && (
             <motion.div
               key="success"
@@ -250,16 +250,16 @@ export function OwnershipTransferDialog({
               className="text-center pt-8 pb-2"
             >
               <div className="flex flex-col items-center space-y-4">
-                <div className="rounded-full bg-green-100 p-4">
-                  <CheckCircle2 className="h-10 w-10 text-green-600" />
+                <div className="rounded-full bg-green-100 dark:bg-emerald-500/20 p-4">
+                  <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-emerald-400" />
                 </div>
-                
+
                 <div className="max-w-[300px]">
                   <p className="text-muted-foreground">
                     Ownership has been successfully transferred to <span className="font-bold text-foreground">{form.getValues().recipientEmail}</span>.
                   </p>
                 </div>
-                
+
                 <Button onClick={closeDialog} className="mt-4 w-full">Done</Button>
               </div>
             </motion.div>

@@ -144,17 +144,15 @@ export class DatabaseStorage implements IStorage {
   getClaimsByStatus = claimOps.getClaimsByStatus;
   createClaimStatusLog = claimOps.createClaimStatusLog;
   getClaimStatusHistory = claimOps.getClaimStatusHistory;
-  createClaimAppeal = claimOps.createClaimAppeal;
-  getClaimAppeal = claimOps.getClaimAppeal;
-  getAppeal = claimOps.getAppeal;
   getPendingAppeals = claimOps.getPendingAppeals;
-  updateClaimAppeal = claimOps.updateClaimAppeal;
+  getAllClaimsWithDetails = claimOps.getAllClaimsWithDetails;
 
   // Notification methods
   getNotification = notificationOps.getNotification;
   getUserNotifications = notificationOps.getUserNotifications;
   createNotification = notificationOps.createNotification;
   markNotificationAsRead = notificationOps.markNotificationAsRead;
+  markAllNotificationsAsRead = notificationOps.markAllNotificationsAsRead;
 
   // Push Subscription methods
   createPushSubscription = notificationOps.createPushSubscription;

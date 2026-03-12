@@ -1,17 +1,54 @@
-node_modules
-dist
-.DS_Store
-server/public
-vite.config.ts.*
-*.tar.gz
-.vercel
 
+# Environment & Secret files
 .env
 .env.production
 .env.local
-app.log
-
-# Security: never commit private keys or temp debug files
+.env.*.local
 *.pem
-tmp_*
+
+# Logs & Debug
+app.log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*_debug.json
 diag.txt
+test-error.txt
+tsc_errors_new.txt
+final_diagnostic.txt
+*.txt
+
+# Test results
+playwright-report/
+test-results/
+playwright-results.json
+playwright-report.json
+test-results.json
+e2e_*.txt
+e2e_*.json
+auth_*.json
+report_*.json
+combined_debug.json
+full_suite_*.json
+full_run.log
+
+# Temporary files
+tmp_*
+.DS_Store
+.vercel
+server/public
+vite.config.ts.*
+*.tar.gz
+
+
+# System
+node_modules
+dist
+
+# Dev Scripts & Tooling
+scripts/
+compare_locales.cjs
+server/ensure-admin-script.ts
+test_email.ts
+test_output*.txt

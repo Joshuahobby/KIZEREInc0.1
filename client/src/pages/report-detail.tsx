@@ -30,13 +30,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { ClaimForm } from "@/components/reports/claim-form";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { AuthWall } from "@/components/ui/auth-wall";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Report, Claim } from "@shared/schema";
 import {
   ArrowLeft,
   Calendar,
   MapPin,
-  Tag,
+  Tag as TagIcon,
   User,
   Phone,
   AlertTriangle,
@@ -51,6 +53,7 @@ export default function ReportDetailPage() {
   const [, navigate] = useLocation();
   const { user, isLoading: isLoadingAuth } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [showClaimForm, setShowClaimForm] = useState(false);
   const [showAppealDialog, setShowAppealDialog] = useState(false);
   const [showMarkFoundDialog, setShowMarkFoundDialog] = useState(false);
@@ -65,6 +68,16 @@ export default function ReportDetailPage() {
     },
     enabled: !!id && !!user,
   });
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl={`/report/${id}`} />
+        </div>
+      </PageLayout>
+    );
+  }
 
   // Extended type for report matches
   interface ReportMatch extends Report {
@@ -98,11 +111,11 @@ export default function ReportDetailPage() {
     onSuccess: () => {
       setShowAppealDialog(false);
       setAppealReason("");
-      toast({ title: "Appeal submitted successfully", description: "An admin will review your case." });
+      toast({ title: t('report_detail.appealSubmittedSuccess'), description: t('report_detail.appealReviewDetails') });
       queryClient.invalidateQueries({ queryKey: ['/api/claims/my-claims'] });
     },
     onError: (err: Error) => {
-      toast({ variant: "destructive", title: "Failed to submit appeal", description: err.message });
+      toast({ variant: "destructive", title: t('report_detail.appealFailed'), description: err.message });
     }
   });
 
@@ -111,27 +124,20 @@ export default function ReportDetailPage() {
       await apiRequest(`/api/reports/${id}/mark-found`, { method: 'POST' });
     },
     onSuccess: () => {
-      toast({ title: "Report updated", description: "Your item has been marked as found." });
+      toast({ title: t('report_detail.reportUpdated'), description: t('report_detail.reportMarkedFound') });
       queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
       queryClient.invalidateQueries({ queryKey: ['/api/items'] });
       setShowMarkFoundDialog(false);
     },
     onError: (err: Error) => {
-      toast({ variant: "destructive", title: "Failed to update report", description: err.message });
+      toast({ variant: "destructive", title: t('report_detail.updateFailed'), description: err.message });
     }
   });
 
   if (!user && !isLoadingAuth) {
     return (
       <PageLayout>
-        <div className="flex flex-col items-center justify-center p-8 text-center py-20">
-          <ShieldCheck className="h-16 w-16 text-primary mb-4" />
-          <h1 className="text-2xl font-bold text-neutral-900 mb-2">Authentication Required</h1>
-          <p className="text-neutral-500 mb-6">You need to be logged in to view report details.</p>
-          <Button onClick={() => navigate('/auth')}>
-            Go to Login
-          </Button>
-        </div>
+        <AuthWall returnUrl={`/report/${id}`} />
       </PageLayout>
     );
   }
@@ -151,11 +157,11 @@ export default function ReportDetailPage() {
       <PageLayout>
         <div className="flex flex-col items-center justify-center p-8 text-center py-20">
           <AlertTriangle className="h-16 w-16 text-red-500 mb-4" />
-          <h1 className="text-2xl font-bold text-neutral-900 mb-2">Report Not Found</h1>
-          <p className="text-neutral-500 mb-6">The report you're looking for doesn't exist or has been removed.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{t('report_detail.reportNotFoundTitle')}</h1>
+          <p className="text-muted-foreground mb-6">{t('report_detail.reportNotFoundDesc')}</p>
           <Button onClick={() => navigate('/lost-found')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Lost & Found
+            {t('report_detail.backToLostFound')}
           </Button>
         </div>
       </PageLayout>
@@ -194,8 +200,8 @@ export default function ReportDetailPage() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-neutral-100 rounded-xl h-64 flex items-center justify-center">
-                  <ImageIcon className="h-16 w-16 text-neutral-300" />
+                <div className="bg-muted rounded-xl h-64 flex items-center justify-center">
+                  <ImageIcon className="h-16 w-16 text-muted-foreground/30" />
                 </div>
               )}
             </div>
@@ -209,14 +215,14 @@ export default function ReportDetailPage() {
                     variant={report.type === 'lost' ? 'destructive' : 'default'}
                     className={report.type === 'found' ? 'bg-green-600' : ''}
                   >
-                    {report.type === 'lost' ? 'Lost' : 'Found'}
+                    {report.type === 'lost' ? t('common.lost') : t('common.found')}
                   </Badge>
-                  <Badge variant="outline">{report.status}</Badge>
+                  <Badge variant="outline">{t(`status.${report.status.toLowerCase()}`, report.status)}</Badge>
                 </div>
-                <h1 className="text-3xl font-bold text-neutral-900">{report.title}</h1>
+                <h1 className="text-3xl font-bold text-foreground">{report.title}</h1>
                 {report.receiptNumber && (
-                  <p className="text-sm text-neutral-500 mt-1 font-mono">
-                    Receipt: {report.receiptNumber}
+                  <p className="text-sm text-muted-foreground mt-1 font-mono">
+                    {t('report_detail.receipt', { receiptNumber: report.receiptNumber })}
                   </p>
                 )}
 
@@ -224,11 +230,11 @@ export default function ReportDetailPage() {
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-4">
                     <div className="flex items-center gap-2 text-amber-800 mb-2">
                       <AlertTriangle className="h-5 w-5" />
-                      <span className="font-semibold">This report has expired</span>
+                      <span className="font-semibold">{t('report_detail.expiredTitle')}</span>
                     </div>
                     <p className="text-sm text-amber-700 mb-3">
-                      Expired reports are no longer visible in public searches.
-                      {isOwner ? " You can renew this report to make it active again." : ""}
+                      {t('report_detail.expiredDesc')}
+                      {isOwner ? t('report_detail.expiredDescOwner') : ""}
                     </p>
                     {isOwner && (
                       <Button
@@ -237,14 +243,14 @@ export default function ReportDetailPage() {
                         onClick={async () => {
                           try {
                             await apiRequest(`/api/reports/${report.id}/renew`, { method: 'POST' });
-                            toast({ title: "Report renewed successfully" });
+                            toast({ title: t('report_detail.renewSuccess') });
                             queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
                           } catch (e) {
-                            toast({ variant: "destructive", title: "Failed to renew report" });
+                            toast({ variant: "destructive", title: t('report_detail.renewFailed') });
                           }
                         }}
                       >
-                        Renew Report (30 Days)
+                        {t('report_detail.renewReport')}
                       </Button>
                     )}
                   </div>
@@ -256,47 +262,47 @@ export default function ReportDetailPage() {
                 <CardContent className="p-5 space-y-4">
                   <div className="flex items-center gap-3 text-sm">
                     <Calendar className="h-4 w-4 text-primary flex-shrink-0" />
-                    <span className="text-neutral-600">Date:</span>
-                    <span className="font-medium">{format(new Date(report.date), 'MMMM d, yyyy')}</span>
+                    <span className="text-muted-foreground">{t('report_detail.dateLabel')}</span>
+                    <span className="font-medium text-foreground">{format(new Date(report.date), 'MMMM d, yyyy')}</span>
                   </div>
 
                   <div className="flex items-center gap-3 text-sm">
                     <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                    <span className="text-neutral-600">Location:</span>
-                    <span className="font-medium">{report.location}</span>
+                    <span className="text-muted-foreground">{t('report_detail.locationLabel')}</span>
+                    <span className="font-medium text-foreground">{report.location}</span>
                   </div>
 
                   {report.category && (
                     <div className="flex items-center gap-3 text-sm">
-                      <Tag className="h-4 w-4 text-primary flex-shrink-0" />
-                      <span className="text-neutral-600">Category:</span>
-                      <span className="font-medium">{report.category}</span>
+                      <TagIcon className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span className="text-muted-foreground">{t('report_detail.categoryLabel')}</span>
+                      <span className="font-medium text-foreground">{t(`categories.${report.category.toLowerCase().replace(/[\s&]/g, '')}`, report.category)}</span>
                     </div>
                   )}
 
                   {report.custodyLocation && (
                     <div className="flex items-center gap-3 text-sm">
                       <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0" />
-                      <span className="text-neutral-600">Held At:</span>
-                      <span className="font-medium">{report.custodyLocation}</span>
+                      <span className="text-muted-foreground">{t('report_detail.heldAtLabel')}</span>
+                      <span className="font-medium text-foreground">{report.custodyLocation}</span>
                     </div>
                   )}
 
                   {report.type === 'lost' && report.contactInfo && (
                     <div className="flex items-start gap-3 text-sm">
                       <Phone className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-neutral-600">Contact:</span>
+                      <span className="text-muted-foreground">{t('report_detail.contactLabel')}</span>
                       {report.contactInfo.startsWith('[') ? (
                         <div className="flex flex-col">
-                          <span className="text-neutral-400 italic">Contact info hidden</span>
-                          <span className="text-xs text-neutral-500 mt-1">
+                          <span className="text-muted-foreground/60 italic">{t('report_detail.contactHidden')}</span>
+                          <span className="text-xs text-muted-foreground/80 mt-1">
                             {isOwner
-                              ? "Visible to you and verified claimants."
-                              : "Submit a claim and get verified to see contact details."}
+                              ? t('report_detail.contactHiddenOwner')
+                              : t('report_detail.contactHiddenFinder')}
                           </span>
                         </div>
                       ) : (
-                        <span className="font-medium">{report.contactInfo}</span>
+                        <span className="font-medium text-foreground">{report.contactInfo}</span>
                       )}
                     </div>
                   )}
@@ -304,24 +310,24 @@ export default function ReportDetailPage() {
                   {/* Finder Reputation (Phase 2) */}
                   {(report as any).finderReputation && (
                     <div className="pt-2">
-                      <div className="flex items-center gap-2 p-3 bg-neutral-50 rounded-lg border border-neutral-100">
+                      <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border border-border">
                         <div className="bg-primary/10 p-2 rounded-full">
                           <User className="h-4 w-4 text-primary" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-semibold text-neutral-700">Finder Reputation</span>
+                            <span className="text-xs font-semibold text-foreground/90">{t('report_detail.finderReputation')}</span>
                             {(report as any).finderReputation.isTrusted && (
                               <Badge className="h-4 px-1 bg-blue-500 text-[10px] hover:bg-blue-600">
                                 <ShieldCheck className="h-2.5 w-2.5 mr-0.5" />
-                                Trusted
+                                {t('report_detail.trusted')}
                               </Badge>
                             )}
                           </div>
-                          <div className="flex items-center gap-3 text-[11px] text-neutral-500">
-                            <span>Score: {(report as any).finderReputation.reputationScore}</span>
+                          <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                            <span>{t('report_detail.score', { score: (report as any).finderReputation.reputationScore })}</span>
                             <span>•</span>
-                            <span>{(report as any).finderReputation.itemsReturnedCount} items returned</span>
+                            <span>{t('report_detail.itemsReturnedCount', { count: (report as any).finderReputation.itemsReturnedCount })}</span>
                           </div>
                         </div>
                       </div>
@@ -333,48 +339,48 @@ export default function ReportDetailPage() {
               {/* Description */}
               <Card>
                 <CardContent className="p-5">
-                  <h3 className="font-semibold text-neutral-900 mb-2">Description</h3>
-                  <p className="text-neutral-600 leading-relaxed">{report.description}</p>
+                  <h3 className="font-semibold text-foreground mb-2">{t('report_detail.descriptionLabel')}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{report.description}</p>
                 </CardContent>
               </Card>
 
               {/* Potential Matches */}
               {isOwner && matches && matches.length > 0 && (
-                <Card className="border-purple-200 bg-purple-50">
+                <Card className="border-purple-500/20 bg-purple-500/10">
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <ShieldCheck className="h-5 w-5 text-purple-600" />
-                      <CardTitle className="text-purple-900">Potential Matches Found</CardTitle>
+                      <CardTitle className="text-purple-600 dark:text-purple-300">{t('report_detail.potentialMatchesFound')}</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-sm text-purple-700">
-                      We found {matches.length} item(s) that might match your report.
+                    <p className="text-sm text-purple-600 dark:text-purple-400">
+                      {t('report_detail.potentialMatchesDesc', { count: matches.length })}
                     </p>
                     <div className="space-y-3">
                       {matches.map((match) => (
                         <div
                           key={match.id}
-                          className="bg-white p-3 rounded-lg border border-purple-100 shadow-sm cursor-pointer hover:bg-purple-50 transition-colors"
+                          className="bg-background p-3 rounded-lg border border-purple-500/20 shadow-sm cursor-pointer hover:bg-purple-500/5 transition-colors"
                           onClick={() => navigate(`/reports/${match.id}`)}
                         >
                           <div className="flex justify-between items-start">
                             <div>
-                              <p className="font-medium text-purple-900">{match.title}</p>
+                              <p className="font-medium text-purple-600 dark:text-purple-300">{match.title}</p>
                               <p className="text-xs text-muted-foreground line-clamp-1">{match.description}</p>
                             </div>
                             <Badge variant="outline" className="text-purple-600 border-purple-200 text-xs">
-                              {match.type === 'lost' ? 'Lost' : 'Found'}
+                              {match.type === 'lost' ? t('dashboard.stats.totalLost') : t('dashboard.stats.totalFound')}
                             </Badge>
                           </div>
                           {match.matchScore && (
                             <div className="mt-2 flex items-center gap-1">
                               <Progress
                                 value={match.matchScore}
-                                className="h-1.5 flex-1 bg-neutral-100"
+                                className="h-1.5 flex-1 bg-muted"
                                 indicatorClassName="bg-purple-500"
                               />
-                              <span className="text-xs font-mono text-purple-700">{match.matchScore}%</span>
+                              <span className="text-xs font-mono text-purple-500">{match.matchScore}%</span>
                             </div>
                           )}
                         </div>
@@ -386,23 +392,23 @@ export default function ReportDetailPage() {
 
               {/* My Claim Status */}
               {!isOwner && myClaim && (
-                <Card className="border-blue-200 bg-blue-50">
+                <Card className="border-blue-500/20 bg-blue-500/10">
                   <CardHeader>
-                    <CardTitle className="text-blue-900">Your Claim Status</CardTitle>
+                    <CardTitle className="text-blue-600 dark:text-blue-300">{t('report_detail.yourClaimStatus')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-blue-800 capitalize">Status: {myClaim.status}</span>
+                      <span className="font-medium text-blue-600 dark:text-blue-400 capitalize">{t('report_detail.statusLabel', { status: myClaim.status })}</span>
                       <Badge variant={myClaim.status === 'verified' ? 'default' : 'secondary'}>
-                        {myClaim.status}
+                        {t(`status.${myClaim.status.toLowerCase()}`, myClaim.status)}
                       </Badge>
                     </div>
-                    <p className="text-sm text-blue-700 mt-2">
+                    <p className="text-sm text-blue-500 mt-2">
                       {myClaim.status === 'verified'
-                        ? "Congratulations! Your claim has been verified. You can now see the contact info above."
+                        ? t('report_detail.statusVerifiedMsg')
                         : myClaim.status === 'rejected'
-                          ? "Your claim was rejected by the finder."
-                          : "Your claim is currently under review by the finder."}
+                          ? t('report_detail.statusRejectedMsg')
+                          : t('report_detail.statusPendingMsg')}
                     </p>
 
                     <div className="flex gap-2 mt-3">
@@ -412,7 +418,7 @@ export default function ReportDetailPage() {
                           className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
                           onClick={() => setShowAppealDialog(true)}
                         >
-                          Appeal Decision
+                          {t('report_detail.appealDecision')}
                         </Button>
                       )}
                       <Button
@@ -420,7 +426,7 @@ export default function ReportDetailPage() {
                         className="flex-1"
                         onClick={() => navigate(`/claims/${myClaim.id}`)}
                       >
-                        View Full Claim
+                        {t('report_detail.viewFullClaim')}
                       </Button>
                     </div>
                   </CardContent>
@@ -429,22 +435,22 @@ export default function ReportDetailPage() {
 
               {/* Claims Received (Owner View) */}
               {isOwner && claims && claims.length > 0 && (
-                <Card className="border-green-200 bg-green-50">
+                <Card className="border-green-500/20 bg-green-500/10">
                   <CardHeader>
-                    <CardTitle className="text-green-900">Claims Received</CardTitle>
-                    <CardDescription>Review claims from users who believe this is their item.</CardDescription>
+                    <CardTitle className="text-green-600 dark:text-green-300">{t('report_detail.claimsReceived')}</CardTitle>
+                    <CardDescription>{t('report_detail.claimsReceivedDesc')}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {claims.map(claim => (
-                      <div key={claim.id} className="bg-white p-4 rounded-lg border border-green-100 shadow-sm">
+                      <div key={claim.id} className="bg-background p-4 rounded-lg border border-green-500/20 shadow-sm">
                         <div className="flex justify-between items-start mb-2">
-                          <span className="font-semibold text-green-900">Claimant #{claim.userId}</span>
-                          <Badge variant={claim.status === 'verified' ? 'default' : 'outline'}>{claim.status}</Badge>
+                          <span className="font-semibold text-green-600 dark:text-green-400">{t('report_detail.claimant', { id: claim.userId })}</span>
+                          <Badge variant={claim.status === 'verified' ? 'default' : 'outline'}>{t(`status.${claim.status.toLowerCase()}`, claim.status)}</Badge>
                         </div>
-                        <p className="text-sm text-neutral-600 mb-3 line-clamp-2">{claim.description}</p>
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{claim.description}</p>
                         <div className="flex gap-2">
                           <Button size="sm" variant="outline" onClick={() => navigate(`/claims/${claim.id}`)}>
-                            View Details
+                            {t('report_detail.viewDetails')}
                           </Button>
                         </div>
                       </div>
@@ -460,20 +466,20 @@ export default function ReportDetailPage() {
                     {!showClaimForm ? (
                       <div className="text-center">
                         <ShieldCheck className="h-10 w-10 text-primary mx-auto mb-3" />
-                        <h3 className="font-semibold text-neutral-900 mb-2">Is this your item?</h3>
-                        <p className="text-sm text-neutral-600 mb-4">
-                          If you believe this item belongs to you, file a claim with proof of ownership.
+                        <h3 className="font-semibold text-foreground mb-2">{t('report_detail.isThisYourItem')}</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          {t('report_detail.isThisYourItemDesc')}
                         </p>
                         <Button onClick={() => setShowClaimForm(true)} className="w-full">
-                          File Ownership Claim
+                          {t('report_detail.fileOwnershipClaim')}
                         </Button>
                       </div>
                     ) : (
                       <div>
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-semibold text-neutral-900">Claim Form</h3>
+                          <h3 className="font-semibold text-foreground">{t('report_detail.claimFormTitle')}</h3>
                           <Button variant="ghost" size="sm" onClick={() => setShowClaimForm(false)}>
-                            Cancel
+                            {t('report_detail.cancel')}
                           </Button>
                         </div>
                         <ClaimForm
@@ -481,9 +487,14 @@ export default function ReportDetailPage() {
                           challengeQuestion={report.challengeQuestion}
                           onSuccess={() => {
                             setShowClaimForm(false);
-                            toast({ title: "Claim submitted successfully!" });
+                            toast({ 
+                              title: t('report_detail.claimSubmittedSuccess'),
+                              description: t('claims.success_desc')
+                            });
                             queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
                             queryClient.invalidateQueries({ queryKey: ['/api/claims/my-claims'] });
+                            // Navigate to My Items to show the pending claim
+                            navigate('/my-items');
                           }}
                         />
                       </div>
@@ -493,17 +504,17 @@ export default function ReportDetailPage() {
               )}
 
               {isOwner && (
-                <Card className="border-blue-200 bg-blue-50">
+                <Card className="border-blue-500/20 bg-blue-500/10">
                   <CardContent className="p-5 text-center">
                     <User className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                    <p className="text-sm text-blue-700">You submitted this report</p>
+                    <p className="text-sm text-blue-500">{t('report_detail.youSubmittedReport')}</p>
                     {report.type === 'lost' && (report.status === 'Open' || report.status === 'In_Progress') && (
                       <Button
                         className="w-full mt-4 bg-green-600 hover:bg-green-700 text-white"
                         onClick={() => setShowMarkFoundDialog(true)}
                       >
                         <CheckCircle className="mr-2 h-4 w-4" />
-                        Mark as Found
+                        {t('report_detail.markAsFound')}
                       </Button>
                     )}
                   </CardContent>
@@ -517,13 +528,13 @@ export default function ReportDetailPage() {
       <AlertDialog open={showMarkFoundDialog} onOpenChange={setShowMarkFoundDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Mark your item as found?</AlertDialogTitle>
+            <AlertDialogTitle>{t('report_detail.markAsFoundDialogTitle')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will mark your lost report as resolved. If this report is linked to one of your registered items, its status will be updated to "Recovered".
+              {t('report_detail.markAsFoundDialogDesc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('report_detail.cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -532,7 +543,7 @@ export default function ReportDetailPage() {
               className="bg-green-600 hover:bg-green-700"
               disabled={markAsFoundMutation.isPending}
             >
-              {markAsFoundMutation.isPending ? "Updating..." : "Confirm Found"}
+              {markAsFoundMutation.isPending ? t('report_detail.updating') : t('report_detail.confirmFound')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -541,17 +552,17 @@ export default function ReportDetailPage() {
       <Dialog open={showAppealDialog} onOpenChange={setShowAppealDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Appeal Claim Decision</DialogTitle>
+            <DialogTitle>{t('report_detail.appealDialogTitle')}</DialogTitle>
             <DialogDescription>
-              If you believe your claim was wrongly rejected, you can submit an appeal to our administration team.
+              {t('report_detail.appealDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="reason">Reason for Appeal</Label>
+              <Label htmlFor="reason">{t('report_detail.reasonForAppeal')}</Label>
               <Textarea
                 id="reason"
-                placeholder="Please explain why this item belongs to you and provide any additional details..."
+                placeholder={t('report_detail.reasonPlaceholder')}
                 className="min-h-[100px]"
                 value={appealReason}
                 onChange={(e) => setAppealReason(e.target.value)}
@@ -559,12 +570,12 @@ export default function ReportDetailPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAppealDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowAppealDialog(false)}>{t('report_detail.cancel')}</Button>
             <Button
               onClick={() => submitAppealMutation.mutate()}
               disabled={appealReason.length < 20 || submitAppealMutation.isPending}
             >
-              {submitAppealMutation.isPending ? "Submitting..." : "Submit Appeal"}
+              {submitAppealMutation.isPending ? t('report_detail.submitting') : t('report_detail.submitAppeal')}
             </Button>
           </DialogFooter>
         </DialogContent>

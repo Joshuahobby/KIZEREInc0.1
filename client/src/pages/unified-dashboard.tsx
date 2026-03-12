@@ -2,7 +2,7 @@ import * as React from "react";
 import { ErrorBoundary } from "@/components/error-boundary";
 
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "wouter";
+import { useLocation, useSearch } from "wouter";
 import { useDashboardData, DashboardData, DashboardStats } from "../hooks/use-dashboard-data";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
@@ -19,6 +19,7 @@ import { QuickActionsPanel } from "@/components/dashboard/quick-actions-panel";
 import { GlobalSearch } from "@/components/dashboard/global-search";
 import { createLogger } from "@/lib/logger";
 import { PageLayout } from "@/components/layout/page-layout";
+import { AuthWall } from "@/components/ui/auth-wall";
 import {
   Table,
   TableBody,
@@ -74,42 +75,7 @@ import { UserPreferences } from "@shared/schema";
 import { AppLayout } from "@/components/layout/admin-layout";
 
 
-// Identity Protection Card (Rwanda Specific)
-const IdentityProtectionCard = ({ user, t }: { user: any, t: any }) => (
-  <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent overflow-hidden relative group">
-    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-      <ShieldCheck className="h-24 w-24 text-primary" />
-    </div>
-    <CardHeader className="pb-2">
-      <div className="flex items-center gap-2">
-        <div className="p-2 bg-primary/10 rounded-lg">
-          <ShieldCheck className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <CardTitle className="text-lg">{t('dashboard.identityProtection.title') || "Identity Protection"}</CardTitle>
-          <CardDescription className="text-xs">
-            {t('dashboard.identityProtection.desc') || "Secure your National ID and Passport"}
-          </CardDescription>
-        </div>
-      </div>
-    </CardHeader>
-    <CardContent>
-      <div className="flex flex-wrap gap-3 mt-2">
-        <Badge variant="outline" className="bg-background/50 backdrop-blur-sm border-primary/20 px-3 py-1 flex items-center gap-2">
-          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">{t('dashboard.identityProtection.nid_protected')}</span>
-        </Badge>
-        <Badge variant="outline" className="bg-background/50 backdrop-blur-sm border-primary/20 px-3 py-1 flex items-center gap-2">
-          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-[10px] font-bold uppercase tracking-wider">{t('dashboard.identityProtection.passport_protected')}</span>
-        </Badge>
-      </div>
-      <Button variant="link" size="sm" className="px-0 mt-4 text-xs font-bold text-primary group-hover:underline">
-        {t('dashboard.identityProtection.manage') || "Manage Protection Settings →"}
-      </Button>
-    </CardContent>
-  </Card>
-);
+// Moved inside UnifiedDashboard for translation scope
 
 // Helper component for the header
 const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: any }) => (
@@ -119,30 +85,31 @@ const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: a
         <Badge variant="outline" className="text-[10px] font-black tracking-tighter uppercase border-primary/20 text-primary px-2 py-0">
           KIZERE {user?.role || 'User'}
         </Badge>
-        <div className="h-1 w-1 rounded-full bg-border" />
-        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Rwanda Operations</span>
       </div>
-      <h1 className="text-3xl font-black tracking-tight sm:text-4xl text-foreground">
+      <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl text-foreground">
         {t('dashboard.welcomeBack', { name: "" }).replace(/,?\s*$/, '')}{' '}
-        <span className="text-primary italic">
+        <span className="text-primary font-medium">
           {user?.fullName?.split(' ')[0] || user?.username}
         </span>
-        {isAdmin && <span className="ml-3 text-[10px] uppercase tracking-[0.2em] font-black text-white bg-primary px-3 py-1 rounded-full shadow-lg shadow-primary/20">SUDO</span>}
+        {isAdmin && <span className="ml-3 text-[10px] uppercase tracking-[0.2em] font-medium text-white bg-primary/80 px-2 py-0.5 rounded-full shadow-sm shadow-primary/10">SUDO</span>}
       </h1>
-      <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-2xl">
+      <p className="text-muted-foreground text-sm font-normal leading-relaxed max-w-2xl opacity-80 mt-1">
         {t('dashboard.welcomeSubtitle')}
       </p>
     </div>
-    <div className="flex items-center gap-4 bg-secondary/5 p-3 rounded-2xl border border-border/50 backdrop-blur-sm">
-      <div className="flex flex-col items-start pr-4 border-r border-border/50">
-        <span className="text-[9px] uppercase tracking-widest font-black text-muted-foreground/60">{t('dashboard.localTime')}</span>
-        <span className="font-bold tabular-nums text-lg">{format(new Date(), 'HH:mm')}</span>
+    <div className="flex items-center gap-3">
+      {/* Time Pill */}
+      <div className="flex items-center gap-2 bg-background/60 dark:bg-slate-900/40 backdrop-blur-md px-4 py-2 rounded-full border border-border/40 shadow-sm">
+        <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">{t('dashboard.localTime')}</span>
+        <span className="font-semibold text-sm tabular-nums text-foreground">{format(new Date(), 'HH:mm')}</span>
       </div>
-      <div className="flex flex-col items-start">
-        <span className="text-[9px] uppercase tracking-widest font-black text-muted-foreground/60">Status</span>
-        <div className="flex items-center gap-1.5 mt-0.5">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-          <span className="text-xs font-bold">Online</span>
+
+      {/* Status Pill */}
+      <div className="flex items-center gap-2 bg-background/60 dark:bg-slate-900/40 backdrop-blur-md px-4 py-2 rounded-full border border-border/40 shadow-sm">
+        <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">Status</span>
+        <div className="flex items-center gap-1.5 pl-1">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
+          <span className="text-xs font-semibold text-foreground">Online</span>
         </div>
       </div>
     </div>
@@ -154,8 +121,46 @@ const logger = createLogger('UnifiedDashboard');
 
 export default function UnifiedDashboard() {
   const [location, navigate] = useLocation();
+  const searchString = useSearch();
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
+
+  // Identity Protection Card (Rwanda Specific)
+  const IdentityProtectionCard = () => (
+    <Card className="border-border/20 bg-card/60 backdrop-blur-sm shadow-sm hover:shadow-premium hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 overflow-hidden relative group h-full flex flex-col justify-between">
+      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+        <ShieldCheck className="h-24 w-24 text-primary" />
+      </div>
+      <CardHeader className="p-4 sm:p-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 sm:p-2.5 bg-primary/10 rounded-xl">
+            <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-base sm:text-lg font-semibold">{t('dashboard.identityProtection.title') || "Identity Protection"}</CardTitle>
+            <CardDescription className="text-xs font-normal">
+              {t('dashboard.identityProtection.desc') || "Securely store your NID or Passport details."}
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 sm:p-5 pt-0 mt-auto">
+        <div className="flex flex-col sm:flex-row gap-2 mt-2">
+          <Badge variant="outline" className="bg-background/40 border-primary/20 px-2 py-1 flex items-center gap-1.5 rounded-full whitespace-nowrap w-fit">
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[10px] font-medium tracking-wide">{t('dashboard.identityProtection.nid_protected') || "NID: PROTECTED"}</span>
+          </Badge>
+          <Badge variant="outline" className="bg-background/40 border-primary/20 px-2 py-1 flex items-center gap-1.5 rounded-full whitespace-nowrap w-fit">
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="text-[10px] font-medium tracking-wide">{t('dashboard.identityProtection.passport_protected') || "PASSPORT: PROTECTED"}</span>
+          </Badge>
+        </div>
+        <Button variant="link" size="sm" className="px-0 mt-4 text-xs font-medium text-primary group-hover:text-primary/80 h-auto">
+          {t('dashboard.identityProtection.manage') || "Manage Identity Documents"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
 
   // Get initial tab based on URL and user role
   const getInitialTab = () => {
@@ -176,14 +181,14 @@ export default function UnifiedDashboard() {
 
   // Update state when URL changes - using explicit React reference to avoid ReferenceErrors
   React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(searchString);
     const currentTab = params.get('tab') || (user?.role === 'Admin' ? 'admin' : user?.role === 'Agent' ? 'agent' : 'overview');
     if (currentTab !== activeTab) {
       setActiveTab(currentTab);
     }
     // Added console log to confirm this effect is running and cache is refreshed
     console.log('[UnifiedDashboard] Tab sync effect running', { currentTab, activeTab });
-  }, [window.location.search, activeTab, user?.role]);
+  }, [searchString, activeTab, user?.role]);
 
   // Helper to change tab and update URL
   const handleTabChange = (newTab: string) => {
@@ -266,12 +271,10 @@ export default function UnifiedDashboard() {
   };
 
   if (!user) {
-    // Handle not logged in state
     return (
       <PageLayout>
-        <div className="max-w-7xl mx-auto text-center py-12 px-4">
-          <h2 className="text-2xl font-semibold mb-4">{t('auth.loginRequired')}</h2>
-          <Button onClick={() => navigate("/")}>{t('common.returnToHome')}</Button>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/dashboard" />
         </div>
       </PageLayout>
     );
@@ -291,69 +294,66 @@ export default function UnifiedDashboard() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-5xl mx-auto space-y-8"
+          className="max-w-5xl mx-auto space-y-4 sm:space-y-8"
         >
-          {/* Identity Protection (Rwanda Focus) */}
-          <motion.div variants={itemVariants}>
-            <IdentityProtectionCard user={user} t={t} />
-          </motion.div>
-
-          {/* Primary Action Paths */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <motion.div variants={itemVariants}>
-              <Card
-                className="overflow-hidden cursor-pointer hover:shadow-lg transition-all border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group relative"
-                onClick={() => navigate('/lost')}
-              >
-                <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <AlertTriangle className="h-16 w-16 text-destructive" />
-                </div>
-                <CardContent className="p-5 flex flex-row items-center gap-5">
-                  <div className="p-3 bg-destructive/10 rounded-2xl shrink-0 group-hover:scale-110 transition-transform shadow-sm">
-                    <AlertTriangle className="h-6 w-6 text-destructive" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-xl font-black tracking-tight text-destructive">{t('dashboard.action.lostTitle')}</h3>
-                    <p className="text-muted-foreground text-xs leading-tight mt-1 font-medium">{t('dashboard.action.lostDesc')}</p>
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Bento Box Action Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 lg:grid-cols-5">
+            {/* Main Identity Block - Spans 3 columns on large screens, 2 on medium */}
+            <motion.div variants={itemVariants} className="md:col-span-2 lg:col-span-3">
+              <IdentityProtectionCard />
             </motion.div>
 
-            <motion.div variants={itemVariants}>
-              <Card
-                className="overflow-hidden cursor-pointer hover:shadow-lg transition-all border-primary/20 bg-primary/5 hover:bg-primary/10 group relative"
-                onClick={() => navigate('/found')}
-              >
-                <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
-                  <Search className="h-16 w-16 text-primary" />
-                </div>
-                <CardContent className="p-5 flex flex-row items-center gap-5">
-                  <div className="p-3 bg-primary/10 rounded-2xl shrink-0 group-hover:scale-110 transition-transform shadow-sm">
-                    <Search className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="text-left">
-                    <h3 className="text-xl font-black tracking-tight text-primary">{t('dashboard.action.foundTitle')}</h3>
-                    <p className="text-muted-foreground text-xs leading-tight mt-1 font-medium">{t('dashboard.action.foundDesc')}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+            {/* Sub Action Blocks - Stacked vertically next to the identity block */}
+            <div className="flex flex-col gap-3 md:gap-4 md:col-span-1 lg:col-span-2">
+              <motion.div variants={itemVariants} className="flex-1">
+                <Card
+                  className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-destructive/10 transition-all duration-300 border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group relative h-full flex flex-col justify-center"
+                  onClick={() => navigate('/lost-found?action=report-lost')}
+                >
+                  <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+                    <div className="p-2 sm:p-3 bg-destructive/10 rounded-xl shrink-0 group-hover:scale-105 transition-transform">
+                      <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-semibold text-destructive dark:text-red-400">{t('dashboard.action.lostTitle') || "I Lost Something"}</h3>
+                      <p className="text-muted-foreground text-xs leading-tight mt-0.5 font-normal">{t('dashboard.action.lostDesc') || "Report a lost item and notify others."}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div variants={itemVariants} className="flex-1">
+                <Card
+                  className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-primary/10 transition-all duration-300 border-primary/20 bg-primary/5 hover:bg-primary/10 group relative h-full flex flex-col justify-center"
+                  onClick={() => navigate('/lost-found?action=report-found')}
+                >
+                  <CardContent className="p-4 sm:p-5 flex items-center gap-4">
+                    <div className="p-2 sm:p-3 bg-primary/10 rounded-xl shrink-0 group-hover:scale-105 transition-transform">
+                      <Search className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-semibold text-primary dark:text-blue-400">{t('dashboard.action.foundTitle') || "I Found Something"}</h3>
+                      <p className="text-muted-foreground text-xs leading-tight mt-0.5 font-normal">{t('dashboard.action.foundDesc') || "Scan a QR code or report an item."}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
           </div>
 
           {/* Secondary Action & Clean List */}
-          <motion.div variants={itemVariants} className="pt-2">
-            <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+          <motion.div variants={itemVariants} className="pt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-4">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-1 bg-primary rounded-full" />
+                <div className="h-6 w-1 bg-primary rounded-full" />
                 <div>
-                  <h2 className="text-xl font-black tracking-tight uppercase">{t('nav.myItems')}</h2>
-                  <p className="text-muted-foreground text-[10px] uppercase tracking-widest font-bold">
+                  <h2 className="text-lg font-semibold tracking-normal uppercase">{t('nav.myItems')}</h2>
+                  <p className="text-muted-foreground text-xs font-normal">
                     {userStats.totalItems} {t('dashboard.registeredItems')}
                   </p>
                 </div>
               </div>
-              <Button onClick={() => navigate('/register-item')} className="w-full sm:w-auto font-bold shadow-lg shadow-primary/20">
+              <Button onClick={() => navigate('/register-item')} variant="outline" size="sm" className="w-full sm:w-auto font-medium">
                 <Plus className="mr-2 h-4 w-4" />
                 {t('dashboard.action.protectTitle')}
               </Button>
@@ -361,12 +361,12 @@ export default function UnifiedDashboard() {
 
             <Card className="border-border/50 shadow-sm overflow-hidden bg-background/50 backdrop-blur-sm">
               <CardContent className="p-0">
-                <ItemsTable items={userStats.recentlyAddedItems} isLoading={false} />
+                <ItemsTable items={userStats.recentlyAddedItems?.slice(0, 4) || []} isLoading={false} />
               </CardContent>
             </Card>
 
             <div className="flex justify-center mt-6">
-              <Button variant="ghost" size="sm" onClick={() => setActiveTab('items')} className="text-muted-foreground font-bold hover:text-primary transition-colors">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/my-items')} className="text-muted-foreground font-bold hover:text-primary transition-colors">
                 {t('dashboard.viewAll')} →
               </Button>
             </div>
@@ -1121,7 +1121,12 @@ export default function UnifiedDashboard() {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="relative"
       >
+        {/* Ambient background glows for Premium Dark Mode */}
+        <div className="fixed top-20 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10 hidden dark:block" />
+        <div className="fixed bottom-0 left-[-100px] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none -z-10 hidden dark:block" />
+
         <WelcomeHeader user={user} isAdmin={isAdmin} t={t} />
 
         <div className="mt-2">

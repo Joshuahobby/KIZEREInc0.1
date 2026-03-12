@@ -12,6 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Plus, Edit, Trash2, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { AuthWall } from "@/components/ui/auth-wall";
+import { PageLayout } from "@/components/layout/page-layout";
 import { apiRequest } from "@/lib/queryClient";
 import { PermissionType } from "@shared/schema";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,7 +29,18 @@ interface Role {
 }
 
 export default function RoleManagementPage() {
+    const { user, isLoading: isLoadingAuth } = useAuth();
     const { toast } = useToast();
+
+    if (!user && !isLoadingAuth) {
+        return (
+            <PageLayout>
+                <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+                    <AuthWall returnUrl="/admin/role-management" />
+                </div>
+            </PageLayout>
+        );
+    }
     const queryClient = useQueryClient();
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
@@ -137,177 +151,179 @@ export default function RoleManagementPage() {
     if (rolesLoading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>;
 
     return (
-        <div className="container mx-auto py-6 space-y-6">
-            <DashboardPageHeader
-                title="Role Management"
-                description="Manage user roles and their permissions"
-                actions={
-                    <Button onClick={() => { resetForm(); setIsCreateOpen(true); }}>
-                        <Plus className="mr-2 h-4 w-4" /> Create Role
-                    </Button>
-                }
-            />
+        <PageLayout>
+            <div className="container mx-auto py-6 space-y-6">
+                <DashboardPageHeader
+                    title="Role Management"
+                    description="Manage user roles and their permissions"
+                    actions={
+                        <Button onClick={() => { resetForm(); setIsCreateOpen(true); }}>
+                            <Plus className="mr-2 h-4 w-4" /> Create Role
+                        </Button>
+                    }
+                />
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>System Roles</CardTitle>
-                    <CardDescription>
-                        View and manage roles. System roles cannot be deleted.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Role Name</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead>Permissions Count</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {roles?.map((role) => (
-                                <TableRow key={role.id}>
-                                    <TableCell className="font-medium">{role.name}</TableCell>
-                                    <TableCell>{role.description}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="secondary">{role.permissions.length} permissions</Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        {role.isSystem ? <Badge>System</Badge> : <Badge variant="outline">Custom</Badge>}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(role)}>
-                                            <Edit className="h-4 w-4" />
-                                        </Button>
-                                        {!role.isSystem && (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="text-destructive hover:text-destructive"
-                                                onClick={() => {
-                                                    if (confirm("Are you sure you want to delete this role?")) {
-                                                        deleteMutation.mutate(role.id);
-                                                    }
-                                                }}
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                    </TableCell>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>System Roles</CardTitle>
+                        <CardDescription>
+                            View and manage roles. System roles cannot be deleted.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Role Name</TableHead>
+                                    <TableHead>Description</TableHead>
+                                    <TableHead>Permissions Count</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {roles?.map((role) => (
+                                    <TableRow key={role.id}>
+                                        <TableCell className="font-medium">{role.name}</TableCell>
+                                        <TableCell>{role.description}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="secondary">{role.permissions.length} permissions</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            {role.isSystem ? <Badge>System</Badge> : <Badge variant="outline">Custom</Badge>}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="sm" onClick={() => handleEditClick(role)}>
+                                                <Edit className="h-4 w-4" />
+                                            </Button>
+                                            {!role.isSystem && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-destructive hover:text-destructive"
+                                                    onClick={() => {
+                                                        if (confirm("Are you sure you want to delete this role?")) {
+                                                            deleteMutation.mutate(role.id);
+                                                        }
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
 
-            {/* Create/Edit Dialog */}
-            <Dialog open={isCreateOpen || isEditOpen} onOpenChange={(open) => {
-                if (!open) {
-                    setIsCreateOpen(false);
-                    setIsEditOpen(false);
-                    resetForm();
-                }
-            }}>
-                <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
-                    <DialogHeader>
-                        <DialogTitle>{isEditOpen ? "Edit Role" : "Create New Role"}</DialogTitle>
-                        <DialogDescription>
-                            Configure role details and permissions.
-                        </DialogDescription>
-                    </DialogHeader>
+                {/* Create/Edit Dialog */}
+                <Dialog open={isCreateOpen || isEditOpen} onOpenChange={(open) => {
+                    if (!open) {
+                        setIsCreateOpen(false);
+                        setIsEditOpen(false);
+                        resetForm();
+                    }
+                }}>
+                    <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+                        <DialogHeader>
+                            <DialogTitle>{isEditOpen ? "Edit Role" : "Create New Role"}</DialogTitle>
+                            <DialogDescription>
+                                Configure role details and permissions.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    <div className="space-y-4 py-4 overflow-y-auto pr-2">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Role Name</Label>
-                            <Input
-                                id="name"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                disabled={isEditOpen && selectedRole?.isSystem} // Prevent renaming system roles if desired
-                                placeholder="e.g. Content Moderator"
-                            />
-                            {isEditOpen && selectedRole?.isSystem && (
-                                <p className="text-xs text-muted-foreground">System role names cannot be changed.</p>
-                            )}
-                        </div>
+                        <div className="space-y-4 py-4 overflow-y-auto pr-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Role Name</Label>
+                                <Input
+                                    id="name"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    disabled={isEditOpen && selectedRole?.isSystem} // Prevent renaming system roles if desired
+                                    placeholder="e.g. Content Moderator"
+                                />
+                                {isEditOpen && selectedRole?.isSystem && (
+                                    <p className="text-xs text-muted-foreground">System role names cannot be changed.</p>
+                                )}
+                            </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Description</Label>
-                            <Input
-                                id="description"
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                placeholder="Role description"
-                            />
-                        </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Input
+                                    id="description"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                    placeholder="Role description"
+                                />
+                            </div>
 
-                        <div className="space-y-2">
-                            <Label>Permissions</Label>
-                            <ScrollArea className="h-[300px] border rounded-md p-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {availablePermissions?.map((perm) => (
-                                        <div key={perm} className="flex items-center space-x-2">
-                                            <Checkbox
-                                                id={`perm-${perm}`}
-                                                checked={formData.permissions.includes(perm)}
-                                                onCheckedChange={() => handlePermissionToggle(perm)}
-                                            />
-                                            <label
-                                                htmlFor={`perm-${perm}`}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                            >
-                                                {perm}
-                                            </label>
-                                        </div>
-                                    ))}
+                            <div className="space-y-2">
+                                <Label>Permissions</Label>
+                                <ScrollArea className="h-[300px] border rounded-md p-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {availablePermissions?.map((perm) => (
+                                            <div key={perm} className="flex items-center space-x-2">
+                                                <Checkbox
+                                                    id={`perm-${perm}`}
+                                                    checked={formData.permissions.includes(perm)}
+                                                    onCheckedChange={() => handlePermissionToggle(perm)}
+                                                />
+                                                <label
+                                                    htmlFor={`perm-${perm}`}
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                                                >
+                                                    {perm}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
+                                <div className="flex justify-between items-center pt-2">
+                                    <p className="text-sm text-muted-foreground">{formData.permissions.length} selected</p>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setFormData(prev => ({ ...prev, permissions: availablePermissions || [] }))}
+                                    >
+                                        Select All
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setFormData(prev => ({ ...prev, permissions: [] }))}
+                                    >
+                                        Deselect All
+                                    </Button>
                                 </div>
-                            </ScrollArea>
-                            <div className="flex justify-between items-center pt-2">
-                                <p className="text-sm text-muted-foreground">{formData.permissions.length} selected</p>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setFormData(prev => ({ ...prev, permissions: availablePermissions || [] }))}
-                                >
-                                    Select All
-                                </Button>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => setFormData(prev => ({ ...prev, permissions: [] }))}
-                                >
-                                    Deselect All
-                                </Button>
                             </div>
                         </div>
-                    </div>
 
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => { setIsCreateOpen(false); setIsEditOpen(false); }}>Cancel</Button>
-                        <Button
-                            onClick={() => {
-                                const payload = {
-                                    name: formData.name,
-                                    description: formData.description,
-                                    permissions: formData.permissions
-                                };
-                                if (isEditOpen) {
-                                    updateMutation.mutate(payload);
-                                } else {
-                                    createMutation.mutate(payload);
-                                }
-                            }}
-                            disabled={createMutation.isPending || updateMutation.isPending}
-                        >
-                            {createMutation.isPending || updateMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : null}
-                            {isEditOpen ? "Save Changes" : "Create Role"}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        </div>
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => { setIsCreateOpen(false); setIsEditOpen(false); }}>Cancel</Button>
+                            <Button
+                                onClick={() => {
+                                    const payload = {
+                                        name: formData.name,
+                                        description: formData.description,
+                                        permissions: formData.permissions
+                                    };
+                                    if (isEditOpen) {
+                                        updateMutation.mutate(payload);
+                                    } else {
+                                        createMutation.mutate(payload);
+                                    }
+                                }}
+                                disabled={createMutation.isPending || updateMutation.isPending}
+                            >
+                                {createMutation.isPending || updateMutation.isPending ? <Loader2 className="animate-spin mr-2" /> : null}
+                                {isEditOpen ? "Save Changes" : "Create Role"}
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+        </PageLayout>
     );
 }
