@@ -251,7 +251,6 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
           paymentDetails={{
             type: 'registration',
             itemId: paymentItem.id,
-            amount: 2000
           }}
           onPaymentSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ["/api/items"] });

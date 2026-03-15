@@ -2,14 +2,10 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { PaymentType } from "@shared/schema";
-import { useToast } from "@/hooks/use-toast";
-import { Loader2, Check } from "lucide-react";
-
-// UI components
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Check, Loader2, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 export interface PaymentPackage {
   id: number;
@@ -37,7 +33,6 @@ export function PaymentPackageSelector({
   onSelectPackage,
   selectedPackageId = null
 }: PaymentPackageSelectorProps) {
-  const { toast } = useToast();
   const [selectedId, setSelectedId] = useState<number | null>(selectedPackageId);
 
   // Fetch payment packages
@@ -51,96 +46,92 @@ export function PaymentPackageSelector({
   // Select default package initially if none is selected
   useEffect(() => {
     if (packages && packages.length > 0 && !selectedId) {
-      // Find default package or use the first one
       const defaultPackage = packages.find(pkg => pkg.isDefault) || packages[0];
       setSelectedId(defaultPackage.id);
       onSelectPackage(defaultPackage.id, Number(defaultPackage.amount));
     }
   }, [packages, selectedId, onSelectPackage]);
 
-  // Handle package selection
   const handleSelectPackage = (packageId: number, amount: number) => {
     setSelectedId(packageId);
     onSelectPackage(packageId, amount);
   };
 
-  // Display loading state
   if (isLoading) {
     return (
       <div className="space-y-3">
-        <Skeleton className="h-4 w-32" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-48 w-full rounded-md" />
-          ))}
-        </div>
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-16 w-full rounded-lg" />
+        <Skeleton className="h-16 w-full rounded-lg" />
       </div>
     );
   }
 
-  // Display error state
   if (error || !packages || packages.length === 0) {
     return (
-      <div className="p-4 border border-destructive/50 rounded-md bg-destructive/10 text-destructive">
-        <p className="font-medium">Failed to load payment packages</p>
-        <p className="text-sm mt-1">
-          {error instanceof Error 
-            ? error.message 
-            : packages && packages.length === 0 
-              ? 'No payment packages available for this type.' 
-              : 'An unknown error occurred'}
+      <div className="p-4 border border-destructive/50 rounded-lg bg-destructive/10 text-destructive">
+        <p className="font-medium text-sm">No payment packages available</p>
+        <p className="text-xs mt-1">
+          {error instanceof Error
+            ? error.message
+            : "An admin needs to configure payment packages before payments can be processed."}
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-medium">Select a Package</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {packages.map((pkg) => (
-          <Card 
-            key={pkg.id}
-            className={`relative cursor-pointer transition-all ${
-              selectedId === pkg.id 
-                ? 'border-primary ring-2 ring-primary/20' 
-                : 'hover:border-primary/50'
-            }`}
-            onClick={() => handleSelectPackage(pkg.id, Number(pkg.amount))}
-          >
-            {pkg.isDefault && (
-              <Badge variant="secondary" className="absolute top-2 right-2">
-                Recommended
-              </Badge>
-            )}
-            <CardHeader className="pb-2">
-              <CardTitle>{pkg.name}</CardTitle>
-              <CardDescription>{pkg.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pkg.amount} {pkg.currency}</div>
-              
-              {pkg.features && pkg.features.length > 0 && (
-                <ul className="mt-4 space-y-2">
-                  {pkg.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <Check size={18} className="mr-2 text-green-500 shrink-0 mt-0.5" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+    <div className="space-y-2">
+      <p className="text-sm font-medium text-muted-foreground">Choose a plan</p>
+      <div className="space-y-2">
+        {packages.map((pkg) => {
+          const isSelected = selectedId === pkg.id;
+
+          return (
+            <button
+              key={pkg.id}
+              type="button"
+              onClick={() => handleSelectPackage(pkg.id, Number(pkg.amount))}
+              className={cn(
+                "w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all",
+                isSelected
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  : "border-border hover:border-primary/40 hover:bg-muted/30"
               )}
-            </CardContent>
-            <CardFooter>
-              <Button 
-                variant={selectedId === pkg.id ? "default" : "outline"} 
-                className="w-full"
-              >
-                {selectedId === pkg.id ? "Selected" : "Select Package"}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+            >
+              {/* Radio indicator */}
+              <div className={cn(
+                "flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                isSelected
+                  ? "border-primary bg-primary"
+                  : "border-muted-foreground/40"
+              )}>
+                {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+              </div>
+
+              {/* Package info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-sm">{pkg.name}</span>
+                  {pkg.isDefault && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 gap-0.5">
+                      <Star className="h-2.5 w-2.5" />
+                      Recommended
+                    </Badge>
+                  )}
+                </div>
+                {pkg.description && (
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{pkg.description}</p>
+                )}
+              </div>
+
+              {/* Price */}
+              <div className="flex-shrink-0 text-right">
+                <span className="font-bold text-sm">{Number(pkg.amount).toLocaleString()} {pkg.currency}</span>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

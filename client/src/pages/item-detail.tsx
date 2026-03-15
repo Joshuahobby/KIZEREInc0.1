@@ -464,7 +464,6 @@ export default function ItemDetailPage() {
             paymentDetails={{
               type: 'registration',
               itemId: item.id,
-              amount: 2000
             }}
             onPaymentSuccess={() => {
               queryClient.invalidateQueries({ queryKey: [`/api/items/${itemId}`] });

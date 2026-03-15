@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { createLogger } from './logger';
 import { signOutgoingRequest } from './pawapay-signature';
 import { config, isProd } from '../config';
-import { DEFAULT_PAYMENT_FEES, getPaymentAmount as configGetPaymentAmount } from '../config/payment.config';
+import { getPaymentAmount as configGetPaymentAmount } from '../config/payment.config';
 
 const logger = createLogger('PawaPayUtils');
 
@@ -51,8 +51,7 @@ async function signedFetch(url: string, options: RequestInit): Promise<Response>
     return fetch(url, { ...options, headers });
 }
 
-// Re-export centralized fee structure
-export const PAYMENT_FEES = DEFAULT_PAYMENT_FEES;
+// Pricing is now exclusively admin-managed via payment_packages table
 
 // ─── Type Definitions ────────────────────────────────────────────────────────
 

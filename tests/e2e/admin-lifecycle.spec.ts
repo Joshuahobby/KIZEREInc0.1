@@ -22,7 +22,7 @@ test.describe('Admin Management Lifecycle', () => {
     await page.goto('/auth');
     await page.getByRole('tab', { name: /Sign In|login/i }).click();
     await page.fill('input[name="username"]', 'admin');
-    await page.fill('input[name="password"]', 'Admin@123456');
+    await page.fill('input[name="password"]', 'admin123');
     await page.locator('form').first().locator('button[type="submit"]').click();
 
     await expect(page).toHaveURL(/\/dashboard|\/admin/i, { timeout: 15000 });

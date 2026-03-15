@@ -5,7 +5,7 @@ import { User, InsertUser, UserPreferences } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import { AuthService } from "@/services/auth.service";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest, clearCsrfToken } from "@/lib/queryClient";
+import { queryClient, apiRequest, clearCsrfToken, setAuthSyncing } from "@/lib/queryClient";
 
 export interface AuthContextType {
   user: User | null;
@@ -73,6 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log("[useAuth] Starting performSync for user:", firebaseUser.email);
     try {
       syncInProgressRef.current = true;
+      setAuthSyncing(true); // Signal to queryClient that we are syncing
       const token = await firebaseUser.getIdToken(true);
       console.log("[useAuth] ID Token retrieved successfully");
 
@@ -108,6 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (isMounted.current) setError(e.message || "Login failed");
     } finally {
       syncInProgressRef.current = false;
+      setAuthSyncing(false); // Signal that sync is complete
       if (isMounted.current) {
         console.log("[useAuth] performSync finally, setting isLoading to false");
         setIsLoading(false);
@@ -135,7 +137,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       syncDebounceTimerRef.current = null;
 
       if (userToSync && isMounted.current) {
-        console.log("[useAuth] Debounce timer fired, calling performSync");
         performSync(userToSync);
       }
     }, SYNC_DEBOUNCE_MS);

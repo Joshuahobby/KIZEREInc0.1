@@ -1,20 +1,13 @@
 /**
  * Payment configuration for the client
- * Centralizes all payment-related constants and settings
- * Mirrors server configuration
+ * Centralizes all payment-related constants and settings.
+ *
+ * NOTE: All pricing is managed by admins via the payment_packages table.
+ * There are NO hardcoded price fallbacks — prices are fetched from the API.
  */
 
 import { PaymentType } from "@shared/schema";
-import { PaymentService } from "@/services/payment.service";
-
-/**
- * Default fee structure for different payment types
- * These fees will be used as fallback if no packages are available
- */
-export const PAYMENT_FEES = {
-  REGISTRATION: 2000, // Item registration fee in RWF
-  LOST_REPORT: 1000,  // Lost item report fee in RWF
-};
+import { apiRequest } from "@/lib/queryClient";
 
 /**
  * Default currency code
@@ -22,31 +15,48 @@ export const PAYMENT_FEES = {
 export const DEFAULT_CURRENCY = "RWF";
 
 /**
- * Get the payment amount based on the payment type
- * 
+ * Cached default package amounts to avoid repeated API calls within a session.
+ */
+const _amountCache: Record<string, { amount: number; expiry: number }> = {};
+
+/**
+ * Fetch the default payment amount from the server for a given type.
+ * The server resolves the amount from admin-configured packages.
+ *
  * @param type The type of payment ('registration' or 'lost_report')
  * @returns The payment amount in the default currency
  */
-export function getPaymentAmount(type: PaymentType): number {
-  switch (type) {
-    case 'registration':
-      return PAYMENT_FEES.REGISTRATION;
-    case 'lost_report':
-      return PAYMENT_FEES.LOST_REPORT;
-    default:
-      return 0;
+export async function getPaymentAmountAsync(type: PaymentType): Promise<number> {
+  // Check local cache (valid for 5 minutes)
+  const cached = _amountCache[type];
+  if (cached && cached.expiry > Date.now()) {
+    return cached.amount;
   }
+
+  try {
+    // Fetch active packages for this type and pick the default or first one
+    const packages = await apiRequest<any[]>(`/api/payment-packages/type/${type}`);
+    if (packages && packages.length > 0) {
+      const defaultPkg = packages.find((p: any) => p.isDefault) || packages[0];
+      const amount = Number(defaultPkg.amount);
+      _amountCache[type] = { amount, expiry: Date.now() + 5 * 60 * 1000 };
+      return amount;
+    }
+  } catch (error) {
+    console.error(`Failed to fetch payment amount for type ${type}:`, error);
+  }
+
+  // Return 0 if no packages found — the payment modal will handle the error
+  return 0;
 }
 
 /**
  * Get payment description based on the payment type
- * 
+ *
  * @param type Payment type
- * @param packageId Optional package ID if a specific package is selected
  * @returns Human-readable description of the payment
  */
-export function getPaymentDescription(type: PaymentType, packageId?: number): string {
-  // Without a package, use default descriptions
+export function getPaymentDescription(type: PaymentType): string {
   switch (type) {
     case 'registration':
       return 'Item Registration Fee';
@@ -59,13 +69,13 @@ export function getPaymentDescription(type: PaymentType, packageId?: number): st
 
 /**
  * Get the package name for a given package ID
- * 
+ *
  * @param packageId The package ID
  * @returns Promise resolving to the package name or a default value
  */
 export async function getPackageName(packageId: number): Promise<string> {
   try {
-    const packageData = await PaymentService.getPaymentPackage(packageId);
+    const packageData = await apiRequest<any>(`/api/payment-packages/${packageId}`);
     return packageData?.name || 'Payment Package';
   } catch (error) {
     console.error("Error fetching package name:", error);

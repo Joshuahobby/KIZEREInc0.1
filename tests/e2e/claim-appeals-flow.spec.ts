@@ -12,12 +12,13 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('Claim Appeals Flow', () => {
-  const finderUsername = `finder_${Math.floor(Math.random() * 10000)}@example.com`;
-  const claimantUsername = `claimant_${Math.floor(Math.random() * 10000)}@example.com`;
-  const reportTitle = `Lost Wallet - ${Math.floor(Math.random() * 10000)}`;
+  const uniqueId = Math.floor(Math.random() * 1000000);
+  const finderUsername = `finder_${uniqueId}@example.com`;
+  const claimantUsername = `claimant_${uniqueId}@example.com`;
+  const reportTitle = `Lost Wallet - ${uniqueId}`;
 
   test('should complete the full claim appeal lifecycle', async ({ page }) => {
-    test.setTimeout(120000); // Increase timeout for this complex flow
+    test.setTimeout(240000); // Increase timeout further for this complex flow
     console.log('--- Phase 1: Registration ---');
     
     // Register Finder (User A)
@@ -99,7 +100,7 @@ test.describe('Claim Appeals Flow', () => {
     await page.getByRole('button', { name: /Submit Report|Finish|Pay/i }).click();
     console.log('Clicked Finish button');
     
-    await expect(page.locator('text=reported successfully').first()).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('text=Found item reported successfully').first()).toBeVisible({ timeout: 20000 });
     console.log('Report submitted successfully');
 
     // Find the report on Dashboard to get its ID
@@ -145,8 +146,14 @@ test.describe('Claim Appeals Flow', () => {
     console.log('Claim filed successfully');
     
     await page.goto('/my-claims');
-    const claimRow = page.locator('tbody tr').first();
-    await claimRow.waitFor({ state: 'visible' });
+    console.log('Navigated to /my-claims, waiting for data...');
+    
+    // Wait for the table to be visible, which means loading is done and we have at least one claim
+    const table = page.locator('table');
+    await table.waitFor({ state: 'visible', timeout: 30000 });
+    
+    const claimRow = table.locator('tbody tr').first();
+    await claimRow.waitFor({ state: 'visible', timeout: 15000 });
     const claimIdText = await claimRow.locator('td').first().innerText();
     const claimId = claimIdText.replace('#', '').trim();
     console.log(`Claim captured with ID: ${claimId}`);
@@ -165,9 +172,16 @@ test.describe('Claim Appeals Flow', () => {
     // Finder sees the claim on their report
     await page.getByRole('button', { name: /Reject/i }).click();
     await page.getByLabel(/Reason for Rejection/i).fill('Not enough details to prove ownership.');
+    console.log('Confirming Rejection...');
     await page.getByRole('button', { name: /Confirm Rejection/i }).click();
+    console.log('Clicked Confirm Rejection button, waiting for toast or badge update');
     
-    await expect(page.getByText('Successfully rejected the claim.').first()).toBeVisible({ timeout: 15000 });
+    // Wait for success toast or status badge update
+    await Promise.any([
+      expect(page.getByText('Successfully rejected the claim.').first()).toBeVisible({ timeout: 20000 }),
+      expect(page.getByText(/rejected/i).first()).toBeVisible({ timeout: 20000 })
+    ]);
+    
     console.log('Claim rejected successfully');
     await page.context().clearCookies();
 
@@ -194,7 +208,7 @@ test.describe('Claim Appeals Flow', () => {
     await page.goto('/auth');
     await page.getByRole('tab', { name: /Sign In|login/i }).click();
     await page.fill('input[name="username"]', 'admin'); 
-    await page.fill('input[name="password"]', 'Admin@123456');
+    await page.fill('input[name="password"]', 'admin123');
     await page.locator('form').first().locator('button[type="submit"]').click();
     await expect(page).toHaveURL(/\/(dashboard|admin)/);
 

@@ -2,18 +2,17 @@ import { useState } from "react";
 import { Button, ButtonProps } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { PaymentModal } from "./payment-modal";
-import { InitializePaymentRequest, PaymentService } from "@/services/payment.service";
+import { InitializePaymentRequest } from "@/services/payment.service";
 import { PaymentType } from "@shared/schema";
 
 interface PaymentButtonProps extends Omit<ButtonProps, "onClick"> {
   paymentType: PaymentType;
-  amount?: number; // If not provided, will use default from server
+  amount?: number; // Optional — if not provided, the modal will resolve from admin packages
   itemId?: number;
   reportId?: number;
   onPaymentSuccess?: (transactionRef: string) => void;
   onPaymentInitiate?: () => void;
   onPaymentCancel?: () => void;
-  showAmount?: boolean;
 }
 
 export function PaymentButton({
@@ -24,73 +23,46 @@ export function PaymentButton({
   onPaymentSuccess,
   onPaymentInitiate,
   onPaymentCancel,
-  showAmount = true,
   children,
   className,
+  onSuccess, // Extract to prevent leaking to <Button>
   ...props
-}: PaymentButtonProps) {
+}: any) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Calculate payment amount if not provided
-  const paymentAmount = amount ?? PaymentService.getPaymentAmount(paymentType);
-
-  // Payment details for the modal
-  const paymentDetails: Omit<InitializePaymentRequest, "amount" | "phoneNumber"> & { amount: number } = {
+  // Payment details for the modal — amount is optional, modal resolves it from packages
+  const paymentDetails: Omit<InitializePaymentRequest, "amount" | "phoneNumber"> & { amount?: number } = {
     type: paymentType,
-    amount: paymentAmount,
+    ...(amount ? { amount } : {}),
     ...(itemId ? { itemId } : {}),
-    ...(reportId ? { reportId } : {})
+    ...(reportId ? { reportId } : {}),
   };
 
-  // Handle button click to open payment modal
   const handleClick = () => {
-    setIsLoading(true);
-    if (onPaymentInitiate) {
-      onPaymentInitiate();
-    }
+    if (onPaymentInitiate) onPaymentInitiate();
     setIsModalOpen(true);
-    setIsLoading(false);
-  };
-
-  // Handle payment success
-  const handlePaymentSuccess = (transactionRef: string) => {
-    if (onPaymentSuccess) {
-      onPaymentSuccess(transactionRef);
-    }
-  };
-
-  // Handle payment cancel
-  const handlePaymentCancel = () => {
-    if (onPaymentCancel) {
-      onPaymentCancel();
-    }
   };
 
   return (
     <>
       <Button
         onClick={handleClick}
-        disabled={isLoading}
         className={className}
         {...props}
       >
-        {isLoading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : null}
-        {children || (
-          <>
-            Pay {showAmount ? `${paymentAmount} RWF` : ""}
-          </>
-        )}
+        {children || "Proceed to Payment"}
       </Button>
 
       <PaymentModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
-        paymentDetails={paymentDetails}
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentCancel={handlePaymentCancel}
+        paymentDetails={paymentDetails as any}
+        onPaymentSuccess={(ref) => {
+          if (onPaymentSuccess) onPaymentSuccess(ref);
+        }}
+        onPaymentCancel={() => {
+          if (onPaymentCancel) onPaymentCancel();
+        }}
       />
     </>
   );

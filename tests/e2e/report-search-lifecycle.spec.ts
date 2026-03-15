@@ -72,6 +72,10 @@ test.describe('Report & Search Lifecycle', () => {
     await page.getByPlaceholder(/Taxi Park|Location/i).fill('Nyabugogo Bus Station');
     await page.getByPlaceholder(/Include distinguishing features|Description/i).fill('Found a blue leather bag with documents inside near the station.');
     
+    // Fill date to be safe
+    let today = new Date().toISOString().split('T')[0];
+    await page.locator('input[type="date"]').fill(today);
+    
     await page.getByRole('button', { name: /Next Step/i }).click();
     await page.waitForTimeout(1000);
     console.log('Found report Step 1 completed');
@@ -82,12 +86,15 @@ test.describe('Report & Search Lifecycle', () => {
     await page.getByPlaceholder(/Verification question/i).fill('What brand is the bag?');
     
     // Submit
-    await page.getByRole('button', { name: /Submit Report/i }).click();
+    const foundSubmitBtn = page.getByRole('button', { name: /Submit Report|Finish/i });
+    await foundSubmitBtn.waitFor({ state: 'visible' });
+    await foundSubmitBtn.click();
+    console.log('Clicked Submit Report button');
     
     // Wait for success toast
     await expect(
       page.getByText(/successfully|reported/i).first()
-    ).toBeVisible({ timeout: 20000 });
+    ).toBeVisible({ timeout: 30000 });
     console.log('Found report submitted successfully');
 
     // --- Phase 3: Verify on Dashboard ---
@@ -114,6 +121,10 @@ test.describe('Report & Search Lifecycle', () => {
     await page.getByPlaceholder(/Taxi Park|Location/i).fill('Kigali Convention Center');
     await page.getByPlaceholder(/Include distinguishing features|Description/i).fill('I lost my Samsung Galaxy near the parking area at around 3pm.');
     
+    // Fill date to be safe
+    today = new Date().toISOString().split('T')[0];
+    await page.locator('input[type="date"]').fill(today);
+    
     await page.getByRole('button', { name: /Next Step/i }).click();
     await page.waitForTimeout(1000);
     console.log('Lost report Step 1 completion');
@@ -128,16 +139,46 @@ test.describe('Report & Search Lifecycle', () => {
     }
 
     // Submit
-    await page.getByRole('button', { name: /Pay & Submit|Submit/i }).click();
+    const lostSubmitBtn = page.getByRole('button', { name: /Pay & Submit|Submit Report|Submit/i });
+    await lostSubmitBtn.waitFor({ state: 'visible' });
+    await lostSubmitBtn.click();
+    console.log('Clicked submit report, waiting for Payment Modal');
+
+    // --- Phase 4.5: Handle Payment Modal ---
+    console.log('--- Phase 4.5: Handle Payment Modal ---');
+    // Wait for the payment modal to appear
+    await expect(page.getByText(/Pay for Lost Item Report/i)).toBeVisible({ timeout: 15000 });
     
+    // Fill phone number if empty
+    const mobileInput = page.getByPlaceholder(/Mobile Money Number/i);
+    await mobileInput.fill('0780000000');
+    console.log('Filled phone number in modal');
+
+    // Click the Pay button
+    const payBtn = page.getByRole('button', { name: /Pay/i });
+    await payBtn.click();
+    console.log('Clicked Pay button in modal');
+
+    // Wait for the "Check Status" button
+    const checkStatusBtn = page.getByRole('button', { name: /I've approved/i });
+    await expect(checkStatusBtn).toBeVisible({ timeout: 15000 });
+    await checkStatusBtn.click();
+    console.log('Clicked Check Status button');
+
+    // Wait for payment modal success screen
     await expect(
-      page.getByText(/successfully|reported/i).first()
+      page.getByText(/Payment of/i).first()
     ).toBeVisible({ timeout: 20000 });
-    console.log('Lost report submitted successfully');
+    await expect(
+      page.getByText(/confirmed/i).first()
+    ).toBeVisible({ timeout: 10000 });
+    console.log('Lost report submitted and paid successfully');
 
     // --- Phase 5: Search ---
     console.log('--- Phase 5: Search for Reports ---');
     await page.goto('/search');
+    await page.waitForTimeout(3000);
+    await page.reload();
     await page.waitForTimeout(3000);
     
     // Ensure search page is loaded - look for the hero search input
@@ -188,12 +229,20 @@ test.describe('Report & Search Lifecycle', () => {
     
     console.log('Search request completed for Found item');
     
-    // Wait for results to render
-    await page.waitForTimeout(3000);
+    // Phase 6: Verify found item appears in search for other users
+    console.log('Phase 6: Verifying found item visibility...');
+    await page.reload(); // Ensure fresh results
+    await page.waitForTimeout(4000); // Wait for indexing
+
+    // Wait for "results found" to appear
+    await expect(page.locator('span:has-text("results found")')).toBeVisible({ timeout: 15000 });
+
+    console.log(`Searching for: ${foundTitle}`);
     
-    // Step 7: Verify search results
-    await expect(page.getByRole('heading', { name: foundTitle }).first()).toBeVisible({ timeout: 45000 });
-    console.log('Search verified for Found item');
+    // Check for the specific found item title
+    const foundCard = page.locator(`h3:has-text("${foundTitle}")`);
+    await expect(foundCard).toBeVisible({ timeout: 15000 });
+    console.log('Phase 6 verified: Found item is searchable');
 
     console.log('Report & Search Lifecycle test completed!');
   });

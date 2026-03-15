@@ -8,6 +8,33 @@ const SESSION_CHECK_TTL_MS = 60 * 1000; // 1 minute TTL
 
 let cachedCsrfToken: string | null = null;
 let csrfTokenPromise: Promise<string> | null = null;
+let isAuthSyncing = false;
+let authSyncResolver: (() => void) | null = null;
+let authSyncPromise: Promise<void> | null = null;
+
+/**
+ * Signals that an authentication sync with the server is in progress.
+ * This prevents other requests from firing until the session is established.
+ */
+export function setAuthSyncing(syncing: boolean) {
+  isAuthSyncing = syncing;
+  if (syncing) {
+    if (!authSyncPromise) {
+      console.log('[QueryClient] Starting auth sync lock...');
+      authSyncPromise = new Promise((resolve) => {
+        authSyncResolver = resolve;
+      });
+    }
+  } else {
+    if (authSyncResolver) {
+      console.log('[QueryClient] Releasing auth sync lock...');
+      const resolve = authSyncResolver;
+      authSyncResolver = null;
+      authSyncPromise = null;
+      resolve();
+    }
+  }
+}
 
 declare global {
   interface Window {
@@ -45,6 +72,22 @@ async function waitForFirebaseAuth(maxWaitMs = 5000): Promise<any> {
  * This creates/refreshes a session if a Firebase token is available
  */
 export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
+  // If we are currently syncing auth (e.g. Google login in progress), wait for it
+  // with a timeout to prevent indefinite stalls.
+  if (isAuthSyncing && authSyncPromise) {
+    console.log('[QueryClient] Waiting for active auth sync to complete...');
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Auth sync timed out after 30s')), 30000)
+    );
+    try {
+      await Promise.race([authSyncPromise, timeoutPromise]);
+    } catch (err) {
+      console.warn('[QueryClient] Auth sync wait timed out or failed, proceeding with attempt');
+      // If it timed out, we clear the syncing state to allow the next check to proceed
+      setAuthSyncing(false);
+    }
+  }
+
   // If not forcing refresh, check if we've successfully checked recently
   if (!forceRefresh && Date.now() - lastSessionCheckTime < SESSION_CHECK_TTL_MS) {
     return;
@@ -67,7 +110,6 @@ export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
       if (sessionCheck.ok) {
         const data = await sessionCheck.json();
         if (data) {
-          console.log('[QueryClient] User already has valid session');
           lastSessionCheckTime = Date.now();
           resolve();
           return;
@@ -240,22 +282,22 @@ export async function apiRequest<T = any>(
         isCsrfError = text.toLowerCase().includes('csrf');
       } catch { /* ignore */ }
     }
-    if (isCsrfError) {
-      console.warn(`[apiRequest] CSRF token invalid for ${url}, refreshing...`);
-      clearCsrfToken();
-      try {
-        const freshToken = await ensureCsrfToken();
-        headers["X-CSRF-Token"] = freshToken;
-        res = await fetch(url, {
-          method,
-          headers,
-          body,
-          credentials: "include",
-        });
-      } catch (csrfError) {
-        console.error('[apiRequest] CSRF retry failed:', csrfError);
+      if (isCsrfError) {
+        console.warn(`[apiRequest] CSRF token invalid for ${url}, refreshing... Status: ${res.status}`);
+        clearCsrfToken();
+        try {
+          const freshToken = await ensureCsrfToken();
+          headers["X-CSRF-Token"] = freshToken;
+          res = await fetch(url, {
+            method,
+            headers,
+            body,
+            credentials: "include",
+          });
+        } catch (csrfError) {
+          console.error('[apiRequest] CSRF retry failed:', csrfError);
+        }
       }
-    }
   }
 
   // If we get a 401, try to re-authenticate and retry once
@@ -296,17 +338,13 @@ export const getQueryFn: <T>(options: {
     async ({ queryKey }) => {
       const url = queryKey[0] as string;
 
-      // For admin routes, ensure authentication first
-      if (url.startsWith('/api/admin')) {
-        try {
-          await ensureAuthenticated();
-        } catch (error: any) {
-          console.error('[getQueryFn] Authentication failed for admin request:', error);
-          if (unauthorizedBehavior === "returnNull") {
-            return null;
-          }
-          throw new Error(`Authentication required for ${url}: ${error.message}`);
-        }
+      // Ensure authentication is synced before making any request
+      // This prevents 401 errors in the console during initial sync
+      try {
+        await ensureAuthenticated();
+      } catch (error: any) {
+        console.warn('[getQueryFn] Pre-request authentication check failed:', error.message);
+        // We continue anyway and let the actual request decide if it's really unauthorized
       }
 
       try {
@@ -322,14 +360,11 @@ export const getQueryFn: <T>(options: {
           console.warn(`[getQueryFn] 401 Unauthorized for ${url}, attempting sync...`);
           try {
             await ensureAuthenticated(true);
-            console.log(`[getQueryFn] Sync successful, retrying ${url}`);
             res = await fetch(url, {
               credentials: "include",
             });
-            console.log(`Retry response status for ${url}: ${res.status}`);
           } catch (authError) {
             console.error('[getQueryFn] Re-authentication failed:', authError);
-            // Let it fall through
           }
         }
 

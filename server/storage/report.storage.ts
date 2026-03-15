@@ -76,8 +76,15 @@ export async function getReportsWithFilters(options: {
   dateRange?: { start: Date; end: Date } | null;
   dateFilter?: string;
   userId?: number; itemId?: number; location?: string; uniqueIdentifier?: string;
+  paymentStatus?: string;
+  requestingUserId?: number;
 }): Promise<{ reports: Report[]; total: number; page: number; totalPages: number }> {
-  const { page, limit, sortBy = 'reportedAt', sortOrder = 'desc', search, type, status, category, dateRange, dateFilter, userId, itemId, location, uniqueIdentifier } = options;
+  const { 
+    page, limit, sortBy = 'reportedAt', sortOrder = 'desc', 
+    search, type, status, category, dateRange, dateFilter, 
+    userId, itemId, location, uniqueIdentifier, paymentStatus, 
+    requestingUserId 
+  } = options;
   const offset = (page - 1) * limit;
   const conditions = [];
 
@@ -117,6 +124,23 @@ export async function getReportsWithFilters(options: {
   if (itemId) conditions.push(eq(reports.itemId, itemId));
   if (location && location !== 'All Locations') conditions.push(like(reports.location, `%${location}%`));
   if (uniqueIdentifier) conditions.push(eq(reports.uniqueIdentifier, uniqueIdentifier));
+
+  // Payment Status & Visibility Logic
+  if (paymentStatus === 'successful') {
+    // If specifically asking for successful payments (public view)
+    if (requestingUserId) {
+      // Show reports that are either paid OR belong to the requesting user
+      conditions.push(or(
+        eq(reports.paymentStatus, 'successful'),
+        eq(reports.userId, requestingUserId)
+      ));
+    } else {
+      // Only show paid reports (anonymous view)
+      conditions.push(eq(reports.paymentStatus, 'successful'));
+    }
+  } else if (paymentStatus) {
+    conditions.push(eq(reports.paymentStatus, paymentStatus));
+  }
 
   // Search logic (multi-keyword OR matching)
   if (search) {

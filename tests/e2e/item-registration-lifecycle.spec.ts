@@ -108,12 +108,34 @@ test.describe('Item Registration Lifecycle', () => {
     const finalSubmitBtn = page.getByRole('button', { name: /Complete Registration|Finish|Submit/i }).first();
     await finalSubmitBtn.waitFor({ state: 'visible', timeout: 10000 });
     await finalSubmitBtn.click();
+    console.log('Clicked complete registration, waiting for Payment Modal');
 
-    // Wait for success screen
+    // --- Phase 5.5: Handle Payment Modal ---
+    console.log('--- Phase 5.5: Handle Payment Modal ---');
+    // Wait for the payment modal to appear
+    await expect(page.getByText(/Pay for Item Registration/i)).toBeVisible({ timeout: 15000 });
+    
+    // Fill phone number if empty
+    const mobileInput = page.getByPlaceholder(/Mobile Money Number/i);
+    await mobileInput.fill('0780000000');
+    console.log('Filled phone number in modal');
+
+    // Click the Pay button (it shows the amount, e.g. "Pay 2,000 RWF")
+    const payBtn = page.getByRole('button', { name: /Pay/i });
+    await payBtn.click();
+    console.log('Clicked Pay button in modal');
+
+    // Wait for the "Check Status" button to appear (indicating we are in the 'waiting' step)
+    const checkStatusBtn = page.getByRole('button', { name: /I've approved/i });
+    await expect(checkStatusBtn).toBeVisible({ timeout: 15000 });
+    await checkStatusBtn.click();
+    console.log('Clicked Check Status button');
+
+    // Wait for success screen (Check mark and Protected title)
     await expect(
-      page.getByText(/successfully|Registration Complete|QR Code/i).first()
+      page.getByText(/Item Protected!|Registration Complete/i).first()
     ).toBeVisible({ timeout: 20000 });
-    console.log('Item registered successfully');
+    console.log('Item registered and paid successfully');
 
     // --- Phase 6: Verify on My Items ---
     console.log('--- Phase 6: Verify on My Items ---');

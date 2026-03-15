@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { PaymentService } from "@/services/payment.service";
-import { getPaymentAmount, DEFAULT_CURRENCY } from "@/config/payment.config";
+import { getPaymentAmountAsync, DEFAULT_CURRENCY } from "@/config/payment.config";
 import { Loader2, ArrowRight } from "lucide-react";
 import { AuthWall } from "@/components/ui/auth-wall";
 import { PageLayout } from "@/components/layout/page-layout";
@@ -46,7 +46,8 @@ export default function PaymentTestPage() {
       console.log("Initializing test payment for user:", user);
 
       // Use the test amount (or default to half the regular amount)
-      const testAmount = Math.floor(getPaymentAmount("registration") * 0.25);
+      const baseAmount = await getPaymentAmountAsync("registration");
+      const testAmount = Math.floor(baseAmount * 0.25);
 
       const response = await PaymentService.initializePayment({
         type: "registration",
@@ -147,9 +148,6 @@ export default function PaymentTestPage() {
                   <p className="font-medium">Payment Initialized</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     Transaction Reference: {transactionRef}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Test Amount: {Math.floor(getPaymentAmount("registration") * 0.25)} {DEFAULT_CURRENCY}
                   </p>
                 </div>
 

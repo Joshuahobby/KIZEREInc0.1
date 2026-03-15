@@ -3,7 +3,10 @@ import {
   users, items, paymentPackages, 
   notifications, reports, userActivityLogs,
   adminActionLogs, verificationRequests, statusChanges,
-  userWarnings
+  userWarnings, chats, messages, payments,
+  payouts, paymentMethods, roles, moderationReports,
+  claimAppeals, claimStatusLogs, auditLogs,
+  pushSubscriptions, claims
 } from "@shared/schema";
 import { hashPassword } from "./utils/auth-crypto";
 
@@ -13,15 +16,28 @@ async function seed() {
   try {
     // 2. Clear existing data in correct order to satisfy FK constraints
     console.log("Cleaning old data...");
+    // Independent/Leaf tables first
+    await db.delete(messages);
+    await db.delete(chats);
     await db.delete(notifications);
-    await db.delete(reports);
-    await db.delete(items);
+    await db.delete(auditLogs);
     await db.delete(userActivityLogs);
     await db.delete(adminActionLogs);
-    await db.delete(verificationRequests);
-    await db.delete(statusChanges);
+    await db.delete(moderationReports);
+    await db.delete(pushSubscriptions);
     await db.delete(userWarnings);
+    await db.delete(statusChanges);
+    await db.delete(claimStatusLogs);
+    await db.delete(claimAppeals);
+    await db.delete(claims);
+    await db.delete(payments);
+    await db.delete(payouts);
+    await db.delete(paymentMethods);
+    await db.delete(verificationRequests);
+    await db.delete(reports);
+    await db.delete(items);
     await db.delete(paymentPackages);
+    await db.delete(roles);
     await db.delete(users);
 
     const hashedAdminPassword = await hashPassword("admin123");
@@ -49,48 +65,34 @@ async function seed() {
       phoneNumber: "+250788654321",
     }).returning();
 
-    // 4. Seed Payment Packages (Tiered Structure)
+    // 4. Seed Payment Packages — Only what the project needs
+    // Each payment type gets exactly one default package.
+    // Admins can add more tiers later via the dashboard.
     console.log("Seeding payment packages...");
     await db.insert(paymentPackages).values([
       {
-        name: "Standard",
-        description: "Standard lost item listing (30 days)",
-        amount: "1000",
-        currency: "RWF",
-        type: "lost_report",
-        features: ["Basic Listing", "30 Days Visibility", "Email Notifications"],
-        status: "active",
-        validityDays: 30
-      },
-      {
-        name: "Premium",
-        description: "High-value items listing with priority support",
+        name: "Item Registration",
+        description: "Register and protect your item with a unique QR code and digital certificate",
         amount: "2000",
         currency: "RWF",
-        type: "lost_report",
-        features: ["Premium Badge", "Top Search Results", "Priority Support", "60 Days Visibility"],
+        type: "registration",
+        isDefault: true,
+        features: ["Unique QR Code", "Digital Certificate", "Ownership Proof", "Lifetime Protection"],
         status: "active",
-        validityDays: 60
+        validityDays: null, // Lifetime
+        createdBy: adminUser.id,
       },
       {
-        name: "Urgent",
-        description: "Urgent listing for immediate attention",
-        amount: "3000",
-        currency: "RWF",
-        type: "lost_report",
-        features: ["Urgent Tag", "Homepage Feature", "Instant Alerts", "90 Days Visibility"],
-        status: "active",
-        validityDays: 90
-      },
-      {
-        name: "Item Registration",
-        description: "Register item ownership with QR code",
+        name: "Lost Item Report",
+        description: "File a lost item report visible across the KIZERE network",
         amount: "1000",
         currency: "RWF",
-        type: "registration",
-        features: ["QR Code", "Ownership Proof", "Lifetime Registration"],
+        type: "lost_report",
+        isDefault: true,
+        features: ["Public Listing", "Email Notifications", "30 Days Visibility", "Match Alerts"],
         status: "active",
-        validityDays: 3650 // 10 years
+        validityDays: 30,
+        createdBy: adminUser.id,
       }
     ]);
 

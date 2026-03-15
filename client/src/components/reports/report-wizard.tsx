@@ -50,6 +50,7 @@ interface ReportWizardProps {
   type: "lost" | "found";
   onSubmit: (data: any, images: File[]) => void;
   isSubmitting: boolean;
+  initialValues?: any;
 }
 
 const CATEGORY_ICONS: Record<string, any> = {
@@ -67,7 +68,7 @@ const CATEGORY_ICONS: Record<string, any> = {
   "Other": Package,
 };
 
-export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps) {
+export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: ReportWizardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
@@ -82,27 +83,30 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
     resolver: zodResolver(schema),
     defaultValues: {
       type,
-      title: "",
-      category: "Other",
-      description: "",
-      location: "",
-      uniqueIdentifier: "",
-      date: new Date().toISOString().split("T")[0],
-      contactInfo: "",
-      custodyLocation: "",
-      challengeQuestion: "",
+      title: initialValues?.title || "",
+      category: initialValues?.category || "Other",
+      description: initialValues?.description || "",
+      location: initialValues?.location || "",
+      uniqueIdentifier: initialValues?.uniqueIdentifier || "",
+      date: initialValues?.date || new Date().toISOString().split("T")[0],
+      contactInfo: initialValues?.contactInfo || "",
+      custodyLocation: initialValues?.custodyLocation || "",
+      challengeQuestion: initialValues?.challengeQuestion || "",
       status: "Open",
-      bountyAmount: 0,
-      imageUrls: []
+      bountyAmount: initialValues?.bountyAmount || 0,
+      imageUrls: initialValues?.imageUrls || [],
+      itemId: initialValues?.itemId || undefined,
     } as any
   });
+
+  const itemId = form.watch("itemId");
 
   const totalSteps = 2;
 
   const nextStep = async () => {
     let fieldsToValidate: string[] = [];
     if (step === 1) {
-      fieldsToValidate = ["title", "category", "location", "date"];
+      fieldsToValidate = ["title", "category", "location", "date", "description"];
     }
 
     const isValid = await form.trigger(fieldsToValidate as any);
@@ -117,15 +121,33 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
       e.stopPropagation();
     }
 
-    if (step !== totalSteps) return;
+    if (step !== totalSteps) {
+      console.warn("[ReportWizard] Final submit called but not on final step:", step);
+      return;
+    }
 
+    console.log("[ReportWizard] Final submit triggered, validating form...");
     form.handleSubmit(async (data) => {
+      console.log("[ReportWizard] Form validation successful, data:", data);
       if (!user) {
+        console.log("[ReportWizard] User not logged in, saving pending data to localStorage");
         localStorage.setItem('pending_report_wizard', JSON.stringify({ data, type }));
         window.location.href = `/auth?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`;
         return;
       }
+      console.log("[ReportWizard] Calling onSubmit callback with images:", images.length);
       onSubmit(data, images);
+    }, (errors) => {
+      console.error("[ReportWizard] Form validation failed:", errors);
+      
+      // Auto-step back if error is on a previous step
+      const step1Fields = ["title", "category", "location", "date", "description"];
+      const hasStep1Errors = Object.keys(errors).some(key => step1Fields.includes(key));
+      
+      if (hasStep1Errors && (step as number) !== 1) {
+        console.log("[ReportWizard] Validation error found in Step 1, moving back...");
+        setStep(1);
+      }
     })(e);
   };
 
@@ -387,7 +409,11 @@ export function ReportWizard({ type, onSubmit, isSubmitting }: ReportWizardProps
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 ) : null}
-                <span>{type === 'lost' ? t('report_wizard.pay_submit') : t('report_wizard.submit_report')}</span>
+                <span>
+                  {type === 'lost' 
+                    ? (itemId ? t('report_wizard.submit_report') : t('report_wizard.pay_submit')) 
+                    : t('report_wizard.submit_report')}
+                </span>
               </Button>
             )}
           </div>

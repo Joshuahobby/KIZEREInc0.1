@@ -38,15 +38,10 @@ const {
   size: 64,
   ignoredMethods: ["GET", "HEAD", "OPTIONS"],
   getSessionIdentifier: (req: Request) => {
-    if (!req.session || !req.session.id) {
-      logger.warn('CSRF: Session ID missing during identifier check', {
-        path: req.path,
-        hasSession: !!req.session,
-        cookies: req.headers.cookie ? 'present' : 'absent'
-      });
-      return 'missing-session';
-    }
-    return req.session.id;
+    // We intentionally ignore the session ID in the identifier to make CSRF tokens
+    // more resilient to session rotation (e.g. after login), while still 
+    // relying on the signed secret cookie for security.
+    return 'constant';
   },
   getCsrfTokenFromRequest: (req: Request) => req.headers["x-csrf-token"] as string,
 });
@@ -202,7 +197,7 @@ export function setupSecurityMiddleware(app: Express) {
     hsts: isProd,
     // Allow Replit iframe embedding
     crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+    crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
 
@@ -242,11 +237,39 @@ export function setupSecurityMiddleware(app: Express) {
   // 2. Middleware to protect all other state-changing routes
   app.use((req, res, next) => {
     // Skip CSRF for specific routes if needed (e.g. webhooks, public endpoints)
-    const ignoredPaths = ["/api/payments/webhook", "/api/chat/webhook", "/api/webhooks/resend", "/api/auth/google", "/api/recruitment"];
+    const ignoredPaths = [
+      "/api/payments/webhook", 
+      "/api/chat/webhook", 
+      "/api/webhooks/resend", 
+      "/api/auth/google", 
+      "/api/recruitment",
+      "/api/upload"
+    ];
     if (ignoredPaths.some(path => req.path.startsWith(path))) {
       return next();
     }
-    doubleCsrfProtection(req, res, next);
+
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method.toUpperCase())) {
+      logger.info("CSRF: Validating request", {
+        path: req.path,
+        method: req.method,
+        hasSession: !!req.session,
+        sessionId: req.session?.id,
+        hasToken: !!req.headers["x-csrf-token"],
+        contentType: req.headers["content-type"]
+      });
+    }
+
+    doubleCsrfProtection(req, res, (err) => {
+      if (err && err.code === 'EBADCSRFTOKEN') {
+        logger.error("CSRF: Validation failed", {
+          path: req.path,
+          sessionId: req.session?.id,
+          tokenInHeader: !!req.headers["x-csrf-token"]
+        });
+      }
+      next(err);
+    });
   });
 
   // Apply rate limiting to authentication routes

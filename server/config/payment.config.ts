@@ -1,22 +1,14 @@
 /**
  * Payment configuration for the server
- * Centralizes all payment-related constants and settings
+ * Centralizes all payment-related constants and settings.
+ * 
+ * NOTE: All pricing is managed by admins via the payment_packages table.
+ * There are NO hardcoded price fallbacks — if no package is configured,
+ * an error is thrown so the admin must set up pricing first.
  */
 
 import { PaymentType } from "@shared/schema";
-import { z } from "zod";
 import { storage } from "../storage";
-
-/**
- * Default fee structure for different payment types
- * These fees will be used as fallback if no packages are defined
- */
-export const DEFAULT_PAYMENT_FEES = {
-  REGISTRATION: 2000, // 2,000 in local currency for item registration
-  LOST_REPORT: 1000,  // 1,000 in local currency for lost item report
-  FOUND_REPORT: 0,    // Free
-  BOUNTY: 0,          // Variable, determined by user
-};
 
 /**
  * Image upload limits based on user role or package
@@ -50,33 +42,37 @@ export function getUploadLimit(user: any): number {
 }
 
 /**
- * Get the payment amount based on the payment type
- * If a default package exists for this type, use its amount
- * Otherwise fallback to the default fees
+ * Get the payment amount based on the payment type.
+ * Uses the admin-configured default package for this type.
+ * If no package is configured, throws an error so the admin knows to set one up.
  * 
- * @param type The type of payment ('registration' or 'lost_report')
+ * @param type The type of payment ('registration', 'lost_report', or 'bounty')
  * @returns The payment amount in the default currency
  */
 export async function getPaymentAmount(type: PaymentType): Promise<number> {
-  // Try to find a default package for this payment type
+  // Bounty amounts are user-defined, not package-based
+  if (type === 'bounty') {
+    return 0;
+  }
+
+  // Look up the admin-configured default package for this payment type
   const defaultPackage = await storage.getDefaultPackageByType(type);
 
-  // If a default package exists, use its amount
   if (defaultPackage) {
     return Number(defaultPackage.amount);
   }
 
-  // Otherwise fallback to default fees
-  switch (type) {
-    case "registration":
-      return DEFAULT_PAYMENT_FEES.REGISTRATION;
-    case "lost_report":
-      return DEFAULT_PAYMENT_FEES.LOST_REPORT;
-    case "bounty":
-      return DEFAULT_PAYMENT_FEES.BOUNTY;
-    default:
-      return 0;
+  // No default package found — try any active package of this type
+  const activePackages = await storage.getPaymentPackageByType(type, true);
+  if (activePackages && activePackages.length > 0) {
+    return Number(activePackages[0].amount);
   }
+
+  // No packages configured at all — throw a clear error
+  throw new Error(
+    `No payment package configured for type "${type}". ` +
+    `An admin must create at least one active package in the Payment Packages dashboard.`
+  );
 }
 
 /**

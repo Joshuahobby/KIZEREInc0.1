@@ -97,9 +97,13 @@ export async function getPaymentPackage(id: number): Promise<PaymentPackage | un
 }
 
 export async function getPaymentPackageByType(type: PaymentType, onlyActive: boolean = true): Promise<PaymentPackage[]> {
-  let query: any = db.select().from(paymentPackages).where(eq(paymentPackages.type, type));
-  if (onlyActive) query = query.where(eq(paymentPackages.status, 'active'));
-  return await query.orderBy(desc(paymentPackages.isDefault));
+  const conditions = [eq(paymentPackages.type, type)];
+  if (onlyActive) conditions.push(eq(paymentPackages.status, 'active'));
+  
+  return await db.select()
+    .from(paymentPackages)
+    .where(and(...conditions))
+    .orderBy(desc(paymentPackages.isDefault));
 }
 
 export async function getDefaultPackageByType(type: PaymentType): Promise<PaymentPackage | undefined> {

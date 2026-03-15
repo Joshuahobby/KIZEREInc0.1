@@ -591,7 +591,6 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
             paymentDetails={{
               type: 'registration',
               itemId: registeredItemData.id,
-              amount: 2000 // Standard registration fee
             }}
             onPaymentSuccess={() => {
               setShowSuccess(true);

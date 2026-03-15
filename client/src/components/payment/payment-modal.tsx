@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -12,15 +14,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Phone, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { Loader2, Phone, CheckCircle2, AlertTriangle, Info, ShieldCheck } from "lucide-react";
 import { InitializePaymentRequest, PaymentService } from "@/services/payment.service";
-import { PaymentPackageSelector } from "./payment-package-selector";
+import { PaymentPackageSelector, PaymentPackage } from "./payment-package-selector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface PaymentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  paymentDetails: Omit<InitializePaymentRequest, "amount" | "phoneNumber"> & { amount: number };
+  paymentDetails: Omit<InitializePaymentRequest, "amount" | "phoneNumber"> & { 
+    amount?: number;
+    bountyAmount?: number;
+  };
   onPaymentSuccess?: (transactionRef: string) => void;
   onPaymentCancel?: () => void;
 }
@@ -36,17 +41,53 @@ export function PaymentModal({
   const { user } = useAuth();
   const [isInitializing, setIsInitializing] = useState(false);
   const [transactionRef, setTransactionRef] = useState<string | null>(null);
-  const [depositStatus, setDepositStatus] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState<{ id: number, amount: number } | null>(null);
-  const [showPackageSelector, setShowPackageSelector] = useState(true);
+  const [selectedPackage, setSelectedPackage] = useState<{ id: number; amount: number; name?: string } | null>(null);
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
-  const [step, setStep] = useState<"package" | "phone" | "waiting" | "done" | "failed">("package");
+  const [step, setStep] = useState<"loading" | "package" | "phone" | "waiting" | "done" | "failed">("loading");
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
+
+
+  // Fetch packages for this payment type to decide the flow
+  const { data: packages, isLoading: isLoadingPackages, error: packagesError } = useQuery({
+    queryKey: ['/api/payment-packages/type', paymentDetails.type],
+    queryFn: async () => {
+      return await apiRequest<PaymentPackage[]>(`/api/payment-packages/type/${paymentDetails.type}`);
+    },
+    enabled: open,
+  });
+
+  // Auto-decide the flow when packages load
+  useEffect(() => {
+    if (!open || isLoadingPackages) {
+      if (open && isLoadingPackages) setStep("loading");
+      return;
+    }
+
+    if (packagesError || !packages || packages.length === 0) {
+      // No packages available — show error in the phone step area
+      setStep("phone");
+      return;
+    }
+
+    if (packages.length === 1) {
+      // Only one package — auto-select it and skip straight to phone entry
+      const pkg = packages[0];
+      setSelectedPackage({ id: pkg.id, amount: Number(pkg.amount), name: pkg.name });
+      setStep("phone");
+    } else {
+      // Multiple packages — let user choose
+      // But pre-select the default
+      const defaultPkg = packages.find(p => p.isDefault) || packages[0];
+      setSelectedPackage({ id: defaultPkg.id, amount: Number(defaultPkg.amount), name: defaultPkg.name });
+      setStep("package");
+    }
+  }, [packages, isLoadingPackages, packagesError, open]);
 
   // Handle package selection
   const handlePackageSelect = (packageId: number, amount: number) => {
-    setSelectedPackage({ id: packageId, amount });
+    const pkg = packages?.find(p => p.id === packageId);
+    setSelectedPackage({ id: packageId, amount, name: pkg?.name });
   };
 
   // Move to phone number entry after package selection
@@ -54,6 +95,11 @@ export function PaymentModal({
     if (!selectedPackage) return;
     setStep("phone");
   };
+
+  // Resolve the final payment amount (Package Fee + Bounty)
+  const pkgAmount = selectedPackage?.amount ?? paymentDetails.amount ?? 0;
+  const bountyAmount = paymentDetails.bountyAmount ?? 0;
+  const resolvedAmount = pkgAmount + bountyAmount;
 
   // Function to initialize payment via PawaPay Direct Deposit
   const initiatePayment = async () => {
@@ -75,20 +121,28 @@ export function PaymentModal({
       return;
     }
 
+    if (resolvedAmount <= 0) {
+      toast({
+        title: "Payment configuration error",
+        description: "No valid payment amount found. Please contact support.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       setIsInitializing(true);
-      setStep("waiting");
 
       const requestDetails = {
         ...paymentDetails,
-        amount: selectedPackage ? selectedPackage.amount : paymentDetails.amount,
+        amount: resolvedAmount,
         packageId: selectedPackage?.id,
         phoneNumber: phoneNumber.trim(),
       };
 
       const response = await PaymentService.initializePayment(requestDetails);
       setTransactionRef(response.transactionRef);
-      setDepositStatus(response.depositStatus || "ACCEPTED");
+      setStep("waiting");
 
       toast({
         title: "Payment request sent",
@@ -157,7 +211,6 @@ export function PaymentModal({
     let pollInterval: NodeJS.Timeout | null = null;
 
     if (step === "waiting" && transactionRef && open) {
-      // Start polling every 5 seconds
       pollInterval = setInterval(async () => {
         try {
           const response = await PaymentService.verifyPayment(transactionRef);
@@ -167,8 +220,6 @@ export function PaymentModal({
               onPaymentSuccess(transactionRef);
             }
             if (pollInterval) clearInterval(pollInterval);
-
-            // Auto close after success
             setTimeout(() => onOpenChange(false), 3000);
           } else if (response.status === "failed") {
             setFailureMessage(response.message || "The payment was not completed");
@@ -182,7 +233,6 @@ export function PaymentModal({
           }
         } catch (error) {
           console.error("Polling error:", error);
-          // Don't stop polling on error, maybe network hiccup
         }
       }, 5000);
     }
@@ -196,154 +246,215 @@ export function PaymentModal({
   useEffect(() => {
     if (!open) {
       setTransactionRef(null);
-      setDepositStatus(null);
-      setStep("package");
-      setShowPackageSelector(true);
+      setStep("loading");
+      setSelectedPackage(null);
       setPhoneNumber(user?.phoneNumber || "");
       setFailureMessage(null);
     }
   }, [open, user]);
 
+  // Determine the dialog title
+  const getTitle = () => {
+    const typeLabel = paymentDetails.type === 'registration' ? 'Item Registration' : 'Lost Item Report';
+    if (step === "done") return "Payment Successful!";
+    if (step === "failed") return "Payment Failed";
+    return `Pay for ${typeLabel}`;
+  };
+
+  // Determine the dialog description
+  const getDescription = () => {
+    switch (step) {
+      case "loading": return "Loading payment options...";
+      case "package": return "Choose the plan that works best for you.";
+      case "phone": return null; // Let the breakdown card speak for itself
+      case "waiting": return "Approve the prompt sent to your phone.";
+      case "done": return "Your payment has been confirmed.";
+      case "failed": return failureMessage || "The payment was not completed.";
+      default: return "";
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${step === 'package' ? 'sm:max-w-2xl' : 'sm:max-w-md'}`}>
-        <DialogHeader>
-          <DialogTitle>Payment for {paymentDetails.type === 'registration' ? 'Item Registration' : 'Lost Item Report'}</DialogTitle>
-          <DialogDescription>
-            {step === "package" && "Select a payment package to continue."}
-            {step === "phone" && `Pay ${selectedPackage?.amount || paymentDetails.amount} RWF via Mobile Money`}
-            {step === "waiting" && "A payment prompt has been sent to your phone."}
-            {step === "done" && "Payment completed successfully!"}
-          </DialogDescription>
+      <DialogContent className="sm:max-w-[400px] rounded-3xl p-6">
+        <DialogHeader className="mb-4">
+          <DialogTitle className="text-xl font-bold tracking-tight">{getTitle()}</DialogTitle>
+          {getDescription() && <DialogDescription className="text-sm">{getDescription()}</DialogDescription>}
         </DialogHeader>
 
-        <div className="p-4">
-          {/* Step 1: Package Selection */}
+        <div className="space-y-6">
+          {/* Loading */}
+          {step === "loading" && (
+            <div className="flex flex-col items-center gap-3 py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+          )}
+
+          {/* Package Selection */}
           {step === "package" && (
-            <div className="mb-4">
+            <div className="space-y-4">
               <PaymentPackageSelector
                 paymentType={paymentDetails.type}
                 onSelectPackage={handlePackageSelect}
                 selectedPackageId={selectedPackage?.id}
               />
 
-              <div className="mt-6 flex justify-end">
-                <Button
-                  onClick={proceedToPhoneEntry}
-                  disabled={!selectedPackage}
-                >
-                  Continue
-                </Button>
-              </div>
+              <Button
+                onClick={proceedToPhoneEntry}
+                disabled={!selectedPackage}
+                className="w-full h-11 rounded-xl"
+              >
+                Continue — {selectedPackage ? `${selectedPackage.amount.toLocaleString()} RWF` : "Select a plan"}
+              </Button>
             </div>
           )}
 
-          {/* Step 2: Phone Number Entry */}
+          {/* Phone Number Entry */}
           {step === "phone" && (
-            <div className="space-y-4">
+            <div className="space-y-5">
+              {/* Payment summary card - Sleeker version */}
+              {selectedPackage && resolvedAmount > 0 && (
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-border/50">
+                  <div className="space-y-2.5">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-muted-foreground font-medium">Processing Fee</span>
+                      <span className="font-semibold">{pkgAmount.toLocaleString()} RWF</span>
+                    </div>
+                    {bountyAmount > 0 && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-muted-foreground font-medium">Item Reward</span>
+                        <span className="font-semibold text-emerald-600">+{bountyAmount.toLocaleString()} RWF</span>
+                      </div>
+                    )}
+                    <div className="pt-2 border-t border-border/40 flex justify-between items-end">
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Due</span>
+                      <div className="text-right leading-none">
+                        <span className="text-2xl font-black">{resolvedAmount.toLocaleString()}</span>
+                        <span className="text-[10px] ml-1 font-bold opacity-50">RWF</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* No packages error */}
+              {(!packages || packages.length === 0) && !isLoadingPackages && (
+                <Alert variant="destructive" className="rounded-xl">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="text-xs">
+                    No payment packages configured.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Phone input */}
               <div className="space-y-2">
-                <Label htmlFor="momo-phone">Mobile Money Phone Number</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="momo-phone"
                     type="tel"
-                    placeholder="e.g. 0788123456"
+                    placeholder="Mobile Money Number"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-11 rounded-xl bg-background border-border/60"
                     autoFocus
                   />
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Enter your phone number (e.g. 0788123456). Country code is optional.
-                  A payment prompt will be sent to this number.
-                </p>
               </div>
 
               <Button
                 onClick={initiatePayment}
-                className="w-full"
-                disabled={isInitializing || !phoneNumber.trim()}
+                className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20"
+                disabled={isInitializing || !phoneNumber.trim() || resolvedAmount <= 0}
               >
                 {isInitializing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Sending payment request...
+                    Sending...
                   </>
                 ) : (
-                  `Pay ${selectedPackage?.amount || paymentDetails.amount} RWF`
+                  `Pay ${resolvedAmount.toLocaleString()} RWF`
                 )}
               </Button>
+
+              {/* Back to package selection */}
+              {packages && packages.length > 1 && (
+                <button
+                  onClick={() => setStep("package")}
+                  className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors font-medium underline underline-offset-4"
+                >
+                  Change payment plan
+                </button>
+              )}
             </div>
           )}
 
-          {/* Step 3: Waiting for approval */}
+          {/* Waiting for approval */}
           {step === "waiting" && (
-            <div className="flex flex-col items-center gap-4 py-4">
+            <div className="flex flex-col items-center gap-6 py-4">
               <div className="relative">
-                <Loader2 className="w-12 h-12 animate-spin text-primary" />
+                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
+                <Loader2 className="w-12 h-12 animate-spin text-primary relative z-10" />
               </div>
               <div className="text-center space-y-2">
-                <p className="font-medium">
-                  Approve the payment on your phone
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  A mobile money prompt has been sent to <strong>{phoneNumber}</strong>.
-                  Please enter your PIN to confirm the payment.
+                <p className="font-bold text-lg">Check your phone</p>
+                <p className="text-sm text-muted-foreground max-w-[240px] mx-auto">
+                  A prompt was sent to <strong>{phoneNumber}</strong>. Enter your PIN to confirm.
                 </p>
               </div>
 
-              <Alert className="mt-2">
-                <Info className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                  <strong>Didn't get the prompt?</strong> Dial <strong>*182*7*1#</strong> on MTN to view and approve pending payments.
-                </AlertDescription>
-              </Alert>
+              <div className="w-full p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-2">
+                <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className="text-[10px] text-amber-700 font-medium">
+                  <strong>Not appearing?</strong> Dial <strong>*182*7*1#</strong> on MTN to approve manually.
+                </p>
+              </div>
 
               <Button
                 onClick={verifyPayment}
                 variant="outline"
-                className="w-full mt-4"
+                className="w-full h-11 rounded-xl"
                 disabled={isVerifying}
               >
                 {isVerifying ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Checking status...
-                  </>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  "I've approved — Check Payment Status"
+                  "I've approved — Check Status"
                 )}
               </Button>
             </div>
           )}
 
-          {/* Step 4: Success */}
+          {/* Success */}
           {step === "done" && (
             <div className="flex flex-col items-center gap-4 py-6">
-              <CheckCircle2 className="w-16 h-16 text-green-500" />
-              <p className="text-center font-medium text-lg">Payment Successful!</p>
+              <div className="h-16 w-16 bg-green-500/10 rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10 text-green-500" />
+              </div>
+              <p className="text-xl font-bold">Success!</p>
               <p className="text-sm text-muted-foreground text-center">
-                Your payment of {selectedPackage?.amount || paymentDetails.amount} RWF has been confirmed.
+                Payment of {resolvedAmount.toLocaleString()} RWF confirmed.
               </p>
             </div>
           )}
 
-          {/* Step 5: Failed */}
+          {/* Failed */}
           {step === "failed" && (
             <div className="flex flex-col items-center gap-4 py-6">
-              <AlertTriangle className="w-16 h-16 text-destructive" />
-              <p className="text-center font-medium text-lg">Payment Failed</p>
+              <div className="h-16 w-16 bg-destructive/10 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-10 h-10 text-destructive" />
+              </div>
+              <p className="text-xl font-bold text-center">Payment Failed</p>
               <p className="text-sm text-muted-foreground text-center">
-                {failureMessage || "The payment was not completed."}
+                {failureMessage || "Something went wrong."}
               </p>
               <Button
                 onClick={() => {
                   setFailureMessage(null);
                   setStep("phone");
                 }}
-                className="w-full mt-2"
+                className="w-full h-11 rounded-xl mt-2"
               >
                 Try Again
               </Button>
@@ -351,31 +462,36 @@ export function PaymentModal({
           )}
         </div>
 
-        <DialogFooter className="flex flex-row items-center justify-between sm:justify-between">
-          {step !== "done" && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (onPaymentCancel) onPaymentCancel();
-                onOpenChange(false);
-              }}
-              disabled={isInitializing || isVerifying}
-            >
-              Cancel
-            </Button>
-          )}
+        {step !== "done" && step !== "loading" && (
+          <DialogFooter className="mt-4 pt-4 border-t border-border/40 flex flex-col gap-2">
+            <div className="flex items-center justify-between w-full">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 px-4 rounded-lg text-muted-foreground"
+                onClick={() => {
+                  if (onPaymentCancel) onPaymentCancel();
+                  onOpenChange(false);
+                }}
+                disabled={isInitializing || isVerifying}
+              >
+                Cancel
+              </Button>
 
-          {step === "waiting" && (
-            <Button
-              variant="ghost"
-              onClick={() => setStep("phone")}
-              disabled={isVerifying}
-              size="sm"
-            >
-              Use different number
-            </Button>
-          )}
-        </DialogFooter>
+              {step === "waiting" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setStep("phone")}
+                  disabled={isVerifying}
+                  className="h-9 px-4 rounded-lg text-primary text-xs font-bold"
+                >
+                  Edit number
+                </Button>
+              )}
+            </div>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

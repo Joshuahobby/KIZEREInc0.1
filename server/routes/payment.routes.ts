@@ -105,7 +105,18 @@ router.post("/initiate", async (req, res) => {
   });
   try {
     const validatedData = initiatePaymentSchema.parse(req.body);
-    const amount = await getPaymentAmount(validatedData.type as 'registration' | 'lost_report');
+    let amount = await getPaymentAmount(validatedData.type as 'registration' | 'lost_report');
+    
+    // Add bounty if it's a lost report
+    if (validatedData.type === "lost_report" && validatedData.reportId) {
+      const report = await storage.getReport(validatedData.reportId);
+      if (report && report.bountyAmount) {
+        const bounty = Number(report.bountyAmount);
+        logger.info("Adding bounty to payment amount", { reportId: report.id, baseAmount: amount, bounty });
+        amount += bounty;
+      }
+    }
+
     const depositId = generateDepositId();
 
     // Require phone number for PawaPay Direct Deposit
@@ -199,10 +210,13 @@ router.post("/webhook", validatePawaPayIP, verifyPawaPaySignature, async (req, r
               ).catch(err => logger.error('Failed to send payment email', { error: err }));
             }
 
-            // Phase: Finalize item registration if this was a registration payment
+            // Phase: Finalize item registration or report payment if this was a registration/report payment
             if (payment.type === 'registration' && payment.itemId) {
               logger.info("Finalizing item registration after successful payment", { itemId: payment.itemId });
               await storage.updateItem(payment.itemId, { status: 'Registered' });
+            } else if (payment.type === 'lost_report' && payment.reportId) {
+              logger.info("Finalizing lost report after successful payment", { reportId: payment.reportId });
+              await storage.updateReport(payment.reportId, { paymentStatus: 'successful' });
             }
           }
         }
@@ -263,10 +277,11 @@ router.get("/verify/:txRef", async (req, res) => {
     const depositStatus = await checkDepositStatus(txRef);
     const internalStatus = mapPawaPayStatus(depositStatus.status);
 
-    logger.info("Verification result", {
+    logger.info("[PaymentVerify] Manual verification result", {
       txRef,
       pawaPayStatus: depositStatus.status,
       internalStatus,
+      amount: depositStatus.amount,
       MOCK_PAYMENTS: serverConfig.MOCK_PAYMENTS
     });
 
@@ -303,10 +318,13 @@ router.get("/verify/:txRef", async (req, res) => {
           ).catch(err => logger.error('Failed to send payment email', { error: err }));
         }
 
-        // Phase: Finalize item registration if this was a registration payment
+        // Phase: Finalize item registration or report payment if this was a registration/report payment
         if (payment.type === 'registration' && payment.itemId) {
           logger.info("Finalizing item registration after manual verification", { itemId: payment.itemId });
           await storage.updateItem(payment.itemId, { status: 'Registered' });
+        } else if (payment.type === 'lost_report' && payment.reportId) {
+          logger.info("Finalizing lost report after manual verification", { reportId: payment.reportId });
+          await storage.updateReport(payment.reportId, { paymentStatus: 'successful' });
         }
       }
 

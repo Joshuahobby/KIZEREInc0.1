@@ -44,6 +44,7 @@ import { ReportWizard } from "@/components/reports/report-wizard";
 import { ReportDetailDialog } from "@/components/reports/report-detail-dialog";
 import { SearchFilters, FilterState } from "@/components/reports/search-filters";
 import { PaymentService } from "@/services/payment.service";
+import { PaymentModal } from "@/components/payment/payment-modal";
 import { Badge } from "@/components/ui/badge";
 import { ShareWhatsAppButton } from "@/components/ui/share-whatsapp-button";
 import { useAuth } from "@/hooks/use-auth";
@@ -80,6 +81,9 @@ export default function LostFound() {
     sortBy: "newest",
     dateFilter: "all"
   });
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentReportId, setPaymentReportId] = useState<number | null>(null);
+  const [paymentBounty, setPaymentBounty] = useState<number>(0);
   const debouncedSearch = useDebounce(searchQuery, 300);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -153,35 +157,50 @@ export default function LostFound() {
   // Mutation for creating a report
   const reportMutation = useMutation({
     mutationFn: async ({ data, images }: { data: any, images: File[] }) => {
-      // Check if offline
-      if (!navigator.onLine) {
-        console.log("[LostFound] Offline detected, queuing report...");
-        await OfflineSyncService.queue('CREATE_REPORT', data);
-        return { offline: true };
-      }
+      
+      // 60-second timeout for the entire submission process
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Submission timed out after 60s. Your connection might be slow.")), 60000)
+      );
 
-      // 1. Upload images if any
-      let imageUrls: string[] = [];
-      if (images.length > 0) {
-        const formData = new FormData();
-        images.forEach(img => formData.append('images', img));
-        const uploadRes = await apiRequest<{ urls: string[] }>('/api/upload/images', {
-          method: 'POST',
-          data: formData
+      const submissionPromise = (async () => {
+        // Check if offline
+        if (!navigator.onLine) {
+          console.log("[LostFound] Offline detected, queuing report...");
+          await OfflineSyncService.queue('CREATE_REPORT', data);
+          return { offline: true };
+        }
+
+        // 1. Upload images if any
+        let imageUrls: string[] = [];
+        if (images.length > 0) {
+          console.log(`[LostFound] Uploading ${images.length} images...`);
+          const formData = new FormData();
+          images.forEach(img => formData.append('images', img));
+          
+          try {
+            const uploadRes = await apiRequest<{ urls: string[] }>('/api/upload/images', {
+              method: 'POST',
+              data: formData
+            });
+            imageUrls = uploadRes.urls;
+          } catch (uploadError: any) {
+            console.error("[LostFound] Image upload failed:", uploadError);
+            throw new Error(`Image upload failed: ${uploadError.message}`);
+          }
+        }
+
+        // 2. Create the report
+        const report = await apiRequest<any>("/api/reports", {
+          method: "POST",
+          data: { ...data, imageUrls }
         });
-        imageUrls = uploadRes.urls;
-      }
 
-      // 2. Create the report
-      const report = await apiRequest<any>("/api/reports", {
-        method: "POST",
-        data: { ...data, imageUrls }
-      });
+        // 3. Payment will be handled separately via PaymentModal
+        return { report };
+      })();
 
-      // 3. Payment will be handled separately via PaymentModal
-      // PawaPay Direct Deposit requires phone number + USSD approval,
-      // so payment is initiated from the dashboard/payment modal after report creation.
-      return { report };
+      return await Promise.race([submissionPromise, timeoutPromise]);
     },
     onSuccess: (res: any) => {
       if (res.offline) {
@@ -194,19 +213,36 @@ export default function LostFound() {
         return;
       }
 
+      console.log("[LostFound] Submission successful, handling results...");
       queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
       queryClient.invalidateQueries({ queryKey: ['/api/stats'] });
 
+      // Check report structure carefully
+      const report = res.report;
+      const paymentStatus = report?.paymentStatus;
+      const isPaid = paymentStatus === 'successful' || paymentStatus === 'completed';
+
+      const isFound = dialogType === 'found';
+      const successTitle = isFound ? t('lostFound_page.reportFoundSuccess') : t('lostFound_page.reportLostSuccess');
+      const successDesc = isFound ? t('lostFound_page.reportFoundSuccessDesc') : (isPaid ? t('lostFound_page.reportLostSuccessDesc') : "Your report has been submitted. Please complete the payment to make it public.");
+
       toast({
-        title: `${dialogType === 'lost' ? 'Lost' : 'Found'} item reported successfully`,
-        description: dialogType === 'found'
-          ? "Your report is pending admin approval."
-          : "Your report has been submitted. Proceed to payment from your dashboard.",
+        title: successTitle,
+        description: successDesc,
       });
       setOpenDialog(false);
+      
+      // If it's a lost report and not yet paid, open the payment modal immediately
+      if (dialogType === 'lost' && !isPaid && report?.id) {
+        setPaymentReportId(report.id);
+        setPaymentBounty(Number(report.bountyAmount || 0));
+        setIsPaymentModalOpen(true);
+      }
+
       form.reset();
     },
     onError: (error: Error) => {
+      console.error("[LostFound] Final submission error:", error);
       toast({
         title: "Submission failed",
         description: error.message || "Something went wrong. Please try again.",
@@ -523,6 +559,7 @@ export default function LostFound() {
               type={dialogType || "found"}
               onSubmit={handleWizardSubmit}
               isSubmitting={reportMutation.isPending}
+              initialValues={form.getValues()}
             />
           </div>
         </DialogContent>
@@ -533,6 +570,27 @@ export default function LostFound() {
         isOpen={detailOpen}
         onClose={() => setDetailOpen(false)}
       />
+
+      {/* Immediate Payment Modal */}
+      {paymentReportId && (
+        <PaymentModal
+          open={isPaymentModalOpen}
+          onOpenChange={setIsPaymentModalOpen}
+          paymentDetails={{
+            type: "lost_report",
+            reportId: paymentReportId,
+            amount: 0, // Modal will resolve amount from packages
+            bountyAmount: paymentBounty
+          }}
+          onPaymentSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['/api/reports'] });
+            toast({
+              title: "Payment received",
+              description: "Your report is now public and visible to everyone.",
+            });
+          }}
+        />
+      )}
     </PageLayout>
   );
 }

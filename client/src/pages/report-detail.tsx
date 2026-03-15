@@ -32,6 +32,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { AuthWall } from "@/components/ui/auth-wall";
+import { PaymentButton } from "@/components/payment/payment-button";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Report, Claim } from "@shared/schema";
 import {
@@ -253,6 +254,39 @@ export default function ReportDetailPage() {
                         {t('report_detail.renewReport')}
                       </Button>
                     )}
+                  </div>
+                )}
+
+                {isOwner && report.paymentStatus === 'pending' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-5 mt-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="flex items-start gap-3">
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <AlertTriangle className="h-5 w-5 text-blue-700" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-blue-900 mb-1">Payment Required</h3>
+                        <p className="text-sm text-blue-700 mb-4 leading-relaxed">
+                          Your report is currently <strong>private</strong> and not visible in the public Hub. 
+                          Complete the payment to activate it and start receiving potential matches.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <PaymentButton
+                            paymentType="lost_report"
+                            reportId={report.id}
+                            onPaymentSuccess={() => {
+                              toast({
+                                title: "Payment Successful",
+                                description: "Your report is now public!",
+                              });
+                              queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6"
+                          >
+                            Pay & Activate Report
+                          </PaymentButton>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

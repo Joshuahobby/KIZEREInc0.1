@@ -1,6 +1,6 @@
 import { apiRequest } from "@/lib/queryClient";
 import { PaymentType } from "@shared/schema";
-import { getPaymentAmount, DEFAULT_CURRENCY } from "@/config/payment.config";
+import { getPaymentAmountAsync, DEFAULT_CURRENCY } from "@/config/payment.config";
 import { PaymentPackage } from "@/components/payment/payment-package-selector";
 
 /**
@@ -136,9 +136,9 @@ export class PaymentService {
    * @param type Payment type
    * @returns Payment amount in the default currency
    */
-  static getPaymentAmount(type: PaymentType): number {
-    // Use the centralized payment configuration
-    return getPaymentAmount(type);
+  static async getPaymentAmount(type: PaymentType): Promise<number> {
+    // Use the centralized async payment configuration (fetches from API)
+    return getPaymentAmountAsync(type);
   }
 
   /**

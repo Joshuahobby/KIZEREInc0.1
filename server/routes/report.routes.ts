@@ -30,7 +30,10 @@ router.get("/", async (req, res) => {
       status: status as string,
       category: category as string,
       dateFilter: dateFilter as string,
-      userId: (type || search) ? undefined : userId // Only filter by user if not searching the hub
+      userId: (type || search) ? undefined : userId, // Only filter by user if not searching the hub
+      // Only show paid reports in public hub/search, but let users see their own pending reports
+      paymentStatus: (type || search) ? 'successful' : undefined,
+      requestingUserId: userId
     });
 
     // Phase 1.5: Sanitize contact info for non-owners
@@ -98,37 +101,33 @@ router.post("/", reportSubmissionLimiter, async (req, res) => {
     const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + expirationDays);
 
-    // Logic for reporting a registered item
+    // Business Logic for payment status:
+    // 1. Found items are always free.
+    // 2. Lost items are free ONLY if they were pre-registered (verified itemId provided).
+    // 3. Unregistered lost items (itemId is null) MUST pay the registration fee.
     let paymentStatus = 'pending';
-    
-    // Found reports and Lost reports with no reward/zero reward are marked as successful immediately
-    if (
-      validatedData.type === 'found' || 
-      validatedData.bountyAmount === undefined || 
-      validatedData.bountyAmount === null ||
-      Number(validatedData.bountyAmount) === 0
-    ) {
-      paymentStatus = 'successful';
-    }
-
     let itemToUpdate = null;
 
-    if (validatedData.itemId) {
+    if (validatedData.type === 'found') {
+      paymentStatus = 'successful';
+    } else if (validatedData.type === 'lost' && validatedData.itemId) {
+      // Check if it's a valid pre-registered item owned by the user
       const item = await storage.getItem(validatedData.itemId);
-      if (item) {
-        // Verify ownership
-        if (item.userId !== req.user!.id) {
-          return res.status(403).json({ message: "You can only report your own items" });
-        }
-        // Verify item status
-        if (item.status !== 'Registered') {
-          return res.status(400).json({ message: "Item must be 'Registered' to be reported as lost" });
-        }
-
-        // Since it's a registered item, report is free (covered by registration)
-        paymentStatus = 'successful';
-        itemToUpdate = item;
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
       }
+      
+      if (item.userId !== req.user!.id) {
+        return res.status(403).json({ message: "You can only report your own items" });
+      }
+      
+      if (item.status !== 'Registered') {
+        return res.status(400).json({ message: "Item must be 'Registered' to be reported as lost for free" });
+      }
+      
+      // Pre-registered items are free to report lost (covered by registration)
+      paymentStatus = 'successful';
+      itemToUpdate = item;
     }
 
     const newReport = await storage.createReport({
