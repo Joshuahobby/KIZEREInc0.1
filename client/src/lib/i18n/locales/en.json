@@ -709,8 +709,8 @@
     "item_register_title": "Register Your Item",
     "item_register_subtitle": "Register your item for safekeeping and recovery in case it gets lost",
     "item_register_success": "Item Registered Successfully",
-    "item_basic_info": "Basic Information",
-    "item_details": "Item Details",
+    "item_basic_info": "Information",
+    "item_details": "Details",
     "item_images": "Item Photos",
     "success": {
       "title": "Item Protected!",
@@ -724,7 +724,7 @@
     "ownership_description": "Upload a receipt or photo to prove this item is yours.",
     "smart_id_title": "Auto-Scan Label",
     "smart_id_description": "Take a photo of the serial number or IMEI, and we'll read it for you.",
-    "main_details": "Item Information",
+    "main_details": "Item Details",
     "edit_title": "Edit Item Details",
     "required": "(Required)",
     "item_name": "Item Name",
@@ -776,9 +776,9 @@
     },
     "status": {
       "auto_saving": "Auto-saving...",
-      "encrypted": "Encrypted Database",
-      "verified": "Verified Records",
-      "bank_security": "Bank-Grade Security"
+      "encrypted": "Secure Storage",
+      "verified": "Verified Registry",
+      "bank_security": "Privacy Protected"
     },
     "fields": {
       "upload_photo": "Upload Item Photo",

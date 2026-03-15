@@ -626,9 +626,6 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                 <h2 className="text-xl font-bold text-foreground tracking-tight">
                   {isEditMode ? t("registration.edit_title") : t("registration.title")}
                 </h2>
-                <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-[0.15em] mt-1">
-                  Global Security Database
-                </p>
               </div>
               <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
                 <Shield className="h-3.5 w-3.5" />
@@ -667,7 +664,6 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                               </div>
                               <div>
                                 <h2 className="text-lg font-bold tracking-tight">{t("registration.main_details")}</h2>
-                                <p className="text-sm text-muted-foreground">Basic information about your asset</p>
                               </div>
                             </div>
 
@@ -707,8 +703,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                               render={({ field }) => (
                                 <FormItem>
                                   <div className="flex justify-between items-end">
-                                    <FormLabel className="text-sm font-semibold text-foreground">Security Classification</FormLabel>
-                                    <span className="text-[10px] text-muted-foreground italic">Select one category</span>
+                                    <FormLabel className="text-sm font-semibold text-foreground">{t("registration.fields.category")}</FormLabel>
                                   </div>
 
                                   <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
@@ -854,7 +849,6 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                               </div>
                               <div>
                                 <h2 className="text-lg font-bold tracking-tight">Ownership Verification</h2>
-                                <p className="text-sm text-muted-foreground">Identifiers and physical proof</p>
                               </div>
                             </div>
 
