@@ -583,7 +583,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
       title={isEditMode ? t("registration.editTitle") : t("registration.title")}
       defaultSidebarCollapsed={true}
     >
-      <div className="min-h-[70vh] py-4 px-3 sm:py-6 sm:px-4">
+      <div className="min-h-[70vh] py-2 px-2 sm:py-3 sm:px-3">
         {registeredItemData && (
           <PaymentModal
             open={showPaymentModal}
@@ -621,7 +621,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
           <div className="bg-background rounded-xl border border-border/50 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1),0_8px_10px_-6px_rgba(0,0,0,0.1)] overflow-hidden flex flex-col">
 
             {/* ──── Header Bar ──── */}
-            <div className="px-6 sm:px-10 py-5 border-b border-border/30 flex justify-between items-center">
+            <div className="px-4 sm:px-6 py-3 border-b border-border/30 flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-bold text-foreground tracking-tight">
                   {isEditMode ? t("registration.edit_title") : t("registration.title")}
@@ -637,12 +637,12 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
             <div className="flex-1 overflow-hidden">
 
               {/* ──── Form Container ──── */}
-              <div className="w-full p-6 sm:p-10 overflow-y-auto">
+              <div className="w-full p-4 sm:p-6 overflow-y-auto">
                 <Form {...form}>
                   <form
                     id="item-registration-form"
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className="space-y-8"
+                    className="space-y-4"
                   >
                     <AnimatePresence mode="wait">
 
@@ -654,10 +654,10 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 30 }}
                           transition={{ duration: 0.3, ease: "easeInOut" }}
-                          className="space-y-5"
+                          className="space-y-3"
                         >
                           {/* Primary Item Name */}
-                          <div className="space-y-5">
+                          <div className="space-y-3">
                             <div className="flex items-center gap-3 mb-2">
                               <div className="h-9 w-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                                 <Info className="h-5 w-5" />
@@ -708,7 +708,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
 
                                   <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                                     <FormControl>
-                                      <SelectTrigger className="mt-3 h-14 bg-muted/5 border-border/60 rounded-xl focus:ring-primary/50 text-sm font-medium">
+                                      <SelectTrigger className="mt-2 h-12 bg-muted/5 border-border/60 rounded-xl focus:ring-primary/50 text-sm font-medium">
                                         <SelectValue placeholder="Select a category..." />
                                       </SelectTrigger>
                                     </FormControl>
@@ -732,7 +732,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           </div>
 
                           {/* Optional Fields */}
-                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden mt-6">
+                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden mt-3">
                             <div
                               role="button"
                               tabIndex={0}
@@ -839,11 +839,11 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 30 }}
                           transition={{ duration: 0.3, ease: "easeInOut" }}
-                          className="space-y-5"
+                          className="space-y-3"
                         >
                           {/* ──── OWNERSHIP VERIFICATION ──── */}
                           <div className="space-y-6">
-                            <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center gap-3 mb-2">
                               <div className="h-9 w-9 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
                                 <Shield className="h-5 w-5" />
                               </div>
@@ -852,7 +852,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-6">
+                            <div className="grid grid-cols-1 gap-4">
                               {/* Unique Identifier */}
                               <FormField
                                 control={form.control}
@@ -912,7 +912,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
 
                                 {/* Existing images */}
                                 {existingImages.length > 0 && (
-                                  <div className="p-4 bg-muted/10 rounded-xl mb-3">
+                                  <div className="p-3 bg-muted/10 rounded-xl mb-2">
                                     <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">{t("registration.item_existing_images")}</p>
                                     <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                                       {existingImages.map((url, idx) => (
@@ -946,7 +946,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           </div>
 
                           {/* Optional Fields */}
-                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden mt-6">
+                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden mt-3">
                             <div
                               role="button"
                               tabIndex={0}
@@ -1044,7 +1044,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           </div>
 
                           {/* Ownership Documents - Collapsible */}
-                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden mt-6">
+                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-sm overflow-hidden mt-3">
                             <div
                               role="button"
                               tabIndex={0}
@@ -1108,10 +1108,10 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: 30 }}
                           transition={{ duration: 0.3, ease: "easeInOut" }}
-                          className="space-y-6"
+                          className="space-y-4"
                         >
                           {/* Review Summary */}
-                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl p-5 sm:p-7 shadow-sm space-y-6">
+                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
                             <div className="flex items-center gap-3">
                               <div className="h-9 w-9 bg-violet-500/10 rounded-xl flex items-center justify-center text-violet-500">
                                 <Eye className="h-4 w-4" />
@@ -1124,7 +1124,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
 
                             <div className="space-y-4">
                               {/* Item Name */}
-                              <div className="flex items-start justify-between p-4 bg-muted/10 rounded-xl">
+                              <div className="flex items-start justify-between p-3 bg-muted/10 rounded-xl">
                                 <div>
                                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("registration.item_name")}</p>
                                   <p className="text-base font-bold">{watchedName || "—"}</p>
@@ -1135,7 +1135,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                               </div>
 
                               {/* Category */}
-                              <div className="flex items-start justify-between p-4 bg-muted/10 rounded-xl">
+                              <div className="flex items-start justify-between p-3 bg-muted/10 rounded-xl">
                                 <div>
                                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("registration.fields.category")}</p>
                                   <div className="flex items-center gap-2">
@@ -1161,7 +1161,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                               </div>
 
                               {/* Identifier */}
-                              <div className="flex items-start justify-between p-4 bg-muted/10 rounded-xl">
+                              <div className="flex items-start justify-between p-3 bg-muted/10 rounded-xl">
                                 <div>
                                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("registration.item_uuid")}</p>
                                   <p className="text-base font-bold font-mono tracking-wider">{watchedIdentifier || "—"}</p>
@@ -1174,7 +1174,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                               </div>
 
                               {/* Photos */}
-                              <div className="flex items-start justify-between p-4 bg-muted/10 rounded-xl">
+                              <div className="flex items-start justify-between p-3 bg-muted/10 rounded-xl">
                                 <div className="space-y-2">
                                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("registration.item_images")}</p>
                                   <div className="flex items-center gap-2">
@@ -1222,7 +1222,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                 </Form>
 
                 {/* ──── SECURITY BADGES ──── */}
-                <div className="mt-8 flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-6 border-t border-border/10">
+                <div className="mt-4 flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-3 border-t border-border/10">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider border border-emerald-100">
                     <Shield className="h-3 w-3" />
                     {t("registration.status.encrypted")}
@@ -1240,7 +1240,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
             </div>
 
             {/* ──── Footer Bar ──── */}
-            <footer className="px-6 sm:px-10 py-4 border-t border-border/30 flex items-center justify-between bg-background">
+            <footer className="px-6 sm:px-10 py-2 border-t border-border/30 flex items-center justify-between bg-background">
               <div className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wider">
                 <span className="block mb-1 font-bold text-foreground">
                   {currentStep === 0 && t("registration.steps.details")}
