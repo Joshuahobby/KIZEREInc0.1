@@ -59,6 +59,16 @@ export function ChatWidget() {
         enabled: !!user, // Always check for chats if logged in to handle visibility
     });
 
+    // URL param handling: auto-open if chatId is in URL
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const urlChatId = params.get('chatId');
+        if (urlChatId) {
+            setIsOpen(true);
+            setActiveChatId(parseInt(urlChatId));
+        }
+    }, [window.location.search]);
+
     // Visibility logic
     const isAlwaysVisiblePath = ALWAYS_VISIBLE_PATHS.includes(location);
     const hasActiveChats = chats && chats.length > 0;

@@ -122,9 +122,7 @@ export default function LostFound() {
       if (filters.dateFilter !== 'all') params.append('dateFilter', filters.dateFilter);
 
       const endpoint = `/api/reports?${params.toString()}`;
-      const res = await fetch(endpoint, { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed to fetch reports');
-      return res.json();
+      return await apiRequest<any>(endpoint);
     },
     enabled: !!user,
   });

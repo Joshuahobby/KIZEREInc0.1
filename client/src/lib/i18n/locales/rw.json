@@ -38,7 +38,8 @@
     "actions": {
       "resolve": "Kukemura",
       "dismiss": "Kureka",
-      "review": "Gusuzuma"
+      "review": "Gusuzuma",
+      "delete": "Gusiba"
     },
     "status": "Imimerere",
     "allStatuses": "Imimerere Yose",
@@ -362,7 +363,11 @@
       "system": "Sisitemu"
     },
     "emptyUnread": "Nta menyesha rishya ufite ubu. Akazi keza!",
-    "emptyDesc": "Ntarahura n'imenyesha na rito. Tuzakumenyesha nibigera igihe."
+    "emptyDesc": "Ntarahura n'imenyesha na rito. Tuzakumenyesha nibigera igihe.",
+    "clearAll": "Gusiba Byose",
+    "deleteError": "Gusiba imenyesha byanze",
+    "clearAllSuccess": "Imenyesha ryose ryasibwe",
+    "clearAllError": "Gusiba imenyesha ryose byanze"
   },
   "dashboard": {
     "welcomeMessage": "Murakaza neza, {name}",
@@ -1778,5 +1783,51 @@
     "benefit3Desc": "Garuza ibintu byawe utarinze kugaragaza amakuru yawe y'itumanaho ku bantu utazi.",
     "ctaTitle": "Witeguye Kurinda Ikintu Cyawe cya Mbere?",
     "ctaButton": "Rinda Ubu"
+  },
+  "walkthrough": {
+    "sub": {
+      "welcome": {
+        "title": "Murakaza neza",
+        "desc": "Ihuriro ryizewe ryo kurinda ibyagaciro n'irondanyamuntu ryawe."
+      },
+      "kyc": {
+        "title": "Genenzura",
+        "desc": "Wuzuza KYC kugira ngo ubashe kugaruza ibibura no gutanga ikirego."
+      },
+      "vault": {
+        "title": "Ububiko",
+        "desc": "Bika neza amakuru y'indangamuntu cyangwa pasiporo yawe."
+      },
+      "assets": {
+        "title": "Ibyagaciro",
+        "desc": "Iyandikishe ibyagaciro byawe mu bubiko buhoraho."
+      },
+      "recovery": {
+        "title": "Kugaruza",
+        "desc": "Tanga raporo y'ibyabuze cyangwa ibyabonetse kugira ngo ubigaruze."
+      }
+    },
+    "agent": {
+      "mission": {
+        "title": "Inshingano",
+        "desc": "Kwubaka icyizere ugenzura abakoresha n'ibyagaciro."
+      },
+      "ops": {
+        "title": "Ibikorwa",
+        "desc": "Genzura irondamuntu ufashe abakoresha kwiyandikisha."
+      },
+      "stats": {
+        "title": "Imibare",
+        "desc": "Kurikirana imibare y'ibikorwa byawe n'uruhare rwawe."
+      },
+      "queue": {
+        "title": "Urutonde",
+        "desc": "Cunga raporo kandi wihutishe ibikorwa byo kugaruza."
+      }
+    },
+    "finish": "Sohoka",
+    "end": "Hagarika",
+    "gotIt": "Ndabyumvise",
+    "stepOf": "Intambwe {{current}} kuri {{total}}"
   }
 }

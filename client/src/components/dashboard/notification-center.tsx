@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
-import { Bell, BellRing, CheckCircle, Clock, User, Settings, X, Info, AlertTriangle } from "lucide-react";
+import { Bell, BellRing, CheckCircle, Clock, User, Settings, X, Info, AlertTriangle, Trash2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -33,8 +33,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const markAsRead = async (id: number) => {
     try {
       await apiRequest(`/api/notifications/${id}/read`, { method: 'PATCH' });
-      // Invalidate the notifications query to refresh the list
+      // Invalidate the notifications and unread count queries to refresh everything
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
     } catch (error) {
       console.error("Failed to mark notification as read", error);
     }
@@ -45,9 +46,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
     try {
       await apiRequest("/api/notifications/mark-all-read", { method: 'POST' });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
       toast({
         title: t('notifications.markAllReadSuccess'),
-        description: t('notifications.markAllReadSuccess'),
       });
     } catch (error) {
       console.error("Failed to mark all notifications as read", error);
@@ -55,6 +56,44 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         variant: "destructive",
         title: t('common.error'),
         description: t('notifications.markAllReadError'),
+      });
+    }
+  };
+
+  // Delete a specific notification
+  const deleteNotification = async (id: number) => {
+    try {
+      await apiRequest(`/api/notifications/${id}`, { method: 'DELETE' });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      toast({
+        title: t('notifications.deleteSuccess'),
+      });
+    } catch (error) {
+      console.error("Failed to delete notification", error);
+      toast({
+        variant: "destructive",
+        title: t('common.error'),
+        description: t('notifications.deleteError'),
+      });
+    }
+  };
+
+  // Clear all notifications
+  const clearAllNotifications = async () => {
+    try {
+      await apiRequest("/api/notifications", { method: 'DELETE' });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      toast({
+        title: t('notifications.clearAllSuccess'),
+      });
+    } catch (error) {
+      console.error("Failed to clear notifications", error);
+      toast({
+        variant: "destructive",
+        title: t('common.error'),
+        description: t('notifications.clearAllError'),
       });
     }
   };
@@ -193,7 +232,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                         : "bg-primary/5 hover:bg-primary/10 border-l-2 border-primary"
                       }
                     `}
-                    onClick={() => setOpenNotification(openNotification === `${notification.id}` ? null : `${notification.id}`)}
+                    onClick={() => {
+                      const isOpening = openNotification !== `${notification.id}`;
+                      setOpenNotification(isOpening ? `${notification.id}` : null);
+                      
+                      // Auto-mark as read if opening an unread notification
+                      if (isOpening && !notification.isRead) {
+                        markAsRead(notification.id);
+                      }
+                    }}
                   >
                     <div className="flex items-start">
                       <div className="flex-shrink-0 mr-3">
@@ -206,25 +253,42 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex justify-between items-start">
-                          <p className={`text-sm font-medium ${!notification.isRead && "text-primary-foreground"}`}>
+                          <p className={`text-sm font-medium ${!notification.isRead ? "text-primary" : "text-foreground"}`}>
                             {notification.title}
                           </p>
-                          <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-                            {formatDate(notification.createdAt)}
-                          </span>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[10px] text-muted-foreground ml-2 flex-shrink-0">
+                              {formatDate(notification.createdAt)}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive transition-colors opactiy-0 group-hover:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notification.id);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                         <p className="text-sm text-muted-foreground line-clamp-2 mb-1">
                           {notification.message}
                         </p>
                         {openNotification === `${notification.id}` && (
-                          <div className="mt-2 text-sm">
-                            <p>{notification.message}</p>
-                            {!notification.isRead && (
-                              <div className="flex gap-2">
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            className="mt-2 text-sm border-t border-border/30 pt-2"
+                          >
+                            <p className="text-foreground leading-relaxed mb-3">{notification.message}</p>
+                            <div className="flex flex-wrap gap-2">
+                              {!notification.isRead && (
                                 <Button
-                                  variant="ghost"
+                                  variant="secondary"
                                   size="sm"
-                                  className="mt-2 h-8 text-xs"
+                                  className="h-8 text-xs"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     markAsRead(notification.id);
@@ -233,27 +297,39 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
                                   <CheckCircle className="h-3.5 w-3.5 mr-1" />
                                   {t('notifications.markAsRead')}
                                 </Button>
-                                {notification.type === 'report_match' && notification.relatedReportId && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="mt-2 h-8 text-xs border-purple-200 text-purple-600 hover:bg-purple-50"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      window.location.href = `/reports/${notification.relatedReportId}`;
-                                    }}
-                                  >
-                                    {t('notifications.viewMatch')}
-                                  </Button>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                              )}
+                              {notification.type === 'report_match' && notification.relatedReportId && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 text-xs border-purple-200 text-purple-600 hover:bg-purple-50"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setLocation(`/reports/${notification.relatedReportId}`);
+                                  }}
+                                >
+                                  {t('notifications.viewMatch')}
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 text-xs text-destructive hover:bg-destructive/10"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(notification.id);
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                                {t('common.actions.delete')}
+                              </Button>
+                            </div>
+                          </motion.div>
                         )}
                       </div>
                       {!notification.isRead && (
                         <div className="flex-shrink-0 ml-2">
-                          <div className="h-2 w-2 rounded-full bg-primary"></div>
+                          <div className="h-2 w-2 rounded-full bg-primary animate-pulse"></div>
                         </div>
                       )}
                     </div>
@@ -265,16 +341,28 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
         </CardContent>
       </Tabs>
 
-      <CardFooter className="flex justify-between border-t pt-3 mt-auto bg-muted/5">
-        <Button
-          variant="outline"
-          size="sm"
-          className="text-xs font-semibold"
-          onClick={markAllAsRead}
-          disabled={unreadCount === 0}
-        >
-          {t('notifications.markAllRead')}
-        </Button>
+      <CardFooter className="flex justify-between border-t pt-3 mt-auto bg-muted/5 gap-2">
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs font-semibold"
+            onClick={markAllAsRead}
+            disabled={unreadCount === 0}
+          >
+            {t('notifications.markAllRead')}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs font-semibold text-destructive hover:bg-destructive/10"
+            onClick={clearAllNotifications}
+            disabled={notifications.length === 0}
+          >
+            <X className="h-3 w-3 mr-1" />
+            {t('notifications.clearAll')}
+          </Button>
+        </div>
         <Button
           variant="ghost"
           size="sm"

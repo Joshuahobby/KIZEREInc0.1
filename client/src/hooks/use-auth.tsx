@@ -88,7 +88,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("[useAuth] Calling /api/auth/google...");
       const userData = await apiRequest<any>("/api/auth/google", {
         method: "POST",
-        data: payload
+        data: payload,
+        skipSyncWait: true
       });
 
       console.log("[useAuth] /api/auth/google sync successful, user role:", userData.role);
@@ -193,6 +194,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const result = await handleRedirectResult();
           if (result && result.success && result.user) {
             console.log("[useAuth] Redirect/popup login detected");
+            setAuthSyncing(true); // Lock early
             await performSync(result.user);
             return; // performSync handles isLoading(false)
           }
@@ -206,6 +208,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
           if (firebaseUser) {
             console.log("[useAuth] Firebase user state: Active (", firebaseUser.email, ")");
+            setAuthSyncing(true); // Lock early to prevent other requests
             await performSync(firebaseUser);
           } else {
             console.log("[useAuth] Firebase user state: Empty");

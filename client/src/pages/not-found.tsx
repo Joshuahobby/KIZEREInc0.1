@@ -45,27 +45,29 @@ export default function NotFound() {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             {/* Quick Action 1: Home */}
-            <Link href="/">
-              <a className="group relative bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl p-8 rounded-3xl border border-slate-200/60 dark:border-white/10 shadow-lg hover:shadow-[0_0_40px_rgba(undefined,0.15)] dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.05)] transition-all duration-300 flex flex-col items-center text-center overflow-hidden h-full">
-                <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 delay-75">
-                  <Home className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">Return Home</h3>
-                <p className="text-sm text-muted-foreground font-medium">Head back to the main landing page to start fresh.</p>
-              </a>
+            <Link 
+              href="/"
+              className="group relative bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl p-8 rounded-3xl border border-slate-200/60 dark:border-white/10 shadow-lg hover:shadow-[0_0_40px_rgba(undefined,0.15)] dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.05)] transition-all duration-300 flex flex-col items-center text-center overflow-hidden h-full"
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 delay-75">
+                <Home className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">Return Home</h3>
+              <p className="text-sm text-muted-foreground font-medium">Head back to the main landing page to start fresh.</p>
             </Link>
 
             {/* Quick Action 2: Search */}
-            <Link href="/search">
-              <a className="group relative bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl p-8 rounded-3xl border border-slate-200/60 dark:border-white/10 shadow-lg hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all duration-300 flex flex-col items-center text-center overflow-hidden h-full">
-                <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 delay-75">
-                  <Search className="w-8 h-8 text-blue-500" />
-                </div>
-                <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-blue-500 transition-colors">Search Directory</h3>
-                <p className="text-sm text-muted-foreground font-medium">Looking for something specific? Search the registry.</p>
-              </a>
+            <Link 
+              href="/search"
+              className="group relative bg-white/60 dark:bg-zinc-950/60 backdrop-blur-xl p-8 rounded-3xl border border-slate-200/60 dark:border-white/10 shadow-lg hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] transition-all duration-300 flex flex-col items-center text-center overflow-hidden h-full"
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="w-16 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 delay-75">
+                <Search className="w-8 h-8 text-blue-500" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-blue-500 transition-colors">Search Directory</h3>
+              <p className="text-sm text-muted-foreground font-medium">Looking for something specific? Search the registry.</p>
             </Link>
           </motion.div>
 

@@ -25,6 +25,14 @@ export async function markAllNotificationsAsRead(userId: number): Promise<void> 
   await db.update(notifications).set({ isRead: true }).where(eq(notifications.userId, userId));
 }
 
+export async function deleteNotification(id: number): Promise<void> {
+  await db.delete(notifications).where(eq(notifications.id, id));
+}
+
+export async function deleteAllNotifications(userId: number): Promise<void> {
+  await db.delete(notifications).where(eq(notifications.userId, userId));
+}
+
 // Push Subscription methods
 import { pushSubscriptions, type PushSubscription, type InsertPushSubscription } from "@shared/schema";
 

@@ -46,6 +46,11 @@ export const paymentTypes = ['registration', 'lost_report', 'bounty'] as const;
 // Define package status
 export const packageStatuses = ['active', 'inactive', 'archived'] as const;
 
+// Define coupon types
+export const couponTypes = ['percentage', 'fixed'] as const;
+export const couponApplicableTypes = ['registration', 'lost_report', 'all'] as const;
+export const couponStatuses = ['active', 'inactive'] as const;
+
 // Define claim statuses
 export const claimStatuses = ['pending', 'verified', 'rejected', 'resolved'] as const;
 
@@ -61,9 +66,10 @@ export const userPreferencesSchema = z.object({
     sms: z.boolean().default(false),
     push: z.boolean().default(true),
   }).optional().default({ email: true, sms: false, push: true }),
-  language: z.enum(['en', 'fr', 'rw']).optional().default('en'),
+  language: z.enum(['en', 'fr', 'rw', 'sw']).optional().default('en'),
   currency: z.string().optional().default('USD'),
   timezone: z.string().optional().default('UTC'),
+  onboardingTourSeen: z.boolean().optional().default(false),
 });
 
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
@@ -78,6 +84,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   language: 'en',
   currency: 'USD',
   timezone: 'UTC',
+  onboardingTourSeen: false,
 };
 
 // Shared validation fragments for consistency
@@ -262,6 +269,28 @@ export const payments = pgTable("payments", {
   packageId: integer("package_id").references(() => paymentPackages.id),
 });
 
+// Coupons table
+export const coupons = pgTable("coupons", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  description: text("description"),
+  discountType: text("discount_type").notNull().default('percentage'), // 'percentage' or 'fixed'
+  discountValue: numeric("discount_value").notNull(),
+  minPurchase: numeric("min_purchase").default('0'),
+  maxDiscount: numeric("max_discount"), // For percentage discounts
+  validFrom: timestamp("valid_from").notNull().defaultNow(),
+  validUntil: timestamp("valid_until"),
+  usageLimit: integer("usage_limit"),
+  usageCount: integer("usage_count").notNull().default(0),
+  applicableType: text("applicable_type").notNull().default('all'), // 'registration', 'lost_report', 'all'
+  status: text("status").notNull().default('active'),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow()
+}, (table) => [
+  uniqueIndex("coupon_code_idx").on(table.code),
+  index("coupon_status_idx").on(table.status)
+]);
+
 // Payouts for bounty releases
 export const payouts = pgTable("payouts", {
   id: serial("id").primaryKey(),
@@ -340,9 +369,12 @@ export const verificationRequests = pgTable("verification_requests", {
   userId: integer("user_id").notNull().references(() => users.id),
   documentType: text("document_type").notNull(), // 'nid', 'passport', 'drivers_license'
   documentUrl: text("document_url").notNull(),
+  documentPublicId: text("document_public_id"), // Added for private document access
   selfieUrl: text("selfie_url").notNull(),
+  selfiePublicId: text("selfie_public_id"), // Added for private document access
   status: text("status").notNull().default('pending'),
   adminComment: text("admin_comment"),
+  livenessCode: text("liveness_code"), // The random code the user must hold in their selfie
   reviewedBy: integer("reviewed_by").references(() => users.id),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   reviewedAt: timestamp("reviewed_at"),
@@ -532,7 +564,10 @@ export const insertVerificationRequestSchema = createInsertSchema(verificationRe
     errorMap: () => ({ message: "Please select a valid document type" })
   }),
   documentUrl: z.string().url("Document URL is required"),
+  documentPublicId: z.string().optional(),
   selfieUrl: z.string().url("Selfie URL is required"),
+  selfiePublicId: z.string().optional(),
+  livenessCode: z.string().optional(),
 });
 export const insertStatusChangeSchema = createInsertSchema(statusChanges).omit({ id: true, timestamp: true });
 export const insertUserWarningSchema = createInsertSchema(userWarnings).omit({
@@ -552,6 +587,24 @@ export const insertPaymentPackageSchema = createInsertSchema(paymentPackages).om
   name: z.string().min(3, "Package name must be at least 3 characters"),
   amount: z.number().positive("Amount must be positive"),
   features: z.array(z.string()).optional().default([])
+});
+
+// Coupon schemas
+export const insertCouponSchema = createInsertSchema(coupons).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  usageCount: true
+}).extend({
+  discountType: z.enum(couponTypes),
+  discountValue: z.union([z.string(), z.number()]).transform(val => val.toString()),
+  minPurchase: z.union([z.string(), z.number()]).optional().default("0").transform(val => val.toString()),
+  maxDiscount: z.union([z.string(), z.number()]).nullable().optional().transform(val => val?.toString() || null),
+  validFrom: z.date().or(z.string().transform(val => new Date(val))).default(() => new Date()),
+  validUntil: z.date().or(z.string().transform(val => new Date(val))).nullable().optional(),
+  usageLimit: z.any().nullable().optional().transform(val => val === "" || val === null || val === undefined ? null : Number(val)),
+  applicableType: z.enum(couponApplicableTypes),
+  status: z.enum(couponStatuses).default('active')
 });
 
 // Moderation schemas
@@ -683,6 +736,8 @@ export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions
   updatedAt: true
 });
 
+
+
 // Types and Schemas Exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertItem = z.infer<typeof insertItemSchema>;
@@ -706,6 +761,7 @@ export type InsertClaimAppeal = z.infer<typeof insertClaimAppealSchema>;
 export type InsertClaimStatusLog = z.infer<typeof insertClaimStatusLogSchema>;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
+export type InsertCoupon = z.infer<typeof insertCouponSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Item = typeof items.$inferSelect;
@@ -729,6 +785,7 @@ export type ClaimAppeal = typeof claimAppeals.$inferSelect;
 export type ClaimStatusLog = typeof claimStatusLogs.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type Coupon = typeof coupons.$inferSelect;
 
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type UserRole = typeof userRoles[number];
@@ -756,5 +813,6 @@ export const initiatePaymentSchema = z.object({
   itemId: z.number().optional(),
   reportId: z.number().optional(),
   redirectUrl: z.string().optional(),
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.any()).optional(),
+  couponCode: z.string().optional()
 });

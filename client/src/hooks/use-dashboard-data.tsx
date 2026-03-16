@@ -31,7 +31,8 @@ export interface DashboardData {
   isModerator: boolean;
   isBusiness: boolean;
   userStats: DashboardStats;
-  adminStats: any;
+  adminStats: any | null;
+  detailedStats: any | null;
   isLoading: boolean;
   items: Item[];
   reports: Report[];
@@ -41,6 +42,8 @@ export interface DashboardData {
   myClaims: Claim[];
   claimsReceived: Claim[];
   allUsers: User[];
+  systemStatus: any | null;
+  adminActivity: any[];
 }
 
 export interface UseDashboardDataOptions {
@@ -114,6 +117,27 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     refetchInterval: refreshInterval
   });
 
+  const { data: detailedStats = null, isLoading: detailedStatsLoading } = useQuery({
+    queryKey: ['/api/admin/stats'],
+    queryFn: async () => await apiRequest('/api/admin/stats'),
+    enabled: isAdmin,
+    refetchInterval: refreshInterval
+  });
+
+  const { data: systemStatus = null, isLoading: systemStatusLoading } = useQuery({
+    queryKey: ['/api/admin/system-status'],
+    queryFn: async () => await apiRequest('/api/admin/system-status'),
+    enabled: isAdmin,
+    refetchInterval: refreshInterval
+  });
+
+  const { data: adminActivity = [], isLoading: adminActivityLoading } = useQuery({
+    queryKey: ['/api/admin/activity-log'],
+    queryFn: async () => await apiRequest('/api/admin/activity-log'),
+    enabled: isAdmin,
+    refetchInterval: refreshInterval
+  });
+
   const { data: allReports = [], isLoading: allReportsLoading } = useQuery({
     queryKey: ['/api/admin/reports'],
     queryFn: async () => await apiRequest('/api/admin/reports'),
@@ -130,7 +154,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
 
   const combinedIsLoading = itemsLoading || reportsLoading || notificationsLoading || paymentsLoading ||
     dashboardStatsLoading || myClaimsLoading || claimsReceivedLoading ||
-    (isAdmin && (allUsersLoading || revenueSummaryLoading)) ||
+    (isAdmin && (allUsersLoading || revenueSummaryLoading || systemStatusLoading || adminActivityLoading || detailedStatsLoading)) ||
     ((isAdmin || isAgent || isModerator) && allReportsLoading);
 
   return useMemo(() => {
@@ -161,6 +185,7 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
       isBusiness,
       userStats,
       adminStats: revenueSummary,
+      detailedStats,
       isLoading: combinedIsLoading,
       items,
       reports: Array.isArray(reports) ? reports : (reports as any)?.reports || [],
@@ -169,11 +194,14 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
       payments: Array.isArray(payments) ? payments : (payments as any)?.payments || [],
       myClaims: Array.isArray(myClaims) ? myClaims : (myClaims as any)?.claims || [],
       claimsReceived: Array.isArray(claimsReceived) ? claimsReceived : (claimsReceived as any)?.claims || [],
-      allUsers: Array.isArray(allUsers) ? allUsers : (allUsers as any)?.users || []
+      allUsers: Array.isArray(allUsers) ? allUsers : (allUsers as any)?.users || [],
+      systemStatus,
+      adminActivity: Array.isArray(adminActivity) ? adminActivity : []
     };
   }, [
     user, isAdmin, isAgent, isModerator, isBusiness, items, reports,
     allReports, notifications, payments, myClaims, claimsReceived,
-    allUsers, revenueSummary, dashboardStats, combinedIsLoading
+    allUsers, revenueSummary, dashboardStats, combinedIsLoading,
+    systemStatus, adminActivity
   ]);
 }

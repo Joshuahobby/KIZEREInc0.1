@@ -20,18 +20,30 @@ export function setAuthSyncing(syncing: boolean) {
   isAuthSyncing = syncing;
   if (syncing) {
     if (!authSyncPromise) {
-      console.log('[QueryClient] Starting auth sync lock...');
       authSyncPromise = new Promise((resolve) => {
         authSyncResolver = resolve;
       });
     }
   } else {
     if (authSyncResolver) {
-      console.log('[QueryClient] Releasing auth sync lock...');
       const resolve = authSyncResolver;
       authSyncResolver = null;
       authSyncPromise = null;
       resolve();
+    }
+  }
+}
+
+/**
+ * Utility to wait for any active authentication synchronization to complete.
+ * This is used to prevent race conditions during application startup.
+ */
+export async function waitForAuthSync(): Promise<void> {
+  if (isAuthSyncing && authSyncPromise) {
+    try {
+      await authSyncPromise;
+    } catch (err) {
+      // Fail silent, the actual request will handle its own failure
     }
   }
 }
@@ -75,7 +87,6 @@ export async function ensureAuthenticated(forceRefresh = false): Promise<void> {
   // If we are currently syncing auth (e.g. Google login in progress), wait for it
   // with a timeout to prevent indefinite stalls.
   if (isAuthSyncing && authSyncPromise) {
-    console.log('[QueryClient] Waiting for active auth sync to complete...');
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Auth sync timed out after 30s')), 30000)
     );
@@ -232,16 +243,13 @@ export async function apiRequest<T = any>(
   options?: {
     method?: string;
     data?: unknown;
+    skipSyncWait?: boolean;
   }
 ): Promise<T> {
-  // For admin routes, ensure authentication first
-  if (url.startsWith('/api/admin')) {
-    try {
-      await ensureAuthenticated();
-    } catch (error: any) {
-      console.error('[apiRequest] Authentication failed for admin request:', error);
-      throw new Error(`Authentication required for ${url}: ${error.message}`);
-    }
+  // Ensure we don't fire requests while an auth sync (Google login) is in progress
+  // unless this is a sync-critical request itself (to avoid deadlock)
+  if (!options?.skipSyncWait) {
+    await waitForAuthSync();
   }
 
   const method = options?.method || 'GET';
@@ -327,7 +335,18 @@ export async function apiRequest<T = any>(
   }
 
   await throwIfResNotOk(res);
-  return res.json();
+
+  // Handle empty response bodies (like 204 No Content)
+  if (res.status === 204 || res.headers.get("Content-Length") === "0") {
+    return {} as T;
+  }
+
+  try {
+    return await res.json();
+  } catch (error) {
+    console.warn("[apiRequest] Failed to parse JSON response:", error);
+    return {} as T;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -340,12 +359,7 @@ export const getQueryFn: <T>(options: {
 
       // Ensure authentication is synced before making any request
       // This prevents 401 errors in the console during initial sync
-      try {
-        await ensureAuthenticated();
-      } catch (error: any) {
-        console.warn('[getQueryFn] Pre-request authentication check failed:', error.message);
-        // We continue anyway and let the actual request decide if it's really unauthorized
-      }
+      await waitForAuthSync();
 
       try {
         console.log(`Making request to: ${url}`);

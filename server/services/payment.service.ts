@@ -17,6 +17,7 @@ import {
 import { getPaymentAmount, DEFAULT_CURRENCY } from '../config/payment.config';
 import { getPaymentDescription } from '../config/payment.config';
 import { UserService } from './user.service';
+import { CouponService } from './coupon.service';
 
 const logger = createLogger('PaymentService');
 
@@ -124,22 +125,62 @@ export class PaymentService {
       // Generate a UUID-based deposit ID (used as transactionRef)
       const depositId = generateDepositId();
 
+      // Handle Coupon if provided
+      let discountAmount = 0;
+      let finalAmount = amount;
+      let appliedCoupon = null;
+
+      if (paymentData.couponCode) {
+        const validation = await CouponService.validateCoupon(
+          paymentData.couponCode,
+          paymentData.userId,
+          amount,
+          paymentData.type
+        );
+        
+        if (validation.isValid && validation.coupon) {
+          discountAmount = validation.discountAmount;
+          finalAmount = validation.finalAmount;
+          appliedCoupon = validation.coupon;
+          logger.info('Coupon applied to payment', { 
+            code: paymentData.couponCode, 
+            discountAmount, 
+            finalAmount 
+          });
+        } else {
+          logger.warn('Invalid coupon provided for payment', { 
+            code: paymentData.couponCode, 
+            reason: validation.message 
+          });
+          // We could throw here, but maybe it's better to just process without coupon if the user insists?
+          // Actually, if they provided a code, they expect a discount.
+          throw new Error(validation.message || 'Invalid coupon code');
+        }
+      }
+
       // Create payment record in database
       const paymentRecord = await storage.createPayment({
         userId: paymentData.userId,
-        amount: amount.toString(),
+        amount: finalAmount.toString(),
         currency: DEFAULT_CURRENCY,
         type: paymentData.type,
         status: 'pending',
         transactionRef: depositId,
         itemId: paymentData.itemId,
         reportId: paymentData.reportId,
-        packageId: packageData?.id
+        packageId: packageData?.id,
+        metadata: {
+          ...paymentData.metadata,
+          originalAmount: amount,
+          discountAmount,
+          couponCode: paymentData.couponCode,
+          couponId: appliedCoupon?.id
+        }
       });
 
       // Initiate deposit with PawaPay (triggers USSD/push prompt on customer's phone)
       const depositResponse = await initiateDeposit({
-        amount,
+        amount: finalAmount,
         currency: DEFAULT_CURRENCY,
         depositId,
         phoneNumber,
@@ -149,6 +190,7 @@ export class PaymentService {
           user_id: user.id.toString(),
           payment_type: paymentData.type,
           package_id: packageData?.id?.toString(),
+          coupon_id: appliedCoupon?.id?.toString()
         }
       });
 
@@ -243,6 +285,14 @@ export class PaymentService {
 
         // Update payment in database
         await storage.updatePayment(payment.id, updateData);
+
+        // If payment just became successful, increment coupon usage if applicable
+        if (newStatus === 'successful' && payment.status !== 'successful') {
+          const metadata = (payment.metadata as any) || {};
+          if (metadata.couponId) {
+            await CouponService.recordUsage(metadata.couponId);
+          }
+        }
 
         logger.info('Payment verified with PawaPay', {
           transactionRef,

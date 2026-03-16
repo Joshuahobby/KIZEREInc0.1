@@ -45,6 +45,25 @@ export class PayoutService {
             return payout;
         }
 
+        // Check user verification status
+        const user = await db.query.users.findFirst({
+            where: eq(users.id, payout.userId)
+        });
+
+        if (user?.role === 'Subscriber' && user.verificationStatus !== 'approved') {
+            const errorMsg = `User ${payout.userId} must be verified to receive payouts`;
+            logger.warn(errorMsg);
+            
+            await db.update(payouts)
+                .set({ 
+                    status: 'failed',
+                    failureReason: 'Identity verification required'
+                })
+                .where(eq(payouts.id, payoutId));
+                
+            throw new Error(errorMsg);
+        }
+
         // Update status to processing
         await db.update(payouts)
             .set({ status: 'processing' })

@@ -245,6 +245,18 @@ export class DashboardService {
         failedPayments: allPayments.filter(p => p.status === 'failed').length,
       };
 
+      // Item Categories Breakdown
+      const itemCategories: Record<string, number> = {};
+      allItems.forEach(item => {
+        itemCategories[item.category] = (itemCategories[item.category] || 0) + 1;
+      });
+
+      // Report Categories Breakdown
+      const reportCategories: Record<string, number> = {};
+      allReports.forEach(report => {
+        reportCategories[report.category] = (reportCategories[report.category] || 0) + 1;
+      });
+
       return {
         totalUsers,
         totalItems,
@@ -253,7 +265,9 @@ export class DashboardService {
         userStats,
         itemStats,
         reportStats,
-        paymentStats
+        paymentStats,
+        itemCategories,
+        reportCategories
       };
     } catch (error) {
       logger.error('Error calculating detailed admin stats', { error });

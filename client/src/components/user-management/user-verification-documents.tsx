@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { format, formatDistanceToNow } from "date-fns";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -34,14 +35,15 @@ import { Textarea } from "@/components/ui/textarea";
 interface VerificationDocument {
   id: number;
   userId: number;
-  type: string;
+  documentType: string;
   status: string;
-  documentUrls: string[];
-  notes?: string;
+  documentUrl: string;
+  selfieUrl: string;
+  livenessCode?: string;
+  adminComment?: string;
   reviewedBy?: number;
   submittedAt: string;
   reviewedAt?: string;
-  expiresAt?: string;
 }
 
 interface UserVerificationDocumentsProps {
@@ -60,38 +62,19 @@ export function UserVerificationDocuments({ userId }: UserVerificationDocumentsP
 
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/admin/users/${userId}/verification-requests`],
-    queryFn: async () => {
-      try {
-        const response = await fetch(`/api/admin/users/${userId}/verification-requests`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch verification documents');
-        }
-        return response.json();
-      } catch (error) {
-        throw new Error('Failed to fetch verification documents');
-      }
-    },
+    queryFn: () => apiRequest(`/api/admin/users/${userId}/verification-requests`),
   });
 
   // Update verification request status mutation
   const updateVerificationMutation = useMutation({
-    mutationFn: async (data: { requestId: number; status: string; notes: string }) => {
-      const response = await fetch(`/api/admin/verification-requests/${data.requestId}`, {
+    mutationFn: (vars: { requestId: number; status: string; adminComment: string }) => {
+      return apiRequest(`/api/admin/verification-requests/${vars.requestId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
+        data: {
+          status: vars.status,
+          adminComment: vars.adminComment,
         },
-        body: JSON.stringify({
-          status: data.status,
-          notes: data.notes,
-        }),
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to update verification request');
-      }
-
-      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -127,7 +110,7 @@ export function UserVerificationDocuments({ userId }: UserVerificationDocumentsP
     updateVerificationMutation.mutate({
       requestId: selectedDocument.id,
       status: reviewStatus,
-      notes: reviewNotes,
+      adminComment: reviewNotes,
     });
   };
 
@@ -168,7 +151,7 @@ export function UserVerificationDocuments({ userId }: UserVerificationDocumentsP
   const openReviewDialog = (document: VerificationDocument) => {
     setSelectedDocument(document);
     setReviewStatus(document.status);
-    setReviewNotes(document.notes || "");
+    setReviewNotes(document.adminComment || "");
     setShowReviewDialog(true);
   };
 
@@ -224,7 +207,7 @@ export function UserVerificationDocuments({ userId }: UserVerificationDocumentsP
                 <div className="flex items-center gap-2">
                   {getStatusIcon(document.status)}
                   <span className="font-medium">
-                    {document.type.replace(/_/g, ' ')}
+                    {document.documentType.replace(/_/g, ' ')}
                   </span>
                   <Badge variant={getStatusBadgeVariant(document.status)}>
                     {document.status.replace(/_/g, ' ')}
@@ -235,28 +218,47 @@ export function UserVerificationDocuments({ userId }: UserVerificationDocumentsP
                   Submitted {submittedTimeInfo.relative}
                 </time>
               </div>
-              
-              {document.documentUrls && document.documentUrls.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
-                  {document.documentUrls.map((url, index) => (
-                    <a 
-                      key={index}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-sm text-blue-600 hover:underline"
-                    >
-                      <FileText className="h-4 w-4 mr-1" />
-                      Document {index + 1}
-                      <ExternalLink className="h-3 w-3 ml-1" />
-                    </a>
-                  ))}
+
+              {document.livenessCode && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/10 rounded-lg border border-blue-100 dark:border-blue-900 w-fit">
+                  <span className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase">Liveness Code:</span>
+                  <span className="font-mono text-sm font-bold text-blue-800 dark:text-blue-200">{document.livenessCode}</span>
                 </div>
               )}
               
-              {document.notes && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">ID Document</span>
+                  <a 
+                    href={document.documentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center p-2 rounded-lg border bg-card hover:bg-accent transition-colors text-sm text-blue-600 font-medium"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    View ID Document
+                    <ExternalLink className="h-3 w-3 ml-auto" />
+                  </a>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Selfie / Liveness</span>
+                  <a 
+                    href={document.selfieUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center p-2 rounded-lg border bg-card hover:bg-accent transition-colors text-sm text-blue-600 font-medium"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    View Selfie
+                    <ExternalLink className="h-3 w-3 ml-auto" />
+                  </a>
+                </div>
+              </div>
+              
+              {document.adminComment && (
                 <div className="text-sm bg-muted/50 p-2 rounded-md">
-                  <p className="text-muted-foreground">{document.notes}</p>
+                  <p className="text-muted-foreground font-medium text-xs uppercase mb-1">Admin Notes</p>
+                  <p className="text-muted-foreground">{document.adminComment}</p>
                 </div>
               )}
               
@@ -292,9 +294,17 @@ export function UserVerificationDocuments({ userId }: UserVerificationDocumentsP
             </DialogHeader>
             
             <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Document Type</label>
-                <p>{selectedDocument.type.replace(/_/g, ' ')}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase">Document Type</label>
+                  <p className="text-sm font-medium">{selectedDocument.documentType.replace(/_/g, ' ')}</p>
+                </div>
+                {selectedDocument.livenessCode && (
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-muted-foreground uppercase">Expected Code</label>
+                    <p className="text-sm font-mono font-bold text-blue-600">{selectedDocument.livenessCode}</p>
+                  </div>
+                )}
               </div>
               
               <div className="space-y-2">
@@ -316,11 +326,11 @@ export function UserVerificationDocuments({ userId }: UserVerificationDocumentsP
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-medium">Notes</label>
+                <label className="text-sm font-medium">Internal Notes / Feedback</label>
                 <Textarea
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder="Add review notes or feedback..."
+                  placeholder="Explain why approved or rejected..."
                   rows={3}
                 />
               </div>

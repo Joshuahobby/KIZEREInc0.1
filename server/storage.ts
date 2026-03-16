@@ -12,6 +12,7 @@ import * as notificationOps from "./storage/notification.storage";
 import * as paymentOps from "./storage/payment.storage";
 import * as verificationOps from "./storage/verification.storage";
 import * as chatOps from "./storage/chat.storage";
+import * as couponOps from "./storage/coupon.storage";
 import {
   User, InsertUser, Item, InsertItem, Report, InsertReport,
   Notification, InsertNotification, Payment, InsertPayment,
@@ -153,6 +154,8 @@ export class DatabaseStorage implements IStorage {
   createNotification = notificationOps.createNotification;
   markNotificationAsRead = notificationOps.markNotificationAsRead;
   markAllNotificationsAsRead = notificationOps.markAllNotificationsAsRead;
+  deleteNotification = notificationOps.deleteNotification;
+  deleteAllNotifications = notificationOps.deleteAllNotifications;
 
   // Push Subscription methods
   createPushSubscription = notificationOps.createPushSubscription;
@@ -194,6 +197,16 @@ export class DatabaseStorage implements IStorage {
   updateVerificationRequestStatus = verificationOps.updateVerificationRequestStatus;
   setDefaultPaymentPackage = paymentOps.setDefaultPaymentPackage;
   getAllPaymentPackages = paymentOps.getAllPaymentPackages;
+
+  // Coupon methods
+  getCoupon = couponOps.getCoupon;
+  getCouponByCode = couponOps.getCouponByCode;
+  getAllCoupons = couponOps.getAllCoupons;
+  getCouponsWithFilters = couponOps.getCouponsWithFilters;
+  createCoupon = couponOps.createCoupon;
+  updateCoupon = couponOps.updateCoupon;
+  incrementCouponUsage = couponOps.incrementCouponUsage;
+  deleteCoupon = couponOps.deleteCoupon;
 
   // Chat methods
   getChat = chatOps.getChat;

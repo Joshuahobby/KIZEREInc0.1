@@ -21,6 +21,14 @@ router.post("/", claimSubmissionLimiter, async (req, res) => {
   try {
     const validatedData = insertClaimSchema.parse(req.body);
 
+    // Check user verification status if they are a Subscriber
+    const user = await storage.getUser(req.user!.id);
+    if (user?.role === 'Subscriber' && user.verificationStatus !== 'approved') {
+      return res.status(403).json({ 
+        message: "Identity verification is required to file a claim. Please complete your identity verification in your profile settings." 
+      });
+    }
+
     const claimData = {
       ...validatedData,
       userId: req.user!.id,

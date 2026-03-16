@@ -74,13 +74,14 @@ import chatRoutes from './routes/chat.routes';
 import rolesRoutes from './routes/roles';
 import auditRoutes from './routes/audit.routes';
 import resendWebhookRoutes from './routes/resend.routes';
+import couponRoutes from './routes/coupon.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
   // Register domain routes
-  app.use('/api/admin', requireAdmin, adminRoutes);
+  app.use('/api/admin', requireAdminOrAgent, adminRoutes);
   app.use('/api/admin/jobs', requireAdmin, adminJobsRoutes);
   app.use('/api/admin/roles', requireAdmin, rolesRoutes);
   app.use('/api/admin/audit-logs', requireAdmin, auditRoutes);
@@ -101,6 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/me', requireAuth, profileRoutes);
   app.use('/api/upload', requireAuth, uploadRoutes);
   app.use('/api/moderation', requireAuth, moderationRoutes);
+  app.use('/api/coupons', requireAuth, couponRoutes);
   app.use('/api/search', requireAuth, searchRoutes);
   app.use('/api/dashboard', requireAuth, dashboardRoutes);
   app.use('/api/chats', requireAuth, chatRoutes);

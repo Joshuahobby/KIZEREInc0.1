@@ -107,4 +107,43 @@ router.post("/unsubscribe", async (req, res) => {
   }
 });
 
+/**
+ * DELETE /api/notifications/:id
+ * Delete a specific notification
+ */
+router.delete("/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const notification = await storage.getNotification(id);
+        
+        if (!notification) {
+            return res.status(404).json({ message: "Notification not found" });
+        }
+
+        if (notification.userId !== req.user!.id) {
+            return res.status(403).json({ message: "Not authorized" });
+        }
+
+        await storage.deleteNotification(id);
+        res.status(204).end();
+    } catch (error) {
+        logger.error("Failed to delete notification:", error);
+        res.status(500).json({ message: "Failed to delete notification" });
+    }
+});
+
+/**
+ * DELETE /api/notifications
+ * Clear all notifications for the user
+ */
+router.delete("/", async (req, res) => {
+    try {
+        await storage.deleteAllNotifications(req.user!.id);
+        res.status(204).end();
+    } catch (error) {
+        logger.error("Failed to clear notifications:", error);
+        res.status(500).json({ message: "Failed to clear notifications" });
+    }
+});
+
 export default router;

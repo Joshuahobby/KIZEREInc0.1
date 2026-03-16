@@ -45,31 +45,7 @@ const packageSchema = z.object({
 
 // Infer the type from our schema
 type PackageFormValues = z.infer<typeof packageSchema>;
-
-// Helper function for API requests
-async function apiRequest(method: string, url: string, data?: any) {
-  const response = await fetch(url, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: data ? JSON.stringify(data) : undefined,
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    try {
-      // Try to parse as JSON
-      const errorData = JSON.parse(errorText);
-      throw new Error(errorData.message || 'An error occurred');
-    } catch (e) {
-      // If not JSON, use text directly
-      throw new Error(errorText || 'An error occurred');
-    }
-  }
-
-  return response;
-}
+import { apiRequest } from '@/lib/queryClient';
 
 export default function CreatePaymentPackage() {
   const { isAuthenticated, user } = useAuth();
@@ -107,8 +83,7 @@ export default function CreatePaymentPackage() {
         createdBy: user?.id,
       };
       
-      const response = await apiRequest('POST', '/api/admin/payment-packages', payload);
-      return response.json();
+      return await apiRequest('/api/admin/payment-packages', { method: 'POST', data: payload });
     },
     onSuccess: () => {
       toast({

@@ -50,6 +50,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 // Hooks & Libs
 import { useToast } from "@/hooks/use-toast";
@@ -156,6 +164,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
   const [showOwnershipDocs, setShowOwnershipDocs] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showVerificationRequired, setShowVerificationRequired] = useState(false);
   const [registeredItemData, setRegisteredItemData] = useState<any>(null);
 
   const isEditMode = !!params?.id;
@@ -464,8 +473,15 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
         }, 500);
       }
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       console.error("[Registration] Mutation error:", error);
+      
+      // Handle the specific 403 Verification Required error polished in Phase 4
+      if (error?.status === 403 || error?.message?.includes("Verification Required")) {
+        setShowVerificationRequired(true);
+        return;
+      }
+
       toast({
         title: "Registration Failed",
         description: error.message || "Failed to register item. Please try again.",
@@ -1319,6 +1335,63 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
           document.body
         )
       }
+      {/* ──── Verification Required Premium Dialog ──── */}
+      <Dialog open={showVerificationRequired} onOpenChange={setShowVerificationRequired}>
+        <DialogContent className="sm:max-w-[420px] p-0 overflow-hidden border-none rounded-3xl shadow-2xl">
+          <div className="bg-gradient-to-b from-destructive/10 to-background p-8 pt-10 text-center relative">
+            <div className="absolute top-4 right-4 text-muted-foreground/30 hover:text-muted-foreground cursor-pointer" onClick={() => setShowVerificationRequired(false)}>
+              <X className="h-4 w-4" />
+            </div>
+            
+            <div className="h-20 w-20 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+              <Shield className="h-10 w-10 text-destructive animate-pulse" />
+              <div className="absolute -top-1 -right-1 h-6 w-6 bg-destructive rounded-full border-4 border-background flex items-center justify-center">
+                <AlertCircle className="h-3 w-3 text-white" />
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-black tracking-tight mb-3">Verification Required</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed px-4">
+              To ensure the integrity of the KIZERE Registry, all users must complete identity verification before registering enterprise-grade items.
+            </p>
+          </div>
+          
+          <div className="px-8 pb-8 space-y-3">
+            <Button 
+              className="w-full h-14 rounded-2xl text-base font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+              onClick={() => setLocation("/verification")}
+            >
+              Verify Profile Now
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="w-full h-12 rounded-xl text-xs font-semibold border-border/40 text-muted-foreground hover:bg-muted/5 transition-colors"
+              onClick={() => setShowVerificationRequired(false)}
+            >
+              Finish Later
+            </Button>
+            
+            <div className="pt-4 border-t border-border/5 flex items-center justify-center gap-2">
+              <div className="flex -space-x-1.5">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-5 w-5 rounded-full border-2 border-background bg-muted overflow-hidden shrink-0">
+                    <img 
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 40}`} 
+                      alt="Agent" 
+                      className="w-full h-full object-cover grayscale opacity-50"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] font-medium text-muted-foreground italic">
+                Wait time for assisted registration: <span className="text-emerald-500 font-bold">~5 mins</span>
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageLayout >
   );
 }

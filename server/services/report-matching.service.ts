@@ -2,6 +2,8 @@ import { storage } from "../storage";
 import { Report, Notification } from "../../shared/schema";
 import { createLogger } from "../utils/logger";
 import { sendMatchNotificationEmail, sendFoundNotificationEmail } from "./email.service";
+import { emitNotification } from "../websocket";
+import { PushService } from "./push.service";
 
 import { OCRService } from "./ocr.service";
 
@@ -309,7 +311,7 @@ export class ReportMatchingService {
     }
 
     // Notify the user who just created the report
-    await storage.createNotification({
+    const n1 = await storage.createNotification({
       userId: report.userId,
       title: `${confidenceLevel} Confidence Match Found!`,
       message: message,
@@ -319,8 +321,11 @@ export class ReportMatchingService {
       relatedReportId: candidate.id
     });
 
+    emitNotification(report.userId, n1);
+    await PushService.notifyReportMatch(report.userId, candidate.id, score);
+
     // Notify the existing report owner
-    await storage.createNotification({
+    const n2 = await storage.createNotification({
       userId: candidate.userId,
       title: `New ${confidenceLevel} Confidence Match Found!`,
       message: relatedMessage,
@@ -329,6 +334,9 @@ export class ReportMatchingService {
       relatedItemId: candidate.itemId || null,
       relatedReportId: report.id
     });
+
+    emitNotification(candidate.userId, n2);
+    await PushService.notifyReportMatch(candidate.userId, report.id, score);
   }
 
   /**
@@ -348,7 +356,7 @@ export class ReportMatchingService {
       ).catch(err => logger.error('Failed to send found notification email', { error: err }));
     }
 
-    await storage.createNotification({
+    const n = await storage.createNotification({
       userId: item.userId,
       title: "Your Item Was Found!",
       message: message,
@@ -356,6 +364,17 @@ export class ReportMatchingService {
       isRead: false,
       relatedItemId: item.id,
       relatedReportId: report.id
+    });
+
+    emitNotification(item.userId, n);
+    await PushService.sendToUser(item.userId, {
+      title: "Your Item Was Found!",
+      body: message,
+      data: {
+        type: "report_match",
+        reportId: report.id,
+        url: `/dashboard/reports/${report.id}`
+      }
     });
   }
 

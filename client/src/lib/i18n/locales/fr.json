@@ -18,7 +18,10 @@
     "update": "Mettre à jour",
     "securityLabel": "Sécurité",
     "secureLabel": "Sécurisé",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "actions": {
+      "delete": "Supprimer"
+    }
   },
   "nav": {
     "home": "Accueil",
@@ -701,6 +704,29 @@
     "benefit3Title": "Confidentialité d'Abord",
     "benefit3Desc": "Récupérez vos objets sans jamais révéler vos coordonnées personnelles à des inconnus.",
     "ctaTitle": "Prêt à Protéger Votre Premier Objet ?",
-    "ctaButton": "Protéger Maintenant"
+    "ctaButton": "Protéger"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "Restez informé des activités de vos objets, des rapports et des alertes système.",
+    "empty": "Aucune notification",
+    "emptyUnread": "Vous n'avez pas de nouvelles notifications pour le moment. Bon travail !",
+    "emptyDesc": "Aucune notification rencontrée pour le moment. Nous vous alerterons quand quelque chose se produira.",
+    "markAsRead": "Marquer comme lu",
+    "markAllRead": "Tout marquer comme lu",
+    "clearAll": "Tout effacer",
+    "viewMatch": "Voir la correspondance",
+    "deleteSuccess": "Notification supprimée",
+    "deleteError": "Échec de la suppression de la notification",
+    "markAllReadSuccess": "Toutes les notifications ont été marquées comme lues",
+    "markAllReadError": "Échec du marquage de tout comme lu",
+    "clearAllSuccess": "Toutes les notifications ont été effacées",
+    "clearAllError": "Échec de l'effacement des notifications",
+    "tabs": {
+      "all": "Tout",
+      "unread": "Non lues",
+      "alerts": "Alertes",
+      "system": "Système"
+    }
   }
 }

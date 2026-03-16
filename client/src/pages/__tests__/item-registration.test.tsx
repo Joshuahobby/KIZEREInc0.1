@@ -60,7 +60,8 @@ describe('ItemRegistrationPage', () => {
     render(<ItemRegistrationPage />, { wrapper: AllProviders });
 
     // Check for the heading text that appears on step 1
-    expect(await screen.findByText(/Item Information/i)).toBeInTheDocument();
+    // The locale key 'registration.main_details' is used
+    expect(await screen.findByText(/Item Details/i)).toBeInTheDocument();
   });
 
   it('shows validation errors for empty required fields', async () => {

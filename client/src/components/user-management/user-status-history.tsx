@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, formatDistanceToNow } from "date-fns";
@@ -51,13 +52,7 @@ const getStatusBadgeVariant = (status: string): "default" | "secondary" | "destr
 export function UserStatusHistory({ userId }: UserStatusHistoryProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/admin/users/${userId}/status-history`],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/users/${userId}/status-history`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch user status history');
-      }
-      return response.json();
-    },
+    queryFn: () => apiRequest(`/api/admin/users/${userId}/status-history`),
   });
 
   if (isLoading) {

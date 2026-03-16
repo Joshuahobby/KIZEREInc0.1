@@ -62,11 +62,6 @@ export default function ReportDetailPage() {
 
   const { data: report, isLoading, error } = useQuery<Report>({
     queryKey: [`/api/reports/${id}`],
-    queryFn: async () => {
-      const res = await fetch(`/api/reports/${id}`, { credentials: 'include' });
-      if (!res.ok) throw new Error('Failed to fetch report');
-      return res.json();
-    },
     enabled: !!id && !!user,
   });
 

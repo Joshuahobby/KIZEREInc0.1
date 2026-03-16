@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -108,14 +109,7 @@ const getActionBadgeVariant = (action: string): "default" | "secondary" | "destr
 export function UserActivityTimeline({ userId }: UserActivityTimelineProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/admin/users/${userId}/activity`],
-    queryFn: async () => {
-      // We'll return the first page of logs (can enhance with pagination later)
-      const response = await fetch(`/api/admin/users/${userId}/activity?page=1&pageSize=20`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch user activity logs');
-      }
-      return response.json();
-    },
+    queryFn: () => apiRequest(`/api/admin/users/${userId}/activity?page=1&pageSize=20`),
   });
 
   if (isLoading) {

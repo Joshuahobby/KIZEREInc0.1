@@ -29,9 +29,15 @@ export async function getPendingVerificationRequests(): Promise<(VerificationReq
     userId: verificationRequests.userId,
     documentType: verificationRequests.documentType,
     documentUrl: verificationRequests.documentUrl,
+    documentPublicId: verificationRequests.documentPublicId,
     selfieUrl: verificationRequests.selfieUrl,
+    selfiePublicId: verificationRequests.selfiePublicId,
+    livenessCode: verificationRequests.livenessCode,
     status: verificationRequests.status,
     submittedAt: verificationRequests.submittedAt,
+    adminComment: verificationRequests.adminComment,
+    reviewedBy: verificationRequests.reviewedBy,
+    reviewedAt: verificationRequests.reviewedAt,
     user: users
   })
   .from(verificationRequests)
@@ -45,12 +51,15 @@ export async function getPendingVerificationRequests(): Promise<(VerificationReq
     userId: r.userId,
     documentType: r.documentType,
     documentUrl: r.documentUrl,
+    documentPublicId: r.documentPublicId,
     selfieUrl: r.selfieUrl,
+    selfiePublicId: r.selfiePublicId,
+    livenessCode: r.livenessCode,
     status: r.status,
     submittedAt: r.submittedAt,
-    adminComment: null, // Basic properties
-    reviewedBy: null,
-    reviewedAt: null,
+    adminComment: r.adminComment,
+    reviewedBy: r.reviewedBy,
+    reviewedAt: r.reviewedAt,
     user: r.user!
   }));
 }

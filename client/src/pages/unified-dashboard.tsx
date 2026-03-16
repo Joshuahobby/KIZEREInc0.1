@@ -73,13 +73,16 @@ import { UpcomingTasksCard } from "@/components/dashboard/upcoming-tasks-card";
 import { DashboardAlerts } from "@/components/dashboard/dashboard-alerts";
 import { UserPreferences } from "@shared/schema";
 import { AppLayout } from "@/components/layout/admin-layout";
+import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
+import { AssistedRegistrationDialog } from "@/components/agent/AssistedRegistrationDialog";
+import { DirectVerificationDialog } from "@/components/agent/DirectVerificationDialog";
 
 
 // Moved inside UnifiedDashboard for translation scope
 
 // Helper component for the header
 const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: any }) => (
-  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2 lg:mb-8">
     <div className="space-y-1">
       <div className="flex items-center gap-2 mb-1">
         <Badge variant="outline" className="text-[10px] font-black tracking-tighter uppercase border-primary/20 text-primary px-2 py-0">
@@ -115,6 +118,33 @@ const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: a
     </div>
   </div>
 );
+// Helper components
+const KYCAlert = ({ t, navigate }: { t: any, navigate: any }) => (
+  <Card data-tour="kyc-alert" className="border-primary/20 bg-primary/5 shadow-premium mb-6 overflow-hidden relative group">
+    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
+      <ShieldCheck className="h-24 w-24 text-primary" />
+    </div>
+    <CardContent className="p-6 relative">
+      <div className="flex flex-col sm:flex-row items-center gap-6">
+        <div className="flex-1 text-center sm:text-left">
+          <h3 className="text-lg font-bold text-foreground flex items-center justify-center sm:justify-start gap-2 mb-2">
+            <AlertTriangle className="h-5 w-5 text-primary animate-pulse" />
+            {t('dashboard.action.verifyTitle') || "Complete Your Verification"}
+          </h3>
+          <p className="text-muted-foreground text-sm max-w-xl">
+            {t('dashboard.action.verifyDesc') || "To fully secure your items and access all recovery features, please complete your identity verification."}
+          </p>
+        </div>
+        <Button 
+          onClick={() => navigate('/verification')}
+          className="shadow-lg shadow-primary/20 font-bold px-8"
+        >
+          {t('dashboard.action.verifyAction') || "Verify Now"}
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 
 const logger = createLogger('UnifiedDashboard');
@@ -124,10 +154,12 @@ export default function UnifiedDashboard() {
   const searchString = useSearch();
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
+  const [assistedRegOpen, setAssistedRegOpen] = React.useState(false);
+  const [directVerifyOpen, setDirectVerifyOpen] = React.useState(false);
 
   // Identity Protection Card (Rwanda Specific)
   const IdentityProtectionCard = () => (
-    <Card className="border-border/20 bg-card/60 backdrop-blur-sm shadow-sm hover:shadow-premium hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 overflow-hidden relative group h-full flex flex-col justify-between">
+    <Card data-tour="identity-card" className="border-border/20 bg-card/60 backdrop-blur-sm shadow-sm hover:shadow-premium hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 overflow-hidden relative group h-full flex flex-col justify-between">
       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
         <ShieldCheck className="h-24 w-24 text-primary" />
       </div>
@@ -296,10 +328,11 @@ export default function UnifiedDashboard() {
           animate="visible"
           className="max-w-5xl mx-auto space-y-4 sm:space-y-8"
         >
+          {user.verificationStatus !== 'approved' && <KYCAlert t={t} navigate={navigate} />}
           {/* Bento Box Action Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 lg:grid-cols-5">
+          <div data-tour="quick-actions" className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 lg:grid-cols-5">
             {/* Main Identity Block - Spans 3 columns on large screens, 2 on medium */}
-            <motion.div variants={itemVariants} className="md:col-span-2 lg:col-span-3">
+            <motion.div data-tour="identity-protection" variants={itemVariants} className="md:col-span-2 lg:col-span-3">
               <IdentityProtectionCard />
             </motion.div>
 
@@ -307,6 +340,7 @@ export default function UnifiedDashboard() {
             <div className="flex flex-col gap-3 md:gap-4 md:col-span-1 lg:col-span-2">
               <motion.div variants={itemVariants} className="flex-1">
                 <Card
+                  data-tour="report-lost"
                   className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-destructive/10 transition-all duration-300 border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group relative h-full flex flex-col justify-center"
                   onClick={() => navigate('/lost-found?action=report-lost')}
                 >
@@ -324,6 +358,7 @@ export default function UnifiedDashboard() {
 
               <motion.div variants={itemVariants} className="flex-1">
                 <Card
+                  data-tour="report-found"
                   className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-primary/10 transition-all duration-300 border-primary/20 bg-primary/5 hover:bg-primary/10 group relative h-full flex flex-col justify-center"
                   onClick={() => navigate('/lost-found?action=report-found')}
                 >
@@ -353,7 +388,7 @@ export default function UnifiedDashboard() {
                   </p>
                 </div>
               </div>
-              <Button onClick={() => navigate('/register-item')} variant="outline" size="sm" className="w-full sm:w-auto font-medium">
+              <Button data-tour="register-item" onClick={() => navigate('/register-item')} variant="outline" size="sm" className="w-full sm:w-auto font-medium">
                 <Plus className="mr-2 h-4 w-4" />
                 {t('dashboard.action.protectTitle')}
               </Button>
@@ -555,8 +590,36 @@ export default function UnifiedDashboard() {
           initial="hidden"
           animate="visible"
         >
+          {/* Field Operations - Prominent for Agents */}
+          <div data-tour="agent-ops" className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <Card className="border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors cursor-pointer group" onClick={() => setDirectVerifyOpen(true)}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 group-hover:text-emerald-600 transition-colors">
+                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                  Field Verification
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">Verify users directly by inspecting physical ID cards on site.</p>
+                <Button variant="link" size="sm" className="px-0 h-auto mt-2 text-emerald-600 group-hover:underline">Start Verification →</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group" onClick={() => setAssistedRegOpen(true)}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 group-hover:text-primary transition-colors">
+                  <Search className="h-4 w-4 text-primary" />
+                  Assisted Registration
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">Register items on behalf of unverified or non-technical users.</p>
+                <Button variant="link" size="sm" className="px-0 h-auto mt-2 text-primary group-hover:underline">Register for User →</Button>
+              </CardContent>
+            </Card>
+          </div>
           {/* Agent Stats */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <div data-tour="agent-stats" className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
             <motion.div variants={itemVariants}>
               <StatsCard
                 title={t('dashboard.agent.activeReports')}
@@ -607,7 +670,7 @@ export default function UnifiedDashboard() {
           </div>
 
           {/* Report Tabs */}
-          <motion.div variants={itemVariants} className="mb-6">
+          <motion.div data-tour="agent-reports" variants={itemVariants} className="mb-6">
             <Card>
               <CardHeader>
                 <CardTitle>{t('dashboard.agent.manageReports')}</CardTitle>
@@ -1127,13 +1190,26 @@ export default function UnifiedDashboard() {
         <div className="fixed top-20 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10 hidden dark:block" />
         <div className="fixed bottom-0 left-[-100px] w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px] pointer-events-none -z-10 hidden dark:block" />
 
-        <WelcomeHeader user={user} isAdmin={isAdmin} t={t} />
+        <div data-tour="welcome-section">
+          <WelcomeHeader user={user} isAdmin={isAdmin} t={t} />
+        </div>
+        <OnboardingTour />
 
         <div className="mt-2">
           <React.Suspense fallback={<div className="p-8 text-center italic">{t('dashboard.loadingComponents')}</div>}>
             {renderDashboardContent()}
           </React.Suspense>
         </div>
+
+        {/* Action Dialogs */}
+        <AssistedRegistrationDialog 
+          isOpen={assistedRegOpen} 
+          onClose={() => setAssistedRegOpen(false)} 
+        />
+        <DirectVerificationDialog 
+          isOpen={directVerifyOpen} 
+          onClose={() => setDirectVerifyOpen(false)} 
+        />
       </motion.div>
     </AppLayout>
   );

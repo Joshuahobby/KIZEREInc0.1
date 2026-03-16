@@ -8,6 +8,13 @@
       "when": 1770736233892,
       "tag": "0000_dapper_overlord",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773648962030,
+      "tag": "0001_fantastic_the_captain",
+      "breakpoints": true
     }
   ]
 }

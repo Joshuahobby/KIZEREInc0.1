@@ -56,7 +56,8 @@
     "actions": {
       "dismiss": "Dismiss",
       "resolve": "Resolve",
-      "review": "Review"
+      "review": "Review",
+      "delete": "Delete"
     }
   },
   "claims": {
@@ -345,24 +346,27 @@
     }
   },
   "notifications": {
-    "itemMatched": "Item Match Found",
-    "itemMatchedDesc": "A lost item matching your description has been found.",
-    "title": "Your Notifications",
-    "subtitle": "Stay updated on your items, reports, and system activity.",
-    "markAllRead": "Mark all as read",
-    "markAllReadSuccess": "All notifications marked as read",
-    "markAllReadError": "Failed to mark notifications as read",
-    "empty": "No new notifications",
+    "title": "Notifications",
+    "subtitle": "Stay updated with your item activities, reports, and system alerts.",
+    "empty": "No notifications",
+    "emptyUnread": "You have no new notifications right now. Great job!",
+    "emptyDesc": "No notifications encountered yet. We'll alert you when something comes up.",
     "markAsRead": "Mark as read",
+    "markAllRead": "Mark all as read",
+    "clearAll": "Clear All",
     "viewMatch": "View Match",
+    "deleteSuccess": "Notification deleted",
+    "deleteError": "Failed to delete notification",
+    "markAllReadSuccess": "All notifications marked as read",
+    "markAllReadError": "Failed to mark all as read",
+    "clearAllSuccess": "All notifications cleared",
+    "clearAllError": "Failed to clear notifications",
     "tabs": {
       "all": "All",
       "unread": "Unread",
       "alerts": "Alerts",
       "system": "System"
-    },
-    "emptyUnread": "You have no unread notifications at the moment. Good job!",
-    "emptyDesc": "You don't have any notifications yet. We'll let you know when something important happens."
+    }
   },
   "dashboard": {
     "welcomeMessage": "Welcome, {name}",
@@ -370,6 +374,12 @@
     "smartItemManagement": "Smart Item Management",
     "welcomeSubtitle": "Your protected inventory and security alerts at a glance.",
     "localTime": "Local Time",
+    "kyc": {
+      "verificationRequired": "Verification Required",
+      "verificationDesc": "To access all features like item registration and claims, please verify your identity.",
+      "completeButton": "Complete Verification",
+      "verifiedTooltip": "Verified Identity"
+    },
     "reputationScore": "Reputation Score",
     "trustedMember": "Trusted Member",
     "communityMember": "Community Member",
@@ -397,7 +407,10 @@
       "lostDesc": "Report a lost item and notify the community.",
       "foundTitle": "I Found Something",
       "foundDesc": "Scan a QR code or report an item you found.",
-      "protectTitle": "Protect an Item"
+      "protectTitle": "Protect an Item",
+      "verifyTitle": "Complete Your Verification",
+      "verifyDesc": "To fully secure your items and access all recovery features, please complete your identity verification.",
+      "verifyAction": "Verify Now"
     },
     "quickActions": {
       "title": "Quick Actions",
@@ -492,6 +505,8 @@
     "admin": {
       "title": "Admin Dashboard",
       "description": "Administrative tools and analytics",
+      "pendingActions": "Pending Actions",
+      "pendingVerifications": "Pending Verifications",
       "totalRevenue": "Total Revenue",
       "totalUsers": "Total Users",
       "registeredItems": "Registered Items",
@@ -539,7 +554,8 @@
         "paymentReceivedDesc": "RWF 5,000 via Momo"
       },
       "verificationReview": "Verification Review",
-      "verificationReviewDesc": "Review identity documents and verify user data."
+      "verificationReviewDesc": "Review identity documents and verify user data.",
+      "commandCenter": "Admin Command Center"
     },
     "agent": {
       "title": "Agent Dashboard",
@@ -1745,5 +1761,51 @@
     "benefit3Desc": "Recover your items without ever revealing your personal contact details to strangers.",
     "ctaTitle": "Ready to Protect Your First Item?",
     "ctaButton": "Protect Now"
+  },
+  "walkthrough": {
+    "sub": {
+      "welcome": {
+        "title": "Welcome",
+        "desc": "Your secure hub for protecting valuables and identity."
+      },
+      "kyc": {
+        "title": "Verify",
+        "desc": "Complete KYC for successful item recovery and claims."
+      },
+      "vault": {
+        "title": "Vault",
+        "desc": "Securely store your NID or Passport details."
+      },
+      "assets": {
+        "title": "Assets",
+        "desc": "Register your valuables in the permanent registry."
+      },
+      "recovery": {
+        "title": "Recovery",
+        "desc": "Report lost or found items to start recovery."
+      }
+    },
+    "agent": {
+      "mission": {
+        "title": "Mission",
+        "desc": "Empower trust by verifying users and items."
+      },
+      "ops": {
+        "title": "Ops",
+        "desc": "Verify identities and assist user registrations."
+      },
+      "stats": {
+        "title": "Stats",
+        "desc": "Track your impact metrics and community contribution."
+      },
+      "queue": {
+        "title": "Queue",
+        "desc": "Manage reports and maintain recovery speed."
+      }
+    },
+    "finish": "Finish",
+    "end": "End Tour",
+    "gotIt": "Got it",
+    "stepOf": "Step {{current}} of {{total}}"
   }
 }

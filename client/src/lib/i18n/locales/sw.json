@@ -579,5 +579,51 @@
     "benefit3Desc": "Rejesha vitu vyako bila kutoa maelezo yako ya mawasiliano ya kibinafsi kwa wageni.",
     "ctaTitle": "Uko Tayari Kulinda Kitu Chako Chako cha Kwanza?",
     "ctaButton": "Linda Sasa"
+  },
+  "walkthrough": {
+    "sub": {
+      "welcome": {
+        "title": "Karibu",
+        "desc": "Kituo chako salama cha kulinda mali na utambulisho."
+      },
+      "kyc": {
+        "title": "Thibitisha",
+        "desc": "Kamilisha KYC kwa ajili ya kurejesha vitu na madai."
+      },
+      "vault": {
+        "title": "Vault",
+        "desc": "Hifadhi salama maelezo ya ID au Pasipoti yako."
+      },
+      "assets": {
+        "title": "Mali",
+        "desc": "Sajili vitu vyako kwenye rejista ya kudumu."
+      },
+      "recovery": {
+        "title": "Urejeshaji",
+        "desc": "Ripoti vitu vilivyopotea au vilivyopatikana."
+      }
+    },
+    "agent": {
+      "mission": {
+        "title": "Dhamira",
+        "desc": "Jenga imani kwa kuthibitisha watumiaji na vitu."
+      },
+      "ops": {
+        "title": "Kazi",
+        "desc": "Thibitisha utambulisho na usaidie usajili."
+      },
+      "stats": {
+        "title": "Takwimu",
+        "desc": "Fuatilia matokeo yako na mchango kwa jamii."
+      },
+      "queue": {
+        "title": "Foleni",
+        "desc": "Simamia ripoti na uharakishe urejeshaji."
+      }
+    },
+    "finish": "Maliza",
+    "end": "Hagarika",
+    "gotIt": "Sawa",
+    "stepOf": "Hatua ya {{current}} ya {{total}}"
   }
 }

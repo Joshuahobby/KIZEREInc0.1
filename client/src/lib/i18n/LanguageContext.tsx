@@ -105,7 +105,7 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     const finalDefaultValue = typeof optionsOrDefault === 'string' ? optionsOrDefault : defaultValue;
 
     // Helper to solve JSON default export issue in some environments
-    const getRoot = (obj: any) => (obj && obj.default && Object.keys(obj).length === 1) ? obj.default : obj;
+    const getRoot = (obj: any) => (obj && (obj.__esModule || obj.default)) ? (obj.default || obj) : obj;
 
     // Traverse helper
     const traverse = (obj: any, pathKeys: string[]) => {

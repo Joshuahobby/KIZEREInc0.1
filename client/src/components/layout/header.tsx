@@ -107,8 +107,8 @@ export function Header() {
   const navigation: NavItem[] = isAuthenticated
     ? [
       { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
-      { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
       { name: t('nav.directory'), href: "/lost-found", icon: Search },
+      { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
     ]
     : [
       { name: t('nav.features'), href: "/#features", scrollTo: "features", icon: Info },

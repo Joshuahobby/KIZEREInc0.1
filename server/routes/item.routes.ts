@@ -56,10 +56,44 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   logger.info("Received item registration request", { body: req.body, user: req.user?.id });
   try {
+    const isAdminOrAgent = ['Admin', 'Agent'].includes(req.user!.role);
+    let targetUserId = req.user!.id;
+
+    // Agent/Admin can register on behalf of another user
+    if (isAdminOrAgent && (req.body.targetUserId || req.body.targetUserEmail)) {
+      if (req.body.targetUserId) {
+        targetUserId = parseInt(req.body.targetUserId);
+      } else if (req.body.targetUserEmail) {
+        const targetUser = await storage.getUserByEmail(req.body.targetUserEmail);
+        if (!targetUser) {
+          return res.status(404).json({ message: "Target user not found" });
+        }
+        targetUserId = targetUser.id;
+      }
+    } else {
+      // Subscriber self-registration check
+      const user = await storage.getUser(req.user!.id);
+      if (user?.role === 'Subscriber' && user.verificationStatus !== 'approved') {
+        return res.status(403).json({ 
+          message: "Account Verification Required",
+          description: "To maintain the security of the KIZERE registry, item registration is only available to verified profiles. Please complete your identity verification to continue.",
+          code: "VERIFICATION_REQUIRED"
+        });
+      }
+    }
+
     const validatedData = insertItemSchema.parse({
       ...req.body,
-      userId: req.user!.id
+      userId: targetUserId
     });
+
+    // Prevent duplicate unique identifiers
+    const existingItem = await storage.getItemByUniqueIdentifier(validatedData.uniqueIdentifier);
+    if (existingItem) {
+      return res.status(400).json({ 
+        message: "An item with this Serial Number / Unique Identifier is already registered in our system. Please contact support if you believe this is an error." 
+      });
+    }
 
     // Enforce image upload limits
     const { getUploadLimit } = await import("../config/payment.config");
@@ -79,6 +113,21 @@ router.post("/", async (req, res) => {
           storage.updateItem(newItem.id, { ocrText: text });
         }
       }).catch(err => logger.error('OCR processing failed for item', { itemId: newItem.id, error: err }));
+    }
+
+    // Log the assisted registration if applicable
+    if (isAdminOrAgent && targetUserId !== req.user!.id) {
+       await storage.createUserActivityLog({
+        userId: req.user!.id,
+        action: 'assisted_item_registration',
+        details: {
+          itemId: newItem.id,
+          targetUserId: targetUserId,
+          itemIdentifier: newItem.uniqueIdentifier
+        },
+        ipAddress: (req.ip as string) || null,
+        userAgent: req.headers['user-agent'] || null
+      });
     }
 
     logger.info("Item created successfully", { itemId: newItem.id });

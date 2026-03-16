@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation } from "wouter";
 import { z } from "zod";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, Upload, CheckCircle2, XCircle, AlertCircle,
-  ShieldCheck, FileText, Camera
+  ShieldCheck, FileText, Camera, Shield, ArrowRight, ArrowLeft,
+  Lock, Sparkles, Check, Scan, Info
 } from "lucide-react";
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter
@@ -21,6 +23,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import Tesseract from 'tesseract.js';
+import confetti from 'canvas-confetti';
 
 const verificationSchema = z.object({
   documentType: z.enum(['nid', 'passport', 'drivers_license'], {
@@ -32,19 +39,72 @@ type VerificationFormData = z.infer<typeof verificationSchema>;
 
 export default function VerificationPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
+  const [step, setStep] = useState(0);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false);
+  const [ocrResult, setOcrResult] = useState<{ detectedName?: string, confidence: number } | null>(null);
+  const [ocrError, setOcrError] = useState<string | null>(null);
 
   const { data: status, isLoading: isLoadingStatus } = useQuery({
     queryKey: ["/api/verification/status"],
   }) as { data: { status: string, adminComment?: string } | undefined, isLoading: boolean };
 
+  const { data: livenessData } = useQuery({
+    queryKey: ["/api/verification/liveness-code"],
+    enabled: !!status && status.status !== 'approved' && status.status !== 'pending'
+  }) as { data: { code: string } | undefined };
+
   const form = useForm<VerificationFormData>({
     resolver: zodResolver(verificationSchema),
+    defaultValues: {
+      documentType: 'nid'
+    }
   });
+
+  // OCR Processing
+  useEffect(() => {
+    if (documentFile && step === 1) {
+      processDocumentOCR(documentFile);
+    }
+  }, [documentFile, step]);
+
+  const processDocumentOCR = async (file: File) => {
+    setIsOcrProcessing(true);
+    setOcrError(null);
+    try {
+      const result = await Tesseract.recognize(file, 'eng', {
+        logger: m => console.log(m)
+      });
+      
+      const text = result.data.text;
+      const confidence = result.data.confidence;
+      
+      // Basic heuristic to find names (looking for Title Case words in sequence)
+      // This is a "best effort" check
+      const userNameParts = user?.fullName?.split(' ') || [];
+      const matches = userNameParts.filter(part => 
+        text.toLowerCase().includes(part.toLowerCase())
+      );
+
+      setOcrResult({
+        detectedName: matches.length > 0 ? matches.join(' ') : undefined,
+        confidence
+      });
+      
+      if (matches.length === 0 && confidence > 50) {
+        setOcrError("Warning: Name on document might not match your profile.");
+      }
+    } catch (err) {
+      console.error("OCR Error:", err);
+    } finally {
+      setIsOcrProcessing(false);
+    }
+  };
 
   const onSubmit = async (data: VerificationFormData) => {
     if (!documentFile || !selfieFile) {
@@ -61,6 +121,9 @@ export default function VerificationPage() {
     formData.append("documentType", data.documentType);
     formData.append("document", documentFile);
     formData.append("selfie", selfieFile);
+    if (livenessData?.code) {
+      formData.append("livenessCode", livenessData.code);
+    }
 
     try {
       await apiRequest("/api/verification", {
@@ -69,6 +132,16 @@ export default function VerificationPage() {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["/api/verification/status"] });
+      
+      // Celebration!
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#22c55e', '#3b82f6', '#10b981']
+      });
+
+      setStep(2); // Success step
 
       toast({
         title: "Verification Submitted",
@@ -87,8 +160,11 @@ export default function VerificationPage() {
 
   if (isLoadingStatus) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-muted-foreground font-medium animate-pulse">Initializing Security Layers...</p>
+        </div>
       </div>
     );
   }
@@ -97,143 +173,390 @@ export default function VerificationPage() {
 
   if (currentStatus === 'pending') {
     return (
-      <div className="container max-w-lg py-10">
-        <Card className="text-center p-6">
-          <div className="mx-auto w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-            <Loader2 className="h-6 w-6 text-blue-600 animate-spin" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Verification In Progress</h2>
-          <p className="text-muted-foreground mb-6">
-            Your verification request is currently pending review. We will notify you once an admin has reviewed your documents.
-          </p>
-          <Button variant="outline" onClick={() => navigate("/dashboard")}>
-            Return to Dashboard
-          </Button>
-        </Card>
+      <div className="container max-w-lg py-20 px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative"
+        >
+          <div className="absolute -inset-1 bg-gradient-to-r from-blue-500 to-primary blur opacity-25 rounded-3xl"></div>
+          <Card className="relative text-center p-8 rounded-3xl border-white/10 glass">
+            <div className="mx-auto w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 relative">
+              <div className="absolute inset-0 rounded-full border-2 border-primary/30 border-t-primary animate-spin"></div>
+              <Shield className="h-10 w-10 text-primary" />
+            </div>
+            <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/60 tracking-tight">Analysis in Progress</h2>
+            <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
+              Your security protocol is currently being reviewed by our compliance team. This typically takes less than 24 hours.
+            </p>
+            <div className="space-y-3">
+              <Button className="w-full py-6 rounded-xl hover:scale-[1.02] transition-transform" onClick={() => navigate("/dashboard")}>
+                Return to Command Center
+              </Button>
+            </div>
+          </Card>
+        </motion.div>
       </div>
     );
   }
 
   if (currentStatus === 'approved') {
     return (
-      <div className="container max-w-lg py-10">
-        <Card className="text-center p-6 border-green-200 bg-green-50 dark:bg-green-900/10">
-          <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-            <ShieldCheck className="h-6 w-6 text-green-600" />
+      <div className="container max-w-lg py-20 px-4 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-8"
+        >
+           <div className="mx-auto w-24 h-24 bg-green-500/10 rounded-full flex items-center justify-center relative shadow-[0_0_40px_rgba(34,197,94,0.2)]">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring" }}
+            >
+              <ShieldCheck className="h-12 w-12 text-green-500" />
+            </motion.div>
           </div>
-          <h2 className="text-2xl font-bold mb-2 text-green-800 dark:text-green-300">You are Verified!</h2>
-          <p className="text-green-700 dark:text-green-400 mb-6">
-            Your identity has been successfully verified. You now have full access to verified features.
-          </p>
-          <Button onClick={() => navigate("/dashboard")}>
-            Return to Dashboard
+          <div className="space-y-4">
+            <h2 className="text-4xl font-black text-foreground tracking-tighter">TRUST ESTABLISHED</h2>
+            <p className="text-xl text-muted-foreground max-w-sm mx-auto">
+              Your identity has been fully verified. You now hold premium status across the platform.
+            </p>
+          </div>
+          <Button 
+            className="px-10 py-6 rounded-2xl text-lg font-bold shadow-xl shadow-primary/20 hover:shadow-primary/30 transition-all hover:-translate-y-1 bg-primary" 
+            onClick={() => navigate("/dashboard")}
+          >
+            Enter Dashboard
           </Button>
-        </Card>
+        </motion.div>
       </div>
     );
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0, x: 20 },
+    visible: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -20 }
+  };
+
+  const progressValue = (step / 2) * 100;
+
   return (
-    <div className="container max-w-2xl py-10">
-      <Card>
-        <CardHeader>
-          <CardTitle>Identity Verification</CardTitle>
-          <CardDescription>
-            To ensure the safety of our platform, we require users to verify their identity.
-            Please upload a valid government-issued ID and a selfie.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {currentStatus === 'rejected' && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Verification Rejected</AlertTitle>
-              <AlertDescription>
-                Your previous request was rejected: {status?.adminComment || "Please upload clearer documents."}
-              </AlertDescription>
-            </Alert>
-          )}
+    <div className="min-h-screen bg-background relative overflow-hidden flex items-center justify-center py-10 px-4">
+      {/* Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.02] pointer-events-none"></div>
+      <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/10 blur-[120px] rounded-full"></div>
+      <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full"></div>
 
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="documentType">Document Type</Label>
-                <Select
-                  onValueChange={(val) => form.setValue("documentType", val as any)}
-                  defaultValue={form.getValues("documentType")}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select ID Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="nid">National ID</SelectItem>
-                    <SelectItem value="passport">Passport</SelectItem>
-                    <SelectItem value="drivers_license">Driver's License</SelectItem>
-                  </SelectContent>
-                </Select>
-                {form.formState.errors.documentType && (
-                  <p className="text-sm text-red-500">{form.formState.errors.documentType.message}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors cursor-pointer relative">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    aria-label="Upload ID Document"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={(e) => setDocumentFile(e.target.files?.[0] || null)}
-                  />
-                  <div className="flex flex-col items-center gap-2">
-                    <FileText className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-sm font-medium">Upload Document</span>
-                    {documentFile ? (
-                      <Badge variant="outline" className="text-green-600 bg-green-50">
-                        {documentFile.name}
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Click to upload</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors cursor-pointer relative">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    aria-label="Upload Selfie"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={(e) => setSelfieFile(e.target.files?.[0] || null)}
-                  />
-                  <div className="flex flex-col items-center gap-2">
-                    <Camera className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-sm font-medium">Upload Selfie</span>
-                    {selfieFile ? (
-                      <Badge variant="outline" className="text-green-600 bg-green-50">
-                        {selfieFile.name}
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Click to upload</span>
-                    )}
-                  </div>
-                </div>
-              </div>
+      <div className="w-full max-w-lg relative z-10">
+        <div className="mb-6 space-y-3 px-2">
+            <div className="flex justify-between items-end mb-1">
+               <div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-primary opacity-80">Verification Progress</h3>
+                  <p className="text-xl font-bold tracking-tight text-foreground">Identity Confirmation</p>
+               </div>
+               <span className="text-xs font-medium text-muted-foreground opacity-50 uppercase tracking-tighter">Step {step + 1} of 2</span>
             </div>
+            <Progress value={step === 0 ? 50 : 100} className="h-1.5 rounded-full bg-white/5 border border-white/10" />
+        </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
-                </>
-              ) : (
-                "Submit Verification Request"
+        <Card className="border-white/10 glass rounded-3xl shadow-xl overflow-hidden min-h-[450px] flex flex-col">
+          <CardContent className="pt-8 flex-1 flex flex-col">
+            <AnimatePresence mode="wait">
+              {step === 0 && (
+                <motion.div
+                  key="step0"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="space-y-6 flex-1 flex flex-col justify-center"
+                >
+                  <div className="text-center space-y-2">
+                    <h2 className="text-2xl font-bold tracking-tight">Select Identity Document</h2>
+                    <p className="text-muted-foreground text-sm leading-relaxed max-w-sm mx-auto">
+                      Please choose the type of identification you would like to use for verification.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    {[
+                      { id: 'nid', name: 'National ID', icon: Shield, desc: 'Government-issued ID card' },
+                      { id: 'passport', name: 'Passport', icon: Sparkles, desc: 'International travel document' },
+                      { id: 'drivers_license', name: 'Driver\'s License', icon: FileText, desc: 'Official driving permit' }
+                    ].map((type) => (
+                      <button
+                        key={type.id}
+                        onClick={() => form.setValue('documentType', type.id as any)}
+                        title={`Select ${type.name}`}
+                        aria-label={`Select ${type.name}`}
+                        className={cn(
+                          "w-full p-4 text-left rounded-2xl border transition-all flex items-center gap-4 relative group",
+                          form.watch('documentType') === type.id 
+                            ? "bg-primary/5 border-primary shadow-sm" 
+                            : "bg-white/[0.02] border-white/10 hover:border-white/20"
+                        )}
+                      >
+                         <div className={cn(
+                           "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
+                           form.watch('documentType') === type.id ? "bg-primary text-white" : "bg-white/5 text-muted-foreground"
+                         )}>
+                            <type.icon className="h-5 w-5" />
+                         </div>
+                         <div className="flex-1">
+                            <p className="font-bold text-base">{type.name}</p>
+                            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter opacity-70">{type.desc}</p>
+                         </div>
+                         <div className={cn(
+                           "h-5 w-5 rounded-full border flex items-center justify-center transition-all",
+                           form.watch('documentType') === type.id ? "border-primary bg-primary text-white" : "border-white/20"
+                         )}>
+                            {form.watch('documentType') === type.id && <Check className="h-3 w-3" />}
+                         </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="pt-4 flex items-center gap-4 justify-center opacity-40">
+                      <div className="flex items-center gap-1.5"><Lock className="h-3 w-3" /><span className="text-[9px] font-bold tracking-widest uppercase">Secure</span></div>
+                      <div className="flex items-center gap-1.5"><Shield className="h-3 w-3" /><span className="text-[9px] font-bold tracking-widest uppercase">Verified</span></div>
+                  </div>
+
+                  <div className="pt-2">
+                     <Button className="w-full py-6 text-base font-bold rounded-xl group" onClick={() => setStep(1)}>
+                       Continue to Upload
+                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                     </Button>
+                  </div>
+                </motion.div>
               )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+
+              {step === 1 && (
+                <motion.div
+                  key="step1"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="space-y-5 flex-1"
+                >
+                  <div className="space-y-1 text-center">
+                    <h2 className="text-2xl font-bold tracking-tight">Upload & Confirm</h2>
+                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">
+                      Documents for {form.watch('documentType').replace('_', ' ')}
+                    </p>
+                  </div>
+
+                  {livenessData?.code && (
+                    <div className="relative group">
+                       <div className="relative bg-white/5 border border-white/10 rounded-2xl p-5 text-center space-y-2 overflow-hidden">
+                          <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Verification Code</p>
+                          <div className="text-3xl font-mono font-bold tracking-[0.3em] text-foreground py-1 select-all tabular-nums leading-none">
+                            {livenessData.code}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground font-medium px-4 leading-tight opacity-80">
+                            Please display this code clearly when taking your selfie.
+                          </p>
+                       </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                     {/* Upload 1: Document */}
+                     <div className="relative group/card">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          title="Upload ID Document"
+                          aria-label="Upload ID Document"
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                          onChange={(e) => setDocumentFile(e.target.files?.[0] || null)}
+                          disabled={isOcrProcessing || isSubmitting}
+                        />
+                        <div className={cn(
+                          "h-48 border border-dashed rounded-2xl flex flex-col items-center justify-center p-5 transition-all relative overflow-hidden",
+                          documentFile ? "border-primary bg-primary/5" : "border-white/10 bg-white/5 hover:border-white/20"
+                        )}>
+                           {/* OCR Scanning Animation Overlay */}
+                           {isOcrProcessing && (
+                             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+                                <motion.div 
+                                  className="w-full h-1 bg-primary/50 absolute top-0"
+                                  animate={{ top: ['0%', '100%', '0%'] }}
+                                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                />
+                                <Scan className="h-8 w-8 text-primary animate-pulse mb-2" />
+                                <p className="text-[10px] font-black uppercase tracking-widest text-primary">Scanning Data...</p>
+                             </div>
+                           )}
+
+                           {documentFile ? (
+                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-center">
+                                <CheckCircle2 className="h-8 w-8 text-primary mb-2" />
+                                <p className="text-xs font-bold leading-tight">Document Ready</p>
+                                <p className="text-[9px] text-muted-foreground truncate max-w-[120px] mt-1">{documentFile.name}</p>
+                                
+                                {ocrResult && (
+                                  <motion.div 
+                                    initial={{ y: 5, opacity: 0 }} 
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="mt-3 py-1 px-3 rounded-full bg-primary/10 border border-primary/20 flex items-center gap-2"
+                                  >
+                                    <Sparkles className="h-3 w-3 text-primary" />
+                                    <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">
+                                      {ocrResult.detectedName ? "Name Verified" : `Score: ${ocrResult.confidence}%`}
+                                    </span>
+                                  </motion.div>
+                                )}
+                             </motion.div>
+                           ) : (
+                             <>
+                               <div className="h-10 w-10 rounded-lg bg-white/10 text-muted-foreground flex items-center justify-center mb-2">
+                                  <FileText className="h-5 w-5" />
+                               </div>
+                               <p className="text-xs font-bold">Upload ID</p>
+                               <p className="text-[9px] text-muted-foreground mt-1 uppercase tracking-tighter opacity-60">Front View</p>
+                             </>
+                           )}
+                        </div>
+                     </div>
+
+                     {/* Upload 2: Selfie */}
+                     <div className="relative group/card">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          title="Upload Selfie"
+                          aria-label="Upload Selfie"
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                          onChange={(e) => setSelfieFile(e.target.files?.[0] || null)}
+                          disabled={isSubmitting}
+                        />
+                        <div className={cn(
+                          "h-48 border border-dashed rounded-2xl flex flex-col items-center justify-center p-5 transition-all",
+                          selfieFile ? "border-primary bg-primary/5" : "border-white/10 bg-white/5 hover:border-white/20"
+                        )}>
+                           {selfieFile ? (
+                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-center">
+                                <CheckCircle2 className="h-8 w-8 text-primary mb-2" />
+                                <p className="text-xs font-bold leading-tight">Selfie Ready</p>
+                                <p className="text-[9px] text-muted-foreground truncate max-w-[120px] mt-1">{selfieFile.name}</p>
+                             </motion.div>
+                           ) : (
+                             <>
+                               <div className="h-10 w-10 rounded-lg bg-white/10 text-muted-foreground flex items-center justify-center mb-2">
+                                  <Camera className="h-5 w-5" />
+                                </div>
+                               <p className="text-xs font-bold">Verify Selfie</p>
+                               <p className="text-[9px] text-muted-foreground mt-1 uppercase tracking-tighter opacity-60">Must show code</p>
+                             </>
+                           )}
+                        </div>
+                     </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {ocrError && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 rounded-2xl py-3">
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle className="text-xs font-bold uppercase tracking-tight">Consistency Check</AlertTitle>
+                          <AlertDescription className="text-[10px] leading-relaxed opacity-90">
+                            {ocrError} Please ensure your document is well-lit and the name is legible.
+                          </AlertDescription>
+                        </Alert>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div className="flex gap-3 pt-3">
+                     <button 
+                       className="py-5 rounded-xl px-5 bg-white/5 text-muted-foreground hover:bg-white/10 transition-colors" 
+                       onClick={() => setStep(0)}
+                       title="Change ID Type"
+                       aria-label="Change ID Type"
+                     >
+                       <ArrowLeft className="h-4 w-4" />
+                     </button>
+                     <Button 
+                       className="flex-1 py-5 text-base font-bold rounded-xl group bg-primary transition-all overflow-hidden" 
+                       onClick={form.handleSubmit(onSubmit)}
+                       disabled={!documentFile || !selfieFile || isSubmitting}
+                     >
+                       {isSubmitting ? (
+                         <div className="flex items-center gap-2">
+                           <Loader2 className="h-4 w-4 animate-spin" />
+                           <span className="font-bold tracking-tight uppercase text-sm">Uploading...</span>
+                         </div>
+                       ) : (
+                         <div className="flex items-center gap-2">
+                           <ShieldCheck className="h-4 w-4" />
+                           <span className="font-bold tracking-tight uppercase text-sm">Complete Verification</span>
+                         </div>
+                       )}
+                     </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 2 && (
+                 <motion.div
+                  key="step2"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="space-y-8 flex-1 flex flex-col justify-center text-center py-6"
+                >
+                  <div className="relative mx-auto w-24 h-24">
+                     <div className="absolute inset-0 bg-green-500/10 blur-2xl rounded-full"></div>
+                     <div className="relative h-full w-full bg-green-500/5 border-2 border-green-500/20 rounded-full flex items-center justify-center">
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", damping: 15, stiffness: 150 }}
+                        >
+                          <ShieldCheck className="h-12 w-12 text-green-500" />
+                        </motion.div>
+                     </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h2 className="text-3xl font-bold tracking-tight text-foreground">Verification Submitted</h2>
+                    <p className="text-muted-foreground text-sm font-medium max-w-xs mx-auto">
+                      Your documents have been securely uploaded. We will review your application shortly.
+                    </p>
+                  </div>
+                  <div className="pt-4">
+                     <Button className="w-full py-6 text-lg font-bold rounded-xl" onClick={() => navigate("/dashboard")}>
+                       Return to Dashboard
+                     </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </CardContent>
+        </Card>
+        
+        {step < 2 && (
+          <p className="mt-6 text-center text-[10px] text-muted-foreground/40 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+             <Lock className="h-3 w-3" />
+             Secure Identity Verification System
+          </p>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes scan {
+          0% { top: 10%; }
+          100% { top: 90%; }
+        }
+      `}</style>
     </div>
   );
 }

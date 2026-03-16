@@ -41,6 +41,7 @@ const WalletPage = React.lazy(() => import("@/pages/wallet"));
 const PaymentDashboard = React.lazy(() => import("@/pages/admin/payment-dashboard"));
 const CommandCenter = React.lazy(() => import("@/pages/admin/command-center"));
 const AdminReports = React.lazy(() => import("@/pages/admin/reports"));
+const CouponManagement = React.lazy(() => import("@/pages/admin/coupons"));
 const PaymentPackages = React.lazy(() => import("@/pages/admin/payment-packages"));
 const NewPaymentPackage = React.lazy(() => import("@/pages/admin/payment-packages/new"));
 const CreatePackage = React.lazy(() => import("@/pages/admin/payment-packages/create-package"));
@@ -186,6 +187,7 @@ function App() {
                   <ProtectedRoute path="/admin/item-management/:id" component={AdminItemDetail} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/items/:id" component={AdminItemDetail} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/reports" component={AdminReports} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/coupons" component={CouponManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/clients" component={ClientManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/verifications" component={AdminVerifications} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/claims" component={AdminClaimsManagement} requiredRole="Admin" />
@@ -199,7 +201,7 @@ function App() {
                   <ProtectedRoute path="/admin/settings" component={SettingsPage} requiredRole="Admin" />
                   <ProtectedRoute path="/settings" component={SettingsPage} requiredRole="any" />
                   <ProtectedRoute path="/dashboard/notifications" component={Notifications} requiredRole="any" />
-                  <ProtectedRoute path="/identity-verification" component={IdentityVerification} requiredRole="any" />
+                  <ProtectedRoute path="/verification" component={IdentityVerification} requiredRole="any" />
 
                   {/* Static Pages */}
                   <Route path="/how-it-works">

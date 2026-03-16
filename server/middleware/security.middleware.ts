@@ -285,7 +285,7 @@ export function setupSecurityMiddleware(app: Express) {
 
   // Custom middleware for input data sanitization
   app.use((req: Request, _res: Response, next: NextFunction) => {
-    if (req.body && typeof req.body === 'object') {
+    if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
       const sanitizedBody = deepSanitize(req.body);
       req.body = sanitizedBody;
     }
@@ -341,6 +341,9 @@ export function validatePawaPayIP(req: Request, res: Response, next: NextFunctio
  */
 function deepSanitize(obj: any): any {
   if (!obj || typeof obj !== 'object') return obj;
+  
+  // Preserve Date objects, as sanitizing them as plain objects will destroy them
+  if (obj instanceof Date) return obj;
 
   if (Array.isArray(obj)) {
     return obj.map(item => deepSanitize(item));

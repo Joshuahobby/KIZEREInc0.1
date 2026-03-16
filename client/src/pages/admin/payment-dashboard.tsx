@@ -41,6 +41,7 @@ import { AuthWall } from "@/components/ui/auth-wall";
 import { PageLayout } from "@/components/layout/page-layout";
 import { DEFAULT_CURRENCY } from "@/config/payment.config";
 import { CommandCenterLayout } from "@/components/layouts/command-center-layout";
+import { waitForAuthSync } from "@/lib/queryClient";
 
 // Placeholder for real data fetching
 interface PaymentTransaction {
@@ -181,6 +182,7 @@ export default function AdminPaymentDashboard() {
       if (dateRange && dateRange !== "all") params.append("dateRange", dateRange);
 
       // We need to handle this differently as we need text data, not JSON
+      await waitForAuthSync();
       const res = await fetch(`/api/admin/payments/export?${params.toString()}`, {
         method: "GET",
         credentials: "include"

@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { dashboardService } from '../services/dashboard.service';
 import { ReportMatchingService } from '../services/report-matching.service';
 import { DEFAULT_USER_PREFERENCES } from '../../shared/schema';
+import { requireAdmin } from '../middleware/auth.middleware';
+import { getUrlWithSignature } from '../services/cloudinary.service';
 
 const logger = createLogger('AdminRoutes');
 const router = Router();
@@ -54,8 +56,8 @@ router.get("/users", async (req, res) => {
   }
 });
 
-// Export users (CSV format)
-router.get("/users/export", async (req, res) => {
+// Export users (CSV format) - Admin Only
+router.get("/users/export", requireAdmin, async (req, res) => {
   try {
     const format = (req.query.format as 'csv' | 'excel') || 'csv';
     const filters: any = {};
@@ -99,8 +101,8 @@ router.get("/users/:id", async (req, res) => {
   }
 });
 
-// Update user status
-router.patch("/users/:id/status", async (req, res) => {
+// Update user status - Admin Only
+router.patch("/users/:id/status", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const { status, reason } = req.body;
@@ -126,8 +128,8 @@ router.patch("/users/:id/status", async (req, res) => {
   }
 });
 
-// Update user role
-router.patch("/users/:id/role", async (req, res) => {
+// Update user role - Admin Only
+router.patch("/users/:id/role", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const { role } = req.body;
@@ -195,6 +197,29 @@ router.get("/users/:id/payments", async (req, res) => {
     res.json(payments);
   } catch (error) {
     logger.error("Error getting user payments:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Get user verification requests
+router.get("/users/:id/verification-requests", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const request = await storage.getVerificationRequest(userId);
+    
+    // Return as an array to maintain compatibility with existing frontend expectations (if needed)
+    // but with signed URLs for private documents
+    if (!request) return res.json([]);
+    
+    const enriched = {
+      ...request,
+      documentUrl: request.documentPublicId ? getUrlWithSignature(request.documentPublicId) : request.documentUrl,
+      selfieUrl: request.selfiePublicId ? getUrlWithSignature(request.selfiePublicId) : request.selfieUrl
+    };
+
+    res.json([enriched]);
+  } catch (error) {
+    logger.error("Error getting user verification requests:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -285,9 +310,16 @@ router.post("/users", async (req, res) => {
 
 router.get("/verification-requests", async (req, res) => {
   try {
-    // Current storage implementation doesn't support pagination for pending requests yet, returns all
-    const result = await storage.getPendingVerificationRequests();
-    res.json(result);
+    const requests = await storage.getPendingVerificationRequests();
+    
+    // Generate signed URLs for private documents
+    const enriched = requests.map(r => ({
+      ...r,
+      documentUrl: r.documentPublicId ? getUrlWithSignature(r.documentPublicId) : r.documentUrl,
+      selfieUrl: r.selfiePublicId ? getUrlWithSignature(r.selfiePublicId) : r.selfieUrl
+    }));
+
+    res.json(enriched);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
@@ -297,7 +329,15 @@ router.get("/verification-requests/:id", async (req, res) => {
   try {
     const request = await storage.getVerificationRequest(parseInt(req.params.id));
     if (!request) return res.status(404).json({ message: "Request not found" });
-    res.json(request);
+
+    // Generate signed URLs if private
+    const enriched = {
+      ...request,
+      documentUrl: request.documentPublicId ? getUrlWithSignature(request.documentPublicId) : request.documentUrl,
+      selfieUrl: request.selfiePublicId ? getUrlWithSignature(request.selfiePublicId) : request.selfieUrl
+    };
+
+    res.json(enriched);
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
   }
@@ -306,26 +346,30 @@ router.get("/verification-requests/:id", async (req, res) => {
 router.patch("/verification-requests/:id", async (req, res) => {
   try {
     const requestId = parseInt(req.params.id);
-    const { status, notes } = req.body;
+    const { status, adminComment } = req.body;
     const adminId = req.user!.id;
 
-    const updatedRequest = await storage.updateVerificationRequestStatus(requestId, status, adminId, notes);
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const updatedRequest = await storage.updateVerificationRequestStatus(requestId, status, adminId, adminComment);
 
     if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
 
-    if (status === 'approved') {
-      await storage.updateUserVerificationStatus(updatedRequest.userId, 'approved');
-      await storage.createAdminActionLog({
-        adminId,
-        targetUserId: updatedRequest.userId,
-        action: 'user_verify',
-        newState: { verificationStatus: 'approved' },
-        reason: notes
-      });
-    }
+    // The storage layer already updates the user verificationStatus
+    
+    await storage.createAdminActionLog({
+      adminId,
+      targetUserId: updatedRequest.userId,
+      action: `Verification ${status}`,
+      newState: { verificationStatus: status },
+      reason: adminComment
+    });
 
     res.json({ success: true, request: updatedRequest });
   } catch (error) {
+    logger.error("Failed to update verification request", error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -485,7 +529,8 @@ router.get("/reports/:id", async (req, res) => {
   }
 });
 
-router.get("/reports/export/csv", async (req, res) => {
+// Export reports - Admin Only
+router.get("/reports/export/csv", requireAdmin, async (req, res) => {
   try {
     const csvContent = await storage.generateReportCSV();
     res.setHeader('Content-Type', 'text/csv');
@@ -497,10 +542,20 @@ router.get("/reports/export/csv", async (req, res) => {
 });
 
 // ==========================================
-// PAYMENT MANAGEMENT (Admin)
+// PAYMENT MANAGEMENT (Admin Only)
 // ==========================================
 
-router.get("/payments/summary", async (req, res) => {
+router.get("/revenue-summary", requireAdmin, async (req, res) => {
+  try {
+    const summary = await dashboardService.getAdminPaymentSummary();
+    res.json(summary);
+  } catch (error) {
+    logger.error("Failed to fetch revenue summary:", error);
+    res.status(500).json({ message: "Failed to fetch revenue summary" });
+  }
+});
+
+router.get("/payments/summary", requireAdmin, async (req, res) => {
   try {
     const allPayments = await storage.getAllPayments();
     const successful = allPayments.filter(p => p.status === 'successful');
@@ -515,7 +570,7 @@ router.get("/payments/summary", async (req, res) => {
   }
 });
 
-router.get("/payments", async (req, res) => {
+router.get("/payments", requireAdmin, async (req, res) => {
   try {
     const result = await storage.getPaymentsWithFilters({
       page: parseInt(req.query.page as string) || 1,
@@ -547,8 +602,8 @@ router.get("/payment-packages", async (req, res) => {
   }
 });
 
-// Create new package
-router.post("/payment-packages", async (req, res) => {
+// Create new package - Admin Only
+router.post("/payment-packages", requireAdmin, async (req, res) => {
   try {
     const newPackage = await storage.createPaymentPackage(req.body);
     await storage.createAdminActionLog({
@@ -564,8 +619,8 @@ router.post("/payment-packages", async (req, res) => {
   }
 });
 
-// Update package (General update)
-router.patch("/payment-packages/:id", async (req, res) => {
+// Update package - Admin Only
+router.patch("/payment-packages/:id", requireAdmin, async (req, res) => {
   try {
     const pkgId = parseInt(req.params.id);
     const updated = await storage.updatePaymentPackage(pkgId, req.body);
@@ -585,8 +640,8 @@ router.patch("/payment-packages/:id", async (req, res) => {
   }
 });
 
-// Delete package
-router.delete("/payment-packages/:id", async (req, res) => {
+// Delete package - Admin Only
+router.delete("/payment-packages/:id", requireAdmin, async (req, res) => {
   try {
     const pkgId = parseInt(req.params.id);
     const success = await storage.deletePaymentPackage(pkgId);
@@ -645,7 +700,7 @@ router.put("/payment-packages/:id", async (req, res) => {
 // SYSTEM & DASHBOARD
 // ==========================================
 
-router.get("/system-status", async (req, res) => {
+router.get("/system-status", requireAdmin, async (req, res) => {
   try {
     const status = await dashboardService.getSystemStatus();
     res.json(status);
@@ -666,7 +721,8 @@ router.get("/activity-log", async (req, res) => {
   }
 });
 
-router.get("/stats", async (req, res) => {
+// Detailed stats - Admin Only
+router.get("/stats", requireAdmin, async (req, res) => {
   try {
     const stats = await dashboardService.getAdminDetailedStats();
     res.json(stats);

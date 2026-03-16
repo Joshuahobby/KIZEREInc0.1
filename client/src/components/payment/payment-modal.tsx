@@ -14,8 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Phone, CheckCircle2, AlertTriangle, Info, ShieldCheck } from "lucide-react";
+import { Loader2, Phone, CheckCircle2, AlertTriangle, Info, ShieldCheck, Ticket } from "lucide-react";
 import { InitializePaymentRequest, PaymentService } from "@/services/payment.service";
+import { CouponService, CouponValidationResponse } from "@/services/coupon.service";
 import { PaymentPackageSelector, PaymentPackage } from "./payment-package-selector";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -46,6 +47,12 @@ export function PaymentModal({
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
   const [step, setStep] = useState<"loading" | "package" | "phone" | "waiting" | "done" | "failed">("loading");
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
+  
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<CouponValidationResponse | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
 
 
   // Fetch packages for this payment type to decide the flow
@@ -96,10 +103,44 @@ export function PaymentModal({
     setStep("phone");
   };
 
+  // Handle coupon validation
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) return;
+    
+    try {
+      setIsValidatingCoupon(true);
+      setCouponError(null);
+      
+      const pkgAmount = selectedPackage?.amount ?? paymentDetails.amount ?? 0;
+      const resp = await CouponService.validateCoupon(couponCode, pkgAmount, paymentDetails.type);
+      
+      if (resp.isValid) {
+        setAppliedCoupon(resp);
+        toast({
+          title: "Coupon applied!",
+          description: `You saved ${resp.discountAmount.toLocaleString()} RWF`,
+        });
+      } else {
+        setCouponError(resp.message || "Invalid coupon");
+      }
+    } catch (error: any) {
+      setCouponError(error.message || "Failed to validate coupon");
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError(null);
+  };
+
   // Resolve the final payment amount (Package Fee + Bounty)
   const pkgAmount = selectedPackage?.amount ?? paymentDetails.amount ?? 0;
   const bountyAmount = paymentDetails.bountyAmount ?? 0;
-  const resolvedAmount = pkgAmount + bountyAmount;
+  const discountAmount = appliedCoupon?.discountAmount ?? 0;
+  const resolvedAmount = pkgAmount + bountyAmount - discountAmount;
 
   // Function to initialize payment via PawaPay Direct Deposit
   const initiatePayment = async () => {
@@ -138,6 +179,7 @@ export function PaymentModal({
         amount: resolvedAmount,
         packageId: selectedPackage?.id,
         phoneNumber: phoneNumber.trim(),
+        couponCode: appliedCoupon ? couponCode : undefined,
       };
 
       const response = await PaymentService.initializePayment(requestDetails);
@@ -250,6 +292,9 @@ export function PaymentModal({
       setSelectedPackage(null);
       setPhoneNumber(user?.phoneNumber || "");
       setFailureMessage(null);
+      setAppliedCoupon(null);
+      setCouponCode("");
+      setCouponError(null);
     }
   }, [open, user]);
 
@@ -326,6 +371,12 @@ export function PaymentModal({
                         <span className="font-semibold text-emerald-600">+{bountyAmount.toLocaleString()} RWF</span>
                       </div>
                     )}
+                    {appliedCoupon && (
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-muted-foreground font-medium">Discount ({appliedCoupon.discountType === 'percentage' ? `${appliedCoupon.discountValue}%` : 'Coupon'})</span>
+                        <span className="font-semibold text-emerald-600">-{appliedCoupon.discountAmount.toLocaleString()} RWF</span>
+                      </div>
+                    )}
                     <div className="pt-2 border-t border-border/40 flex justify-between items-end">
                       <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Due</span>
                       <div className="text-right leading-none">
@@ -346,6 +397,47 @@ export function PaymentModal({
                   </AlertDescription>
                 </Alert>
               )}
+
+              {/* Coupon input */}
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Offer Code"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value);
+                        if (couponError) setCouponError(null);
+                      }}
+                      disabled={!!appliedCoupon || isValidatingCoupon}
+                      className="pl-10 h-11 rounded-xl bg-background border-border/60"
+                    />
+                  </div>
+                  {appliedCoupon ? (
+                    <Button 
+                      variant="outline" 
+                      onClick={removeCoupon}
+                      className="h-11 px-4 rounded-xl border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/5 hover:text-emerald-700"
+                    >
+                      Remove
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline" 
+                      onClick={validateCoupon}
+                      disabled={!couponCode.trim() || isValidatingCoupon}
+                      className="h-11 px-4 rounded-xl"
+                    >
+                      {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                    </Button>
+                  )}
+                </div>
+                {couponError && <p className="text-[10px] text-destructive px-1 font-medium">{couponError}</p>}
+                {appliedCoupon && appliedCoupon.description && (
+                  <p className="text-[10px] text-emerald-600 px-1 font-medium">{appliedCoupon.description}</p>
+                )}
+              </div>
 
               {/* Phone input */}
               <div className="space-y-2">

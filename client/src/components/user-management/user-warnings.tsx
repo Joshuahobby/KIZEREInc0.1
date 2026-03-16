@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, formatDistanceToNow } from "date-fns";
@@ -50,13 +51,7 @@ const getSeverityBadgeVariant = (severity: string): "default" | "secondary" | "d
 export function UserWarnings({ userId }: UserWarningsProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: [`/api/admin/users/${userId}/warnings`],
-    queryFn: async () => {
-      const response = await fetch(`/api/admin/users/${userId}/warnings`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch user warnings');
-      }
-      return response.json();
-    },
+    queryFn: () => apiRequest(`/api/admin/users/${userId}/warnings`),
   });
 
   if (isLoading) {

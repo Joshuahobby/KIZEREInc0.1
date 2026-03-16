@@ -120,19 +120,7 @@ export default function PaymentPackages() {
     
     try {
       setIsDirectFetching(true);
-      const response = await fetch('/api/admin/payment-packages', {
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch packages: ${response.status} ${errorText}`);
-      }
-      
-      const data = await response.json();
+      const data = await apiRequest<PaymentPackage[]>('/api/admin/payment-packages');
       console.log('Direct fetch successful:', data);
       setDirectFetchedData(data);
       setDirectFetchError(null);

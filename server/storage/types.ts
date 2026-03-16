@@ -5,7 +5,7 @@ import {
   PaymentMethod, InsertPaymentMethod, UserActivityLog, InsertUserActivityLog,
   AdminActionLog, InsertAdminActionLog, Role, InsertRole,
   StatusChange, InsertStatusChange, UserWarning, InsertUserWarning,
-  PaymentPackage, InsertPaymentPackage, Claim, InsertClaim,
+  PaymentPackage, InsertPaymentPackage, Coupon, InsertCoupon, Claim, InsertClaim,
   ClaimStatusLog, InsertClaimStatusLog, Chat, InsertChat, Message, InsertMessage,
   PushSubscription, InsertPushSubscription, VerificationRequest, InsertVerificationRequest,
   AccountStatus, VerificationStatus, PaymentType
@@ -172,6 +172,22 @@ export interface IStorage {
   getPendingVerificationRequests(): Promise<(VerificationRequest & { user: User })[]>;
   updateVerificationRequestStatus(id: number, status: 'approved' | 'rejected', adminId: number, comment?: string): Promise<VerificationRequest | undefined>;
   getAllPaymentPackages(includeInactive?: boolean): Promise<PaymentPackage[]>;
+
+  // Coupon methods
+  getCoupon(id: number): Promise<Coupon | undefined>;
+  getCouponByCode(code: string): Promise<Coupon | undefined>;
+  getAllCoupons(): Promise<Coupon[]>;
+  getCouponsWithFilters(options: {
+    page: number;
+    pageSize: number;
+    search?: string;
+    status?: string;
+    type?: string;
+  }): Promise<{ coupons: Coupon[]; total: number }>;
+  createCoupon(coupon: InsertCoupon): Promise<Coupon>;
+  updateCoupon(id: number, coupon: Partial<Coupon>): Promise<Coupon | undefined>;
+  incrementCouponUsage(id: number): Promise<void>;
+  deleteCoupon(id: number): Promise<boolean>;
 
   // Chat methods
   getChat(id: number): Promise<Chat | undefined>;

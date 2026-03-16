@@ -599,7 +599,28 @@ export default {
   // Notifications
   notifications: {
     itemMatched: 'Item Match Found',
-    itemMatchedDesc: 'Someone reported finding an item that matches your lost item description.'
+    itemMatchedDesc: 'Someone reported finding an item that matches your lost item description.',
+    title: 'Notifications',
+    subtitle: 'Stay updated on your items and claims',
+    empty: 'No notifications',
+    emptyUnread: 'No unread notifications',
+    emptyDesc: 'We\'ll notify you here when there are updates.',
+    markAsRead: 'Mark as read',
+    markAllRead: 'Mark all as read',
+    markAllReadSuccess: 'All notifications marked as read',
+    markAllReadError: 'Failed to mark notifications as read',
+    viewMatch: 'View Match',
+    clearAll: 'Clear All',
+    clearAllSuccess: 'All notifications cleared',
+    clearAllError: 'Failed to clear notifications',
+    deleteSuccess: 'Notification deleted',
+    deleteError: 'Failed to delete notification',
+    tabs: {
+      all: 'All',
+      unread: 'Unread',
+      alerts: 'Alerts',
+      system: 'System'
+    }
   },
   
   // Misc

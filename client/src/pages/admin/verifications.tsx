@@ -67,8 +67,12 @@ export default function AdminVerifications() {
   });
 
   const handleReview = (status: 'approved' | 'rejected') => {
-    if (status === 'rejected' && !reviewComment) {
-      toast({ title: t('common.error'), description: "Please provide a reason for rejection.", variant: "destructive" });
+    if (status === 'rejected' && (!reviewComment || reviewComment.trim().length < 5)) {
+      toast({ 
+        title: t('common.error'), 
+        description: "Please provide a detailed reason for rejection.", 
+        variant: "destructive" 
+      });
       return;
     }
     setReviewAction(status);
@@ -79,6 +83,14 @@ export default function AdminVerifications() {
     });
   };
 
+  const REJECTION_REASONS = [
+    { label: "Blurry/Unreadable Image", value: "The uploaded image is too blurry or low quality to verify. Please upload a clear photo." },
+    { label: "Document Expired", value: "The document provided has expired. Please upload a valid, current ID." },
+    { label: "Name Mismatch", value: "The name on the document does not match your profile name. Please ensure they are consistent." },
+    { label: "Wrong Document Type", value: "The uploaded document does not match the type selected (e.g., Passport vs ID)." },
+    { label: "Selfie/Code Mismatch", value: "The selfie or the liveness code is incorrect or not visible." }
+  ];
+
   if (isLoading) {
     return <div className="flex justify-center p-10"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
@@ -87,119 +99,207 @@ export default function AdminVerifications() {
     <PageLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.admin.identityVerifications')}</h2>
-          <Badge variant="outline" className="text-lg px-4 py-1">
+          <div className="space-y-1">
+            <h2 className="text-3xl font-bold tracking-tight">{t('dashboard.admin.identityVerifications')}</h2>
+            <p className="text-muted-foreground">Review and validate user identity documents to maintain platform trust.</p>
+          </div>
+          <Badge variant="outline" className="text-lg px-4 py-1 bg-primary/5 text-primary border-primary/20">
             {requests?.length || 0} {t('dashboard.admin.pendingVerifications')}
           </Badge>
         </div>
 
-        <div className="border rounded-lg">
+        <div className="border rounded-xl bg-card overflow-hidden shadow-sm">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead>{t('dashboard.table.user')}</TableHead>
-                <TableHead>{t('dashboard.table.docType')}</TableHead>
-                <TableHead>{t('dashboard.table.submitted')}</TableHead>
-                <TableHead>{t('dashboard.table.actions')}</TableHead>
+                <TableHead className="font-bold">{t('dashboard.table.user')}</TableHead>
+                <TableHead className="font-bold text-center">{t('dashboard.table.docType')}</TableHead>
+                <TableHead className="font-bold">{t('dashboard.table.submitted')}</TableHead>
+                <TableHead className="font-bold text-right">{t('dashboard.table.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {requests?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
-                    {t('dashboard.admin.noPendingVerifications')}
+                  <TableCell colSpan={4} className="text-center py-20 text-muted-foreground">
+                    <div className="flex flex-col items-center gap-2">
+                      <Check className="h-10 w-10 text-green-500/50" />
+                      <p className="font-medium text-lg">{t('dashboard.admin.noPendingVerifications')}</p>
+                      <p className="text-sm">All users are currently up to date.</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
                 requests?.map((req: any) => (
-                  <TableRow key={req.id}>
+                  <TableRow key={req.id} className="hover:bg-muted/30 transition-colors">
                     <TableCell>
-                      <div className="font-medium">{req.user.fullName}</div>
-                      <div className="text-sm text-muted-foreground">{req.user.email}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          {req.user.fullName?.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-base">{req.user.fullName}</div>
+                          <div className="text-xs text-muted-foreground font-mono">{req.user.email}</div>
+                        </div>
+                      </div>
                     </TableCell>
-                    <TableCell className="capitalize">{req.documentType?.replace('_', ' ')}</TableCell>
-                    <TableCell>{format(new Date(req.submittedAt), "PPP")}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
+                      <Badge variant="secondary" className="capitalize px-3">
+                        {req.documentType?.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {format(new Date(req.submittedAt), "MMM d, yyyy")}
+                      <div className="text-xs">{format(new Date(req.submittedAt), "HH:mm")}</div>
+                    </TableCell>
+                    <TableCell className="text-right">
                       <Dialog open={selectedRequest?.id === req.id} onOpenChange={(open) => !open && setSelectedRequest(null)}>
                         <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => setSelectedRequest(req)}>
-                            <Eye className="h-4 w-4 mr-2" /> {t('dashboard.common.actions.review')}
+                          <Button variant="default" size="sm" onClick={() => setSelectedRequest(req)} className="bg-primary hover:bg-primary/90">
+                            <Eye className="h-4 w-4 mr-2" /> Speed Review
                           </Button>
                         </DialogTrigger>
                         {selectedRequest?.id === req.id && (
-                          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle>{t('dashboard.admin.verificationReview')}</DialogTitle>
-                              <DialogDescription>
-                                {t('dashboard.admin.verificationReviewDesc')} {req.user.fullName}
-                              </DialogDescription>
-                            </DialogHeader>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 my-4">
-                              <div className="space-y-2">
-                                <h4 className="font-medium flex items-center gap-2">
-                                  <FileText className="h-4 w-4" /> Document ({req.documentType})
-                                </h4>
-                                <div className="border rounded-lg overflow-hidden bg-black/5 aspect-video flex items-center justify-center">
-                                  <img
-                                    src={req.documentUrl}
-                                    alt="Document"
-                                    className="object-contain max-h-64 w-full cursor-pointer hover:scale-105 transition-transform"
-                                    onClick={() => window.open(req.documentUrl, '_blank')}
-                                  />
+                          <DialogContent 
+                            className="max-w-6xl max-h-[95vh] flex flex-col p-0 overflow-hidden"
+                            aria-describedby="verification-review-description"
+                          >
+                            <div className="p-6 border-b bg-muted/30">
+                              <DialogHeader>
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <DialogTitle className="text-2xl">{t('dashboard.admin.verificationReview')}</DialogTitle>
+                                    <DialogDescription id="verification-review-description" className="mt-1">
+                                      Reviewing documents for <span className="font-bold text-foreground">{req.user.fullName}</span>
+                                    </DialogDescription>
+                                  </div>
+                                  <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">
+                                    {req.documentType?.toUpperCase()}
+                                  </Badge>
                                 </div>
-                                <a href={req.documentUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
-                                  View Full Size <ExternalLink className="h-3 w-3" />
-                                </a>
-                              </div>
-
-                              <div className="space-y-2">
-                                <h4 className="font-medium flex items-center gap-2">
-                                  <Camera className="h-4 w-4" /> Selfie
-                                </h4>
-                                <div className="border rounded-lg overflow-hidden bg-black/5 aspect-square max-h-64 flex items-center justify-center">
-                                  <img
-                                    src={req.selfieUrl}
-                                    alt="Selfie"
-                                    className="object-cover h-full w-full cursor-pointer hover:scale-105 transition-transform"
-                                    onClick={() => window.open(req.selfieUrl, '_blank')}
-                                  />
-                                </div>
-                                <a href={req.selfieUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline flex items-center gap-1">
-                                  View Full Size <ExternalLink className="h-3 w-3" />
-                                </a>
-                              </div>
+                              </DialogHeader>
                             </div>
 
-                            <div className="space-y-4">
-                              <div>
-                                <label className="text-sm font-medium mb-1 block">Review Notes (Optional/Reason for Rejection)</label>
-                                <Textarea
-                                  placeholder="Add notes..."
-                                  value={reviewComment}
-                                  onChange={(e) => setReviewComment(e.target.value)}
-                                />
+                            <div className="flex-1 overflow-y-auto p-6 bg-muted/5">
+                              {/* Speed Review Side-by-Side */}
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-bold text-sm tracking-tight flex items-center gap-2 uppercase text-muted-foreground">
+                                      <FileText className="h-4 w-4" /> Identity Document
+                                    </h4>
+                                    <Badge variant="outline" className="bg-background">Front View</Badge>
+                                  </div>
+                                  <div className="group relative border-2 border-dashed rounded-xl overflow-hidden bg-black/5 aspect-[1.6/1] flex items-center justify-center ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
+                                    <img
+                                      src={req.documentUrl}
+                                      alt="Document"
+                                      className="object-contain h-full w-full cursor-zoom-in group-hover:scale-[1.02] transition-transform"
+                                      onClick={() => window.open(req.documentUrl, '_blank')}
+                                    />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-bold text-sm tracking-tight flex items-center gap-2 uppercase text-muted-foreground">
+                                      <Camera className="h-4 w-4" /> Face Verification
+                                    </h4>
+                                    <Badge variant="outline" className="bg-background">Liveness Check</Badge>
+                                  </div>
+                                  <div className="group relative border-2 border-dashed rounded-xl overflow-hidden bg-black/5 aspect-[1.6/1] flex items-center justify-center ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
+                                    <img
+                                      src={req.selfieUrl}
+                                      alt="Selfie"
+                                      className="object-contain h-full w-full cursor-zoom-in group-hover:scale-[1.02] transition-transform"
+                                      onClick={() => window.open(req.selfieUrl, '_blank')}
+                                    />
+                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
+                                  </div>
+                                </div>
                               </div>
 
-                              <DialogFooter className="gap-2 sm:gap-0">
-                                <Button
-                                  variant="destructive"
-                                  onClick={() => handleReview('rejected')}
-                                  disabled={reviewMutation.isPending}
-                                >
-                                  {reviewMutation.isPending && reviewAction === 'rejected' ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-2" />}
-                                  {t('dashboard.table.reject')}
-                                </Button>
-                                <Button
-                                  variant="default"
-                                  className="bg-green-600 hover:bg-green-700"
-                                  onClick={() => handleReview('approved')}
-                                  disabled={reviewMutation.isPending}
-                                >
-                                  {reviewMutation.isPending && reviewAction === 'approved' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
-                                  {t('dashboard.table.approve')}
-                                </Button>
-                              </DialogFooter>
+                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* User Info Recap */}
+                                <div className="lg:col-span-1 space-y-4">
+                                  <div className="p-4 rounded-xl border bg-card/50 space-y-3">
+                                    <h5 className="font-bold text-xs uppercase text-muted-foreground">User Information</h5>
+                                    <div className="space-y-2">
+                                      <div>
+                                        <div className="text-[10px] text-muted-foreground uppercase font-bold">Full Name</div>
+                                        <div className="text-sm font-medium">{req.user.fullName}</div>
+                                      </div>
+                                      <div>
+                                        <div className="text-[10px] text-muted-foreground uppercase font-bold">Username</div>
+                                        <div className="text-sm font-medium">@{req.user.username}</div>
+                                      </div>
+                                      <div>
+                                        <div className="text-[10px] text-muted-foreground uppercase font-bold">Liveness Code</div>
+                                        <div className="text-sm font-mono bg-muted px-2 py-0.5 rounded inline-block">
+                                          {req.livenessCode || "N/A"}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex flex-col gap-2">
+                                    <h5 className="font-bold text-xs uppercase text-muted-foreground px-1">Quick Rejection Reasons</h5>
+                                    <div className="grid grid-cols-1 gap-1.5">
+                                      {REJECTION_REASONS.map((reason) => (
+                                        <Button 
+                                          key={reason.label}
+                                          variant="outline" 
+                                          size="sm" 
+                                          className="justify-start text-xs h-auto py-2 px-3 text-left leading-tight hover:bg-destructive/5 hover:text-destructive hover:border-destructive/30"
+                                          onClick={() => setReviewComment(reason.value)}
+                                        >
+                                          {reason.label}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Review Area */}
+                                <div className="lg:col-span-2 space-y-4">
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-bold uppercase text-muted-foreground flex items-center justify-between">
+                                      Final Review Feedback
+                                      <span className="text-[10px] font-normal lowercase italic">Mandatory for rejections</span>
+                                    </label>
+                                    <Textarea
+                                      placeholder="Explain the decision to the user. This message will be sent via email..."
+                                      className="min-h-[120px] rounded-xl focus-visible:ring-primary/20"
+                                      value={reviewComment}
+                                      onChange={(e) => setReviewComment(e.target.value)}
+                                    />
+                                  </div>
+
+                                  <div className="flex gap-3 pt-2">
+                                    <Button
+                                      variant="outline"
+                                      size="lg"
+                                      className="flex-1 rounded-xl h-12 border-destructive/20 text-destructive hover:bg-destructive hover:text-white transition-all shadow-sm"
+                                      onClick={() => handleReview('rejected')}
+                                      disabled={reviewMutation.isPending}
+                                    >
+                                      {reviewMutation.isPending && reviewAction === 'rejected' ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4 mr-2" />}
+                                      Final Reject
+                                    </Button>
+                                    <Button
+                                      variant="default"
+                                      size="lg"
+                                      className="flex-[2] rounded-xl h-12 bg-green-600 hover:bg-green-700 transition-all shadow-md active:scale-[0.98]"
+                                      onClick={() => handleReview('approved')}
+                                      disabled={reviewMutation.isPending}
+                                    >
+                                      {reviewMutation.isPending && reviewAction === 'approved' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+                                      Verify Identity
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </DialogContent>
                         )}

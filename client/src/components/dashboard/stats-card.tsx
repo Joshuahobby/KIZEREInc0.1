@@ -18,6 +18,8 @@ interface StatsCardProps {
   subtitle?: string; // Added subtitle prop
   isLoading?: boolean;
   formatter?: (value: number | string) => string;
+  className?: string;
+  onClick?: () => void;
 }
 
 export const StatsCard: React.FC<StatsCardProps> = ({
@@ -33,7 +35,9 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   suffix = "",
   subtitle,
   isLoading = false,
-  formatter = (val) => val.toString()
+  formatter = (val) => val.toString(),
+  className,
+  onClick
 }) => {
   // Calculate percentage change if previousValue is provided
   const percentChange = previousValue !== undefined && typeof value === 'number' && typeof previousValue === 'number'
@@ -92,7 +96,10 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   };
 
   return (
-    <Card className="h-full border border-border/60 bg-card/60 backdrop-blur-xl shadow-lg shadow-neutral-200/20 dark:shadow-none hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+    <Card 
+      onClick={onClick}
+      className={`h-full border border-border/60 bg-card/60 backdrop-blur-xl shadow-lg shadow-neutral-200/20 dark:shadow-none hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden ${className || ''} ${onClick ? 'cursor-pointer hover:bg-card/80' : ''}`}
+    >
       <CardContent className="p-6 relative">
         <div className="flex items-center justify-between mb-4">
           <div className="flex flex-col">

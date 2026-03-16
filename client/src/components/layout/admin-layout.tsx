@@ -40,7 +40,10 @@ import {
   Filter,
   X,
   PackageIcon,
-  Briefcase
+  Briefcase,
+  Ticket,
+  ShieldCheck,
+  CheckCircle2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -74,6 +77,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSocket } from "@/hooks/use-socket";
+import { useToast } from "@/hooks/use-toast";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { NotificationCenter } from "@/components/dashboard/notification-center";
 
 
 interface AppLayoutProps {
@@ -97,9 +104,14 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [, navigate] = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(defaultSidebarCollapsed);
   const queryClient = useQueryClient();
   const { onEvent } = useSocket();
+  const { toast } = useToast();
+
+  // Fetch dashboard data for notifications
+  const { notifications, isLoading: isNotificationsLoading } = useDashboardData();
 
   // Fetch unread notification count
   const { data: unreadData } = useQuery<{ count: number }>({
@@ -111,11 +123,27 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
 
   // Real-time: invalidate unread count when a notification arrives
   useEffect(() => {
-    const cleanup = onEvent("notification:new", () => {
+    const cleanup = onEvent("notification:new", (notification: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+
+      // Show global toast
+      toast({
+        title: notification.title,
+        description: notification.message,
+        action: notification.type === 'chat_message' ? (
+          <Button variant="outline" size="sm" onClick={() => navigate(`/dashboard?chatId=${notification.relatedReportId}`)}>
+            Chat
+          </Button>
+        ) : notification.type === 'report_match' && notification.relatedReportId ? (
+          <Button variant="outline" size="sm" onClick={() => window.location.href = `/reports/${notification.relatedReportId}`}>
+            {t('notifications.viewMatch')}
+          </Button>
+        ) : undefined
+      });
     });
     return cleanup;
-  }, [onEvent, queryClient]);
+  }, [onEvent, queryClient, toast, t]);
 
   // Keyboard shortcut: Ctrl+B to toggle sidebar
   useEffect(() => {
@@ -181,26 +209,30 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
     ];
     categories.push({ title: t('nav.portfolioHeader'), items: portfolioItems });
 
-    // EXPLORE Category
     const exploreItems: NavItem[] = [
       { title: t('nav.search'), href: "/search", icon: <Search className="h-5 w-5" /> },
       { title: t('nav.lostFound'), href: "/lost-found", icon: <AlertTriangle className="h-5 w-5" /> }
     ];
     categories.push({ title: t('nav.exploreHeader'), items: exploreItems });
 
-    // ADMINISTRATION Category (Admin/Agent)
+    // FIELD OPERATIONS Category (Agent/Admin)
     if (isAdmin || isAgent) {
-      const adminItems: NavItem[] = [
+      const fieldItems: NavItem[] = [
         { title: "User Directory", href: "/admin/users", icon: <Users className="h-5 w-5" /> },
-        { title: "Verification Requests", href: "/admin/verifications", icon: <Shield className="h-5 w-5" />, badge: 3 },
-        { title: "Claims", href: "/admin/claims", icon: <FileText className="h-5 w-5" /> }
+        { title: "Verification Queue", href: "/admin/verifications", icon: <Shield className="h-5 w-5" />, badge: 3 },
+        { title: "All Claims", href: "/admin/claims", icon: <FileText className="h-5 w-5" /> }
       ];
+      categories.push({ title: "FIELD OPERATIONS", items: fieldItems });
+    }
 
-      if (isAdmin) {
-        adminItems.push({ title: "Command Center", href: "/admin/command-center", icon: <Database className="h-5 w-5" /> });
-        adminItems.push({ title: "Analytics", href: "/admin/analytics", icon: <BarChart3 className="h-5 w-5" /> });
-        adminItems.push({ title: "Settings", href: "/admin/settings", icon: <Settings className="h-5 w-5" /> });
-      }
+    // ADMINISTRATION Category (Admin Only)
+    if (isAdmin) {
+      const adminItems: NavItem[] = [
+        { title: "Command Center", href: "/admin/command-center", icon: <Database className="h-5 w-5" /> },
+        { title: "Offer Codes", href: "/admin/coupons", icon: <Ticket className="h-5 w-5" /> },
+        { title: "Analytics", href: "/admin/analytics", icon: <BarChart3 className="h-5 w-5" /> },
+        { title: "Settings", href: "/admin/settings", icon: <Settings className="h-5 w-5" /> }
+      ];
       categories.push({ title: t('nav.adminHeader'), items: adminItems });
     }
 
@@ -361,33 +393,46 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
             </div>
 
             {/* Notification bell */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative group/bell hover:bg-primary/5">
-                    <motion.div
-                      animate={unreadCount > 0 ? {
-                        rotate: [0, -10, 10, -10, 10, 0],
-                        scale: [1, 1.1, 1, 1.1, 1]
-                      } : {}}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 3,
-                        repeatDelay: 5
-                      }}
-                    >
-                      <Bell className="h-5 w-5 text-muted-foreground group-hover/bell:text-primary transition-colors" />
-                    </motion.div>
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground px-1 ring-2 ring-background animate-pulse">
-                        {unreadCount > 99 ? '99+' : unreadCount}
-                      </span>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent className="bg-primary text-primary-foreground font-bold border-none">Notifications</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Popover>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="icon" className="relative group/bell hover:bg-primary/5">
+                        <motion.div
+                          animate={unreadCount > 0 ? {
+                            rotate: [0, -10, 10, -10, 10, 0],
+                            scale: [1, 1.1, 1, 1.1, 1]
+                          } : {}}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 3,
+                            repeatDelay: 5
+                          }}
+                        >
+                          <Bell className="h-5 w-5 text-muted-foreground group-hover/bell:text-primary transition-colors" />
+                        </motion.div>
+                        {unreadCount > 0 && (
+                          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground px-1 ring-2 ring-background animate-pulse">
+                            {unreadCount > 99 ? '99+' : unreadCount}
+                          </span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-primary text-primary-foreground font-bold border-none">Notifications</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <PopoverContent className="w-[380px] p-0 mr-4 border-none shadow-premium animate-in fade-in zoom-in-95 duration-200" align="end">
+                <div className="h-[480px]">
+                  <NotificationCenter 
+                    notifications={notifications} 
+                    isLoading={isNotificationsLoading} 
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {/* User dropdown menu */}
             <DropdownMenu>
@@ -409,8 +454,11 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
               <DropdownMenuContent align="end" className="w-64 p-2 shadow-2xl border-border/50 rounded-2xl animate-in zoom-in-95 duration-200">
                 <DropdownMenuLabel className="px-3 py-4">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-black leading-none tracking-tight">
+                    <p className="text-sm font-black leading-none tracking-tight flex items-center gap-1.5">
                       {user?.fullName || user?.username}
+                      {user?.verificationStatus === 'approved' && (
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      )}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground font-medium opacity-60">
                       {user?.email}
@@ -554,7 +602,12 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
                       <AvatarFallback className="bg-primary/10 text-primary font-bold">{getUserInitials()}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 overflow-hidden">
-                      <p className="text-xs font-black truncate text-black dark:text-foreground">{user?.fullName || user?.username}</p>
+                      <p className="text-xs font-black truncate text-black dark:text-foreground flex items-center gap-1.5">
+                        {user?.fullName || user?.username}
+                        {user?.verificationStatus === 'approved' && (
+                          <ShieldCheck className="h-3 w-3 text-emerald-500 shrink-0" />
+                        )}
+                      </p>
                       <p className="text-[10px] text-black/50 truncate opacity-50 uppercase tracking-tighter dark:text-muted-foreground">
                         {user?.role || 'User'} Level
                       </p>
@@ -615,6 +668,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
               </div>
             </div>
           </footer>
+          <QuickActionMenu position="bottom-right" className="mb-4 mr-4" />
         </div>
       </div>
     </div>

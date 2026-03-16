@@ -115,13 +115,6 @@ export function QuickActionMenu({
       onClick: () => navigate('/admin/analytics'),
       roles: ['Admin']
     },
-    {
-      icon: <Settings className="h-4 w-4" />,
-      label: t('dashboard.quickActions.settings'),
-      description: t('dashboard.quickActions.settingsDesc'),
-      onClick: () => navigate(isAdmin ? '/admin/settings' : '/profile'),
-      roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business']
-    }
   ];
 
   // Filter actions based on user role
