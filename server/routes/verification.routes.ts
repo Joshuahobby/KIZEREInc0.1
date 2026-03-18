@@ -16,7 +16,7 @@ const logger = createLogger('VerificationRoutes');
  * Generate a random code for the user to hold during verification
  */
 router.get('/liveness-code', (req: Request, res: Response) => {
-  const code = crypto.randomBytes(3).toString('hex').toUpperCase();
+  const code = Math.floor(1000 + Math.random() * 9000).toString();
   // Store in session for validation upon submission
   (req.session as any).livenessCode = code;
   res.json({ code });

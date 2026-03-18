@@ -46,7 +46,11 @@ import {
   CheckCircle,
   Loader2,
   Image as ImageIcon,
-  ShieldCheck
+  ShieldCheck,
+  Star,
+  ShieldAlert,
+  ArrowRight,
+  Lock
 } from "lucide-react";
 
 export default function ReportDetailPage() {
@@ -60,7 +64,7 @@ export default function ReportDetailPage() {
   const [showMarkFoundDialog, setShowMarkFoundDialog] = useState(false);
   const [appealReason, setAppealReason] = useState("");
 
-  const { data: report, isLoading, error } = useQuery<Report>({
+  const { data: report, isLoading, error } = useQuery<Report & { privacyProtected?: boolean }>({
     queryKey: [`/api/reports/${id}`],
     enabled: !!id && !!user,
   });
@@ -155,7 +159,7 @@ export default function ReportDetailPage() {
           <AlertTriangle className="h-16 w-16 text-red-500 mb-4" />
           <h1 className="text-2xl font-bold text-foreground mb-2">{t('report_detail.reportNotFoundTitle')}</h1>
           <p className="text-muted-foreground mb-6">{t('report_detail.reportNotFoundDesc')}</p>
-          <Button onClick={() => navigate('/lost-found')}>
+          <Button onClick={() => navigate('/search')}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             {t('report_detail.backToLostFound')}
           </Button>
@@ -174,7 +178,7 @@ export default function ReportDetailPage() {
           {/* Back Button */}
           <Button
             variant="ghost"
-            onClick={() => navigate('/lost-found')}
+            onClick={() => navigate('/search')}
             className="mb-6"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -214,6 +218,12 @@ export default function ReportDetailPage() {
                     {report.type === 'lost' ? t('common.lost') : t('common.found')}
                   </Badge>
                   <Badge variant="outline">{t(`status.${report.status.toLowerCase()}`, report.status)}</Badge>
+                  {report.isFeatured && (
+                    <Badge className="bg-amber-400 text-amber-950 border-amber-300 gap-1 flex items-center hover:bg-amber-400">
+                      <Star className="h-3 w-3 fill-current" />
+                      {t('searchPage.featured')}
+                    </Badge>
+                  )}
                 </div>
                 <h1 className="text-3xl font-bold text-foreground">{report.title}</h1>
                 {report.receiptNumber && (
@@ -261,7 +271,7 @@ export default function ReportDetailPage() {
                       <div className="flex-1">
                         <h3 className="font-bold text-blue-900 mb-1">Payment Required</h3>
                         <p className="text-sm text-blue-700 mb-4 leading-relaxed">
-                          Your report is currently <strong>private</strong> and not visible in the public Hub. 
+                          Your report is currently <strong>private</strong> and not visible in the public directory. 
                           Complete the payment to activate it and start receiving potential matches.
                         </p>
                         <div className="flex flex-wrap gap-2">
@@ -280,6 +290,55 @@ export default function ReportDetailPage() {
                             Pay & Activate Report
                           </PaymentButton>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Privacy Banner for Guests */}
+                {!isOwner && report.privacyProtected && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mt-4 flex gap-3">
+                    <div className="bg-orange-100 p-2 rounded-lg h-fit">
+                      <Lock className="h-5 w-5 text-orange-700" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-orange-900 text-sm">{t('searchPage.privacyProtected')}</h3>
+                      <p className="text-xs text-orange-700 leading-relaxed mt-0.5">
+                        {t('searchPage.privacyHintLong')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Featured Upgrade for Owners */}
+                {isOwner && !report.isFeatured && report.status === 'Open' && report.paymentStatus === 'successful' && (
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200 rounded-xl p-5 mt-4 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                      <Star className="h-16 w-16 text-amber-600" />
+                    </div>
+                    <div className="flex items-start gap-4 relative z-10">
+                      <div className="bg-amber-200 p-2.5 rounded-xl shadow-inner">
+                        <Star className="h-6 w-6 text-amber-700 fill-amber-700" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-black text-amber-900 mb-1 tracking-tight">Boost This Report</h3>
+                        <p className="text-sm text-amber-800 mb-4 leading-relaxed font-medium">
+                          Get <strong>10x more visibility</strong> by featuring your report at the top of search results.
+                        </p>
+                        <PaymentButton
+                          paymentType="featured_upgrade"
+                          reportId={report.id}
+                          onPaymentSuccess={() => {
+                            toast({
+                              title: "Upgrade Successful!",
+                              description: "Your report is now featured!",
+                            });
+                            queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
+                          }}
+                          className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-black px-6 shadow-lg shadow-amber-500/20"
+                        >
+                          Upgrade to Featured {t('common.brandName')}
+                        </PaymentButton>
                       </div>
                     </div>
                   </div>
@@ -612,3 +671,4 @@ export default function ReportDetailPage() {
     </PageLayout>
   );
 }
+

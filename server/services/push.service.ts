@@ -11,11 +11,18 @@ const contactEmail = process.env.CONTACT_EMAIL || "admin@kizere.rw";
 if (!vapidPublicKey || !vapidPrivateKey) {
     logger.warn("VAPID keys not found in environment variables. Web Push will not work.");
 } else {
-    webpush.setVapidDetails(
-        `mailto:${contactEmail}`,
-        vapidPublicKey,
-        vapidPrivateKey
-    );
+    try {
+        webpush.setVapidDetails(
+            `mailto:${contactEmail}`,
+            vapidPublicKey,
+            vapidPrivateKey
+        );
+        logger.info("VAPID details set successfully");
+    } catch (error: any) {
+        logger.error("Failed to set VAPID details. Web Push will be disabled.", { 
+            error: error.message 
+        });
+    }
 }
 
 export class PushService {

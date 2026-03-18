@@ -202,7 +202,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({
                   variant="outline"
                   size="sm"
                   className="rounded-xl border-amber-200/50 hover:bg-amber-50/50 transition-all"
-                  onClick={() => navigate('/lost-found/report')}
+                  onClick={() => navigate('/search?action=report-lost')}
                 >
                   <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
                   File Report

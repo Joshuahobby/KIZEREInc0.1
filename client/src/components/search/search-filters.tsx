@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Filter, X, Search } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
@@ -17,12 +17,13 @@ export interface SearchFiltersProps {
     initialFilters?: any;
     layout?: "vertical" | "horizontal";
     hideSearchInput?: boolean;
+    viewModeAction?: React.ReactNode;
 }
 
-export function SearchFilters({ onSearch, initialFilters, layout = "vertical", hideSearchInput = false }: SearchFiltersProps) {
+export function SearchFilters({ onSearch, initialFilters, layout = "vertical", hideSearchInput = false, viewModeAction }: SearchFiltersProps) {
     const { t } = useLanguage();
     const [searchTerm, setSearchTerm] = useState(initialFilters?.q || "");
-    const [type, setType] = useState(initialFilters?.type || "lost"); // Default to lost/found search
+    const [type, setType] = useState(initialFilters?.type || "all"); // Default to all search
     const [status, setStatus] = useState<string[]>(initialFilters?.status ? initialFilters.status.split(',') : []);
     const [category, setCategory] = useState<string[]>(initialFilters?.category ? initialFilters.category.split(',') : []);
     const [location, setLocation] = useState(initialFilters?.location || "");
@@ -36,7 +37,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
     useEffect(() => {
         if (initialFilters) {
             setSearchTerm(initialFilters.q || "");
-            setType(initialFilters.type || "lost");
+            setType(initialFilters.type || "all");
             setStatus(initialFilters.status ? initialFilters.status.split(',') : []);
             setCategory(initialFilters.category ? initialFilters.category.split(',') : []);
             setLocation(initialFilters.location || "");
@@ -66,6 +67,22 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
             sortBy,
         });
     };
+
+    const isFirstRender = useRef(true);
+
+    // Auto-apply filters when they change
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        
+        const timer = setTimeout(() => {
+            handleSearch();
+        }, 150); // slight debounce
+        
+        return () => clearTimeout(timer);
+    }, [type, status, category, location, dateRange, sortBy]);
 
     // Auto-search on Enter key
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -215,9 +232,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 shrink-0 ml-auto">
-                        <Button className="h-10 rounded-xl px-5 font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] text-xs" onClick={handleSearch}>
-                            {t('searchFilters.apply')}
-                        </Button>
+                        {viewModeAction}
                         <Button variant="ghost" size="icon" className="h-10 w-10 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all group shrink-0" onClick={clearFilters} title={t('searchFilters.clearAll')}>
                             <X className="h-4 w-4 group-hover:rotate-90 transition-transform" />
                         </Button>
@@ -331,8 +346,6 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
                     </PopoverContent>
                 </Popover>
             </div>
-
-            <Button className="w-full" onClick={handleSearch}>Apply Filters</Button>
         </div>
     );
 }

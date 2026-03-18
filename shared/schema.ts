@@ -41,7 +41,7 @@ export const permissionTypes = [
 export const paymentStatuses = ['pending', 'successful', 'failed', 'cancelled'] as const;
 
 // Define payment types
-export const paymentTypes = ['registration', 'lost_report', 'bounty'] as const;
+export const paymentTypes = ['registration', 'lost_report', 'bounty', 'featured_upgrade'] as const;
 
 // Define package status
 export const packageStatuses = ['active', 'inactive', 'archived'] as const;
@@ -174,6 +174,8 @@ export const reports = pgTable("reports", {
   ocrText: text("ocr_text"),
   bountyAmount: numeric("bounty_amount"),
   bountyStatus: text("bounty_status").default('none'), // 'none', 'escrowed', 'released', 'refunded'
+  isFeatured: boolean("is_featured").default(false),
+  featuredAt: timestamp("featured_at"),
   reportedAt: timestamp("reported_at").defaultNow().notNull(),
 }, (table) => [
   index("report_user_idx").on(table.userId),
@@ -491,6 +493,8 @@ export const insertReportSchema = createInsertSchema(reports)
     gracePeriodEnd: z.coerce.date().optional(),
     paymentStatus: z.string().optional(),
     ocrText: z.string().optional(),
+    isFeatured: z.boolean().optional().default(false),
+    featuredAt: z.coerce.date().optional(),
   });
 
 // Extended schema for lost item report form with validation

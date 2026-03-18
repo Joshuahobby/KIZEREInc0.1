@@ -188,7 +188,9 @@ export async function getReportsWithFilters(options: {
     challengeQuestion: reports.challengeQuestion,
     ocrText: reports.ocrText,
     reportedAt: reports.reportedAt,
-    claimCount: sql<number>`(SELECT count(*) FROM ${claims} WHERE ${claims.reportId} = ${reports.id})`.mapWith(Number)
+    claimCount: sql<number>`(SELECT count(*) FROM ${claims} WHERE ${claims.reportId} = ${reports.id})`.mapWith(Number),
+    isFeatured: reports.isFeatured,
+    featuredAt: reports.featuredAt
   } as any;
 
   // Add relevance score if searching

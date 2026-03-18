@@ -88,6 +88,15 @@ async function runMigration() {
         IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = 'updated_at') THEN
           ALTER TABLE users ADD COLUMN updated_at TIMESTAMP DEFAULT NOW();
         END IF;
+
+        -- Reports table enhancements
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reports' AND column_name = 'is_featured') THEN
+          ALTER TABLE reports ADD COLUMN is_featured BOOLEAN DEFAULT FALSE;
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'reports' AND column_name = 'featured_at') THEN
+          ALTER TABLE reports ADD COLUMN featured_at TIMESTAMP;
+        END IF;
       END $$;
     `);
     

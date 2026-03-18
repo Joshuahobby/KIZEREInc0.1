@@ -317,6 +317,7 @@ router.get("/:id", async (req, res) => {
 
     const sanitizedReport = {
       ...report,
+      location: canSeeContactInfo ? report.location : `[Region: ${report.location.split(',').pop()?.trim() || 'Central'}]`,
       contactInfo: canSeeContactInfo
         ? report.contactInfo
         : (report.contactInfo ? '[Submit a verified claim to view contact info]' : null),

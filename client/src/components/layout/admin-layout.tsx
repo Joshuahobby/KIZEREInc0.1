@@ -72,7 +72,6 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
 import { AuthService } from "@/services/auth.service";
 import { UserPreferences } from "@shared/schema";
-import { GlobalSearch } from "@/components/dashboard/global-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -210,8 +209,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
     categories.push({ title: t('nav.portfolioHeader'), items: portfolioItems });
 
     const exploreItems: NavItem[] = [
-      { title: t('nav.search'), href: "/search", icon: <Search className="h-5 w-5" /> },
-      { title: t('nav.lostFound'), href: "/lost-found", icon: <AlertTriangle className="h-5 w-5" /> }
+      { title: t('nav.search'), href: "/search", icon: <Search className="h-5 w-5" /> }
     ];
     categories.push({ title: t('nav.exploreHeader'), items: exploreItems });
 
@@ -251,7 +249,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
   // Top Nav Items (Simplified for quick access)
   const topNavItems: NavItem[] = [
     { title: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { title: "Search Hub", href: "/search", icon: <Search className="h-4 w-4" /> },
+    { title: "Search Directory", href: "/search", icon: <Search className="h-4 w-4" /> },
     { title: "My Items", href: "/my-items", icon: <PackageIcon className="h-4 w-4" /> },
   ];
 
@@ -280,7 +278,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
                 <div className="p-8 pb-4">
                   <SheetTitle className="sr-only">KIZERE Navigation Menu</SheetTitle>
                   <SheetDescription className="sr-only">
-                    Access your property dashboard, lost & found hub, and platform settings.
+                    Access your property dashboard, lost & found directory, and platform settings.
                   </SheetDescription>
                   <div className="flex items-center space-x-3 mb-8">
                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
@@ -373,9 +371,8 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
             </Link>
           </div>
 
-          {/* Column 2: Global search - Perfectly Centered */}
-          <div className="hidden md:flex justify-self-center w-full max-w-xl transition-all duration-300 focus-within:max-w-2xl px-4">
-            <GlobalSearch variant="navbar" className="w-full h-10 rounded-xl" placeholder={t('common.searchPlaceholder')} />
+          {/* Column 2: Empty space - Perfectly Centered */}
+          <div className="hidden md:flex justify-self-center w-full max-w-xl transition-all duration-300 px-4">
           </div>
 
           {/* Column 3: Right side actions - Right Aligned */}

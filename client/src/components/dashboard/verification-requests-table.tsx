@@ -151,7 +151,14 @@ export function VerificationRequestsTable() {
 
                         <div className="grid md:grid-cols-2 gap-6 my-4">
                           <div className="space-y-2">
-                            <h4 className="text-sm font-semibold">Selfie Analysis</h4>
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-sm font-semibold">Selfie Analysis</h4>
+                              {request.livenessCode && (
+                                <Badge variant="secondary" className="font-mono text-xs">
+                                  Liveness Code: <span className="text-primary font-bold ml-1">{request.livenessCode}</span>
+                                </Badge>
+                              )}
+                            </div>
                             <div className="aspect-[4/3] relative rounded-lg overflow-hidden border bg-muted">
                               <img
                                 src={request.selfieUrl}

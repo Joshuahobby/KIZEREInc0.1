@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import Tesseract from 'tesseract.js';
 import confetti from 'canvas-confetti';
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 const verificationSchema = z.object({
   documentType: z.enum(['nid', 'passport', 'drivers_license'], {
@@ -40,6 +41,7 @@ type VerificationFormData = z.infer<typeof verificationSchema>;
 export default function VerificationPage() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
   const [step, setStep] = useState(0);
@@ -76,31 +78,38 @@ export default function VerificationPage() {
   const processDocumentOCR = async (file: File) => {
     setIsOcrProcessing(true);
     setOcrError(null);
+    setOcrResult(null);
+    
     try {
-      const result = await Tesseract.recognize(file, 'eng', {
-        logger: m => console.log(m)
-      });
+      const result = await Tesseract.recognize(file, 'eng');
       
       const text = result.data.text;
       const confidence = result.data.confidence;
       
-      // Basic heuristic to find names (looking for Title Case words in sequence)
-      // This is a "best effort" check
-      const userNameParts = user?.fullName?.split(' ') || [];
-      const matches = userNameParts.filter(part => 
-        text.toLowerCase().includes(part.toLowerCase())
+      // Better name matching: normalize and check for intersection
+      const normalizedText = text.toLowerCase().replace(/[^a-z\s]/g, '');
+      const userFullName = user?.fullName?.toLowerCase() || '';
+      const userNameParts = userFullName.split(/\s+/).filter(part => part.length > 2);
+      
+      const matchedParts = userNameParts.filter(part => 
+        normalizedText.includes(part)
       );
 
+      const isMatch = matchedParts.length >= Math.min(2, userNameParts.length);
+
       setOcrResult({
-        detectedName: matches.length > 0 ? matches.join(' ') : undefined,
+        detectedName: isMatch ? matchedParts.join(' ') : undefined,
         confidence
       });
       
-      if (matches.length === 0 && confidence > 50) {
-        setOcrError("Warning: Name on document might not match your profile.");
+      if (!isMatch && confidence > 40) {
+        setOcrError(t('ocr.kyc_mismatch_desc') || "The name on the ID doesn't seem to match your profile name perfectly. Please ensure the photo is clear.");
+      } else if (confidence < 40) {
+        setOcrError(t('ocr.kyc_low_conf_desc') || "The text is hard to read. A clear photo speeds up manual approval.");
       }
     } catch (err) {
       console.error("OCR Error:", err);
+      // Don't set error for user, just fail silently as it's a helper
     } finally {
       setIsOcrProcessing(false);
     }
@@ -401,11 +410,19 @@ export default function VerificationPage() {
                                   <motion.div 
                                     initial={{ y: 5, opacity: 0 }} 
                                     animate={{ y: 0, opacity: 1 }}
-                                    className="mt-3 py-1 px-3 rounded-full bg-primary/10 border border-primary/20 flex items-center gap-2"
+                                    className={cn(
+                                      "mt-3 py-1 px-3 rounded-full border flex items-center gap-2",
+                                      ocrResult.detectedName 
+                                        ? "bg-emerald-500/10 border-emerald-500/20" 
+                                        : "bg-amber-500/10 border-amber-500/20"
+                                    )}
                                   >
-                                    <Sparkles className="h-3 w-3 text-primary" />
-                                    <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">
-                                      {ocrResult.detectedName ? "Name Verified" : `Score: ${ocrResult.confidence}%`}
+                                    <Sparkles className={cn("h-3 w-3", ocrResult.detectedName ? "text-emerald-500" : "text-amber-500")} />
+                                    <span className={cn(
+                                      "text-[9px] font-bold uppercase tracking-tighter",
+                                      ocrResult.detectedName ? "text-emerald-500" : "text-amber-500"
+                                    )}>
+                                      {ocrResult.detectedName ? t('ocr.kyc_name_match') : t('ocr.kyc_helper')}
                                     </span>
                                   </motion.div>
                                 )}

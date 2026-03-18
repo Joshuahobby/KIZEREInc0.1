@@ -161,7 +161,7 @@
     "loginRequired": "Ugomba kwinjira kugira ngo urebe iyi paji"
   },
   "footer": {
-    "description": "KIZERE Hub ni urubuga rwuzuye rwo kwandikisha ibintu, kumenyesha ibyabuze n'ibyabonetse, no gucunga uburenganzira bwo gutunga mu buryo bw'ikoranabuhanga.",
+    "description": "KIZERE ni urubuga rwuzuye rwo kwandikisha ibintu, kumenyesha ibyabuze n'ibyabonetse, no gucunga uburenganzira bwo gutunga mu buryo bw'ikoranabuhanga.",
     "quickLinks": "Inzira z'Akokanya",
     "resources": "Ibikoresho",
     "contact": "Twandikire",
@@ -299,7 +299,7 @@
       },
       "contactUs": "Ntabwo ubonye igisubizo? Twandikire."
     },
-    "footerDescription": "KIZERE Hub ni urubuga rwuzuye rwo kwandikisha ibintu, kumenyesha ibyabuze n'ibyabonetse, no gucunga uburenganzira bwo gutunga, rufite intego yo kurinda umutekano no gukora neza.",
+    "footerDescription": "KIZERE ni urubuga rwuzuye rwo kwandikisha ibintu, kumenyesha ibyabuze n'ibyabonetse, no gucunga uburenganzira bwo gutunga, rufite intego yo kurinda umutekano no gukora neza.",
     "footer": {
       "quickLinks": "Inzira z'Akokanya",
       "home": "Ahabanza",
@@ -379,7 +379,7 @@
     "reputationScore": "Amanota y'Ubwizerane",
     "trustedMember": "Umunyamuryango Wizerwa",
     "communityMember": "Umunyamuryango w'Abaturage",
-    "activeHubReports": "Raporo z'Ihuriro Zigikora",
+    "activeHubReports": "Raporo Zigikora",
     "totalPlatformUsers": "Abakoresha bose b'Urubuga",
     "pendingVerifications": "Igenzura ritarangira",
     "exportData": "Ohereza Amakuru",
@@ -1293,7 +1293,7 @@
       "lost_found": "Kumenyesha ibyabuze n'ibyabonetse",
       "qr_codes": "Uburyo bwo gukoresha utag QR za KIZERE"
     },
-    "welcome_title": "Murakaza neza kuri KIZERE Hub",
+    "welcome_title": "Murakaza neza kuri KIZERE",
     "welcome_text": "Izi nyandiko zateganyijwe kugira ngo zigufashe gukoresha KIZERE mu buryo bwiza cyane. Waba uri umukoresha mushya ushaka kurinda ibyawe cyangwa uri umukozi ufasha mu kugarura ibyabuze, uzasanga byose hano.",
     "tip_title": "Inama",
     "tip_text": "Koresha ahantu ho gushakira hejuru kugira ngo ubone amakuru ku kintu icyo ari cyo cyose cyanditse cyangwa ubufasha ukeneye.",

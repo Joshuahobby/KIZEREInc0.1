@@ -158,41 +158,95 @@ export default function UnifiedDashboard() {
   const [directVerifyOpen, setDirectVerifyOpen] = React.useState(false);
 
   // Identity Protection Card (Rwanda Specific)
-  const IdentityProtectionCard = () => (
-    <Card data-tour="identity-card" className="border-border/20 bg-card/60 backdrop-blur-sm shadow-sm hover:shadow-premium hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 overflow-hidden relative group h-full flex flex-col justify-between">
-      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-        <ShieldCheck className="h-24 w-24 text-primary" />
-      </div>
-      <CardHeader className="p-4 sm:p-5">
-        <div className="flex items-center gap-3">
-          <div className="p-2 sm:p-2.5 bg-primary/10 rounded-xl">
-            <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-          </div>
-          <div>
-            <CardTitle className="text-base sm:text-lg font-semibold">{t('dashboard.identityProtection.title') || "Identity Protection"}</CardTitle>
-            <CardDescription className="text-xs font-normal">
-              {t('dashboard.identityProtection.desc') || "Securely store your NID or Passport details."}
-            </CardDescription>
-          </div>
+  const IdentityProtectionCard = () => {
+    const status = user?.verificationStatus || 'unverified';
+    
+    const getStatusConfig = () => {
+      switch (status) {
+        case 'approved':
+          return {
+            color: 'text-emerald-500',
+            bg: 'bg-emerald-500/10',
+            icon: <CheckCircle2 className="h-4 w-4" />,
+            label: t('dashboard.identityProtection.status_approved'),
+            desc: t('dashboard.identityProtection.approved_msg')
+          };
+        case 'pending':
+          return {
+            color: 'text-amber-500',
+            bg: 'bg-amber-500/10',
+            icon: <Clock className="h-4 w-4 animate-pulse" />,
+            label: t('dashboard.identityProtection.status_pending'),
+            desc: t('dashboard.identityProtection.pending_msg')
+          };
+        case 'rejected':
+          return {
+            color: 'text-destructive',
+            bg: 'bg-destructive/10',
+            icon: <AlertTriangle className="h-4 w-4" />,
+            label: t('dashboard.identityProtection.status_rejected'),
+            desc: t('dashboard.identityProtection.rejected_msg')
+          };
+        default:
+          return {
+            color: 'text-primary',
+            bg: 'bg-primary/10',
+            icon: <ShieldCheck className="h-4 w-4" />,
+            label: t('dashboard.identityProtection.status_unverified'),
+            desc: t('dashboard.identityProtection.unverified_msg')
+          };
+      }
+    };
+
+    const config = getStatusConfig();
+
+    return (
+      <Card data-tour="identity-card" className="border-border/20 bg-card/60 backdrop-blur-sm shadow-sm hover:shadow-premium hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 overflow-hidden relative group h-full flex flex-col justify-between">
+        <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+          <ShieldCheck className="h-24 w-24 text-primary" />
         </div>
-      </CardHeader>
-      <CardContent className="p-4 sm:p-5 pt-0 mt-auto">
-        <div className="flex flex-col sm:flex-row gap-2 mt-2">
-          <Badge variant="outline" className="bg-background/40 border-primary/20 px-2 py-1 flex items-center gap-1.5 rounded-full whitespace-nowrap w-fit">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[10px] font-medium tracking-wide">{t('dashboard.identityProtection.nid_protected') || "NID: PROTECTED"}</span>
-          </Badge>
-          <Badge variant="outline" className="bg-background/40 border-primary/20 px-2 py-1 flex items-center gap-1.5 rounded-full whitespace-nowrap w-fit">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span className="text-[10px] font-medium tracking-wide">{t('dashboard.identityProtection.passport_protected') || "PASSPORT: PROTECTED"}</span>
-          </Badge>
-        </div>
-        <Button variant="link" size="sm" className="px-0 mt-4 text-xs font-medium text-primary group-hover:text-primary/80 h-auto">
-          {t('dashboard.identityProtection.manage') || "Manage Identity Documents"}
-        </Button>
-      </CardContent>
-    </Card>
-  );
+        <CardHeader className="p-4 sm:p-5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 sm:p-2.5 ${config.bg} rounded-xl`}>
+                <ShieldCheck className={`h-5 w-5 sm:h-6 sm:w-6 ${config.color}`} />
+              </div>
+              <div>
+                <CardTitle className="text-base sm:text-lg font-semibold">{t('dashboard.identityProtection.title') || "Identity Protection"}</CardTitle>
+                <div className={`flex items-center gap-1.5 mt-0.5 ${config.color} text-[10px] font-bold uppercase tracking-wider`}>
+                  {config.icon}
+                  {config.label}
+                </div>
+              </div>
+            </div>
+          </div>
+          <CardDescription className="text-xs font-normal leading-relaxed">
+            {config.desc}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-5 pt-0 mt-auto">
+          <div className="flex flex-col sm:flex-row gap-2 mt-2">
+            <Badge variant="outline" className={`bg-background/40 ${status === 'approved' ? 'border-emerald-500/30' : 'border-primary/20'} px-2 py-1 flex items-center gap-1.5 rounded-full whitespace-nowrap w-fit`}>
+              <div className={`h-1.5 w-1.5 rounded-full ${status === 'approved' ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />
+              <span className="text-[10px] font-medium tracking-wide">{t('dashboard.identityProtection.nid_protected') || "NID: PROTECTED"}</span>
+            </Badge>
+            <Badge variant="outline" className={`bg-background/40 ${status === 'approved' ? 'border-emerald-500/30' : 'border-primary/20'} px-2 py-1 flex items-center gap-1.5 rounded-full whitespace-nowrap w-fit`}>
+              <div className={`h-1.5 w-1.5 rounded-full ${status === 'approved' ? 'bg-emerald-500' : 'bg-muted-foreground/30'}`} />
+              <span className="text-[10px] font-medium tracking-wide">{t('dashboard.identityProtection.passport_protected') || "PASSPORT: PROTECTED"}</span>
+            </Badge>
+          </div>
+          <Button 
+            variant="link" 
+            size="sm" 
+            className="px-0 mt-4 text-xs font-medium text-primary group-hover:text-primary/80 h-auto"
+            onClick={() => navigate('/verification')}
+          >
+            {status === 'approved' ? t('dashboard.identityProtection.manage') : t('dashboard.action.verifyAction') || "Complete Verification"}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  };
 
   // Get initial tab based on URL and user role
   const getInitialTab = () => {
@@ -342,7 +396,7 @@ export default function UnifiedDashboard() {
                 <Card
                   data-tour="report-lost"
                   className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-destructive/10 transition-all duration-300 border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group relative h-full flex flex-col justify-center"
-                  onClick={() => navigate('/lost-found?action=report-lost')}
+                  onClick={() => navigate('/search?action=report-lost')}
                 >
                   <CardContent className="p-4 sm:p-5 flex items-center gap-4">
                     <div className="p-2 sm:p-3 bg-destructive/10 rounded-xl shrink-0 group-hover:scale-105 transition-transform">
@@ -360,7 +414,7 @@ export default function UnifiedDashboard() {
                 <Card
                   data-tour="report-found"
                   className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-primary/10 transition-all duration-300 border-primary/20 bg-primary/5 hover:bg-primary/10 group relative h-full flex flex-col justify-center"
-                  onClick={() => navigate('/lost-found?action=report-found')}
+                  onClick={() => navigate('/search?action=report-found')}
                 >
                   <CardContent className="p-4 sm:p-5 flex items-center gap-4">
                     <div className="p-2 sm:p-3 bg-primary/10 rounded-xl shrink-0 group-hover:scale-105 transition-transform">
@@ -832,7 +886,7 @@ export default function UnifiedDashboard() {
                   <CardTitle>{t('dashboard.reports.title')}</CardTitle>
                   <CardDescription>{t('dashboard.reports.description')}</CardDescription>
                 </div>
-                <Button size="sm" onClick={() => navigate("/lost-found/report")}>
+                <Button size="sm" onClick={() => navigate("/search?action=report-lost")}>
                   <Plus className="h-4 w-4 mr-2" /> {t('dashboard.reports.newReport')}
                 </Button>
               </CardHeader>
@@ -1214,3 +1268,4 @@ export default function UnifiedDashboard() {
     </AppLayout>
   );
 }
+

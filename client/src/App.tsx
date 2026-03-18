@@ -21,7 +21,6 @@ const AuthCallback = React.lazy(() => import("@/pages/auth-callback"));
 const MyItems = React.lazy(() => import("@/pages/my-items"));
 const ItemDetail = React.lazy(() => import("@/pages/item-detail"));
 const Search = React.lazy(() => import("@/pages/search"));
-const LostFound = React.lazy(() => import("@/pages/lost-found"));
 const ReportDetailPage = React.lazy(() => import("@/pages/report-detail"));
 const ClaimDetailPage = React.lazy(() => import("@/pages/claim-detail"));
 const MyClaims = React.lazy(() => import("@/pages/my-claims"));
@@ -145,12 +144,6 @@ function App() {
                   <Route path="/search">
                     <Search />
                   </Route>
-                  <Route path="/lost-found">
-                    <LostFound />
-                  </Route>
-                  <ProtectedRoute path="/lost-found/report" component={ItemRegistration} requiredRole="any" />
-                  <ProtectedRoute path="/lost-found/report/lost" component={ItemRegistration} requiredRole="any" />
-                  <ProtectedRoute path="/lost-found/report/found" component={ItemRegistration} requiredRole="any" />
                   <Route path="/report/:id">
                     <ReportDetailPage />
                   </Route>

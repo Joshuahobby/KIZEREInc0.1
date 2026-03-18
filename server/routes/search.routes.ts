@@ -10,7 +10,7 @@ const router = Router();
 
 router.get("/", async (req, res) => {
   try {
-    const { q, status, category, location, dateFilter, startDate, endDate, type: typeFilter } = req.query;
+    const { q, status, category, location, dateFilter, startDate, endDate, type: typeFilter, sortBy } = req.query;
     const queryStr = (q as string || '').toLowerCase().trim();
     const keywords = queryStr.split(/\s+/).filter(k => k.length > 1);
 
@@ -109,9 +109,9 @@ router.get("/", async (req, res) => {
 
       const dateConditions = getDateRangeConditions(reports.reportedAt);
       reportConditions.push(...dateConditions);
-
+ 
       const reportResults = await db.select().from(reports).where(reportConditions.length ? and(...reportConditions) : undefined);
-
+ 
       results.push(...reportResults.map(report => {
         let score = 0;
         if (queryStr) {
@@ -123,27 +123,49 @@ router.get("/", async (req, res) => {
             if (report.ocrText?.toLowerCase().includes(k)) score += 3;
           });
         }
+
+        const isExactMatch = report.uniqueIdentifier === queryStr && queryStr.length > 3;
+        
+        // Privacy logic: Discoverability in the public hub should be restrictive
+        // Hide location and title unless it's a generic identification
+        // Truncate description for general view
+        const displayDescription = report.description && report.description.length > 120 
+          ? report.description.substring(0, 120) + "..." 
+          : report.description;
+
         return {
           id: report.id,
-          title: report.title,
-          description: report.description,
+          title: isExactMatch ? report.title : `[Item in ${report.category}]`, 
+          description: displayDescription,
           category: report.category,
-          status: report.status, // Return actual status (Open, Resolved)
-          location: report.location,
+          status: report.status,
+          location: isExactMatch ? report.location : `[Region: ${report.location.split(',').pop()?.trim() || 'Central'}]`,
           date: report.reportedAt,
           imageUrls: report.imageUrls,
-          type: report.type, // 'lost' or 'found'
-          score
+          type: report.type,
+          isFeatured: report.isFeatured,
+          isExactMatch,
+          score: report.isFeatured ? score + 100 : score
         };
       }));
     }
 
-    // Sort by score if query exists, otherwise by date
-    if (queryStr) {
-      results.sort((a, b) => b.score - a.score);
-    } else {
-      results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    }
+    // Sort: Featured first, then by specified sorting method
+    results.sort((a, b) => {
+      // 1. Featured items always appear first
+      if (a.isFeatured && !b.isFeatured) return -1;
+      if (!a.isFeatured && b.isFeatured) return 1;
+      
+      // 2. Custom sorting logic
+      if (sortBy === 'oldest') {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      }
+      if (sortBy === 'relevance' || (queryStr && !sortBy)) {
+        return b.score - a.score;
+      }
+      // Default: newest
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
 
     res.json(results);
   } catch (error) {

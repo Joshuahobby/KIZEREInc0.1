@@ -44,8 +44,8 @@ export function Footer() {
       title: t('landing.footer.resources') || "Resources",
       links: [
         { label: t('nav.contact') || "Contact", href: "/contact" },
-        { label: t('nav.lostDirectory') || "Lost Items", href: "/lost-found?type=lost" },
-        { label: t('nav.foundDirectory') || "Found Items", href: "/lost-found?type=found" },
+        { label: t('nav.lostDirectory') || "Lost Items", href: "/search?type=lost" },
+        { label: t('nav.foundDirectory') || "Found Items", href: "/search?type=found" },
         { label: t('landing.footer.community') || "Community", href: "/community" },
       ]
     }
@@ -186,3 +186,4 @@ export function Footer() {
     </footer>
   );
 }
+

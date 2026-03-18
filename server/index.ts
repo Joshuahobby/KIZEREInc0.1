@@ -12,6 +12,7 @@ import { initMonitoring, initErrorHandlers } from "./utils/monitoring";
 
 const logger = createLogger('Server');
 const app = express();
+let serverPromise: Promise<any>;
 
 // Trust proxy is required for correct IP detection on Vercel/proxies
 app.set('trust proxy', true);
@@ -68,7 +69,6 @@ app.use((req, res, next) => {
 });
 
 // Export app and server for Vercel
-let serverPromise: Promise<any>;
 
 export const startServer = async () => {
   // Initialize Monitoring (Sentry)
@@ -85,13 +85,18 @@ export const startServer = async () => {
     logger.error("Failed to start WebSocket server", { error: err });
   }
 
-  // Start background cron jobs
-  try {
-    const { startExpirationCron } = await import("./cron/expiration");
-    startExpirationCron();
-    logger.info("Expiration cron job started");
-  } catch (err) {
-    logger.error("Failed to start expiration cron", { error: err });
+  // Start background cron jobs (skip on Vercel as background jobs are not supported in serverless)
+  const isVercel = process.env.VERCEL === "1" || process.env.VERCEL === "true";
+  if (!isVercel) {
+    try {
+      const { startExpirationCron } = await import("./cron/expiration");
+      startExpirationCron();
+      logger.info("Expiration cron job started");
+    } catch (err) {
+      logger.error("Failed to start expiration cron", { error: err });
+    }
+  } else {
+    logger.info("Vercel: Skipping expiration cron job in serverless environment");
   }
 
   // Global error handler using centralized error handler
@@ -109,8 +114,6 @@ export const startServer = async () => {
   // Sentry error handler (must be after all controllers)
   initErrorHandlers(app);
 
-  // Explicitly check if running on Vercel to avoid loading Vite
-  const isVercel = process.env.VERCEL === "1";
   if (isVercel) {
     process.env.NODE_ENV = "production";
   }
@@ -124,8 +127,10 @@ export const startServer = async () => {
 
   if (!isProd && !isVercel) {
     logger.info("Setting up Vite for development...");
-    const { setupVite } = await import("./vite");
     try {
+      // Hide the import from static analysis to prevent bundling devDependencies into production
+      const vitePath = "./vite";
+      const { setupVite } = await import(vitePath);
       await setupVite(app, server);
       logger.info("Vite middleware initialized successfully");
     } catch (err: any) {
@@ -137,8 +142,9 @@ export const startServer = async () => {
   }
 
   // Only listen if not in a serverless environment
-  if (!isProd || process.env.VERCEL !== "1") {
-    const port = config.PORT;
+  // In Vercel, the environment provides the server.
+  if (process.env.VERCEL !== "1" && process.env.VERCEL !== "true") {
+    const port = config.PORT || 5000;
     server.listen(port, "0.0.0.0", () => {
       log(`serving on port ${port}`);
     });

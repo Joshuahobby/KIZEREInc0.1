@@ -4,7 +4,7 @@ import { PageLayout } from "@/components/layout/page-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Item, Report } from "@shared/schema";
 import { Link, useLocation } from "wouter";
-import { Loader2, Calendar, Tag as TagIcon, MapPin, ChevronRight, List, Map as MapIcon, Layers, Search as SearchIcon, Smartphone, FileText, Hash, Package, Eye, PackageSearch, Lock, Shield } from "lucide-react";
+import { Loader2, Calendar, Tag as TagIcon, MapPin, ChevronRight, List, Map as MapIcon, Layers, Search as SearchIcon, Smartphone, FileText, Hash, Package, Eye, PackageSearch, Lock, Shield, Key, Wallet, Briefcase, Shirt, Car, Laptop, Gem } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { SearchFilters } from "@/components/search/search-filters";
@@ -15,6 +15,24 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthWall } from "@/components/ui/auth-wall";
 import { cn } from "@/lib/utils";
+
+const getCategoryIcon = (category: string, className: string) => {
+  if (!category) return <Package className={className} />;
+  switch (category.toLowerCase()) {
+    case 'phones':
+    case 'electronics': return <Smartphone className={className} />;
+    case 'keys': return <Key className={className} />;
+    case 'wallets': return <Wallet className={className} />;
+    case 'documents': return <FileText className={className} />;
+    case 'jewelry': return <Gem className={className} />;
+    case 'clothing': return <Shirt className={className} />;
+    case 'bags':
+    case 'accessories': return <Briefcase className={className} />;
+    case 'computers': return <Laptop className={className} />;
+    case 'transportation': return <Car className={className} />;
+    default: return <Package className={className} />;
+  }
+};
 
 export default function Search() {
   const { t } = useLanguage();
@@ -116,32 +134,47 @@ export default function Search() {
                     />
                   </div>
 
-                  {/* View Toggle (moved into hero bottom) */}
-                  <div className="flex items-center space-x-1.5 bg-background/50 backdrop-blur-md p-1.5 rounded-xl border border-border/30 mt-4">
-                    <Button
-                      variant={viewMode === 'list' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('list')}
-                      className="gap-2 h-10 rounded-xl text-sm font-bold px-5"
-                    >
-                      <List className="w-4 h-4" /> {t('searchPage.list')}
-                    </Button>
-                    <Button
-                      variant={viewMode === 'map' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('map')}
-                      className="gap-2 h-10 rounded-xl text-sm font-bold px-5"
-                    >
-                      <MapIcon className="w-4 h-4" /> {t('searchPage.map')}
-                    </Button>
-                  </div>
+
                 </div>
               </div>
 
               <div className="flex flex-col gap-6 h-full">
                 {/* Top Bar: Horizontal Filters (Dock Style) */}
                 <div className="w-full sticky top-20 z-30">
-                  <SearchFilters onSearch={handleSearch} initialFilters={filters} layout="horizontal" hideSearchInput={true} />
+                  <SearchFilters 
+                    onSearch={handleSearch} 
+                    initialFilters={filters} 
+                    layout="horizontal" 
+                    hideSearchInput={true} 
+                    viewModeAction={
+                      <div className="flex bg-background/50 border border-border/30 p-0.5 rounded-xl shrink-0 shadow-sm mr-1">
+                        <button
+                          onClick={() => setViewMode('list')}
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300",
+                            viewMode === 'list'
+                              ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          )}
+                        >
+                          <List className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">{t('searchPage.list')}</span>
+                        </button>
+                        <button
+                          onClick={() => setViewMode('map')}
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300",
+                            viewMode === 'map'
+                              ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          )}
+                        >
+                          <MapIcon className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">{t('searchPage.map')}</span>
+                        </button>
+                      </div>
+                    }
+                  />
                 </div>
 
                 {/* Content: Results */}
@@ -187,7 +220,7 @@ export default function Search() {
                                       visible: { opacity: 1, y: 0 }
                                     }}>
                                       <Link href={link}>
-                                        <Card className="h-full flex flex-col overflow-hidden bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 dark:hover:border-white/20 transition-all duration-500 hover:-translate-y-1 hover:shadow-premium group cursor-pointer relative">
+                                        <Card className="h-full flex flex-col overflow-hidden bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 dark:hover:border-white/20 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/10 group cursor-pointer relative">
                                           {/* Image Header / Top Banner */}
                                           <div className="relative h-48 sm:h-52 w-full overflow-hidden rounded-t-xl bg-slate-50 dark:bg-slate-800/50 flex flex-col justify-center items-center p-4">
                                             {item.imageUrls && item.imageUrls.length > 0 ? (
@@ -198,23 +231,33 @@ export default function Search() {
                                               />
                                             ) : (
                                               <div className="flex items-center justify-center h-full">
-                                                <Package className="h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-700" />
+                                                {getCategoryIcon(item.category || '', "h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-700")}
                                               </div>
                                             )}
 
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                                             <div className="absolute top-3 right-3">
-                                              <div className={`px-2.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl backdrop-blur-md flex items-center gap-1.5 z-10 ${(item.status === 'Open' || item.status === 'Registered') ? 'bg-white/95 text-blue-600 dark:bg-black/70 dark:text-blue-400 border border-blue-500/20' :
-                                                item.status === 'Lost' ? 'bg-red-50 text-destructive dark:bg-black/80 dark:text-destructive border border-destructive/30 animate-pulse' :
-                                                  'bg-white/95 text-emerald-600 dark:bg-black/70 dark:text-emerald-400 border border-emerald-500/20'
-                                                }`}>
-                                                <div className={`h-1.5 w-1.5 rounded-full ${(item.status === 'Open' || item.status === 'Registered') ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.6)]' :
-                                                  item.status === 'Lost' ? 'bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.6)]' :
-                                                    'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]'
-                                                  }`} />
-                                                {item.status}
-                                              </div>
+                                              {(() => {
+                                                const isLost = item.status === 'Open' ? item.type === 'lost' : item.status === 'Lost';
+                                                const isFound = item.status === 'Open' ? item.type === 'found' : item.status === 'Found';
+                                                const displayStatus = item.status === 'Open' ? (item.type === 'lost' ? 'Lost' : item.type === 'found' ? 'Found' : item.status) : item.status;
+                                                
+                                                const wrapperClass = isLost ? 'bg-red-50 text-destructive dark:bg-black/80 dark:text-destructive border border-destructive/30 animate-pulse' :
+                                                  isFound ? 'bg-emerald-50 text-emerald-600 dark:bg-black/80 dark:text-emerald-400 border border-emerald-500/30' :
+                                                  'bg-blue-50 text-blue-600 dark:bg-black/80 dark:text-blue-400 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.2)]';
+                                                  
+                                                const dotClass = isLost ? 'bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.6)]' :
+                                                  isFound ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]' :
+                                                  'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]';
+
+                                                return (
+                                                  <div className={`px-2.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest shadow-xl backdrop-blur-md flex items-center gap-1.5 z-10 ${wrapperClass}`}>
+                                                    <div className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
+                                                    {displayStatus}
+                                                  </div>
+                                                );
+                                              })()}
                                             </div>
 
                                             {/* Quick view button on hover */}

@@ -109,6 +109,8 @@ export async function getPaymentDescription(type: PaymentType, packageId?: numbe
       return "Lost Item Report Fee";
     case "bounty":
       return "Bounty Payment";
+    case "featured_upgrade":
+      return "Report Featured Upgrade";
     default:
       return "Payment";
   }

@@ -217,6 +217,9 @@ router.post("/webhook", validatePawaPayIP, verifyPawaPaySignature, async (req, r
             } else if (payment.type === 'lost_report' && payment.reportId) {
               logger.info("Finalizing lost report after successful payment", { reportId: payment.reportId });
               await storage.updateReport(payment.reportId, { paymentStatus: 'successful' });
+            } else if (payment.type === 'featured_upgrade' && payment.reportId) {
+              logger.info("Featuring report after successful upgrade payment", { reportId: payment.reportId });
+              await storage.updateReport(payment.reportId, { isFeatured: true, featuredAt: new Date() });
             }
           }
         }
@@ -325,6 +328,9 @@ router.get("/verify/:txRef", async (req, res) => {
         } else if (payment.type === 'lost_report' && payment.reportId) {
           logger.info("Finalizing lost report after manual verification", { reportId: payment.reportId });
           await storage.updateReport(payment.reportId, { paymentStatus: 'successful' });
+        } else if (payment.type === 'featured_upgrade' && payment.reportId) {
+          logger.info("Featuring report after manual verification", { reportId: payment.reportId });
+          await storage.updateReport(payment.reportId, { isFeatured: true, featuredAt: new Date() });
         }
       }
 

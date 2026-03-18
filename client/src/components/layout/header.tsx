@@ -36,7 +36,6 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
-import { GlobalSearch } from "@/components/dashboard/global-search";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { WifiOff, BellRing } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -90,7 +89,7 @@ export function Header() {
     if (!user) return "/dashboard";
     switch (user.role) {
       case "Admin": return "/admin";
-      case "Agent": return "/lost-found?type=lost";
+      case "Agent": return "/search?type=lost";
       default: return "/dashboard";
     }
   };
@@ -107,13 +106,13 @@ export function Header() {
   const navigation: NavItem[] = isAuthenticated
     ? [
       { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
-      { name: t('nav.directory'), href: "/lost-found", icon: Search },
+      { name: t('nav.directory'), href: "/search", icon: Search },
       { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
     ]
     : [
       { name: t('nav.features'), href: "/#features", scrollTo: "features", icon: Info },
       { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
-      { name: t('nav.directory'), href: "/lost-found", icon: Search },
+      { name: t('nav.directory'), href: "/search", icon: Search },
       { name: t('nav.community'), href: "/community", icon: Users },
     ];
 
@@ -184,12 +183,6 @@ export function Header() {
                   {item.name}
                 </Link>
               ))}
-
-              {isAuthenticated && (
-                <div className="ml-4 lg:ml-6">
-                  <GlobalSearch variant="navbar" placeholder={t('common.searchPlaceholder')} />
-                </div>
-              )}
             </nav>
           </div>
 
@@ -424,3 +417,4 @@ export function Header() {
     </header>
   );
 }
+

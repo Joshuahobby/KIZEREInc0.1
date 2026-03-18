@@ -1,6 +1,6 @@
 import { Pool, neonConfig, neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-// import ws from "ws";
+import ws from "ws";
 import * as schema from "@shared/schema";
 import { config, isProd } from "./config";
 import { createLogger } from "./utils/logger";
@@ -8,7 +8,10 @@ import { createLogger } from "./utils/logger";
 const logger = createLogger("database");
 
 // Configure WebSockets for environments that need them (like session stores)
-// neonConfig.webSocketConstructor = ws;
+// This is critical for the Neon serverless driver to connect over WebSockets.
+if (process.env.VERCEL) {
+  neonConfig.webSocketConstructor = ws;
+}
 
 // 1. HTTP Connection for fast, stateless queries (Drizzle)
 if (!config.DATABASE_URL) {
@@ -38,17 +41,6 @@ export const pool = new Pool({
 pool.on('error', (err) => {
   logger.error('Unexpected error on idle client', { error: err.message });
 });
-
-// Connection pool monitoring in production
-if (isProd) {
-  setInterval(() => {
-    logger.info('DB pool status', {
-      totalCount: pool.totalCount,
-      idleCount: pool.idleCount,
-      waitingCount: pool.waitingCount
-    });
-  }, 60000);
-}
 
 // Log startup
 logger.info('Database connection initialized (HTTP + Pool)');
