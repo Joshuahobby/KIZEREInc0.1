@@ -19,6 +19,10 @@
     "securityLabel": "Sécurité",
     "secureLabel": "Sécurisé",
     "cancel": "Annuler",
+    "continue": "Continuer",
+    "next": "Suivant",
+    "back": "Retour",
+    "finish": "Terminer",
     "actions": {
       "delete": "Supprimer"
     }

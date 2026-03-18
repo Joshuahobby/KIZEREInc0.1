@@ -20,7 +20,11 @@
     "returnToHome": "Rudi Nyumbani",
     "securityLabel": "Usalama",
     "secureLabel": "Salama",
-    "cancel": "Ghairi"
+    "cancel": "Ghairi",
+    "continue": "Endelea",
+    "next": "Ifuatayo",
+    "back": "Rudi Nyuma",
+    "finish": "Maliza"
   },
   "nav": {
     "home": "Nyumbani",
