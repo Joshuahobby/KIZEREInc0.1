@@ -153,6 +153,7 @@ export function setupSecurityMiddleware(app: Express) {
           "https://accounts.google.com",
           "https://replit.com",
           "https://*.replit.com",
+          "https://www.googletagmanager.com",
           ...(process.env.NODE_ENV !== 'production' ? ["'unsafe-inline'", "'unsafe-eval'"] : [])
         ],
         styleSrc: [
@@ -165,7 +166,7 @@ export function setupSecurityMiddleware(app: Express) {
           "https://*.replit.com"
         ],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co", "https://*.tile.openstreetmap.org"],
+        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co", "https://*.tile.openstreetmap.org", "https://www.google-analytics.com", "https://*.google-analytics.com"],
         connectSrc: ["'self'",
           "blob:",
           "data:",
@@ -185,7 +186,9 @@ export function setupSecurityMiddleware(app: Express) {
           "https://lh3.googleusercontent.com",
           "https://placehold.co",
           "ws://localhost:5001",
-          "wss://localhost:5001"
+          "wss://localhost:5001",
+          "https://www.google-analytics.com",
+          "https://*.google-analytics.com"
         ],
         frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         workerSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net"],
