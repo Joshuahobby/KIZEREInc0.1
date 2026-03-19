@@ -10,6 +10,7 @@ import { ChatWidget } from "@/components/chat/chat-widget";
 import { GlobalNotice } from "@/components/layout/global-notice";
 import { useLocation } from "wouter";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
 // Lazy load all pages
 const UnifiedDashboard = React.lazy(() => import("@/pages/unified-dashboard"));
@@ -116,6 +117,7 @@ function App() {
       {/* Screen reader route announcer */}
       <div ref={announcerRef} aria-live="polite" aria-atomic="true" className="sr-only" role="status" />
       <IframeWarning />
+      <GoogleAnalytics />
       <ThemeProvider attribute="class" defaultTheme="system" storageKey="kizere-theme" enableSystem disableTransitionOnChange>
         <LanguageProvider defaultLanguage="en">
           <TooltipProvider>

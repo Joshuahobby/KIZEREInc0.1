@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthService } from "@/services/auth.service";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import ReactGA from "react-ga4";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -101,7 +102,14 @@ export default function AuthPage() {
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
     const registerData = AuthModel.prepareRegisterData(data);
-    registerMutation.mutate(registerData);
+    registerMutation.mutate(registerData, {
+      onSuccess: () => {
+        ReactGA.event("sign_up", {
+          method: "Email",
+          role: data.role
+        });
+      }
+    });
   };
 
   const fadeIn = {

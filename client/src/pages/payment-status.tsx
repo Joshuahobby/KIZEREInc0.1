@@ -8,6 +8,7 @@ import { Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthWall } from "@/components/ui/auth-wall";
 import { PageLayout } from "@/components/layout/page-layout";
+import ReactGA from "react-ga4";
 
 export default function PaymentStatus() {
   const [, setLocation] = useLocation();
@@ -69,6 +70,13 @@ export default function PaymentStatus() {
               description: "Your payment has been processed successfully",
               variant: "default"
             });
+
+            // Track successful payment
+            ReactGA.event("payment_complete", {
+              tx_ref: txRef,
+              payment_status: "verified"
+            });
+
             return;
           }
         } catch (statusError) {
@@ -89,6 +97,12 @@ export default function PaymentStatus() {
             title: "Payment successful",
             description: "Your payment has been processed successfully",
             variant: "default"
+          });
+
+          // Track successful payment
+          ReactGA.event("payment_complete", {
+            tx_ref: txRef,
+            payment_status: "verified"
           });
         } else if (response.status === "pending") {
           // Keep in loading state if still pending

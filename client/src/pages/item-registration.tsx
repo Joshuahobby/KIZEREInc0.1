@@ -67,6 +67,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { PageLayout } from "@/components/layout/page-layout";
 import { AuthWall } from "@/components/ui/auth-wall";
+import ReactGA from "react-ga4";
 
 // Custom Registration Components
 import { SmartIDRecognizer } from "@/components/item-registration/smart-id-recognizer";
@@ -467,6 +468,12 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
       if (!isEditMode) {
         setRegisteredItemData(data.item);
         setShowPaymentModal(true);
+
+        // Track successful item registration
+        ReactGA.event("item_registered", {
+          category: data.item.category,
+          has_images: data.item.imageUrls?.length > 0
+        });
       } else {
         setTimeout(() => {
           setLocation(`/items/${itemId}`);

@@ -3,6 +3,7 @@ import { useParams, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { PageLayout } from "@/components/layout/page-layout";
+import ReactGA from "react-ga4";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -579,6 +580,13 @@ export default function ReportDetailPage() {
                               title: t('report_detail.claimSubmittedSuccess'),
                               description: t('claims.success_desc')
                             });
+                            
+                            // Track successful claim submission
+                            ReactGA.event("claim_submitted", {
+                              report_id: String(report.id),
+                              report_type: report.type
+                            });
+
                             queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
                             queryClient.invalidateQueries({ queryKey: ['/api/claims/my-claims'] });
                             // Navigate to My Items to show the pending claim

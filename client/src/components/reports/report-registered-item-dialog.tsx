@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import ReactGA from "react-ga4";
 import {
     Dialog,
     DialogContent,
@@ -95,6 +96,13 @@ export function ReportRegisteredItemDialog({ item, open, onOpenChange }: ReportR
             if (data?.receiptNumber) {
                 setReceiptNumber(data.receiptNumber);
             }
+
+            // Track successful report submission
+            ReactGA.event("report_submitted", {
+                category: item.category,
+                type: "lost",
+                item_id: item.id
+            });
 
             // Optimistic UI update: update item status in cache immediately
             queryClient.setQueryData<Item[]>(["/api/items"], (oldItems) => {
