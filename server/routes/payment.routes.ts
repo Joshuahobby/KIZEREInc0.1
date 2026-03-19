@@ -23,6 +23,7 @@ import {
 import type { PawaPayDepositCallback } from "../utils/pawapay";
 import { getPaymentDescription } from "../config/payment.config";
 import { sendPaymentConfirmationEmail } from "../services/email.service";
+import { CouponService } from "../services/coupon.service";
 
 const logger = createLogger('PaymentRoutes');
 import { config as serverConfig } from "../config";
@@ -105,7 +106,18 @@ router.post("/initiate", async (req, res) => {
   });
   try {
     const validatedData = initiatePaymentSchema.parse(req.body);
-    let amount = await getPaymentAmount(validatedData.type as 'registration' | 'lost_report');
+    let amount = 0;
+
+    // Determine base amount from package or default
+    if (validatedData.packageId) {
+      const pkg = await storage.getPaymentPackage(validatedData.packageId);
+      if (!pkg) {
+        return res.status(400).json({ message: "Invalid payment package selected" });
+      }
+      amount = Number(pkg.amount);
+    } else {
+      amount = await getPaymentAmount(validatedData.type as 'registration' | 'lost_report');
+    }
     
     // Add bounty if it's a lost report
     if (validatedData.type === "lost_report" && validatedData.reportId) {
@@ -114,6 +126,36 @@ router.post("/initiate", async (req, res) => {
         const bounty = Number(report.bountyAmount);
         logger.info("Adding bounty to payment amount", { reportId: report.id, baseAmount: amount, bounty });
         amount += bounty;
+      }
+    }
+
+    // Apply coupon if provided
+    let couponId: number | null = null;
+    if (validatedData.couponCode) {
+      const validation = await CouponService.validateCoupon(
+        validatedData.couponCode,
+        req.user!.id,
+        amount,
+        validatedData.type as any
+      );
+
+      if (validation.isValid && validation.coupon) {
+        logger.info("Applying coupon discount", { 
+          code: validatedData.couponCode, 
+          originalAmount: amount, 
+          discount: validation.discountAmount,
+          finalAmount: validation.finalAmount
+        });
+        amount = validation.finalAmount;
+        couponId = validation.coupon.id;
+      } else {
+        logger.warn("Invalid coupon provided during initiation", { 
+          code: validatedData.couponCode, 
+          message: validation.message 
+        });
+        // We can choose to fail or proceed without coupon. 
+        // Usually safer to fail if user explicitly provided a coupon that they expect to work.
+        return res.status(400).json({ message: validation.message || "Invalid coupon code" });
       }
     }
 
@@ -135,7 +177,7 @@ router.post("/initiate", async (req, res) => {
       itemId: validatedData.itemId || null,
       reportId: validatedData.reportId || null,
       packageId: validatedData.packageId || null,
-      metadata: null
+      metadata: couponId ? { couponId } : null
     });
 
     // Initiate deposit with PawaPay
@@ -220,6 +262,15 @@ router.post("/webhook", validatePawaPayIP, verifyPawaPaySignature, async (req, r
             } else if (payment.type === 'featured_upgrade' && payment.reportId) {
               logger.info("Featuring report after successful upgrade payment", { reportId: payment.reportId });
               await storage.updateReport(payment.reportId, { isFeatured: true, featuredAt: new Date() });
+            }
+
+            // Record coupon usage if applicable
+            const metadata = payment.metadata as any;
+            if (metadata && metadata.couponId) {
+              logger.info("Recording coupon usage after successful webhook", { couponId: metadata.couponId });
+              await CouponService.recordUsage(metadata.couponId).catch(err => 
+                logger.error("Failed to record coupon usage", { error: err, couponId: metadata.couponId })
+              );
             }
           }
         }
@@ -331,6 +382,15 @@ router.get("/verify/:txRef", async (req, res) => {
         } else if (payment.type === 'featured_upgrade' && payment.reportId) {
           logger.info("Featuring report after manual verification", { reportId: payment.reportId });
           await storage.updateReport(payment.reportId, { isFeatured: true, featuredAt: new Date() });
+        }
+
+        // Record coupon usage if applicable
+        const metadata = payment.metadata as any;
+        if (metadata && metadata.couponId) {
+          logger.info("Recording coupon usage after successful manual verification", { couponId: metadata.couponId });
+          await CouponService.recordUsage(metadata.couponId).catch(err => 
+            logger.error("Failed to record coupon usage", { error: err, couponId: metadata.couponId })
+          );
         }
       }
 
