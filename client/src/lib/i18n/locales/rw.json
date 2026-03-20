@@ -319,7 +319,7 @@
       "cookiePolicy": "Politiki ya Kuki"
     },
     "recruitment": {
-      "notice": "Turimo gushaka abakozi! Turashaka abasemura badufasha kwongera indimi KIZERE ikoresha.",
+      "notice": "Dukeneye abakozi! Turashaka abasemuzi mu kunoza indimi KIZERE ikoresha.",
       "learnMore": "Menya Birenzeho & Saba Akazi",
       "dialogTitle": "Kora na KIZERE",
       "dialogSubtitle": "Duhe ubufasha bwo gutuma KIZERE igera kuri bose mu Rwanda.",
@@ -901,7 +901,6 @@
     "qr_generation_error": "Byanze kurema kode QR.",
     "qr_refreshed": "Kode QR Yavuguruwe",
     "qr_refreshed_desc": "Inzira (URL) nshya yihariye yaremwe.",
-
     "preview": {
       "title": "Igaragaza ry'Ikintu",
       "item": "Ikintu",
