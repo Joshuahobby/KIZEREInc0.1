@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PageLayout } from "@/components/layout/page-layout";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { Item, Report } from "@shared/schema";
 import { Link, useLocation } from "wouter";
@@ -90,6 +91,10 @@ export default function Search() {
 
   return (
     <PageLayout hideSidebar={true}>
+      <SEO 
+        title={filters.type === 'lost' ? "KIZERE - Lost Items Directory" : filters.type === 'found' ? "KIZERE - Found Items Directory" : "KIZERE - Explore Items"}
+        description="Search through Rwandan lost and found items. Use our advanced search to reconnect with your missing property."
+      />
       <div className="py-4 min-h-[calc(100vh-4rem)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col">
           {!user && !isLoadingAuth ? (

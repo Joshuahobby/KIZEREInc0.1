@@ -27,6 +27,7 @@ import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, Link, useLocation } from "wouter";
 import { useState } from "react";
 import { PageLayout } from "@/components/layout";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -174,6 +175,13 @@ export default function ItemDetailPage() {
 
   return (
     <PageLayout>
+      {item && (
+        <SEO
+          title={`${item.name} | KIZERE`}
+          description={item.description || `View details for ${item.name} on KIZERE.`}
+          image={item.imageUrls?.[0]}
+        />
+      )}
       <div className="container max-w-4xl mx-auto py-4 md:py-8 px-4">
         {/* Breadcrumb / Back Navigation */}
         <div className="mb-6 flex items-center justify-between">

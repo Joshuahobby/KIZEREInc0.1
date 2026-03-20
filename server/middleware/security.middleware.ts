@@ -165,8 +165,9 @@ export function setupSecurityMiddleware(app: Express) {
           "https://replit.com",
           "https://*.replit.com"
         ],
+        scriptSrcAttr: ["'unsafe-inline'"],
         fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co", "https://*.tile.openstreetmap.org", "https://www.google-analytics.com", "https://*.google-analytics.com"],
+        imgSrc: ["'self'", "data:", "blob:", "https://res.cloudinary.com", "https://lh3.googleusercontent.com", "https://*.firebasestorage.googleapis.com", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://images.unsplash.com", "https://placehold.co", "https://*.tile.openstreetmap.org", "https://www.google-analytics.com", "https://*.google-analytics.com", "https://*.google.com", "https://*.google.rw", "https://stats.g.doubleclick.net"],
         connectSrc: ["'self'",
           "blob:",
           "data:",
@@ -188,7 +189,8 @@ export function setupSecurityMiddleware(app: Express) {
           "ws://localhost:5001",
           "wss://localhost:5001",
           "https://www.google-analytics.com",
-          "https://*.google-analytics.com"
+          "https://*.google-analytics.com",
+          "https://analytics.google.com"
         ],
         frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         workerSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net"],

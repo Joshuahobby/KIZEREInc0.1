@@ -22,20 +22,10 @@ export function Footer() {
       title: t('landing.footer.quickLinks') || "Quick Links",
       links: [
         { label: t('landing.footer.home') || "Home", href: "/" },
-        {
-          label: t('landing.footer.features') || "Features",
-          href: "/#features",
-          onClick: (e: React.MouseEvent) => {
-            if (window.location.pathname === '/') {
-              e.preventDefault();
-              document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-            }
-          }
-        },
-        {
-          label: t('nav.howItWorks') || "How It Works",
-          href: "/how-it-works",
-        },
+        { label: "Features", href: "/features" },
+        { label: "Use Cases", href: "/use-cases" },
+        { label: t('nav.howItWorks') || "How It Works", href: "/how-it-works" },
+        { label: "How-To Guides", href: "/how-to-use" },
         { label: t('nav.about') || "About", href: "/about" },
         { label: t('landing.footer.faq') || "FAQ", href: "/faq" },
       ]
@@ -43,6 +33,7 @@ export function Footer() {
     {
       title: t('landing.footer.resources') || "Resources",
       links: [
+        { label: "Blog & News", href: "/blog" },
         { label: t('nav.contact') || "Contact", href: "/contact" },
         { label: t('nav.lostDirectory') || "Lost Items", href: "/search?type=lost" },
         { label: t('nav.foundDirectory') || "Found Items", href: "/search?type=found" },
@@ -118,7 +109,6 @@ export function Footer() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      onClick={link.onClick}
                       className="text-gray-400 hover:text-white transition-colors duration-200 inline-flex items-center group"
                     >
                       <span className="relative">

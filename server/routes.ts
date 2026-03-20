@@ -87,6 +87,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/admin/audit-logs', requireAdmin, auditRoutes);
 
   // Public/Semi-public routes
+  app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send(`User-agent: *
+Allow: /$
+Allow: /about$
+Allow: /contact$
+Allow: /faq$
+Allow: /how-it-works$
+Allow: /privacy$
+Allow: /terms$
+Allow: /blog$
+
+# Disallow all dynamic, items, and search paths to protect user data
+Disallow: /search
+Disallow: /items/
+Disallow: /reports/
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /my-items
+Disallow: /my-claims
+Disallow: /profile
+Disallow: /settings
+Disallow: /api/
+
+Sitemap: https://kizere.rw/sitemap.xml`);
+  });
+
+  app.get('/sitemap.xml', (req, res) => {
+    const baseUrl = 'https://kizere.rw';
+    
+    // Only static, public pages are included. Internal items are intentionally omitted to protect user privacy.
+    const staticPages = [
+      '',
+      '/about',
+      '/contact',
+      '/faq',
+      '/how-it-works',
+      '/how-to-use',
+      '/privacy',
+      '/terms',
+      '/blog',
+      '/use-cases',
+      '/features'
+    ];
+
+    const xmlUrls = staticPages.map(page => `
+  <url>
+    <loc>${baseUrl}${page}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>${page === '' ? '1.0' : '0.8'}</priority>
+  </url>`).join('');
+
+    const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${xmlUrls}
+</urlset>`;
+
+    res.header('Content-Type', 'application/xml');
+    res.send(sitemap);
+  });
 
   // Authenticated routes
   app.use('/api/items', requireAuth, itemRoutes);

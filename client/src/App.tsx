@@ -52,6 +52,10 @@ const AdminVerifications = React.lazy(() => import("@/pages/admin/verifications"
 const AdminClaimsManagement = React.lazy(() => import("@/pages/admin/claims-management"));
 const ClientManagement = React.lazy(() => import("@/pages/admin/client-management"));
 const BlogPage = React.lazy(() => import("@/pages/blog"));
+const BlogPostPage = React.lazy(() => import("@/pages/blog-post"));
+const UseCasesPage = React.lazy(() => import("@/pages/use-cases"));
+const HowToUsePage = React.lazy(() => import("@/pages/how-to-use"));
+const FeaturesPage = React.lazy(() => import("@/pages/features"));
 const DocsPage = React.lazy(() => import("@/pages/docs"));
 const CommunityPage = React.lazy(() => import("@/pages/community"));
 const FAQPage = React.lazy(() => import("@/pages/faqs"));
@@ -219,6 +223,18 @@ function App() {
                   </Route>
                   <Route path="/blog">
                     <BlogPage />
+                  </Route>
+                  <Route path="/blog/:slug">
+                    <BlogPostPage />
+                  </Route>
+                  <Route path="/use-cases">
+                    <UseCasesPage />
+                  </Route>
+                  <Route path="/how-to-use">
+                    <HowToUsePage />
+                  </Route>
+                  <Route path="/features">
+                    <FeaturesPage />
                   </Route>
                   <Route path="/docs">
                     <DocsPage />

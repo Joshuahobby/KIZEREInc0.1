@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useLocation, Link } from "wouter";
+import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -70,8 +71,67 @@ export default function LandingPage() {
     }
   };
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": t('landing.faq.questions.security.question'),
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": t('landing.faq.questions.security.answer')
+        }
+      },
+      {
+        "@type": "Question",
+        "name": t('landing.faq.questions.items.question'),
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": t('landing.faq.questions.items.answer')
+        }
+      },
+      {
+        "@type": "Question",
+        "name": t('landing.faq.questions.lostFound.question'),
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": t('landing.faq.questions.lostFound.answer')
+        }
+      },
+      {
+        "@type": "Question",
+        "name": t('landing.faq.questions.limits.question'),
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": t('landing.faq.questions.limits.answer')
+        }
+      }
+    ]
+  };
+
+  const orgSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "KIZERE",
+    "url": "https://kizere.rw",
+    "logo": "https://kizere.rw/icons/icon-512x512.png"
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://kizere.rw/",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://kizere.rw/search?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO schema={[orgSchema, websiteSchema, faqSchema]} />
 
       {/* Unified Header */}
       <Header />
@@ -425,6 +485,7 @@ export default function LandingPage() {
             className="w-full h-full object-cover" 
             width={1920} 
             height={1280}
+            loading="lazy"
             decoding="async"
           />
           <div className="absolute inset-0 bg-primary/80 dark:bg-black/80 mix-blend-multiply"></div>

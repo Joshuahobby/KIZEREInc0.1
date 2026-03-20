@@ -1,5 +1,6 @@
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { SEO } from "@/components/SEO";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import { Shield, Target, Eye } from "lucide-react";
@@ -30,6 +31,10 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO 
+        title={`${t('about_page.title')} | KIZERE`} 
+        description={t('about_page.story_text')} 
+      />
       <Header />
       <main className="flex-grow">
         <section className="py-20 bg-primary/5 border-b border-primary/10">

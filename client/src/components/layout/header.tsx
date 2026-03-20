@@ -107,13 +107,17 @@ export function Header() {
     ? [
       { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
       { name: t('nav.directory'), href: "/search", icon: Search },
-      { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
+      { name: "Features", href: "/features", icon: Info },
+      { name: "Use Cases", href: "/use-cases", icon: Users },
+      { name: "Blog", href: "/blog" },
     ]
     : [
-      { name: t('nav.features'), href: "/#features", scrollTo: "features", icon: Info },
+      { name: "Features", href: "/features", icon: Info },
+      { name: "Use Cases", href: "/use-cases", icon: Info },
       { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
+      { name: "Guides", href: "/how-to-use" },
+      { name: "Blog", href: "/blog" },
       { name: t('nav.directory'), href: "/search", icon: Search },
-      { name: t('nav.community'), href: "/community", icon: Users },
     ];
 
   // Admin access is now handled via the sidebar in the dashboard layout

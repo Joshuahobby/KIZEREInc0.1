@@ -2,6 +2,7 @@ import * as React from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { SEO } from "@/components/SEO";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
@@ -88,6 +89,10 @@ export default function HowItWorks() {
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
+            <SEO 
+                title={`${t('howItWorksPage.processTitle')} | KIZERE`}
+                description={t('howItWorksPage.processSubtitle')}
+            />
             <Header />
 
             <main className="flex-grow">

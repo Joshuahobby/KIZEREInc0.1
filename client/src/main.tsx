@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Router } from "wouter";
 import { AuthProvider } from "@/hooks/use-auth";
@@ -14,18 +15,20 @@ import { initMonitoring } from "./lib/monitoring";
 initMonitoring();
 
 createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <Router>
-      <DirectionProvider dir="ltr">
-        <LoadingProvider>
-          <AuthProvider>
-            <App />
-            <Toaster />
-          </AuthProvider>
-        </LoadingProvider>
-      </DirectionProvider>
-    </Router>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <DirectionProvider dir="ltr">
+          <LoadingProvider>
+            <AuthProvider>
+              <App />
+              <Toaster />
+            </AuthProvider>
+          </LoadingProvider>
+        </DirectionProvider>
+      </Router>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 // Register Service Worker for PWA (Production ONLY to avoid dev caching issues)
