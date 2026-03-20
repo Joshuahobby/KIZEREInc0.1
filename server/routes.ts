@@ -14,6 +14,7 @@ import {
   userRoles,
   initiatePaymentSchema,
   items,
+  blogPosts,
   reports,
   PaymentType,
   PaymentStatus,
@@ -114,10 +115,10 @@ Disallow: /api/
 Sitemap: https://kizere.rw/sitemap.xml`);
   });
 
-  app.get('/sitemap.xml', (req, res) => {
+  app.get('/sitemap.xml', async (req, res) => {
     const baseUrl = 'https://kizere.rw';
     
-    // Only static, public pages are included. Internal items are intentionally omitted to protect user privacy.
+    // Static public pages
     const staticPages = [
       '',
       '/about',
@@ -132,11 +133,22 @@ Sitemap: https://kizere.rw/sitemap.xml`);
       '/features'
     ];
 
-    const xmlUrls = staticPages.map(page => `
+    // Fetch blog posts for dynamic sitemap inclusion
+    let dynamicPages: string[] = [];
+    try {
+      const blogs = await db.select({ slug: blogPosts.slug }).from(blogPosts).where(eq(blogPosts.status, 'published'));
+      dynamicPages = blogs.map(b => `/blog/${b.slug}`);
+    } catch (error) {
+      console.error("Error fetching blogs for sitemap:", error);
+    }
+
+    const allPages = [...staticPages, ...dynamicPages];
+
+    const xmlUrls = allPages.map(page => `
   <url>
     <loc>${baseUrl}${page}</loc>
     <changefreq>weekly</changefreq>
-    <priority>${page === '' ? '1.0' : '0.8'}</priority>
+    <priority>${page === '' ? '1.0' : (page.startsWith('/blog/') ? '0.7' : '0.8')}</priority>
   </url>`).join('');
 
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
@@ -146,6 +158,28 @@ ${xmlUrls}
 
     res.header('Content-Type', 'application/xml');
     res.send(sitemap);
+  });
+
+  // Public Blog Routes
+  app.get('/api/blogs', async (req, res) => {
+    try {
+      const posts = await db.select().from(blogPosts).where(eq(blogPosts.status, 'published')).orderBy(desc(blogPosts.publishedAt));
+      res.json(posts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch blog posts" });
+    }
+  });
+
+  app.get('/api/blogs/:slug', async (req, res) => {
+    try {
+      const [post] = await db.select().from(blogPosts).where(eq(blogPosts.slug, req.params.slug));
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch blog post" });
+    }
   });
 
   // Authenticated routes

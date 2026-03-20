@@ -105,19 +105,19 @@ export function Header() {
   // Dynamic navigation based on auth state
   const navigation: NavItem[] = isAuthenticated
     ? [
-      { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
       { name: t('nav.directory'), href: "/search", icon: Search },
+      { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
       { name: "Features", href: "/features", icon: Info },
       { name: "Use Cases", href: "/use-cases", icon: Users },
       { name: "Blog", href: "/blog" },
     ]
     : [
+      { name: t('nav.directory'), href: "/search", icon: Search },
       { name: "Features", href: "/features", icon: Info },
       { name: "Use Cases", href: "/use-cases", icon: Info },
       { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
       { name: "Guides", href: "/how-to-use" },
       { name: "Blog", href: "/blog" },
-      { name: t('nav.directory'), href: "/search", icon: Search },
     ];
 
   // Admin access is now handled via the sidebar in the dashboard layout
@@ -142,9 +142,9 @@ export function Header() {
       )}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-3 items-center h-16 w-full">
+        <div className="flex items-center justify-between h-16 w-full gap-4">
           {/* Logo - Left aligned */}
-          <div className="flex items-center justify-start">
+          <div className="flex-none min-w-[140px] flex items-center justify-start">
             <Link href={isAuthenticated ? getDashboardPath() : "/"} className="flex items-center gap-2 group" aria-label="KIZERE Home">
               <Logo className="h-8 w-8 transition-transform group-hover:scale-110" aria-hidden="true" />
               <div className="flex flex-col items-start leading-none gap-0">
@@ -158,8 +158,8 @@ export function Header() {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Absolute Centered with space protection */}
-          <div className="justify-self-center">
+          {/* Desktop Navigation - Centered */}
+          <div className="hidden lg:flex flex-1 items-center justify-center overflow-hidden">
             <nav className="hidden lg:flex lg:items-center lg:gap-1" aria-label="Main Navigation">
               {!isOnline && (
                 <Badge variant="outline" className="mr-2 border-amber-500/50 bg-amber-500/10 text-amber-600 animate-pulse gap-1">
@@ -191,7 +191,7 @@ export function Header() {
           </div>
 
           {/* Actions - Right aligned */}
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex-none min-w-[200px] flex items-center justify-end gap-2">
             <div className="flex items-center gap-1 sm:gap-2 mr-2">
               <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.95 }}>
                 <ThemeToggle />

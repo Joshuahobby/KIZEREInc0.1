@@ -190,7 +190,8 @@ export function setupSecurityMiddleware(app: Express) {
           "wss://localhost:5001",
           "https://www.google-analytics.com",
           "https://*.google-analytics.com",
-          "https://analytics.google.com"
+          "https://analytics.google.com",
+          "https://stats.g.doubleclick.net"
         ],
         frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
         workerSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net"],

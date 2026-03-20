@@ -93,7 +93,7 @@ function App() {
     if (!isIframe) return null;
 
     return (
-      <div className="fixed top-0 left-0 right-0 z-[100] bg-orange-500 text-white p-2 text-center text-sm font-medium shadow-md">
+      <div className="relative z-[100] bg-orange-500 text-white p-2 text-center text-sm font-medium shadow-md">
         ⚠️ Preview window detected. Google Login may fail.
         <a href={window.location.href} target="_blank" rel="noopener noreferrer" className="underline ml-2 font-bold">Open in New Tab</a>
       </div>

@@ -4,33 +4,32 @@ import { SEO } from "@/components/SEO";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Share2, Facebook, Twitter, Linkedin } from "lucide-react";
+import { ArrowLeft, Calendar, Share2, Facebook, Twitter, Linkedin, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { BlogPost } from "@shared/schema";
 
-// Mock data (same as blog.tsx for now, but with full content)
-const BLOG_POSTS: Record<string, any> = {
-  "why-register-devices": {
-    id: "why-register-devices",
-    title: "Why Registering Your Devices is Critical in Rwanda",
-    excerpt: "Learn how the national registry protects you against theft and increases device resale value.",
-    content: `
-      <p>In today's digital age, our electronic devices are more than just tools—they hold our personal data, professional lives, and significant financial value.</p>
-      <h2>The Rising Cost of Device Theft</h2>
-      <p>Device theft remains a significant issue globally. Without a central registry, stolen devices can easily be wiped and resold on the secondary market with little risk to the thieves.</p>
-      <h2>How KIZERE Changes the Game</h2>
-      <p>By registering your device's unique identifiers (like IMEI and Serial Number) on KIZERE, you create a permanent, verifiable link between you and your property. If your device is ever lost or stolen, you can flag it instantly. This prevents buyers on the secondary market from unknowingly purchasing stolen goods and dramatically increases the chances of recovery by law enforcement.</p>
-      <h2>Increased Resale Value</h2>
-      <p>When you're ready to upgrade, transferring a verified KIZERE-registered item gives the buyer peace of mind, often allowing you to command a premium price compared to unregistered, unverifiable items.</p>
-    `,
-    date: "2026-03-15",
-    author: "KIZERE Security Team",
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1200&auto=format&fit=crop",
-    category: "Security"
-  }
-};
+// Mock data (moved to DB)
+// const BLOG_POSTS: Record<string, any> = {...};
 
 export default function BlogPostPage() {
   const { slug } = useParams();
-  const post = slug ? BLOG_POSTS[slug] : null;
+  
+  const { data: post, isLoading, error } = useQuery<BlogPost>({
+    queryKey: [`/api/blogs/${slug}`],
+    enabled: !!slug,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <div className="flex-grow flex items-center justify-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -50,14 +49,14 @@ export default function BlogPostPage() {
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    "headline": post.title,
+    "headline": post?.title,
     "image": [
-      post.image.startsWith('http') ? post.image : `https://kizere.rw${post.image}`
+      post?.image?.startsWith('http') ? post.image : `https://kizere.rw${post?.image || ''}`
     ],
-    "datePublished": new Date(post.date).toISOString(),
+    "datePublished": post ? new Date(post.publishedAt || post.createdAt).toISOString() : '',
     "author": [{
       "@type": "Person",
-      "name": post.author
+      "name": post.authorName || "KIZERE Team"
     }],
     "publisher": {
       "@type": "Organization",
@@ -95,7 +94,7 @@ export default function BlogPostPage() {
               </span>
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
-                {new Date(post.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                {new Date(post.publishedAt || post.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
               </div>
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-6">
@@ -119,7 +118,7 @@ export default function BlogPostPage() {
             <aside className="space-y-8">
               <div className="p-6 rounded-2xl bg-card border border-border/50">
                 <h3 className="font-bold text-lg mb-2">Written by</h3>
-                <p className="text-primary font-medium">{post.author}</p>
+                <p className="text-primary font-medium">{post.authorName || "KIZERE Team"}</p>
               </div>
               
               <div className="p-6 rounded-2xl bg-card border border-border/50">

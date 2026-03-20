@@ -889,7 +889,6 @@
     "qr_generation_error": "Could not generate QR code.",
     "qr_refreshed": "QR Code Updated",
     "qr_refreshed_desc": "A new unique URL has been generated.",
-
     "preview": {
       "title": "Item Preview",
       "item": "Item",
@@ -1221,7 +1220,7 @@
     "mission": "Our Mission",
     "mission_text": "To build a transparent and trustworthy environment for item ownership and recovery in Rwanda through innovative digital solutions.",
     "vision": "Our Vision",
-    "vision_text": "To become the standard for ownership verification and lost-item recovery across East Africa.",
+    "vision_text": "To become the standard for ownership verification and lost-item recovery across Different parts Rwanda.",
     "story": "The KIZERE Story",
     "story_text": "Founded in Kigali, KIZERE was born out of the need for a central, reliable system to manage property and facilitate the return of lost items in our growing city."
   },

@@ -425,6 +425,33 @@ export const paymentPackages = pgTable("payment_packages", {
   updatedAt: timestamp("updated_at").defaultNow()
 });
 
+// Blog Posts (CMS)
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(), // HTML or Markdown
+  image: text("image").notNull(),
+  category: text("category").notNull(),
+  authorId: integer("author_id").references(() => users.id),
+  authorName: text("author_name"), // Fallback if no specific user ID is provided
+  status: text("status").notNull().default('published'), // 'draft', 'published', 'archived'
+  publishedAt: timestamp("published_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("blog_post_slug_idx").on(table.slug),
+  index("blog_post_status_idx").on(table.status),
+]);
+
+// External session table used by connect-pg-simple
+export const session = pgTable("session", {
+  sid: varchar("sid").primaryKey(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(),
+});
+
 // Zod schemas for input validation
 
 // User schemas
@@ -576,6 +603,10 @@ export const insertVerificationRequestSchema = createInsertSchema(verificationRe
 export const insertStatusChangeSchema = createInsertSchema(statusChanges).omit({ id: true, timestamp: true });
 export const insertUserWarningSchema = createInsertSchema(userWarnings).omit({
   id: true, issuedAt: true, acknowledgedAt: true, expiresAt: true
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true, createdAt: true, updatedAt: true
 });
 
 // Payment package schema
@@ -790,6 +821,7 @@ export type ClaimStatusLog = typeof claimStatusLogs.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type Coupon = typeof coupons.$inferSelect;
+export type BlogPost = typeof blogPosts.$inferSelect;
 
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type UserRole = typeof userRoles[number];
