@@ -33,7 +33,7 @@ function SortableItem({ id, url, file, onRemove }: SortableItemProps) {
         isDragging ? "opacity-50 z-10" : "opacity-100 z-1"
       )}
     >
-      <img src={url} alt={file.name} className="object-cover w-full h-full" />
+      <img src={url} alt={file.name} className="object-cover w-full h-full" width={80} height={80} loading="lazy" decoding="async" />
 
       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
         <div

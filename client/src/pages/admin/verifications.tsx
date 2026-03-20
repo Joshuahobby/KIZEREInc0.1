@@ -194,6 +194,10 @@ export default function AdminVerifications() {
                                     <img
                                       src={req.documentUrl}
                                       alt="Document"
+                                      width={600}
+                                      height={375}
+                                      loading="lazy"
+                                      decoding="async"
                                       className="object-contain h-full w-full cursor-zoom-in group-hover:scale-[1.02] transition-transform"
                                       onClick={() => window.open(req.documentUrl, '_blank')}
                                     />
@@ -212,6 +216,10 @@ export default function AdminVerifications() {
                                     <img
                                       src={req.selfieUrl}
                                       alt="Selfie"
+                                      width={600}
+                                      height={375}
+                                      loading="lazy"
+                                      decoding="async"
                                       className="object-contain h-full w-full cursor-zoom-in group-hover:scale-[1.02] transition-transform"
                                       onClick={() => window.open(req.selfieUrl, '_blank')}
                                     />

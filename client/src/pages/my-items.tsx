@@ -544,6 +544,10 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                       <img
                         src={item.imageUrls[0]}
                         alt={item.name}
+                        width={80}
+                        height={80}
+                        loading="lazy"
+                        decoding="async"
                         className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal group-hover:scale-110 transition-transform duration-700"
                       />
                     ) : (
@@ -702,6 +706,10 @@ function ItemsGrid({ items, viewMode, onReportLost, onMarkFound, onViewItem, has
                   <img
                     src={item.imageUrls[0]}
                     alt={item.name}
+                    width={400}
+                    height={200}
+                    loading="lazy"
+                    decoding="async"
                     className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal transition-transform duration-1000 group-hover:scale-110 drop-shadow-md"
                   />
                 ) : (

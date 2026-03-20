@@ -227,6 +227,10 @@ export default function Search() {
                                               <img
                                                 src={item.imageUrls[0]}
                                                 alt={item.title || item.name}
+                                                width={400}
+                                                height={300}
+                                                loading="lazy"
+                                                decoding="async"
                                                 className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal transition-transform duration-1000 group-hover:scale-110 drop-shadow-md"
                                               />
                                             ) : (

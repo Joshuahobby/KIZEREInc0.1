@@ -160,6 +160,10 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                   src={item.imageUrls[0]}
                   alt={item.name}
                   className="h-full w-full object-cover"
+                  width={48}
+                  height={48}
+                  loading="lazy"
+                  decoding="async"
                 />
               </div>
             ) : (

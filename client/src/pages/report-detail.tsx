@@ -196,6 +196,10 @@ export default function ReportDetailPage() {
                       key={i}
                       src={url}
                       alt={`${report.title} - Image ${i + 1}`}
+                      width={800}
+                      height={256}
+                      loading={i === 0 ? "eager" : "lazy"}
+                      decoding="async"
                       className="rounded-xl w-full h-64 object-cover shadow-lg border"
                     />
                   ))}

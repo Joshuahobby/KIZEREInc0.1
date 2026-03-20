@@ -204,7 +204,7 @@ export default function CommandCenter() {
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0 overflow-hidden ring-offset-background transition-all hover:ring-2 hover:ring-primary/20">
                     <div className="h-full w-full bg-primary/10 flex items-center justify-center">
                       {user?.avatarUrl ? (
-                        <img src={user.avatarUrl} alt="User avatar" className="h-full w-full object-cover" />
+                        <img src={user.avatarUrl} alt="User avatar" width={32} height={32} loading="eager" decoding="async" className="h-full w-full object-cover" />
                       ) : (
                         <User className="h-4 w-4 text-primary" />
                       )}

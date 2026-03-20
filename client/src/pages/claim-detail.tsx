@@ -439,7 +439,7 @@ export default function ClaimDetailPage() {
                       <div className="grid grid-cols-2 gap-4">
                         {claim.imageUrls.map((url, i) => (
                           <div key={i} className="aspect-video relative rounded-lg overflow-hidden border bg-muted">
-                            <img src={url} alt={`Proof ${i + 1}`} className="object-cover w-full h-full" />
+                            <img src={url} alt={`Proof ${i + 1}`} width={400} height={225} loading="lazy" decoding="async" className="object-cover w-full h-full" />
                           </div>
                         ))}
                       </div>

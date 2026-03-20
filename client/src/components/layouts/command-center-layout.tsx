@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 
 import {
   AlertTriangle,
@@ -137,7 +138,7 @@ export function CommandCenterLayout({ children }: { children: React.ReactNode })
                 </div>
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                   {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="User avatar" className="h-8 w-8 rounded-full" />
+                    <img src={user.avatarUrl} alt="User avatar" width={32} height={32} loading="lazy" decoding="async" className="h-8 w-8 rounded-full" />
                   ) : (
                     <User className="h-4 w-4 text-primary" />
                   )}
@@ -225,12 +226,11 @@ export function CommandCenterLayout({ children }: { children: React.ReactNode })
                     <div className="text-sm font-medium">Health Score</div>
                     <div className="text-lg font-bold">{healthScore}%</div>
                   </div>
-                  <div className="h-2 bg-background rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${healthScore >= 90 ? 'bg-emerald-500' : healthScore >= 70 ? 'bg-amber-500' : 'bg-red-500'}`}
-                      style={{ width: `${healthScore}%` }}
-                    ></div>
-                  </div>
+                  <Progress 
+                    value={healthScore} 
+                    className="h-2 bg-background" 
+                    indicatorClassName={healthScore >= 90 ? 'bg-emerald-500' : healthScore >= 70 ? 'bg-amber-500' : 'bg-red-500'} 
+                  />
                 </div>
                 {activeIssues.length > 0 && (
                   <Alert variant="destructive" className="mt-2">

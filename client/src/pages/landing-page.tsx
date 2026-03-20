@@ -419,7 +419,14 @@ export default function LandingPage() {
       <section className="py-16 md:py-24 relative overflow-hidden">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0">
-          <img src={crowdImage} alt="Background" className="w-full h-full object-cover" />
+          <img 
+            src={crowdImage} 
+            alt="Background" 
+            className="w-full h-full object-cover" 
+            width={1920} 
+            height={1280}
+            decoding="async"
+          />
           <div className="absolute inset-0 bg-primary/80 dark:bg-black/80 mix-blend-multiply"></div>
           <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
         </div>
@@ -515,6 +522,10 @@ export default function LandingPage() {
                   whileInView={{ scale: 1, filter: "blur(0px)" }}
                   transition={{ duration: 0.8 }}
                   viewport={{ once: true }}
+                  width={1200}
+                  height={800}
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
                   <p className="text-white text-sm md:text-base font-medium">{t('landing.howItWorks.communityDesc')}</p>
@@ -852,6 +863,10 @@ export default function LandingPage() {
                     src={mobileMockupImage}
                     alt="KIZERE Mobile App"
                     className="max-w-full h-auto drop-shadow-2xl"
+                    width={400}
+                    height={800}
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               </motion.div>

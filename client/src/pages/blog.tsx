@@ -108,6 +108,10 @@ export default function BlogPage() {
                       <img
                         src={post.image}
                         alt={post.title}
+                        width={400}
+                        height={250}
+                        loading="lazy"
+                        decoding="async"
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-4 left-4">

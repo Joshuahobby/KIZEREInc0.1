@@ -76,6 +76,10 @@ export function ClaimReviewDialog({ claim, isOpen, onClose }: ClaimReviewDialogP
                     src={url}
                     className="rounded-lg border h-32 w-full object-cover shadow-sm"
                     alt={t("claims.claim_evidence_alt")}
+                    width={300}
+                    height={128}
+                    loading="lazy"
+                    decoding="async"
                   />
                 ))}
               </div>

@@ -940,7 +940,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                     <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                                       {existingImages.map((url, idx) => (
                                         <div key={idx} className="relative aspect-square rounded-xl overflow-hidden group border border-border/30">
-                                          <img src={url} alt="Item" className="w-full h-full object-cover" />
+                                          <img src={url} alt="Item" width={100} height={100} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                             <Button
                                               type="button"
@@ -1203,9 +1203,9 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                   <div className="flex items-center gap-2">
                                     <div className="flex -space-x-2">
                                       {existingImages.slice(0, 3).map((url, idx) => (
-                                        <div key={`ex-${idx}`} className="h-10 w-10 rounded-lg border-2 border-background overflow-hidden">
-                                          <img src={url} alt="" className="h-full w-full object-cover" />
-                                        </div>
+                                          <div key={`ex-${idx}`} className="h-10 w-10 rounded-lg border-2 border-background overflow-hidden">
+                                            <img src={url} alt="" width={40} height={40} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+                                          </div>
                                       ))}
                                       {itemImages.slice(0, 3 - existingImages.length).map((file, idx) => (
                                         <div key={`new-${idx}`} className="h-10 w-10 rounded-lg border-2 border-background overflow-hidden bg-muted flex items-center justify-center">
@@ -1387,6 +1387,10 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                     <img 
                       src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i + 40}`} 
                       alt="Agent" 
+                      width={20}
+                      height={20}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover grayscale opacity-50"
                     />
                   </div>

@@ -72,6 +72,10 @@ export function ReportDetailDialog({ report, isOpen, onClose }: ReportDetailDial
                     src={url}
                     alt={report.title}
                     className="rounded-lg object-cover h-40 w-full border"
+                    width={400}
+                    height={200}
+                    loading="lazy"
+                    decoding="async"
                   />
                 ))}
               </div>

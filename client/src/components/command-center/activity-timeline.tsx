@@ -278,6 +278,10 @@ export function ActivityTimeline({ events, maxEvents = 5, onEventClick }: Activi
                                 src={event.actor.avatar} 
                                 alt={event.actor.name} 
                                 className="h-full w-full rounded-full object-cover"
+                                width={32}
+                                height={32}
+                                loading="lazy"
+                                decoding="async"
                               />
                             ) : (
                               <span className="text-sm font-bold">

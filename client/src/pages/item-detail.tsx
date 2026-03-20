@@ -295,6 +295,10 @@ export default function ItemDetailPage() {
                   <img
                     src={item.imageUrls[0]}
                     alt={item.name}
+                    width={800}
+                    height={450}
+                    loading="eager"
+                    decoding="async"
                     className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal drop-shadow-lg"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />

@@ -198,6 +198,10 @@ export function ReportRegisteredItemDialog({ item, open, onOpenChange }: ReportR
                                     src={item.imageUrls[0]}
                                     alt={item.name}
                                     className="h-12 w-12 rounded object-cover mr-3"
+                                    width={48}
+                                    height={48}
+                                    loading="lazy"
+                                    decoding="async"
                                 />
                             ) : (
                                 <div className="h-12 w-12 rounded bg-primary/10 flex items-center justify-center mr-3 text-primary font-bold text-xs">

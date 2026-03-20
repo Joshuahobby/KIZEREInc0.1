@@ -164,6 +164,10 @@ export function VerificationRequestsTable() {
                                 src={request.selfieUrl}
                                 alt="Selfie"
                                 className="object-contain w-full h-full"
+                                width={400}
+                                height={300}
+                                loading="lazy"
+                                decoding="async"
                               />
                             </div>
                           </div>
@@ -174,6 +178,10 @@ export function VerificationRequestsTable() {
                                 src={request.documentUrl}
                                 alt="Identity Document"
                                 className="object-contain w-full h-full"
+                                width={400}
+                                height={300}
+                                loading="lazy"
+                                decoding="async"
                               />
                             </div>
                           </div>

@@ -167,7 +167,11 @@ export function SmartIDRecognizer({ onIdentifierSelected, showHeader = true }: S
                 <img 
                   src={selectedImage.url} 
                   alt={t('registration.smart_id_image_alt')} 
-                  className="w-full h-full object-contain" 
+                  className="w-full h-full object-contain"
+                  width={800}
+                  height={450}
+                  loading="lazy"
+                  decoding="async" 
                 />
                 <Button 
                   type="button"
