@@ -42,6 +42,9 @@ export default defineConfig({
           if (id.includes("node_modules")) {
             // Only isolate heavy, independent libraries that are lazy-loaded
             // Avoid splitting interdependent modules (react, radix, lucide, clsx, etc.)
+            if (id.includes("framer-motion")) {
+              return "vendor-animations";
+            }
             if (id.includes("recharts") || id.includes("d3")) {
               return "vendor-charts";
             }
