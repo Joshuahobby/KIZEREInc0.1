@@ -337,7 +337,7 @@ export function Header() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-controls="mobile-menu"
-              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-label={mobileMenuOpen ? t("nav.close_menu") : t("nav.open_menu")}
             >
               {mobileMenuOpen ? (
                 <X className="h-5 w-5" />
