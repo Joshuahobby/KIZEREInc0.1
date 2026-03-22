@@ -227,6 +227,10 @@
       "privacyPolicy": "Sera ya Faragha",
       "termsOfService": "Masharti ya Huduma",
       "cookiePolicy": "Sera ya Vidakuzi"
+    },
+    "recruitment": {
+      "notice": "Tunaajiri! Watafsiri wa kutusaidia kupanua KIZERE",
+      "learnMore": "Omba"
     }
   },
   "community_page": {
@@ -489,7 +493,7 @@
     "security_placeholder": "Swali la uthibitisho kwa wadai...",
     "bounty_title": "Ongeza Zawadi (Hiari)",
     "bounty_desc": "Toa zawadi kuwahamasisha wapataji.",
-    "bounty_escrow": "Zawadi huhifadhiwa salama kwenye akaunti ya dhamana na **hutolewa tu** unapothibitisha kupokea kitu chako kwa OTP.",
+    "bounty_escrow": "Zawadi huhifadhiwa salama kwenye akaunti ya dhamana and **hutolewa tu** unapothibitisha kupokea kitu chako kwa OTP.",
     "reward_amount": "Kiasi cha Zawadi (RWF)",
     "reward_hint": "Acha 0 kama hutaki kutoa zawadi.",
     "payment_info": "Kuripoti kitu kilichopotea hugharimu **1,000 RWF**.",
@@ -550,7 +554,7 @@
     "subtitle": "Tazama vitu vilivyopatikana au tafuta kwenye orodha mali zako zilizopotea",
     "reportLost": "Ripoti Kitu Kilichopotea",
     "reportLostDesc": "Toa maelezo ya kitu chako kilichopotea.",
-    "reportFound": "Ripoti Kitu Kilichopatikana",
+    "reportFound": "Ripoti Kitu Kilichapatikana",
     "reportFoundDesc": "Toa maelezo ya kitu ulichokipata.",
     "searchPlaceholder": "Tafuta kwa maneno (mfano. Pasipoti, Pochi ya bluu)...",
     "searchButton": "Tafuta",
@@ -582,7 +586,8 @@
     "benefit3Title": "Faragha Kwanza",
     "benefit3Desc": "Rejesha vitu vyako bila kutoa maelezo yako ya mawasiliano ya kibinafsi kwa wageni.",
     "ctaTitle": "Uko Tayari Kulinda Kitu Chako Chako cha Kwanza?",
-    "ctaButton": "Linda Sasa"
+    "ctaButton": "Linda Kitu Chako",
+    "heroCtaButton": "Angalia Mchakato"
   },
   "walkthrough": {
     "sub": {
@@ -629,5 +634,30 @@
     "end": "Hagarika",
     "gotIt": "Sawa",
     "stepOf": "Hatua ya {{current}} ya {{total}}"
+  },
+  "contact_page": {
+    "title": "Wasiliana Nasi",
+    "subtitle": "Tuwasiliane kupitia njia yoyote hapa chini.",
+    "form": {
+      "name": "Jina Kamika",
+      "email": "Anwani ya Barua Pepe",
+      "subject": "Somo",
+      "message": "Ujumbe",
+      "send": "Tuma Ujumbe"
+    },
+    "info": {
+      "address": "Kigali, Rwanda",
+      "phone": "+250 793 895 236",
+      "email": "support@kizere.rw"
+    }
+  },
+  "about_page": {
+    "title": "Kwa Nini KIZERE?",
+    "mission": "Ahadi Yetu Kwako",
+    "mission_text": "Tuna dhamira ya kuhakikisha hakuna kitu cha thamani nchini Rwanda kinachobaki kimepotea. Kwa kuchanganya teknolojia ya kisasa na uaminifu wa jamii, tunatoa sauti kwa mali zako na amani ya akili unayostahili.",
+    "vision": "Mustakabali Salama",
+    "vision_text": "Tunatarajia Rwanda ambapo wizi hautakuwepo kwa sababu kila kitu kinalindwa. Jiunge na maelfu ya watumiaji wanaojenga jamii salama na yenye uwazi zaidi ambapo chako kinabaki kuwa chako.",
+    "story": "Zaidi ya Daftari Tu",
+    "story_text": "KIZERE ilizaliwa kutokana na utambuzi rahisi: kupoteza kitu muhimu si kuhusu pesa tu—ni kuhusu uhusiano. Tulijenga jukwaa hili ili kubadilisha wasiwasi wa kupoteza kuwa ujasiri wa kupata."
   }
 }

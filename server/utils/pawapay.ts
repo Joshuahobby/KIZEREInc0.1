@@ -287,7 +287,7 @@ export async function initiateDeposit(data: PaymentInitialization): Promise<Pawa
         }
         // Format phoneNumber: remove leading +, spaces, dashes
         let formattedPhone = data.phoneNumber.replace(/[\s\+\-]/g, '');
-        // If it starts with '07' and is 10 digits (e.g., 0788331033), convert to '2507...'
+        // If it starts with '07' and is 10 digits (e.g., 0793895236), convert to '2507...'
         if (formattedPhone.startsWith('07') && formattedPhone.length === 10) {
             formattedPhone = '250' + formattedPhone.substring(1);
         }

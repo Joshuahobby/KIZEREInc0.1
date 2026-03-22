@@ -229,6 +229,10 @@
       "privacyPolicy": "Politique de Confidentialité",
       "termsOfService": "Conditions d'Utilisation",
       "cookiePolicy": "Politique de Cookies"
+    },
+    "recruitment": {
+      "notice": "Nous recrutons ! Traducteurs pour nous aider à étendre KIZERE",
+      "learnMore": "Postuler"
     }
   },
   "community_page": {
@@ -448,6 +452,7 @@
       "confirmPassword": "Confirmer le mot de passe",
       "passwordChangeSuccess": "Mot de passe modifié avec succès",
       "passwordChangeSuccessDesc": "Votre mot de passe a été mis à jour. Veuillez utiliser votre nouveau mot de passe pour vos prochaines connexions.",
+      "passwordChangeSuccessDesc_2": "Votre mot de passe a été mis à jour. Veuillez utiliser votre nouveau mot de passe pour vos prochaines connexions.",
       "passwordChangeError": "Erreur lors de la modification du mot de passe",
       "passwordChangeErrorDesc": "Un problème est survenu lors de la modification de votre mot de passe. Veuillez vérifier votre mot de passe actuel et réessayer.",
       "sessionsTitle": "Sessions Actives",
@@ -708,7 +713,8 @@
     "benefit3Title": "Confidentialité d'Abord",
     "benefit3Desc": "Récupérez vos objets sans jamais révéler vos coordonnées personnelles à des inconnus.",
     "ctaTitle": "Prêt à Protéger Votre Premier Objet ?",
-    "ctaButton": "Protéger"
+    "ctaButton": "Protéger votre objet",
+    "heroCtaButton": "Voir le processus"
   },
   "notifications": {
     "title": "Notifications",
@@ -732,5 +738,30 @@
       "alerts": "Alertes",
       "system": "Système"
     }
+  },
+  "contact_page": {
+    "title": "Contactez-nous",
+    "subtitle": "Nous sommes là pour vous aider. Contactez-nous via l'un des canaux ci-dessous.",
+    "form": {
+      "name": "Nom Complet",
+      "email": "Adresse Email",
+      "subject": "Sujet",
+      "message": "Message",
+      "send": "Envoyer le Message"
+    },
+    "info": {
+      "address": "Kigali, Rwanda",
+      "phone": "+250 793 895 236",
+      "email": "support@kizere.rw"
+    }
+  },
+  "about_page": {
+    "title": "Pourquoi KIZERE ?",
+    "mission": "Notre Promesse",
+    "mission_text": "Nous avons pour mission de garantir qu'aucun objet de valeur au Rwanda ne reste perdu. En combinant une technologie de pointe et la confiance de la communauté, nous donnons une voix à vos biens et vous apportons la tranquillité d'esprit que vous méritez.",
+    "vision": "Un Avenir Sécurisé",
+    "vision_text": "Nous envisageons un Rwanda où le vol est obsolète parce que chaque objet est protégé. Rejoignez des milliers d'utilisateurs qui bâtissent une société plus sûre et plus transparente où ce qui vous appartient reste à vous.",
+    "story": "Plus Qu'un Simple Registre",
+    "story_text": "KIZERE est né d'un constat simple : perdre quelque chose d'important n'est pas seulement une question d'argent, c'est une question de lien. Nous avons construit cette plateforme pour transformer l'anxiété de la perte en confiance de la récupération."
   }
 }

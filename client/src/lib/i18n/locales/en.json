@@ -319,8 +319,8 @@
       "cookiePolicy": "Cookie Policy"
     },
     "recruitment": {
-      "notice": "We are hiring! We're looking for translators to help us expand KIZERE to more languages.",
-      "learnMore": "Learn More & Apply",
+      "notice": "We are hiring! Translators to help us expand KIZERE",
+      "learnMore": "Apply",
       "dialogTitle": "Work with KIZERE",
       "dialogSubtitle": "Help us make KIZERE accessible to everyone in Rwanda.",
       "description": "We're looking for passionate individuals to help us translate and localize our platform into Kinyarwanda and Kiswahili. Your work will help thousands of people protect and recover their valuables.",
@@ -1216,13 +1216,13 @@
     "contact_us_text": "Still have questions? We're here to help you secure what matters most."
   },
   "about_page": {
-    "title": "About KIZERE",
-    "mission": "Our Mission",
-    "mission_text": "To build a transparent and trustworthy environment for item ownership and recovery in Rwanda through innovative digital solutions.",
-    "vision": "Our Vision",
-    "vision_text": "To become the standard for ownership verification and lost-item recovery across Different parts Rwanda.",
-    "story": "The KIZERE Story",
-    "story_text": "Founded in Kigali, KIZERE was born out of the need for a central, reliable system to manage property and facilitate the return of lost items in our growing city."
+    "title": "Why KIZERE?",
+    "mission": "Our Promise to You",
+    "mission_text": "We're on a mission to ensure no valuable in Rwanda ever stays lost. By combining cutting-edge technology with community trust, we give your belongings a voice and you the peace of mind you deserve.",
+    "vision": "A Secure Future",
+    "vision_text": "We envision a Rwanda where theft is obsolete because every item is protected. Join thousands of users who are building a safer, more transparent society where what's yours stays yours.",
+    "story": "More Than Just a Registry",
+    "story_text": "KIZERE was born from a simple realization: losing something important isn't just about the money—it's about the connection. We built this platform to turn the anxiety of loss into the confidence of recovery."
   },
   "contact_page": {
     "title": "Contact Us",
@@ -1236,7 +1236,7 @@
     },
     "info": {
       "address": "Kigali, Rwanda",
-      "phone": "+250 7XX XXX XXX",
+      "phone": "+250 793 895 236",
       "email": "support@kizere.rw"
     }
   },
@@ -1781,7 +1781,8 @@
     "benefit3Title": "Privacy First",
     "benefit3Desc": "Recover your items without ever revealing your personal contact details to strangers.",
     "ctaTitle": "Ready to Protect Your First Item?",
-    "ctaButton": "Protect Now"
+    "ctaButton": "Protect Your Item",
+    "heroCtaButton": "See the Process"
   },
   "walkthrough": {
     "sub": {

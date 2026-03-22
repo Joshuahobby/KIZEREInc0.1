@@ -319,8 +319,8 @@
       "cookiePolicy": "Politiki ya Kuki"
     },
     "recruitment": {
-      "notice": "Dukeneye abakozi! Turashaka abasemuzi mu kunoza indimi KIZERE ikoresha.",
-      "learnMore": "Menya Birenzeho & Saba Akazi",
+      "notice": "Dukeneye abasemuzi bo kudufasha kwagura KIZERE!",
+      "learnMore": "Saba akazi",
       "dialogTitle": "Kora na KIZERE",
       "dialogSubtitle": "Duhe ubufasha bwo gutuma KIZERE igera kuri bose mu Rwanda.",
       "description": "Turashaka abantu bafite ishyaka ryo kudufasha gusemura no gushyira porogaramu yacu mu Kinyarwanda n'Igiswahili. Akazi kanyu kazafasha ibihumbi by'abantu kurinda no kugarura ibintu byabo by'agaciro.",
@@ -1221,13 +1221,13 @@
     "contact_us_text": "Uragifite ibindi bibazo? Turi hano kugira nâ€™ugufashe kurinda ibintu byawe by'agaciro."
   },
   "about_page": {
-    "title": "Kuri KIZERE",
-    "mission": "Inshingano Zacu",
-    "mission_text": "Kubaka umuryango ukoresha ukuri kandi wizewe mu gutunga no kugarura ibintu mu Rwanda binyuze mu mishinga y'ikoranabuhanga.",
-    "vision": "Icyerekezo Cyacu",
-    "vision_text": "Kuba icyitegererezo mu kwemeza uburenganzira bwo gutunga no kugarura ibyabuze muri Afurika y'Iburasirazuba.",
-    "story": "Amateka ya KIZERE",
-    "story_text": "Yatangiye i Kigali, KIZERE yavutse biturutse ku kenerwa rya sisitemu imwe yizewe yo gucunga ibikoresho no gufasha kugarura ibyabuze mu mujyi wacu ukura vuba."
+    "title": "Kuki Hitamo KIZERE?",
+    "mission": "Isezerano Ryacu",
+    "mission_text": "Inshingano zacu ni ukubashoboza kurinda ibyanyu byose ntihagire na kimwe kizima mu Rwanda kirangirira mu bimenyetso bidatuye. Twatangiye uru rugendo kugira ngo buri Munyarwanda agire umutekano w'ibyo yakoze n'imvune ze.",
+    "vision": "Ejo Hazaza Hafite Umutekano",
+    "vision_text": "Twifuza u Rwanda ruzira ubujura bw'ibikoresho, aho buri wese afite icyizere cyuzuye ko ibye bishinganye. Jya muri uyu muryango w'abantu bashaka impinduka n'umutekano urambye.",
+    "story": "Birarenze Kwandikisha Gusa",
+    "story_text": "KIZERE yavutse igihe twonse ko itakara ry'igikoresho atari amafaranga gusa ariko ari n'umutekano w'ibyo ubitseho. Twubatse ubu buryo ngo dukureho ubwoba, tubuze abajura aho bamenera."
   },
   "contact_page": {
     "title": "Twandikire",
@@ -1241,7 +1241,7 @@
     },
     "info": {
       "address": "Kigali, u Rwanda",
-      "phone": "+250 7XX XXX XXX",
+      "phone": "+250 793 895 236",
       "email": "support@kizere.rw"
     }
   },
@@ -1782,7 +1782,8 @@
     "benefit3Title": "Ibanga Mbere na Mbere",
     "benefit3Desc": "Garuza ibintu byawe utarinze kugaragaza amakuru yawe y'itumanaho ku bantu utazi.",
     "ctaTitle": "Witeguye Kurinda Ikintu Cyawe cya Mbere?",
-    "ctaButton": "Rinda Ubu"
+    "ctaButton": "Rinda Ikintu Cyawe",
+    "heroCtaButton": "Reba Uko Bikora"
   },
   "walkthrough": {
     "sub": {

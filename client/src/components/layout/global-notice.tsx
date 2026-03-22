@@ -12,13 +12,15 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     Globe,
     ArrowRight,
     CheckCircle2,
     Mail,
     Phone,
-    Paperclip
+    Paperclip,
+    X
 } from "lucide-react";
 
 export function GlobalNotice() {
@@ -47,10 +49,7 @@ export function GlobalNotice() {
     const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
 
     // Hide on auth page and any other pages where it doesn't make sense
-    const hiddenRoutes = ["/auth"];
-    if (hiddenRoutes.includes(location) || isDismissed) {
-        return null;
-    }
+    const hiddenRoutes = ["/auth", "/admin", "/dashboard", "/signup", "/login"];
 
     const handleRecruitmentSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -88,24 +87,49 @@ export function GlobalNotice() {
 
     return (
         <>
-            <div className="bg-primary/10 border-b border-primary/20 py-2.5 px-4 relative z-50">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 text-sm text-center">
-                    <div className="flex items-center justify-center gap-2">
-                        <Globe className="w-4 h-4 text-primary shrink-0" />
-                        <span className="font-medium text-foreground">
-                            {t('landing.recruitment.notice') || "We are hiring! We're looking for translators to help us expand KIZERE to more languages."}
-                        </span>
-                    </div>
-                    <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 text-primary hover:text-primary/80 font-bold underline-offset-4 shrink-0"
-                        onClick={() => setShowRecruitmentDialog(true)}
+            <AnimatePresence>
+                {(!hiddenRoutes.includes(location) && !isDismissed) && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="bg-primary/10 border-b border-primary/20 relative z-50 overflow-hidden"
                     >
-                        {t('landing.recruitment.learnMore') || "Learn More & Apply"} <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                    </Button>
-                </div>
-            </div>
+                        <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between gap-4">
+                            <div className="flex-1 flex items-center justify-center gap-2 sm:gap-4 text-[10px] sm:text-xs">
+                                <div className="flex items-center gap-2">
+                                    <div className="bg-primary/20 p-1 rounded-full">
+                                        <Globe className="w-3 h-3 text-primary shrink-0" />
+                                    </div>
+                                    <span className="font-medium text-foreground">
+                                        {t('landing.recruitment.notice') || "We are hiring! Translators to help us expand KIZERE"}
+                                    </span>
+                                </div>
+                                <Button
+                                    variant="link"
+                                    size="sm"
+                                    className="h-auto p-0 text-primary hover:text-primary/80 font-bold underline-offset-4 shrink-0 text-[10px] sm:text-xs"
+                                    onClick={() => setShowRecruitmentDialog(true)}
+                                >
+                                    {t('landing.recruitment.learnMore') || "Apply"} <ArrowRight className="w-3 h-3 ml-0.5" />
+                                </Button>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 rounded-full hover:bg-primary/20 shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                                onClick={() => {
+                                    setIsDismissed(true);
+                                    localStorage.setItem("hide-recruitment", "true");
+                                }}
+                                aria-label="Dismiss notice"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </Button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <Dialog open={showRecruitmentDialog} onOpenChange={(open) => {
                 setShowRecruitmentDialog(open);

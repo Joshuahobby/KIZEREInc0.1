@@ -51,7 +51,7 @@ export function Footer() {
 
   const contactInfo = [
     { icon: Mail, label: "support@kizere.com", href: "mailto:support@kizere.com" },
-    { icon: Phone, label: "+250 788 331 033", href: "tel:+250788331033" },
+    { icon: Phone, label: "+250 793 895 236", href: "tel:+250793895236" },
     { icon: MapPin, label: t('landing.footer.location') || "Kigali, Rwanda", href: "#" },
   ];
 

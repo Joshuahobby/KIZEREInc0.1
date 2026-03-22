@@ -12,6 +12,7 @@ import {
     QrCode,
     RefreshCw,
     ArrowRight,
+    ChevronDown,
     Shield,
     Zap,
     Lock
@@ -113,16 +114,27 @@ export default function HowItWorks() {
                                 <Shield className="h-3.5 w-3.5" />
                                 {t('common.brandName')} {t('common.securityLabel')}
                             </div>
-                            <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8 leading-[1.1]">
+                            <h1 className="text-2xl md:text-7xl font-bold tracking-tight mb-8 leading-[1.1]">
                                 <span className="text-gradient drop-shadow-sm">{t('howItWorksPage.heroTitle')}</span>
                             </h1>
-                            <p className="text-lg md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-12 leading-relaxed">
+                            <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto mb-12 leading-relaxed">
                                 {t('howItWorksPage.heroSubtitle')}
                             </p>
                             <div className="flex flex-wrap justify-center gap-4">
-                                <Button size="lg" className="rounded-full px-8 py-7 shadow-lg shadow-primary/20 premium-button text-lg">
+                                <Button 
+                                    size="lg" 
+                                    className="rounded-full px-8 py-7 shadow-lg shadow-primary/20 premium-button text-lg group"
+                                    onClick={() => {
+                                        document.getElementById('steps-section')?.scrollIntoView({ behavior: 'smooth' });
+                                    }}
+                                >
                                     {t('howItWorksPage.ctaButton')}
-                                    <ArrowRight className="ml-2 h-5 w-5" />
+                                    <motion.div
+                                        animate={{ y: [0, 5, 0] }}
+                                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                                    >
+                                        <ChevronDown className="ml-2 h-5 w-5" />
+                                    </motion.div>
                                 </Button>
                             </div>
                         </motion.div>
@@ -130,10 +142,10 @@ export default function HowItWorks() {
                 </section>
 
                 {/* Steps Section */}
-                <section className="py-24 relative">
+                <section id="steps-section" className="py-24 relative">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div className="text-center mb-20">
-                            <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">{t('howItWorksPage.processTitle')}</h2>
+                            <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">{t('howItWorksPage.processTitle')}</h2>
                             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                                 {t('howItWorksPage.processSubtitle')}
                             </p>
@@ -192,7 +204,7 @@ export default function HowItWorks() {
                                 <div className="inline-block px-4 py-1.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary text-xs font-bold tracking-wider uppercase mb-6 backdrop-blur-md">
                                     {t('howItWorksPage.benefitsTitle')}
                                 </div>
-                                <h2 className="text-4xl md:text-5xl font-bold mb-10 tracking-tight">{t('howItWorksPage.benefitsTitle')}</h2>
+                                <h2 className="text-3xl md:text-5xl font-bold mb-10 tracking-tight">{t('howItWorksPage.benefitsTitle')}</h2>
                                 <div className="space-y-10">
                                     {benefits.map((benefit, idx) => (
                                         <div key={idx} className="flex gap-6 group">
@@ -259,7 +271,7 @@ export default function HowItWorks() {
                             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-2xl" />
 
                             <div className="relative z-10 flex flex-col items-center">
-                                <h2 className="text-4xl md:text-6xl font-bold mb-8 tracking-tight max-w-2xl mx-auto leading-tight">
+                                <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight max-w-2xl mx-auto leading-tight">
                                     {t('howItWorksPage.ctaTitle')}
                                 </h2>
                                 <Link href="/auth">

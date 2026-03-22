@@ -159,7 +159,7 @@ export default function LandingPage() {
                 {t('landing.trustedUsers')}
               </motion.span>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-tight">
+              <h1 className="text-2xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-foreground leading-tight">
                 <motion.span
                   className="text-gradient block"
                   initial={{ opacity: 0, y: 20 }}
@@ -348,7 +348,7 @@ export default function LandingPage() {
               <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
                 {t('landing.powerfulFeatures')}
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+              <h2 className="text-2xl md:text-4xl font-bold text-foreground">
                 {t('landing.completeSolution')} <span className="text-gradient">{t('landing.itemManagement')}</span>
               </h2>
               <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -507,7 +507,7 @@ export default function LandingPage() {
             <span className="inline-block mb-4 px-4 py-1.5 rounded-full bg-white/20 text-white font-bold text-sm backdrop-blur-md border border-white/30 shadow-sm uppercase tracking-wider">
               {t('landing.startToday')}
             </span>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 text-center tracking-tight text-balance drop-shadow-sm">
+            <h2 className="text-2xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 text-center tracking-tight text-balance drop-shadow-sm">
               {t('landing.readyToSecure')}
             </h2>
             <p className="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-white/90 text-center font-medium">
@@ -558,7 +558,7 @@ export default function LandingPage() {
               <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
                 {t('landing.howItWorks.simpleProcess')}
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+              <h2 className="text-2xl md:text-4xl font-bold text-foreground">
                 {t('landing.howItWorks.sectionTitle')}
               </h2>
               <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -705,7 +705,7 @@ export default function LandingPage() {
               <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
                 {t('landing.testimonials.sectionTitle')}
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+              <h2 className="text-2xl md:text-4xl font-bold text-foreground">
                 {t('landing.testimonials.mainTitle')}
               </h2>
               <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -859,7 +859,7 @@ export default function LandingPage() {
                 <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
                   {t('landing.mobileApp.sectionTitle')}
                 </span>
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
+                <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-6">
                   {t('landing.mobileApp.mainTitle')}
                 </h2>
                 <p className="text-lg text-muted-foreground mb-8">
@@ -951,7 +951,7 @@ export default function LandingPage() {
               <span className="inline-block mb-3 px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm">
                 {t('landing.faq.sectionTitle')}
               </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+              <h2 className="text-2xl md:text-4xl font-bold text-foreground">
                 {t('landing.faq.mainTitle')}
               </h2>
               <p className="mt-4 text-xl text-muted-foreground max-w-3xl mx-auto">
