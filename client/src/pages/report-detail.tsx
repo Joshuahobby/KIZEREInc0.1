@@ -183,7 +183,7 @@ export default function ReportDetailPage() {
             className="mb-6"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Lost & Found
+            {t('report_detail.backToLostFound')}
           </Button>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -274,10 +274,9 @@ export default function ReportDetailPage() {
                         <AlertTriangle className="h-5 w-5 text-blue-700" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-bold text-blue-900 mb-1">Payment Required</h3>
+                        <h3 className="font-bold text-blue-900 mb-1">{t('report_detail.paymentRequired')}</h3>
                         <p className="text-sm text-blue-700 mb-4 leading-relaxed">
-                          Your report is currently <strong>private</strong> and not visible in the public directory. 
-                          Complete the payment to activate it and start receiving potential matches.
+                          {t('report_detail.paymentDesc')}
                         </p>
                         <div className="flex flex-wrap gap-2">
                           <PaymentButton
@@ -285,14 +284,14 @@ export default function ReportDetailPage() {
                             reportId={report.id}
                             onPaymentSuccess={() => {
                               toast({
-                                title: "Payment Successful",
-                                description: "Your report is now public!",
+                                title: t('report_detail.paymentSuccess'),
+                                description: t('report_detail.paymentSuccessDesc'),
                               });
                               queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
                             }}
                             className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6"
                           >
-                            Pay & Activate Report
+                            {t('report_detail.payAndActivate')}
                           </PaymentButton>
                         </div>
                       </div>
@@ -326,23 +325,23 @@ export default function ReportDetailPage() {
                         <Star className="h-6 w-6 text-amber-700 fill-amber-700" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-black text-amber-900 mb-1 tracking-tight">Boost This Report</h3>
+                        <h3 className="font-black text-amber-900 mb-1 tracking-tight">{t('report_detail.boostReport')}</h3>
                         <p className="text-sm text-amber-800 mb-4 leading-relaxed font-medium">
-                          Get <strong>10x more visibility</strong> by featuring your report at the top of search results.
+                          {t('report_detail.boostDesc')}
                         </p>
                         <PaymentButton
                           paymentType="featured_upgrade"
                           reportId={report.id}
                           onPaymentSuccess={() => {
                             toast({
-                              title: "Upgrade Successful!",
-                              description: "Your report is now featured!",
+                              title: t('report_detail.upgradeSuccess'),
+                              description: t('report_detail.upgradeSuccessDesc'),
                             });
                             queryClient.invalidateQueries({ queryKey: [`/api/reports/${id}`] });
                           }}
                           className="bg-amber-500 hover:bg-amber-600 text-amber-950 font-black px-6 shadow-lg shadow-amber-500/20"
                         >
-                          Upgrade to Featured {t('common.brandName')}
+                          {t('report_detail.upgradeToFeatured', { brandName: t('common.brandName') })}
                         </PaymentButton>
                       </div>
                     </div>

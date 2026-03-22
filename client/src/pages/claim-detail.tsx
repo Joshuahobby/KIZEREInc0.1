@@ -112,17 +112,17 @@ export default function ClaimDetailPage() {
       setShowRejectDialog(false);
       setNotes("");
       
-      const actionTitle = status === 'verified' ? "Claim Verified" : status === 'rejected' ? "Claim Rejected" : "Info Requested";
-      const actionDesc = status === 'verified' ? "verify" : status === 'rejected' ? "reject" : "request info for";
+      const actionTitle = status === 'verified' ? t('claim_detail.actionVerified') : status === 'rejected' ? t('claim_detail.actionRejected') : t('claim_detail.actionInfoRequested');
+      const actionDesc = status === 'verified' ? t('claim_detail.actionVerify') : status === 'rejected' ? t('claim_detail.actionReject') : t('claim_detail.actionRequestInfo');
       
       toast({
         title: actionTitle,
-        description: `Successfully ${actionDesc}ed the claim.`
+        description: t('claim_detail.toastActionSuccess', { action: actionDesc })
       });
       queryClient.invalidateQueries({ queryKey: [`/api/claims/${id}`] });
     },
     onError: (err: Error) => {
-      toast({ variant: "destructive", title: "Action Failed", description: err.message });
+      toast({ variant: "destructive", title: t('claim_detail.toastActionFailed'), description: err.message });
     }
   });
 
@@ -133,11 +133,11 @@ export default function ClaimDetailPage() {
     },
     onSuccess: () => {
       setShowWithdrawDialog(false);
-      toast({ title: "Claim Withdrawn", description: "You have successfully withdrawn your claim." });
+      toast({ title: t('claim_detail.toastWithdrawnTitle'), description: t('claim_detail.toastWithdrawnDesc') });
       queryClient.invalidateQueries({ queryKey: [`/api/claims/${id}`] });
     },
     onError: (err: Error) => {
-      toast({ variant: "destructive", title: "Withdrawal Failed", description: err.message });
+      toast({ variant: "destructive", title: t('claim_detail.toastWithdrawFailed'), description: err.message });
     }
   });
 
@@ -152,11 +152,11 @@ export default function ClaimDetailPage() {
     onSuccess: () => {
       setShowRequestInfoDialog(false);
       setAdditionalInfo("");
-      toast({ title: "Info Updated", description: "Your additional information has been sent to the finder." });
+      toast({ title: t('claim_detail.toastInfoUpdatedTitle'), description: t('claim_detail.toastInfoUpdatedDesc') });
       queryClient.invalidateQueries({ queryKey: [`/api/claims/${id}`] });
     },
     onError: (err: Error) => {
-      toast({ variant: "destructive", title: "Update Failed", description: err.message });
+      toast({ variant: "destructive", title: t('claim_detail.toastInfoUpdateFailed'), description: err.message });
     }
   });
 
@@ -174,7 +174,7 @@ export default function ClaimDetailPage() {
       });
     },
     onError: (err: Error) => {
-      toast({ variant: "destructive", title: "Appeal Failed", description: err.message });
+      toast({ variant: "destructive", title: t('claim_detail.toastAppealFailed'), description: err.message });
     }
   });
 
@@ -191,15 +191,15 @@ export default function ClaimDetailPage() {
       setOtpValue("");
       const hasBounty = report?.bountyAmount && Number(report.bountyAmount) > 0;
       toast({
-        title: "Handover Confirmed",
+        title: t('claim_detail.toastHandoverConfirmed'),
         description: hasBounty
-          ? "The item has been successfully returned! Bounty payout initiated."
-          : "The item has been successfully returned!"
+          ? t('claim_detail.toastHandoverBounty')
+          : t('claim_detail.toastHandoverSuccess')
       });
       queryClient.invalidateQueries({ queryKey: [`/api/claims/${id}`] });
     },
     onError: (err: Error) => {
-      toast({ variant: "destructive", title: "Handover Failed", description: "Invalid OTP. Please try again." });
+      toast({ variant: "destructive", title: t('claim_detail.toastHandoverFailed'), description: t('claim_detail.toastHandoverFailedDesc') });
     }
   });
 
@@ -217,7 +217,7 @@ export default function ClaimDetailPage() {
       setShowChat(true);
     },
     onError: (err: Error) => {
-      toast({ variant: "destructive", title: "Chat Error", description: err.message });
+      toast({ variant: "destructive", title: t('claim_detail.toastChatError'), description: err.message });
     }
   });
 
@@ -246,9 +246,9 @@ export default function ClaimDetailPage() {
       <PageLayout>
         <div className="flex flex-col items-center justify-center p-8 text-center py-20">
           <AlertTriangle className="h-16 w-16 text-red-500 mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Claim Not Found</h1>
-          <p className="text-muted-foreground mb-6">The claim you're looking for doesn't exist or you don't have permission to view it.</p>
-          <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{t('claim_detail.notFoundTitle')}</h1>
+          <p className="text-muted-foreground mb-6">{t('claim_detail.notFoundDesc')}</p>
+          <Button onClick={() => navigate('/dashboard')}>{t('claim_detail.backToDashboard')}</Button>
         </div>
       </PageLayout>
     );
@@ -275,22 +275,22 @@ export default function ClaimDetailPage() {
   // Next Steps text helper
   const getNextSteps = () => {
     if (isClaimant) {
-      if (claim.status === 'withdrawn') return "You have withdrawn this claim. No further action is required.";
-      if (claim.status === 'pending') return "Your claim is under review. Please wait for the finder to verify your proof. You can message them below.";
-      if (claim.status === 'needs_info') return "The finder has requested additional information. Please provide more details or photos so they can proceed.";
-      if (claim.status === 'verified') return "Your claim was approved! Contact the finder to arrange a meetup. Be sure to securely provide your 6-digit OTP when you receive the item.";
-      if (claim.status === 'rejected' && claim.appealStatus === 'pending') return "Your appeal is currently under review by administrators.";
-      if (claim.status === 'rejected') return "Your claim was rejected because the proof was insufficient. If you believe this is a mistake, you can appeal.";
-      if (claim.status === 'resolved') return "This claim is resolved and the item has been returned successfully!";
+      if (claim.status === 'withdrawn') return t('claim_detail.claimantNextStepsWithdrawn');
+      if (claim.status === 'pending') return t('claim_detail.claimantNextStepsPending');
+      if (claim.status === 'needs_info') return t('claim_detail.claimantNextStepsNeedsInfo');
+      if (claim.status === 'verified') return t('claim_detail.claimantNextStepsVerified');
+      if (claim.status === 'rejected' && claim.appealStatus === 'pending') return t('claim_detail.claimantNextStepsRejectedAppeal');
+      if (claim.status === 'rejected') return t('claim_detail.claimantNextStepsRejected');
+      if (claim.status === 'resolved') return t('claim_detail.claimantNextStepsResolved');
     } else if (isFinder || isAdmin) {
-      if (claim.status === 'withdrawn') return "The claimant has withdrawn their claim.";
-      if (claim.status === 'pending') return "Review the claimant's proof. Accept it, reject it, or request more information if needed.";
-      if (claim.status === 'needs_info') return "Waiting for the claimant to provide additional information.";
-      if (claim.status === 'verified') return "You approved this claim. Arrange a meetup with the claimant and request their 6-digit OTP to finalize the handover.";
-      if (claim.status === 'rejected') return "You rejected this claim. No further action is required unless the claimant appeals.";
-      if (claim.status === 'resolved') return "You have successfully handed over this item!";
+      if (claim.status === 'withdrawn') return t('claim_detail.finderNextStepsWithdrawn');
+      if (claim.status === 'pending') return t('claim_detail.finderNextStepsPending');
+      if (claim.status === 'needs_info') return t('claim_detail.finderNextStepsNeedsInfo');
+      if (claim.status === 'verified') return t('claim_detail.finderNextStepsVerified');
+      if (claim.status === 'rejected') return t('claim_detail.finderNextStepsRejected');
+      if (claim.status === 'resolved') return t('claim_detail.finderNextStepsResolved');
     }
-    return "Status unknown.";
+    return t('claim_detail.statusUnknown');
   };
 
   return (
@@ -303,7 +303,7 @@ export default function ClaimDetailPage() {
             className="mb-6"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Report
+            {t('claim_detail.backToReport')}
           </Button>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -320,7 +320,7 @@ export default function ClaimDetailPage() {
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm ${currentStep >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                       1
                     </div>
-                    <span className="text-xs font-medium text-center">Submitted</span>
+                    <span className="text-xs font-medium text-center">{t('claim_detail.submitted')}</span>
                   </div>
 
                   {/* Step 2 */}
@@ -332,7 +332,7 @@ export default function ClaimDetailPage() {
                       {claim.status === 'rejected' ? <XCircle className="h-4 w-4" /> : '2'}
                     </div>
                     <span className="text-xs font-medium text-center">
-                      {claim.status === 'rejected' ? 'Rejected' : claim.status === 'needs_info' ? 'Needs Info' : 'Under Review'}
+                      {claim.status === 'rejected' ? t('claim_detail.rejected') : claim.status === 'needs_info' ? t('claim_detail.needsInfo') : t('claim_detail.underReview')}
                     </span>
                   </div>
 
@@ -341,7 +341,7 @@ export default function ClaimDetailPage() {
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm ${currentStep >= 3 ? 'bg-green-600 text-white' : 'bg-muted text-muted-foreground'}`}>
                       3
                     </div>
-                    <span className="text-xs font-medium text-center">Approved</span>
+                    <span className="text-xs font-medium text-center">{t('claim_detail.approved')}</span>
                   </div>
 
                   {/* Step 4 */}
@@ -349,13 +349,13 @@ export default function ClaimDetailPage() {
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-sm ${currentStep >= 4 ? 'bg-blue-600 text-white' : 'bg-muted text-muted-foreground'}`}>
                       <CheckCircle className="h-4 w-4" />
                     </div>
-                    <span className="text-xs font-medium text-center">Handed Over</span>
+                    <span className="text-xs font-medium text-center">{t('claim_detail.handedOver')}</span>
                   </div>
                 </div>
               ) : (
                 <div className="bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 p-4 rounded-lg flex items-center justify-center gap-2 font-medium mb-6">
                   <XCircle className="h-5 w-5" />
-                  This claim was withdrawn by the claimant.
+                  {t('claim_detail.withdrawnDesc')}
                 </div>
               )}
 
@@ -363,18 +363,18 @@ export default function ClaimDetailPage() {
               <div className="bg-primary/10 border border-primary/20 rounded-lg p-5 flex gap-4">
                 <AlertTriangle className="h-6 w-6 text-primary shrink-0" />
                 <div>
-                  <h3 className="font-bold text-foreground mb-1">Next Steps</h3>
+                  <h3 className="font-bold text-foreground mb-1">{t('claim_detail.nextSteps')}</h3>
                   <p className="text-sm text-muted-foreground font-medium leading-relaxed">{getNextSteps()}</p>
                   
                   {/* Action buttons inside Next Steps for Claimant */}
                   {showClaimantActions && claim.status === 'needs_info' && (
                     <Button size="sm" className="mt-4 bg-primary text-primary-foreground" onClick={() => setShowRequestInfoDialog(true)}>
-                      Provide Additional Info
+                      {t('claim_detail.provideInfo')}
                     </Button>
                   )}
                   {showClaimantActions && claim.status === 'pending' && (
                     <Button size="sm" variant="outline" className="mt-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => setShowWithdrawDialog(true)}>
-                      Withdraw Claim
+                      {t('claim_detail.withdrawClaim')}
                     </Button>
                   )}
                 </div>
@@ -384,16 +384,16 @@ export default function ClaimDetailPage() {
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-xl">Claim Details</CardTitle>
+                      <CardTitle className="text-xl">{t('claim_detail.claimDetails')}</CardTitle>
                       <CardDescription>
-                        Claim for: <span className="font-medium text-foreground">{claim.reportTitle}</span>
+                        {t('claim_detail.claimFor')} <span className="font-medium text-foreground">{claim.reportTitle}</span>
                       </CardDescription>
                     </div>
                     <Badge
                       variant={claim.status === 'verified' ? 'default' : claim.status === 'rejected' ? 'destructive' : 'outline'}
                       className="capitalize"
                     >
-                      {claim.status}
+                      {t(`claim_detail.${claim.status}`)}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -402,24 +402,24 @@ export default function ClaimDetailPage() {
                   {report?.bountyAmount && Number(report.bountyAmount) > 0 && (
                     <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="bg-green-500/20 p-2 rounded-full">
+                         <div className="bg-green-500/20 p-2 rounded-full">
                           <Banknote className="h-5 w-5 text-green-600 dark:text-green-400" />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-green-600 dark:text-green-400">Bounty Reward</p>
+                          <p className="text-sm font-medium text-green-600 dark:text-green-400">{t('claim_detail.bounty')}</p>
                           <p className="text-lg font-bold text-green-600 dark:text-green-500">
                             {Number(report.bountyAmount).toLocaleString()} RWF
                           </p>
                         </div>
                       </div>
                       <Badge variant="outline" className="bg-background text-green-600 dark:text-green-400 border-green-500/30">
-                        {report.bountyStatus === 'released' ? 'Paid Out' : 'Escrowed'}
+                        {report.bountyStatus === 'released' ? t('claim_detail.paidOut') : t('claim_detail.escrowed')}
                       </Badge>
                     </div>
                   )}
 
                   <div>
-                    <h3 className="font-medium text-foreground mb-2">Description of Item/Proof</h3>
+                    <h3 className="font-medium text-foreground mb-2">{t('claim_detail.descriptionProof')}</h3>
                     <p className="text-muted-foreground whitespace-pre-wrap">{claim.description}</p>
                   </div>
 
@@ -427,7 +427,7 @@ export default function ClaimDetailPage() {
                     <div className="p-4 bg-primary/5 border border-primary/10 rounded-lg">
                       <div className="flex items-center gap-2 mb-2 text-primary font-bold">
                         <ShieldCheck className="h-4 w-4" />
-                        <span>Verification Answer</span>
+                        <span>{t('claim_detail.verificationAnswer')}</span>
                       </div>
                       <p className="text-foreground/80 italic">"{claim.verificationAnswer}"</p>
                     </div>
@@ -435,7 +435,7 @@ export default function ClaimDetailPage() {
 
                   {claim.imageUrls && claim.imageUrls.length > 0 && (
                     <div>
-                      <h3 className="font-medium text-foreground mb-2">Proof Images</h3>
+                      <h3 className="font-medium text-foreground mb-2">{t('claim_detail.proofImages')}</h3>
                       <div className="grid grid-cols-2 gap-4">
                         {claim.imageUrls.map((url, i) => (
                           <div key={i} className="aspect-video relative rounded-lg overflow-hidden border bg-muted">
@@ -451,7 +451,7 @@ export default function ClaimDetailPage() {
                     <div className="bg-muted p-4 rounded-lg">
                       <div className="flex items-center gap-2 mb-2 text-foreground font-medium">
                         <MessageSquare className="h-4 w-4" />
-                        <span>Notes from Finder</span>
+                        <span>{t('claim_detail.notesFromFinder')}</span>
                       </div>
                       <p className="text-muted-foreground">{claim.finderNotes}</p>
                     </div>
@@ -468,22 +468,22 @@ export default function ClaimDetailPage() {
                           claim.appealStatus === 'rejected' ? 'text-red-600' :
                             'text-amber-600'
                           }`} />
-                        <span>Claim Appeal: {claim.appealStatus.charAt(0).toUpperCase() + claim.appealStatus.slice(1)}</span>
+                        <span>{t('claim_detail.claimAppeal')} {t(`claim_detail.appeal_${claim.appealStatus}`)}</span>
                       </div>
                       <div className="space-y-2 text-sm">
-                        <p><span className="text-muted-foreground font-medium">Your Reason:</span> {claim.appealReason}</p>
+                        <p><span className="text-muted-foreground font-medium">{t('claim_detail.yourReason')}</span> {claim.appealReason}</p>
                         {claim.appealAdminNotes && (
                           <div className="pt-2 border-t border-border/50 mt-2">
-                            <p><span className="text-muted-foreground font-medium">Admin Decision:</span> {claim.appealAdminNotes}</p>
+                            <p><span className="text-muted-foreground font-medium">{t('claim_detail.adminDecision')}</span> {claim.appealAdminNotes}</p>
                             {claim.appealResolvedAt && (
                               <p className="text-[10px] text-muted-foreground/60 mt-1">
-                                Resolved on {format(new Date(claim.appealResolvedAt), 'MMM d, yyyy HH:mm')}
+                                {t('claim_detail.appealResolvedOn', { date: format(new Date(claim.appealResolvedAt), 'MMM d, yyyy HH:mm') })}
                               </p>
                             )}
                           </div>
                         )}
                         {claim.appealStatus === 'pending' && (
-                          <p className="text-amber-700 italic text-xs">An administrator is currently reviewing your appeal.</p>
+                          <p className="text-amber-700 italic text-xs">{t('claim_detail.adminReviewing')}</p>
                         )}
                       </div>
                     </div>
@@ -493,8 +493,8 @@ export default function ClaimDetailPage() {
                   {isClaimant && claim.status === 'verified' && claim.handoverOtp && (
                     <div className="p-6 mt-6 bg-green-500/5 border-2 border-dashed border-green-500/20 rounded-xl text-center">
                       <ShieldCheck className="h-10 w-10 text-green-600 dark:text-green-500 mx-auto mb-3" />
-                      <h3 className="text-lg font-bold text-green-600 dark:text-green-400 mb-1">Secure Handover Code</h3>
-                      <p className="text-sm text-green-600 dark:text-green-500/80 mb-4">When meeting the finder, provide them with this 6-digit code to finalize the return.</p>
+                      <h3 className="text-lg font-bold text-green-600 dark:text-green-400 mb-1">{t('claim_detail.secureHandoverCode')}</h3>
+                      <p className="text-sm text-green-600 dark:text-green-500/80 mb-4">{t('claim_detail.handoverCodeDesc')}</p>
                       <div className="bg-background rounded-lg py-4 px-8 border border-green-500/20 inline-block shadow-sm">
                         <span className="text-4xl font-black tracking-[0.5em] text-foreground">{claim.handoverOtp}</span>
                       </div>
@@ -511,7 +511,7 @@ export default function ClaimDetailPage() {
                       onClick={() => setShowRejectDialog(true)}
                     >
                       <XCircle className="mr-2 h-4 w-4" />
-                      Reject
+                      {t('claim_detail.reject')}
                     </Button>
                     {claim.status === 'pending' && (
                       <Button
@@ -523,7 +523,7 @@ export default function ClaimDetailPage() {
                         disabled={verifyMutation.isPending}
                       >
                         <AlertTriangle className="mr-2 h-4 w-4" />
-                        Request More Info
+                        {t('claim_detail.requestMoreInfo')}
                       </Button>
                     )}
                     <Button
@@ -531,7 +531,7 @@ export default function ClaimDetailPage() {
                       onClick={() => setShowVerifyDialog(true)}
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      Verify Proof
+                      {t('claim_detail.verifyProof')}
                     </Button>
                   </CardFooter>
                 )}
@@ -541,13 +541,13 @@ export default function ClaimDetailPage() {
                   <CardFooter className="flex justify-between items-center border-t bg-amber-500/5 p-4">
                     <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
                       <AlertTriangle className="h-4 w-4" />
-                      <span className="text-sm font-medium">Ready for handover?</span>
+                      <span className="text-sm font-medium">{t('claim_detail.readyForHandover')}</span>
                     </div>
                     <Button
                       className="bg-amber-600 hover:bg-amber-700"
                       onClick={() => setShowHandoverDialog(true)}
                     >
-                      Process Handover
+                      {t('claim_detail.processHandover')}
                     </Button>
                   </CardFooter>
                 )}
@@ -555,12 +555,12 @@ export default function ClaimDetailPage() {
                 {/* Appeal Action for Claimant */}
                 {isClaimant && claim.status === 'rejected' && (
                   <CardFooter className="bg-muted/50 border-t p-4 flex justify-between items-center">
-                    <p className="text-sm text-muted-foreground">Believe this rejection was a mistake?</p>
+                    <p className="text-sm text-muted-foreground">{t('claim_detail.rejectionMistake')}</p>
                     <Button
                       variant="outline"
                       onClick={() => setShowAppealDialog(true)}
                     >
-                      Appeal Decision
+                      {t('claim_detail.appealDecision')}
                     </Button>
                   </CardFooter>
                 )}
@@ -574,21 +574,21 @@ export default function ClaimDetailPage() {
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
                       <UserIcon className="h-5 w-5" />
-                      Claimant Info
+                      {t('claim_detail.claimantInfo')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Name</span>
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('claim_detail.name')}</span>
                       <p className="font-medium">{claim.claimantName}</p>
                     </div>
                     <div>
-                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Email</span>
+                      <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">{t('claim_detail.email')}</span>
                       <p className="font-medium text-sm">{claim.claimantEmail}</p>
                     </div>
                     <div className="pt-2">
                       <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded text-xs text-blue-600 dark:text-blue-400">
-                        Verify the proof images and description carefully before approving. Once verified, your contact info will be shared with them.
+                        {t('claim_detail.verifyInstructions')}
                       </div>
                     </div>
                   </CardContent>
@@ -619,7 +619,7 @@ export default function ClaimDetailPage() {
             <div className="fixed bottom-6 right-6 z-50 w-full max-w-[400px]">
               <ChatWindow
                 chatId={activeChatId}
-                title={`Chat: ${claim.reportTitle}`}
+                title={t('claim_detail.chatWithTitle', { title: claim.reportTitle })}
                 onClose={() => setShowChat(false)}
               />
             </div>
@@ -631,28 +631,28 @@ export default function ClaimDetailPage() {
       <Dialog open={showVerifyDialog} onOpenChange={setShowVerifyDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Verify Claim</DialogTitle>
+            <DialogTitle>{t('claim_detail.verifyDialogTitle')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to verify this claim? This will mark the item as FOUND by this user and share your contact information with them.
+              {t('claim_detail.verifyDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="verify-notes">Optional Notes for Claimant</Label>
+            <Label htmlFor="verify-notes">{t('claim_detail.verifyNotesLabel')}</Label>
             <Textarea
               id="verify-notes"
-              placeholder="Add any instructions on how to meet up..."
+              placeholder={t('claim_detail.verifyNotesPlaceholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowVerifyDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowVerifyDialog(false)}>{t('common.cancel')}</Button>
             <Button
               className="bg-green-600 hover:bg-green-700"
               onClick={() => verifyMutation.mutate('verified')}
               disabled={verifyMutation.isPending}
             >
-              {verifyMutation.isPending ? "Processing..." : "Confirm Verification"}
+              {verifyMutation.isPending ? t('claim_detail.processing') : t('claim_detail.confirmVerification')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -662,29 +662,28 @@ export default function ClaimDetailPage() {
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reject Claim</DialogTitle>
+            <DialogTitle>{t('claim_detail.rejectDialogTitle')}</DialogTitle>
             <DialogDescription>
-              Please provide a reason for rejecting this claim. The claimant will be notified.
-              Instead of rejecting, if you just need clearer photos, consider using the "Request More Info" button instead.
+              {t('claim_detail.rejectDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="reject-notes">Reason for Rejection *</Label>
+            <Label htmlFor="reject-notes">{t('claim_detail.rejectNotesLabel')}</Label>
             <Textarea
               id="reject-notes"
-              placeholder="Explain why the proof was insufficient..."
+              placeholder={t('claim_detail.rejectNotesPlaceholder')}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRejectDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowRejectDialog(false)}>{t('common.cancel')}</Button>
             <Button
               variant="destructive"
               onClick={() => verifyMutation.mutate('rejected')}
               disabled={verifyMutation.isPending || notes.length < 5}
             >
-              {verifyMutation.isPending ? "Processing..." : "Confirm Rejection"}
+              {verifyMutation.isPending ? t('claim_detail.processing') : t('claim_detail.confirmRejection')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -694,19 +693,19 @@ export default function ClaimDetailPage() {
       <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Withdraw Claim</DialogTitle>
+            <DialogTitle>{t('claim_detail.withdrawDialogTitle')}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to withdraw your claim? This action cannot be undone, and the item will remain available for others to claim.
+              {t('claim_detail.withdrawDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setShowWithdrawDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowWithdrawDialog(false)}>{t('common.cancel')}</Button>
             <Button
               variant="destructive"
               onClick={() => withdrawMutation.mutate()}
               disabled={withdrawMutation.isPending}
             >
-              {withdrawMutation.isPending ? "Withdrawing..." : "Withdraw Claim"}
+              {withdrawMutation.isPending ? t('claim_detail.withdrawing') : t('claim_detail.withdrawClaim')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -716,33 +715,33 @@ export default function ClaimDetailPage() {
       <Dialog open={showRequestInfoDialog} onOpenChange={setShowRequestInfoDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Provide Additional Information</DialogTitle>
+            <DialogTitle>{t('claim_detail.provideInfoDialogTitle')}</DialogTitle>
             <DialogDescription>
-              The finder requested more details to verify your claim. Provide them below.
+              {t('claim_detail.provideInfoDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div>
-              <Label htmlFor="additional-info">Additional Details</Label>
+              <Label htmlFor="additional-info">{t('claim_detail.additionalInfoLabel')}</Label>
               <Textarea
                 id="additional-info"
-                placeholder="Describe the item in more detail, mention specific scratches, features..."
+                placeholder={t('claim_detail.additionalInfoPlaceholder')}
                 value={additionalInfo}
                 onChange={(e) => setAdditionalInfo(e.target.value)}
                 className="min-h-[100px]"
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              (In a future update, you will be able to upload additional images here. For now, please use text evidence or the chat feature.)
+              {t('claim_detail.additionalInfoFuture')}
             </p>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRequestInfoDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowRequestInfoDialog(false)}>{t('common.cancel')}</Button>
             <Button
               onClick={() => provideInfoMutation.mutate()}
               disabled={provideInfoMutation.isPending || additionalInfo.length < 10}
             >
-              {provideInfoMutation.isPending ? "Submitting..." : "Submit Info"}
+              {provideInfoMutation.isPending ? t('claim_detail.submitting') : t('claim_detail.submitInfo')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -752,28 +751,28 @@ export default function ClaimDetailPage() {
       <Dialog open={showAppealDialog} onOpenChange={setShowAppealDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Appeal Claim Decision</DialogTitle>
+            <DialogTitle>{t('claim_detail.appealDialogTitle')}</DialogTitle>
             <DialogDescription>
-              Submit an appeal to the administration team.
+              {t('claim_detail.appealDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <Label htmlFor="appeal-reason">Reason for Appeal *</Label>
+            <Label htmlFor="appeal-reason">{t('claim_detail.appealReasonLabel')}</Label>
             <Textarea
               id="appeal-reason"
-              placeholder="Explain why this decision is incorrect..."
+              placeholder={t('claim_detail.appealReasonPlaceholder')}
               value={appealReason}
               onChange={(e) => setAppealReason(e.target.value)}
               className="min-h-[100px]"
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAppealDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowAppealDialog(false)}>{t('common.cancel')}</Button>
             <Button
               onClick={() => appealMutation.mutate()}
               disabled={appealMutation.isPending || appealReason.length < 20}
             >
-              {appealMutation.isPending ? "Submitting..." : "Submit Appeal"}
+              {appealMutation.isPending ? t('claim_detail.submitting') : t('claim_detail.submitAppeal')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -783,13 +782,13 @@ export default function ClaimDetailPage() {
       <Dialog open={showHandoverDialog} onOpenChange={setShowHandoverDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Secure Handover</DialogTitle>
+            <DialogTitle>{t('claim_detail.handoverDialogTitle')}</DialogTitle>
             <DialogDescription>
-              Enter the 6-digit OTP provided by the claimant to confirm you have handed over the item.
+              {t('claim_detail.handoverDialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-6 flex flex-col items-center gap-4">
-            <Label htmlFor="otp">6-Digit Handover Code</Label>
+            <Label htmlFor="otp">{t('claim_detail.otpLabel')}</Label>
             <Input
               id="otp"
               className="text-center text-2xl font-black tracking-[0.5em] h-14"
@@ -799,22 +798,22 @@ export default function ClaimDetailPage() {
               onChange={(e) => setOtpValue(e.target.value)}
             />
             <p className="text-xs text-muted-foreground text-center">
-              By confirming, you agree that the item has been safely returned to its rightful owner.
+              {t('claim_detail.handoverAgreement')}
             </p>
             {report?.bountyAmount && Number(report.bountyAmount) > 0 && (
               <div className="bg-green-500/10 p-2 rounded text-xs text-green-600 dark:text-green-400 text-center w-full">
-                <strong>Bounty Note:</strong> Verifying this code will strictly release the {Number(report.bountyAmount).toLocaleString()} RWF reward to you.
+                <strong>{t('claim_detail.bountyNote')}</strong> {t('claim_detail.bountyNoteDesc', { amount: Number(report.bountyAmount).toLocaleString() })}
               </div>
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowHandoverDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowHandoverDialog(false)}>{t('common.cancel')}</Button>
             <Button
               className="bg-amber-600 hover:bg-amber-700"
               onClick={() => handoverMutation.mutate(otpValue)}
               disabled={handoverMutation.isPending || otpValue.length !== 6}
             >
-              {handoverMutation.isPending ? "Confirming..." : "Finalize Handover"}
+              {handoverMutation.isPending ? t('claim_detail.confirming') : t('claim_detail.finalizeHandover')}
             </Button>
           </DialogFooter>
         </DialogContent>

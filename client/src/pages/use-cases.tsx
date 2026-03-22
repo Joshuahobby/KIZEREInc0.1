@@ -23,7 +23,7 @@ export default function UseCasesPage() {
       icon: <Search className="w-8 h-8 text-blue-500" />,
       title: "The Distressed Owner (Lost Item)",
       description: "Recover a lost item as quickly and securely as possible. Search our real-time database, file a detailed loss report, and securely claim matches when a Good Samaritan reports finding your property.",
-      image: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=800&auto=format&fit=crop",
+      image: "/images/localized/use-case-owner.png",
       color: "from-blue-500/20 to-transparent",
       features: ["Immediate matching", "Secure identity verification", "Safe communication"]
     },
@@ -32,7 +32,7 @@ export default function UseCasesPage() {
       icon: <MapPin className="w-8 h-8 text-emerald-500" />,
       title: "The Good Samaritan (Found Item)",
       description: "Safely return a found item to its rightful owner. Report what you've found (like a phone left in a taxi) and the system automatically matches it with distraught owners looking for it.",
-      image: "https://images.unsplash.com/photo-1552581234-2612b7297b3a?q=80&w=800&auto=format&fit=crop",
+      image: "/images/localized/use-case-finder.png",
       color: "from-emerald-500/20 to-transparent",
       features: ["Anonymous reporting", "Moderated handoffs", "Community reward eligibility"]
     },
@@ -41,7 +41,7 @@ export default function UseCasesPage() {
       icon: <Building2 className="w-8 h-8 text-purple-500" />,
       title: "Subscribers & Businesses (Hotels/Events)",
       description: "Manage lost and found efficiently for your venue. Batch upload items left behind at conferences, hotels, or airports to help guests recover them instantly without physical logbooks.",
-      image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=800&auto=format&fit=crop",
+      image: "/images/localized/use-case-business.png",
       color: "from-purple-500/20 to-transparent",
       features: ["Batch item uploading", "Premium visibility", "Dashboard analytics"]
     },
@@ -50,7 +50,7 @@ export default function UseCasesPage() {
       icon: <Plane className="w-8 h-8 text-amber-500" />,
       title: "Tourists & Travelers",
       description: "Protect your valuables while exploring Rwanda. Pre-register your laptops, cameras, and passports so that if anything is lost during transit or tours, you are instantly contactable.",
-      image: "https://images.unsplash.com/photo-1589197331516-4d8494e3371f?q=80&w=800&auto=format&fit=crop",
+      image: "/images/localized/use-case-traveler.png",
       color: "from-amber-500/20 to-transparent",
       features: ["Temporary registrations", "International contact binding", "Flight/Transit tracking"]
     },
@@ -59,7 +59,7 @@ export default function UseCasesPage() {
       icon: <Store className="w-8 h-8 text-rose-500" />,
       title: "Electronics Retailers",
       description: "Enhance customer trust by registering devices directly at the point of sale. Provide your customers with a secure 'Digital Passport' for their new smartphones or laptops the moment they walk out the door.",
-      image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?q=80&w=800&auto=format&fit=crop",
+      image: "/images/localized/use-case-retailer.png",
       color: "from-rose-500/20 to-transparent",
       features: ["API POS integration", "Instant digital receipts", "Increased customer loyalty"]
     },
@@ -68,7 +68,7 @@ export default function UseCasesPage() {
       icon: <ShieldCheck className="w-8 h-8 text-cyan-500" />,
       title: "Insurance Companies",
       description: "Streamline the claims process. Verify the existence, ownership, and 'lost' status of highly valuable assets such as jewelry and professional equipment before paying out claims.",
-      image: "https://images.unsplash.com/photo-1588421357574-87938a86fa28?q=80&w=800&auto=format&fit=crop",
+      image: "/images/localized/use-case-insurance.png",
       color: "from-cyan-500/20 to-transparent",
       features: ["Fraud prevention", "Status verification API", "Immutable audit trails"]
     }

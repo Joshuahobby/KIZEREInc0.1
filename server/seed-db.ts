@@ -107,7 +107,7 @@ async function seed() {
         status: "active",
         uniqueIdentifier: "IMEI-123456789",
         location: "Kigali, Rwanda",
-        imageUrls: ["https://images.unsplash.com/photo-1696446701796-da61225697cc"]
+        imageUrls: ["/images/localized/blog-security.png"]
       },
       {
         userId: testUser.id,
@@ -117,7 +117,7 @@ async function seed() {
         status: "active",
         uniqueIdentifier: "SN-C02ABCD123",
         location: "Kigali, Rwanda",
-        imageUrls: ["https://images.unsplash.com/photo-1517336714731-489689fd1ca8"]
+        imageUrls: ["/images/localized/blog-success.png"]
       }
     ]);
 

@@ -271,7 +271,7 @@ export default function LandingPage() {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full"></div>
 
                   <div className="flex justify-between items-center mb-8">
-                    <h3 className="text-xl font-semibold text-foreground">{t('landing.itemRegistration')}</h3>
+                    <h2 className="text-xl font-semibold text-foreground">{t('landing.itemRegistration')}</h2>
                     <motion.span
                       className="px-3 py-1 bg-green-100 dark:bg-green-900/60 text-green-800 dark:text-green-200 rounded-full text-sm font-medium"
                       animate={{ y: [0, -3, 0] }}

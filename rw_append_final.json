@@ -1,4 +1,4 @@
-,
+{
 "idRecognition": {
     "title": "Shyiraho ifoto y'ikiranga ikintu cyawe",
     "subtitle": "Ikora ku biranga bifite IMEI, serial numbers, cyangwa inyandiko za ID",
@@ -272,7 +272,7 @@
     },
     "info": {
         "address": "Kigali, u Rwanda",
-        "phone": "+250 7XX XXX XXX",
+        "phone": "+250 793 895 236",
         "email": "support@kizere.rw"
     }
 },

@@ -335,6 +335,9 @@ export function Header() {
               size="icon"
               className="md:hidden rounded-full ml-1"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {mobileMenuOpen ? (
                 <X className="h-5 w-5" />
@@ -348,7 +351,10 @@ export function Header() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl animate-in slide-in-from-top duration-300">
+        <div 
+          id="mobile-menu"
+          className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl animate-in slide-in-from-top duration-300"
+        >
           <div className="px-4 py-6 space-y-2">
             {navigation.map((item) => (
               <Link

@@ -16,7 +16,7 @@ const BLOG_POSTS = [
       <h2>Increased Resale Value</h2>
       <p>When you're ready to upgrade, transferring a verified KIZERE-registered item gives the buyer peace of mind, often allowing you to command a premium price compared to unregistered, unverifiable items.</p>
     `,
-    image: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=800&auto=format&fit=crop",
+    image: "/images/localized/blog-security.png",
     category: "Security",
     authorName: "KIZERE Security Team",
   },
@@ -33,7 +33,7 @@ const BLOG_POSTS = [
       <h2>Partnering with Retailers</h2>
       <p>We are actively working with major electronics retailers across Different parts Rwanda to automatically issue these digital passports at the point of sale. This ensures the device is protected from the exact moment it leaves the store.</p>
     `,
-    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800&auto=format&fit=crop",
+    image: "/images/localized/blog-tech.png",
     category: "Technology",
     authorName: "Tech Innovations",
   },
@@ -50,7 +50,7 @@ const BLOG_POSTS = [
       <h2>The Handover</h2>
       <p>Our secure messaging system allowed Grace and the platform moderators to safely arrange a handover. Her thesis was saved, and the laptop was returned seamlessly. "I never thought I'd see it again," she noted. "Registering took five minutes, but it saved me a semester's worth of work."</p>
     `,
-    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop",
+    image: "/images/localized/blog-success.png",
     category: "Success Stories",
     authorName: "Community Stories",
   },
@@ -67,7 +67,7 @@ const BLOG_POSTS = [
       <h2>National Security Impact</h2>
       <p>A digitized registry makes it significantly harder for stolen goods to be monetized, directly contributing to the safety and security of our neighborhoods across the country.</p>
     `,
-    image: "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?q=80&w=800&auto=format&fit=crop",
+    image: "/images/localized/blog-vision.png",
     category: "Vision",
     authorName: "KIZERE Strategy Team",
   },
@@ -84,7 +84,7 @@ const BLOG_POSTS = [
       <h2>Preventing Internal Loss</h2>
       <p>A transparent registry discourages theft from within and ensures that assets are returned when employees transition. It's about building a culture of responsibility within your Rwandan business.</p>
     `,
-    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=800&auto=format&fit=crop",
+    image: "/images/localized/blog-business.png",
     category: "Business",
     authorName: "Business Solutions",
   },
@@ -101,7 +101,7 @@ const BLOG_POSTS = [
       <h2>Stay Vigilant, Stay Safe</h2>
       <p>By promoting the use of the registry to friends and family, you are helping to shrink the market for stolen goods, making Rwanda safer for everyone to own and carry the tools they need to succeed.</p>
     `,
-    image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=800&auto=format&fit=crop",
+    image: "/images/localized/use-case-finder.png",
     category: "Community",
     authorName: "Community Relations",
   }

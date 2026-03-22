@@ -36,11 +36,13 @@ export function SEO({
       <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />
       <link rel="alternate" hrefLang="en" href={canonicalUrl} />
       <link rel="alternate" hrefLang="rw" href={canonicalUrl} />
+      <link rel="alternate" hrefLang="fr" href={canonicalUrl} />
+      <link rel="alternate" hrefLang="sw" href={canonicalUrl} />
       
       {/* Open Graph metadata */}
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
-      <meta property="og:image" content={image.startsWith('http') ? image : `${baseUrl}${image}`} />
+      <meta property="og:image" content={image.startsWith('http') ? image : `${baseUrl}${image.startsWith('/') ? '' : '/'}${image}`} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:type" content={type} />
       
@@ -49,7 +51,7 @@ export function SEO({
       <meta name="twitter:site" content="@kizere_rw" />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      <meta name="twitter:image" content={image.startsWith('http') ? image : `${baseUrl}${image}`} />
+      <meta name="twitter:image" content={image.startsWith('http') ? image : `${baseUrl}${image.startsWith('/') ? '' : '/'}${image}`} />
       
       {/* JSON-LD Structured Data */}
       {schemaString && (
