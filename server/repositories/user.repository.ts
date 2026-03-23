@@ -39,6 +39,15 @@ export class UserRepository extends BaseRepository<User, InsertUser> {
   }
 
   /**
+   * Get user by phone number
+   * @param phoneNumber Phone number to look up
+   * @returns User or undefined
+   */
+  async findByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+    return this.findOneByField(users.phoneNumber, phoneNumber);
+  }
+
+  /**
    * Find user by reset password token
    * @param token Reset password token
    * @returns User or undefined

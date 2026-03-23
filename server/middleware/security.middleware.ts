@@ -140,83 +140,90 @@ export function setupSecurityMiddleware(app: Express) {
     allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token']
   }));
 
+  const cspDirectives = {
+    defaultSrc: ["'self'"],
+    scriptSrc: [
+      "'self'",
+      "blob:",
+      "https://cdn.jsdelivr.net",
+      "https://apis.google.com",
+      "https://*.firebaseapp.com",
+      "https://*.gstatic.com",
+      "https://accounts.google.com",
+      "https://replit.com",
+      "https://*.replit.com",
+      "https://www.googletagmanager.com",
+      ...(process.env.NODE_ENV !== 'production' ? ["'unsafe-inline'", "'unsafe-eval'"] : [])
+    ],
+    styleSrc: [
+      "'self'",
+      "'unsafe-inline'",
+      "https://fonts.googleapis.com",
+      "https://*.firebaseapp.com",
+      "https://accounts.google.com",
+      "https://replit.com",
+      "https://*.replit.com"
+    ],
+    scriptSrcAttr: ["'unsafe-inline'"],
+    fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+    imgSrc: [
+      "'self'", 
+      "data:", 
+      "blob:", 
+      "https://res.cloudinary.com", 
+      "https://lh3.googleusercontent.com", 
+      "https://*.firebasestorage.googleapis.com", 
+      "https://*.firebaseapp.com", 
+      "https://accounts.google.com", 
+      "https://replit.com", 
+      "https://*.replit.com",
+      "https://placehold.co", 
+      "https://api.dicebear.com",
+      "https://*.tile.openstreetmap.org", 
+      "https://www.google-analytics.com", 
+      "https://www.google.com", 
+      "https://*.google.rw", 
+      "https://stats.g.doubleclick.net"
+    ],
+    connectSrc: [
+      "'self'",
+      "blob:",
+      "data:",
+      "https://cdn.jsdelivr.net",
+      "https://tessdata.projectnaptha.com",
+      "https://res.cloudinary.com",
+      "https://*.googleapis.com",
+      "https://*.firebaseio.com",
+      "https://*.firebaseapp.com",
+      "wss://*.firebaseio.com",
+      "https://accounts.google.com",
+      "https://identitytoolkit.googleapis.com",
+      "https://replit.com",
+      "https://*.replit.com",
+      "wss://*.replit.com",
+      "https://apis.google.com",
+      "https://lh3.googleusercontent.com",
+      "https://placehold.co",
+      "ws://localhost:5001",
+      "wss://localhost:5001",
+      "https://www.google-analytics.com",
+      "https://*.google-analytics.com",
+      "https://analytics.google.com",
+      "https://www.googletagmanager.com",
+      "https://*.googletagmanager.com",
+      "https://stats.g.doubleclick.net",
+      "https://*.google.rw",
+      "https://www.google.rw"
+    ],
+    frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
+    workerSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net"],
+    formAction: ["'self'", "https://accounts.google.com"],
+    childSrc: ["'self'", "blob:", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com"]
+  };
+
   app.use(helmet({
     contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: [
-          "'self'",
-          "blob:",
-          "https://cdn.jsdelivr.net",
-          "https://apis.google.com",
-          "https://*.firebaseapp.com",
-          "https://*.gstatic.com",
-          "https://accounts.google.com",
-          "https://replit.com",
-          "https://*.replit.com",
-          "https://www.googletagmanager.com",
-          ...(process.env.NODE_ENV !== 'production' ? ["'unsafe-inline'", "'unsafe-eval'"] : [])
-        ],
-        styleSrc: [
-          "'self'",
-          "'unsafe-inline'", // Required for Tailwind CSS / dynamic styles — CSS injection is not an XSS vector
-          "https://fonts.googleapis.com",
-          "https://*.firebaseapp.com",
-          "https://accounts.google.com",
-          "https://replit.com",
-          "https://*.replit.com"
-        ],
-        scriptSrcAttr: ["'unsafe-inline'"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
-        imgSrc: [
-          "'self'", 
-          "data:", 
-          "blob:", 
-          "https://res.cloudinary.com", 
-          "https://lh3.googleusercontent.com", 
-          "https://*.firebasestorage.googleapis.com", 
-          "https://*.firebaseapp.com", 
-          "https://accounts.google.com", 
-          "https://replit.com", 
-          "https://*.replit.com",
-          "https://placehold.co", 
-          "https://*.tile.openstreetmap.org", 
-          "https://www.google-analytics.com", 
-          "https://www.google.com", 
-          "https://*.google.rw", 
-          "https://stats.g.doubleclick.net"
-        ],
-        connectSrc: [
-          "'self'",
-          "blob:",
-          "data:",
-          "https://cdn.jsdelivr.net",
-          "https://tessdata.projectnaptha.com",
-          "https://res.cloudinary.com",
-          "https://*.googleapis.com",
-          "https://*.firebaseio.com",
-          "https://*.firebaseapp.com",
-          "wss://*.firebaseio.com",
-          "https://accounts.google.com",
-          "https://identitytoolkit.googleapis.com",
-          "https://replit.com",
-          "https://*.replit.com",
-          "wss://*.replit.com",
-          "https://apis.google.com",
-          "https://lh3.googleusercontent.com",
-          "https://placehold.co",
-          "ws://localhost:5001",
-          "wss://localhost:5001",
-          "https://www.google-analytics.com",
-          "https://*.google-analytics.com",
-          "https://analytics.google.com",
-          "https://stats.g.doubleclick.net"
-        ],
-        frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
-        workerSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net"],
-        formAction: ["'self'", "https://accounts.google.com"],
-        childSrc: ["'self'", "blob:", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com"]
-      }
+      directives: cspDirectives
     },
     // Disable HSTS in development
     hsts: isProd,
@@ -225,6 +232,10 @@ export function setupSecurityMiddleware(app: Express) {
     crossOriginOpenerPolicy: false,
     crossOriginResourcePolicy: { policy: "cross-origin" }
   }));
+
+  logger.info('CSP Configured', { 
+    connectSrc: cspDirectives.connectSrc
+  });
 
   // Prevent XSS attacks
   app.use(xssClean());

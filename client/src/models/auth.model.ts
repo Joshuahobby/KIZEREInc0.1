@@ -45,8 +45,8 @@ class AuthModelClass {
     }, {
       message: "Enter a valid email or phone number (+250XXXXXXXXX)",
     }),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(6, "Confirm password is required"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(8, "Confirm password is required"),
     role: z.enum(['Admin', 'Agent', 'Subscriber']).optional(),
     consentGiven: z.boolean().refine(val => val === true, "You must agree to the Privacy Policy to create an account"),
     isOver16: z.boolean().refine(val => val === true, "You must be at least 16 years old to register"),
@@ -79,12 +79,20 @@ class AuthModelClass {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isEmail = emailRegex.test(username);
 
+    // Format phone number if it's not an email
+    let phoneNumber = !isEmail ? username : null;
+    if (phoneNumber) {
+      phoneNumber = this.formatRwandanPhoneNumber(phoneNumber);
+    }
+
+    const generatedEmail = `${username.replace(/[^a-zA-Z0-9]/g, '')}_${Math.floor(Math.random() * 100000)}@placeholder.kizere.rw`;
+
     return {
       ...userData,
       consentGiven: registerData.consentGiven,
-      username: username, // Keep the original username
-      email: isEmail ? username : `${username.replace(/[^a-zA-Z0-9]/g, '')}_${Math.floor(Math.random() * 10000)}@placeholder.kizere.rw`, // Use email or generate unique placeholder
-      phoneNumber: !isEmail ? username : null,
+      username: username,
+      email: isEmail ? username : generatedEmail,
+      phoneNumber: phoneNumber,
       role: userData.role || 'Subscriber',
       preferences: DEFAULT_USER_PREFERENCES
     };

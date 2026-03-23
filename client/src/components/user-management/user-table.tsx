@@ -1,426 +1,279 @@
-import { useState } from "react";
-import { 
-  Table, 
-  TableHeader, 
-  TableRow, 
-  TableHead, 
-  TableBody, 
-  TableCell 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle 
-} from "@/components/ui/dialog";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+  MoreHorizontal, 
+  Edit, 
+  Trash2, 
+  User as UserIcon, 
+  Shield, 
+  Mail, 
+  Calendar,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  ExternalLink,
+  MoreVertical,
+  Settings2,
+  ShieldCheck
+} from "lucide-react";
+import { User } from "@shared/schema";
+import { format } from "date-fns";
 import { 
   Tooltip, 
   TooltipContent, 
   TooltipProvider, 
   TooltipTrigger 
 } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Pagination } from "@/components/ui/pagination";
-import { format } from "date-fns";
-import { 
-  MoreHorizontal, 
-  ShieldAlert, 
-  Eye, 
-  Edit, 
-  UserCog, 
-  History, 
-  AlertTriangle,
-  ShieldCheck,
-  ShieldX,
-  UserX,
-  Check,
-  X
-} from "lucide-react";
-
-export interface User {
-  id: number;
-  fullName: string;
-  username?: string;
-  email: string;
-  role: string;
-  status: string;
-  verificationStatus: string;
-  createdAt: string;
-  updatedAt: string;
-  lastLogin?: string;
-  warningCount: number;
-  activityLevel?: string;
-  avatarUrl?: string;
-}
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface UserTableProps {
   users: User[];
-  totalPages: number;
-  currentPage: number;
-  onPageChange: (page: number) => void;
-  onViewUser: (user: User) => void;
-  onEditUser: (user: User) => void;
-  onStatusChange: (user: User, status: string) => void;
-  onRoleChange: (user: User, role: string) => void;
+  onEdit: (user: User) => void;
+  onDelete: (user: User) => void;
+  onStatusChange: (userId: number, status: string) => void;
+  onRoleChange: (userId: number, role: string) => void;
+  onViewDetails: (user: User) => void;
+  onVerify?: (user: User) => void;
 }
+
+const statusConfig = {
+  active: { color: "bg-emerald-500", label: "Active", bg: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+  suspended: { color: "bg-amber-500", label: "Suspended", bg: "bg-amber-50 text-amber-700 border-amber-100" },
+  inactive: { color: "bg-slate-400", label: "Inactive", bg: "bg-slate-50 text-slate-700 border-slate-100" },
+  pending: { color: "bg-blue-500", label: "Pending", bg: "bg-blue-50 text-blue-700 border-blue-100" },
+  banned: { color: "bg-red-500", label: "Banned", bg: "bg-red-50 text-red-700 border-red-100" },
+};
+
+const roleConfig = {
+  Admin: { icon: Shield, color: "text-purple-600", bg: "bg-purple-50 border-purple-100" },
+  Agent: { icon: UserIcon, color: "text-blue-600", bg: "bg-blue-50 border-blue-100" },
+  Moderator: { icon: Shield, color: "text-indigo-600", bg: "bg-indigo-50 border-indigo-100" },
+  Subscriber: { icon: UserIcon, color: "text-slate-600", bg: "bg-slate-50 border-slate-100" },
+  Business: { icon: UserIcon, color: "text-cyan-600", bg: "bg-cyan-50 border-cyan-100" },
+};
 
 export function UserTable({ 
   users, 
-  totalPages, 
-  currentPage, 
-  onPageChange,
-  onViewUser,
-  onEditUser,
-  onStatusChange,
-  onRoleChange
+  onEdit, 
+  onDelete, 
+  onStatusChange, 
+  onRoleChange, 
+  onViewDetails,
+  onVerify
 }: UserTableProps) {
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [showStatusDialog, setShowStatusDialog] = useState(false);
-  const [showRoleDialog, setShowRoleDialog] = useState(false);
-  const [newStatus, setNewStatus] = useState('');
-  const [newRole, setNewRole] = useState('');
-  const [statusReason, setStatusReason] = useState('');
-  
-  const handleStatusChange = () => {
-    if (selectedUser && newStatus) {
-      onStatusChange(selectedUser, newStatus);
-      setShowStatusDialog(false);
-      setNewStatus('');
-      setStatusReason('');
-      setSelectedUser(null);
-    }
-  };
-  
-  const handleRoleChange = () => {
-    if (selectedUser && newRole) {
-      onRoleChange(selectedUser, newRole);
-      setShowRoleDialog(false);
-      setNewRole('');
-      setSelectedUser(null);
-    }
-  };
-  
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return <Badge variant="success">Active</Badge>;
-      case 'suspended':
-        return <Badge variant="destructive">Suspended</Badge>;
-      case 'inactive':
-        return <Badge variant="outline">Inactive</Badge>;
-      case 'pending':
-        return <Badge variant="secondary">Pending</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
-  
-  const getVerificationBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'verified':
-        return <Badge variant="default" className="flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Verified</Badge>;
-      case 'pending':
-        return <Badge variant="secondary" className="flex items-center gap-1"><ShieldAlert className="h-3 w-3" /> Pending</Badge>;
-      case 'rejected':
-        return <Badge variant="destructive" className="flex items-center gap-1"><ShieldX className="h-3 w-3" /> Rejected</Badge>;
-      case 'unverified':
-      default:
-        return <Badge variant="outline" className="flex items-center gap-1"><Shield className="h-3 w-3" /> Unverified</Badge>;
-    }
-  };
-  
-  const getRoleBadge = (role: string) => {
-    switch (role) {
-      case 'Admin':
-        return <Badge className="bg-purple-500">Admin</Badge>;
-      case 'Agent':
-        return <Badge className="bg-blue-500">Agent</Badge>;
-      case 'Subscriber':
-      default:
-        return <Badge className="bg-gray-500">Subscriber</Badge>;
-    }
-  };
-  
-  const getActivityBadge = (level?: string) => {
-    if (!level) return null;
-    
-    switch (level.toLowerCase()) {
-      case 'high':
-        return <Badge className="bg-green-500">High</Badge>;
-      case 'medium':
-        return <Badge className="bg-blue-500">Medium</Badge>;
-      case 'low':
-        return <Badge className="bg-yellow-500">Low</Badge>;
-      case 'inactive':
-        return <Badge className="bg-gray-500">Inactive</Badge>;
-      default:
-        return null;
-    }
-  };
-  
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part.charAt(0))
-      .join('')
-      .toUpperCase();
-  };
-
   return (
-    <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Verification</TableHead>
-              <TableHead>Activity</TableHead>
-              <TableHead>Registered</TableHead>
-              <TableHead>Last Login</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
-                  No users found
-                </TableCell>
-              </TableRow>
-            ) : (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <Avatar>
-                        {user.avatarUrl ? (
-                          <AvatarImage src={user.avatarUrl} alt={user.fullName} />
-                        ) : (
-                          <AvatarFallback>{getInitials(user.fullName)}</AvatarFallback>
-                        )}
+    <div className="rounded-2xl border-2 border-primary/5 bg-background/50 backdrop-blur-sm overflow-hidden shadow-sm transition-all hover:shadow-md">
+      <Table>
+        <TableHeader className="bg-muted/30">
+          <TableRow className="hover:bg-transparent border-primary/5">
+            <TableHead className="w-[300px] py-4 px-6 text-xs font-bold uppercase tracking-wider text-muted-foreground">User / Identity</TableHead>
+            <TableHead className="py-4 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Role & Status</TableHead>
+            <TableHead className="py-4 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Verification</TableHead>
+            <TableHead className="py-4 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Registration</TableHead>
+            <TableHead className="py-4 px-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">Activity</TableHead>
+            <TableHead className="w-[80px] py-4 px-6 text-right"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <AnimatePresence mode="popLayout">
+            {users.map((user, index) => {
+              const status = (user.status || 'active') as keyof typeof statusConfig;
+              const role = (user.role || 'Subscriber') as keyof typeof roleConfig;
+
+              return (
+                <motion.tr
+                  key={user.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2, delay: index * 0.03 }}
+                  className="group border-primary/5 transition-colors hover:bg-primary/[0.02]"
+                >
+                  <TableCell className="py-5 px-6">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-10 w-10 border-2 border-background shadow-sm transition-transform group-hover:scale-110">
+                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} />
+                        <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+                          {user.fullName ? user.fullName.substring(0, 2).toUpperCase() : user.username.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <div className="font-semibold">{user.fullName}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
+                      <div className="flex flex-col min-w-0">
+                        <span className="font-semibold text-sm truncate group-hover:text-primary transition-colors">
+                          {user.fullName || user.username}
+                        </span>
+                        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Mail className="h-3 w-3" />
+                          <span className="truncate">{user.email}</span>
+                        </div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell>{getStatusBadge(user.status)}</TableCell>
-                  <TableCell>{getVerificationBadge(user.verificationStatus)}</TableCell>
-                  <TableCell>{getActivityBadge(user.activityLevel)}</TableCell>
-                  <TableCell className="text-sm">
-                    {format(new Date(user.createdAt), 'PP')}
+                  <TableCell className="py-5 px-4">
+                    <div className="flex flex-col gap-2">
+                        {/* Role Badge */}
+                        <div className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border max-w-fit",
+                            (roleConfig[role] || roleConfig.Subscriber).bg,
+                            (roleConfig[role] || roleConfig.Subscriber).color
+                        )}>
+                            <Shield className="h-3 w-3" />
+                            {user.role}
+                        </div>
+                        {/* Status Label with Dot */}
+                        <div className="flex items-center gap-2 px-1">
+                            <span className={cn("h-2 w-2 rounded-full", (statusConfig[status] || statusConfig.active).color)} />
+                            <span className="text-[11px] font-medium text-muted-foreground capitalize">
+                                {status}
+                            </span>
+                        </div>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-sm">
-                    {user.lastLogin 
-                      ? format(new Date(user.lastLogin), 'PP') 
-                      : <span className="text-muted-foreground">Never</span>}
+                  <TableCell className="py-5 px-4">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-2 cursor-help">
+                            {user.isEmailVerified ? (
+                              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                            ) : (
+                              <AlertCircle className="h-5 w-5 text-amber-500" />
+                            )}
+                            <span className="text-xs font-medium">
+                              {user.isEmailVerified ? "Verified" : "Unverified"}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-background/95 backdrop-blur-sm border-primary/10">
+                          <p className="text-[11px]">Email Verification Status</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="py-5 px-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-foreground">
+                        {user.createdAt ? format(new Date(user.createdAt), "MMM d, yyyy") : "N/A"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Calendar className="h-2.5 w-2.5" />
+                        Date Registered
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-5 px-4">
+                    <div className="flex flex-col gap-1 text-[11px]">
+                        <span className="text-muted-foreground">Last active:</span>
+                        <span className="font-semibold text-foreground">
+                            {user.lastLogin ? format(new Date(user.lastLogin), "MMM d, HH:mm") : "Never"}
+                        </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-5 px-6 text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 rounded-full transition-all hover:bg-primary/5 hover:text-primary active:scale-90"
+                        >
+                          <MoreVertical className="h-4 w-4" />
                           <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onViewUser(user)}>
-                          <Eye className="mr-2 h-4 w-4" />
-                          View details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onEditUser(user)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit user
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                      <DropdownMenuContent align="end" className="w-[180px] p-2 rounded-xl shadow-xl border-primary/10 bg-background/95 backdrop-blur-md">
+                        <DropdownMenuLabel className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                          Actions
+                        </DropdownMenuLabel>
                         <DropdownMenuItem 
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setNewRole(user.role);
-                            setShowRoleDialog(true);
-                          }}>
-                          <UserCog className="mr-2 h-4 w-4" />
-                          Change role
+                            onClick={() => onViewDetails(user)}
+                            className="rounded-lg px-2 py-1.5 text-xs font-medium hover:bg-primary/5 hover:text-primary cursor-pointer"
+                        >
+                          <ExternalLink className="mr-2 h-3.5 w-3.5" /> View Profile
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          onClick={() => {
-                            setSelectedUser(user);
-                            setNewStatus(user.status);
-                            setShowStatusDialog(true);
-                          }}>
-                          <UserX className="mr-2 h-4 w-4" />
-                          Change status
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>
-                          <History className="mr-2 h-4 w-4" />
-                          View activity
-                        </DropdownMenuItem>
-                        {user.warningCount > 0 && (
-                          <DropdownMenuItem className="text-amber-600">
-                            <AlertTriangle className="mr-2 h-4 w-4" />
-                            View warnings ({user.warningCount})
+
+                        {user.verificationStatus === 'pending' && onVerify && (
+                          <DropdownMenuItem 
+                              onClick={() => onVerify(user)}
+                              className="rounded-lg px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 cursor-pointer"
+                          >
+                            <ShieldCheck className="mr-2 h-3.5 w-3.5" /> Verify Identity
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem 
+                            onClick={() => onEdit(user)}
+                            className="rounded-lg px-2 py-1.5 text-xs font-medium hover:bg-primary/5 hover:text-primary cursor-pointer"
+                        >
+                          <Edit className="mr-2 h-3.5 w-3.5" /> Edit Identity
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuSeparator className="my-1 bg-primary/5" />
+                        
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer">
+                            <Shield className="mr-2 h-3.5 w-3.5" /> Change Role
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="bg-background/95 backdrop-blur-md border-primary/10 rounded-xl p-1 min-w-[140px]">
+                            <DropdownMenuRadioGroup value={user.role} onValueChange={(val) => onRoleChange(user.id, val)}>
+                              <DropdownMenuRadioItem value="Admin" className="rounded-lg text-xs cursor-pointer">Admin</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="Agent" className="rounded-lg text-xs cursor-pointer">Agent</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="Subscriber" className="rounded-lg text-xs cursor-pointer">Subscriber</DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+
+                        <DropdownMenuSub>
+                          <DropdownMenuSubTrigger className="rounded-lg px-2 py-1.5 text-xs font-medium cursor-pointer">
+                            <Settings2 className="mr-2 h-3.5 w-3.5" /> Set Status
+                          </DropdownMenuSubTrigger>
+                          <DropdownMenuSubContent className="bg-background/95 backdrop-blur-md border-primary/10 rounded-xl p-1 min-w-[140px]">
+                            <DropdownMenuRadioGroup value={user.status || 'active'} onValueChange={(val) => onStatusChange(user.id, val)}>
+                              <DropdownMenuRadioItem value="active" className="rounded-lg text-xs cursor-pointer">Active</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="suspended" className="rounded-lg text-xs cursor-pointer text-amber-600">Suspend</DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="inactive" className="rounded-lg text-xs cursor-pointer text-slate-500">Inactivate</DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                          </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+
+                        <DropdownMenuSeparator className="my-1 bg-primary/5" />
+                        
+                        <DropdownMenuItem 
+                          onClick={() => onDelete(user)} 
+                          className="rounded-lg px-2 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                        >
+                          <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete User
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {totalPages > 1 && (
-        <div className="flex justify-center my-6">
-          <Pagination
-            totalPages={totalPages}
-            currentPage={currentPage}
-            onPageChange={onPageChange}
-          />
-        </div>
-      )}
-      
-      {/* Status Change Dialog */}
-      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Change User Status</DialogTitle>
-            <DialogDescription>
-              Update the status for {selectedUser?.fullName}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="status">New Status</Label>
-              <Select
-                value={newStatus}
-                onValueChange={setNewStatus}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="suspended">Suspended</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="reason">Reason for change</Label>
-              <Input
-                id="reason"
-                placeholder="Enter the reason for this status change"
-                value={statusReason}
-                onChange={(e) => setStatusReason(e.target.value)}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleStatusChange}>
-              Update Status
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Role Change Dialog */}
-      <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Change User Role</DialogTitle>
-            <DialogDescription>
-              Update the role for {selectedUser?.fullName}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="role">New Role</Label>
-              <Select
-                value={newRole}
-                onValueChange={setNewRole}
-              >
-                <SelectTrigger id="role">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Admin">Admin</SelectItem>
-                  <SelectItem value="Agent">Agent</SelectItem>
-                  <SelectItem value="Subscriber">Subscriber</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRoleDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleRoleChange}>
-              Update Role
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
-}
-
-// Helper component for Shield icon (required for verification badge)
-function Shield(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-    </svg>
+                </motion.tr>
+              );
+            })}
+          </AnimatePresence>
+        </TableBody>
+      </Table>
+    </div>
   );
 }

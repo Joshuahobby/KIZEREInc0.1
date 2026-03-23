@@ -9,7 +9,7 @@ export const userRoles = ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business
 export const accountStatuses = ['active', 'pending', 'suspended', 'inactive', 'banned'] as const;
 
 // Define verification statuses
-export const verificationStatuses = ['pending', 'in_review', 'approved', 'rejected', 'expired'] as const;
+export const verificationStatuses = ['unverified', 'pending', 'in_review', 'approved', 'rejected', 'expired'] as const;
 
 // Define activity levels
 export const activityLevels = ['high', 'medium', 'low', 'inactive'] as const;
@@ -106,7 +106,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default('Subscriber'),
   avatarUrl: text("avatar_url"),
   status: text("status").notNull().default('active'),
-  verificationStatus: text("verification_status").default('pending'),
+  verificationStatus: text("verification_status").default('unverified'),
   activityLevel: text("activity_level").default('medium'),
   lastLogin: timestamp("last_login"),
   address: text("address"),
@@ -117,6 +117,9 @@ export const users = pgTable("users", {
   preferences: json("preferences").$type<UserPreferences>(),
   customPermissions: json("custom_permissions").$type<string[]>(),
   twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  twoFactorMethod: text("two_factor_method"), // 'sms', 'email', or 'both'
+  phoneVerified: boolean("phone_verified").default(false),
+  emailVerified: boolean("email_verified").default(false),
   recoveryEmail: text("recovery_email"),
   notes: text("admin_notes"),
   warningCount: integer("warning_count").default(0),
@@ -801,6 +804,31 @@ export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions
   updatedAt: true
 });
 
+// ===================== Verification Codes (OTP for 2FA) =====================
+
+export const verificationCodeTypes = ['login_2fa', 'phone_verify', 'email_verify', 'password_reset'] as const;
+export const verificationCodeChannels = ['sms', 'email'] as const;
+
+export const verificationCodes = pgTable("verification_codes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  code: text("code").notNull(), // hashed 6-digit OTP
+  type: text("type").notNull(), // 'login_2fa', 'phone_verify', 'email_verify'
+  channel: text("channel").notNull(), // 'sms' or 'email'
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("verification_code_user_idx").on(table.userId),
+  index("verification_code_type_idx").on(table.type),
+]);
+
+export const insertVerificationCodeSchema = createInsertSchema(verificationCodes).omit({
+  id: true,
+  createdAt: true,
+  usedAt: true,
+});
+
 
 
 // Types and Schemas Exports
@@ -830,6 +858,10 @@ export type InsertCoupon = z.infer<typeof insertCouponSchema>;
 export type ConsentRecord = typeof consentRecords.$inferSelect;
 export type InsertConsentRecord = z.infer<typeof insertConsentRecordSchema>;
 export type ConsentType = typeof consentTypes[number];
+export type VerificationCode = typeof verificationCodes.$inferSelect;
+export type InsertVerificationCode = z.infer<typeof insertVerificationCodeSchema>;
+export type VerificationCodeType = typeof verificationCodeTypes[number];
+export type VerificationCodeChannel = typeof verificationCodeChannels[number];
 
 export type User = typeof users.$inferSelect;
 export type Item = typeof items.$inferSelect;
@@ -855,6 +887,7 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type Coupon = typeof coupons.$inferSelect;
 export type BlogPost = typeof blogPosts.$inferSelect;
+export type TwoFactorMethod = 'sms' | 'email' | 'both';
 
 export type UserLogin = z.infer<typeof userLoginSchema>;
 export type UserRole = typeof userRoles[number];

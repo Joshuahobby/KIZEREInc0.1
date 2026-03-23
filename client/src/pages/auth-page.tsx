@@ -54,6 +54,7 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation, loginWithGoogle, isLoading: authLoading } = useAuth();
   const { t } = useLanguage();
   const [location, navigate] = useLocation();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Redirect if already logged in
   React.useEffect(() => {
@@ -96,18 +97,38 @@ export default function AuthPage() {
   });
 
   const onLoginSubmit = (data: LoginFormValues) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     const loginData = AuthModel.prepareLoginData(data);
-    loginMutation.mutate(loginData);
+    loginMutation.mutate(loginData, {
+      onSuccess: () => {
+        setIsSubmitting(false);
+      },
+      onError: () => {
+        setIsSubmitting(false);
+      }
+    });
   };
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     const registerData = AuthModel.prepareRegisterData(data);
+    console.log("[AuthPage] Submitting registration data:", { ...registerData, password: "[REDACTED]" });
+    
     registerMutation.mutate(registerData, {
-      onSuccess: () => {
+      onSuccess: (responseData) => {
+        console.log("[AuthPage] Registration success response:", responseData);
+        setIsSubmitting(false);
         ReactGA.event("sign_up", {
           method: "Email",
           role: data.role
         });
+      },
+      onError: (error) => {
+        console.error("[AuthPage] Registration error:", error);
+        setIsSubmitting(false);
       }
     });
   };
@@ -463,10 +484,10 @@ export default function AuthPage() {
                       <Button
                         type="submit"
                         className="w-full mt-2 h-9 text-sm"
-                        disabled={registerMutation.isPending}
+                        disabled={registerMutation.isPending || isSubmitting}
                         size="sm"
                       >
-                        {registerMutation.isPending ? (
+                        {registerMutation.isPending || isSubmitting ? (
                           <>
                             <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
                             {t('auth.creatingAccount')}

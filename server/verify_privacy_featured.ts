@@ -23,8 +23,6 @@ async function verify() {
       title: "Privacy Test Phone",
       description: "This is a very long description that should be truncated in the search results to protect the privacy of the reporter. It contains sensitive details like serial numbers 123456789.",
       location: "Kigali, Nyarugenge, Sector X, Cell Y, House 123",
-      province: "Kigali City",
-      district: "Nyarugenge",
       date: new Date(),
       status: "Open",
       paymentStatus: "successful",
@@ -45,10 +43,13 @@ async function verify() {
     });
 
     const foundReport = searchResults.reports.find((r: any) => r.id === report.id);
-    if (foundReport) {
-      console.log(`Found Report Title: ${foundReport.title}`);
-      console.log(`Found Report Location: ${foundReport.location}`);
+    if (!foundReport) {
+      console.error("Test report not found in search results.");
+      process.exit(1);
     }
+    
+    console.log(`Found Report Title: ${foundReport.title}`);
+    console.log(`Found Report Location: ${foundReport.location}`);
 
     // 3. Simulate Route Masking Logic
     console.log("\nTesting Route Masking Logic Simulation...");
@@ -104,7 +105,7 @@ async function verify() {
     // We simulate the sorting logic from search.routes.ts
     const allReports = [foundReport, normalReport];
     // Add score to reports
-    const scoredReports = allReports.map(r => ({
+    const scoredReports = allReports.filter((r): r is NonNullable<typeof r> => r != null).map(r => ({
         ...r,
         isFeatured: r.id === report.id,
         score: r.id === report.id ? 100 : 0

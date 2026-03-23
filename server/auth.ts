@@ -9,6 +9,8 @@ import { env } from "./config";
 import { UserService } from "./services/user.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
 import { sendWelcomeEmail, sendResetPasswordEmail } from "./services/email.service";
+import { sendOTP, verifyOTP } from "./services/otp.service";
+import { normalizeRwandanPhone, isValidRwandanPhone, sendSMS } from "./services/sms.service";
 import { createLogger } from "./utils/logger";
 
 const logger = createLogger('Auth');
@@ -77,6 +79,7 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        logger.info('[Auth] login attempt', { username });
         let user = await storage.getUserByUsername(username);
         
         // Fallback to searching by email if username not found
@@ -84,12 +87,21 @@ export function setupAuth(app: Express) {
           user = await storage.getUserByEmail(username);
         }
 
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user) {
+          logger.warn('[Auth] user not found', { username });
           return done(null, false);
-        } else {
-          return done(null, user);
         }
+
+        const isMatch = await comparePasswords(password, user.password);
+        if (!isMatch) {
+          logger.warn('[Auth] invalid password', { userId: user.id, username: user.username });
+          return done(null, false);
+        }
+
+        logger.info('[Auth] authentication successful', { userId: user.id });
+        return done(null, user);
       } catch (error) {
+        logger.error('[Auth] strategy error', { error });
         return done(error);
       }
     }),
@@ -177,13 +189,23 @@ export function setupAuth(app: Express) {
       // Strip password from response
       const { password, ...userWithoutPassword } = user;
 
-      // Log in the new user
-      req.login(user as Express.User, (err) => {
-        if (err) return next(err);
+      // Force 2FA verification on registration
+      (req.session as any).pending2FAUserId = user.id;
+      req.session.save((saveErr) => {
+        if (saveErr) return next(saveErr);
 
-        req.session.save((saveErr) => {
-          if (saveErr) return next(saveErr);
-          res.status(201).json(userWithoutPassword);
+        const methods: string[] = [];
+        if (user.phoneNumber) methods.push('sms');
+        if (user.email && !user.email.includes('@placeholder.kizere.rw')) methods.push('email');
+        if (methods.length === 0) methods.push('email'); // Fallback option
+
+        res.status(201).json({
+          requires2FA: true,
+          isRegistration: true,
+          userId: user.id,
+          methods,
+          maskedPhone: user.phoneNumber ? maskPhone(user.phoneNumber) : null,
+          maskedEmail: user.email ? maskEmail(user.email) : null,
         });
       });
     } catch (error) {
@@ -193,16 +215,50 @@ export function setupAuth(app: Express) {
 
   app.post("/api/auth/login", (req, res, next) => {
     passport.authenticate("local", (err: any, user: SelectUser | false, info: any) => {
-      if (err) return next(err);
+      if (err) {
+        logger.error('[Auth] passport.authenticate error', { err });
+        return next(err);
+      }
       if (!user) {
+        logger.warn('[Auth] login failed: user not found or password mismatch', { 
+          info,
+          username: req.body.username 
+        });
         return res.status(401).json({ message: "Invalid username or password" });
       }
+
+      // Check if 2FA is enabled
+      if (user.twoFactorEnabled) {
+        // Store pending user ID in session for 2FA verification
+        (req.session as any).pending2FAUserId = user.id;
+        req.session.save((saveErr) => {
+          if (saveErr) return next(saveErr);
+
+          // Determine available 2FA methods
+          const methods: string[] = [];
+          if (user.phoneNumber && user.phoneVerified) methods.push('sms');
+          if (user.email && !user.email.includes('@placeholder.kizere.rw')) methods.push('email');
+          // Fallback: always allow email if no phone is verified
+          if (methods.length === 0) methods.push('email');
+
+          return res.status(200).json({
+            requires2FA: true,
+            userId: user.id,
+            methods,
+            // Mask phone/email for privacy
+            maskedPhone: user.phoneNumber ? maskPhone(user.phoneNumber) : null,
+            maskedEmail: user.email ? maskEmail(user.email) : null,
+          });
+        });
+        return;
+      }
+
+      // Normal login (no 2FA)
       req.login(user as Express.User, (loginErr) => {
         if (loginErr) return next(loginErr);
 
         req.session.save((saveErr) => {
           if (saveErr) return next(saveErr);
-          // Strip password from response
           const { password, ...userWithoutPassword } = user;
           res.status(200).json(userWithoutPassword);
         });
@@ -210,23 +266,259 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.post("/api/auth/forgot-password", async (req, res, next) => {
+  // ===================== 2FA Endpoints =====================
+
+  /**
+   * Send 2FA verification code
+   * Called after login returns requires2FA: true
+   */
+  app.post("/api/auth/2fa/send", async (req, res, next) => {
     try {
-      const { email } = req.body;
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
+      const pendingUserId = (req.session as any)?.pending2FAUserId;
+      if (!pendingUserId) {
+        return res.status(400).json({ message: "No pending 2FA verification. Please log in first." });
       }
 
-      const { token, user } = await UserService.generateResetToken(email);
-      
-      // Send reset email
-      await sendResetPasswordEmail(user.email, user.fullName || user.username, token);
+      const { channel } = req.body; // 'sms' or 'email'
+      if (!channel || !['sms', 'email'].includes(channel)) {
+        return res.status(400).json({ message: "Invalid channel. Use 'sms' or 'email'." });
+      }
 
-      res.status(200).json({ message: "Password reset link sent to your email" });
+      const user = await storage.getUser(pendingUserId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      let destination: string;
+      if (channel === 'sms') {
+        if (!user.phoneNumber) {
+          return res.status(400).json({ message: "No phone number on this account." });
+        }
+        destination = user.phoneNumber;
+      } else {
+        if (!user.email || user.email.includes('@placeholder.kizere.rw')) {
+          return res.status(400).json({ message: "No valid email on this account." });
+        }
+        destination = user.email;
+      }
+
+      const result = await sendOTP(user.id, channel, 'login_2fa', destination);
+      return res.status(result.success ? 200 : 429).json({ message: result.message });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  /**
+   * Verify 2FA code and complete login
+   */
+  app.post("/api/auth/2fa/verify", async (req, res, next) => {
+    try {
+      const pendingUserId = (req.session as any)?.pending2FAUserId;
+      if (!pendingUserId) {
+        return res.status(400).json({ message: "No pending 2FA verification. Please log in first." });
+      }
+
+      const { code } = req.body;
+      if (!code || code.length !== 6) {
+        return res.status(400).json({ message: "Please enter a valid 6-digit code." });
+      }
+
+      const result = await verifyOTP(pendingUserId, code, 'login_2fa');
+      if (!result.valid) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      // If it's a registration/login 2FA, mark the used channel as verified
+      if (result.channel === 'sms') {
+        await storage.updateUser(pendingUserId, { phoneVerified: true });
+      } else if (result.channel === 'email') {
+        await storage.updateUser(pendingUserId, { emailVerified: true });
+      }
+
+      // OTP verified — complete login
+      const user = await storage.getUser(pendingUserId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Clear pending 2FA
+      delete (req.session as any).pending2FAUserId;
+
+      req.login(user as Express.User, (loginErr) => {
+        if (loginErr) return next(loginErr);
+
+        req.session.save((saveErr) => {
+          if (saveErr) return next(saveErr);
+          const { password, ...userWithoutPassword } = user;
+          res.status(200).json(userWithoutPassword);
+        });
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  /**
+   * Enable 2FA for authenticated user
+   */
+  app.post("/api/auth/2fa/enable", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { method, code } = req.body; // method: 'sms' | 'email' | 'both'
+      if (!method || !['sms', 'email', 'both'].includes(method)) {
+        return res.status(400).json({ message: "Invalid method. Use 'sms', 'email', or 'both'." });
+      }
+
+      // Verify the confirmation code if provided
+      if (code) {
+        const verifyResult = await verifyOTP(req.user.id, code, 'login_2fa');
+        if (!verifyResult.valid) {
+          return res.status(400).json({ message: verifyResult.message });
+        }
+      }
+
+      // Enable 2FA
+      await storage.updateUser(req.user.id, {
+        twoFactorEnabled: true,
+        twoFactorMethod: method,
+      });
+
+      logger.info('2FA enabled', { userId: req.user.id, method });
+      res.status(200).json({ message: `Two-factor authentication enabled via ${method}` });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  /**
+   * Disable 2FA for authenticated user (requires current password)
+   */
+  app.post("/api/auth/2fa/disable", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { password: currentPassword } = req.body;
+      if (!currentPassword) {
+        return res.status(400).json({ message: "Current password is required to disable 2FA." });
+      }
+
+      // Verify current password
+      const user = await storage.getUser(req.user.id);
+      if (!user || !(await comparePasswords(currentPassword, user.password))) {
+        return res.status(400).json({ message: "Incorrect password." });
+      }
+
+      await storage.updateUser(req.user.id, {
+        twoFactorEnabled: false,
+        twoFactorMethod: null,
+      });
+
+      logger.info('2FA disabled', { userId: req.user.id });
+      res.status(200).json({ message: "Two-factor authentication has been disabled." });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  /**
+   * Verify phone number (used during registration or settings)
+   */
+  app.post("/api/auth/verify-phone", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const { code } = req.body;
+      if (!code || code.length !== 6) {
+        return res.status(400).json({ message: "Please enter a valid 6-digit code." });
+      }
+
+      const result = await verifyOTP(req.user.id, code, 'phone_verify');
+      if (!result.valid) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      // Mark phone as verified
+      await storage.updateUser(req.user.id, { phoneVerified: true });
+
+      logger.info('Phone verified', { userId: req.user.id });
+      res.status(200).json({ message: "Phone number verified successfully." });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  /**
+   * Send phone verification OTP (for settings / post-registration)
+   */
+  app.post("/api/auth/send-phone-otp", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const user = await storage.getUser(req.user.id);
+      if (!user || !user.phoneNumber) {
+        return res.status(400).json({ message: "No phone number on this account." });
+      }
+
+      if (!isValidRwandanPhone(user.phoneNumber)) {
+        return res.status(400).json({ message: "Invalid Rwandan phone number format." });
+      }
+
+      const result = await sendOTP(user.id, 'sms', 'phone_verify', user.phoneNumber);
+      return res.status(result.success ? 200 : 429).json({ message: result.message });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.post("/api/auth/forgot-password", async (req, res, next) => {
+    try {
+      const { email, phoneNumber } = req.body;
+      const identifier = email || phoneNumber;
+      
+      if (!identifier) {
+        return res.status(400).json({ message: "Email or phone number is required" });
+      }
+
+      const { token, user } = await UserService.generateResetToken(identifier);
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const isEmail = emailRegex.test(identifier);
+
+      if (isEmail) {
+        // Send reset email
+        await sendResetPasswordEmail(user.email, user.fullName || user.username, token);
+        res.status(200).json({ message: "Password reset link sent to your email" });
+      } else {
+        // Send reset SMS
+        // We use the same 'token' (6-digit code) generated by UserService
+        const message = `Your KIZERE password reset code is: ${token}. It expires in 1 hour. Do not share this code with anyone.`;
+        await sendSMS(user.phoneNumber || identifier, message);
+        
+        res.status(200).json({ 
+          message: "Password reset code sent to your phone",
+          phone: user.phoneNumber || identifier 
+        });
+      }
     } catch (error: any) {
-      // For security, don't reveal if user exists or not
+      // For security, don't reveal if user exists or not (except for specific errors)
       if (error.name === 'NotFoundError') {
-        return res.status(200).json({ message: "If an account exists with that email, a reset link has been sent." });
+        const identifier = req.body.email || req.body.phoneNumber || "";
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+        return res.status(200).json({ 
+          message: isEmail 
+            ? "If an account exists with that email, a reset link has been sent."
+            : "If an account exists with that phone number, a reset code has been sent."
+        });
       }
       next(error);
     }
@@ -285,4 +577,18 @@ export function setupAuth(app: Express) {
   });
 
   // Google OAuth authentication is now handled in routes.ts
+}
+
+// Utility functions for masking sensitive data
+function maskPhone(phone: string): string {
+  if (!phone || phone.length < 6) return '***';
+  return phone.slice(0, 4) + '****' + phone.slice(-3);
+}
+
+function maskEmail(email: string): string {
+  if (!email) return '***';
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return '***';
+  const maskedLocal = local.slice(0, 2) + '***';
+  return `${maskedLocal}@${domain}`;
 }

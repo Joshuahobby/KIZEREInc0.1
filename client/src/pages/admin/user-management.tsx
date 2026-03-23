@@ -17,15 +17,46 @@ import { UserActivityTimeline } from "@/components/user-management/user-activity
 import { UserStatusHistory } from "@/components/user-management/user-status-history";
 import { UserWarnings } from "@/components/user-management/user-warnings";
 import { UserVerificationDocuments } from "@/components/user-management/user-verification-documents";
+import { UserVerificationDialog } from "@/components/user-management/user-verification-dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
-import { Loader2, UserPlus, ArrowLeft } from "lucide-react";
+import { Loader2, UserPlus, ArrowLeft, Trash2, Edit, AlertTriangle, Shield, CheckCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useForm } from "react-hook-form";
+import { cn } from "@/lib/utils";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthWall } from "@/components/ui/auth-wall";
 import { PageLayout } from "@/components/layout/page-layout";
+
+const userEditSchema = z.object({
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  username: z.string().min(3, "Username must be at least 3 characters").optional(),
+  role: z.string(),
+  status: z.string(),
+});
 
 interface UserResponse {
   users: User[];
@@ -39,17 +70,6 @@ export default function UserManagementPage() {
   const { user, isLoading: isLoadingAuth } = useAuth();
   const [, navigate] = useLocation();
 
-  if (!user && !isLoadingAuth) {
-    return (
-      <PageLayout>
-        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
-          <AuthWall returnUrl="/admin/users" />
-        </div>
-      </PageLayout>
-    );
-  }
-
-  // State
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState<UserFiltersType>({
@@ -62,36 +82,61 @@ export default function UserManagementPage() {
     sortOrder: "desc",
   });
 
-  // State for user detail modal
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserDetail, setShowUserDetail] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [verificationUser, setVerificationUser] = useState<User | null>(null);
 
-  // Fetch users with filters and pagination
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['/api/admin/users', currentPage, pageSize, filters],
-    queryFn: async () => {
-      // Build query parameters
-      const params = new URLSearchParams({
-        page: currentPage.toString(),
-        pageSize: pageSize.toString(),
+  // Mutation for updating user details
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ userId, data }: { userId: number; data: any }) => {
+      return apiRequest(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        data
       });
-
-      // Add filters to params
-      if (filters.search) params.append('search', filters.search);
-      if (filters.role) params.append('role', filters.role);
-      if (filters.status) params.append('status', filters.status);
-      if (filters.verificationStatus) params.append('verificationStatus', filters.verificationStatus);
-      if (filters.activityLevel) params.append('activityLevel', filters.activityLevel);
-      if (filters.sortBy) params.append('sortBy', filters.sortBy);
-      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
-
-      // Add date filters if provided
-      if (filters.startDate) params.append('startDate', filters.startDate.toISOString());
-      if (filters.endDate) params.append('endDate', filters.endDate.toISOString());
-
-      const response = await apiRequest<UserResponse>(`/api/admin/users?${params.toString()}`);
-      return response;
     },
+    onSuccess: () => {
+      toast({
+        title: "User updated",
+        description: "User details have been successfully updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setShowEditDialog(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error updating user",
+        description: error.message || "An error occurred while updating the user details.",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Mutation for deleting user
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      return apiRequest(`/api/admin/users/${userId}`, {
+        method: 'DELETE'
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "User deleted",
+        description: "User has been successfully deleted.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      setShowDeleteDialog(false);
+      setShowUserDetail(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error deleting user",
+        description: error.message || "An error occurred while deleting the user.",
+        variant: "destructive",
+      });
+    }
   });
 
   // Mutation for changing user status
@@ -142,45 +187,45 @@ export default function UserManagementPage() {
     }
   });
 
-  // Export users handler
-  const handleExport = async (format: 'csv' | 'excel') => {
-    try {
-      // Build query parameters for the export
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['/api/admin/users', currentPage, pageSize, filters],
+    queryFn: async () => {
       const params = new URLSearchParams({
-        format
+        page: currentPage.toString(),
+        pageSize: pageSize.toString(),
       });
-
-      // Add filters to export params
       if (filters.search) params.append('search', filters.search);
       if (filters.role) params.append('role', filters.role);
       if (filters.status) params.append('status', filters.status);
       if (filters.verificationStatus) params.append('verificationStatus', filters.verificationStatus);
       if (filters.activityLevel) params.append('activityLevel', filters.activityLevel);
-
-      // Add date filters if provided
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+      if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
       if (filters.startDate) params.append('startDate', filters.startDate.toISOString());
       if (filters.endDate) params.append('endDate', filters.endDate.toISOString());
+      return apiRequest<UserResponse>(`/api/admin/users?${params.toString()}`);
+    },
+  });
 
-      // Trigger file download
-      window.open(`/api/admin/users/export?${params.toString()}`, '_blank');
-
-      toast({
-        title: "Export started",
-        description: `User data is being exported as ${format.toUpperCase()}.`,
-      });
-    } catch (error) {
-      toast({
-        title: "Export failed",
-        description: "An error occurred while exporting users.",
-        variant: "destructive",
-      });
-    }
+  const handleExport = async (format: 'csv' | 'excel') => {
+    const params = new URLSearchParams({ format });
+    if (filters.search) params.append('search', filters.search);
+    if (filters.role) params.append('role', filters.role);
+    if (filters.status) params.append('status', filters.status);
+    if (filters.verificationStatus) params.append('verificationStatus', filters.verificationStatus);
+    if (filters.activityLevel) params.append('activityLevel', filters.activityLevel);
+    if (filters.startDate) params.append('startDate', filters.startDate.toISOString());
+    if (filters.endDate) params.append('endDate', filters.endDate.toISOString());
+    window.open(`/api/admin/users/export?${params.toString()}`, '_blank');
+    toast({
+      title: "Export started",
+      description: `User data is being exported as ${format.toUpperCase()}.`,
+    });
   };
 
-  // Event handlers
   const handleFilterChange = (newFilters: UserFiltersType) => {
     setFilters(newFilters);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   };
 
   const handlePageChange = (page: number) => {
@@ -193,8 +238,8 @@ export default function UserManagementPage() {
   };
 
   const handleEditUser = (user: User) => {
-    // Navigate to user edit page or open a modal
-    console.log("Edit user:", user);
+    setSelectedUser(user);
+    setShowEditDialog(true);
   };
 
   const handleStatusChange = (user: User, status: string) => {
@@ -205,11 +250,16 @@ export default function UserManagementPage() {
     });
   };
 
-  const handleRoleChange = (user: User) => {
-    // Implementation handled by mutation in the UserTable component
+  const handleDeleteUser = (user: User) => {
+    setSelectedUser(user);
+    setShowDeleteDialog(true);
   };
 
-  // Handle errors
+  const handleVerifyUser = (user: User) => {
+    setVerificationUser(user);
+    setShowVerificationDialog(true);
+  };
+
   useEffect(() => {
     if (error) {
       toast({
@@ -219,6 +269,16 @@ export default function UserManagementPage() {
       });
     }
   }, [error, toast]);
+
+  if (!user && !isLoadingAuth) {
+    return (
+      <PageLayout>
+        <div className="container max-w-7xl mx-auto py-20 flex items-center justify-center">
+          <AuthWall returnUrl="/admin/users" />
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
@@ -248,26 +308,76 @@ export default function UserManagementPage() {
             <TabsTrigger value="warnings">Users with Warnings</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="all-users">
+          <TabsContent value="all-users" className="space-y-6 mt-6">
             <UserFilters onFilterChange={handleFilterChange} onExport={handleExport} />
 
             {isLoading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="flex items-center justify-center py-20 bg-background/50 backdrop-blur-sm rounded-3xl border-2 border-dashed border-primary/10">
+                <div className="flex flex-col items-center gap-4">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary/60" />
+                  <p className="text-sm font-medium text-muted-foreground animate-pulse">Loading identity vault...</p>
+                </div>
               </div>
             ) : data?.users && data.users.length > 0 ? (
-              <UserTable
-                users={data.users}
-                totalPages={data.pages || 1}
-                currentPage={currentPage}
-                onPageChange={handlePageChange}
-                onViewUser={handleViewUser}
-                onEditUser={handleEditUser}
-                onStatusChange={handleStatusChange}
-                onRoleChange={(user, role) =>
-                  changeRoleMutation.mutate({ userId: user.id, role })
-                }
-              />
+              <div className="space-y-6">
+                <UserTable
+                  users={data.users}
+                  onViewDetails={handleViewUser}
+                  onEdit={handleEditUser}
+                  onDelete={handleDeleteUser}
+                  onVerify={handleVerifyUser}
+                  onStatusChange={(id, s) => changeStatusMutation.mutate({ userId: id, status: s })}
+                  onRoleChange={(id, r) => changeRoleMutation.mutate({ userId: id, role: r })}
+                />
+                
+                {/* External Pagination */}
+                {data.pages > 1 && (
+                  <div className="flex items-center justify-between px-2 py-4">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Showing {data.users.length} of {data.total} users
+                    </p>
+                    <div className="flex items-center gap-2">
+                       <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        className="h-8 border-primary/5 hover:bg-primary/5"
+                       >
+                         Previous
+                       </Button>
+                       <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(5, data.pages) }, (_, i) => {
+                            const pageNum = i + 1; // Simplified for now
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={currentPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                className={cn(
+                                    "h-8 w-8 p-0 border-primary/5",
+                                    currentPage === pageNum && "shadow-md shadow-primary/20"
+                                )}
+                                onClick={() => handlePageChange(pageNum)}
+                              >
+                                {pageNum}
+                              </Button>
+                            )
+                          })}
+                       </div>
+                       <Button 
+                        variant="outline" 
+                        size="sm" 
+                        disabled={currentPage === data.pages}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        className="h-8 border-primary/5 hover:bg-primary/5"
+                       >
+                         Next
+                       </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <Card>
                 <CardContent className="py-10 text-center">
@@ -289,22 +399,40 @@ export default function UserManagementPage() {
           </TabsContent>
 
           <TabsContent value="pending-verification">
-            <p className="text-muted-foreground mb-4">Users awaiting identity verification</p>
-            {/* This tab would be implemented similar to all-users but with a predefined filter */}
+            <UserTabContent
+              tab="pending-verification"
+              onViewUser={handleViewUser}
+              onEditUser={handleEditUser}
+              onDeleteUser={handleDeleteUser}
+              onVerifyUser={handleVerifyUser}
+              onStatusChange={handleStatusChange}
+              onRoleChange={(u, r) => changeRoleMutation.mutate({ userId: u.id, role: r })}
+            />
           </TabsContent>
 
           <TabsContent value="recently-active">
-            <p className="text-muted-foreground mb-4">Users who logged in within the last 7 days</p>
-            {/* This tab would be implemented similar to all-users but with a predefined filter */}
+            <UserTabContent
+              tab="recently-active"
+              onViewUser={handleViewUser}
+              onEditUser={handleEditUser}
+              onDeleteUser={handleDeleteUser}
+              onStatusChange={handleStatusChange}
+              onRoleChange={(u, r) => changeRoleMutation.mutate({ userId: u.id, role: r })}
+            />
           </TabsContent>
 
           <TabsContent value="warnings">
-            <p className="text-muted-foreground mb-4">Users with one or more warning flags</p>
-            {/* This tab would be implemented similar to all-users but with a predefined filter */}
+            <UserTabContent
+              tab="warnings"
+              onViewUser={handleViewUser}
+              onEditUser={handleEditUser}
+              onDeleteUser={handleDeleteUser}
+              onStatusChange={handleStatusChange}
+              onRoleChange={(u, r) => changeRoleMutation.mutate({ userId: u.id, role: r })}
+            />
           </TabsContent>
         </Tabs>
 
-        {/* User Detail Dialog */}
         {selectedUser && (
           <Dialog open={showUserDetail} onOpenChange={setShowUserDetail}>
             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -330,39 +458,46 @@ export default function UserManagementPage() {
                         <h3 className="text-sm font-medium text-muted-foreground">Full Name</h3>
                         <p className="mt-1">{selectedUser.fullName}</p>
                       </div>
-
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Email</h3>
                         <p className="mt-1">{selectedUser.email}</p>
                       </div>
-
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Username</h3>
                         <p className="mt-1">{selectedUser.username || 'Not set'}</p>
                       </div>
-
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Role</h3>
                         <p className="mt-1">{selectedUser.role}</p>
                       </div>
-
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Status</h3>
                         <p className="mt-1">{selectedUser.status}</p>
                       </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground">Phone Number</h3>
+                        <p className="mt-1">{selectedUser.phoneNumber || 'Not provided'}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-medium text-muted-foreground">2FA Enabled</h3>
+                        <p className="mt-1">
+                          {selectedUser.twoFactorEnabled ? (
+                            <Badge variant="success" className="bg-green-100 text-green-800">Enabled</Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground">Disabled</Badge>
+                          )}
+                        </p>
+                      </div>
                     </div>
-
                     <div className="space-y-4">
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Verification Status</h3>
                         <p className="mt-1">{selectedUser.verificationStatus}</p>
                       </div>
-
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Registered On</h3>
                         <p className="mt-1">{format(new Date(selectedUser.createdAt), 'PPP')}</p>
                       </div>
-
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Last Login</h3>
                         <p className="mt-1">
@@ -371,20 +506,16 @@ export default function UserManagementPage() {
                             : "Never logged in"}
                         </p>
                       </div>
-
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Activity Level</h3>
                         <p className="mt-1">{selectedUser.activityLevel || 'Unknown'}</p>
                       </div>
-
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground">Warning Count</h3>
                         <p className="mt-1">{selectedUser.warningCount}</p>
                       </div>
                     </div>
                   </div>
-
-                  {/* User Warnings section */}
                   <div className="mt-6">
                     <UserWarnings userId={selectedUser.id} />
                   </div>
@@ -393,11 +524,9 @@ export default function UserManagementPage() {
                 <TabsContent value="activity" className="mt-4">
                   <UserActivityTimeline userId={selectedUser.id} />
                 </TabsContent>
-
                 <TabsContent value="status" className="mt-4">
                   <UserStatusHistory userId={selectedUser.id} />
                 </TabsContent>
-
                 <TabsContent value="verification" className="mt-4">
                   <UserVerificationDocuments userId={selectedUser.id} />
                 </TabsContent>
@@ -414,7 +543,268 @@ export default function UserManagementPage() {
             </DialogContent>
           </Dialog>
         )}
+
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Confirm Deletion
+              </DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the user <strong>{selectedUser?.fullName}</strong>?
+                This action is permanent and cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)} disabled={deleteUserMutation.isPending}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => selectedUser && deleteUserMutation.mutate(selectedUser.id)}
+                disabled={deleteUserMutation.isPending}
+              >
+                {deleteUserMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Delete User"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <EditUserDialog
+          user={selectedUser}
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          onSave={(data) => {
+            if (selectedUser) {
+              updateUserMutation.mutate({ userId: selectedUser.id, data });
+            }
+          }}
+          isSubmitting={updateUserMutation.isPending}
+        />
+
+        <UserVerificationDialog 
+          user={verificationUser}
+          open={showVerificationDialog}
+          onOpenChange={setShowVerificationDialog}
+        />
       </div>
     </PageLayout>
+  );
+}
+
+// Helper Components
+function UserTabContent({
+  tab,
+  onViewUser,
+  onEditUser,
+  onDeleteUser,
+  onVerifyUser,
+  onStatusChange,
+  onRoleChange
+}: {
+  tab: string;
+  onViewUser: (user: User) => void;
+  onEditUser: (user: User) => void;
+  onDeleteUser: (user: User) => void;
+  onVerifyUser?: (user: User) => void;
+  onStatusChange: (user: User, status: string) => void;
+  onRoleChange: (user: User, role: string) => void;
+}) {
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: [`/api/admin/users/tabs/${tab}`],
+    queryFn: async () => apiRequest<UserResponse>(`/api/admin/users/tabs/${tab}`),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const users = usersData?.users || [];
+
+  if (users.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center">
+          <p className="text-muted-foreground text-sm">No users found in this category.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <UserTable
+      users={users}
+      onViewDetails={onViewUser}
+      onEdit={onEditUser}
+      onDelete={onDeleteUser}
+      onVerify={onVerifyUser}
+      onStatusChange={onStatusChange}
+      onRoleChange={onRoleChange}
+    />
+  );
+}
+
+function EditUserDialog({
+  user,
+  open,
+  onOpenChange,
+  onSave,
+  isSubmitting
+}: {
+  user: User | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (data: any) => void;
+  isSubmitting: boolean;
+}) {
+  const form = useForm({
+    resolver: zodResolver(userEditSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      username: "",
+      role: "Subscriber",
+      status: "active",
+    },
+  });
+
+  useEffect(() => {
+    if (user && open) {
+      form.reset({
+        fullName: user.fullName,
+        email: user.email,
+        username: user.username || "",
+        role: user.role,
+        status: user.status,
+      });
+    }
+  }, [user, open, form]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Edit User Details</DialogTitle>
+          <DialogDescription>
+            Update profile information for {user?.fullName}.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSave)} className="space-y-4 py-4">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} type="email" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username (Optional)</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>User Role</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                        <SelectItem value="Agent">Agent</SelectItem>
+                        <SelectItem value="Subscriber">Subscriber</SelectItem>
+                        <SelectItem value="Business">Business</SelectItem>
+                        <SelectItem value="Moderator">Moderator</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>System Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="suspended">Suspended</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                        <SelectItem value="banned">Banned</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Shield className="mr-2 h-4 w-4" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 }

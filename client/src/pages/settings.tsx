@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PrivacySettings } from "@/components/settings/privacy-settings";
+import TwoFactorSettings from "@/components/settings/two-factor-settings";
 
 export default function SettingsPage() {
     const { t } = useLanguage();
@@ -122,32 +123,7 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl">
-                            <CardHeader className="border-b border-border/50 bg-muted/20 pb-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-blue-500/10 rounded-lg">
-                                        <Smartphone className="h-5 w-5 text-blue-500" />
-                                    </div>
-                                    <div>
-                                        <CardTitle>{t("settings_page.twofa_title")}</CardTitle>
-                                        <CardDescription>{t("settings_page.twofa_desc")}</CardDescription>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center justify-between p-4 border rounded-xl bg-muted/30">
-                                    <div className="flex items-center gap-3">
-                                        <Shield className="h-5 w-5 text-muted-foreground" />
-                                        <div>
-                                            <p className="text-sm font-bold">{t("settings_page.authenticator_app")}</p>
-                                            <p className="text-xs text-muted-foreground">{t("settings_page.authenticator_desc")}</p>
-                                        </div>
-                                    </div>
-                                    <Badge variant="secondary">{t("settings_page.disabled")}</Badge>
-                                </div>
-                                <Button variant="outline" className="w-full">{t("settings_page.enable_2fa")}</Button>
-                            </CardContent>
-                        </Card>
+                        <TwoFactorSettings className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl" />
                     </TabsContent>
 
                     <TabsContent value="privacy" className="space-y-6 mt-6">

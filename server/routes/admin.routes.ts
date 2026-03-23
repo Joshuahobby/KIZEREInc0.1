@@ -12,6 +12,9 @@ import { getUrlWithSignature } from '../services/cloudinary.service';
 const logger = createLogger('AdminRoutes');
 const router = Router();
 
+// Protect all admin routes
+router.use(requireAdmin);
+
 // ==========================================
 // USER MANAGEMENT
 // ==========================================
@@ -96,8 +99,11 @@ router.get("/users/:id", async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (error) {
-    logger.error("Error getting user:", error);
-    res.status(500).json({ message: "Internal server error" });
+    logger.error(`Error getting user with ID ${req.params.id}:`, error);
+    res.status(500).json({ 
+      message: "Internal server error",
+      details: error instanceof Error ? error.message : String(error)
+    });
   }
 });
 
@@ -196,7 +202,100 @@ router.get("/users/:id/payments", async (req, res) => {
     const payments = await storage.getUserPayments(userId);
     res.json(payments);
   } catch (error) {
-    logger.error("Error getting user payments:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Update user details - Admin Only
+router.patch("/users/:id", requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const userData = req.body;
+    const adminId = req.user!.id;
+
+    // Remove sensitive or read-only fields if they exist
+    delete userData.id;
+    delete userData.password;
+    delete userData.createdAt;
+    delete userData.lastLogin;
+
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const updatedUser = await storage.updateUser(userId, userData);
+
+    await storage.createAdminActionLog({
+      adminId,
+      targetUserId: userId,
+      action: `Updated user details`,
+      previousState: user,
+      newState: updatedUser || {}
+    });
+
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    logger.error("Error updating user details:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Delete user - Admin Only
+router.delete("/users/:id", requireAdmin, async (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const adminId = req.user!.id;
+
+    const user = await storage.getUser(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const success = await storage.deleteUser(userId);
+
+    if (success) {
+      await storage.createAdminActionLog({
+        adminId,
+        action: `Deleted user ${user.username}`,
+        previousState: user,
+        newState: { deleted: true },
+        details: JSON.stringify({ targetUserId: userId }) // Store ID in details instead of metadata
+      });
+      res.json({ success: true });
+    } else {
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  } catch (error) {
+    logger.error("Error deleting user:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// Admin management tabs data
+router.get("/users/tabs/:tab", requireAdmin, async (req, res) => {
+  try {
+    const tab = req.params.tab;
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 10;
+    
+    let filters: any = { page, pageSize };
+
+    if (tab === 'pending-verification' || tab === 'pending') {
+      filters.verificationStatus = 'pending';
+    } else if (tab === 'recently-active' || tab === 'active') {
+      // Recently active: filter by lastLogin within last 24h
+      const yesterday = new Date();
+      yesterday.setHours(yesterday.getHours() - 24);
+      filters.startDate = yesterday;
+      filters.sortBy = 'lastLogin';
+    } else if (tab === 'warnings') {
+      // This is a bit tricky with current storage, but let's assume status 'suspended' or similar for now
+      // or we can add a specific filter in getUsersWithFilters if needed.
+      // For now, let's just use status='suspended' as a proxy if no better way.
+      filters.status = 'suspended';
+    }
+
+    const result = await storage.getUsersWithFilters(filters);
+    res.json(result);
+  } catch (error) {
+    logger.error(`Error getting users for tab ${req.params.tab}:`, error);
     res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -329,6 +428,28 @@ router.get("/verification-requests/:id", async (req, res) => {
   try {
     const request = await storage.getVerificationRequest(parseInt(req.params.id));
     if (!request) return res.status(404).json({ message: "Request not found" });
+
+    // Generate signed URLs if private
+    const enriched = {
+      ...request,
+      documentUrl: request.documentPublicId ? getUrlWithSignature(request.documentPublicId) : request.documentUrl,
+      selfieUrl: request.selfiePublicId ? getUrlWithSignature(request.selfiePublicId) : request.selfieUrl
+    };
+
+    res.json(enriched);
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/verification-requests/user/:userId", async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId);
+    const request = await storage.getVerificationRequest(userId);
+    
+    if (!request) {
+      return res.status(404).json({ message: "No verification request found for this user" });
+    }
 
     // Generate signed URLs if private
     const enriched = {

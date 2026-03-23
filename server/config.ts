@@ -11,6 +11,7 @@ const configSchema = z.object({
 
   // Optional but recommended for production
   FRONTEND_URL: z.string().optional(),
+  APP_URL: z.string().optional(),
 
   // Stripe
   STRIPE_SECRET_KEY: z.string().startsWith("sk_").optional(),
@@ -29,6 +30,10 @@ const configSchema = z.object({
   // PawaPay
   PAWAPAY_API_TOKEN: z.string().optional(),
   MOCK_PAYMENTS: z.string().transform(v => v === 'true').default('false'),
+
+  // Pindo SMS (Rwanda)
+  PINDO_API_TOKEN: z.string().optional(),
+  PINDO_SENDER_ID: z.string().optional().default('KIZERE'),
 });
 
 const _config = configSchema.safeParse(process.env);
@@ -41,12 +46,18 @@ if (!_config.success) {
   console.log("✅ Environment configuration validated successfully");
 }
 
-export const config = _config.success ? _config.data : ({
+const resolvedAppUrl = process.env.APP_URL || process.env.FRONTEND_URL || (process.env.NODE_ENV === "production" ? "https://kizere.rw" : "http://localhost:5000");
+
+export const config = _config.success ? {
+  ..._config.data,
+  APP_URL: _config.data.APP_URL || _config.data.FRONTEND_URL || resolvedAppUrl
+} : ({
   NODE_ENV: (process.env.NODE_ENV || "development") as "development" | "production" | "test",
   PORT: Number(process.env.PORT || "5000"),
   DATABASE_URL: process.env.DATABASE_URL || "",
   SESSION_SECRET: process.env.SESSION_SECRET,
   FRONTEND_URL: process.env.FRONTEND_URL,
+  APP_URL: resolvedAppUrl,
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,

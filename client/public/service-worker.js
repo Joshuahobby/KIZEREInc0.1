@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kizere-v5';
+const CACHE_NAME = 'kizere-v6';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -45,11 +45,37 @@ self.addEventListener('fetch', (event) => {
     'firebaseinstallations.googleapis.com',
     'firebaseapp.com',
     'firebaseio.com',
-    'gstatic.com'
+    'gstatic.com',
+    'www.googletagmanager.com',
+    'www.google-analytics.com',
+    'analytics.google.com',
+    'stats.g.doubleclick.net'
   ];
 
   if (externalDomains.some(domain => url.hostname.includes(domain))) {
     // Let browser handle these requests directly without service worker intervention
+    return;
+  }
+
+  // Network-first for root and index.html to ensure CSP headers are updated
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          // If successful, update the cache and return the response
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // If network fails, try the cache
+          return caches.match(event.request);
+        })
+    );
     return;
   }
 

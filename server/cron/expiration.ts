@@ -3,6 +3,9 @@ import { reports, users } from "@shared/schema";
 import { eq, and, lte, sql } from "drizzle-orm";
 import { createLogger } from "../utils/logger";
 import { sendExpirationEmail } from "../services/email.service";
+import otpService from "../services/otp.service";
+
+
 
 const logger = createLogger('ExpirationCron');
 
@@ -14,6 +17,15 @@ export function startExpirationCron() {
     try {
       logger.info('Running expiration check...');
       const now = new Date();
+
+      // Cleanup expired verification codes
+      try {
+        await otpService.cleanupExpiredCodes();
+        logger.info('Cleaned up expired verification codes');
+      } catch (error) {
+        logger.error('Error cleaning up expired verification codes', { error });
+      }
+
 
       // Find expired reports
       const expiredReports = await db.select({

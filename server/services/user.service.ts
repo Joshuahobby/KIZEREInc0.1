@@ -43,6 +43,21 @@ export class UserService {
   }
 
   /**
+   * Get user by phone number
+   * @param phoneNumber Phone number to look up
+   * @returns User object or undefined if not found
+   */
+  static async getUserByPhoneNumber(phoneNumber: string): Promise<User | undefined> {
+    try {
+      logger.info('Getting user by phone number', { phoneNumber });
+      return await userRepository.findByPhoneNumber(phoneNumber);
+    } catch (error) {
+      logger.error('Error getting user by phone number', { phoneNumber, error });
+      throw new DatabaseError('Failed to retrieve user by phone number');
+    }
+  }
+
+  /**
    * Get user by username
    * @param username Username to look up
    * @returns User object or undefined if not found
@@ -200,18 +215,38 @@ export class UserService {
   }
 
   /**
-   * Generate a reset password token for a user
-   * @param email User's email
+   * Generate a reset password token for a user (email or phone)
+   * @param identifier User's email or phone number
    * @returns Reset token and user
    */
-  static async generateResetToken(email: string): Promise<{ token: string; user: User }> {
+  static async generateResetToken(identifier: string): Promise<{ token: string; user: User }> {
     try {
-      const user = await userRepository.findByEmail(email);
-      if (!user) {
-        throw new NotFoundError('User with this email not found');
+      // Check if identifier is email or phone
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const isEmail = emailRegex.test(identifier);
+      
+      let user: User | undefined;
+      if (isEmail) {
+        user = await userRepository.findByEmail(identifier);
+      } else {
+        // Try looking up by phone number
+        user = await userRepository.findByPhoneNumber(identifier);
+        
+        // If not found, try by username (as phone users use phone as username)
+        if (!user) {
+          user = await userRepository.findByUsername(identifier);
+        }
       }
 
-      const token = crypto.randomBytes(32).toString('hex');
+      if (!user) {
+        throw new NotFoundError(`User with this ${isEmail ? 'email' : 'identifier'} not found`);
+      }
+
+      // For phone resets, generate a 6-digit code. For email, a hex token.
+      const token = isEmail 
+        ? crypto.randomBytes(32).toString('hex')
+        : Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+        
       const expires = new Date();
       expires.setHours(expires.getHours() + 1); // Token valid for 1 hour
 
@@ -220,11 +255,11 @@ export class UserService {
         resetPasswordExpires: expires
       } as any);
 
-      logger.info('Reset token generated successfully', { userId: user.id });
+      logger.info('Reset token generated successfully', { userId: user.id, isEmail });
       return { token, user };
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
-      logger.error('Error generating reset token', { email, error });
+      logger.error('Error generating reset token', { identifier, error });
       throw new DatabaseError('Failed to generate reset token');
     }
   }

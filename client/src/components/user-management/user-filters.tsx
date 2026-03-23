@@ -1,13 +1,5 @@
 import { useState } from "react";
 import { 
-  Card, 
-  CardContent, 
-  CardTitle, 
-  CardDescription, 
-  CardHeader,
-  CardFooter 
-} from "@/components/ui/card";
-import { 
   Select, 
   SelectContent, 
   SelectItem, 
@@ -25,7 +17,8 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { Calendar as CalendarIcon, X, Filter, Download } from "lucide-react";
+import { Calendar as CalendarIcon, X, Filter, Download, Search, Settings2, SlidersHorizontal } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface UserFiltersProps {
   onFilterChange: (filters: UserFilters) => void;
@@ -91,227 +84,201 @@ export function UserFilters({ onFilterChange, onExport }: UserFiltersProps) {
     onFilterChange(defaultFilters);
   };
 
+  const activeFiltersCount = [
+    filters.role !== "_all_roles",
+    filters.status !== "_all_statuses",
+    filters.verificationStatus !== "_all_verification",
+    filters.activityLevel !== "_all_activity",
+    startDate !== undefined,
+    endDate !== undefined,
+  ].filter(Boolean).length;
+
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>User Filters</CardTitle>
-        <CardDescription>Filter and sort the user list</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-4 md:grid-cols-3">
-          {/* Search Input */}
-          <div className="space-y-2">
-            <Label htmlFor="search">Search</Label>
-            <Input
-              id="search"
-              placeholder="Search by name, email, ID..."
-              value={filters.search}
-              onChange={(e) => handleChange("search", e.target.value)}
-            />
-          </div>
-          
-          {/* User Role */}
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select
-              value={filters.role}
-              onValueChange={(value) => handleChange("role", value)}
+    <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
+      {/* Primary Search Bar */}
+      <div className="relative flex-1 w-full overflow-hidden rounded-xl border-2 border-primary/5 bg-background/50 backdrop-blur-sm transition-all focus-within:border-primary/20 focus-within:ring-4 focus-within:ring-primary/5">
+        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+        <Input
+          placeholder="Search for users by name, email, or ID..."
+          value={filters.search}
+          onChange={(e) => handleChange("search", e.target.value)}
+          className="h-12 border-none bg-transparent pl-11 pr-4 focus-visible:ring-0"
+        />
+      </div>
+
+      <div className="flex items-center gap-2 w-full md:w-auto">
+        {/* Advanced Filters Trigger */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="outline" 
+              className={cn(
+                "h-12 border-2 px-4 transition-all hover:bg-muted relative",
+                activeFiltersCount > 0 ? "border-primary/20 bg-primary/5 text-primary" : "border-primary/5"
+              )}
             >
-              <SelectTrigger id="role">
-                <SelectValue placeholder="All roles" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all_roles">All roles</SelectItem>
-                <SelectItem value="Admin">Admin</SelectItem>
-                <SelectItem value="Agent">Agent</SelectItem>
-                <SelectItem value="Subscriber">Subscriber</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* User Status */}
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={filters.status}
-              onValueChange={(value) => handleChange("status", value)}
-            >
-              <SelectTrigger id="status">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all_statuses">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Verification Status */}
-          <div className="space-y-2">
-            <Label htmlFor="verificationStatus">Verification</Label>
-            <Select
-              value={filters.verificationStatus}
-              onValueChange={(value) => handleChange("verificationStatus", value)}
-            >
-              <SelectTrigger id="verificationStatus">
-                <SelectValue placeholder="Any verification" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all_verification">Any verification</SelectItem>
-                <SelectItem value="verified">Verified</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-                <SelectItem value="unverified">Unverified</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Activity Level */}
-          <div className="space-y-2">
-            <Label htmlFor="activityLevel">Activity</Label>
-            <Select
-              value={filters.activityLevel}
-              onValueChange={(value) => handleChange("activityLevel", value)}
-            >
-              <SelectTrigger id="activityLevel">
-                <SelectValue placeholder="Any activity" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_all_activity">Any activity</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Start Date */}
-          <div className="space-y-2">
-            <Label htmlFor="startDate">Date From</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !startDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP") : "Pick a date"}
+              <SlidersHorizontal className="mr-2 h-4 w-4" />
+              Filters
+              {activeFiltersCount > 0 && (
+                <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground leading-none">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[340px] p-6 shadow-2xl rounded-2xl border-primary/10 bg-background/95 backdrop-blur-md" align="end">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-primary/5 pb-4">
+                <h4 className="font-bold leading-none tracking-tight">Advanced Filters</h4>
+                <Button variant="ghost" className="h-8 px-2 text-xs text-muted-foreground hover:text-primary" onClick={clearFilters}>
+                  Reset All
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={startDate}
-                  onSelect={(date) => handleChange("startDate", date)}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          {/* End Date */}
-          <div className="space-y-2">
-            <Label htmlFor="endDate">Date To</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !endDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "PPP") : "Pick a date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={endDate}
-                  onSelect={(date) => handleChange("endDate", date)}
-                  initialFocus
-                  disabled={(date) => startDate ? date < startDate : false}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          {/* Sort By */}
-          <div className="space-y-2">
-            <Label htmlFor="sortBy">Sort By</Label>
-            <Select
-              value={filters.sortBy}
-              onValueChange={(value) => handleChange("sortBy", value)}
-            >
-              <SelectTrigger id="sortBy">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="createdAt">Registration Date</SelectItem>
-                <SelectItem value="lastLogin">Last Login</SelectItem>
-                <SelectItem value="fullName">Name</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="role">Role</SelectItem>
-                <SelectItem value="status">Status</SelectItem>
-                <SelectItem value="warningCount">Warning Count</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          {/* Sort Order */}
-          <div className="space-y-2">
-            <Label htmlFor="sortOrder">Sort Order</Label>
-            <Select
-              value={filters.sortOrder}
-              onValueChange={(value: "asc" | "desc") => handleChange("sortOrder", value)}
-            >
-              <SelectTrigger id="sortOrder">
-                <SelectValue placeholder="Sort order" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="asc">Ascending</SelectItem>
-                <SelectItem value="desc">Descending</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={clearFilters}>
-            <X className="mr-2 h-4 w-4" />
-            Clear Filters
-          </Button>
-          <Button variant="secondary">
-            <Filter className="mr-2 h-4 w-4" />
-            Apply Filters
-          </Button>
-        </div>
-        <div className="flex space-x-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-2">
-              <div className="grid gap-2">
-                <Button variant="ghost" onClick={() => onExport('csv')}>Export as CSV</Button>
-                <Button variant="ghost" onClick={() => onExport('excel')}>Export as Excel</Button>
               </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </CardFooter>
-    </Card>
+
+              <div className="grid gap-4">
+                {/* User Role */}
+                <div className="space-y-2">
+                  <Label htmlFor="role" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">User Role</Label>
+                  <Select value={filters.role} onValueChange={(value) => handleChange("role", value)}>
+                    <SelectTrigger id="role" className="h-10 border-primary/10 bg-muted/30">
+                      <SelectValue placeholder="All roles" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_all_roles">All roles</SelectItem>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Agent">Agent</SelectItem>
+                      <SelectItem value="Subscriber">Subscriber</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* User Status */}
+                <div className="space-y-2">
+                  <Label htmlFor="status" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">System Status</Label>
+                  <Select value={filters.status} onValueChange={(value) => handleChange("status", value)}>
+                    <SelectTrigger id="status" className="h-10 border-primary/10 bg-muted/30">
+                      <SelectValue placeholder="All statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_all_statuses">All statuses</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="suspended">Suspended</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Date From */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">From</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "h-10 w-full justify-start text-left font-normal border-primary/10 bg-muted/30 px-3",
+                            !startDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                          <span className="truncate">{startDate ? format(startDate, "MMM d, yyyy") : "Date"}</span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={startDate}
+                          onSelect={(date) => handleChange("startDate", date)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Date To */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">To</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "h-10 w-full justify-start text-left font-normal border-primary/10 bg-muted/30 px-3",
+                            !endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                          <span className="truncate">{endDate ? format(endDate, "MMM d, yyyy") : "Date"}</span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={(date) => handleChange("endDate", date)}
+                          initialFocus
+                          disabled={(date) => startDate ? date < startDate : false}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {/* Sort Controls */}
+                <div className="pt-2 border-t border-primary/5">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block text-center">Sorting & Display</Label>
+                  <div className="flex gap-2">
+                    <Select value={filters.sortBy} onValueChange={(value) => handleChange("sortBy", value)}>
+                      <SelectTrigger className="h-10 border-primary/10 bg-muted/30 flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="createdAt">Registration</SelectItem>
+                        <SelectItem value="lastLogin">Last Login</SelectItem>
+                        <SelectItem value="fullName">Full Name</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={filters.sortOrder} onValueChange={(value: "asc" | "desc") => handleChange("sortOrder", value)}>
+                      <SelectTrigger className="h-10 border-primary/10 bg-muted/30 w-[100px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="asc">Asc</SelectItem>
+                        <SelectItem value="desc">Desc</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Export Button */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+                variant="outline" 
+                className="h-12 border-2 border-primary/5 px-4 transition-all hover:bg-muted"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[200px] p-2 shadow-xl border-primary/10 rounded-xl bg-background/95 backdrop-blur-md" align="end">
+            <div className="grid gap-1">
+              <Button variant="ghost" className="justify-start px-2 py-1.5 h-9 rounded-lg" onClick={() => onExport('csv')}>
+                <Search className="mr-2 h-3.5 w-3.5" /> Export as CSV
+              </Button>
+              <Button variant="ghost" className="justify-start px-2 py-1.5 h-9 rounded-lg" onClick={() => onExport('excel')}>
+                <Download className="mr-2 h-3.5 w-3.5" /> Export as Excel
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </div>
   );
 }

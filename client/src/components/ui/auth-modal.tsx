@@ -87,6 +87,10 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       loginWithGoogle: async () => { throw new Error("Auth context not available") },
       signOut: async () => { throw new Error("Auth context not available") },
       refreshUser: async () => { },
+      pending2FA: null,
+      send2FACode: async () => {},
+      verify2FAMutation: { mutateAsync: async () => { } },
+      clear2FA: () => {},
     };
   }
 
@@ -155,11 +159,7 @@ export function AuthModal({ isOpen, onClose, defaultTab = "login" }: AuthModalPr
       setIsSubmitting(true);
       const registerData = AuthModel.prepareRegisterData(data);
 
-      await auth.registerMutation.mutateAsync({
-        username: registerData.username,
-        password: registerData.password,
-        fullName: registerData.fullName
-      });
+      await auth.registerMutation.mutateAsync(registerData as any);
 
       toast({
         title: "Account created!",

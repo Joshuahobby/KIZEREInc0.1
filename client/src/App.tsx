@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
@@ -43,6 +43,7 @@ const HowItWorks = lazyWithRetry(() => import("@/pages/how-it-works-v2"));
 const AuthPage = lazyWithRetry(() => import("@/pages/auth-page"));
 const ForgotPasswordPage = lazyWithRetry(() => import("@/pages/auth/ForgotPasswordPage"));
 const ResetPasswordPage = lazyWithRetry(() => import("@/pages/auth/ResetPasswordPage"));
+const VerifyOTPPage = lazyWithRetry(() => import("@/pages/auth/verify-otp-page"));
 const AuthCallback = lazyWithRetry(() => import("@/pages/auth-callback"));
 const MyItems = lazyWithRetry(() => import("@/pages/my-items"));
 const ItemDetail = lazyWithRetry(() => import("@/pages/item-detail"));
@@ -50,7 +51,6 @@ const Search = lazyWithRetry(() => import("@/pages/search"));
 const ReportDetailPage = lazyWithRetry(() => import("@/pages/report-detail"));
 const ClaimDetailPage = lazyWithRetry(() => import("@/pages/claim-detail"));
 const MyClaims = lazyWithRetry(() => import("@/pages/my-claims"));
-const UserManagement = lazyWithRetry(() => import("@/pages/user-management"));
 const AdminUserManagement = lazyWithRetry(() => import("@/pages/admin/user-management"));
 const RoleManagementPage = lazyWithRetry(() => import("@/pages/admin/role-management"));
 const AuditLogsPage = lazyWithRetry(() => import("@/pages/admin/audit-logs"));
@@ -171,6 +171,9 @@ function App() {
                   <Route path="/reset-password">
                     <ResetPasswordPage />
                   </Route>
+                  <Route path="/verify-2fa">
+                    <VerifyOTPPage />
+                  </Route>
 
                   {/* Protected routes */}
                   <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
@@ -191,7 +194,9 @@ function App() {
                   </Route>
                   <ProtectedRoute path="/my-claims" component={MyClaims} requiredRole="any" />
                   <ProtectedRoute path="/claims/:id" component={ClaimDetailPage} requiredRole="any" />
-                  <ProtectedRoute path="/user-management" component={UserManagement} requiredRole="Admin" />
+                   <Route path="/user-management">
+                     <Redirect to="/admin/users" />
+                   </Route>
 
                   {/* Payment routes */}
                   <Route path="/payment-status">
@@ -212,7 +217,6 @@ function App() {
                   <ProtectedRoute path="/admin/payment-packages/create" component={CreatePackage} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/users" component={AdminUserManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/users/new" component={NewUser} requiredRole="Admin" />
-                  <ProtectedRoute path="/admin/item-management" component={AdminItemManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/items" component={AdminItemManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/item-management/new" component={NewItem} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/items/new" component={NewItem} requiredRole="Admin" />

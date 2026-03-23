@@ -37,6 +37,7 @@ export interface IStorage {
   updateUserRole(userId: number, role: string): Promise<User | undefined>;
   updateUserVerificationStatus(userId: number, status: VerificationStatus): Promise<User | undefined>;
   updateUserReputation(userId: number, pointsDelta: number, itemsReturnedDelta: number): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
 
   // User activity logs
   getUserActivityLogs(userId: number, page: number, pageSize: number): Promise<UserActivityLog[]>;

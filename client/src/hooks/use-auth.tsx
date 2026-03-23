@@ -7,18 +7,30 @@ import { AuthService } from "@/services/auth.service";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, clearCsrfToken, setAuthSyncing } from "@/lib/queryClient";
 
+export interface Pending2FAData {
+  userId: number;
+  methods: string[];
+  maskedPhone: string | null;
+  maskedEmail: string | null;
+}
+
 export interface AuthContextType {
   user: User | null;
   role: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  loginMutation: any; // Using any for simplicity with mutations
+  loginMutation: any;
   registerMutation: any;
   logoutMutation: any;
   loginWithGoogle: (redirectUrl?: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: (userData?: User) => Promise<void>;
+  // 2FA
+  pending2FA: Pending2FAData | null;
+  send2FACode: (channel: 'sms' | 'email') => Promise<void>;
+  verify2FAMutation: any;
+  clear2FA: () => void;
 }
 
 const AuthContext = React.createContext<AuthContextType | undefined>(undefined);
@@ -30,6 +42,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = React.useState<string | null>(null);
   const [, setLocation] = useLocation();
   const [isRedirecting, setIsRedirecting] = React.useState(false);
+  const [pending2FA, setPending2FA] = React.useState<Pending2FAData | null>(() => {
+    const saved = typeof window !== 'undefined' ? sessionStorage.getItem('pending_2fa') : null;
+    if (saved) {
+      try {
+        console.log("[useAuth] Restoring pending2FA from sessionStorage");
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("[useAuth] Failed to parse saved 2FA state", e);
+      }
+    }
+    return null;
+  });
+
+  // Persist pending2FA to sessionStorage
+  React.useEffect(() => {
+    if (pending2FA) {
+      console.log("[useAuth] Persisting pending2FA to sessionStorage:", pending2FA.userId);
+      sessionStorage.setItem('pending_2fa', JSON.stringify(pending2FA));
+    } else {
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('pending_2fa');
+      }
+    }
+  }, [pending2FA]);
   const { toast } = useToast();
   const isMounted = React.useRef(true);
 
@@ -276,7 +312,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data: credentials,
       });
     },
-    onSuccess: (userData: User) => {
+    onSuccess: (data: any) => {
+      // Check if 2FA is required
+      if (data.requires2FA) {
+        setPending2FA({
+          userId: data.userId,
+          methods: data.methods,
+          maskedPhone: data.maskedPhone,
+          maskedEmail: data.maskedEmail,
+        });
+        console.log("[useAuth] Login requires 2FA, redirecting to /verify-2fa", data);
+        setLocation('/verify-2fa');
+        return;
+      }
+
+      // Normal login (no 2FA)
+      const userData = data as User;
       setUser(userData);
       const preferredStyle = (userData.preferences as UserPreferences)?.dashboardStyle;
       const dashboardPath = AuthService.getDashboardPathByRole(userData.role, preferredStyle);
@@ -298,11 +349,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data,
       });
     },
-    onSuccess: (userData: User) => {
-      setUser(userData);
+    onSuccess: (data: any) => {
+      console.log("[useAuth] Registration successful data:", data);
+      if (data.requires2FA) {
+        console.log("[useAuth] Registration requires 2FA, setting pending state and redirecting", {
+          userId: data.userId,
+          methods: data.methods,
+          maskedPhone: data.maskedPhone
+        });
+        setPending2FA({
+          userId: data.userId,
+          methods: data.methods,
+          maskedPhone: data.maskedPhone,
+          maskedEmail: data.maskedEmail,
+          isRegistration: true
+        });
+        setLocation('/verify-2fa');
+        return;
+      }
+
+      setUser(data as User);
       setLocation("/dashboard");
     },
     onError: (err: Error) => {
+      console.error("[useAuth] Registration failed error:", err);
       toast({
         title: "Registration Failed",
         description: err.message,
@@ -411,6 +481,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     mutationFn: signOut,
   });
 
+  // 2FA: Send verification code
+  const send2FACode = React.useCallback(async (channel: 'sms' | 'email') => {
+    try {
+      await apiRequest('/api/auth/2fa/send', {
+        method: 'POST',
+        data: { channel },
+      });
+      toast({
+        title: 'Code Sent',
+        description: `Verification code sent via ${channel === 'sms' ? 'SMS' : 'email'}.`,
+      });
+    } catch (err: any) {
+      toast({
+        title: 'Failed to send code',
+        description: err.message || 'Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, []);
+
+  // 2FA: Verify code and complete login
+  const verify2FAMutation = useMutation({
+    mutationFn: async (code: string) => {
+      return await apiRequest('/api/auth/2fa/verify', {
+        method: 'POST',
+        data: { code },
+      });
+    },
+    onSuccess: (userData: User) => {
+      setPending2FA(null);
+      setUser(userData);
+      const preferredStyle = (userData.preferences as UserPreferences)?.dashboardStyle;
+      const dashboardPath = AuthService.getDashboardPathByRole(userData.role, preferredStyle);
+      setLocation(dashboardPath);
+      toast({
+        title: 'Welcome!',
+        description: `Signed in as ${userData.fullName || userData.username}`,
+      });
+    },
+    onError: (err: Error) => {
+      toast({
+        title: 'Verification Failed',
+        description: err.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const clear2FA = React.useCallback(() => setPending2FA(null), []);
+
   const value = React.useMemo(() => ({
     user,
     role: user?.role || null,
@@ -423,7 +543,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loginWithGoogle,
     signOut,
     refreshUser,
-  }), [user, isLoading, error, loginMutation, registerMutation, logoutMutation]);
+    // 2FA
+    pending2FA,
+    send2FACode,
+    verify2FAMutation,
+    clear2FA,
+  }), [user, isLoading, error, loginMutation, registerMutation, logoutMutation, pending2FA, verify2FAMutation]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

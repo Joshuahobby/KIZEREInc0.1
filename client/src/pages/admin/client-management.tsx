@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { AuthWall } from "@/components/ui/auth-wall";
 import { PageLayout } from "@/components/layout/page-layout";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
-import UserTable from "@/components/user-management/UserTable";
+import { UserTable } from "@/components/user-management/user-table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Dialog,
@@ -191,15 +191,20 @@ export default function ClientManagementPage() {
                             </div>
                         ) : (
                             <UserTable
-                                users={usersData?.users || []}
-                                totalCount={usersData?.total || 0}
-                                currentPage={currentPage}
-                                pageSize={pageSize}
-                                onPageChange={handlePageChange}
-                                onViewUser={handleViewUser}
-                                onEditUser={(user) => window.location.href = `/admin/users/${user.id}`}
-                                onChangeStatus={handleStatusChange}
-                                onChangeRole={() => { }} // Disabled for this view
+                                users={(usersData?.users || []) as any}
+                                onViewDetails={handleViewUser}
+                                onEdit={(user) => window.location.href = `/admin/users/${user.id}`}
+                                onDelete={(user) => {
+                                    if (confirm(`Are you sure you want to delete client ${user.fullName}?`)) {
+                                        apiRequest(`/api/admin/users/${user.id}`, { method: 'DELETE' })
+                                            .then(() => {
+                                                toast({ title: "Client deleted" });
+                                                queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+                                            });
+                                    }
+                                }}
+                                onStatusChange={handleStatusChange}
+                                onRoleChange={() => { }} // Disabled for this view
                             />
                         )}
                     </CardContent>

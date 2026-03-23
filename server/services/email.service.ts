@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { createLogger } from '../utils/logger';
+import { config } from '../config';
 
 const logger = createLogger('EmailService');
 
@@ -418,7 +419,12 @@ export async function sendResetPasswordEmail(
   userName: string,
   token: string
 ): Promise<boolean> {
-  const resetLink = `${process.env.APP_URL || 'https://kizere.com'}/reset-password?token=${token}`;
+  const resetLink = `${config.APP_URL}/reset-password?token=${token}`;
+  
+  logger.info('Generated password reset link', { 
+    userIdOrEmail: email, 
+    link: resetLink.replace(token, '[REDACTED]') 
+  });
 
   return sendEmail({
     to: email,
