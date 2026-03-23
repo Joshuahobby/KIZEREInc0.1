@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -255,9 +255,9 @@ export default function AuthPage() {
                             {t('auth.rememberMe')}
                           </label>
                         </div>
-                        <a href="#" className="text-xs text-primary hover:underline">
+                        <Link href="/forgot-password" className="text-xs text-primary hover:underline">
                           {t('auth.forgotPassword')}
-                        </a>
+                        </Link>
                       </div>
 
                       <Button

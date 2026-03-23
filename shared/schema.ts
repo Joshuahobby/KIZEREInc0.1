@@ -127,6 +127,8 @@ export const users = pgTable("users", {
   verificationDocuments: json("verification_documents"),
   processingRestricted: boolean("processing_restricted").default(false),
   deletionRequestedAt: timestamp("deletion_requested_at"),
+  resetPasswordToken: text("reset_password_token"),
+  resetPasswordExpires: timestamp("reset_password_expires"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

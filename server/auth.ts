@@ -8,7 +8,7 @@ import { User as SchemaUser, User as SelectUser } from "@shared/schema";
 import { env } from "./config";
 import { UserService } from "./services/user.service";
 import { hashPassword, comparePasswords } from "./utils/auth-crypto";
-import { sendWelcomeEmail } from "./services/email.service";
+import { sendWelcomeEmail, sendResetPasswordEmail } from "./services/email.service";
 import { createLogger } from "./utils/logger";
 
 const logger = createLogger('Auth');
@@ -199,6 +199,42 @@ export function setupAuth(app: Express) {
         });
       });
     })(req, res, next);
+  });
+
+  app.post("/api/auth/forgot-password", async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const { token, user } = await UserService.generateResetToken(email);
+      
+      // Send reset email
+      await sendResetPasswordEmail(user.email, user.fullName || user.username, token);
+
+      res.status(200).json({ message: "Password reset link sent to your email" });
+    } catch (error: any) {
+      // For security, don't reveal if user exists or not
+      if (error.name === 'NotFoundError') {
+        return res.status(200).json({ message: "If an account exists with that email, a reset link has been sent." });
+      }
+      next(error);
+    }
+  });
+
+  app.post("/api/auth/reset-password", async (req, res, next) => {
+    try {
+      const { token, password } = req.body;
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password are required" });
+      }
+
+      await UserService.resetPassword(token, password);
+      res.status(200).json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      next(error);
+    }
   });
 
   app.post("/api/auth/logout", (req, res, next) => {

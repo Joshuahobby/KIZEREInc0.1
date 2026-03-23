@@ -407,7 +407,57 @@ export default {
   sendAdminAppealNotification,
   sendAdminVerificationNotification,
   sendUserVerificationStatusEmail,
+  sendResetPasswordEmail,
 };
+
+/**
+ * Send password reset email
+ */
+export async function sendResetPasswordEmail(
+  email: string,
+  userName: string,
+  token: string
+): Promise<boolean> {
+  const resetLink = `${process.env.APP_URL || 'https://kizere.com'}/reset-password?token=${token}`;
+
+  return sendEmail({
+    to: email,
+    subject: 'Reset Your KIZERE Password',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #667eea; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Password Reset Request</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            We received a request to reset your password for your KIZERE account.
+          </p>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Click the button below to choose a new password. This link will expire in 1 hour.
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" 
+               style="display: inline-block; background: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+              Reset Password
+            </a>
+          </div>
+          <p style="color: #4b5563; line-height: 1.6; font-size: 14px;">
+            If you didn't request this, you can safely ignore this email. Your password will remain unchanged.
+          </p>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+          <p style="color: #9ca3af; font-size: 12px;">
+            If the button above doesn't work, copy and paste this link into your browser: <br>
+            <a href="${resetLink}" style="color: #667eea;">${resetLink}</a>
+          </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>© ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}
 
 /**
  * Send expiration warning email

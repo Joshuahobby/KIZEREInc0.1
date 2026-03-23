@@ -19,6 +19,8 @@ const ItemRegistration = React.lazy(() => import("@/pages/item-registration"));
 const LandingPage = React.lazy(() => import("@/pages/landing-page"));
 const HowItWorks = React.lazy(() => import("@/pages/how-it-works-v2"));
 const AuthPage = React.lazy(() => import("@/pages/auth-page"));
+const ForgotPasswordPage = React.lazy(() => import("@/pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = React.lazy(() => import("@/pages/auth/ResetPasswordPage"));
 const AuthCallback = React.lazy(() => import("@/pages/auth-callback"));
 const MyItems = React.lazy(() => import("@/pages/my-items"));
 const ItemDetail = React.lazy(() => import("@/pages/item-detail"));
@@ -140,6 +142,12 @@ function App() {
                   </Route>
                   <Route path="/auth">
                     <AuthPage />
+                  </Route>
+                  <Route path="/forgot-password">
+                    <ForgotPasswordPage />
+                  </Route>
+                  <Route path="/reset-password">
+                    <ResetPasswordPage />
                   </Route>
 
                   {/* Protected routes */}

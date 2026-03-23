@@ -7,6 +7,7 @@ import { createLogger } from '../utils/logger';
 import { validatePasswordStrength } from '../utils/auth-crypto';
 import { DatabaseError, NotFoundError, ValidationError } from '../utils/error-handler';
 import { userRepository } from '../repositories/user.repository';
+import crypto from 'crypto';
 
 const logger = createLogger('UserService');
 
@@ -195,6 +196,69 @@ export class UserService {
     } catch (error) {
       logger.error('Error searching users', { query, error });
       throw new DatabaseError('Failed to search users');
+    }
+  }
+
+  /**
+   * Generate a reset password token for a user
+   * @param email User's email
+   * @returns Reset token and user
+   */
+  static async generateResetToken(email: string): Promise<{ token: string; user: User }> {
+    try {
+      const user = await userRepository.findByEmail(email);
+      if (!user) {
+        throw new NotFoundError('User with this email not found');
+      }
+
+      const token = crypto.randomBytes(32).toString('hex');
+      const expires = new Date();
+      expires.setHours(expires.getHours() + 1); // Token valid for 1 hour
+
+      await userRepository.update(user.id, {
+        resetPasswordToken: token,
+        resetPasswordExpires: expires
+      } as any);
+
+      logger.info('Reset token generated successfully', { userId: user.id });
+      return { token, user };
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      logger.error('Error generating reset token', { email, error });
+      throw new DatabaseError('Failed to generate reset token');
+    }
+  }
+
+  /**
+   * Reset user password using a valid token
+   * @param token Reset token
+   * @param newPassword New password
+   * @returns Updated user
+   */
+  static async resetPassword(token: string, newPassword: string): Promise<User> {
+    try {
+      const user = await userRepository.findByResetToken(token);
+      if (!user) {
+        throw new ValidationError('Invalid or expired reset token');
+      }
+
+      if (!user.resetPasswordExpires || new Date() > user.resetPasswordExpires) {
+        throw new ValidationError('Reset token has expired');
+      }
+
+      // Update password and clear token fields
+      const updatedUser = await userRepository.update(user.id, {
+        password: newPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null
+      } as any);
+
+      logger.info('Password reset successfully', { userId: user.id });
+      return updatedUser;
+    } catch (error) {
+      if (error instanceof ValidationError) throw error;
+      logger.error('Error resetting password', { error });
+      throw new DatabaseError('Failed to reset password');
     }
   }
 }

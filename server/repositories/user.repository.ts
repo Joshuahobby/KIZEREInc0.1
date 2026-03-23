@@ -37,6 +37,15 @@ export class UserRepository extends BaseRepository<User, InsertUser> {
   async findByUsername(username: string): Promise<User | undefined> {
     return this.findOneByField(users.username, username);
   }
+
+  /**
+   * Find user by reset password token
+   * @param token Reset password token
+   * @returns User or undefined
+   */
+  async findByResetToken(token: string): Promise<User | undefined> {
+    return this.findOneByField(users.resetPasswordToken, token);
+  }
   
   /**
    * Create a new user with password hashing
