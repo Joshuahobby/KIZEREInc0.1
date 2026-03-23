@@ -40,12 +40,21 @@ export default function VerifyOTPPage() {
     setCountdown(60); // 60 second cooldown
   }, [send2FACode]);
 
-  // Auto-select and auto-send if only one method available
+  // Auto-select and auto-send if a preferred method is set or only one method available
   useEffect(() => {
-    if (pending2FA?.methods.length === 1 && !selectedChannel && !codeSent) {
-      const channel = pending2FA.methods[0] as 'sms' | 'email';
-      console.log(`[VerifyOTPPage] Auto-selecting and sending to ${channel}`);
-      handleSendCode(channel);
+    if (selectedChannel || codeSent || !pending2FA) return;
+
+    let channelToAutoSend: 'sms' | 'email' | null = null;
+
+    if (pending2FA.preferredMethod && ['sms', 'email'].includes(pending2FA.preferredMethod)) {
+      channelToAutoSend = pending2FA.preferredMethod as 'sms' | 'email';
+    } else if (pending2FA.methods.length === 1) {
+      channelToAutoSend = pending2FA.methods[0] as 'sms' | 'email';
+    }
+
+    if (channelToAutoSend) {
+      console.log(`[VerifyOTPPage] Auto-selecting and sending to ${channelToAutoSend}`);
+      handleSendCode(channelToAutoSend);
     }
   }, [pending2FA, selectedChannel, codeSent, handleSendCode]);
 

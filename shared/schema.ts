@@ -116,7 +116,7 @@ export const users = pgTable("users", {
   bio: text("bio"),
   preferences: json("preferences").$type<UserPreferences>(),
   customPermissions: json("custom_permissions").$type<string[]>(),
-  twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  twoFactorEnabled: boolean("two_factor_enabled").default(true),
   twoFactorMethod: text("two_factor_method"), // 'sms', 'email', or 'both'
   phoneVerified: boolean("phone_verified").default(false),
   emailVerified: boolean("email_verified").default(false),

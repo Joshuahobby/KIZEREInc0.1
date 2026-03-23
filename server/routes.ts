@@ -383,7 +383,9 @@ ${xmlUrls}
             phoneNumber: null,
             role: 'Subscriber',
             avatarUrl: photoURL || null,
-            preferences: DEFAULT_USER_PREFERENCES
+            preferences: DEFAULT_USER_PREFERENCES,
+            twoFactorEnabled: true,
+            twoFactorMethod: 'email'
           });
           logger.info('Created new user from Firebase auth', { userId: user.id, email });
         } catch (createError: any) {
@@ -429,7 +431,10 @@ ${xmlUrls}
           logger.info('Session saved successfully', { userId: user!.id, sessionId: req.sessionID });
 
           const { password, ...userData } = user!;
-          return res.status(200).json(userData);
+          return res.status(200).json({
+            ...userData,
+            preferredMethod: user!.twoFactorMethod
+          });
         });
       });
 

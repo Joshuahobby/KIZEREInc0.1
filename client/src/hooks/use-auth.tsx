@@ -12,6 +12,8 @@ export interface Pending2FAData {
   methods: string[];
   maskedPhone: string | null;
   maskedEmail: string | null;
+  preferredMethod?: string | null;
+  isRegistration?: boolean;
 }
 
 export interface AuthContextType {
@@ -320,6 +322,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           methods: data.methods,
           maskedPhone: data.maskedPhone,
           maskedEmail: data.maskedEmail,
+          preferredMethod: data.preferredMethod,
         });
         console.log("[useAuth] Login requires 2FA, redirecting to /verify-2fa", data);
         setLocation('/verify-2fa');
@@ -362,6 +365,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           methods: data.methods,
           maskedPhone: data.maskedPhone,
           maskedEmail: data.maskedEmail,
+          preferredMethod: data.preferredMethod,
           isRegistration: true
         });
         setLocation('/verify-2fa');

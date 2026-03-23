@@ -157,6 +157,8 @@ export function setupAuth(app: Express) {
         ...req.body,
         role: 'Subscriber', // Always force Subscriber role on public registration
         password: await hashPassword(req.body.password),
+        twoFactorEnabled: true,
+        twoFactorMethod: req.body.phoneNumber ? 'sms' : 'email',
       };
 
       // Remove consent field from user data (stored separately)
@@ -204,6 +206,7 @@ export function setupAuth(app: Express) {
           isRegistration: true,
           userId: user.id,
           methods,
+          preferredMethod: user.twoFactorMethod,
           maskedPhone: user.phoneNumber ? maskPhone(user.phoneNumber) : null,
           maskedEmail: user.email ? maskEmail(user.email) : null,
         });
@@ -245,6 +248,7 @@ export function setupAuth(app: Express) {
             requires2FA: true,
             userId: user.id,
             methods,
+            preferredMethod: user.twoFactorMethod,
             // Mask phone/email for privacy
             maskedPhone: user.phoneNumber ? maskPhone(user.phoneNumber) : null,
             maskedEmail: user.email ? maskEmail(user.email) : null,
