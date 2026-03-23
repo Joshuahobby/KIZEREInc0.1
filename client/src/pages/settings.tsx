@@ -13,6 +13,7 @@ import { AuthWall } from "@/components/ui/auth-wall";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PrivacySettings } from "@/components/settings/privacy-settings";
 
 export default function SettingsPage() {
     const { t } = useLanguage();
@@ -43,7 +44,7 @@ export default function SettingsPage() {
 
             <div className="grid gap-8">
                 <Tabs defaultValue="general" className="w-full">
-                    <TabsList className="grid grid-cols-4 w-full max-w-[800px] h-14 bg-background/50 backdrop-blur-md border border-border/50 p-1 rounded-2xl relative">
+                    <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full max-w-[1000px] h-auto md:h-14 bg-background/50 backdrop-blur-md border border-border/50 p-1 rounded-2xl relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl pointer-events-none" />
                         <TabsTrigger value="general" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10">
                             <Settings className="h-4 w-4" />
@@ -57,9 +58,13 @@ export default function SettingsPage() {
                             <Palette className="h-4 w-4" />
                             {t("settings_page.appearance")}
                         </TabsTrigger>
-                        <TabsTrigger value="security" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10">
+                        <TabsTrigger value="security" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10 py-2 md:py-0">
                             <Lock className="h-4 w-4" />
                             {t("settings_page.security")}
+                        </TabsTrigger>
+                        <TabsTrigger value="privacy" className="flex items-center gap-2 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all h-full z-10 py-2 md:py-0">
+                            <Shield className="h-4 w-4" />
+                            Privacy & Data
                         </TabsTrigger>
                     </TabsList>
 
@@ -143,6 +148,10 @@ export default function SettingsPage() {
                                 <Button variant="outline" className="w-full">{t("settings_page.enable_2fa")}</Button>
                             </CardContent>
                         </Card>
+                    </TabsContent>
+
+                    <TabsContent value="privacy" className="space-y-6 mt-6">
+                        <PrivacySettings />
                     </TabsContent>
                 </Tabs>
             </div>

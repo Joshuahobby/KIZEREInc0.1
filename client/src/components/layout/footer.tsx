@@ -170,6 +170,9 @@ export function Footer() {
             <Link href="/cookies" className="text-gray-500 hover:text-white transition-colors duration-200 text-xs font-medium">
               {t('landing.footer.cookiePolicy') || "Cookie Policy"}
             </Link>
+            <Link href="/compliance" className="text-gray-500 hover:text-white transition-colors duration-200 text-xs font-medium border-l border-white/10 pl-4 ml-2">
+              Data Protection & Compliance
+            </Link>
           </div>
         </motion.div>
       </div>

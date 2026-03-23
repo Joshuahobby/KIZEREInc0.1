@@ -125,6 +125,8 @@ export const users = pgTable("users", {
   isTrusted: boolean("is_trusted").default(false),
   suspensionHistory: json("suspension_history"),
   verificationDocuments: json("verification_documents"),
+  processingRestricted: boolean("processing_restricted").default(false),
+  deletionRequestedAt: timestamp("deletion_requested_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -750,6 +752,32 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   createdAt: true,
 });
 
+// ===================== Data Protection Consent Records =====================
+// Required by Rwanda Law No. 058/2021, Art. 6 — Consent must be recorded
+
+export const consentTypes = ['registration', 'verification', 'cookies', 'marketing', 'automated_matching'] as const;
+
+export const consentRecords = pgTable("consent_records", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  consentType: text("consent_type").notNull(), // 'registration', 'verification', 'cookies', 'marketing', 'automated_matching'
+  consentGiven: boolean("consent_given").notNull().default(true),
+  consentText: text("consent_text").notNull(), // The exact text the user agreed to
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  grantedAt: timestamp("granted_at").defaultNow().notNull(),
+  withdrawnAt: timestamp("withdrawn_at"),
+}, (table) => [
+  index("consent_user_idx").on(table.userId),
+  index("consent_type_idx").on(table.consentType),
+]);
+
+export const insertConsentRecordSchema = createInsertSchema(consentRecords).omit({
+  id: true,
+  grantedAt: true,
+  withdrawnAt: true,
+});
+
 // ===================== Web Push Subscriptions =====================
 
 export const pushSubscriptions = pgTable("push_subscriptions", {
@@ -797,6 +825,9 @@ export type InsertClaimStatusLog = z.infer<typeof insertClaimStatusLogSchema>;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;
 export type InsertCoupon = z.infer<typeof insertCouponSchema>;
+export type ConsentRecord = typeof consentRecords.$inferSelect;
+export type InsertConsentRecord = z.infer<typeof insertConsentRecordSchema>;
+export type ConsentType = typeof consentTypes[number];
 
 export type User = typeof users.$inferSelect;
 export type Item = typeof items.$inferSelect;

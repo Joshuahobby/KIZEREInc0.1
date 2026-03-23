@@ -76,6 +76,8 @@ import rolesRoutes from './routes/roles';
 import auditRoutes from './routes/audit.routes';
 import resendWebhookRoutes from './routes/resend.routes';
 import couponRoutes from './routes/coupon.routes';
+import consentRoutes from './routes/consent.routes';
+import dataRightsRoutes from './routes/data-rights.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -201,6 +203,8 @@ ${xmlUrls}
   app.use('/api/dashboard', requireAuth, dashboardRoutes);
   app.use('/api/chats', requireAuth, chatRoutes);
   app.use('/api/webhooks/resend', resendWebhookRoutes);
+  app.use('/api/consent', requireAuth, consentRoutes);
+  app.use('/api/me', requireAuth, dataRightsRoutes);
 
   // Recruitment endpoint (with file upload support)
   const multer = (await import('multer')).default;

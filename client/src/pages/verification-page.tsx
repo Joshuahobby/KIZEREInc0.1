@@ -34,6 +34,9 @@ const verificationSchema = z.object({
   documentType: z.enum(['nid', 'passport', 'drivers_license'], {
     required_error: "Please select a document type",
   }),
+  consentGiven: z.boolean().refine(val => val === true, {
+    message: "You must consent to processing your ID and selfie",
+  }),
 });
 
 type VerificationFormData = z.infer<typeof verificationSchema>;
@@ -64,7 +67,8 @@ export default function VerificationPage() {
   const form = useForm<VerificationFormData>({
     resolver: zodResolver(verificationSchema),
     defaultValues: {
-      documentType: 'nid'
+      documentType: 'nid',
+      consentGiven: false,
     }
   });
 
@@ -128,6 +132,7 @@ export default function VerificationPage() {
     setIsSubmitting(true);
     const formData = new FormData();
     formData.append("documentType", data.documentType);
+    formData.append("consentGiven", data.consentGiven.toString());
     formData.append("document", documentFile);
     formData.append("selfie", selfieFile);
     if (livenessData?.code) {
@@ -492,6 +497,24 @@ export default function VerificationPage() {
                     )}
                   </AnimatePresence>
 
+                  <div className="pt-2 px-1 flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      id="verification-consent"
+                      title="Consent to ID and biometric processing"
+                      className="mt-1 h-4 w-4 rounded border-white/20 bg-background accent-primary"
+                      checked={form.watch('consentGiven')}
+                      onChange={(e) => form.setValue('consentGiven', e.target.checked)}
+                    />
+                    <label htmlFor="verification-consent" className="text-xs text-muted-foreground leading-tight cursor-pointer">
+                      I explicitly consent to KIZERE processing my government-issued ID and selfie for identity verification purposes in accordance with Rwanda Law No. 058/2021.
+                    </label>
+                  </div>
+
+                  {form.formState.errors.consentGiven && (
+                    <p className="text-[10px] text-destructive px-1">{form.formState.errors.consentGiven.message}</p>
+                  )}
+
                   <div className="flex gap-3 pt-3">
                      <button 
                        className="py-5 rounded-xl px-5 bg-white/5 text-muted-foreground hover:bg-white/10 transition-colors" 
@@ -504,7 +527,7 @@ export default function VerificationPage() {
                      <Button 
                        className="flex-1 py-5 text-base font-bold rounded-xl group bg-primary transition-all overflow-hidden" 
                        onClick={form.handleSubmit(onSubmit)}
-                       disabled={!documentFile || !selfieFile || isSubmitting}
+                       disabled={!documentFile || !selfieFile || isSubmitting || !form.watch('consentGiven')}
                      >
                        {isSubmitting ? (
                          <div className="flex items-center gap-2">

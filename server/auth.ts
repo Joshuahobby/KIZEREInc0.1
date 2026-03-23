@@ -112,6 +112,13 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Password must be at least 8 characters" });
       }
 
+      // Rwanda Law No. 058/2021, Art. 6 — Require explicit consent
+      if (!req.body.consentGiven) {
+        return res.status(400).json({
+          message: "You must consent to our Privacy Policy and data processing terms to create an account."
+        });
+      }
+
       // Check if username or email already exists
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
@@ -131,8 +138,26 @@ export function setupAuth(app: Express) {
         password: await hashPassword(req.body.password),
       };
 
+      // Remove consent field from user data (stored separately)
+      delete safeUserData.consentGiven;
+
       // Create new user with forced Subscriber role
       const user = await storage.createUser(safeUserData);
+
+      // Record consent (Rwanda Law No. 058/2021, Art. 6)
+      try {
+        const { createConsentRecord } = await import("./storage/consent.storage");
+        await createConsentRecord({
+          userId: user.id,
+          consentType: "registration",
+          consentGiven: true,
+          consentText: "I agree to KIZERE's Privacy Policy and consent to the processing of my personal data for item registration, lost & found reporting, and identity verification purposes, as described in the Privacy Policy.",
+          ipAddress: (req.ip as string) || null,
+          userAgent: req.headers["user-agent"] || null,
+        });
+      } catch (consentErr) {
+        logger.error('Failed to record consent', { error: consentErr, userId: user.id });
+      }
 
       // Send welcome email
       if (user.email) {

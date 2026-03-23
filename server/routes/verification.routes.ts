@@ -50,7 +50,14 @@ router.post(
       }
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const { documentType, livenessCode } = req.body;
+      const { documentType, livenessCode, consentGiven } = req.body;
+
+      // Rwanda Law No. 058/2021, Art. 6 — Explicit consent for sensitive data (Gov ID, biometric selfie)
+      if (!consentGiven || consentGiven === 'false') {
+        return res.status(400).json({
+          message: 'You must consent to KIZERE processing your government-issued ID and selfie for identity verification purposes.'
+        });
+      }
 
       logger.info('Starting verification submission', { 
         userId: req.user.id, 
@@ -120,6 +127,22 @@ router.post(
       }
 
       logger.info('Verification request completed', { userId: req.user.id, requestId: request.id });
+
+      // Record verification consent (Rwanda Law Art. 6 — sensitive data)
+      try {
+        const { createConsentRecord } = await import('../storage/consent.storage');
+        await createConsentRecord({
+          userId: req.user.id,
+          consentType: 'verification',
+          consentGiven: true,
+          consentText: 'I consent to KIZERE processing my government-issued ID and selfie for identity verification purposes.',
+          ipAddress: (req.ip as string) || null,
+          userAgent: req.headers['user-agent'] || null,
+        });
+      } catch (consentErr: any) {
+        logger.error('Failed to record verification consent', { error: consentErr.message });
+      }
+
       res.status(201).json(request);
 
     } catch (error: any) {

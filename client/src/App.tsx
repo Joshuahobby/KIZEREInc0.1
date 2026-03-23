@@ -11,6 +11,7 @@ import { GlobalNotice } from "@/components/layout/global-notice";
 import { useLocation } from "wouter";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { CookieBanner } from "@/components/ui/cookie-banner";
 
 // Lazy load all pages
 const UnifiedDashboard = React.lazy(() => import("@/pages/unified-dashboard"));
@@ -63,6 +64,8 @@ const AboutPage = React.lazy(() => import("@/pages/about"));
 const ContactPage = React.lazy(() => import("@/pages/contact"));
 const PrivacyPage = React.lazy(() => import("@/pages/privacy"));
 const TermsPage = React.lazy(() => import("@/pages/terms"));
+const CookiePage = React.lazy(() => import("@/pages/cookies"));
+const CompliancePage = React.lazy(() => import("@/pages/compliance"));
 const Notifications = React.lazy(() => import("@/pages/notifications"));
 const NotFound = React.lazy(() => import("@/pages/not-found"));
 
@@ -221,6 +224,12 @@ function App() {
                   <Route path="/terms">
                     <TermsPage />
                   </Route>
+                  <Route path="/cookies">
+                    <CookiePage />
+                  </Route>
+                  <Route path="/compliance">
+                    <CompliancePage />
+                  </Route>
                   <Route path="/blog">
                     <BlogPage />
                   </Route>
@@ -248,6 +257,7 @@ function App() {
                 </Switch>
                 <ScrollToTop />
               </main>
+              <CookieBanner />
               <ChatWidget />
             </React.Suspense>
           </TooltipProvider>

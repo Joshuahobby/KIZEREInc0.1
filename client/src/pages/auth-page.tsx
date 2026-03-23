@@ -408,16 +408,57 @@ export default function AuthPage() {
                         />
                       </div>
 
-                      <div className="flex items-center space-x-2 mt-1 mb-1">
-                        <input
-                          type="checkbox"
-                          id="terms"
-                          className="rounded border-input h-3.5 w-3.5 text-primary focus:ring-primary"
-                        />
-                        <label htmlFor="terms" className="text-xs text-muted-foreground leading-tight">
-                          {t('auth.termsAndPrivacy').split('&')[0]} <a href="#" className="text-primary hover:underline">{t('auth.terms')}</a> & <a href="#" className="text-primary hover:underline">{t('auth.privacy')}</a>
-                        </label>
-                      </div>
+                      <FormField
+                        control={registerForm.control}
+                        name="isOver16"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                id="age-verify"
+                                aria-label="Confirm age over 16"
+                                title="Age Verification"
+                                className="rounded border-input h-4 w-4 text-primary focus:ring-primary mt-1"
+                                checked={field.value || false}
+                                onChange={(e) => field.onChange(e.target.checked)}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel htmlFor="age-verify" className="text-xs text-muted-foreground leading-tight cursor-pointer">
+                                I confirm that I am at least 16 years of age.
+                              </FormLabel>
+                              <FormMessage className="text-[10px]" />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="consentGiven"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4 mb-2">
+                            <FormControl>
+                              <input
+                                type="checkbox"
+                                id="terms"
+                                aria-label="Privacy Policy Consent"
+                                title="Privacy Policy Consent"
+                                className="rounded border-input h-4 w-4 text-primary focus:ring-primary mt-1"
+                                checked={field.value || false}
+                                onChange={(e) => field.onChange(e.target.checked)}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel htmlFor="terms" className="text-xs text-muted-foreground leading-tight cursor-pointer">
+                                I explicitly consent to the processing of my personal data for item registration, lost & found reporting, and identity verification purposes, as detailed in the <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a> (Rwanda Law No. 058/2021).
+                              </FormLabel>
+                              <FormMessage className="text-[10px]" />
+                            </div>
+                          </FormItem>
+                        )}
+                      />
 
                       <Button
                         type="submit"

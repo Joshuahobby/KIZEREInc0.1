@@ -48,6 +48,8 @@ class AuthModelClass {
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm password is required"),
     role: z.enum(['Admin', 'Agent', 'Subscriber']).optional(),
+    consentGiven: z.boolean().refine(val => val === true, "You must agree to the Privacy Policy to create an account"),
+    isOver16: z.boolean().refine(val => val === true, "You must be at least 16 years old to register"),
   }).refine(data => data.password === data.confirmPassword, {
     message: "Passwords do not match",
     path: ["confirmPassword"],
@@ -70,7 +72,7 @@ class AuthModelClass {
    * @param registerData - Raw registration form data
    * @returns Validated registration data for API
    */
-  static prepareRegisterData(registerData: z.infer<typeof this.registerSchema>): InsertUser {
+  static prepareRegisterData(registerData: z.infer<typeof this.registerSchema>): InsertUser & { consentGiven: boolean } {
     const { confirmPassword, username, ...userData } = registerData;
 
     // Determine if username is email or phone
@@ -79,6 +81,7 @@ class AuthModelClass {
 
     return {
       ...userData,
+      consentGiven: registerData.consentGiven,
       username: username, // Keep the original username
       email: isEmail ? username : `${username.replace(/[^a-zA-Z0-9]/g, '')}_${Math.floor(Math.random() * 10000)}@placeholder.kizere.rw`, // Use email or generate unique placeholder
       phoneNumber: !isEmail ? username : null,
