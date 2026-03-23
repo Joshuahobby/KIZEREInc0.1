@@ -11,22 +11,22 @@ export default function HowToUsePage() {
       title: "1. Create your secure account",
       description: "Sign up using your Google account or email. KIZERE uses bank-level encryption to secure your identity.",
       // Placeholder image URL for where the screenshot goes
-      screenshot: "/images/localized/blog-vision.png" 
+      screenshot: "/images/localized/blog-vision.png?v=2" 
     },
     {
       title: "2. Register your first item",
       description: "Navigate to the dashboard and click 'Add Item'. Fill in details like the IMEI, serial number, and upload proof of purchase or photos.",
-      screenshot: "/images/localized/blog-security.png"
+      screenshot: "/images/localized/blog-security.png?v=2"
     },
     {
       title: "3. Verify ownership",
       description: "For high-value items, you can request manual verification by an agent. This adds a 'Verified' badge to your asset.",
-      screenshot: "/images/localized/use-case-insurance.png"
+      screenshot: "/images/localized/use-case-insurance.png?v=2"
     },
     {
       title: "4. Report a lost item",
       description: "If an item goes missing, flip its status to 'Lost'. The item's details are instantly pushed to the public search index to prevent resale.",
-      screenshot: "/images/localized/use-case-owner.png"
+      screenshot: "/images/localized/use-case-owner.png?v=2"
     }
   ];
 
