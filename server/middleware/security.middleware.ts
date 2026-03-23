@@ -120,10 +120,11 @@ export function setupSecurityMiddleware(app: Express) {
   const configuredOrigin = config.FRONTEND_URL || "http://localhost:5000";
   app.use(cors({
     origin: function (origin, callback) {
-      // In development, allow all local origins
+      // Allow all local origins during development or automated testing
       const isDevelopment = process.env.NODE_ENV !== 'production';
+      const isLocalhost = !origin || origin.includes('localhost') || origin.includes('127.0.0.1');
 
-      if (!origin || isDevelopment || origin === configuredOrigin || origin.endsWith('.vercel.app') || origin.endsWith('kizere.rw')) {
+      if (isDevelopment || isLocalhost || origin === configuredOrigin || origin.endsWith('.vercel.app') || origin.endsWith('kizere.rw')) {
         callback(null, true);
       } else {
         logger.warn('CORS blocked origin', {

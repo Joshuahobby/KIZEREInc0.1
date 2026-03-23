@@ -16,16 +16,20 @@ export function log(message: string, source = "express") {
 
 export function serveStatic(app: Express) {
   const distPath = path.resolve(process.cwd(), "dist");
+  log(`Initializing static serving from ${distPath}`);
 
   if (!fs.existsSync(distPath)) {
+    log(`Error: distPath does not exist: ${distPath}`, "express");
     // If dist/public doesn't exist, try local public as fallback (for dev/local testing)
     const localPublic = path.resolve(process.cwd(), "public");
     if (fs.existsSync(localPublic)) {
+      log(`Falling back to local public: ${localPublic}`);
       app.use(express.static(localPublic));
     } else {
       log(`Warning: Could not find build directory at ${distPath}`, "express");
     }
   } else {
+    log(`Serving static files from ${distPath}`);
     app.use(express.static(distPath));
   }
 

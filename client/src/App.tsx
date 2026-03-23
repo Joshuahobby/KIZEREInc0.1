@@ -14,62 +14,84 @@ import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { CookieBanner } from "@/components/ui/cookie-banner";
 
 // Lazy load all pages
-const UnifiedDashboard = React.lazy(() => import("@/pages/unified-dashboard"));
-const ItemRegistration = React.lazy(() => import("@/pages/item-registration"));
-const LandingPage = React.lazy(() => import("@/pages/landing-page"));
-const HowItWorks = React.lazy(() => import("@/pages/how-it-works-v2"));
-const AuthPage = React.lazy(() => import("@/pages/auth-page"));
-const ForgotPasswordPage = React.lazy(() => import("@/pages/auth/ForgotPasswordPage"));
-const ResetPasswordPage = React.lazy(() => import("@/pages/auth/ResetPasswordPage"));
-const AuthCallback = React.lazy(() => import("@/pages/auth-callback"));
-const MyItems = React.lazy(() => import("@/pages/my-items"));
-const ItemDetail = React.lazy(() => import("@/pages/item-detail"));
-const Search = React.lazy(() => import("@/pages/search"));
-const ReportDetailPage = React.lazy(() => import("@/pages/report-detail"));
-const ClaimDetailPage = React.lazy(() => import("@/pages/claim-detail"));
-const MyClaims = React.lazy(() => import("@/pages/my-claims"));
-const UserManagement = React.lazy(() => import("@/pages/user-management"));
-const AdminUserManagement = React.lazy(() => import("@/pages/admin/user-management"));
-const RoleManagementPage = React.lazy(() => import("@/pages/admin/role-management"));
-const AuditLogsPage = React.lazy(() => import("@/pages/admin/audit-logs"));
-const AdminAnalytics = React.lazy(() => import("@/pages/admin/analytics"));
-const NewUser = React.lazy(() => import("@/pages/admin/new-user"));
-const AdminItemManagement = React.lazy(() => import("@/pages/admin/item-management"));
-const AdminItemDetail = React.lazy(() => import("@/pages/admin/item-detail"));
-const NewItem = React.lazy(() => import("@/pages/admin/new-item"));
-const PaymentStatus = React.lazy(() => import("@/pages/payment-status"));
-const PaymentHistory = React.lazy(() => import("@/pages/payment-history"));
-const PaymentTest = React.lazy(() => import("@/pages/payment-test"));
-const WalletPage = React.lazy(() => import("@/pages/wallet"));
-const PaymentDashboard = React.lazy(() => import("@/pages/admin/payment-dashboard"));
-const CommandCenter = React.lazy(() => import("@/pages/admin/command-center"));
-const AdminReports = React.lazy(() => import("@/pages/admin/reports"));
-const CouponManagement = React.lazy(() => import("@/pages/admin/coupons"));
-const PaymentPackages = React.lazy(() => import("@/pages/admin/payment-packages"));
-const NewPaymentPackage = React.lazy(() => import("@/pages/admin/payment-packages/new"));
-const CreatePackage = React.lazy(() => import("@/pages/admin/payment-packages/create-package"));
-const ProfilePage = React.lazy(() => import("@/pages/profile"));
-const SettingsPage = React.lazy(() => import("@/pages/settings"));
-const IdentityVerification = React.lazy(() => import("@/pages/verification-page"));
-const AdminVerifications = React.lazy(() => import("@/pages/admin/verifications"));
-const AdminClaimsManagement = React.lazy(() => import("@/pages/admin/claims-management"));
-const ClientManagement = React.lazy(() => import("@/pages/admin/client-management"));
-const BlogPage = React.lazy(() => import("@/pages/blog"));
-const BlogPostPage = React.lazy(() => import("@/pages/blog-post"));
-const UseCasesPage = React.lazy(() => import("@/pages/use-cases"));
-const HowToUsePage = React.lazy(() => import("@/pages/how-to-use"));
-const FeaturesPage = React.lazy(() => import("@/pages/features"));
-const DocsPage = React.lazy(() => import("@/pages/docs"));
-const CommunityPage = React.lazy(() => import("@/pages/community"));
-const FAQPage = React.lazy(() => import("@/pages/faqs"));
-const AboutPage = React.lazy(() => import("@/pages/about"));
-const ContactPage = React.lazy(() => import("@/pages/contact"));
-const PrivacyPage = React.lazy(() => import("@/pages/privacy"));
-const TermsPage = React.lazy(() => import("@/pages/terms"));
-const CookiePage = React.lazy(() => import("@/pages/cookies"));
-const CompliancePage = React.lazy(() => import("@/pages/compliance"));
-const Notifications = React.lazy(() => import("@/pages/notifications"));
-const NotFound = React.lazy(() => import("@/pages/not-found"));
+// Helper to handle chunk loading errors by forcing a page reload
+const lazyWithRetry = (componentImport: () => Promise<{ default: React.ComponentType<any> }>) => 
+  React.lazy(async () => {
+    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
+      window.localStorage.getItem('page-has-been-force-refreshed') || 'false'
+    );
+
+    try {
+      const component = await componentImport();
+      window.localStorage.setItem('page-has-been-force-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenForceRefreshed) {
+        // A temporary 404 for a chunk often means a new deployment happened
+        window.localStorage.setItem('page-has-been-force-refreshed', 'true');
+        window.location.reload();
+      }
+      throw error; // If reload didn't help, throw original error
+    }
+  });
+
+// Lazy load all pages with retry logic
+const UnifiedDashboard = lazyWithRetry(() => import("@/pages/unified-dashboard"));
+const ItemRegistration = lazyWithRetry(() => import("@/pages/item-registration"));
+const LandingPage = lazyWithRetry(() => import("@/pages/landing-page"));
+const HowItWorks = lazyWithRetry(() => import("@/pages/how-it-works-v2"));
+const AuthPage = lazyWithRetry(() => import("@/pages/auth-page"));
+const ForgotPasswordPage = lazyWithRetry(() => import("@/pages/auth/ForgotPasswordPage"));
+const ResetPasswordPage = lazyWithRetry(() => import("@/pages/auth/ResetPasswordPage"));
+const AuthCallback = lazyWithRetry(() => import("@/pages/auth-callback"));
+const MyItems = lazyWithRetry(() => import("@/pages/my-items"));
+const ItemDetail = lazyWithRetry(() => import("@/pages/item-detail"));
+const Search = lazyWithRetry(() => import("@/pages/search"));
+const ReportDetailPage = lazyWithRetry(() => import("@/pages/report-detail"));
+const ClaimDetailPage = lazyWithRetry(() => import("@/pages/claim-detail"));
+const MyClaims = lazyWithRetry(() => import("@/pages/my-claims"));
+const UserManagement = lazyWithRetry(() => import("@/pages/user-management"));
+const AdminUserManagement = lazyWithRetry(() => import("@/pages/admin/user-management"));
+const RoleManagementPage = lazyWithRetry(() => import("@/pages/admin/role-management"));
+const AuditLogsPage = lazyWithRetry(() => import("@/pages/admin/audit-logs"));
+const AdminAnalytics = lazyWithRetry(() => import("@/pages/admin/analytics"));
+const NewUser = lazyWithRetry(() => import("@/pages/admin/new-user"));
+const AdminItemManagement = lazyWithRetry(() => import("@/pages/admin/item-management"));
+const AdminItemDetail = lazyWithRetry(() => import("@/pages/admin/item-detail"));
+const NewItem = lazyWithRetry(() => import("@/pages/admin/new-item"));
+const PaymentStatus = lazyWithRetry(() => import("@/pages/payment-status"));
+const PaymentHistory = lazyWithRetry(() => import("@/pages/payment-history"));
+const PaymentTest = lazyWithRetry(() => import("@/pages/payment-test"));
+const WalletPage = lazyWithRetry(() => import("@/pages/wallet"));
+const PaymentDashboard = lazyWithRetry(() => import("@/pages/admin/payment-dashboard"));
+const CommandCenter = lazyWithRetry(() => import("@/pages/admin/command-center"));
+const AdminReports = lazyWithRetry(() => import("@/pages/admin/reports"));
+const CouponManagement = lazyWithRetry(() => import("@/pages/admin/coupons"));
+const PaymentPackages = lazyWithRetry(() => import("@/pages/admin/payment-packages"));
+const NewPaymentPackage = lazyWithRetry(() => import("@/pages/admin/payment-packages/new"));
+const CreatePackage = lazyWithRetry(() => import("@/pages/admin/payment-packages/create-package"));
+const ProfilePage = lazyWithRetry(() => import("@/pages/profile"));
+const SettingsPage = lazyWithRetry(() => import("@/pages/settings"));
+const IdentityVerification = lazyWithRetry(() => import("@/pages/verification-page"));
+const AdminVerifications = lazyWithRetry(() => import("@/pages/admin/verifications"));
+const AdminClaimsManagement = lazyWithRetry(() => import("@/pages/admin/claims-management"));
+const ClientManagement = lazyWithRetry(() => import("@/pages/admin/client-management"));
+const BlogPage = lazyWithRetry(() => import("@/pages/blog"));
+const BlogPostPage = lazyWithRetry(() => import("@/pages/blog-post"));
+const UseCasesPage = lazyWithRetry(() => import("@/pages/use-cases"));
+const HowToUsePage = lazyWithRetry(() => import("@/pages/how-to-use"));
+const FeaturesPage = lazyWithRetry(() => import("@/pages/features"));
+const DocsPage = lazyWithRetry(() => import("@/pages/docs"));
+const CommunityPage = lazyWithRetry(() => import("@/pages/community"));
+const FAQPage = lazyWithRetry(() => import("@/pages/faqs"));
+const AboutPage = lazyWithRetry(() => import("@/pages/about"));
+const ContactPage = lazyWithRetry(() => import("@/pages/contact"));
+const PrivacyPage = lazyWithRetry(() => import("@/pages/privacy"));
+const TermsPage = lazyWithRetry(() => import("@/pages/terms"));
+const CookiePage = lazyWithRetry(() => import("@/pages/cookies"));
+const CompliancePage = lazyWithRetry(() => import("@/pages/compliance"));
+const Notifications = lazyWithRetry(() => import("@/pages/notifications"));
+const NotFound = lazyWithRetry(() => import("@/pages/not-found"));
 
 function App() {
   // Handle Firebase redirect result

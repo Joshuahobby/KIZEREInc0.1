@@ -26,17 +26,16 @@ declare global {
 
 export function setupSessionAccess(app: Express) {
   // SESSION_SECRET is critical for session persistence in serverless environments.
-  // If missing, a new secret is generated on every lambda cold start, logging everyone out.
   const sessionSecret = process.env.SESSION_SECRET;
+  const nodeEnv = process.env.NODE_ENV || "development";
+  const isLocal = process.env.LOCAL_TESTING === "true" || nodeEnv === "development";
 
-  if (!sessionSecret && env.NODE_ENV === "production") {
+  console.log(`[Auth] Setting up session access. ENV: ${nodeEnv}, Local: ${isLocal}`);
+
+  if (!sessionSecret && nodeEnv === "production") {
     console.error("❌ CRITICAL ERROR: SESSION_SECRET is not set in production!");
-    console.error("Sessions will be volatile and users will be logged out on every serverless cold start.");
-    console.error("Please set SESSION_SECRET in your Vercel Environment Variables.");
   }
 
-  // Use a hash of the DATABASE_URL as a semi-stable fallback if secret is missing
-  // This is better than randomBytes which changes on every single cold start.
   const fallbackSecret = process.env.DATABASE_URL
     ? createHash('sha256').update(process.env.DATABASE_URL).digest('hex')
     : randomBytes(32).toString('hex');
@@ -47,15 +46,25 @@ export function setupSessionAccess(app: Express) {
     secret: finalSecret,
     resave: false,
     saveUninitialized: false,
-    name: 'kizere.sid', // Specific name to avoid conflicts
+    rolling: true, // Force cookie on every response to help debugging
+    name: 'kizere.sid',
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       httpOnly: true,
-      secure: env.NODE_ENV === "production",
+      // Only require secure cookies in production, UNLESS we're on localhost
+      secure: nodeEnv === "production" && !isLocal,
       sameSite: 'lax'
     },
     store: storage.sessionStore,
   };
+
+  console.log(`[Auth] Session Cookie Settings:`, {
+    name: sessionSettings.name,
+    secure: sessionSettings.cookie?.secure,
+    resave: sessionSettings.resave,
+    saveUninitialized: sessionSettings.saveUninitialized,
+    isLocal
+  });
 
   app.set("trust proxy", 1);
   app.use(session(sessionSettings));
