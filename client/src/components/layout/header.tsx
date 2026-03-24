@@ -105,19 +105,18 @@ export function Header() {
   // Dynamic navigation based on auth state
   const navigation: NavItem[] = isAuthenticated
     ? [
+      { name: "Verify Item", href: "/verify-item", icon: Shield },
       { name: t('nav.directory'), href: "/search", icon: Search },
       { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
       { name: "Features", href: "/features", icon: Info },
       { name: "Use Cases", href: "/use-cases", icon: Users },
-      { name: "Blog", href: "/blog" },
     ]
     : [
+      { name: "Verify Item", href: "/verify-item", icon: Shield },
       { name: t('nav.directory'), href: "/search", icon: Search },
       { name: "Features", href: "/features", icon: Info },
       { name: "Use Cases", href: "/use-cases", icon: Info },
       { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
-      { name: "Guides", href: "/how-to-use" },
-      { name: "Blog", href: "/blog" },
     ];
 
   // Admin access is now handled via the sidebar in the dashboard layout

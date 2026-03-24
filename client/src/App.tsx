@@ -79,7 +79,6 @@ const ClientManagement = lazyWithRetry(() => import("@/pages/admin/client-manage
 const BlogPage = lazyWithRetry(() => import("@/pages/blog"));
 const BlogPostPage = lazyWithRetry(() => import("@/pages/blog-post"));
 const UseCasesPage = lazyWithRetry(() => import("@/pages/use-cases"));
-const HowToUsePage = lazyWithRetry(() => import("@/pages/how-to-use"));
 const FeaturesPage = lazyWithRetry(() => import("@/pages/features"));
 const DocsPage = lazyWithRetry(() => import("@/pages/docs"));
 const CommunityPage = lazyWithRetry(() => import("@/pages/community"));
@@ -92,6 +91,7 @@ const CookiePage = lazyWithRetry(() => import("@/pages/cookies"));
 const CompliancePage = lazyWithRetry(() => import("@/pages/compliance"));
 const Notifications = lazyWithRetry(() => import("@/pages/notifications"));
 const NotFound = lazyWithRetry(() => import("@/pages/not-found"));
+const PublicSearch = lazyWithRetry(() => import("@/pages/public-search"));
 
 function App() {
   // Handle Firebase redirect result
@@ -186,6 +186,9 @@ function App() {
                   <Route path="/search">
                     <Search />
                   </Route>
+                  <Route path="/verify-item">
+                    <PublicSearch />
+                  </Route>
                   <Route path="/report/:id">
                     <ReportDetailPage />
                   </Route>
@@ -272,9 +275,6 @@ function App() {
                   </Route>
                   <Route path="/use-cases">
                     <UseCasesPage />
-                  </Route>
-                  <Route path="/how-to-use">
-                    <HowToUsePage />
                   </Route>
                   <Route path="/features">
                     <FeaturesPage />

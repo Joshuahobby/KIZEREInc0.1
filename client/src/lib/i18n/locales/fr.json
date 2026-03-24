@@ -766,5 +766,52 @@
     "vision_text": "Nous envisageons un Rwanda où le vol est obsolète parce que chaque objet est protégé. Rejoignez des milliers d'utilisateurs qui bâtissent une société plus sûre et plus transparente où ce qui vous appartient reste à vous.",
     "story": "Plus Qu'un Simple Registre",
     "story_text": "KIZERE est né d'un constat simple : perdre quelque chose d'important n'est pas seulement une question d'argent, c'est une question de lien. Nous avons construit cette plateforme pour transformer l'anxiété de la perte en confiance de la récupération."
+  },
+  "walkthrough": {
+    "sub": {
+      "welcome": {
+        "title": "Bienvenue",
+        "desc": "Le hub de confiance pour protéger vos actifs et votre identité."
+      },
+      "kyc": {
+        "title": "Vérification",
+        "desc": "Complétez votre KYC pour activer la récupération d'objets et les réclamations."
+      },
+      "vault": {
+        "title": "Coffre-fort",
+        "desc": "Conservez vos documents d'identité ou passeports en toute sécurité."
+      },
+      "assets": {
+        "title": "Actifs",
+        "desc": "Enregistrez vos objets de valeur dans le registre permanent."
+      },
+      "recovery": {
+        "title": "Récupération",
+        "desc": "Signalez des objets perdus ou trouvés pour faciliter leur restitution."
+      }
+    },
+    "agent": {
+      "mission": {
+        "title": "Mission",
+        "desc": "Instaurez la confiance en vérifiant les utilisateurs et les actifs."
+      },
+      "ops": {
+        "title": "Opérations",
+        "desc": "Gérez les vérifications d'identité et aidez les utilisateurs à s'enregistrer."
+      },
+      "stats": {
+        "title": "Statistiques",
+        "desc": "Suivez vos performances et votre impact sur la communauté."
+      },
+      "queue": {
+        "title": "File d'attente",
+        "desc": "Gérez les rapports et accélérez le processus de réunification."
+      }
+    },
+    "finish": "Terminer",
+    "end": "Quitter",
+    "gotIt": "Compris",
+    "stepOf": "Étape {{current}} sur {{total}}",
+    "replay": "Revoir les instructions"
   }
 }

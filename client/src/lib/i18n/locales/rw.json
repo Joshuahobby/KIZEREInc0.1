@@ -1962,6 +1962,7 @@
     "finish": "Sohoka",
     "end": "Hagarika",
     "gotIt": "Ndabyumvise",
-    "stepOf": "Intambwe {{current}} kuri {{total}}"
+    "stepOf": "Intambwe {{current}} kuri {{total}}",
+    "replay": "Subira urebe amabwiriza"
   }
 }

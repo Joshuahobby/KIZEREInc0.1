@@ -189,8 +189,8 @@
     "heroTitle1": "Peace of Mind",
     "heroTitle2": "For Your Valuables",
     "heroSubtitle": "Protect your valuables and recover what you've lost. Rwanda's trusted digital registry.",
-    "registerNow": "Protect an Item",
-    "learnMore": "See How it Works",
+    "registerNow": "Protect Item",
+    "learnMore": "Verify Item",
     "secure": "Secure & Private",
     "digitalCertificates": "Digital Proof",
     "itemRegistration": "Item Registration",
@@ -201,8 +201,8 @@
       "date": "Protected: April 25, 2025",
       "certificate": "Digital Proof"
     },
-    "powerfulFeatures": "Our Tools",
-    "completeSolution": "Simple Tools for",
+    "powerfulFeatures": "Smart Features",
+    "completeSolution": "Complete Solution for",
     "itemManagement": "Your Peace of Mind",
     "kizereProvides": "Everything you need to keep your valuables safe and ensure they find their way home if lost.",
     "feature1Title": "Auto-Scan Label",
@@ -244,7 +244,7 @@
     "testimonials": {
       "sectionTitle": "User Stories",
       "mainTitle": "What Our Community Says",
-      "subtitle": "Hear from people who have successfully protected and recovered their valuable items.",
+      "subtitle": "Trusted by thousands of users worldwide to protect what matters most.",
       "testimonial1": {
         "name": "James M.",
         "location": "Kigali, Rwanda",
@@ -1961,6 +1961,7 @@
     "finish": "Finish",
     "end": "End Tour",
     "gotIt": "Got it",
-    "stepOf": "Step {{current}} of {{total}}"
+    "stepOf": "Step {{current}} of {{total}}",
+    "replay": "Replay Walkthrough"
   }
 }

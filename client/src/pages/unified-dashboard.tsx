@@ -20,6 +20,48 @@ import { GlobalSearch } from "@/components/dashboard/global-search";
 import { createLogger } from "@/lib/logger";
 import { PageLayout } from "@/components/layout/page-layout";
 import { AuthWall } from "@/components/ui/auth-wall";
+import { cn } from "@/lib/utils";
+import {
+  AlertTriangle,
+  ArrowRight,
+  ShieldCheck,
+  ShieldAlert,
+  XCircle,
+  Clock,
+  CheckCircle2,
+  Trash2,
+  ChevronRight,
+  Plus,
+  Search,
+  ChevronDown,
+  Filter,
+  RefreshCw,
+  Bell,
+  CreditCard,
+  CreditCard as PaymentIcon,
+  Package,
+  FileText,
+  User,
+  Users,
+  Settings,
+  MoreVertical,
+  Download,
+  Share2,
+  Heart,
+  MessageSquare,
+  Shield,
+  HelpCircle,
+  ArrowDownUp,
+  Calendar,
+  BellRing,
+  ShoppingBag,
+  DollarSign,
+  ClipboardList,
+  Activity,
+  LayoutDashboard,
+  BarChart3,
+  LogOut
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -30,32 +72,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Settings } from "lucide-react";
-import {
-  HelpCircle,
-  Filter,
-  ArrowDownUp,
-  Calendar,
-  BellRing,
-  User,
-  ShieldCheck,
-  ShoppingBag,
-  AlertTriangle,
-  CheckCircle2,
-  DollarSign,
-  Users,
-  FileText,
-  ClipboardList,
-  Clock,
-  Search,
-  Activity,
-  Package,
-  Bell,
-  Plus,
-  LayoutDashboard,
-  BarChart3,
-  LogOut
-} from "lucide-react";
 import { format } from "date-fns";
 
 // Import admin-specific components
@@ -101,6 +117,18 @@ const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: a
       </p>
     </div>
     <div className="flex items-center gap-3">
+      {/* Replay Walkthrough Button */}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-9 w-9 rounded-full p-0 text-muted-foreground hover:text-primary transition-colors bg-background/60 dark:bg-slate-900/40 backdrop-blur-md border border-border/40 shadow-sm"
+        onClick={() => window.dispatchEvent(new CustomEvent('replay-onboarding'))}
+        title={t('walkthrough.replay') || "Replay Walkthrough"}
+      >
+        <HelpCircle className="h-5 w-5" />
+        <span className="sr-only">{t('walkthrough.replay')}</span>
+      </Button>
+
       {/* Time Pill */}
       <div className="flex items-center gap-2 bg-background/60 dark:bg-slate-900/40 backdrop-blur-md px-4 py-2 rounded-full border border-border/40 shadow-sm">
         <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">{t('dashboard.localTime')}</span>
@@ -119,32 +147,53 @@ const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: a
   </div>
 );
 // Helper components
-const KYCAlert = ({ t, navigate }: { t: any, navigate: any }) => (
-  <Card data-tour="kyc-alert" className="border-primary/20 bg-primary/5 shadow-premium mb-6 overflow-hidden relative group">
-    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
-      <ShieldCheck className="h-24 w-24 text-primary" />
-    </div>
-    <CardContent className="p-6 relative">
-      <div className="flex flex-col sm:flex-row items-center gap-6">
-        <div className="flex-1 text-center sm:text-left">
-          <h3 className="text-lg font-bold text-foreground flex items-center justify-center sm:justify-start gap-2 mb-2">
-            <AlertTriangle className="h-5 w-5 text-primary animate-pulse" />
-            {t('dashboard.action.verifyTitle') || "Complete Your Verification"}
-          </h3>
-          <p className="text-muted-foreground text-sm max-w-xl">
-            {t('dashboard.action.verifyDesc') || "To fully secure your items and access all recovery features, please complete your identity verification."}
-          </p>
-        </div>
-        <Button 
-          onClick={() => navigate('/verification')}
-          className="shadow-lg shadow-primary/20 font-bold px-8"
-        >
-          {t('dashboard.action.verifyAction') || "Verify Now"}
-        </Button>
+const KYCAlert = ({ t, navigate, verificationRequest }: { t: any, navigate: any, verificationRequest?: any }) => {
+  const isRejected = verificationRequest?.status === 'rejected';
+  const isPending = verificationRequest?.status === 'pending';
+  const rejectionReason = verificationRequest?.adminComment;
+
+  if (isPending) return null;
+
+  return (
+    <Card data-tour="kyc-alert" className={cn(
+      "border-primary/20 shadow-premium mb-6 overflow-hidden relative group",
+      isRejected ? "bg-destructive/5 border-destructive/20" : "bg-primary/5"
+    )}>
+      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
+        {isRejected ? <XCircle className="h-24 w-24 text-destructive" /> : <ShieldCheck className="h-24 w-24 text-primary" />}
       </div>
-    </CardContent>
-  </Card>
-);
+      <CardContent className="p-6 relative">
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="flex-1 text-center sm:text-left">
+            <h3 className={cn(
+              "text-lg font-bold flex items-center justify-center sm:justify-start gap-2 mb-2",
+              isRejected ? "text-destructive" : "text-foreground"
+            )}>
+              {isRejected ? <AlertTriangle className="h-5 w-5 animate-pulse" /> : <ShieldCheck className="h-5 w-5 text-primary animate-pulse" />}
+              {isRejected ? (t('dashboard.identityProtection.status_rejected') || "Verification Rejected") : (t('dashboard.action.verifyTitle') || "Complete Your Verification")}
+            </h3>
+            <p className="text-muted-foreground text-sm max-w-xl">
+              {isRejected 
+                ? (rejectionReason || t('dashboard.identityProtection.rejected_desc') || "Your verification was not approved. Please review the requirements and try again.")
+                : (t('dashboard.action.verifyDesc') || "To fully secure your items and access all recovery features, please complete your identity verification.")
+              }
+            </p>
+          </div>
+          <Button 
+            onClick={() => navigate('/verification')}
+            variant={isRejected ? "destructive" : "default"}
+            className={cn(
+              "shadow-lg font-bold px-8",
+              !isRejected && "shadow-primary/20"
+            )}
+          >
+            {isRejected ? (t('dashboard.action.tryAgain') || "Try Again") : (t('dashboard.action.verifyAction') || "Verify Now")}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 
 const logger = createLogger('UnifiedDashboard');
@@ -158,8 +207,9 @@ export default function UnifiedDashboard() {
   const [directVerifyOpen, setDirectVerifyOpen] = React.useState(false);
 
   // Identity Protection Card (Rwanda Specific)
-  const IdentityProtectionCard = () => {
+  const IdentityProtectionCard = ({ verificationRequest }: { verificationRequest?: any }) => {
     const status = user?.verificationStatus || 'unverified';
+    const adminComment = verificationRequest?.adminComment;
     
     const getStatusConfig = () => {
       switch (status) {
@@ -183,9 +233,9 @@ export default function UnifiedDashboard() {
           return {
             color: 'text-destructive',
             bg: 'bg-destructive/10',
-            icon: <AlertTriangle className="h-4 w-4" />,
+            icon: <XCircle className="h-4 w-4" />,
             label: t('dashboard.identityProtection.status_rejected'),
-            desc: t('dashboard.identityProtection.rejected_msg')
+            desc: adminComment || t('dashboard.identityProtection.rejected_msg')
           };
         default:
           return {
@@ -309,7 +359,8 @@ export default function UnifiedDashboard() {
     reports = [],
     allReports = [],
     myClaims = [],
-    claimsReceived = []
+    claimsReceived = [],
+    verificationRequest = null
   } = dashboardData || {};
 
 
@@ -382,12 +433,14 @@ export default function UnifiedDashboard() {
           animate="visible"
           className="max-w-5xl mx-auto space-y-4 sm:space-y-8"
         >
-          {user.verificationStatus !== 'approved' && <KYCAlert t={t} navigate={navigate} />}
+          {user.verificationStatus !== 'approved' && (
+            <KYCAlert t={t} navigate={navigate} verificationRequest={verificationRequest} />
+          )}
           {/* Bento Box Action Grid */}
           <div data-tour="quick-actions" className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 lg:grid-cols-5">
             {/* Main Identity Block - Spans 3 columns on large screens, 2 on medium */}
             <motion.div data-tour="identity-protection" variants={itemVariants} className="md:col-span-2 lg:col-span-3">
-              <IdentityProtectionCard />
+              <IdentityProtectionCard verificationRequest={verificationRequest} />
             </motion.div>
 
             {/* Sub Action Blocks - Stacked vertically next to the identity block */}

@@ -118,7 +118,7 @@ export default function AuthPage() {
     console.log("[AuthPage] Submitting registration data:", { ...registerData, password: "[REDACTED]" });
     
     registerMutation.mutate(registerData, {
-      onSuccess: (responseData) => {
+      onSuccess: (responseData: any) => {
         console.log("[AuthPage] Registration success response:", responseData);
         setIsSubmitting(false);
         ReactGA.event("sign_up", {
@@ -126,7 +126,7 @@ export default function AuthPage() {
           role: data.role
         });
       },
-      onError: (error) => {
+      onError: (error: any) => {
         console.error("[AuthPage] Registration error:", error);
         setIsSubmitting(false);
       }

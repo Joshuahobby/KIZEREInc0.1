@@ -131,10 +131,13 @@ export default function ClientManagementPage() {
     };
 
     // Function to handle changing user status
-    const handleStatusChange = (user: User, status: string) => {
-        setSelectedUser(user);
-        setSelectedStatus(status as AccountStatus);
-        setIsStatusDialogOpen(true);
+    const handleStatusChange = (userId: number, status: string) => {
+        const user = (usersData?.users || []).find((u: any) => u.id === userId);
+        if (user) {
+            setSelectedUser(user);
+            setSelectedStatus(status as AccountStatus);
+            setIsStatusDialogOpen(true);
+        }
     };
 
     // Function to confirm status change

@@ -13,6 +13,8 @@ interface MapViewProps {
     className?: string;
 }
 
+const HMR_KEY = Math.random().toString();
+
 export default function MapView({ items, className }: MapViewProps) {
     // Default center (Kigali, Rwanda)
     const defaultCenter: [number, number] = [-1.9441, 30.0619];
@@ -61,7 +63,7 @@ export default function MapView({ items, className }: MapViewProps) {
 
     return (
         <div className={`relative border border-border/50 rounded-xl overflow-hidden shadow-sm ${className}`}>
-            <MapContainer center={defaultCenter} zoom={13} scrollWheelZoom={false} className="h-full w-full z-0">
+            <MapContainer key={HMR_KEY} center={defaultCenter} zoom={13} scrollWheelZoom={false} className="h-full w-full z-0">
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -18,11 +18,11 @@ interface LanguageSwitcherProps {
 }
 
 // Language display names
-const languageNames: Record<Language, { name: string; nativeName: string }> = {
-  en: { name: 'English', nativeName: 'English' },
-  fr: { name: 'French', nativeName: 'Français' },
-  rw: { name: 'Kinyarwanda', nativeName: 'Kinyarwanda' },
-  sw: { name: 'Swahili', nativeName: 'Kiswahili' },
+const languageNames: Record<Language, { name: string; nativeName: string; flagCode: string }> = {
+  en: { name: 'English', nativeName: 'English', flagCode: 'gb' },
+  fr: { name: 'French', nativeName: 'Français', flagCode: 'fr' },
+  rw: { name: 'Kinyarwanda', nativeName: 'Kinyarwanda', flagCode: 'rw' },
+  sw: { name: 'Swahili', nativeName: 'Kiswahili', flagCode: 'ke' },
 };
 
 export function LanguageSwitcher({ 
@@ -46,7 +46,13 @@ export function LanguageSwitcher({
             className
           )}
         >
-          <Globe className="h-4 w-4" />
+          <img 
+            src={`https://flagcdn.com/w20/${languageNames[language]?.flagCode || 'un'}.png`} 
+            srcSet={`https://flagcdn.com/w40/${languageNames[language]?.flagCode || 'un'}.png 2x`}
+            width="20" 
+            alt={language}
+            className="rounded-sm object-cover" 
+          />
           {variant !== 'icon-only' && (
             <span className="text-sm">
               {variant === 'default' ? 
@@ -71,7 +77,16 @@ export function LanguageSwitcher({
               setLanguage(lang.code as Language);
             }}
           >
-            <span>{lang.name}</span>
+            <div className="flex items-center gap-2">
+              <img 
+                src={`https://flagcdn.com/w20/${languageNames[lang.code as Language]?.flagCode || 'un'}.png`} 
+                srcSet={`https://flagcdn.com/w40/${languageNames[lang.code as Language]?.flagCode || 'un'}.png 2x`}
+                width="20" 
+                alt={lang.code}
+                className="rounded-sm object-cover shadow-sm" 
+              />
+              <span>{lang.name}</span>
+            </div>
             {lang.code === language && <Check className="h-4 w-4 ml-2" />}
           </DropdownMenuItem>
         ))}

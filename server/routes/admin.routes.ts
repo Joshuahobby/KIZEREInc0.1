@@ -8,6 +8,8 @@ import { ReportMatchingService } from '../services/report-matching.service';
 import { DEFAULT_USER_PREFERENCES } from '../../shared/schema';
 import { requireAdmin } from '../middleware/auth.middleware';
 import { getUrlWithSignature } from '../services/cloudinary.service';
+import { sendUserVerificationStatusEmail } from '../services/email.service';
+import { emitToUser } from '../websocket';
 
 const logger = createLogger('AdminRoutes');
 const router = Router();
@@ -478,7 +480,32 @@ router.patch("/verification-requests/:id", async (req, res) => {
 
     if (!updatedRequest) return res.status(404).json({ message: "Request not found" });
 
-    // The storage layer already updates the user verificationStatus
+    // Emit real-time update via WebSocket
+    try {
+      emitToUser(updatedRequest.userId, 'VERIFICATION_STATUS_CHANGED', {
+        status: updatedRequest.status,
+        requestId: updatedRequest.id,
+        comment: updatedRequest.adminComment
+      });
+      logger.info('WebSocket status update emitted', { userId: updatedRequest.userId, status: updatedRequest.status });
+    } catch (wsErr: any) {
+      logger.error('Failed to emit WebSocket status update', { error: wsErr.message });
+    }
+
+    // Send email notification
+    try {
+      const targetUser = await storage.getUser(updatedRequest.userId);
+      if (targetUser?.email) {
+        sendUserVerificationStatusEmail(
+          targetUser.email,
+          targetUser.fullName || 'User',
+          status as 'approved' | 'rejected',
+          adminComment
+        ).catch(err => logger.error('Failed to send verification status email', { error: err }));
+      }
+    } catch (emailErr: any) {
+      logger.error('Error during email notification', { error: emailErr.message });
+    }
     
     await storage.createAdminActionLog({
       adminId,

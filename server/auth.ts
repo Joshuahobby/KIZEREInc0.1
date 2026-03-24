@@ -263,6 +263,11 @@ export function setupAuth(app: Express) {
 
         req.session.save((saveErr) => {
           if (saveErr) return next(saveErr);
+          
+          storage.updateUser(user.id, { lastLogin: new Date() }).catch(err => {
+            logger.error('Failed to update last login', { error: err, userId: user.id });
+          });
+
           const { password, ...userWithoutPassword } = user;
           res.status(200).json(userWithoutPassword);
         });
@@ -354,6 +359,11 @@ export function setupAuth(app: Express) {
 
         req.session.save((saveErr) => {
           if (saveErr) return next(saveErr);
+          
+          storage.updateUser(user.id, { lastLogin: new Date() }).catch(err => {
+            logger.error('Failed to update last login', { error: err, userId: user.id });
+          });
+
           const { password, ...userWithoutPassword } = user;
           res.status(200).json(userWithoutPassword);
         });

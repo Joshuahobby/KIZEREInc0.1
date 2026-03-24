@@ -77,10 +77,9 @@ router.post(
         return res.status(400).json({ message: 'Invalid document type' });
       }
 
-      // Verify liveness code if provided
+      // Verify liveness code if provided (optional for Selfie-with-ID flow)
       const expectedCode = (req.session as any).livenessCode;
-      logger.info('Verifying liveness code', { expectedCode, providedCode: livenessCode });
-      if (expectedCode && livenessCode !== expectedCode) {
+      if (expectedCode && livenessCode && livenessCode !== expectedCode) {
         logger.warn('Submission failed: Liveness code mismatch');
         return res.status(400).json({ message: 'Invalid liveness code' });
       }
@@ -211,63 +210,6 @@ router.get('/admin/list', async (req: Request, res: Response) => {
   }
 });
 
-/**
- * POST /api/verification/admin/:id/review
- * Approve or Reject (Admin/Agent/Moderator only)
- */
-router.post('/admin/:id/review', async (req: Request, res: Response) => {
-  try {
-    const isInternal = ['Admin', 'Agent', 'Moderator'].includes(req.user!.role);
-    if (!isInternal) {
-      return res.status(403).json({ message: 'Forbidden: Internal access required' });
-    }
-
-    const { status, comment } = req.body;
-    if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({ message: 'Invalid status' });
-    }
-
-    const updated = await storage.updateVerificationRequestStatus(
-      parseInt(req.params.id),
-      status,
-      req.user!.id,
-      comment
-    );
-
-    if (!updated) return res.status(404).json({ message: 'Request not found' });
-
-    // Emit real-time update via WebSocket
-    try {
-      const { emitToUser } = await import('../websocket');
-      emitToUser(updated.userId, 'VERIFICATION_STATUS_CHANGED', {
-        status: updated.status,
-        requestId: updated.id,
-        comment: updated.adminComment
-      });
-      logger.info('WebSocket status update emitted', { userId: updated.userId, status: updated.status });
-    } catch (wsErr: any) {
-      logger.error('Failed to emit WebSocket status update', { error: wsErr.message });
-    }
-
-    // Send email notification (Verification approved/rejected)
-    const targetUser = await storage.getUser(updated.userId);
-    if (targetUser?.email) {
-      sendUserVerificationStatusEmail(
-        targetUser.email,
-        targetUser.fullName || 'User',
-        status as 'approved' | 'rejected',
-        comment
-      ).catch(err => logger.error('Failed to send verification status email', { error: err }));
-    }
-
-    logger.info(`Sending email notification for verification ${status} to User ID: ${updated.userId}`);
-
-    res.json(updated);
-  } catch (error) {
-    logger.error('Review failed', { error });
-    res.status(500).json({ message: 'Failed to review request' });
-  }
-});
 
 /**
  * POST /api/verification/verify-direct

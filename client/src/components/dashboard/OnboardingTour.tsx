@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest } from "@/lib/queryClient";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { UserPreferences } from "@shared/schema";
 import { 
   ShieldCheck, 
   Smartphone, 
@@ -94,16 +95,16 @@ export const OnboardingTour = () => {
   
   const queryClient = useQueryClient();
   const updatePrefs = useMutation({
-    mutationFn: async (prefs: any) => {
-      const res = await apiRequest('/api/me/preferences', {
-        method: 'PUT',
-        data: { preferences: prefs }
+    mutationFn: async (prefs: Partial<UserPreferences>) => {
+      // FIX: Use correctly as apiRequest(url, { method, data })
+      return await apiRequest("/api/me/preferences", { 
+        method: "PUT", 
+        data: prefs 
       });
-      return res;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/me/preferences"] });
-    }
+    onSuccess: (data) => {
+      queryClient.setQueryData(["/api/user"], data);
+    },
   });
 
   const steps = React.useMemo(() => {
@@ -111,10 +112,38 @@ export const OnboardingTour = () => {
     return isAgent ? getAgentSteps(t) : getSubscriberSteps(t);
   }, [user?.role, t]);
 
+  const onComplete = () => {
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#047857', '#10b981', '#34d399', '#ffffff']
+    });
+
+    updatePrefs.mutate({ onboardingTourSeen: true });
+    
+    setTimeout(() => {
+      setIsVisible(false);
+    }, 4000);
+  };
+
+  // Add support for manual replay via custom event
   React.useEffect(() => {
-    const onboardingTourSeen = (user?.preferences as any)?.onboardingTourSeen;
-    if (onboardingTourSeen === false || onboardingTourSeen === undefined) {
-      const timer = setTimeout(() => setIsVisible(true), 1500);
+    const handleReplay = () => {
+      setCurrentStep(0);
+      setIsVisible(true);
+    };
+
+    window.addEventListener('replay-onboarding', handleReplay);
+    return () => window.removeEventListener('replay-onboarding', handleReplay);
+  }, []);
+
+  React.useEffect(() => {
+    // Show tour if not seen before, after a short delay
+    if (user && !user.preferences?.onboardingTourSeen) {
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 1500);
       return () => clearTimeout(timer);
     }
   }, [user]);

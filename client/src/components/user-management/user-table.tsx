@@ -40,12 +40,7 @@ import {
 } from "lucide-react";
 import { User } from "@shared/schema";
 import { format } from "date-fns";
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipProvider, 
-  TooltipTrigger 
-} from "@/components/ui/tooltip";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -152,25 +147,37 @@ export function UserTable({
                     </div>
                   </TableCell>
                   <TableCell className="py-5 px-4">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-center gap-2 cursor-help">
-                            {user.isEmailVerified ? (
-                              <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                            ) : (
-                              <AlertCircle className="h-5 w-5 text-amber-500" />
-                            )}
-                            <span className="text-xs font-medium">
-                              {user.isEmailVerified ? "Verified" : "Unverified"}
-                            </span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="bg-background/95 backdrop-blur-sm border-primary/10">
-                          <p className="text-[11px]">Email Verification Status</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                    <div className="flex flex-col gap-2">
+                       {/* Identity Verification */}
+                       <div className="flex items-center gap-2">
+                         {user.verificationStatus === 'approved' ? (
+                           <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                         ) : user.verificationStatus === 'pending' || user.verificationStatus === 'in_review' ? (
+                           <AlertCircle className="h-4 w-4 text-amber-500" />
+                         ) : user.verificationStatus === 'rejected' ? (
+                           <XCircle className="h-4 w-4 text-red-500" />
+                         ) : (
+                           <Shield className="h-4 w-4 text-muted-foreground" />
+                         )}
+                         <span className="text-xs font-medium">
+                           {user.verificationStatus === 'approved' ? 'ID Verified' : 
+                            user.verificationStatus === 'pending' || user.verificationStatus === 'in_review' ? 'ID Pending' : 
+                            user.verificationStatus === 'rejected' ? 'ID Rejected' : 'ID Unverified'}
+                         </span>
+                       </div>
+                       
+                       {/* Email Verification */}
+                       <div className="flex items-center gap-2">
+                         {user.emailVerified ? (
+                           <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                         ) : (
+                           <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                         )}
+                         <span className="text-[11px] text-muted-foreground">
+                           {user.emailVerified ? "Email Verified" : "Email Unverified"}
+                         </span>
+                       </div>
+                    </div>
                   </TableCell>
                   <TableCell className="py-5 px-4">
                     <div className="flex flex-col gap-1">

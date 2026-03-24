@@ -44,6 +44,7 @@ export interface DashboardData {
   allUsers: User[];
   systemStatus: any | null;
   adminActivity: any[];
+  verificationRequest: any | null;
 }
 
 export interface UseDashboardDataOptions {
@@ -152,8 +153,15 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
     refetchInterval: refreshInterval
   });
 
+  const { data: verificationRequest = null, isLoading: verificationRequestLoading } = useQuery({
+    queryKey: ['/api/verification/status'],
+    queryFn: async () => await apiRequest('/api/verification/status'),
+    enabled: !!user && user.verificationStatus !== 'approved',
+    refetchInterval: refreshInterval
+  });
+
   const combinedIsLoading = itemsLoading || reportsLoading || notificationsLoading || paymentsLoading ||
-    dashboardStatsLoading || myClaimsLoading || claimsReceivedLoading ||
+    dashboardStatsLoading || myClaimsLoading || claimsReceivedLoading || verificationRequestLoading ||
     (isAdmin && (allUsersLoading || revenueSummaryLoading || systemStatusLoading || adminActivityLoading || detailedStatsLoading)) ||
     ((isAdmin || isAgent || isModerator) && allReportsLoading);
 
@@ -196,12 +204,13 @@ export function useDashboardData(options: UseDashboardDataOptions = {}): Dashboa
       claimsReceived: Array.isArray(claimsReceived) ? claimsReceived : (claimsReceived as any)?.claims || [],
       allUsers: Array.isArray(allUsers) ? allUsers : (allUsers as any)?.users || [],
       systemStatus,
-      adminActivity: Array.isArray(adminActivity) ? adminActivity : []
+      adminActivity: Array.isArray(adminActivity) ? adminActivity : [],
+      verificationRequest
     };
   }, [
     user, isAdmin, isAgent, isModerator, isBusiness, items, reports,
     allReports, notifications, payments, myClaims, claimsReceived,
     allUsers, revenueSummary, dashboardStats, combinedIsLoading,
-    systemStatus, adminActivity
+    systemStatus, adminActivity, verificationRequest
   ]);
 }

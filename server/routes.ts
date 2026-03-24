@@ -184,6 +184,73 @@ ${xmlUrls}
     }
   });
 
+  // Public Search Endpoint (No Login Required)
+  app.get('/api/public/items/search', async (req, res) => {
+    try {
+      const { query } = req.query;
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ status: 'error', message: "Search query is required" });
+      }
+
+      // Find the item with exact (case-insensitive) match on uniqueIdentifier
+      const [item] = await db.select({
+        id: items.id,
+        status: items.status,
+        name: items.name,
+        category: items.category,
+        userId: items.userId
+      })
+      .from(items)
+      .where(sql`LOWER(${items.uniqueIdentifier}) = LOWER(${query})`)
+      .limit(1);
+
+      if (!item) {
+        return res.json({ status: 'not_found', message: 'This item is not protected by Kizere' });
+      }
+
+      // Get owner details securely
+      const { users } = await import('@shared/schema');
+      const [owner] = await db.select({
+        fullName: users.fullName,
+        phoneNumber: users.phoneNumber
+      })
+      .from(users)
+      .where(eq(users.id, item.userId))
+      .limit(1);
+
+      if (!owner) {
+        return res.json({ status: 'not_found', message: 'This item is not protected by Kizere' });
+      }
+
+      // Securely mask phone number: e.g., +250 788 123 456 -> +250 *** *** 456
+      const maskPhone = (phone: string | null) => {
+        if (!phone) return 'Not provided';
+        const cleaned = phone.replace(/\s+/g, '');
+        if (cleaned.length <= 7) return cleaned.replace(/./g, '*');
+        const start = cleaned.substring(0, 4);
+        const end = cleaned.substring(cleaned.length - 3);
+        const masked = '*'.repeat(cleaned.length - 7);
+        return `${start}${masked}${end}`;
+      };
+
+      res.json({
+        status: 'found',
+        item: {
+          status: item.status,
+          name: item.name,
+          category: item.category
+        },
+        owner: {
+          name: owner.fullName,
+          phone: maskPhone(owner.phoneNumber)
+        }
+      });
+    } catch (error) {
+      logger.error('Error in public item search', { error });
+      res.status(500).json({ status: 'error', message: "Failed to search for item" });
+    }
+  });
+
   // Authenticated routes
   app.use('/api/items', requireAuth, itemRoutes);
   app.use('/api/reports', requireAuth, reportRoutes);

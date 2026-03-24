@@ -183,7 +183,8 @@ export function setupSecurityMiddleware(app: Express) {
       "https://www.google-analytics.com", 
       "https://www.google.com", 
       "https://*.google.rw", 
-      "https://stats.g.doubleclick.net"
+      "https://stats.g.doubleclick.net",
+      "https://flagcdn.com"
     ],
     connectSrc: [
       "'self'",

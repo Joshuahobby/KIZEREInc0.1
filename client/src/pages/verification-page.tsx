@@ -43,7 +43,7 @@ type VerificationFormData = z.infer<typeof verificationSchema>;
 
 export default function VerificationPage() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { t } = useLanguage();
   const [, navigate] = useLocation();
   const queryClient = useQueryClient();
@@ -54,6 +54,10 @@ export default function VerificationPage() {
   const [isOcrProcessing, setIsOcrProcessing] = useState(false);
   const [ocrResult, setOcrResult] = useState<{ detectedName?: string, confidence: number } | null>(null);
   const [ocrError, setOcrError] = useState<string | null>(null);
+  const [docTypeValidated, setDocTypeValidated] = useState<boolean>(false);
+  const [nameValidated, setNameValidated] = useState<boolean>(false);
+  const [isSelfieOcrProcessing, setIsSelfieOcrProcessing] = useState(false);
+  const [selfieValidated, setSelfieValidated] = useState<boolean>(false);
 
   const { data: status, isLoading: isLoadingStatus } = useQuery({
     queryKey: ["/api/verification/status"],
@@ -79,19 +83,41 @@ export default function VerificationPage() {
     }
   }, [documentFile, step]);
 
+  useEffect(() => {
+    if (selfieFile && step === 1) {
+      processSelfieOCR(selfieFile);
+    }
+  }, [selfieFile, step]);
+
   const processDocumentOCR = async (file: File) => {
     setIsOcrProcessing(true);
     setOcrError(null);
     setOcrResult(null);
+    setDocTypeValidated(false);
+    setNameValidated(false);
     
     try {
       const result = await Tesseract.recognize(file, 'eng');
       
       const text = result.data.text;
       const confidence = result.data.confidence;
+      const normalizedText = text.toLowerCase();
       
-      // Better name matching: normalize and check for intersection
-      const normalizedText = text.toLowerCase().replace(/[^a-z\s]/g, '');
+      // 1. Document Type Validation
+      const docType = form.getValues('documentType');
+      const docKeywords: Record<string, string[]> = {
+        nid: ["republic of rwanda", "indangamuntu", "national id", "rwanda", "id card"],
+        passport: ["passport", "repubulika", "rwanda", "travel document"],
+        drivers_license: ["permis", "conduire", "driving", "license", "rwanda"]
+      };
+
+      const keywords = docKeywords[docType] || [];
+      const foundKeywords = keywords.filter(k => normalizedText.includes(k.toLowerCase()));
+      const isDocTypeMatch = foundKeywords.length >= (docType === 'nid' ? 2 : 1);
+      
+      setDocTypeValidated(isDocTypeMatch);
+
+      // 2. Name Matching
       const userFullName = user?.fullName?.toLowerCase() || '';
       const userNameParts = userFullName.split(/\s+/).filter(part => part.length > 2);
       
@@ -99,24 +125,134 @@ export default function VerificationPage() {
         normalizedText.includes(part)
       );
 
-      const isMatch = matchedParts.length >= Math.min(2, userNameParts.length);
+      const isNameMatch = matchedParts.length >= Math.min(2, userNameParts.length);
+      setNameValidated(isNameMatch);
 
       setOcrResult({
-        detectedName: isMatch ? matchedParts.join(' ') : undefined,
+        detectedName: isNameMatch ? matchedParts.join(' ') : undefined,
         confidence
       });
       
-      if (!isMatch && confidence > 40) {
-        setOcrError(t('ocr.kyc_mismatch_desc') || "The name on the ID doesn't seem to match your profile name perfectly. Please ensure the photo is clear.");
+      if (!isDocTypeMatch) {
+         setOcrError(`The uploaded image does not appear to be a valid ${docType === 'nid' ? 'National ID' : docType === 'passport' ? 'Passport' : 'Driver\'s License'}. Please check the document type and try again.`);
+      } else if (!isNameMatch && confidence > 40) {
+        setOcrError(t('ocr.kyc_mismatch_desc') || "The name on the ID doesn't seem to match your profile name perfectly. Please ensure the photo is clear and contains your full name.");
       } else if (confidence < 40) {
-        setOcrError(t('ocr.kyc_low_conf_desc') || "The text is hard to read. A clear photo speeds up manual approval.");
+        setOcrError(t('ocr.kyc_low_conf_desc') || "The text is hard to read. A clear photo is required for security verification.");
       }
     } catch (err) {
       console.error("OCR Error:", err);
-      // Don't set error for user, just fail silently as it's a helper
+      setOcrError("Failed to process document. Please ensure the image is a valid JPG/PNG and try again.");
     } finally {
       setIsOcrProcessing(false);
     }
+  };
+
+  const processSelfieOCR = async (file: File) => {
+    setIsSelfieOcrProcessing(true);
+    setOcrError(null);
+    setSelfieValidated(false);
+    
+    try {
+      const result = await Tesseract.recognize(file, 'eng');
+      const normalizedText = result.data.text.toLowerCase();
+      const confidence = result.data.confidence;
+
+      // Cross-validation: Look for user's name or doc type keywords in the selfie
+      const userFullName = user?.fullName?.toLowerCase() || '';
+      const userNameParts = userFullName.split(/\s+/).filter(part => part.length > 2);
+      
+      const matchedParts = userNameParts.filter(part => 
+        normalizedText.includes(part)
+      );
+
+      const docType = form.getValues('documentType');
+      const docKeywords: Record<string, string[]> = {
+        nid: ["republic", "rwanda", "id", "national"],
+        passport: ["passport", "repubulika", "rwanda"],
+        drivers_license: ["permis", "conduire", "driving", "license"]
+      };
+
+      const keywords = docKeywords[docType] || [];
+      const foundKeywords = keywords.filter(k => normalizedText.includes(k.toLowerCase()));
+
+      // Selfie validation is more lenient because it's further away
+      const isMatch = matchedParts.length >= 1 || foundKeywords.length >= 1;
+      setSelfieValidated(isMatch);
+
+      if (!isMatch && confidence > 30) {
+        setOcrError("We couldn't clearly see your ID in the selfie. Please ensure you are holding it next to your face and the photo is clear.");
+      }
+    } catch (err) {
+      console.error("Selfie OCR Error:", err);
+    } finally {
+      setIsSelfieOcrProcessing(false);
+    }
+  };
+
+  const downloadVerificationCard = () => {
+    if (!livenessData?.code) return;
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Background
+    ctx.fillStyle = '#0f172a'; // Slate 900
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Border
+    ctx.strokeStyle = '#3b82f6'; // Blue 500
+    ctx.lineWidth = 10;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+    // Title
+    ctx.fillStyle = '#f8fafc'; // Slate 50
+    ctx.font = 'bold 24px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('KIZERE IDENTITY VERIFICATION', canvas.width / 2, 80);
+
+    // Name
+    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#94a3b8'; // Slate 400
+    ctx.fillText(user?.fullName || 'Verification Subject', canvas.width / 2, 130);
+
+    // Code Label
+    ctx.fillStyle = '#3b82f6';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText('VERIFICATION CODE', canvas.width / 2, 200);
+
+    // Code
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 80px monospace';
+    ctx.fillText(livenessData.code, canvas.width / 2, 280);
+
+    // Date
+    ctx.font = '14px sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.fillText(`Generated: ${new Date().toLocaleString()}`, canvas.width / 2, 340);
+
+    // KIZERE Branding
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillText('OFFICIAL KIZERE DIGITAL IDENTITY BACKUP', canvas.width / 2, 365);
+
+    // Footer
+    ctx.font = 'italic 10px sans-serif';
+    ctx.fillStyle = '#475569';
+    ctx.fillText('This document is for identity verification purposes only within the KIZERE ecosystem.', canvas.width / 2, 385);
+
+    const link = document.createElement('a');
+    link.download = `KIZERE-ID-Backup-${user?.username || 'user'}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    
+    toast({
+      title: "Digital ID Backup Ready",
+      description: "Hold this card clearly visible in your selfie for manual verification.",
+    });
   };
 
   const onSubmit = async (data: VerificationFormData) => {
@@ -146,6 +282,7 @@ export default function VerificationPage() {
       });
 
       await queryClient.invalidateQueries({ queryKey: ["/api/verification/status"] });
+      await refreshUser();
       
       // Celebration!
       confetti({
@@ -277,6 +414,23 @@ export default function VerificationPage() {
 
         <Card className="border-white/10 glass rounded-3xl shadow-xl overflow-hidden min-h-[450px] flex flex-col">
           <CardContent className="pt-8 flex-1 flex flex-col">
+            {/* Rejection Alert */}
+            {status?.adminComment && status.status === 'rejected' && step === 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }} 
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 bg-destructive/10 border border-destructive/20 rounded-2xl flex gap-3 items-start"
+              >
+                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-destructive uppercase tracking-tight">Previous Attempt Rejected</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Reason: <span className="text-foreground font-medium">{status.adminComment}</span>
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
             <AnimatePresence mode="wait">
               {step === 0 && (
                 <motion.div
@@ -362,19 +516,30 @@ export default function VerificationPage() {
                     </p>
                   </div>
 
-                  {livenessData?.code && (
-                    <div className="relative group">
-                       <div className="relative bg-white/5 border border-white/10 rounded-2xl p-5 text-center space-y-2 overflow-hidden">
-                          <p className="text-[9px] font-bold text-primary uppercase tracking-[0.2em]">Verification Code</p>
-                          <div className="text-3xl font-mono font-bold tracking-[0.3em] text-foreground py-1 select-all tabular-nums leading-none">
-                            {livenessData.code}
-                          </div>
-                          <p className="text-[10px] text-muted-foreground font-medium px-4 leading-tight opacity-80">
-                            Please display this code clearly when taking your selfie.
-                          </p>
-                       </div>
-                    </div>
-                  )}
+                  <div className="relative group">
+                     <div className="relative bg-primary/5 border border-primary/20 rounded-2xl p-5 text-center space-y-2 overflow-hidden">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <Scan className="h-4 w-4 text-primary" />
+                          <p className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Live Identity Verification</p>
+                        </div>
+                        <p className="text-xl font-bold tracking-tight text-foreground leading-tight">
+                          Hold your {form.watch('documentType').replace('_', ' ')} next to your face
+                        </p>
+                        <p className="text-[10px] text-muted-foreground font-medium px-4 leading-tight opacity-80 pt-1">
+                          Ensure both your face and ID details are clearly visible in the photo.
+                        </p>
+                        <div className="pt-2">
+                           <Button 
+                             variant="outline" 
+                             size="sm" 
+                             className="bg-white/5 border-white/10 hover:bg-white/10 text-[9px] h-7 rounded-lg opacity-60"
+                             onClick={downloadVerificationCard}
+                           >
+                              Download Digital ID Backup
+                           </Button>
+                        </div>
+                     </div>
+                  </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                      {/* Upload 1: Document */}
@@ -415,20 +580,37 @@ export default function VerificationPage() {
                                   <motion.div 
                                     initial={{ y: 5, opacity: 0 }} 
                                     animate={{ y: 0, opacity: 1 }}
-                                    className={cn(
-                                      "mt-3 py-1 px-3 rounded-full border flex items-center gap-2",
-                                      ocrResult.detectedName 
-                                        ? "bg-emerald-500/10 border-emerald-500/20" 
-                                        : "bg-amber-500/10 border-amber-500/20"
-                                    )}
+                                    className="mt-3 flex flex-col gap-1.5 w-full items-center"
                                   >
-                                    <Sparkles className={cn("h-3 w-3", ocrResult.detectedName ? "text-emerald-500" : "text-amber-500")} />
-                                    <span className={cn(
-                                      "text-[9px] font-bold uppercase tracking-tighter",
-                                      ocrResult.detectedName ? "text-emerald-500" : "text-amber-500"
-                                    )}>
-                                      {ocrResult.detectedName ? t('ocr.kyc_name_match') : t('ocr.kyc_helper')}
-                                    </span>
+                                     <div className={cn(
+                                       "py-1 px-3 rounded-full border flex items-center gap-2",
+                                       docTypeValidated 
+                                         ? "bg-emerald-500/10 border-emerald-500/20" 
+                                         : "bg-amber-500/10 border-amber-500/20"
+                                     )}>
+                                       {docTypeValidated ? <Check className="h-3 w-3 text-emerald-500" /> : <AlertCircle className="h-3 w-3 text-amber-500" />}
+                                       <span className={cn(
+                                         "text-[9px] font-bold uppercase tracking-tighter",
+                                         docTypeValidated ? "text-emerald-500" : "text-amber-500"
+                                       )}>
+                                         {docTypeValidated ? "ID Type Recognized" : "Doc Type Unclear"}
+                                       </span>
+                                     </div>
+                                     
+                                     <div className={cn(
+                                       "py-1 px-3 rounded-full border flex items-center gap-2",
+                                       nameValidated 
+                                         ? "bg-emerald-500/10 border-emerald-500/20" 
+                                         : "bg-amber-500/10 border-amber-500/20"
+                                     )}>
+                                       {nameValidated ? <Check className="h-3 w-3 text-emerald-500" /> : <Shield className="h-3 w-3 text-amber-500" />}
+                                       <span className={cn(
+                                         "text-[9px] font-bold uppercase tracking-tighter",
+                                         nameValidated ? "text-emerald-500" : "text-amber-500"
+                                       )}>
+                                         {nameValidated ? "Name Matches Profile" : "Name Verification Pending"}
+                                       </span>
+                                     </div>
                                   </motion.div>
                                 )}
                              </motion.div>
@@ -449,29 +631,49 @@ export default function VerificationPage() {
                         <input
                           type="file"
                           accept="image/*"
-                          title="Upload Selfie"
-                          aria-label="Upload Selfie"
+                          title="Upload Selfie with ID"
+                          aria-label="Upload Selfie with ID"
                           className="absolute inset-0 opacity-0 cursor-pointer z-10"
                           onChange={(e) => setSelfieFile(e.target.files?.[0] || null)}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isSelfieOcrProcessing}
                         />
                         <div className={cn(
-                          "h-48 border border-dashed rounded-2xl flex flex-col items-center justify-center p-5 transition-all",
+                          "h-48 border border-dashed rounded-2xl flex flex-col items-center justify-center p-5 transition-all relative overflow-hidden",
                           selfieFile ? "border-primary bg-primary/5" : "border-white/10 bg-white/5 hover:border-white/20"
                         )}>
+                           {/* Selfie OCR Scanning Animation */}
+                           {isSelfieOcrProcessing && (
+                             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+                                <motion.div 
+                                  className="w-full h-1 bg-primary/50 absolute top-0"
+                                  animate={{ top: ['0%', '100%', '0%'] }}
+                                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                                />
+                                <Camera className="h-8 w-8 text-primary animate-pulse mb-2" />
+                                <p className="text-[10px] font-black uppercase tracking-widest text-primary">Matching ID...</p>
+                             </div>
+                           )}
+
                            {selfieFile ? (
                              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-center">
                                 <CheckCircle2 className="h-8 w-8 text-primary mb-2" />
                                 <p className="text-xs font-bold leading-tight">Selfie Ready</p>
                                 <p className="text-[9px] text-muted-foreground truncate max-w-[120px] mt-1">{selfieFile.name}</p>
+                                
+                                {selfieValidated && (
+                                  <div className="mt-3 py-1 px-3 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
+                                    <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                                    <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-tighter">ID Detected</span>
+                                  </div>
+                                )}
                              </motion.div>
                            ) : (
                              <>
                                <div className="h-10 w-10 rounded-lg bg-white/10 text-muted-foreground flex items-center justify-center mb-2">
                                   <Camera className="h-5 w-5" />
                                 </div>
-                               <p className="text-xs font-bold">Verify Selfie</p>
-                               <p className="text-[9px] text-muted-foreground mt-1 uppercase tracking-tighter opacity-60">Must show code</p>
+                               <p className="text-xs font-bold">Selfie + ID</p>
+                               <p className="text-[9px] text-muted-foreground mt-1 uppercase tracking-tighter opacity-60">Hold ID by face</p>
                              </>
                            )}
                         </div>
@@ -524,23 +726,28 @@ export default function VerificationPage() {
                      >
                        <ArrowLeft className="h-4 w-4" />
                      </button>
-                     <Button 
-                       className="flex-1 py-5 text-base font-bold rounded-xl group bg-primary transition-all overflow-hidden" 
-                       onClick={form.handleSubmit(onSubmit)}
-                       disabled={!documentFile || !selfieFile || isSubmitting || !form.watch('consentGiven')}
-                     >
-                       {isSubmitting ? (
-                         <div className="flex items-center gap-2">
-                           <Loader2 className="h-4 w-4 animate-spin" />
-                           <span className="font-bold tracking-tight uppercase text-sm">Uploading...</span>
-                         </div>
-                       ) : (
-                         <div className="flex items-center gap-2">
-                           <ShieldCheck className="h-4 w-4" />
-                           <span className="font-bold tracking-tight uppercase text-sm">Complete Verification</span>
-                         </div>
-                       )}
-                     </Button>
+                      <Button 
+                        className="flex-1 py-5 text-base font-bold rounded-xl group bg-primary transition-all overflow-hidden" 
+                        onClick={form.handleSubmit(onSubmit)}
+                        disabled={!documentFile || !selfieFile || isSubmitting || !form.watch('consentGiven') || !docTypeValidated || !nameValidated || !selfieValidated}
+                      >
+                        {isSubmitting ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="font-bold tracking-tight uppercase text-sm">Uploading...</span>
+                          </div>
+                        ) : (!docTypeValidated || !nameValidated || !selfieValidated) ? (
+                          <div className="flex items-center gap-2">
+                            <Lock className="h-4 w-4" />
+                            <span className="font-bold tracking-tight uppercase text-sm">Verification Locked</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <ShieldCheck className="h-4 w-4" />
+                            <span className="font-bold tracking-tight uppercase text-sm">Complete Verification</span>
+                          </div>
+                        )}
+                      </Button>
                   </div>
                 </motion.div>
               )}

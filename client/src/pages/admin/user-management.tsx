@@ -12,7 +12,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { UserFilters, type UserFilters as UserFiltersType } from "@/components/user-management/user-filters";
-import { UserTable, type User } from "@/components/user-management/user-table";
+import { UserTable } from "@/components/user-management/user-table";
+import { type User } from "@shared/schema";
 import { UserActivityTimeline } from "@/components/user-management/user-activity-timeline";
 import { UserStatusHistory } from "@/components/user-management/user-status-history";
 import { UserWarnings } from "@/components/user-management/user-warnings";
@@ -242,9 +243,9 @@ export default function UserManagementPage() {
     setShowEditDialog(true);
   };
 
-  const handleStatusChange = (user: User, status: string) => {
+  const handleStatusChange = (userId: number, status: string) => {
     changeStatusMutation.mutate({
-      userId: user.id,
+      userId,
       status,
       reason: `Status changed to ${status} by admin`
     });
@@ -406,7 +407,7 @@ export default function UserManagementPage() {
               onDeleteUser={handleDeleteUser}
               onVerifyUser={handleVerifyUser}
               onStatusChange={handleStatusChange}
-              onRoleChange={(u, r) => changeRoleMutation.mutate({ userId: u.id, role: r })}
+              onRoleChange={(userId, r) => changeRoleMutation.mutate({ userId, role: r })}
             />
           </TabsContent>
 
@@ -417,7 +418,7 @@ export default function UserManagementPage() {
               onEditUser={handleEditUser}
               onDeleteUser={handleDeleteUser}
               onStatusChange={handleStatusChange}
-              onRoleChange={(u, r) => changeRoleMutation.mutate({ userId: u.id, role: r })}
+              onRoleChange={(userId, r) => changeRoleMutation.mutate({ userId, role: r })}
             />
           </TabsContent>
 
@@ -428,7 +429,7 @@ export default function UserManagementPage() {
               onEditUser={handleEditUser}
               onDeleteUser={handleDeleteUser}
               onStatusChange={handleStatusChange}
-              onRoleChange={(u, r) => changeRoleMutation.mutate({ userId: u.id, role: r })}
+              onRoleChange={(userId, r) => changeRoleMutation.mutate({ userId, role: r })}
             />
           </TabsContent>
         </Tabs>
@@ -608,8 +609,8 @@ function UserTabContent({
   onEditUser: (user: User) => void;
   onDeleteUser: (user: User) => void;
   onVerifyUser?: (user: User) => void;
-  onStatusChange: (user: User, status: string) => void;
-  onRoleChange: (user: User, role: string) => void;
+  onStatusChange: (userId: number, status: string) => void;
+  onRoleChange: (userId: number, role: string) => void;
 }) {
   const { data: usersData, isLoading } = useQuery({
     queryKey: [`/api/admin/users/tabs/${tab}`],

@@ -636,7 +636,8 @@
     "finish": "Maliza",
     "end": "Hagarika",
     "gotIt": "Sawa",
-    "stepOf": "Hatua ya {{current}} ya {{total}}"
+    "stepOf": "Hatua ya {{current}} ya {{total}}",
+    "replay": "Rudia Maelekezo"
   },
   "contact_page": {
     "title": "Wasiliana Nasi",

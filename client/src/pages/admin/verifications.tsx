@@ -48,9 +48,9 @@ export default function AdminVerifications() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ id, status, comment }: { id: number, status: string, comment: string }) => {
-      const res = await apiRequest(`/api/verification/admin/${id}/review`, {
-        method: "POST",
-        data: { status, comment }
+      const res = await apiRequest(`/api/admin/verification-requests/${id}`, {
+        method: "PATCH",
+        data: { status, adminComment: comment }
       });
       return res;
     },

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function ThemeToggle() {
-    const { theme, setTheme } = useTheme();
+    const { theme, setTheme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
 
     // Wait for component to be mounted to avoid hydration mismatch
@@ -14,8 +14,10 @@ export function ThemeToggle() {
         setMounted(true);
     }, []);
 
+    const currentTheme = resolvedTheme || theme;
+
     const toggleTheme = () => {
-        const newTheme = theme === 'dark' ? 'light' : 'dark';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         console.log('[ThemeToggle] Switching theme to:', newTheme);
         setTheme(newTheme);
     };
@@ -31,7 +33,7 @@ export function ThemeToggle() {
             onClick={toggleTheme}
             className={cn(
                 "relative flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300",
-                theme === 'light'
+                currentTheme === 'light'
                     ? "bg-amber-50/50 border border-amber-100 hover:bg-amber-100/80"
                     : "hover:bg-blue-900/20 border border-transparent"
             )}
@@ -41,25 +43,25 @@ export function ThemeToggle() {
                 <motion.div
                     initial={false}
                     animate={{
-                        opacity: theme === 'light' ? 1 : 0,
-                        y: theme === 'light' ? 0 : -10
+                        opacity: currentTheme === 'light' ? 1 : 0,
+                        y: currentTheme === 'light' ? 0 : -10
                     }}
                     transition={{ duration: 0.2 }}
                     className="absolute inset-0 flex items-center justify-center"
                 >
-                    <Sun className="h-5 w-5 text-amber-600" />
+                    <Sun className="h-5 w-5 text-amber-600 dark:text-amber-500" />
                 </motion.div>
 
                 <motion.div
                     initial={false}
                     animate={{
-                        opacity: theme === 'dark' ? 1 : 0,
-                        y: theme === 'dark' ? 0 : 10
+                        opacity: currentTheme === 'dark' ? 1 : 0,
+                        y: currentTheme === 'dark' ? 0 : 10
                     }}
                     transition={{ duration: 0.2 }}
                     className="absolute inset-0 flex items-center justify-center"
                 >
-                    <Moon className="h-5 w-5 text-blue-400" />
+                    <Moon className="h-5 w-5 text-blue-500 dark:text-blue-400" />
                 </motion.div>
             </div>
         </Button>
