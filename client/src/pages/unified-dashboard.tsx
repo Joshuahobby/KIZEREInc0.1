@@ -449,7 +449,7 @@ export default function UnifiedDashboard() {
                 <Card
                   data-tour="report-lost"
                   className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-destructive/10 transition-all duration-300 border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group relative h-full flex flex-col justify-center"
-                  onClick={() => navigate('/search?action=report-lost')}
+                  onClick={() => navigate('/report-lost')}
                 >
                   <CardContent className="p-4 sm:p-5 flex items-center gap-4">
                     <div className="p-2 sm:p-3 bg-destructive/10 rounded-xl shrink-0 group-hover:scale-105 transition-transform">
@@ -467,7 +467,7 @@ export default function UnifiedDashboard() {
                 <Card
                   data-tour="report-found"
                   className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-primary/10 transition-all duration-300 border-primary/20 bg-primary/5 hover:bg-primary/10 group relative h-full flex flex-col justify-center"
-                  onClick={() => navigate('/search?action=report-found')}
+                  onClick={() => navigate('/report-found')}
                 >
                   <CardContent className="p-4 sm:p-5 flex items-center gap-4">
                     <div className="p-2 sm:p-3 bg-primary/10 rounded-xl shrink-0 group-hover:scale-105 transition-transform">
@@ -939,7 +939,7 @@ export default function UnifiedDashboard() {
                   <CardTitle>{t('dashboard.reports.title')}</CardTitle>
                   <CardDescription>{t('dashboard.reports.description')}</CardDescription>
                 </div>
-                <Button size="sm" onClick={() => navigate("/search?action=report-lost")}>
+                <Button size="sm" onClick={() => navigate("/report-lost")}>
                   <Plus className="h-4 w-4 mr-2" /> {t('dashboard.reports.newReport')}
                 </Button>
               </CardHeader>

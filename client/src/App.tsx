@@ -92,6 +92,7 @@ const CompliancePage = lazyWithRetry(() => import("@/pages/compliance"));
 const Notifications = lazyWithRetry(() => import("@/pages/notifications"));
 const NotFound = lazyWithRetry(() => import("@/pages/not-found"));
 const PublicSearch = lazyWithRetry(() => import("@/pages/public-search"));
+const CreateReport = lazyWithRetry(() => import("@/pages/create-report"));
 
 function App() {
   // Handle Firebase redirect result
@@ -186,6 +187,8 @@ function App() {
                   <Route path="/search">
                     <Search />
                   </Route>
+                  <ProtectedRoute path="/report-lost" component={CreateReport} requiredRole="any" />
+                  <ProtectedRoute path="/report-found" component={CreateReport} requiredRole="any" />
                   <Route path="/verify-item">
                     <PublicSearch />
                   </Route>
