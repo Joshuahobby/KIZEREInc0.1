@@ -25,6 +25,7 @@
     "continue": "Continuer",
     "next": "Suivant",
     "back": "Retour",
+    "backToDashboard": "Retour au Tableau de Bord",
     "finish": "Terminer",
     "actions": {
       "delete": "Supprimer"
@@ -45,6 +46,7 @@
     "mainHeader": "PRINCIPAL",
     "portfolioHeader": "INVENTAIRE",
     "exploreHeader": "EXPLORER",
+    "explore": "Explorer",
     "adminHeader": "ADMINISTRATION"
   },
   "item_category_electronics": "Électronique",
@@ -531,9 +533,17 @@
       "saveErrorDesc": "Nous n'avons pas pu enregistrer vos préférences. Veuillez réessayer plus tard."
     }
   },
+  "report_lost_subtitle": "Aidez-nous à trouver votre objet perdu dans notre base de données",
   "reports": {
+    "successTitle": "Signalement soumis avec succès",
+    "successDescription": "Votre signalement a été reçu et ajouté à notre base de données.",
     "reportLostItem": "Signaler un Objet Perdu",
     "reportFoundItem": "Signaler un Objet Trouvé",
+    "reportCreated": "Signalement créé, en attente de paiement",
+    "proceedToPayment": "Procéder au paiement",
+    "paymentSuccess": "Paiement réussi !",
+    "paymentFailed": "Échec du paiement",
+    "reportPublished": "Votre signalement est maintenant en ligne.",
     "itemDetails": "Détails de l'Objet",
     "lastSeen": "Dernière Fois Vu",
     "contactInformation": "Coordonnées",

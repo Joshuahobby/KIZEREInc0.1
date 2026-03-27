@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import ReactGA from "react-ga4";
+import { PaymentModal } from "@/components/payment/payment-modal";
 
 export default function CreateReport() {
   const { t } = useLanguage();
@@ -23,6 +24,8 @@ export default function CreateReport() {
   const [, navigate] = useLocation();
   const [success, setSuccess] = useState(false);
   const [receiptNumber, setReceiptNumber] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [createdReport, setCreatedReport] = useState<any>(null);
 
   // Determine report type from URL path
   const [isLostRoute] = useRoute("/report-lost");
@@ -59,7 +62,6 @@ export default function CreateReport() {
       });
     },
     onSuccess: (data) => {
-      setSuccess(true);
       if (data?.receiptNumber) {
         setReceiptNumber(data.receiptNumber);
       }
@@ -72,12 +74,23 @@ export default function CreateReport() {
       queryClient.invalidateQueries({ queryKey: ["/api/reports"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
 
-      toast({
-        title: t("reports.successTitle") || "Report Submitted!",
-        description:
-          t("reports.successDescription") ||
-          "Your report has been filed successfully.",
-      });
+      // If lost report requires payment, open PaymentModal instead of success screen
+      if (data?.paymentStatus === 'pending' && type === 'lost') {
+        setCreatedReport(data);
+        setShowPaymentModal(true);
+        toast({
+          title: t("reports.reportCreated") || "Report Created",
+          description: t("reports.proceedToPayment") || "Complete payment to publish your report.",
+        });
+      } else {
+        setSuccess(true);
+        toast({
+          title: t("reports.successTitle") || "Report Submitted!",
+          description:
+            t("reports.successDescription") ||
+            "Your report has been filed successfully.",
+        });
+      }
     },
     onError: (error: Error) => {
       toast({
@@ -106,6 +119,35 @@ export default function CreateReport() {
 
   return (
     <PageLayout>
+      {/* Payment Modal for Lost Reports */}
+      {createdReport && (
+        <PaymentModal
+          open={showPaymentModal}
+          onOpenChange={setShowPaymentModal}
+          paymentDetails={{
+            type: 'lost_report',
+            reportId: createdReport.id,
+            bountyAmount: createdReport.bountyAmount ? Number(createdReport.bountyAmount) : 0,
+          }}
+          onPaymentSuccess={() => {
+            setShowPaymentModal(false);
+            setSuccess(true);
+            toast({
+              title: t("reports.paymentSuccess") || "Payment Successful!",
+              description: t("reports.reportPublished") || "Your lost item report is now live.",
+            });
+          }}
+          onPaymentCancel={() => {
+            setShowPaymentModal(false);
+            toast({
+              title: t("reports.paymentPending") || "Payment Pending",
+              description: t("reports.payLater") || "Your report has been saved. You can pay from your dashboard to publish it.",
+              variant: "default",
+            });
+            navigate("/dashboard");
+          }}
+        />
+      )}
       <SEO
         title={
           type === "lost"

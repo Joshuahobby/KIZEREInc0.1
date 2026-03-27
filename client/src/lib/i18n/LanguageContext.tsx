@@ -121,7 +121,9 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     };
 
     // Get the current language's translations
-    const currentLangObj = translations[language];
+    // Always use the live imported 'en' object for English to ensure React Fast Refresh (HMR) 
+    // picks up JSON changes without requiring a full page reload or state reset.
+    const currentLangObj = language === 'en' ? en : translations[language];
     let value = traverse(currentLangObj, keys);
 
     // If translation not found in current language, try in default language

@@ -27,6 +27,7 @@
     "continue": "Endelea",
     "next": "Ifuatayo",
     "back": "Rudi Nyuma",
+    "backToDashboard": "Rudi Dashibodi",
     "finish": "Maliza"
   },
   "nav": {
@@ -44,6 +45,7 @@
     "mainHeader": "KUU",
     "portfolioHeader": "IMILIKI",
     "exploreHeader": "GUNDUA",
+    "explore": "Gundua",
     "adminHeader": "UTAWALA"
   },
   "item_category_electronics": "Elektroniki",
@@ -445,9 +447,17 @@
       "saveErrorDesc": "Hatukuweza kuhifadhi upendeleo wako. Tafadhali jaribu tena baadaye."
     }
   },
+  "report_lost_subtitle": "Tusaidie kulinganisha kitu chako kilichopotea na orodha yetu ya vitu vilivyopatikana",
   "reports": {
+    "successTitle": "Ripoti Imewasilishwa Kikamilifu",
+    "successDescription": "Ripoti yako imepokelewa na kuongezwa kwenye hifadhidata yetu.",
     "reportLostItem": "Ripoti Kitu Kilichopotea",
     "reportFoundItem": "Ripoti Kitu Kilichopatikana",
+    "reportCreated": "Ripoti imeundwa, inasubiri malipo",
+    "proceedToPayment": "Endelea na Malipo",
+    "paymentSuccess": "Malipo Yamefanikiwa!",
+    "paymentFailed": "Malipo Yameshindikana",
+    "reportPublished": "Ripoti yako sasa ipo hewani.",
     "itemDetails": "Maelezo ya Kitu",
     "lastSeen": "Kilionekana Mwisho",
     "contactInformation": "Maelezo ya Mawasiliano",

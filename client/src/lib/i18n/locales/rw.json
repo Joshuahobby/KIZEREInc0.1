@@ -34,6 +34,7 @@
     "continue": "Komeza",
     "next": "Komeza",
     "back": "Subira Inyuma",
+    "backToDashboard": "Subira ku Kibaho",
     "finish": "Rangiza",
     "cancel_edit": "Hagarika Ihindura",
     "actions": {
@@ -116,6 +117,7 @@
     "mainHeader": "IBY'INGENZI",
     "portfolioHeader": "IBIKORESHO",
     "exploreHeader": "SHAKISHA",
+    "explore": "Shakisha",
     "adminHeader": "UBUYOBOZI",
     "account": "Konti",
     "blog": "Amakuru",
@@ -1031,9 +1033,17 @@
     "uploadImage": "Ohereza Ifoto",
     "additionalDetails": "Andi Makuru Arambuye"
   },
+  "report_lost_subtitle": "Dufashe guhuza ikintu cyabuze n'amakuru y'ibyabonetse",
   "reports": {
+    "successTitle": "Raporo Yemejwe Neza",
+    "successDescription": "Raporo yawe yakiriwe kandi yongewe mu bubiko bwacu.",
     "reportLostItem": "Menyekanisha Ikintu Cyabuze",
     "reportFoundItem": "Menyekanisha Ikintu Cyabonetse",
+    "reportCreated": "Raporo yakozwe, hategerejwe kwishyura",
+    "proceedToPayment": "Komeza wishyure",
+    "paymentSuccess": "Uwishyu bwakunze!",
+    "paymentFailed": "Uwishyu bwanze",
+    "reportPublished": "Raporo yawe ubu iragaragara.",
     "itemDetails": "Amakuru y'Ikintu",
     "lastSeen": "Cyabonekeye Bwa Nyuma",
     "contactInformation": "Amakuru yo Kuvugana",
