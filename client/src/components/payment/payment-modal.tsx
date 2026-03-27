@@ -321,7 +321,7 @@ export function PaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] rounded-3xl p-6">
+      <DialogContent className="sm:max-w-[440px] rounded-3xl p-6 overflow-hidden">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-xl font-bold tracking-tight">{getTitle()}</DialogTitle>
           {getDescription() && <DialogDescription className="text-sm">{getDescription()}</DialogDescription>}
