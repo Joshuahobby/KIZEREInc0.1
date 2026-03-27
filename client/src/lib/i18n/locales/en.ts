@@ -57,6 +57,7 @@ export default {
     register: 'Register Items',
     registerItems: 'Register Items',
     search: 'Search Items',
+    explore: 'Browse Reports',
     lostFound: 'Lost & Found',
     dashboard: 'Dashboard',
     profile: 'Profile',
@@ -245,9 +246,9 @@ export default {
 
   // Reports
   report_lost_title: 'Report Lost Item',
-  report_lost_description: 'Fill out this form to report a lost item.',
+  report_lost_subtitle: 'Fill in the details below to file a lost item report.',
   report_found_title: 'Report Found Item',
-  report_found_description: 'Fill out this form to report a found item.',
+  report_found_subtitle: 'Fill in the details below to submit a found item report.',
   report_item_details: 'Item Details',
   report_location: 'Location',
   report_date: 'Date',
@@ -367,6 +368,15 @@ export default {
   success_report_created: 'Report created successfully',
   success_report_updated: 'Report updated successfully',
   success_report_deleted: 'Report deleted successfully',
+  
+  // Reports Structure
+  reports: {
+    reportLostItem: 'Report Lost Item',
+    reportFoundItem: 'Report Found Item',
+    successTitle: 'Report Submitted!',
+    successDescription: 'Your report has been filed successfully. We\'ll notify you of any matches.',
+    errorTitle: 'Submission Failed',
+  },
   
   // Landing Page - flat (for backward compatibility)
   'landing.nav.features': 'Features',
@@ -582,6 +592,7 @@ export default {
     complete_registration: 'Complete Registration',
     processing: 'Processing...',
     save_draft: 'Save Draft',
+    backToDashboard: 'Back to Dashboard',
   },
   
   // Auth

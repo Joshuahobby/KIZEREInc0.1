@@ -16,7 +16,9 @@ export default {
   edit: 'Modifier',
   delete: 'Supprimer',
   view: 'Voir',
-  search: 'Rechercher',
+  search: 'Rechercher des objets',
+  explore: 'Parcourir les rapports',
+  lostFound: 'Objets Perdus & Trouvés',
   filter: 'Filtrer',
   all: 'Tous',
   ok: 'OK',
@@ -159,6 +161,18 @@ export default {
   validation_password_match: 'Les mots de passe ne correspondent pas',
   validation_invalid_format: 'Format invalide',
   
+  // Reports
+  report_lost_title: 'Signaler un objet perdu',
+  report_lost_subtitle: 'Remplissez les détails ci-dessous pour signaler un objet perdu.',
+  report_found_title: 'Signaler un objet trouvé',
+  report_found_subtitle: 'Remplissez les détails ci-dessous pour signaler un objet trouvé.',
+  
+  reports: {
+    successTitle: 'Rapport soumis!',
+    successDescription: 'Votre rapport a été soumis avec succès. Nous vous informerons de toute correspondance.',
+    errorTitle: 'Échec de la soumission',
+  },
+
   // Landing Page
   'landing.nav.features': 'Caractéristiques',
   'landing.nav.howItWorks': 'Comment ça marche',
@@ -186,6 +200,11 @@ export default {
   'auth.login': 'Connexion',
   'auth.getStarted': 'Commencer',
   
+  // Common
+  common: {
+    backToDashboard: 'Retour au tableau de bord',
+  },
+
   // Misc
   copyright: '© {{year}} KIZERE. Tous droits réservés.',
 };

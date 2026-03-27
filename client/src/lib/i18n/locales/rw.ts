@@ -10,6 +10,8 @@ export const rw = {
   "delete": "Gusiba",
   "edit": "Guhindura",
   "search": "Gushakisha",
+  "explore": "Gushakisha Raporo",
+  "lostFound": "Ibyabuze & Ibyabonetse",
   "filter": "Gushungura",
   "back": "Gusubira inyuma",
   "next": "Komeza",
@@ -46,6 +48,17 @@ export const rw = {
   "auth_welcome_back": "Murakaza neza",
   "auth_create_account": "Kora konti",
   "auth_logout_confirm": "Urashaka gusohoka?",
+
+  // Reports
+  "report_lost_title": "Tanga Raporo y'Icyabuze",
+  "report_lost_subtitle": "Uzuza amakuru akurikira kugirango utange raporo y'icyabuze.",
+  "report_found_title": "Tanga Raporo y'Icyabonetse",
+  "report_found_subtitle": "Uzuza amakuru akurikira kugirango utange raporo y'icyabonetse.",
+  "reports": {
+    "successTitle": "Raporo Yahawe!",
+    "successDescription": "Raporo yawe yahawe neza. Tuzakumenyesha niba hari ibyayibonetse.",
+    "errorTitle": "Raporo Ntiyahawe",
+  },
 
   // Item Registration
   "item_register_title": "Kwandikisha ikintu",
@@ -142,4 +155,9 @@ export const rw = {
   "footer_terms": "Amabwiriza y'ikoreshwa",
   "footer_contact": "Twandikire",
   "footer_about": "Ibyerekeye",
+  
+  // Common
+  "common": {
+    "backToDashboard": "Gusubira ahavunga",
+  },
 };
