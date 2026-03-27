@@ -321,13 +321,13 @@ export function PaymentModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[440px] rounded-3xl p-6 overflow-hidden">
+      <DialogContent className="sm:max-w-[440px] rounded-3xl overflow-hidden payment-modal-content">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-xl font-bold tracking-tight">{getTitle()}</DialogTitle>
           {getDescription() && <DialogDescription className="text-sm">{getDescription()}</DialogDescription>}
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 w-full min-w-0">
           {/* Loading */}
           {step === "loading" && (
             <div className="flex flex-col items-center gap-3 py-8">
@@ -337,20 +337,22 @@ export function PaymentModal({
 
           {/* Package Selection */}
           {step === "package" && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <PaymentPackageSelector
                 paymentType={paymentDetails.type}
                 onSelectPackage={handlePackageSelect}
                 selectedPackageId={selectedPackage?.id}
               />
 
-              <Button
-                onClick={proceedToPhoneEntry}
-                disabled={!selectedPackage}
-                className="w-full h-11 rounded-xl"
-              >
-                Continue — {selectedPackage ? `${selectedPackage.amount.toLocaleString()} RWF` : "Select a plan"}
-              </Button>
+              <div className="payment-modal-inset">
+                <Button
+                  onClick={proceedToPhoneEntry}
+                  disabled={!selectedPackage}
+                  className="h-11 rounded-xl w-full"
+                >
+                  Continue — {selectedPackage ? `${selectedPackage.amount.toLocaleString()} RWF` : "Select a plan"}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -359,7 +361,8 @@ export function PaymentModal({
             <div className="space-y-5">
               {/* Payment summary card - Sleeker version */}
               {selectedPackage && resolvedAmount > 0 && (
-                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-border/50">
+                <div className="payment-modal-inset">
+                  <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-border/50">
                   <div className="space-y-2.5">
                     <div className="flex justify-between items-center text-xs">
                       <span className="text-muted-foreground font-medium">Processing Fee</span>
@@ -385,6 +388,7 @@ export function PaymentModal({
                       </div>
                     </div>
                   </div>
+                  </div>
                 </div>
               )}
 
@@ -399,7 +403,7 @@ export function PaymentModal({
               )}
 
               {/* Coupon input */}
-              <div className="space-y-2">
+              <div className="space-y-2 payment-modal-inset">
                 <div className="flex gap-2">
                   <div className="relative flex-1">
                     <Ticket className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -440,7 +444,7 @@ export function PaymentModal({
               </div>
 
               {/* Phone input */}
-              <div className="space-y-2">
+              <div className="space-y-2 payment-modal-inset">
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -455,20 +459,22 @@ export function PaymentModal({
                 </div>
               </div>
 
-              <Button
-                onClick={initiatePayment}
-                className="w-full h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20"
-                disabled={isInitializing || !phoneNumber.trim() || resolvedAmount <= 0}
-              >
-                {isInitializing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Sending...
-                  </>
-                ) : (
-                  `Pay ${resolvedAmount.toLocaleString()} RWF`
-                )}
-              </Button>
+              <div className="payment-modal-inset">
+                <Button
+                  onClick={initiatePayment}
+                  className="h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20 w-full"
+                  disabled={isInitializing || !phoneNumber.trim() || resolvedAmount <= 0}
+                >
+                  {isInitializing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    `Pay ${resolvedAmount.toLocaleString()} RWF`
+                  )}
+                </Button>
+              </div>
 
               {/* Back to package selection */}
               {packages && packages.length > 1 && (
