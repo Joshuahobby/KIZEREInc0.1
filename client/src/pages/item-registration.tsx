@@ -538,19 +538,19 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="max-w-lg w-full mx-auto bg-background rounded-3xl border border-border/50 shadow-2xl overflow-hidden"
+            className="max-w-lg w-full mx-auto bg-background/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-border/20 shadow-[0_32px_80px_-16px_rgba(0,0,0,0.35)] overflow-hidden"
           >
             {/* Success Header */}
-            <div className="bg-gradient-to-br from-primary via-primary/90 to-primary/80 p-8 text-center text-primary-foreground">
+            <div className="relative bg-gradient-to-br from-[#0db9f2] via-[#0099d4] to-[#006fa0] p-10 text-center text-white overflow-hidden">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4"
+                className="w-24 h-24 bg-white/15 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-6 ring-4 ring-white/20 shadow-xl"
               >
-                <Check className="h-10 w-10" />
+                <Check className="h-12 w-12" />
               </motion.div>
-              <h2 className="text-2xl font-bold mb-1">{t("registration.success.title")}</h2>
+              <h2 className="text-3xl font-black mb-2 tracking-tight">{t("registration.success.title")}</h2>
               <p
                 className="text-sm opacity-90 leading-relaxed"
                 dangerouslySetInnerHTML={{
@@ -562,8 +562,8 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
             {/* QR Code */}
             <div className="p-8 space-y-6">
               <div className="text-center space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t("registration.success.label_title")}</p>
-                <div className="bg-muted/30 p-6 rounded-2xl border border-dashed border-border/50 inline-block mx-auto">
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground">{t("registration.success.label_title")}</p>
+                <div className="bg-muted/10 p-6 rounded-3xl border border-border/10 inline-block mx-auto shadow-inner">
                   <QRCodeGenerator
                     itemIdentifier={registeredItemData?.uniqueIdentifier}
                     itemName={registeredItemData?.name}
@@ -582,12 +582,12 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                     itemName: registeredItemData?.name || 'My Item',
                     itemUrl: `${window.location.origin}/items/${registeredItemData?.id}`
                   })}
-                  className="h-12 rounded-2xl text-sm font-semibold w-full"
+                  className="h-14 rounded-2xl text-sm font-bold w-full uppercase tracking-widest shadow-premium"
                   size="lg"
                 />
                 <Button
                   onClick={() => setLocation("/dashboard")}
-                  className="h-14 rounded-2xl text-base font-bold shadow-lg shadow-primary/20"
+                  className="h-16 rounded-2xl text-base font-black shadow-xl shadow-primary/25 bg-primary uppercase tracking-[0.15em] transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   {t("registration.success.go_dashboard")}
                 </Button>
@@ -681,7 +681,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                         >
                           {/* Primary Item Name */}
                           <div className="space-y-3">
-                            <div className="flex items-center gap-3 mb-2">
+                            <div className="flex items-center gap-4">
                               <div className="h-9 w-9 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
                                 <Info className="h-5 w-5" />
                               </div>
@@ -865,24 +865,25 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           className="space-y-3"
                         >
                           {/* ──── OWNERSHIP VERIFICATION ──── */}
-                          <div className="space-y-6">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="h-9 w-9 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500">
-                                <Shield className="h-5 w-5" />
+                          <div className="bg-muted/5 border border-border/10 rounded-3xl p-6 sm:p-8 space-y-8">
+                            <div className="flex items-center gap-4">
+                              <div className="h-12 w-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shadow-sm shadow-emerald-500/10 transition-transform hover:rotate-6">
+                                <Shield className="h-6 w-6" />
                               </div>
                               <div>
-                                <h2 className="text-lg font-bold tracking-tight">Ownership Verification</h2>
+                                <h2 className="text-xl font-black tracking-tight uppercase">{t("registration.steps.verification")}</h2>
+                                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest opacity-60 mt-0.5">Secure Ownership Chain</p>
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-1 gap-4">
+                            <div className="grid grid-cols-1 gap-6">
                               {/* Unique Identifier */}
                               <FormField
                                 control={form.control}
                                 name="uniqueIdentifier"
                                 render={({ field }) => (
                                   <FormItem>
-                                    <FormLabel className="text-sm font-semibold flex items-center justify-between">
+                                    <FormLabel className="premium-label mb-3 flex items-center justify-between">
                                       <span className="flex items-center gap-1.5">
                                         {t("registration.fields.uuid_label")}
                                         <span className="text-primary text-xs">*</span>
@@ -903,17 +904,17 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                       <div className="relative group">
                                         <Input
                                           placeholder={t("registration.fields.uuid_placeholder")}
-                                          className="h-12 bg-muted/5 border-border/60 focus:border-primary/50 rounded-xl text-sm font-mono tracking-wide pr-32"
+                                          className="h-16 bg-background dark:bg-slate-950/40 border-border/30 shadow-none focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl text-lg font-black pr-36 tracking-[0.1em] transition-all"
                                           {...field}
                                           disabled={isEditMode}
                                         />
                                         <button
                                           type="button"
                                           onClick={() => (document.getElementById('smart-ai-trigger') as HTMLElement)?.click()}
-                                          className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200 text-xs font-bold"
+                                          className="absolute right-3 top-1/2 -translate-y-1/2 h-10 flex items-center gap-2 px-4 rounded-xl bg-primary text-primary-foreground hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 text-[10px] font-black uppercase"
                                           title="Detect item details automatically / Scan serial number"
                                         >
-                                          <Camera className="h-3.5 w-3.5" />
+                                          <Camera className="h-4 w-4" />
                                           {t("registration.actions.detect_id")}
                                         </button>
                                         <div className="hidden">
@@ -1134,22 +1135,22 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                           className="space-y-4"
                         >
                           {/* Review Summary */}
-                          <div className="bg-background/60 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+                          <div className="bg-muted/5 border border-border/10 rounded-3xl p-6 sm:p-8 shadow-none space-y-8">
                             <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 bg-violet-500/10 rounded-xl flex items-center justify-center text-violet-500">
+                              <div className="h-12 w-12 bg-violet-500/10 rounded-2xl flex items-center justify-center text-violet-500 shadow-sm shadow-violet-500/10">
                                 <Eye className="h-4 w-4" />
                               </div>
                               <div>
-                                <h2 className="text-lg font-bold tracking-tight">{t("registration.review.summary_title")}</h2>
-                                <p className="text-sm text-muted-foreground">Review your details before submitting</p>
+                                <h2 className="text-xl font-black tracking-tight uppercase">{t("registration.review.summary_title")}</h2>
+                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest opacity-60 mt-0.5">Review before submitting</p>
                               </div>
                             </div>
 
                             <div className="space-y-4">
                               {/* Item Name */}
-                              <div className="flex items-start justify-between p-3 bg-muted/10 rounded-xl">
+                              <div className="flex items-start justify-between p-4 bg-muted/10 rounded-2xl">
                                 <div>
-                                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">{t("registration.item_name")}</p>
+                                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1.5">{t("registration.item_name")}</p>
                                   <p className="text-base font-bold">{watchedName || "—"}</p>
                                 </div>
                                 <Button type="button" variant="ghost" size="sm" onClick={() => setCurrentStep(0)} className="text-xs text-primary">
@@ -1276,7 +1277,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
               </div>
               <div className="hidden lg:flex items-center gap-3">
                 {currentStep > 0 && (
-                  <Button type="button" variant="ghost" onClick={prevStep} className="h-12 px-5 rounded-xl text-sm font-semibold">
+                  <Button type="button" variant="ghost" onClick={prevStep} className="h-16 px-6 rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-muted/30 transition-all">
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     {t("common.back")}
                   </Button>
@@ -1287,12 +1288,12 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                   </span>
                 )}
                 {currentStep < maxSteps - 1 ? (
-                  <Button type="button" onClick={nextStep} disabled={currentStep === 0 ? !canProceedStep0 : !canProceedStep1} className="h-12 px-8 rounded-xl text-sm font-bold bg-[#0db9f2] hover:bg-[#0a94c2] text-white shadow-lg shadow-[#0db9f2]/20 transition-all group">
+                  <Button type="button" onClick={nextStep} disabled={currentStep === 0 ? !canProceedStep0 : !canProceedStep1} className="h-16 px-10 rounded-2xl text-sm font-black uppercase tracking-[0.15em] bg-[#0db9f2] hover:bg-[#0a94c2] text-white shadow-xl shadow-[#0db9f2]/20 hover:scale-[1.02] active:scale-[0.98] transition-all group">
                     {isEditMode ? t("registration.actions.review_changes") : t("registration.actions.review_submit")}
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 ) : (
-                  <Button type="submit" form="item-registration-form" disabled={completion < 30 || registerMutation.isPending} className="h-12 px-8 rounded-xl text-sm font-bold bg-[#0db9f2] hover:bg-[#0a94c2] text-white shadow-lg shadow-[#0db9f2]/20 transition-all">
+                  <Button type="submit" form="item-registration-form" disabled={completion < 30 || registerMutation.isPending} className="h-16 px-10 rounded-2xl text-sm font-black uppercase tracking-[0.15em] bg-[#0db9f2] hover:bg-[#0a94c2] text-white shadow-xl shadow-[#0db9f2]/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
                     {registerMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <>{isEditMode ? t("common.saveChanges") : t("common.complete_registration")}<ArrowRight className="ml-2 h-4 w-4" /></>}
                   </Button>
                 )}
