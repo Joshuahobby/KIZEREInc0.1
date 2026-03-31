@@ -182,9 +182,11 @@ export function setupSecurityMiddleware(app: Express) {
       "https://*.tile.openstreetmap.org", 
       "https://www.google-analytics.com", 
       "https://www.google.com", 
+      "https://*.google.com",
       "https://*.google.rw", 
       "https://stats.g.doubleclick.net",
-      "https://flagcdn.com"
+      "https://flagcdn.com",
+      "https://googleads.g.doubleclick.net"
     ],
     connectSrc: [
       "'self'",
@@ -210,9 +212,11 @@ export function setupSecurityMiddleware(app: Express) {
       "https://www.google-analytics.com",
       "https://*.google-analytics.com",
       "https://analytics.google.com",
+      "https://*.analytics.google.com",
       "https://www.googletagmanager.com",
       "https://*.googletagmanager.com",
       "https://stats.g.doubleclick.net",
+      "https://googleads.g.doubleclick.net",
       "https://*.google.rw",
       "https://www.google.rw"
     ],
