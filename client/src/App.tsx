@@ -92,6 +92,7 @@ const Notifications = lazyWithRetry(() => import("@/pages/notifications"));
 const NotFound = lazyWithRetry(() => import("@/pages/not-found"));
 const PublicSearch = lazyWithRetry(() => import("@/pages/public-search"));
 const CreateReport = lazyWithRetry(() => import("@/pages/create-report"));
+const PosTerminal = lazyWithRetry(() => import("@/pages/pos-terminal"));
 
 function App() {
   // Handle Firebase redirect result
@@ -210,6 +211,9 @@ function App() {
                   <ProtectedRoute path="/payment-history" component={PaymentHistory} requiredRole="any" />
                   <ProtectedRoute path="/wallet" component={WalletPage} requiredRole="any" />
                   <ProtectedRoute path="/payment-test" component={PaymentTest} requiredRole="any" />
+
+                  {/* POS Terminal route */}
+                  <ProtectedRoute path="/pos" component={PosTerminal} requiredRole={['Retailer', 'Admin']} />
 
                   {/* Admin routes - Consolidated to UnifiedDashboard */}
                   <ProtectedRoute path="/admin" component={UnifiedDashboard} requiredRole="Admin" />

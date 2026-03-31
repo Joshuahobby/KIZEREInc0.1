@@ -6,7 +6,7 @@ import { User } from "@shared/schema";
 import { AuthService } from "@/services/auth.service";
 
 // Type for role requirements
-type RoleRequirement = 'Admin' | 'Agent' | 'Subscriber' | 'any';
+type RoleRequirement = string | string[] | 'any';
 
 // Helper component for loading with accessibility
 const LoadingComponent = () => (
@@ -30,6 +30,7 @@ const UnauthorizedComponent = () => (
 // Helper function to check if the user has the required role
 const hasRequiredRole = (user: Omit<User, "password">, requiredRole: RoleRequirement): boolean => {
   if (requiredRole === 'any') return true;
+  if (Array.isArray(requiredRole)) return requiredRole.includes(user.role);
   return user.role === requiredRole;
 };
 

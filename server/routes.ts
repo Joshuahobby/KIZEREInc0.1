@@ -79,6 +79,7 @@ import couponRoutes from './routes/coupon.routes';
 import consentRoutes from './routes/consent.routes';
 import dataRightsRoutes from './routes/data-rights.routes';
 import agentRoutes from './routes/agent.routes';
+import posRoutes from './routes/pos.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -90,6 +91,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/admin/jobs', requireAdmin, adminJobsRoutes);
   app.use('/api/admin/roles', requireAdmin, rolesRoutes);
   app.use('/api/admin/audit-logs', requireAdmin, auditRoutes);
+
+  // POS routes (handles its own auth: API key for POS, session for admin)
+  app.use('/api/pos', posRoutes);
 
   // Public/Semi-public routes
   app.get('/robots.txt', (req, res) => {

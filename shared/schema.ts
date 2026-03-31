@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Define allowed user roles
-export const userRoles = ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business'] as const;
+export const userRoles = ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business', 'Retailer'] as const;
 
 // Define account statuses
 export const accountStatuses = ['active', 'pending', 'suspended', 'inactive', 'banned'] as const;
@@ -50,6 +50,12 @@ export const packageStatuses = ['active', 'inactive', 'archived'] as const;
 export const couponTypes = ['percentage', 'fixed'] as const;
 export const couponApplicableTypes = ['registration', 'lost_report', 'all'] as const;
 export const couponStatuses = ['active', 'inactive'] as const;
+
+// POS feature enums
+export const retailerStatuses = ['active', 'suspended', 'inactive'] as const;
+export const posProductStatuses = ['registered', 'transferred', 'stolen', 'archived'] as const;
+export const ownershipEventTypes = ['sale', 'transfer', 'stolen_report', 'recovery'] as const;
+export const retailerSubscriptionPlans = ['basic', 'standard', 'premium', 'enterprise'] as const;
 
 // Define claim statuses
 export const claimStatuses = ['pending', 'verified', 'rejected', 'resolved'] as const;
@@ -101,6 +107,7 @@ export const users = pgTable("users", {
   fullName: text("full_name").notNull(),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
+  nationalId: text("national_id").unique(),
   password: text("password").notNull(),
   phoneNumber: text("phone_number"),
   role: text("role").notNull().default('Subscriber'),
@@ -831,6 +838,97 @@ export const insertVerificationCodeSchema = createInsertSchema(verificationCodes
 
 
 
+// ===================== Retailer POS Tables =====================
+
+// Retailers table
+export const retailers = pgTable("retailers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  address: text("address"),
+  apiKey: text("api_key").notNull().unique(),
+  subscriptionPlan: text("subscription_plan").notNull().default('basic'),
+  status: text("status").notNull().default('active'),
+  userId: integer("user_id").notNull().references(() => users.id),
+  logoUrl: text("logo_url"),
+  metadata: json("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("retailer_api_key_idx").on(table.apiKey),
+  index("retailer_user_idx").on(table.userId),
+  index("retailer_status_idx").on(table.status)
+]);
+
+// POS Products table
+export const posProducts = pgTable("pos_products", {
+  id: serial("id").primaryKey(),
+  sku: text("sku"),
+  serialNumber: text("serial_number").notNull().unique(),
+  name: text("name").notNull(),
+  category: text("category").notNull().default('Other'),
+  retailerId: integer("retailer_id").notNull().references(() => retailers.id),
+  currentOwnerId: integer("current_owner_id").notNull().references(() => users.id),
+  registrationDate: timestamp("registration_date").defaultNow().notNull(),
+  status: text("status").notNull().default('registered'),
+  metadata: json("metadata"),
+}, (table) => [
+  uniqueIndex("pos_product_serial_idx").on(table.serialNumber),
+  index("pos_product_sku_idx").on(table.sku),
+  index("pos_product_retailer_idx").on(table.retailerId),
+  index("pos_product_owner_idx").on(table.currentOwnerId),
+  index("pos_product_status_idx").on(table.status)
+]);
+
+// Ownership Ledger — immutable audit trail
+export const ownershipLedger = pgTable("ownership_ledger", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull().references(() => posProducts.id),
+  fromUserId: integer("from_user_id").references(() => users.id),
+  toUserId: integer("to_user_id").notNull().references(() => users.id),
+  registeredBy: integer("registered_by").notNull().references(() => retailers.id),
+  event: text("event").notNull().default('sale'),
+  notes: text("notes"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => [
+  index("ledger_product_idx").on(table.productId),
+  index("ledger_to_user_idx").on(table.toUserId),
+  index("ledger_event_idx").on(table.event),
+  index("ledger_timestamp_idx").on(table.timestamp)
+]);
+
+// Zod schemas for POS tables
+export const insertRetailerSchema = createInsertSchema(retailers).omit({
+  id: true, createdAt: true, updatedAt: true, apiKey: true
+}).extend({
+  name: z.string().min(2, "Retailer name must be at least 2 characters"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  subscriptionPlan: z.enum(retailerSubscriptionPlans).default('basic'),
+  status: z.enum(retailerStatuses).default('active'),
+  logoUrl: z.string().url().optional().nullable(),
+  metadata: z.record(z.any()).optional(),
+});
+
+export const insertPosProductSchema = createInsertSchema(posProducts).omit({
+  id: true, registrationDate: true
+}).extend({
+  serialNumber: z.string().min(3, "Serial number must be at least 3 characters"),
+  name: z.string().min(2, "Product name is required"),
+  category: z.string().default('Other'),
+  status: z.enum(posProductStatuses).default('registered'),
+  metadata: z.record(z.any()).optional(),
+});
+
+export const insertOwnershipLedgerSchema = createInsertSchema(ownershipLedger).omit({
+  id: true, timestamp: true
+}).extend({
+  event: z.enum(ownershipEventTypes).default('sale'),
+  notes: z.string().optional(),
+});
+
 // Types and Schemas Exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertItem = z.infer<typeof insertItemSchema>;
@@ -887,6 +985,16 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type Coupon = typeof coupons.$inferSelect;
 export type BlogPost = typeof blogPosts.$inferSelect;
+export type Retailer = typeof retailers.$inferSelect;
+export type PosProduct = typeof posProducts.$inferSelect;
+export type OwnershipLedgerEntry = typeof ownershipLedger.$inferSelect;
+export type InsertRetailer = z.infer<typeof insertRetailerSchema>;
+export type InsertPosProduct = z.infer<typeof insertPosProductSchema>;
+export type InsertOwnershipLedger = z.infer<typeof insertOwnershipLedgerSchema>;
+export type RetailerStatus = typeof retailerStatuses[number];
+export type PosProductStatus = typeof posProductStatuses[number];
+export type OwnershipEventType = typeof ownershipEventTypes[number];
+export type RetailerSubscriptionPlan = typeof retailerSubscriptionPlans[number];
 export type TwoFactorMethod = 'sms' | 'email' | 'both';
 
 export type UserLogin = z.infer<typeof userLoginSchema>;

@@ -28,7 +28,7 @@ interface LanguageContextType {
   language: Language;
   translations: Record<Language, any>;
   setLanguage: (language: Language) => void;
-  t: (key: string, optionsOrDefault?: Record<string, any> | string, defaultValue?: string) => string;
+  t: (key: string, optionsOrDefault?: Record<string, any> | string, optionsOrDefault2?: Record<string, any> | string) => string;
   getLanguages: () => { code: Language; name: string }[];
 }
 
@@ -36,7 +36,7 @@ const LanguageContext = React.createContext<LanguageContextType>({
   language: DEFAULT_LANGUAGE,
   translations: { [DEFAULT_LANGUAGE]: en } as any,
   setLanguage: () => { },
-  t: (key: string, optionsOrDefault?: Record<string, any> | string, defaultValue?: string) => {
+  t: (key: string, optionsOrDefault?: Record<string, any> | string, optionsOrDefault2?: Record<string, any> | string) => {
     return typeof optionsOrDefault === 'string' ? optionsOrDefault : key;
   },
   getLanguages: () => [],
@@ -96,13 +96,22 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
   }, [language]);
 
   // Translation function
-  const t = (key: string, optionsOrDefault?: Record<string, any> | string, defaultValue?: string): string => {
+  const t = (key: string, optionsOrDefault?: Record<string, any> | string, optionsOrDefault2?: Record<string, any> | string): string => {
     // Split the key by periods to traverse the translations object
     const keys = key.split(".");
 
-    // Determine if second arg is options or a default value string
-    const options = typeof optionsOrDefault === 'object' ? optionsOrDefault : undefined;
-    const finalDefaultValue = typeof optionsOrDefault === 'string' ? optionsOrDefault : defaultValue;
+    // Determine arguments: handle (key, options), (key, defaultValue), or (key, defaultValue, options)
+    let options: Record<string, any> | undefined;
+    let finalDefaultValue: string | undefined;
+
+    if (typeof optionsOrDefault === 'string') {
+      finalDefaultValue = optionsOrDefault;
+      if (typeof optionsOrDefault2 === 'object') {
+        options = optionsOrDefault2;
+      }
+    } else if (typeof optionsOrDefault === 'object') {
+      options = optionsOrDefault as Record<string, any>;
+    }
 
     // Helper to solve JSON default export issue in some environments
     const getRoot = (obj: any) => (obj && (obj.__esModule || obj.default)) ? (obj.default || obj) : obj;
