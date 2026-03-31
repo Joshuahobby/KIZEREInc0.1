@@ -58,6 +58,11 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       ...(options.attachments?.length ? { attachments: options.attachments } : {}),
     });
 
+    if (result.error) {
+      logger.error('Failed to send email via Resend API', { error: result.error, to: options.to });
+      return false;
+    }
+
     logger.info('Email sent successfully', { id: result.data?.id });
     return true;
   } catch (error) {
