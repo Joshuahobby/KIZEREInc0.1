@@ -1870,21 +1870,23 @@
   "searchFilters": {
     "searchTerm": "Search Term",
     "searchPlaceholder": "Keyword, Serial Number...",
-    "type": "Type",
-    "allTypes": "All",
+    "filterTitle": "Filter Results",
+    "type": "Report Type",
+    "allTypes": "All Types",
     "lost": "Lost",
     "found": "Found",
     "category": "Category",
+    "categories": "Item Categories",
     "allCategories": "All Categories",
     "selected": "Selected",
     "dateRange": "Date Range",
     "pickDate": "Pick a date",
     "sortBy": "Sort By",
-    "newest": "Newest First",
-    "oldest": "Oldest First",
+    "newest": "Newest",
+    "oldest": "Oldest",
     "mostRelevant": "Most Relevant",
     "apply": "Apply",
-    "clearAll": "Clear all filters"
+    "clearAll": "Reset All Filters"
   },
   "searchPage": {
     "title": "Search & Discovery",

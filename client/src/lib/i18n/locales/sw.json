@@ -706,5 +706,30 @@
     "vision_text": "Tunatarajia Rwanda ambapo wizi hautakuwepo kwa sababu kila kitu kinalindwa. Jiunge na maelfu ya watumiaji wanaojenga jamii salama na yenye uwazi zaidi ambapo chako kinabaki kuwa chako.",
     "story": "Zaidi ya Daftari Tu",
     "story_text": "KIZERE ilizaliwa kutokana na utambuzi rahisi: kupoteza kitu muhimu si kuhusu pesa tu—ni kuhusu uhusiano. Tulijenga jukwaa hili ili kubadilisha wasiwasi wa kupoteza kuwa ujasiri wa kupata."
+  },
+  "searchFilters": {
+    "searchTerm": "Neno la Utafutaji",
+    "searchPlaceholder": "Neno kuu, Nambari ya siri...",
+    "filterTitle": "Chuja Matokeo",
+    "type": "Aina ya Ripoti",
+    "allTypes": "Aina Zote",
+    "all": "Yote",
+    "lost": "Iliyopotea",
+    "found": "Iliyopatikana",
+    "category": "Kategoria",
+    "categories": "Mada za Vitu",
+    "allCategories": "Mada Zote",
+    "selected": "zilizochaguliwa",
+    "location": "Eneo",
+    "locationPlaceholder": "Mji, Wilaya...",
+    "dateRange": "Kipindi cha Tarehe",
+    "pickDate": "Chagua tarehe",
+    "sortBy": "Panga kwa",
+    "newest": "Mpya zaidi",
+    "oldest": "Ya zamani",
+    "mostRelevant": "Sahihi zaidi",
+    "apply": "Tumia",
+    "clear": "Futa",
+    "clearAll": "Futa Vichungi Vyote"
   }
 }

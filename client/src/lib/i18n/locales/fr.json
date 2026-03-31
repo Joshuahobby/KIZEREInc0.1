@@ -856,5 +856,30 @@
     "gotIt": "Compris",
     "stepOf": "Étape {{current}} sur {{total}}",
     "replay": "Revoir les instructions"
+  },
+  "searchFilters": {
+    "searchTerm": "Terme de recherche",
+    "searchPlaceholder": "Mot-clé, numéro de série...",
+    "filterTitle": "Filtrer les résultats",
+    "type": "Type de rapport",
+    "allTypes": "Tous les types",
+    "all": "Tout",
+    "lost": "Perdu",
+    "found": "Trouvé",
+    "category": "Catégorie",
+    "categories": "Catégories d'articles",
+    "allCategories": "Toutes les catégories",
+    "selected": "sélectionné(s)",
+    "location": "Lieu",
+    "locationPlaceholder": "Ville, Quartier...",
+    "dateRange": "Plage de dates",
+    "pickDate": "Sélectionner une date",
+    "sortBy": "Trier par",
+    "newest": "Le plus récent",
+    "oldest": "Le plus ancien",
+    "mostRelevant": "Le plus pertinent",
+    "apply": "Appliquer",
+    "clear": "Effacer",
+    "clearAll": "Réinitialiser les filtres"
   }
 }

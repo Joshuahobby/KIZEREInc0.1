@@ -51,7 +51,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
     }, [initialFilters]);
 
     const categories = [
-        "Electronics", "Documents", "Jewelry", "Clothing", "Keys", "Other"
+        "electronics", "documents", "jewelry", "clothing", "keys", "other"
     ];
 
     const statuses = ["Open", "In_Progress", "Resolved", "Closed"];
@@ -176,7 +176,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
                                                     )}
                                                     onClick={() => toggleCategory(c)}
                                                 >
-                                                    <span className="text-sm font-black uppercase tracking-tight">{c}</span>
+                                                    <span className="text-sm font-black uppercase tracking-tight">{t(`item_category_${c}`)}</span>
                                                     <Checkbox
                                                         checked={category.includes(c)}
                                                         className="h-5 w-5 border-border/20 data-[state=checked]:bg-primary"
@@ -245,7 +245,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
                                     <Button variant="outline" className="w-full bg-card/60 border-border/10 rounded-xl h-14 shadow-sm transition-all text-xs font-black uppercase tracking-widest px-4 justify-between">
                                         <span className="truncate">
                                             {category.length === 0 ? t('searchFilters.allCategories') :
-                                                category.length === 1 ? category[0] :
+                                                category.length === 1 ? t(`item_category_${category[0]}`) :
                                                     `${category.length} ${t('searchFilters.selected')}`}
                                         </span>
                                         <Filter className="ml-1.5 h-3.5 w-3.5 opacity-50 shrink-0 text-primary" />
@@ -262,7 +262,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
                                                     className="rounded-md border-border/50 data-[state=checked]:bg-primary"
                                                 />
                                                 <label htmlFor={`cat-h-${c}`} className="text-xs font-black uppercase tracking-wide leading-none cursor-pointer group-hover:text-primary transition-colors">
-                                                    {c}
+                                                    {t(`item_category_${c}`)}
                                                 </label>
                                             </div>
                                         ))}
@@ -302,18 +302,18 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
         <div className="bg-card p-4 rounded-lg border shadow-sm space-y-4">
             <div className="flex items-center justify-between">
                 <h3 className="font-semibold flex items-center gap-2">
-                    <Filter className="w-4 h-4" /> Filters
+                    <Filter className="w-4 h-4" /> {t('searchFilters.filterTitle') || "Filters"}
                 </h3>
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-neutral-500">
-                    <X className="w-3 h-3 mr-1" /> Clear
+                    <X className="w-3 h-3 mr-1" /> {t('searchFilters.clear') || "Clear"}
                 </Button>
             </div>
 
             {/* Main Search */}
             <div className="space-y-2">
-                <Label>Search Term</Label>
+                <Label>{t('searchFilters.searchTerm') || "Search Term"}</Label>
                 <Input
-                    placeholder="Keyword, Serial Number..."
+                    placeholder={t('searchFilters.searchPlaceholder') || "Keyword, Serial Number..."}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -321,24 +321,24 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
 
             {/* Type */}
             <div className="space-y-2">
-                <Label>Type</Label>
+                <Label>{t('searchFilters.type') || "Type"}</Label>
                 <Select value={type} onValueChange={setType}>
                     <SelectTrigger>
-                        <SelectValue placeholder="All Types" />
+                        <SelectValue placeholder={t('searchFilters.allTypes') || "All Types"} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="lost">Lost</SelectItem>
-                        <SelectItem value="found">Found</SelectItem>
+                        <SelectItem value="all">{t('searchFilters.all') || "All"}</SelectItem>
+                        <SelectItem value="lost">{t('searchFilters.lost') || "Lost"}</SelectItem>
+                        <SelectItem value="found">{t('searchFilters.found') || "Found"}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
 
             {/* Location */}
             <div className="space-y-2">
-                <Label>Location</Label>
+                <Label>{t('searchFilters.location') || "Location"}</Label>
                 <Input
-                    placeholder="City, District..."
+                    placeholder={t('searchFilters.locationPlaceholder') || "City, District..."}
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                 />
@@ -346,7 +346,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
 
             {/* Category (Multi-select simulation) */}
             <div className="space-y-2">
-                <Label>Categories</Label>
+                <Label>{t('searchFilters.categories') || "Categories"}</Label>
                 <div className="flex flex-wrap gap-2">
                     {categories.map(c => (
                         <div key={c} className="flex items-center space-x-2">
@@ -356,7 +356,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
                                 onCheckedChange={() => toggleCategory(c)}
                             />
                             <label htmlFor={`cat-${c}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                {c}
+                                {t(`item_category_${c}`)}
                             </label>
                         </div>
                     ))}
@@ -365,7 +365,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
 
             {/* Date Range */}
             <div className="space-y-2">
-                <Label>Date Range</Label>
+                <Label>{t('searchFilters.dateRange') || "Date Range"}</Label>
                 <Popover>
                     <PopoverTrigger asChild>
                         <Button
@@ -386,7 +386,7 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
                                     format(dateRange.from, "LLL dd, y")
                                 )
                             ) : (
-                                <span>Pick a date</span>
+                                <span>{t('searchFilters.pickDate') || "Pick a date"}</span>
                             )}
                         </Button>
                     </PopoverTrigger>
