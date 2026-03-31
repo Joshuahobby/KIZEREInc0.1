@@ -1,6 +1,6 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { requireRetailerApiKey } from "../middleware/retailer-auth.middleware";
-import { requireRole, requireAdmin } from "../middleware/auth.middleware";
+import { requireAuth, requireRole, requireAdmin } from "../middleware/auth.middleware";
 import {
   checkOrCreateCustomer,
   registerProduct,
@@ -13,8 +13,8 @@ import {
   getProductHistory,
   getRetailerProducts,
   getOwnerProducts,
+  getRetailerByUserId,
 } from "../services/pos.service";
-import { insertPosProductSchema } from "@shared/schema";
 import { createLogger } from "../utils/logger";
 import { z } from "zod";
 
@@ -22,17 +22,60 @@ const logger = createLogger("PosRoutes");
 const router = Router();
 
 // ═══════════════════════════════════════════════════════════
-// POS TERMINAL ENDPOINTS (Retailer API Key auth)
+// DUAL AUTH MIDDLEWARE
+// Accepts either session auth (logged-in Retailer/Admin) OR API key (external POS)
+// Attaches retailer to req.retailer for downstream handlers
+// ═══════════════════════════════════════════════════════════
+
+async function posAuthMiddleware(req: Request, res: Response, next: NextFunction) {
+  const apiKey = req.headers["x-api-key"] as string | undefined;
+
+  if (apiKey) {
+    // API key auth path (external POS systems)
+    return requireRetailerApiKey(req, res, next);
+  }
+
+  // Session auth path (web UI)
+  if (!req.isAuthenticated?.()) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  const user = (req as any).user;
+  const allowedRoles = ["Retailer", "Admin"];
+  if (!allowedRoles.includes(user.role)) {
+    return res.status(403).json({ message: "POS access requires Retailer or Admin role" });
+  }
+
+  // Look up the retailer record for this user
+  try {
+    const retailer = await getRetailerByUserId(user.id);
+    if (!retailer) {
+      return res.status(403).json({
+        message: "No retailer profile found. Contact an admin to set up your POS access.",
+      });
+    }
+    if (retailer.status !== "active") {
+      return res.status(403).json({ message: "Retailer account is not active" });
+    }
+    (req as any).retailer = retailer;
+    next();
+  } catch (error: any) {
+    logger.error("POS session auth error", { error: error.message });
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// POS TERMINAL ENDPOINTS (Dual auth: session or API key)
 // ═══════════════════════════════════════════════════════════
 
 /**
  * POST /api/pos/check-or-create
  * Looks up customer by NID or creates stub account instantly.
- * Auth: Retailer API Key
  */
 router.post(
   "/check-or-create",
-  requireRetailerApiKey,
+  posAuthMiddleware,
   async (req: Request, res: Response) => {
     try {
       const schema = z.object({
@@ -75,11 +118,10 @@ router.post(
 /**
  * POST /api/pos/register
  * Register a new product and assign ownership.
- * Auth: Retailer API Key
  */
 router.post(
   "/register",
-  requireRetailerApiKey,
+  posAuthMiddleware,
   async (req: Request, res: Response) => {
     try {
       const schema = z.object({
@@ -123,11 +165,10 @@ router.post(
 /**
  * POST /api/pos/transfer
  * Transfer product ownership to a new customer.
- * Auth: Retailer API Key
  */
 router.post(
   "/transfer",
-  requireRetailerApiKey,
+  posAuthMiddleware,
   async (req: Request, res: Response) => {
     try {
       const schema = z.object({
@@ -165,11 +206,10 @@ router.post(
 /**
  * GET /api/pos/products/:productId/history
  * Get ownership history for a product.
- * Auth: Retailer API Key
  */
 router.get(
   "/products/:productId/history",
-  requireRetailerApiKey,
+  posAuthMiddleware,
   async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.productId, 10);
@@ -186,8 +226,27 @@ router.get(
   }
 );
 
+/**
+ * GET /api/pos/my-products
+ * Get products registered by the current retailer.
+ */
+router.get(
+  "/my-products",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const products = await getRetailerProducts(retailer.id);
+      res.json({ success: true, products });
+    } catch (error: any) {
+      logger.error("getRetailerProducts failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
 // ═══════════════════════════════════════════════════════════
-// ADMIN RETAILER MANAGEMENT ENDPOINTS (Session auth)
+// ADMIN RETAILER MANAGEMENT ENDPOINTS (Session auth - Admin only)
 // ═══════════════════════════════════════════════════════════
 
 /**
@@ -281,7 +340,7 @@ router.patch(
       res.json({ success: true, retailer: updated });
     } catch (error: any) {
       logger.error("updateRetailer failed", { error: error.message });
-      res.status(500).json({ message: error.message || "Internal server error" });
+      res.status(500).json({ message: "Internal server error" });
     }
   }
 );
@@ -303,7 +362,7 @@ router.post(
       res.json({ success: true, retailer: updated });
     } catch (error: any) {
       logger.error("regenerateApiKey failed", { error: error.message });
-      res.status(500).json({ message: error.message || "Internal server error" });
+      res.status(500).json({ message: "Internal server error" });
     }
   }
 );

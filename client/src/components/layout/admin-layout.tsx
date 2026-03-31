@@ -43,7 +43,8 @@ import {
   Briefcase,
   Ticket,
   ShieldCheck,
-  CheckCircle2
+  CheckCircle2,
+  Store
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -159,6 +160,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
   // Check roles
   const isAdmin = user?.role === "Admin";
   const isAgent = user?.role === "Agent" || user?.role === "Moderator";
+  const isRetailer = user?.role === "Retailer";
   const isSubscriber = user?.role === "Subscriber" || user?.role === "Business";
 
   // Get current dashboard path dynamically based on role and preference
@@ -223,10 +225,19 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
       categories.push({ title: "FIELD OPERATIONS", items: fieldItems });
     }
 
+    // POS Category (Retailer/Admin)
+    if (isRetailer || isAdmin) {
+      const posItems: NavItem[] = [
+        { title: "POS Terminal", href: "/pos", icon: <Store className="h-5 w-5" /> },
+      ];
+      categories.push({ title: "POS", items: posItems });
+    }
+
     // ADMINISTRATION Category (Admin Only)
     if (isAdmin) {
       const adminItems: NavItem[] = [
         { title: "Command Center", href: "/admin/command-center", icon: <Database className="h-5 w-5" /> },
+        { title: "Retailers", href: "/admin/retailers", icon: <Store className="h-5 w-5" /> },
         { title: "Offer Codes", href: "/admin/coupons", icon: <Ticket className="h-5 w-5" /> },
         { title: "Analytics", href: "/admin/analytics", icon: <BarChart3 className="h-5 w-5" /> },
         { title: "Settings", href: "/admin/settings", icon: <Settings className="h-5 w-5" /> }

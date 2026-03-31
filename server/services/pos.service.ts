@@ -281,6 +281,18 @@ export async function getRetailerById(id: number) {
 }
 
 /**
+ * Get a retailer by linked user ID.
+ */
+export async function getRetailerByUserId(userId: number) {
+  const [retailer] = await db
+    .select()
+    .from(retailers)
+    .where(eq(retailers.userId, userId))
+    .limit(1);
+  return retailer;
+}
+
+/**
  * Update retailer details.
  */
 export async function updateRetailer(

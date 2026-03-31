@@ -3,6 +3,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,6 +19,7 @@ import {
   Smartphone,
   Store,
   Printer,
+  LayoutDashboard,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -240,9 +242,17 @@ export default function PosTerminal() {
               <p className="text-xs text-slate-400">{t("pos.subtitle", "Retailer Terminal")}</p>
             </div>
           </div>
-          <div className="text-right text-xs text-slate-400">
-            <div className="font-medium text-white">{user?.fullName}</div>
-            <div>{new Date().toLocaleDateString()}</div>
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard">
+              <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-sm font-medium">
+                <LayoutDashboard className="w-4 h-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </button>
+            </Link>
+            <div className="text-right text-xs text-slate-400">
+              <div className="font-medium text-white">{user?.fullName}</div>
+              <div>{new Date().toLocaleDateString()}</div>
+            </div>
           </div>
         </div>
       </header>
