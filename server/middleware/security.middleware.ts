@@ -184,6 +184,8 @@ export function setupSecurityMiddleware(app: Express) {
       "https://www.google.com", 
       "https://*.google.com",
       "https://*.google.rw", 
+      "https://*.google.ro",
+      "https://www.google.ro",
       "https://stats.g.doubleclick.net",
       "https://flagcdn.com",
       "https://googleads.g.doubleclick.net"
@@ -218,7 +220,9 @@ export function setupSecurityMiddleware(app: Express) {
       "https://stats.g.doubleclick.net",
       "https://googleads.g.doubleclick.net",
       "https://*.google.rw",
-      "https://www.google.rw"
+      "https://www.google.rw",
+      "https://*.google.ro",
+      "https://www.google.ro"
     ],
     frameSrc: ["'self'", "https://*.firebaseapp.com", "https://accounts.google.com", "https://replit.com", "https://*.replit.com"],
     workerSrc: ["'self'", "blob:", "https://cdn.jsdelivr.net"],
