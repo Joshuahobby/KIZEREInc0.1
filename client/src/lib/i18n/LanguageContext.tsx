@@ -121,15 +121,14 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     };
 
     // Get the current language's translations
-    // Always use the live imported 'en' object for English to ensure React Fast Refresh (HMR) 
-    // picks up JSON changes without requiring a full page reload or state reset.
     const currentLangObj = language === 'en' ? en : translations[language];
     let value = traverse(currentLangObj, keys);
 
-    // If translation not found in current language, try in default language
-    if (value === undefined && language !== DEFAULT_LANGUAGE) {
-      console.log(`[LanguageContext] Key "${key}" not found in "${language}", trying fallback to "${DEFAULT_LANGUAGE}"`);
-      const defaultLangObj = translations[DEFAULT_LANGUAGE] || en;
+    // If translation not found in current language, try in default language (en)
+    if (value === undefined && language !== 'en') {
+      // If we are currently loading the bundle for this language, we might want to wait
+      // but since t() is synchronous, we'll try the English fallback instead.
+      const defaultLangObj = en;
       value = traverse(defaultLangObj, keys);
     }
 
@@ -137,7 +136,10 @@ export const LanguageProvider: React.FC<LanguageProviderProps> = ({
     if (value === undefined) {
       if (finalDefaultValue) return finalDefaultValue;
 
-      console.warn(`[LanguageContext] Translation key not found: "${key}" (Language: ${language})`);
+      // Only warn if we are not in the middle of loading a bundle
+      if (language === 'en' || translations[language]) {
+        console.warn(`[LanguageContext] Translation key not found: "${key}" (Language: ${language})`);
+      }
       return key;
     }
 

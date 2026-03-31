@@ -14,15 +14,16 @@ import { emitToUser } from '../websocket';
 const logger = createLogger('AdminRoutes');
 const router = Router();
 
-// Protect all admin routes
-router.use(requireAdmin);
+// All admin routes in this file are handled by base authentication in routes.ts
+// which allows Admin, Agent, and Moderator roles for general viewing.
+// Sensitive write/delete operations are further restricted by requireAdmin.
 
 // ==========================================
 // USER MANAGEMENT
 // ==========================================
 
-// Get filtered users with pagination
-router.get("/users", async (req, res) => {
+// Get filtered users with pagination - Admin Only
+router.get("/users", requireAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 10;
@@ -93,8 +94,8 @@ router.get("/users/export", requireAdmin, async (req, res) => {
   }
 });
 
-// Get user by ID
-router.get("/users/:id", async (req, res) => {
+// Get user by ID - Admin Only
+router.get("/users/:id", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const user = await storage.getUser(userId);
@@ -163,8 +164,8 @@ router.patch("/users/:id/role", requireAdmin, async (req, res) => {
   }
 });
 
-// Get user activity, status history, and warnings (consolidated)
-router.get("/users/:id/activity", async (req, res) => {
+// Get user activity, status history, and warnings - Admin Only
+router.get("/users/:id/activity", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const page = parseInt(req.query.page as string) || 1;
@@ -177,7 +178,7 @@ router.get("/users/:id/activity", async (req, res) => {
   }
 });
 
-router.get("/users/:id/status-history", async (req, res) => {
+router.get("/users/:id/status-history", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const history = await storage.getUserStatusHistory(userId);
@@ -187,7 +188,7 @@ router.get("/users/:id/status-history", async (req, res) => {
   }
 });
 
-router.get("/users/:id/warnings", async (req, res) => {
+router.get("/users/:id/warnings", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const warnings = await storage.getUserWarnings(userId);
@@ -197,8 +198,8 @@ router.get("/users/:id/warnings", async (req, res) => {
   }
 });
 
-// Get user payments
-router.get("/users/:id/payments", async (req, res) => {
+// Get user payments - Admin Only
+router.get("/users/:id/payments", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const payments = await storage.getUserPayments(userId);
@@ -302,8 +303,8 @@ router.get("/users/tabs/:tab", requireAdmin, async (req, res) => {
   }
 });
 
-// Get user verification requests
-router.get("/users/:id/verification-requests", async (req, res) => {
+// Get user verification requests - Admin Only
+router.get("/users/:id/verification-requests", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const request = await storage.getVerificationRequest(userId);
@@ -325,8 +326,8 @@ router.get("/users/:id/verification-requests", async (req, res) => {
   }
 });
 
-// Create user warning
-router.post("/users/:id/warnings", async (req, res) => {
+// Create user warning - Admin Only
+router.post("/users/:id/warnings", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
     const { warningType, severity, message } = req.body;
@@ -364,8 +365,8 @@ router.post("/users/:id/warnings", async (req, res) => {
   }
 });
 
-// Create new user (Admin version)
-router.post("/users", async (req, res) => {
+// Create new user (Admin version) - Admin Only
+router.post("/users", requireAdmin, async (req, res) => {
   try {
     const { fullName, email, username, password, role, phoneNumber, status, verificationStatus } = req.body;
     const adminId = req.user!.id;
@@ -409,7 +410,7 @@ router.post("/users", async (req, res) => {
 // VERIFICATION REQUESTS
 // ==========================================
 
-router.get("/verification-requests", async (req, res) => {
+router.get("/verification-requests", requireAdmin, async (req, res) => {
   try {
     const requests = await storage.getPendingVerificationRequests();
     
@@ -426,7 +427,7 @@ router.get("/verification-requests", async (req, res) => {
   }
 });
 
-router.get("/verification-requests/:id", async (req, res) => {
+router.get("/verification-requests/:id", requireAdmin, async (req, res) => {
   try {
     const request = await storage.getVerificationRequest(parseInt(req.params.id));
     if (!request) return res.status(404).json({ message: "Request not found" });
@@ -444,7 +445,7 @@ router.get("/verification-requests/:id", async (req, res) => {
   }
 });
 
-router.get("/verification-requests/user/:userId", async (req, res) => {
+router.get("/verification-requests/user/:userId", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.userId);
     const request = await storage.getVerificationRequest(userId);
@@ -466,7 +467,7 @@ router.get("/verification-requests/user/:userId", async (req, res) => {
   }
 });
 
-router.patch("/verification-requests/:id", async (req, res) => {
+router.patch("/verification-requests/:id", requireAdmin, async (req, res) => {
   try {
     const requestId = parseInt(req.params.id);
     const { status, adminComment } = req.body;
@@ -526,7 +527,7 @@ router.patch("/verification-requests/:id", async (req, res) => {
 // ITEM MANAGEMENT (Admin)
 // ==========================================
 
-router.post("/items", async (req, res) => {
+router.post("/items", requireAdmin, async (req, res) => {
   try {
     const { name, category, description, ownerId, status, estimatedValue, lastKnownLocation, serialNumber, modelNumber } = req.body;
     if (!name || !category) return res.status(400).json({ message: "Name and category required" });
@@ -565,7 +566,7 @@ router.post("/items", async (req, res) => {
   }
 });
 
-router.patch("/items/:id/status", async (req, res) => {
+router.patch("/items/:id/status", requireAdmin, async (req, res) => {
   try {
     const itemId = parseInt(req.params.id);
     const { status } = req.body;
@@ -589,7 +590,7 @@ router.patch("/items/:id/status", async (req, res) => {
   }
 });
 
-router.delete("/items/:id", async (req, res) => {
+router.delete("/items/:id", requireAdmin, async (req, res) => {
   try {
     const itemId = parseInt(req.params.id);
     const item = await storage.getItem(itemId);
@@ -640,7 +641,7 @@ router.get("/reports", async (req, res) => {
   }
 });
 
-router.patch("/reports/:id/status", async (req, res) => {
+router.patch("/reports/:id/status", requireAdmin, async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
     const { status, notes } = req.body;
@@ -739,7 +740,7 @@ router.get("/payments", requireAdmin, async (req, res) => {
 
 // CRUD for Payment Packages
 
-// Get all packages
+// Get all packages - Accessible to Authenticated Users for plan selection
 router.get("/payment-packages", async (req, res) => {
   try {
     const includeInactive = req.query.includeInactive === 'true';

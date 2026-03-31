@@ -94,7 +94,7 @@ export default function ProfilePage() {
         text={t("profile.subtitle")}
       >
         {!isEditingProfile && (
-          <Button onClick={handleEditProfile} className="flex items-center gap-2">
+          <Button onClick={handleEditProfile} className="h-14 md:h-10 flex items-center gap-2 rounded-2xl md:rounded-xl font-black md:font-bold shadow-premium">
             <Edit className="h-4 w-4" />
             {t("profile.editProfile")}
           </Button>
@@ -134,43 +134,43 @@ export default function ProfilePage() {
 
           {/* Security & Access Tab (merged Security + Permissions) */}
           <TabsContent value="security" className="space-y-6 mt-6">
-            <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl relative overflow-hidden">
+            <Card className="border-white/10 shadow-premium bg-[#0B0F1A] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-bl-full pointer-events-none"></div>
-              <CardHeader className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-transparent pb-6">
-                <CardTitle className="flex items-center gap-2">
+              <CardHeader className="border-b border-white/5 bg-gradient-to-r from-primary/5 to-transparent pb-6">
+                <CardTitle className="flex items-center gap-2 text-xl font-black tracking-tight">
                   <Lock className="h-5 w-5 text-primary" />
                   {t("profile.security.passwordTitle")}
                 </CardTitle>
-                <CardDescription>{t("profile.security.passwordDesc")}</CardDescription>
+                <CardDescription className="font-bold text-white/50">{t("profile.security.passwordDesc")}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <PasswordChangeForm />
               </CardContent>
             </Card>
 
-            <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl">
-              <CardHeader className="border-b border-border/50 bg-muted/20 pb-6">
-                <CardTitle className="flex items-center gap-2">
+            <Card className="border-white/10 shadow-premium bg-[#0B0F1A]">
+              <CardHeader className="border-b border-white/5 bg-white/5 pb-6">
+                <CardTitle className="flex items-center gap-2 text-xl font-black tracking-tight">
                   <ShieldCheck className="h-5 w-5 text-green-500" />
                   {t("profile.security.sessionsTitle")}
                 </CardTitle>
-                <CardDescription>{t("profile.security.sessionsDesc")}</CardDescription>
+                <CardDescription className="font-bold text-white/50">{t("profile.security.sessionsDesc")}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-6">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium">{t("profile.security.currentSession")}</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm font-black text-white">{t("profile.security.currentSession")}</p>
+                      <p className="text-xs font-bold text-white/40">
                         {new Date().toLocaleDateString()} • {navigator.userAgent.split('/')[0]}
                       </p>
                     </div>
-                    <Badge className="bg-green-600">{t("profile.security.active")}</Badge>
+                    <Badge className="bg-green-600 font-black h-8 px-4 border-none shadow-lg">{t("profile.security.active")}</Badge>
                   </div>
                 </div>
               </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full">
+              <CardFooter className="pt-2">
+                <Button variant="outline" className="h-14 w-full rounded-2xl border-white/10 bg-white/5 font-black hover:bg-white/10 text-white transition-all">
                   {t("profile.security.logoutAllSessions")}
                 </Button>
               </CardFooter>

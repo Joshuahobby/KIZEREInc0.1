@@ -9,6 +9,7 @@ import { User } from "@/types/user";
 
 // UI Components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -95,10 +96,10 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
   };
 
   return (
-    <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl">
-      <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b border-border/50 pb-6 mb-6">
-        <CardTitle>{t("profile.editProfile")}</CardTitle>
-        <CardDescription>{t("profile.editProfileDesc")}</CardDescription>
+    <Card className="border-white/10 shadow-premium bg-[#0B0F1A]">
+      <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b border-white/5 pb-6 mb-6">
+        <CardTitle className="text-2xl font-black tracking-tighter">{t("profile.editProfile")}</CardTitle>
+        <CardDescription className="text-white/40 font-bold">{t("profile.editProfileDesc")}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center space-y-4 mb-6">
@@ -118,15 +119,15 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-6 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("profile.fullName")}</FormLabel>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-white/40">{t("profile.fullName")}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t("profile.fullNamePlaceholder")} {...field} />
+                      <Input className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white" placeholder={t("profile.fullNamePlaceholder")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -137,9 +138,9 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("profile.username")}</FormLabel>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-white/40">{t("profile.username")}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t("profile.usernamePlaceholder")} {...field} />
+                      <Input className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white" placeholder={t("profile.usernamePlaceholder")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -150,9 +151,9 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("profile.email")}</FormLabel>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-white/40">{t("profile.email")}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t("profile.emailPlaceholder")} {...field} />
+                      <Input className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white" placeholder={t("profile.emailPlaceholder")} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -163,9 +164,10 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
                 name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t("profile.phone")}</FormLabel>
+                    <FormLabel className="text-xs font-black uppercase tracking-widest text-white/40">{t("profile.phone")}</FormLabel>
                     <FormControl>
                       <Input
+                        className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white"
                         placeholder={t("profile.phonePlaceholder")}
                         {...field}
                         value={field.value || ''}
@@ -177,18 +179,23 @@ export function ProfileEditForm({ user, onCancel, onSuccess }: ProfileEditFormPr
                 )}
               />
             </div>
-            <CardFooter className="flex justify-end gap-2 px-0">
+            <CardFooter className="flex flex-col md:flex-row justify-end gap-3 px-0 mt-4">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onCancel}
                 disabled={isSubmitting}
+                className="h-14 w-full md:w-auto rounded-2xl font-black border-white/10 bg-white/5 hover:bg-white/10 transition-all order-2 md:order-1"
               >
                 {t("common.cancel")}
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting || !form.formState.isDirty}
+                className={cn(
+                    "h-14 w-full md:w-auto rounded-2xl font-black transition-all order-1 md:order-2",
+                    form.formState.isDirty ? "bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)]" : "bg-white/10 text-white/40"
+                )}
               >
                 {isSubmitting ? t("common.saving") : t("common.save")}
               </Button>

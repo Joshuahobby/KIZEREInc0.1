@@ -397,7 +397,7 @@ export function ContextualSidebar({
           </Tooltip>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-3.5rem)] p-4">
+        <ScrollArea className="h-[calc(100dvh-3.5rem)] p-4">
           {renderContent()}
         </ScrollArea>
       </TooltipProvider>

@@ -160,7 +160,7 @@ export default function CreateReport() {
             : "Report a found item and help reconnect it with its owner."
         }
       />
-      <div className="py-6 min-h-[calc(100vh-4rem)]">
+      <div className="py-6 min-h-[calc(100dvh-4rem)]">
         <div className="max-w-2xl mx-auto px-4">
           {/* Back Button */}
           <Button

@@ -25,7 +25,8 @@ import {
   CreditCard,
   ShieldCheck,
   FileUp,
-  FileDown
+  FileDown,
+  ChevronRight
 } from "lucide-react";
 
 interface QuickActionItemProps {
@@ -71,19 +72,20 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
     <button
       onClick={handleClick}
       disabled={isDisabled}
-      className={`w-full text-left px-4 py-3 rounded-xl mb-2 transition-all duration-300 ease-in-out hover:translate-x-1 group ${colorClass} ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-md border border-transparent hover:border-white/20"
-        }`}
+      className={`w-full text-left px-5 py-4 rounded-2xl mb-3 transition-all duration-300 ease-in-out hover:translate-x-1 group ${colorClass} ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-premium border border-transparent hover:border-white/20"
+        } min-h-[72px] flex items-center`}
     >
-      <div className="flex items-start">
-        <div className="flex-shrink-0 mr-3">
-          <div className="h-10 w-10 rounded-2xl flex items-center justify-center bg-white/95 dark:bg-background/95 shadow-sm group-hover:scale-110 transition-transform duration-500">
-            {icon}
+      <div className="flex items-center w-full">
+        <div className="flex-shrink-0 mr-4">
+          <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-white/95 dark:bg-slate-900 shadow-premium group-hover:scale-110 transition-transform duration-500">
+            {React.cloneElement(icon as React.ReactElement, { className: "h-6 w-6" })}
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-sm tracking-tight">{title}</h3>
-          <p className="text-[10px] opacity-80 uppercase font-bold tracking-wider mt-0.5">{description}</p>
+          <h3 className="font-black text-sm tracking-tight leading-tight">{title}</h3>
+          <p className="text-[10px] opacity-70 uppercase font-black tracking-widest mt-1 leading-none">{description}</p>
         </div>
+        <ChevronRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-x-2 group-hover:translate-x-0" />
       </div>
     </button>
   );
@@ -220,18 +222,16 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
         </ScrollArea>
       </CardContent>
 
-      {(isAdmin || isAgent) && (
         <CardFooter className="flex justify-between pt-5 border-t mt-3 gap-3">
-          <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl border-dashed">
+          <Button variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all">
             <FileDown className="h-4 w-4 mr-2 text-primary" />
-            <span className="text-xs font-bold">{t('dashboard.exportData')}</span>
+            <span>{t('dashboard.exportData')}</span>
           </Button>
-          <Button variant="outline" size="sm" className="flex-1 h-9 rounded-xl border-dashed">
+          <Button variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all">
             <FileUp className="h-4 w-4 mr-2 text-primary" />
-            <span className="text-xs font-bold">{t('dashboard.importData')}</span>
+            <span>{t('dashboard.importData')}</span>
           </Button>
         </CardFooter>
-      )}
     </Card>
   );
 };

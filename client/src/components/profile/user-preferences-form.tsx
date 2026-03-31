@@ -172,42 +172,42 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
   }
 
   return (
-    <Card className="border-border/50 shadow-lg bg-background/60 backdrop-blur-xl">
-      <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b border-border/50 pb-6">
-        <CardTitle>{t("profile.preferences.title")}</CardTitle>
-        <CardDescription>{t("profile.preferences.description")}</CardDescription>
+    <Card className="border-white/10 shadow-premium bg-[#0B0F1A]">
+      <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b border-white/5 pb-6">
+        <CardTitle className="text-2xl font-black tracking-tighter">{t("profile.preferences.title")}</CardTitle>
+        <CardDescription className="font-bold text-white/40">{t("profile.preferences.description")}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-8">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid gap-6">
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">{t("profile.preferences.appearance")}</h3>
-                <Separator />
+            <div className="grid gap-8">
+              <div className="space-y-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">{t("profile.preferences.appearance")}</h3>
+                <Separator className="bg-white/5" />
                 <div className="grid gap-4 md:grid-cols-2 mt-4">
                   <FormField
                     control={form.control}
                     name="theme"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("profile.preferences.theme")}</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("profile.preferences.theme")}</FormLabel>
                         <Select
                           disabled={isSaving}
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white focus:ring-primary/20 transition-all">
                               <SelectValue placeholder={t("profile.preferences.selectTheme")} />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="light">{t("profile.preferences.themes.light")}</SelectItem>
-                            <SelectItem value="dark">{t("profile.preferences.themes.dark")}</SelectItem>
-                            <SelectItem value="system">{t("profile.preferences.themes.system")}</SelectItem>
+                          <SelectContent className="bg-[#0B0F1A] border-white/10 rounded-2xl">
+                            <SelectItem value="light" className="h-12 font-bold focus:bg-primary focus:text-black">{t("profile.preferences.themes.light")}</SelectItem>
+                            <SelectItem value="dark" className="h-12 font-bold focus:bg-primary focus:text-black">{t("profile.preferences.themes.dark")}</SelectItem>
+                            <SelectItem value="system" className="h-12 font-bold focus:bg-primary focus:text-black">{t("profile.preferences.themes.system")}</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription>
+                        <FormDescription className="text-white/20 font-bold italic">
                           {t("profile.preferences.themeDescription")}
                         </FormDescription>
                         <FormMessage />
@@ -219,26 +219,26 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     name="language"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("profile.preferences.language")}</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("profile.preferences.language")}</FormLabel>
                         <Select
                           disabled={isSaving}
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white focus:ring-primary/20 transition-all">
                               <SelectValue placeholder={t("profile.preferences.selectLanguage")} />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-[#0B0F1A] border-white/10 rounded-2xl">
                             {availableLanguages.map((language) => (
-                              <SelectItem key={language.value} value={language.value}>
+                              <SelectItem key={language.value} value={language.value} className="h-12 font-bold focus:bg-primary focus:text-black">
                                 {language.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormDescription>
+                        <FormDescription className="text-white/20 font-bold italic">
                           {t("profile.preferences.languageDescription")}
                         </FormDescription>
                         <FormMessage />
@@ -248,20 +248,20 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">{t("profile.preferences.notifications")}</h3>
-                <Separator />
+              <div className="space-y-4 pt-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">{t("profile.preferences.notifications")}</h3>
+                <Separator className="bg-white/5" />
                 <div className="space-y-4 mt-4">
                   <FormField
                     control={form.control}
                     name="notifications.email"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-md border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">
+                      <FormItem className="flex items-center justify-between rounded-2xl border border-white/5 p-4 bg-white/5 h-auto md:h-20 transition-all hover:bg-white/10">
+                        <div className="space-y-1">
+                          <FormLabel className="text-sm font-black text-white uppercase tracking-wider">
                             {t("profile.preferences.emailNotifications")}
                           </FormLabel>
-                          <FormDescription>
+                          <FormDescription className="text-xs font-bold text-white/30">
                             {t("profile.preferences.emailNotificationsDesc")}
                           </FormDescription>
                         </div>
@@ -270,6 +270,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                             checked={field.value}
                             onCheckedChange={field.onChange}
                             disabled={isSaving}
+                            className="scale-110"
                           />
                         </FormControl>
                       </FormItem>
@@ -279,12 +280,12 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     control={form.control}
                     name="notifications.sms"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-md border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">
+                      <FormItem className="flex items-center justify-between rounded-2xl border border-white/5 p-4 bg-white/5 h-auto md:h-20 transition-all hover:bg-white/10">
+                        <div className="space-y-1">
+                          <FormLabel className="text-sm font-black text-white uppercase tracking-wider">
                             {t("profile.preferences.smsNotifications")}
                           </FormLabel>
-                          <FormDescription>
+                          <FormDescription className="text-xs font-bold text-white/30">
                             {t("profile.preferences.smsNotificationsDesc")}
                           </FormDescription>
                         </div>
@@ -293,6 +294,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                             checked={field.value}
                             onCheckedChange={field.onChange}
                             disabled={isSaving}
+                            className="scale-110"
                           />
                         </FormControl>
                       </FormItem>
@@ -302,12 +304,12 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     control={form.control}
                     name="notifications.push"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between rounded-md border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">
+                      <FormItem className="flex items-center justify-between rounded-2xl border border-white/5 p-4 bg-white/5 h-auto md:h-20 transition-all hover:bg-white/10">
+                        <div className="space-y-1">
+                          <FormLabel className="text-sm font-black text-white uppercase tracking-wider">
                             {t("profile.preferences.pushNotifications")}
                           </FormLabel>
-                          <FormDescription>
+                          <FormDescription className="text-xs font-bold text-white/30">
                             {t("profile.preferences.pushNotificationsDesc")}
                           </FormDescription>
                         </div>
@@ -316,6 +318,7 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                             checked={field.value}
                             onCheckedChange={field.onChange}
                             disabled={isSaving}
+                            className="scale-110"
                           />
                         </FormControl>
                       </FormItem>
@@ -324,33 +327,33 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">{t("profile.preferences.dashboardSettings")}</h3>
-                <Separator />
+              <div className="space-y-4 pt-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">{t("profile.preferences.dashboardSettings")}</h3>
+                <Separator className="bg-white/5" />
                 <div className="grid gap-4 md:grid-cols-2 mt-4">
                   <FormField
                     control={form.control}
                     name="dashboardLayout"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("profile.preferences.layout")}</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("profile.preferences.layout")}</FormLabel>
                         <Select
                           disabled={isSaving}
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white outline-none ring-offset-background transition-all">
                               <SelectValue placeholder={t("profile.preferences.selectLayout")} />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="default">{t("profile.preferences.layouts.default")}</SelectItem>
-                            <SelectItem value="compact">{t("profile.preferences.layouts.compact")}</SelectItem>
-                            <SelectItem value="wide">{t("profile.preferences.layouts.wide")}</SelectItem>
+                          <SelectContent className="bg-[#0B0F1A] border-white/10 rounded-2xl">
+                            <SelectItem value="default" className="h-12 font-bold">{t("profile.preferences.layouts.default")}</SelectItem>
+                            <SelectItem value="compact" className="h-12 font-bold">{t("profile.preferences.layouts.compact")}</SelectItem>
+                            <SelectItem value="wide" className="h-12 font-bold">{t("profile.preferences.layouts.wide")}</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription>
+                        <FormDescription className="text-white/20 font-bold italic">
                           {t("profile.preferences.layoutDescription")}
                         </FormDescription>
                         <FormMessage />
@@ -362,24 +365,24 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     name="dashboardStyle"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Dashboard Style</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/40">Dashboard Style</FormLabel>
                         <Select
                           disabled={isSaving}
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white outline-none ring-offset-background transition-all">
                               <SelectValue placeholder="Select a dashbaord style" />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="standard">Standard (Default)</SelectItem>
-                            <SelectItem value="classic">Classic (Detailed)</SelectItem>
-                            <SelectItem value="command_center">Command Center (Admin Focus)</SelectItem>
+                          <SelectContent className="bg-[#0B0F1A] border-white/10 rounded-2xl">
+                            <SelectItem value="standard" className="h-12 font-bold">Standard (Default)</SelectItem>
+                            <SelectItem value="classic" className="h-12 font-bold">Classic (Detailed)</SelectItem>
+                            <SelectItem value="command_center" className="h-12 font-bold">Command Center (Admin Focus)</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription>
+                        <FormDescription className="text-white/20 font-bold italic">
                           Choose your preferred dashboard experience for immediate redirection after login.
                         </FormDescription>
                         <FormMessage />
@@ -389,35 +392,35 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <h3 className="text-lg font-medium">{t("profile.preferences.regionalization")}</h3>
-                <Separator />
+              <div className="space-y-4 pt-4">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">{t("profile.preferences.regionalization")}</h3>
+                <Separator className="bg-white/5" />
                 <div className="grid gap-4 md:grid-cols-2 mt-4">
                   <FormField
                     control={form.control}
                     name="currency"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("profile.preferences.currency")}</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("profile.preferences.currency")}</FormLabel>
                         <Select
                           disabled={isSaving}
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white outline-none ring-offset-background transition-all">
                               <SelectValue placeholder={t("profile.preferences.selectCurrency")} />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-[#0B0F1A] border-white/10 rounded-2xl max-h-[300px]">
                             {currencies.map((currency) => (
-                              <SelectItem key={currency.value} value={currency.value}>
+                              <SelectItem key={currency.value} value={currency.value} className="h-12 font-bold">
                                 {currency.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormDescription>
+                        <FormDescription className="text-white/20 font-bold italic">
                           {t("profile.preferences.currencyDescription")}
                         </FormDescription>
                         <FormMessage />
@@ -429,26 +432,26 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
                     name="timezone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("profile.preferences.timezone")}</FormLabel>
+                        <FormLabel className="text-[10px] font-black uppercase tracking-widest text-white/40">{t("profile.preferences.timezone")}</FormLabel>
                         <Select
                           disabled={isSaving}
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white outline-none ring-offset-background transition-all">
                               <SelectValue placeholder={t("profile.preferences.selectTimezone")} />
                             </SelectTrigger>
                           </FormControl>
-                          <SelectContent>
+                          <SelectContent className="bg-[#0B0F1A] border-white/10 rounded-2xl max-h-[300px]">
                             {timezones.map((timezone) => (
-                              <SelectItem key={timezone.value} value={timezone.value}>
+                              <SelectItem key={timezone.value} value={timezone.value} className="h-12 font-bold">
                                 {timezone.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                        <FormDescription>
+                        <FormDescription className="text-white/20 font-bold italic">
                           {t("profile.preferences.timezoneDescription")}
                         </FormDescription>
                         <FormMessage />
@@ -459,10 +462,11 @@ export function UserPreferencesForm({ preferences, isLoading }: UserPreferencesF
               </div>
             </div>
 
-            <CardFooter className="flex justify-end gap-2 px-0">
+            <CardFooter className="flex justify-end pt-8 px-0 border-t border-white/5 mt-8">
               <Button
                 type="submit"
                 disabled={isSaving || !form.formState.isDirty}
+                className="h-14 w-full md:w-auto px-10 rounded-2xl font-black bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all"
               >
                 {isSaving ? t("common.saving") : t("common.saveChanges")}
               </Button>

@@ -156,7 +156,7 @@ function AuditLogsPage() {
                 {/* Logs Timeline */}
                 <Card>
                     <CardContent className="p-0">
-                        <ScrollArea className="h-[calc(100vh-350px)]">
+                        <ScrollArea className="h-[calc(100dvh-350px)]">
                             {isLoading ? (
                                 <div className="p-8 text-center text-muted-foreground">Loading audit logs...</div>
                             ) : logs.length === 0 ? (

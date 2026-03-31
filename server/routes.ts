@@ -78,12 +78,14 @@ import resendWebhookRoutes from './routes/resend.routes';
 import couponRoutes from './routes/coupon.routes';
 import consentRoutes from './routes/consent.routes';
 import dataRightsRoutes from './routes/data-rights.routes';
+import agentRoutes from './routes/agent.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
 
   // Register domain routes
+  app.use('/api/agent', agentRoutes);
   app.use('/api/admin', requireAdminOrAgent, adminRoutes);
   app.use('/api/admin/jobs', requireAdmin, adminJobsRoutes);
   app.use('/api/admin/roles', requireAdmin, rolesRoutes);

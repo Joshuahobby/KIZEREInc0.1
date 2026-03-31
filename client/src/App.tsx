@@ -6,7 +6,6 @@ import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ChatWidget } from "@/components/chat/chat-widget";
 import { GlobalNotice } from "@/components/layout/global-notice";
 import { useLocation } from "wouter";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
@@ -151,7 +150,7 @@ function App() {
       <IframeWarning />
       <GoogleAnalytics />
       <ThemeProvider attribute="class" defaultTheme="system" storageKey="kizere-theme" enableSystem disableTransitionOnChange>
-        <LanguageProvider defaultLanguage="en">
+        <LanguageProvider>
           <TooltipProvider>
             <React.Suspense fallback={<LoadingOverlay alwaysShow={true} />}>
               <GlobalNotice />
@@ -295,7 +294,6 @@ function App() {
                 <ScrollToTop />
               </main>
               <CookieBanner />
-              <ChatWidget />
             </React.Suspense>
           </TooltipProvider>
         </LanguageProvider>

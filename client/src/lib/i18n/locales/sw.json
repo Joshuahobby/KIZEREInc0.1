@@ -28,7 +28,8 @@
     "next": "Ifuatayo",
     "back": "Rudi Nyuma",
     "backToDashboard": "Rudi Dashibodi",
-    "finish": "Maliza"
+    "finish": "Maliza",
+    "scrollToTop": "Rudi Juu"
   },
   "nav": {
     "home": "Nyumbani",
@@ -214,6 +215,13 @@
         "quote": "Nilipata mkoba wa mtu na kutumia KIZERE kutafuta mmiliki. Jukwaa lilifanya iwe rahisi kuunganika na kurudisha mkoba salama."
       }
     },
+    "featured": {
+      "sectionTitle": "Vitu vya Haraka",
+      "mainTitle": "Ripoti Zilizoangaziwa",
+      "subtitle": "Zilizoongezwa kwa mwonekano wa juu zaidi. Vitu hivi vinahitaji umakini wako wa haraka.",
+      "viewAll": "Vinjari Saraka ya Utafutaji",
+      "noFeatured": "Hakuna ripoti zilizoangaziwa kwa sasa."
+    },
     "footerDescription": "Jukwaa kamili la usajili wa vitu, usimamizi wa vipotea na vipatikana, na ulinzi wa umiliki.",
     "footer": {
       "quickLinks": "Viungo vya Haraka",
@@ -322,9 +330,34 @@
     "welcomeMessage": "Karibu kwenye dashibodi yako",
     "registeredItems": "Vitu Vilivyosajiliwa",
     "recentActivity": "Shughuli za Hivi Karibuni",
+    "exportData": "Hamisha Data",
+    "importData": "Ingiza Data",
     "quickActions": {
       "title": "Vitendo vya Haraka",
-      "subtitle": "Zana na njia za mkato zinazotumiwa mara kwa mara"
+      "subtitle": "Zana na njia za mkato zinazotumiwa mara kwa mara",
+      "actions": "Vitendo",
+      "quickAction": "Kitendo cha Haraka",
+      "addUser": "Ongeza Mtumiaji",
+      "addUserDesc": "Fungua akaunti mpya ya mtumiaji",
+      "registerItem": "Sajili Kitu",
+      "registerItemDesc": "Sajili kitu kipya chenye thamani",
+      "reportLost": "Ripoti Kimepotea",
+      "reportLostDesc": "Tuma ripoti ya kitu kilichopotea",
+      "reportFound": "Ripoti Kimepatikana",
+      "reportFoundDesc": "Tuma ripoti ya kitu kilichopatikana",
+      "pendingReports": "Ripoti Zinazosubiri",
+      "pendingReportsDesc": "Kagua ripoti zinazosubiri uhakiki",
+      "processReports": "Chakata Ripoti",
+      "processReportsDesc": "Hakiki na usasishe ripoti",
+      "newPackage": "Kifurushi Kipya",
+      "newPackageDesc": "Unda kifurushi cha malipo",
+      "payments": "Malipo",
+      "paymentsDesc": "Tazama dashibodi ya malipo",
+      "analytics": "Uchambuzi",
+      "analyticsDesc": "Tazama uchambuzi wa mfumo",
+      "settings": "Mipangilio",
+      "settingsDesc": "Usanidi wa mfumo",
+      "scrollToTopDesc": "Rudi haraka juu ya ukurasa"
     },
     "registerNewItem": "Sajili Kitu Kipya",
     "viewAllItems": "Tazama Vitu Vyote",

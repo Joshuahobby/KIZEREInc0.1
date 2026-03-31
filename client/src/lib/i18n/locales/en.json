@@ -12,6 +12,7 @@
     "returnToHome": "Return to Home",
     "language": "Language",
     "search": "Search",
+    "scrollToTop": "Back to Top",
     "register_item": "Register Item",
     "complete_registration": "Complete Registration",
     "filter": "Filter",
@@ -264,7 +265,15 @@
       },
       "viewMore": "View More Testimonials"
     },
+    "featured": {
+      "sectionTitle": "Urgent Items",
+      "mainTitle": "Featured Reports",
+      "subtitle": "Boosted for maximum visibility. These items need your immediate attention.",
+      "viewAll": "Browse Search Directory",
+      "noFeatured": "No featured reports at the moment."
+    },
     "mobileApp": {
+
       "sectionTitle": "Mobile Access",
       "mainTitle": "KIZERE on Your Mobile Device",
       "description": "Access your items, manage certificates, and respond to lost & found alerts from anywhere with our mobile app.",
@@ -420,6 +429,8 @@
     "quickActions": {
       "title": "Quick Actions",
       "subtitle": "Frequently used tools and shortcuts",
+      "actions": "Actions",
+      "quickAction": "Quick Action",
       "addUser": "Add User",
       "addUserDesc": "Create a new user account",
       "registerItem": "Register Item",
@@ -439,7 +450,8 @@
       "analytics": "Analytics",
       "analyticsDesc": "View system analytics",
       "settings": "Settings",
-      "settingsDesc": "System configuration"
+      "settingsDesc": "System configuration",
+      "scrollToTopDesc": "Quickly return to the start of the page"
     },
     "moderation": {
       "title": "Moderation",
@@ -580,6 +592,14 @@
       "pendingMatches": "Pending Matches",
       "agentActions": "Quick Actions",
       "actionsDescription": "Common administrative tasks",
+      "handover": "Secure Handover",
+      "handoverInitiate": "Initiate the secure handover of an item to its owner or finder.",
+      "handoverVerify": "Verify the code sent to the recipient's {{channel}}.",
+      "handoverSuccess": "Custody transfer successfully completed.",
+      "assistedCreation": "Assisted Registration",
+      "assistedCreationDesc": "Create a new KIZERE account for a subscriber in the field.",
+      "unauthorized": "Unauthorized Access",
+      "unauthorizedDesc": "You do not have permission to view the Agent Console.",
       "actions": {
         "search": "Search Database",
         "newReport": "New Report",

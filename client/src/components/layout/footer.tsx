@@ -60,9 +60,9 @@ export function Footer() {
   ];
 
   return (
-    <footer className="bg-gray-900 dark:bg-gray-950 text-white py-16 relative overflow-hidden" role="contentinfo">
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <div className="absolute inset-0 bg-grid-pattern opacity-30"></div>
+    <footer className="bg-background text-foreground py-16 relative border-t border-border overflow-hidden" role="contentinfo">
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
@@ -76,10 +76,10 @@ export function Footer() {
               viewport={{ once: true }}
             >
               <Link href="/" className="flex items-center gap-2 mb-6 group" aria-label="KIZERE Home">
-                <Logo className="h-8 w-8 text-white group-hover:scale-110 transition-transform" aria-hidden="true" />
-                <span className="text-2xl font-display font-bold text-white tracking-tight">KIZERE</span>
+                <Logo className="h-8 w-8 text-primary group-hover:scale-110 transition-transform" aria-hidden="true" />
+                <span className="text-2xl font-black text-foreground tracking-tight">KIZERE</span>
               </Link>
-              <p className="text-gray-300 mb-8 max-w-md text-base leading-relaxed">
+              <p className="text-muted-foreground mb-8 max-w-md text-base leading-relaxed font-medium">
                 {t('landing.footerDescription') || t('footer.description')}
               </p>
               <div className="flex items-center gap-3">
@@ -88,7 +88,7 @@ export function Footer() {
                     key={social.label}
                     href={social.href}
                     aria-label={social.label}
-                    className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/20 hover:scale-110 transition-all duration-200 border border-white/10"
+                    className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center hover:bg-primary hover:text-primary-foreground hover:scale-110 transition-all duration-300 border border-primary/10"
                   >
                     <social.icon className="h-5 w-5" />
                   </a>
@@ -107,17 +107,17 @@ export function Footer() {
               transition={{ duration: 0.6, delay: 0.1 * (idx + 1) }}
               viewport={{ once: true }}
             >
-              <h4 className="text-lg font-semibold mb-6 text-white">{section.title}</h4>
+              <h4 className="premium-label mb-6 text-foreground">{section.title}</h4>
               <ul className="space-y-4">
                 {section.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-gray-300 hover:text-white transition-colors duration-200 inline-flex items-center group"
+                      className="text-muted-foreground hover:text-primary transition-colors duration-200 inline-flex items-center group font-black text-sm"
                     >
                       <span className="relative">
                         {link.label}
-                        <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
+                        <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full" />
                       </span>
                     </Link>
                   </li>
@@ -134,18 +134,18 @@ export function Footer() {
             transition={{ duration: 0.6, delay: 0.3 }}
             viewport={{ once: true }}
           >
-            <h4 className="text-lg font-semibold mb-6 text-white">{t('landing.footer.contact') || "Contact Us"}</h4>
+            <h4 className="premium-label mb-6 text-foreground">{t('landing.footer.contact') || "Contact Us"}</h4>
             <ul className="space-y-4">
               {contactInfo.map((item) => (
                 <li key={item.label}>
                   <a
                     href={item.href}
-                    className="flex items-center text-gray-300 group transition-colors hover:text-white"
+                    className="flex items-center text-muted-foreground group transition-colors hover:text-primary"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mr-4 group-hover:bg-primary/20 transition-colors shrink-0">
-                      <item.icon className="h-5 w-5 text-primary group-hover:text-white transition-colors" />
+                    <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center mr-4 group-hover:bg-primary transition-all duration-300 shrink-0 border border-primary/10">
+                      <item.icon className="h-5 w-5 text-primary group-hover:text-primary-foreground transition-colors" />
                     </div>
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className="text-sm font-black">{item.label}</span>
                   </a>
                 </li>
               ))}
@@ -155,27 +155,27 @@ export function Footer() {
 
         {/* Bottom Bar */}
         <motion.div
-          className="mt-16 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6"
+          className="mt-16 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-6"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           viewport={{ once: true }}
         >
-          <p className="text-gray-400 text-sm">
+          <p className="text-muted-foreground text-xs font-medium">
             {t('landing.footer.copyright', { year: currentYear }) || `© ${currentYear} KIZERE. All rights reserved.`}
           </p>
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-2">
-            <Link href="/privacy" className="text-gray-500 hover:text-white transition-colors duration-200 text-xs font-medium">
+            <Link href="/privacy" className="text-muted-foreground hover:text-primary transition-colors duration-200 text-xs font-black">
               {t('landing.footer.privacyPolicy') || "Privacy Policy"}
             </Link>
-            <Link href="/terms" className="text-gray-500 hover:text-white transition-colors duration-200 text-xs font-medium">
+            <Link href="/terms" className="text-muted-foreground hover:text-primary transition-colors duration-200 text-xs font-black">
               {t('landing.footer.termsOfService') || "Terms of Service"}
             </Link>
-            <Link href="/cookies" className="text-gray-500 hover:text-white transition-colors duration-200 text-xs font-medium">
+            <Link href="/cookies" className="text-muted-foreground hover:text-primary transition-colors duration-200 text-xs font-black">
               {t('landing.footer.cookiePolicy') || "Cookie Policy"}
             </Link>
-            <Link href="/compliance" className="text-gray-500 hover:text-white transition-colors duration-200 text-xs font-medium border-l border-white/10 pl-4 ml-2">
-              Data Protection & Compliance
+            <Link href="/compliance" className="text-muted-foreground hover:text-primary transition-colors duration-200 text-xs font-black border-l border-border pl-4 ml-2">
+              Compliance
             </Link>
           </div>
         </motion.div>

@@ -182,7 +182,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                 className="space-y-4"
               >
                 {/* Bento Section 1: What, Where & When */}
-                <div className="bg-muted/40 dark:bg-zinc-900/40 border border-border/50 dark:border-white/5 rounded-2xl p-4 space-y-4">
+                <div className="bg-muted/40 dark:bg-zinc-900/40 border border-border/50 dark:border-white/5 rounded-3xl p-5 space-y-4">
                   <div className="flex items-center gap-2 border-b border-border/50 dark:border-white/5 pb-2">
                     <div className={cn(
                       "h-6 w-6 rounded-md flex items-center justify-center",
@@ -201,7 +201,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                         <FormItem className="space-y-1">
                           <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-zinc-400">{t('report_wizard.item_name')}</FormLabel>
                           <FormControl>
-                            <Input placeholder={t('report_wizard.item_name_placeholder')} className="h-10 rounded-xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium" {...field} />
+                            <Input placeholder={t('report_wizard.item_name_placeholder')} className="h-14 rounded-2xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium" {...field} />
                           </FormControl>
                           <FormMessage className="text-[10px]" />
                         </FormItem>
@@ -216,7 +216,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                           <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-zinc-400">{t('report_wizard.select_category')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="h-10 rounded-xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium">
+                              <SelectTrigger className="h-14 rounded-2xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium">
                                 <SelectValue placeholder={t('report_wizard.select_category')} />
                               </SelectTrigger>
                             </FormControl>
@@ -248,7 +248,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                         <FormItem className="space-y-1">
                           <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-zinc-400">{t('report_wizard.location')}</FormLabel>
                           <FormControl>
-                            <Input placeholder={t('report_wizard.location_placeholder')} className="h-10 rounded-xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium" {...field} />
+                            <Input placeholder={t('report_wizard.location_placeholder')} className="h-14 rounded-2xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium" {...field} />
                           </FormControl>
                           <FormMessage className="text-[10px]" />
                         </FormItem>
@@ -262,7 +262,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                         <FormItem className="space-y-1">
                           <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-zinc-400">{t('report_wizard.date')}</FormLabel>
                           <FormControl>
-                            <Input type="date" className="h-10 rounded-xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white focus:border-primary/50 dark:focus:border-zinc-700 transition-all [color-scheme:light] dark:[color-scheme:dark] font-medium" {...field} />
+                            <Input type="date" className="h-14 rounded-2xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white focus:border-primary/50 dark:focus:border-zinc-700 transition-all [color-scheme:light] dark:[color-scheme:dark] font-medium" {...field} />
                           </FormControl>
                           <FormMessage className="text-[10px]" />
                         </FormItem>
@@ -277,12 +277,12 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                     control={form.control}
                     name="description"
                     render={({ field }) => (
-                      <FormItem className="bg-muted/40 dark:bg-zinc-900/40 border border-border/50 dark:border-white/5 rounded-2xl p-4 flex flex-col h-full space-y-1">
+                      <FormItem className="bg-muted/40 dark:bg-zinc-900/40 border border-border/50 dark:border-white/5 rounded-3xl p-5 flex flex-col h-full space-y-1">
                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-zinc-400 block">{t('report_wizard.description')}</FormLabel>
                         <FormControl className="flex-1 mt-1">
                           <Textarea
                             placeholder={t('report_wizard.description_placeholder')}
-                            className="min-h-[80px] rounded-xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all resize-none font-medium h-full"
+                            className="min-h-[80px] rounded-2xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all resize-none font-medium h-full"
                             {...field}
                           />
                         </FormControl>
@@ -292,9 +292,9 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                   />
 
                   {/* Bento Section 3: Images */}
-                  <div className="bg-muted/40 dark:bg-zinc-900/40 border border-border/50 dark:border-white/5 rounded-2xl p-4 flex flex-col h-full space-y-1">
+                  <div className="bg-muted/40 dark:bg-zinc-900/40 border border-border/50 dark:border-white/5 rounded-3xl p-5 flex flex-col h-full space-y-1">
                     <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-zinc-400 block">{t('report_wizard.images')}</FormLabel>
-                    <div className="rounded-xl border border-border/50 dark:border-white/5 bg-background/30 dark:bg-zinc-950/30 p-1 flex-1 mt-1">
+                    <div className="rounded-2xl border border-border/50 dark:border-white/5 bg-background/30 dark:bg-zinc-950/30 p-1 flex-1 mt-1">
                       <BatchImageUpload onImagesChange={setImages} maxFiles={3} />
                     </div>
                   </div>
@@ -317,7 +317,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                     <FormItem className="space-y-1">
                       <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-zinc-400">{t('report_wizard.contact_details')}</FormLabel>
                       <FormControl>
-                        <Input placeholder={t('report_wizard.contact_details_placeholder')} className="h-10 rounded-xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium" {...field} />
+                        <Input placeholder={t('report_wizard.contact_details_placeholder')} className="h-14 rounded-2xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium" {...field} />
                       </FormControl>
                       <FormDescription className="text-[9px] text-muted-foreground dark:text-zinc-500">
                         {type === 'found' ? t('report_wizard.contact_hint_found') : t('report_wizard.contact_hint_lost')}
@@ -332,11 +332,11 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                     control={form.control}
                     name="challengeQuestion"
                     render={({ field }) => (
-                      <FormItem className="bg-amber-500/5 border border-amber-500/20 dark:border-amber-500/10 p-4 rounded-xl space-y-1">
+                      <FormItem className="bg-amber-500/5 border border-amber-500/20 dark:border-amber-500/10 p-5 rounded-3xl space-y-1">
                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-amber-600 dark:text-amber-500">{t('report_wizard.security_title')}</FormLabel>
                         <p className="text-[9px] text-amber-600/80 dark:text-amber-500/60 mb-2">{t('report_wizard.security_desc')}</p>
                         <FormControl>
-                          <Input placeholder={t('report_wizard.security_placeholder')} className="h-10 rounded-lg border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium" {...field} />
+                          <Input placeholder={t('report_wizard.security_placeholder')} className="h-14 rounded-2xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium" {...field} />
                         </FormControl>
                         <FormMessage className="text-[10px]" />
                       </FormItem>
@@ -349,14 +349,14 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                     control={form.control}
                     name="bountyAmount"
                     render={({ field }) => (
-                      <FormItem className="bg-emerald-500/5 border border-emerald-500/20 dark:border-emerald-500/10 p-4 rounded-xl space-y-1">
+                      <FormItem className="bg-emerald-500/5 border border-emerald-500/20 dark:border-emerald-500/10 p-5 rounded-3xl space-y-1">
                         <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-500">{t('report_wizard.reward_amount')}</FormLabel>
                         <p className="text-[9px] text-emerald-600/80 dark:text-emerald-500/60 mb-2">{t('report_wizard.reward_hint')}</p>
                         <FormControl>
                           <div className="relative">
                             <Input
                               type="number"
-                              className="h-10 rounded-lg border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 pl-3 pr-10 font-bold text-foreground dark:text-white focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium"
+                              className="h-14 rounded-2xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 pl-4 pr-12 font-bold text-foreground dark:text-white focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium"
                               {...field}
                               onChange={(e) => field.onChange(Number(e.target.value))}
                             />
@@ -377,7 +377,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
               type="button"
               variant="outline"
               onClick={prevStep}
-              className="flex-1 rounded-xl h-11 border-border/50 dark:border-white/10 hover:bg-muted dark:hover:bg-white/5 text-foreground dark:text-white font-medium transition-all"
+              className="flex-1 rounded-2xl h-14 border-border/50 dark:border-white/10 hover:bg-muted dark:hover:bg-white/5 text-foreground dark:text-white font-bold transition-all"
               disabled={step === 1 || isSubmitting}
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -389,7 +389,7 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                 <Button
                   type="button"
                   onClick={nextStep}
-                  className="h-11 px-8 rounded-xl font-bold bg-foreground text-background dark:bg-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all w-full sm:w-auto"
+                  className="h-14 px-8 rounded-2xl font-black uppercase tracking-widest bg-foreground text-background dark:bg-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all w-full sm:w-auto shadow-premium"
                 >
                   {t('report_wizard.next_step')}
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -400,10 +400,10 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                 onClick={handleFinalSubmit}
                 disabled={isSubmitting}
                 className={cn(
-                  "h-11 rounded-xl flex-[2] text-white font-bold transition-all duration-300",
+                  "h-14 rounded-2xl flex-[2] text-white font-black uppercase tracking-widest transition-all duration-300 shadow-premium hover:-translate-y-1",
                   type === 'lost'
-                    ? "bg-red-600 hover:bg-red-500 shadow-[0_0_20px_rgba(220,38,38,0.4)] border border-red-500/50"
-                    : "bg-emerald-600 hover:bg-emerald-500 shadow-[0_0_20px_rgba(5,150,105,0.4)] border border-emerald-500/50"
+                    ? "bg-red-600 hover:bg-red-500 border border-red-500/50"
+                    : "bg-emerald-600 hover:bg-emerald-500 border border-emerald-500/50"
                 )}
               >
                 {isSubmitting ? (

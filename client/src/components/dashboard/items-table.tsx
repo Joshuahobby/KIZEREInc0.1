@@ -140,9 +140,9 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
         <Button
           variant="default"
           onClick={() => navigate("/register-item")}
-          className="rounded-full px-8 h-11 bg-primary hover:bg-primary/90 font-bold transition-all shadow-lg shadow-primary/20 hover:-translate-y-0.5"
+          className="rounded-full px-10 h-16 bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-sm transition-all shadow-premium shadow-primary/20 hover:-translate-y-1"
         >
-          <PlusCircle className="mr-2 h-4 w-4 text-white" />
+          <PlusCircle className="mr-2 h-5 w-5 text-white" />
           Secure First Item
         </Button>
       </div>

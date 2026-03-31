@@ -14,7 +14,8 @@ import {
   CreditCard,
   DollarSign,
   AlertTriangle,
-  CheckCircle2
+  CheckCircle2,
+  ArrowUp
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
@@ -27,13 +28,17 @@ interface QuickActionMenuProps {
   onOpenChange?: (open: boolean) => void;
   className?: string;
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  inline?: boolean;
+  mobileNav?: boolean;
 }
 
 export function QuickActionMenu({
   isOpen: propIsOpen,
   onOpenChange,
   className,
-  position = 'bottom-right'
+  position = 'bottom-right',
+  inline = false,
+  mobileNav = false
 }: QuickActionMenuProps) {
   const [isOpen, setIsOpen] = useState(propIsOpen || false);
   const [, navigate] = useLocation();
@@ -115,6 +120,13 @@ export function QuickActionMenu({
       onClick: () => navigate('/admin/analytics'),
       roles: ['Admin']
     },
+    {
+      icon: <ArrowUp className="h-4 w-4" />,
+      label: t('common.scrollToTop', 'Scroll to Top'),
+      description: t('dashboard.quickActions.scrollToTopDesc', 'Back to page top'),
+      onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business', 'Guest'] // Everyone
+    }
   ];
 
   // Filter actions based on user role
@@ -157,10 +169,10 @@ export function QuickActionMenu({
   };
 
   return (
-    <>
+    <div className={cn(inline && "relative")}>
       {/* Backdrop when menu is open (mobile only) */}
       <AnimatePresence>
-        {isOpen && (
+        {isOpen && !inline && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -172,33 +184,65 @@ export function QuickActionMenu({
       </AnimatePresence>
 
       {/* Quick action button */}
-      <Button
-        size="icon"
-        className={cn(
-          "fixed z-50 h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground transition-all flex",
-          getPositionClasses(),
-          className
-        )}
-        onClick={toggleMenu}
-      >
-        {isOpen ? (
-          <X className="h-5 w-5" />
-        ) : (
-          <Zap className="h-5 w-5 fill-current" />
-        )}
-      </Button>
+      {mobileNav ? (
+        <button
+          onClick={toggleMenu}
+          className={cn(
+            "flex flex-col items-center justify-center gap-1.5 group transition-all duration-300 px-4 py-2 rounded-2xl flex-1 h-full min-h-[64px]",
+            isOpen ? "text-primary" : "text-white/40 hover:text-white",
+            className
+          )}
+        >
+          <div className={cn(
+            "p-2.5 rounded-xl transition-all duration-300",
+            isOpen ? "bg-primary/20 scale-110 shadow-[0_0_25px_rgba(var(--primary),0.3)]" : "group-hover:bg-white/5"
+          )}>
+            {isOpen ? <X className="h-6 w-6" /> : <Zap className="h-6 w-6" />}
+          </div>
+          <span className={cn(
+            "text-[10px] font-black uppercase tracking-[0.1em] transition-all duration-300",
+            isOpen ? "opacity-100 translate-y-0" : "opacity-40 translate-y-0.5"
+          )}>
+            {t('dashboard.quickActions.actions', 'Actions')}
+          </span>
+        </button>
+      ) : (
+        <Button
+          size={inline ? "default" : "icon"}
+          onClick={toggleMenu}
+          className={cn(
+            "z-50 shadow-premium transition-all duration-300",
+            inline
+              ? "relative h-14 rounded-2xl px-6 font-black uppercase tracking-widest text-xs border border-border/50 hover:bg-primary hover:text-primary-foreground hover:border-primary flex items-center gap-2"
+              : "fixed h-14 w-14 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex",
+            !inline && getPositionClasses(),
+            className
+          )}
+          variant={inline ? "outline" : "default"}
+        >
+          {isOpen ? (
+            <X className="h-5 w-5" />
+          ) : (
+            <>
+              <Zap className={cn("h-5 w-5", inline && "fill-current")} />
+              {inline && t('dashboard.quickActions.quickAction', 'Quick Action')}
+            </>
+          )}
+        </Button>
+      )}
 
       {/* Action menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.9, y: inline ? 20 : 0 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: inline ? 20 : 0 }}
             transition={{ type: "spring", damping: 20, stiffness: 300 }}
             className={cn(
-              "fixed z-40 bg-card/80 backdrop-blur-xl shadow-2xl rounded-2xl border border-border/50 w-64 overflow-hidden",
-              getActionMenuPositionClasses()
+              "z-40 bg-card/80 backdrop-blur-xl shadow-2xl rounded-2xl border border-border/50 w-64 overflow-hidden",
+              inline ? "absolute bottom-full mb-4 right-0 origin-bottom-right" : "fixed",
+              !inline && getActionMenuPositionClasses()
             )}
           >
             <div className="p-2 flex flex-col gap-1">
@@ -224,6 +268,6 @@ export function QuickActionMenu({
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

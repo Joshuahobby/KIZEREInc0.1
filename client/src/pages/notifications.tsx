@@ -25,7 +25,7 @@ export default function NotificationsPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-8">
-          <div className="h-[calc(100vh-250px)] min-h-[500px]">
+          <div className="h-[calc(100dvh-250px)] min-h-[500px]">
             <NotificationCenter 
               notifications={notifications} 
               isLoading={isLoading} 

@@ -7,7 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Filter, X, Search } from "lucide-react";
+import { Calendar as CalendarIcon, Filter, X, Search, SlidersHorizontal } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -110,132 +111,187 @@ export function SearchFilters({ onSearch, initialFilters, layout = "vertical", h
 
     if (layout === "horizontal") {
         return (
-            <div className="w-full bg-card/40 backdrop-blur-xl border border-border/40 p-1.5 md:p-2 rounded-2xl shadow-premium transition-all">
-                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
+            <div className="w-full bg-background/50 backdrop-blur-xl border border-border/30 p-2 md:p-3 rounded-2xl md:rounded-3xl shadow-premium transition-all">
+                <div className="flex flex-row items-center gap-3">
                     {/* Main Search */}
                     {!hideSearchInput && (
-                        <div className="flex-1 md:max-w-[280px]">
-                            <div className="relative h-10 w-full">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary shrink-0" />
+                        <div className="flex-1">
+                            <div className="relative h-14 w-full">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary shrink-0" />
                                 <Input
                                     placeholder={t('searchFilters.searchPlaceholder')}
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     onKeyDown={handleKeyDown}
-                                    className="h-full pl-9 w-full bg-background/50 border-border/30 rounded-xl shadow-sm focus:ring-primary/20 transition-all hover:bg-background/80 text-xs font-bold"
+                                    className="h-full pl-12 w-full bg-card/50 border-border/10 rounded-2xl shadow-sm focus:ring-primary/20 transition-all hover:bg-card/80 text-sm font-black tracking-tight"
                                 />
                             </div>
                         </div>
                     )}
 
-                    {/* Type */}
-                    <div className="flex-1 md:max-w-[140px]">
-                        <Select value={type} onValueChange={setType}>
-                            <SelectTrigger className="w-full bg-background/50 border-border/30 rounded-xl h-10 shadow-sm focus:ring-primary/20 transition-all hover:bg-background/80 text-xs font-bold px-3">
-                                <SelectValue placeholder={t('searchFilters.allTypes')} />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl border-border/40 shadow-xl backdrop-blur-xl bg-background/95">
-                                <SelectItem value="all" className="rounded-lg text-xs font-medium cursor-pointer">{t('searchFilters.allTypes')}</SelectItem>
-                                <SelectItem value="lost" className="rounded-lg text-xs font-medium cursor-pointer">{t('searchFilters.lost')}</SelectItem>
-                                <SelectItem value="found" className="rounded-lg text-xs font-medium cursor-pointer">{t('searchFilters.found')}</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    {/* Mobile Filter Trigger */}
+                    <div className="md:hidden">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="outline" size="icon" className="h-14 w-14 rounded-2xl bg-card border-border/10 shadow-premium text-primary hover:text-white transition-all">
+                                    <SlidersHorizontal className="h-6 w-6" />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="bottom" className="h-[85vh] bg-background border-t-border/50 rounded-t-3xl px-6 py-8 outline-none">
+                                <SheetHeader className="pb-8 text-left">
+                                    <SheetTitle className="text-2xl font-black tracking-tighter flex items-center gap-3">
+                                        <Filter className="h-6 w-6 text-primary" />
+                                        {t('searchFilters.filterTitle') || "Filter Results"}
+                                    </SheetTitle>
+                                </SheetHeader>
+                                
+                                <div className="space-y-8 overflow-y-auto max-h-full pb-28 custom-scrollbar">
+                                    {/* Type */}
+                                    <div className="space-y-3">
+                                        <Label className="premium-label mb-2 block">{t('searchFilters.type') || "Report Type"}</Label>
+                                        <Select value={type} onValueChange={setType}>
+                                            <SelectTrigger className="h-14 bg-card/50 border-border/10 rounded-2xl text-base font-black px-5">
+                                                <SelectValue placeholder={t('searchFilters.allTypes')} />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-background border-border/30 rounded-2xl">
+                                                <SelectItem value="all" className="font-bold">{t('searchFilters.allTypes')}</SelectItem>
+                                                <SelectItem value="lost" className="font-bold">{t('searchFilters.lost')}</SelectItem>
+                                                <SelectItem value="found" className="font-bold">{t('searchFilters.found')}</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    {/* Category Grid */}
+                                    <div className="space-y-4">
+                                        <Label className="premium-label mb-2 block">{t('searchFilters.categories') || "Item Categories"}</Label>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {categories.map(c => (
+                                                <div 
+                                                    key={c} 
+                                                    className={cn(
+                                                        "flex items-center justify-between p-4 rounded-2xl border-2 transition-all duration-300 cursor-pointer h-16",
+                                                        category.includes(c) 
+                                                            ? "bg-primary/10 border-primary text-primary shadow-lg shadow-primary/5" 
+                                                            : "bg-card/50 border-border/10 text-muted-foreground"
+                                                    )}
+                                                    onClick={() => toggleCategory(c)}
+                                                >
+                                                    <span className="text-sm font-black uppercase tracking-tight">{c}</span>
+                                                    <Checkbox
+                                                        checked={category.includes(c)}
+                                                        className="h-5 w-5 border-border/20 data-[state=checked]:bg-primary"
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Date Range */}
+                                    <div className="space-y-3">
+                                        <Label className="premium-label mb-2 block">{t('searchFilters.pickDate')}</Label>
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button variant="outline" className="h-14 w-full bg-card/50 border-border/10 rounded-2xl text-base font-black px-5 justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <CalendarIcon className="h-5 w-5 text-primary" />
+                                                        <span>
+                                                            {dateRange.from ? (
+                                                                dateRange.to ? `${format(dateRange.from, "LLL dd")} - ${format(dateRange.to, "LLL dd")}` : format(dateRange.from, "LLL dd")
+                                                            ) : t('searchFilters.pickDate')}
+                                                        </span>
+                                                    </div>
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0 bg-background border-border/30 rounded-2xl" align="center">
+                                                <Calendar
+                                                    mode="range"
+                                                    selected={dateRange}
+                                                    onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
+                                                    className="p-3 shadow-2xl"
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+
+                                    {/* Reset Button */}
+                                    <Button variant="destructive" onClick={clearFilters} className="h-14 w-full rounded-2xl font-black uppercase tracking-widest mt-4">
+                                        {t('searchFilters.clearAll') || "Reset All Filters"}
+                                    </Button>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
                     </div>
 
-                    {/* Category Popover */}
-                    <div className="flex-1 md:max-w-[160px]">
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button variant="outline" className="w-full bg-background/50 border-border/30 rounded-xl h-10 shadow-sm focus:ring-primary/20 transition-all hover:bg-background/80 text-xs font-bold px-3 justify-between">
-                                    <div className="flex items-center gap-2 overflow-hidden">
+                    {/* Desktop Filters (md+) */}
+                    <div className="hidden md:flex items-center gap-2">
+                        {/* Type */}
+                        <div className="w-[140px]">
+                            <Select value={type} onValueChange={setType}>
+                                <SelectTrigger className="w-full bg-card/60 border-border/10 rounded-xl h-14 shadow-sm transition-all text-xs font-black uppercase tracking-widest px-4">
+                                    <SelectValue placeholder={t('searchFilters.allTypes')} />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-border/30 shadow-2xl backdrop-blur-xl bg-background/95">
+                                    <SelectItem value="all" className="rounded-lg text-xs font-bold uppercase cursor-pointer">{t('searchFilters.allTypes')}</SelectItem>
+                                    <SelectItem value="lost" className="rounded-lg text-xs font-bold uppercase cursor-pointer">{t('searchFilters.lost')}</SelectItem>
+                                    <SelectItem value="found" className="rounded-lg text-xs font-bold uppercase cursor-pointer">{t('searchFilters.found')}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {/* Category Popover */}
+                        <div className="w-[180px]">
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" className="w-full bg-card/60 border-border/10 rounded-xl h-14 shadow-sm transition-all text-xs font-black uppercase tracking-widest px-4 justify-between">
                                         <span className="truncate">
                                             {category.length === 0 ? t('searchFilters.allCategories') :
                                                 category.length === 1 ? category[0] :
                                                     `${category.length} ${t('searchFilters.selected')}`}
                                         </span>
+                                        <Filter className="ml-1.5 h-3.5 w-3.5 opacity-50 shrink-0 text-primary" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[220px] p-2 rounded-2xl border-border/30 shadow-2xl bg-background/95 backdrop-blur-xl" align="start">
+                                    <div className="space-y-1">
+                                        {categories.map(c => (
+                                            <div key={c} className="flex items-center space-x-2 p-2.5 hover:bg-primary/10 rounded-xl cursor-pointer transition-colors group" onClick={() => toggleCategory(c)}>
+                                                <Checkbox
+                                                    id={`cat-h-${c}`}
+                                                    checked={category.includes(c)}
+                                                    onCheckedChange={() => toggleCategory(c)}
+                                                    className="rounded-md border-border/50 data-[state=checked]:bg-primary"
+                                                />
+                                                <label htmlFor={`cat-h-${c}`} className="text-xs font-black uppercase tracking-wide leading-none cursor-pointer group-hover:text-primary transition-colors">
+                                                    {c}
+                                                </label>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <Filter className="ml-1.5 h-3 w-3 opacity-50 shrink-0" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-[200px] p-2 rounded-xl border-border/50 shadow-xl" align="start">
-                                <div className="space-y-0.5">
-                                    {categories.map(c => (
-                                        <div key={c} className="flex items-center space-x-2 p-2 hover:bg-muted/50 rounded-lg cursor-pointer transition-colors" onClick={() => toggleCategory(c)}>
-                                            <Checkbox
-                                                id={`cat-h-${c}`}
-                                                checked={category.includes(c)}
-                                                onCheckedChange={() => toggleCategory(c)}
-                                                className="rounded-md border-border/50 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                            />
-                                            <label htmlFor={`cat-h-${c}`} className="text-sm font-medium leading-none cursor-pointer">
-                                                {c}
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
 
-                    {/* Date Range - Hidden on very small mobile if too wide, or full width */}
-                    <div className="flex-1 md:max-w-[160px]">
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                        "w-full bg-background/50 border-border/30 rounded-xl h-10 shadow-sm focus:ring-primary/20 transition-all hover:bg-background/80 text-xs font-bold px-3 justify-start",
-                                        !dateRange.from && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-3.5 w-3.5 opacity-50" />
-                                    <span className="truncate">
-                                        {dateRange.from ? (
-                                            dateRange.to ? (
-                                                <>{format(dateRange.from, "LLL dd")} - {format(dateRange.to, "LLL dd")}</>
-                                            ) : (
-                                                format(dateRange.from, "LLL dd")
-                                            )
-                                        ) : (
-                                            <span>{t('searchFilters.pickDate')}</span>
-                                        )}
-                                    </span>
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0 rounded-2xl border-border/50 shadow-2xl" align="start">
-                                <Calendar
-                                    initialFocus
-                                    mode="range"
-                                    defaultMonth={dateRange.from}
-                                    selected={dateRange}
-                                    onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })}
-                                    numberOfMonths={window.innerWidth > 640 ? 2 : 1}
-                                    className="p-3"
-                                />
-                            </PopoverContent>
-                        </Popover>
-                    </div>
+                        {/* Sort By */}
+                        <div className="w-[140px]">
+                            <Select value={sortBy} onValueChange={setSortBy}>
+                                <SelectTrigger className="w-full bg-card/60 border-border/10 rounded-xl h-14 shadow-sm transition-all text-xs font-black uppercase tracking-widest px-4">
+                                    <SelectValue placeholder={t('searchFilters.newest')} />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-border/30 shadow-2xl backdrop-blur-xl bg-background/95">
+                                    <SelectItem value="newest" className="rounded-lg text-xs font-bold uppercase cursor-pointer">{t('searchFilters.newest')}</SelectItem>
+                                    <SelectItem value="oldest" className="rounded-lg text-xs font-bold uppercase cursor-pointer">{t('searchFilters.oldest')}</SelectItem>
+                                    <SelectItem value="relevant" className="rounded-lg text-xs font-bold uppercase cursor-pointer">{t('searchFilters.mostRelevant')}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
 
-                    {/* Sort By - Hidden on niche screens if needed, but here full width or small */}
-                    <div className="flex-1 md:max-w-[140px]">
-                        <Select value={sortBy} onValueChange={setSortBy}>
-                            <SelectTrigger className="w-full bg-background/50 border-border/30 rounded-xl h-10 shadow-sm focus:ring-primary/20 transition-all hover:bg-background/80 text-xs font-bold px-3">
-                                <SelectValue placeholder={t('searchFilters.newest')} />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl border-border/40 shadow-xl backdrop-blur-xl bg-background/95">
-                                <SelectItem value="newest" className="rounded-lg text-xs font-medium cursor-pointer">{t('searchFilters.newest')}</SelectItem>
-                                <SelectItem value="oldest" className="rounded-lg text-xs font-medium cursor-pointer">{t('searchFilters.oldest')}</SelectItem>
-                                <SelectItem value="relevant" className="rounded-lg text-xs font-medium cursor-pointer">{t('searchFilters.mostRelevant')}</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0 ml-auto">
-                        {viewModeAction}
-                        <Button variant="ghost" size="icon" className="h-10 w-10 flex items-center justify-center rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all group shrink-0" onClick={clearFilters} title={t('searchFilters.clearAll')}>
-                            <X className="h-4 w-4 group-hover:rotate-90 transition-transform" />
-                        </Button>
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 shrink-0 ml-auto">
+                            {viewModeAction}
+                            <Button variant="ghost" size="icon" className="h-14 w-14 flex items-center justify-center rounded-2xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all group shrink-0" onClick={clearFilters} title={t('searchFilters.clearAll')}>
+                                <X className="h-5 w-5 group-hover:rotate-90 transition-transform" />
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>

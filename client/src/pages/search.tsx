@@ -95,7 +95,7 @@ export default function Search() {
         title={filters.type === 'lost' ? "KIZERE - Lost Items Directory" : filters.type === 'found' ? "KIZERE - Found Items Directory" : "KIZERE - Explore Items"}
         description="Search through Rwandan lost and found items. Use our advanced search to reconnect with your missing property."
       />
-      <div className="py-4 min-h-[calc(100vh-4rem)]">
+      <div className="py-4 min-h-[calc(100dvh-4rem)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col">
           {!user && !isLoadingAuth ? (
             <div className="flex-1 flex items-center justify-center py-20">
@@ -104,12 +104,12 @@ export default function Search() {
           ) : (
             <>
               {/* Spatial Hero Search Section */}
-              <div className="relative overflow-hidden rounded-[2rem] bg-card/40 backdrop-blur-3xl border border-border/40 p-6 sm:p-10 mb-6 shadow-2xl group transition-all duration-700 hover:shadow-primary/5">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background/50 to-primary/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
+              <div className="relative overflow-hidden rounded-3xl bg-background/50 backdrop-blur-3xl border border-border/30 p-6 sm:p-10 mb-8 shadow-2xl group transition-all duration-700 hover:shadow-primary/5">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 opacity-50 group-hover:opacity-100 transition-opacity duration-700" />
 
                 {/* Glowing orbs for depth */}
-                <div className="absolute -top-32 -right-32 w-80 h-80 bg-primary/20 rounded-full blur-[100px] opacity-60 mix-blend-screen" />
-                <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-primary/20 rounded-full blur-[100px] opacity-60 mix-blend-screen" />
+                <div className="absolute -top-32 -right-32 w-80 h-80 bg-primary/20 rounded-full blur-[120px] opacity-40 mix-blend-screen" />
+                <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-primary/20 rounded-full blur-[120px] opacity-40 mix-blend-screen" />
 
                 <div className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto space-y-5">
                   <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-wide uppercase shadow-inner">
@@ -117,22 +117,22 @@ export default function Search() {
                     <span>{t('nav.exploreHeader')}</span>
                   </div>
 
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-foreground leading-[1.1]">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-foreground leading-[1.1] uppercase">
                     {filters.type === 'lost' ? t('searchPage.lostTitle') :
                       filters.type === 'found' ? t('searchPage.foundTitle') :
                         t('searchPage.title')}
                   </h1>
 
-                  <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl font-medium tracking-wide">
+                  <p className="text-muted-foreground text-sm sm:text-base md:text-lg max-w-2xl font-bold tracking-tight opacity-80">
                     {filters.type === 'lost' ? t('searchPage.lostSubtitle') :
                       filters.type === 'found' ? t('searchPage.foundSubtitle') :
                         t('searchPage.subtitle')}
                   </p>
 
                   <div className="w-full max-w-2xl relative mt-4 group/search">
-                    <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground/70" />
+                    <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-primary" />
                     <Input
-                      className="w-full h-14 pl-14 pr-6 rounded-2xl bg-background/90 backdrop-blur-xl border-2 border-border/50 hover:border-primary/40 focus:border-primary transition-all text-lg shadow-xl font-medium placeholder:text-muted-foreground/60"
+                      className="w-full h-14 pl-14 pr-6 rounded-2xl bg-background border-2 border-border/50 hover:border-primary/40 focus:border-primary transition-all text-lg shadow-xl font-black tracking-tight placeholder:text-muted-foreground/40"
                       placeholder={t('searchFilters.searchPlaceholder')}
                       value={filters.q || ''}
                       onChange={(e) => handleSearch({ ...filters, q: e.target.value })}
@@ -145,36 +145,36 @@ export default function Search() {
 
               <div className="flex flex-col gap-6 h-full">
                 {/* Top Bar: Horizontal Filters (Dock Style) */}
-                <div className="w-full sticky top-20 z-30">
+                <div className="w-full sticky top-20 z-30 pb-4">
                   <SearchFilters 
                     onSearch={handleSearch} 
                     initialFilters={filters} 
                     layout="horizontal" 
                     hideSearchInput={true} 
                     viewModeAction={
-                      <div className="flex bg-background/50 border border-border/30 p-0.5 rounded-xl shrink-0 shadow-sm mr-1">
+                      <div className="flex bg-card border border-border/30 p-1 rounded-2xl shrink-0 shadow-sm mr-1 h-14">
                         <button
                           onClick={() => setViewMode('list')}
                           className={cn(
-                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300",
+                            "flex items-center gap-2 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300",
                             viewMode === 'list'
-                              ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                         >
-                          <List className="w-3.5 h-3.5" />
+                          <List className="w-4 h-4" />
                           <span className="hidden sm:inline">{t('searchPage.list')}</span>
                         </button>
                         <button
                           onClick={() => setViewMode('map')}
                           className={cn(
-                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-300",
+                            "flex items-center gap-2 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300",
                             viewMode === 'map'
-                              ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                              ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                               : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                           )}
                         >
-                          <MapIcon className="w-3.5 h-3.5" />
+                          <MapIcon className="w-4 h-4" />
                           <span className="hidden sm:inline">{t('searchPage.map')}</span>
                         </button>
                       </div>
@@ -225,9 +225,20 @@ export default function Search() {
                                       visible: { opacity: 1, y: 0 }
                                     }}>
                                       <Link href={link}>
-                                        <Card className="h-full flex flex-col overflow-hidden bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 dark:hover:border-white/20 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/10 group cursor-pointer relative">
+                                        <Card className={cn(
+                                          "h-full flex flex-col overflow-hidden bg-white/70 dark:bg-card/40 backdrop-blur-xl border border-border/30 hover:border-primary/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-primary/10 group cursor-pointer relative rounded-3xl",
+                                          item.isFeatured && "ring-2 ring-amber-400/50 border-amber-400/30 bg-gradient-to-br from-amber-400/5 to-transparent shadow-[0_0_30px_rgba(245,158,11,0.1)]"
+                                        )}>
+                                          {/* Featured Badge */}
+                                          {item.isFeatured && (
+                                            <div className="absolute top-0 left-0 z-20 overflow-hidden w-16 h-16 pointer-events-none">
+                                              <div className="absolute transform -rotate-45 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-[8px] font-black py-1 px-4 w-28 -left-8 top-3 text-center shadow-lg uppercase tracking-widest border-b border-amber-300/30">
+                                                Featured
+                                              </div>
+                                            </div>
+                                          )}
                                           {/* Image Header / Top Banner */}
-                                          <div className="relative h-48 sm:h-52 w-full overflow-hidden rounded-t-xl bg-slate-50 dark:bg-slate-800/50 flex flex-col justify-center items-center p-4">
+                                          <div className="relative h-48 sm:h-52 w-full overflow-hidden bg-slate-50 dark:bg-card/30 flex flex-col justify-center items-center p-6 border-b border-border/10">
                                             {item.imageUrls && item.imageUrls.length > 0 ? (
                                               <img
                                                 src={item.imageUrls[0]}
@@ -236,11 +247,11 @@ export default function Search() {
                                                 height={300}
                                                 loading="lazy"
                                                 decoding="async"
-                                                className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal transition-transform duration-1000 group-hover:scale-110 drop-shadow-md"
+                                                className="object-contain w-full h-full mix-blend-multiply dark:mix-blend-normal transition-transform duration-1000 group-hover:scale-110 drop-shadow-xl"
                                               />
                                             ) : (
                                               <div className="flex items-center justify-center h-full">
-                                                {getCategoryIcon(item.category || '', "h-12 w-12 sm:h-16 sm:w-16 text-muted-foreground/20 group-hover:scale-110 transition-transform duration-700")}
+                                                {getCategoryIcon(item.category || '', "h-12 w-12 sm:h-16 sm:w-16 text-primary/10 group-hover:scale-110 group-hover:text-primary/20 transition-all duration-700")}
                                               </div>
                                             )}
 
@@ -280,25 +291,25 @@ export default function Search() {
                                             </div>
                                           </div>
 
-                                          <CardContent className="p-4 pt-4 flex-1 flex flex-col">
-                                            <h3 className="text-base font-black line-clamp-1 group-hover:text-primary transition-colors duration-300">
+                                          <CardContent className="p-5 flex-1 flex flex-col">
+                                            <h3 className="text-base font-black uppercase tracking-tight line-clamp-1 group-hover:text-primary transition-colors duration-300">
                                               {item.title || item.name}
                                             </h3>
-                                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2 min-h-[32px]">{item.description}</p>
+                                            <p className="text-xs text-muted-foreground mt-2 line-clamp-2 min-h-[32px] font-bold leading-relaxed">{item.description}</p>
 
-                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-4 text-[10px] sm:text-xs text-muted-foreground">
-                                              <span className="flex items-center gap-1">
-                                                <Calendar className="w-3.5 h-3.5 text-primary/40" /> {format(new Date(item.date || item.registeredAt || new Date()), 'MMM d, yyyy')}
+                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-5 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">
+                                              <span className="flex items-center gap-1.5">
+                                                <Calendar className="w-3.5 h-3.5 text-primary" /> {format(new Date(item.date || item.registeredAt || new Date()), 'MMM d, yyyy')}
                                               </span>
                                               {item.location && (
-                                                <span className="flex items-center gap-1">
-                                                  <MapPin className="w-3.5 h-3.5 text-primary/40" /> {item.location}
+                                                <span className="flex items-center gap-1.5">
+                                                  <MapPin className="w-3.5 h-3.5 text-primary" /> {item.location}
                                                 </span>
                                               )}
                                             </div>
-                                            <div className="flex items-center mt-3 pt-3 border-t border-border/50">
-                                              <div className="flex items-center text-[9px] font-black text-muted-foreground/50 tracking-widest uppercase">
-                                                <TagIcon className="h-3 w-3 mr-1.5 text-primary/50" />
+                                            <div className="flex items-center mt-4 pt-4 border-t border-border/30">
+                                              <div className="premium-label text-primary/60 flex items-center">
+                                                <TagIcon className="h-3 w-3 mr-2 text-primary" />
                                                 {item.category}
                                               </div>
                                             </div>

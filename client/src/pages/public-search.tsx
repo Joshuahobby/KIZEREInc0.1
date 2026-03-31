@@ -48,7 +48,7 @@ export default function PublicSearch() {
         title="Verify Item - KIZERE"
         description="Verify an item's status before buying. Check if it's reported lost, stolen, or clean on KIZERE."
       />
-      <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-b from-background to-background/50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+      <div className="min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-background to-background/50 py-12 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
         
         <motion.div 
           initial={{ opacity: 0, y: -20 }}

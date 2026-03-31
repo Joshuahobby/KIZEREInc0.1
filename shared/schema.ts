@@ -806,7 +806,7 @@ export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions
 
 // ===================== Verification Codes (OTP for 2FA) =====================
 
-export const verificationCodeTypes = ['login_2fa', 'phone_verify', 'email_verify', 'password_reset'] as const;
+export const verificationCodeTypes = ['login_2fa', 'phone_verify', 'email_verify', 'password_reset', 'handover_verify'] as const;
 export const verificationCodeChannels = ['sms', 'email'] as const;
 
 export const verificationCodes = pgTable("verification_codes", {

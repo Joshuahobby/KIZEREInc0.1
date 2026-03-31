@@ -94,101 +94,106 @@ export function PrivacySettings() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-border/50 shadow-sm bg-background/60 backdrop-blur-xl">
-        <CardHeader className="border-b border-border/50 pb-6 bg-primary/5">
+      <Card className="border-white/10 shadow-premium bg-[#0B0F1A]">
+        <CardHeader className="border-b border-white/5 pb-6 bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Download className="h-5 w-5 text-primary" />
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <Download className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <CardTitle>Data Export</CardTitle>
-              <CardDescription>Download a copy of your personal data</CardDescription>
+              <CardTitle className="text-xl font-black tracking-tight">Data Export</CardTitle>
+              <CardDescription className="font-bold text-white/40 text-xs">Download a copy of your personal data</CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-6 space-y-4">
-          <p className="text-sm text-muted-foreground">
+        <CardContent className="pt-6 space-y-6">
+          <p className="text-sm font-bold text-white/60 leading-relaxed">
             You have the right to receive a copy of your personal data collected by KIZERE in a structured, commonly used, and machine-readable format (Rwanda Law No. 058/2021).
           </p>
-          <Button onClick={handleDataExport} disabled={isExporting} variant="outline" className="w-full sm:w-auto">
-            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+          <Button onClick={handleDataExport} disabled={isExporting} variant="outline" className="h-14 w-full md:w-auto rounded-2xl font-black bg-white/5 border-white/10 hover:bg-white/10 text-white transition-all shadow-premium">
+            {isExporting ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : <Download className="mr-3 h-5 w-5" />}
             {isExporting ? "Exporting..." : "Download My Data (JSON)"}
           </Button>
         </CardContent>
       </Card>
 
-      <Card className="border-border/50 shadow-sm bg-background/60 backdrop-blur-xl">
-        <CardHeader className="border-b border-border/50 pb-6 bg-primary/5">
+      <Card className="border-white/10 shadow-premium bg-[#0B0F1A]">
+        <CardHeader className="border-b border-white/5 pb-6 bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <ShieldAlert className="h-5 w-5 text-primary" />
+            <div className="p-3 bg-primary/10 rounded-2xl">
+              <ShieldAlert className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <CardTitle>Consent & Data Processing</CardTitle>
-              <CardDescription>Manage how your data is used</CardDescription>
+              <CardTitle className="text-xl font-black tracking-tight">Consent & Data Processing</CardTitle>
+              <CardDescription className="font-bold text-white/40 text-xs">Manage how your data is used</CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-6 space-y-6">
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-            <div className="space-y-1 pr-6">
-              <Label htmlFor="restrict-processing" className="font-semibold text-base">Restrict Processing</Label>
-              <p className="text-sm text-muted-foreground">
+        <CardContent className="pt-6 space-y-8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-[500px]">
+              <Label htmlFor="restrict-processing" className="font-black text-white uppercase tracking-widest text-xs">Restrict Processing</Label>
+              <p className="text-sm font-bold text-white/50 leading-relaxed">
                 Temporarily suspend active processing of your personal data. This may limit your ability to use certain platform features.
               </p>
             </div>
-            <Switch 
-              id="restrict-processing" 
-              checked={isRestricting} 
-              onCheckedChange={handleRestrictProcessing}
-            />
+            <div className="flex items-center h-14 px-4 bg-white/5 rounded-2xl border border-white/5 w-full md:w-auto shrink-0 touch-target-standard">
+               <Switch 
+                id="restrict-processing" 
+                checked={isRestricting} 
+                onCheckedChange={handleRestrictProcessing}
+                className="scale-125"
+              />
+            </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-start justify-between gap-4 pt-4 border-t">
-            <div className="space-y-1 pr-6">
-              <Label className="font-semibold text-base">Marketing Consent</Label>
-              <p className="text-sm text-muted-foreground">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pt-6 border-t border-white/5">
+            <div className="space-y-2 max-w-[500px]">
+              <Label className="font-black text-white uppercase tracking-widest text-xs">Marketing Consent</Label>
+              <p className="text-sm font-bold text-white/50 leading-relaxed">
                 Receive emails about new features and promotions.
               </p>
             </div>
-            <Switch id="marketing-consent" defaultChecked={true} />
+            <div className="flex items-center h-14 px-4 bg-white/5 rounded-2xl border border-white/5 w-full md:w-auto shrink-0 touch-target-standard">
+              <Switch id="marketing-consent" defaultChecked={true} className="scale-125" />
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-destructive/30 shadow-sm bg-destructive/5 backdrop-blur-xl">
-        <CardHeader className="border-b border-destructive/10 pb-6">
+      <Card className="border-red-500/20 shadow-premium bg-[#1A0B0B]">
+        <CardHeader className="border-b border-red-500/10 pb-6 bg-gradient-to-r from-red-500/5 to-transparent">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-destructive/10 rounded-lg">
-              <Trash2 className="h-5 w-5 text-destructive" />
+            <div className="p-3 bg-red-500/10 rounded-2xl">
+              <Trash2 className="h-6 w-6 text-red-500" />
             </div>
             <div>
-              <CardTitle className="text-destructive">Danger Zone</CardTitle>
-              <CardDescription>Delete your account and all associated data</CardDescription>
+              <CardTitle className="text-xl font-black tracking-tight text-white">Danger Zone</CardTitle>
+              <CardDescription className="font-bold text-red-500/60 text-xs">Delete your account and all associated data</CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-6 space-y-4">
-          <div className="rounded-lg bg-destructive/10 p-4 border border-destructive/20 text-sm text-destructive-foreground/90 flex gap-3">
-            <AlertTriangle className="h-5 w-5 shrink-0" />
-            <p>
+        <CardContent className="pt-6 space-y-6">
+          <div className="rounded-2xl bg-red-500/5 p-5 border border-red-500/10 flex gap-4">
+            <AlertTriangle className="h-6 w-6 shrink-0 text-red-500" />
+            <p className="text-sm font-bold text-white/60 leading-relaxed">
               Requesting deletion will suspend your account immediately. We retain your data for a 7-day grace period in case you change your mind. After 7 days, your personal information is permanently erased.
             </p>
           </div>
           
           {user?.deletionRequestedAt ? (
-            <div className="flex items-center gap-2 text-primary font-medium p-4 bg-primary/10 rounded-lg">
-              <CheckCircle2 className="h-5 w-5" />
-              <span>Deletion requested on {new Date(user.deletionRequestedAt).toLocaleDateString()}. Account will be permanently deleted shortly.</span>
+            <div className="flex items-center gap-3 text-red-500 font-black p-5 bg-red-500/10 rounded-2xl border border-red-500/20 shadow-inner">
+              <CheckCircle2 className="h-6 w-6" />
+              <span className="text-sm uppercase tracking-wider">Deletion requested on {new Date(user.deletionRequestedAt).toLocaleDateString()}</span>
             </div>
           ) : (
             <Button 
               onClick={handleAccountDeletion} 
               disabled={isDeleting} 
               variant="destructive" 
-              className="w-full sm:w-auto"
+              className="h-14 w-full md:w-auto rounded-2xl font-black bg-red-600 hover:bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.2)] transition-all flex items-center justify-center gap-3"
             >
-              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+              {isDeleting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
               {isDeleting ? "Requesting..." : "Request Account Deletion"}
             </Button>
           )}

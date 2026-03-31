@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, cloneElement, ReactElement } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { QuickActionMenu } from "@/components/dashboard/quick-action-menu";
@@ -267,14 +267,13 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
-                  size="icon"
-                  className="md:hidden rounded-xl border-border/50 bg-background/50 shadow-sm"
+                  className="md:hidden h-12 w-12 rounded-2xl border-border/50 bg-background/50 shadow-premium group transition-all duration-300 hover:border-primary/30"
                   aria-label="Open Menu"
                 >
-                  <Menu className="h-5 w-5" />
+                  <Menu className="h-6 w-6 text-foreground group-hover:text-primary transition-colors" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] p-0 border-r-0 overflow-hidden flex flex-col midnight-sidebar sidebar-dark-content dark">
+              <SheetContent side="left" className="w-[300px] p-0 border-r-0 overflow-hidden flex flex-col bg-[#0B0F1A] sidebar-dark-content dark border-r border-white/5">
                 <div className="p-8 pb-4">
                   <SheetTitle className="sr-only">KIZERE Navigation Menu</SheetTitle>
                   <SheetDescription className="sr-only">
@@ -291,10 +290,10 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
                   </div>
 
                   <div className="relative group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50 group-focus-within:text-primary transition-colors" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30 group-focus-within:text-primary transition-colors" />
                     <Input
                       placeholder={t('common.searchPlaceholder')}
-                      className="pl-9 bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-primary/40 rounded-2xl h-11 text-sm text-white placeholder:text-muted-foreground/30"
+                      className="pl-9 bg-white/5 border-none focus-visible:ring-1 focus-visible:ring-primary/40 rounded-2xl h-12 text-sm text-white placeholder:text-white/20"
                     />
                   </div>
                 </div>
@@ -315,18 +314,18 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
                             setIsMobileOpen(false);
                           }}
                           className={cn(
-                            "flex items-center gap-3 px-4 py-3 text-sm font-bold transition-colors duration-300 relative rounded-2xl group",
+                            "flex items-center gap-4 px-5 py-4 text-sm font-bold transition-all duration-300 relative rounded-2xl group border border-transparent",
                             isActive
-                              ? "text-primary font-black bg-primary/10"
+                              ? "text-primary font-black bg-primary/10 border-primary/20 shadow-[0_0_20px_rgba(var(--primary),0.05)]"
                               : item.title === "Terminate Session"
                                 ? "text-red-500/70 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 mt-auto pt-8 border-t border-border"
-                                : "text-muted-foreground hover:text-foreground"
+                                : "text-white/60 hover:text-white hover:bg-white/5"
                           )}
                         >
                           {isActive && (
                             <motion.div
                               layoutId="active-capsule-mobile"
-                              className="absolute inset-0 active-capsule-glow rounded-2xl -z-10"
+                              className="absolute inset-0 bg-primary/5 rounded-2xl -z-10"
                               initial={false}
                               transition={{
                                 type: "spring",
@@ -336,14 +335,14 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
                             />
                           )}
                           <div className={cn(
-                            "flex h-5 w-5 items-center justify-center transition-all duration-500",
-                            isActive ? "text-primary scale-110 drop-shadow-[0_0_8px_rgba(var(--primary),0.8)]" : "text-muted-foreground/30 group-hover:scale-110 group-hover:text-white"
+                            "flex h-6 w-6 items-center justify-center transition-all duration-500",
+                            isActive ? "text-primary scale-110 drop-shadow-[0_0_12px_rgba(var(--primary),0.6)]" : "text-white/30 group-hover:scale-110 group-hover:text-white"
                           )}>
                             {item.icon}
                           </div>
                           <span className="flex-1 tracking-tight">{item.title}</span>
                           {item.badge && (
-                            <Badge variant="secondary" className="h-5 px-2 text-[9px] bg-primary/20 text-primary border-none font-black rounded-full">
+                            <Badge variant="secondary" className="h-5 px-2 text-[9px] bg-primary text-primary-foreground border-none font-black rounded-full shadow-lg shadow-primary/20">
                               {item.badge}
                             </Badge>
                           )}
@@ -500,7 +499,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
         {!hideSidebar && (
           <aside
             className={cn(
-              "hidden md:flex flex-col sticky top-16 h-[calc(100vh-4rem)] transition-all duration-500 ease-in-out z-30 group/sidebar shrink-0",
+              "hidden md:flex flex-col sticky top-16 h-[calc(100dvh-4rem)] transition-all duration-500 ease-in-out z-30 group/sidebar shrink-0",
               sidebarCollapsed ? "w-20" : "w-72"
             )}
           >
@@ -638,7 +637,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
         <div className="flex-1 flex flex-col min-w-0 bg-neutral-50/50 dark:bg-background">
           {/* Center panel: Main content area */}
           <main className="flex-1 flex flex-col">
-            <div className="p-8 pb-12 max-w-[1600px] w-full mx-auto min-h-[calc(100vh-4rem)] flex flex-col">
+            <div className="p-8 pb-12 max-w-[1600px] w-full mx-auto min-h-[calc(100dvh-4rem)] flex flex-col">
               {children}
             </div>
           </main>
@@ -665,8 +664,91 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
               </div>
             </div>
           </footer>
-          <QuickActionMenu position="bottom-right" className="mb-4 mr-4" />
+          <QuickActionMenu position="bottom-right" className="hidden md:flex mb-4 mr-4" />
+          
+          {/* Mobile Bottom Navigation - Field Optimized */}
+          <MobileBottomNav isAdmin={isAdmin} isAgent={isAgent} location={location} t={t} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+function MobileBottomNav({ isAdmin, isAgent, location, t }: { isAdmin: boolean, isAgent: boolean, location: string, t: any }) {
+  const navItems = [
+    { id: 'home', icon: <Home className="h-5 w-5" />, label: t('nav.dashboard'), href: "/dashboard" },
+    { id: 'search', icon: <Search className="h-5 w-5" />, label: t('nav.search'), href: "/search" },
+    { id: 'items', icon: <PackageIcon className="h-5 w-5" />, label: t('nav.myItems'), href: "/my-items" },
+  ];
+
+  if (isAgent || isAdmin) {
+    navItems.push({ 
+      id: 'agent', 
+      icon: <ShieldCheck className="h-5 w-5" />, 
+      label: t('dashboard.tabs.agentConsole') || "Agent", 
+      href: "/dashboard?tab=agent" 
+    });
+  }
+
+  return (
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0B0F1A] border-t border-white/10 pb-safe-area-inset-bottom shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+      <div className="flex items-center justify-around h-16 px-2">
+        {navItems.slice(0, 2).map((item) => {
+          const isActive = location === item.href || (item.id === 'agent' && location === '/dashboard' && window.location.search.includes('tab=agent'));
+          return (
+            <Link 
+              key={item.id} 
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center gap-1.5 group transition-all duration-300 px-4 py-2 rounded-2xl flex-1 h-full min-h-[64px]",
+                isActive ? "text-primary" : "text-white/40 hover:text-white"
+              )}
+            >
+              <div className={cn(
+                "p-2.5 rounded-xl transition-all duration-300",
+                isActive ? "bg-primary/20 scale-110 shadow-[0_0_25px_rgba(var(--primary),0.3)]" : "group-hover:bg-white/5"
+              )}>
+                {cloneElement(item.icon as ReactElement, { className: "h-6 w-6" })}
+              </div>
+              <span className={cn(
+                "text-[10px] font-black uppercase tracking-[0.1em] transition-all duration-300",
+                isActive ? "opacity-100 translate-y-0" : "opacity-40 translate-y-0.5"
+              )}>
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+        
+        {/* Strategically Inlined Quick Action Menu */}
+        <QuickActionMenu mobileNav={true} />
+        
+        {navItems.slice(2).map((item) => {
+          const isActive = location === item.href || (item.id === 'agent' && location === '/dashboard' && window.location.search.includes('tab=agent'));
+          return (
+            <Link 
+              key={item.id} 
+              href={item.href}
+              className={cn(
+                "flex flex-col items-center justify-center gap-1.5 group transition-all duration-300 px-4 py-2 rounded-2xl flex-1 h-full min-h-[64px]",
+                isActive ? "text-primary" : "text-white/40 hover:text-white"
+              )}
+            >
+              <div className={cn(
+                "p-2.5 rounded-xl transition-all duration-300",
+                isActive ? "bg-primary/20 scale-110 shadow-[0_0_25px_rgba(var(--primary),0.3)]" : "group-hover:bg-white/5"
+              )}>
+                {cloneElement(item.icon as ReactElement, { className: "h-6 w-6" })}
+              </div>
+              <span className={cn(
+                "text-[10px] font-black uppercase tracking-[0.1em] transition-all duration-300",
+                isActive ? "opacity-100 translate-y-0" : "opacity-40 translate-y-0.5"
+              )}>
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

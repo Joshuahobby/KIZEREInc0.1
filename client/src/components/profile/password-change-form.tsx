@@ -104,11 +104,12 @@ export function PasswordChangeForm() {
           name="currentPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.security.currentPassword")}</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-white/40">{t("profile.security.currentPassword")}</FormLabel>
               <FormControl>
                 <Input 
                   type="password" 
                   placeholder="••••••••" 
+                  className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white"
                   {...field} 
                 />
               </FormControl>
@@ -122,11 +123,12 @@ export function PasswordChangeForm() {
           name="newPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.security.newPassword")}</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-white/40">{t("profile.security.newPassword")}</FormLabel>
               <FormControl>
                 <Input 
                   type="password" 
                   placeholder="••••••••" 
+                  className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white"
                   {...field}
                   onChange={(e) => {
                     field.onChange(e);
@@ -145,11 +147,12 @@ export function PasswordChangeForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("profile.security.confirmPassword")}</FormLabel>
+              <FormLabel className="text-xs font-black uppercase tracking-widest text-white/40">{t("profile.security.confirmPassword")}</FormLabel>
               <FormControl>
                 <Input 
                   type="password" 
                   placeholder="••••••••" 
+                  className="h-14 bg-white/5 border-white/5 rounded-2xl font-black text-white"
                   {...field} 
                 />
               </FormControl>
@@ -160,7 +163,7 @@ export function PasswordChangeForm() {
         
         <Button 
           type="submit" 
-          className="w-full"
+          className="h-14 w-full rounded-2xl font-black bg-primary text-black hover:bg-primary/90 shadow-[0_0_20px_rgba(var(--primary),0.3)] transition-all"
           disabled={isSubmitting || !form.formState.isDirty}
         >
           {isSubmitting ? t("common.updating") : t("profile.security.changePassword")}

@@ -160,7 +160,7 @@ export function ExpandableDetailView({
               {/* Mobile content */}
               {sections.map((section) => (
                 <TabsContent key={section.id} value={section.id} className="mt-0">
-                  <ScrollArea className="h-[calc(100vh-180px)]">
+                  <ScrollArea className="h-[calc(100dvh-180px)]">
                     <div className="p-4">{section.content}</div>
                   </ScrollArea>
                 </TabsContent>

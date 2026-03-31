@@ -77,6 +77,18 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  React.useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [mobileMenuOpen]);
+
   // Define the navigation item type
   type NavItem = {
     name: string;
@@ -143,14 +155,14 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 w-full gap-4">
           {/* Logo - Left aligned */}
-          <div className="flex-none min-w-[140px] flex items-center justify-start">
+          <div className="flex-none flex items-center justify-start">
             <Link href={isAuthenticated ? getDashboardPath() : "/"} className="flex items-center gap-2 group" aria-label="KIZERE Home">
               <Logo className="h-8 w-8 transition-transform group-hover:scale-110" aria-hidden="true" />
-              <div className="flex flex-col items-start leading-none gap-0">
-                <span className="text-xl font-heading font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tighter">
+              <div className="flex flex-col items-start gap-0">
+                <span className="text-lg sm:text-xl font-heading font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 tracking-tighter leading-none">
                   {t('common.brandName')}
                 </span>
-                <span className="text-[9px] uppercase tracking-[0.25em] text-primary font-bold opacity-80">
+                <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.25em] text-primary font-bold opacity-80 leading-none mt-0.5">
                   {t('common.brandSubtitle')}
                 </span>
               </div>
@@ -190,11 +202,13 @@ export function Header() {
           </div>
 
           {/* Actions - Right aligned */}
-          <div className="flex-none min-w-[200px] flex items-center justify-end gap-2">
-            <div className="flex items-center gap-1 sm:gap-2 mr-2">
-              <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.95 }}>
-                <ThemeToggle />
-              </motion.div>
+          <div className="flex-none flex items-center justify-end gap-1 sm:gap-2">
+            <div className="flex items-center gap-1">
+              {location !== "/" && (
+                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} whileTap={{ scale: 0.95 }}>
+                  <ThemeToggle />
+                </motion.div>
+              )}
 
               <div className="hidden sm:block">
                 <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
@@ -352,42 +366,48 @@ export function Header() {
       {mobileMenuOpen && (
         <div 
           id="mobile-menu"
-          className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl animate-in slide-in-from-top duration-300"
+          className={cn(
+            "md:hidden absolute top-full left-0 w-full h-[calc(100dvh-4rem)] z-50 border-t border-border shadow-2xl animate-in fade-in slide-in-from-top-1 duration-300 overflow-hidden bg-background",
+            ""
+          )}
         >
-          <div className="px-4 py-6 space-y-2">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={cn(
-                  "flex items-center px-4 py-3 rounded-xl text-base font-medium transition-all",
-                  isActive(item.href)
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                )}
-                onClick={(e) => {
-                  setMobileMenuOpen(false);
-                  if (item.scrollTo && location === '/') {
-                    e.preventDefault();
-                    scrollToSection(item.scrollTo);
-                  }
-                }}
-              >
-                {item.icon && <item.icon className="mr-3 h-5 w-5" />}
-                {item.name}
-              </Link>
-            ))}
+          <div className="flex flex-col h-full px-4 py-6 overflow-y-auto bg-background">
+            <div className="flex-1 space-y-2">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center h-standard-target px-5 rounded-2xl text-lg font-black transition-all active:scale-[0.98]",
+                    isActive(item.href)
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                      : "text-foreground hover:bg-accent"
+                  )}
+                  onClick={(e) => {
+                    setMobileMenuOpen(false);
+                    if (item.scrollTo && location === '/') {
+                      e.preventDefault();
+                      scrollToSection(item.scrollTo);
+                    }
+                  }}
+                >
+                  {item.icon && <item.icon className="mr-5 h-7 w-7 text-cyan-400" />}
+                  {item.name}
+                </Link>
+              ))}
+            </div>
 
-            <div className="pt-4 border-t border-border mt-4 flex flex-col gap-4">
-              <div className="flex items-center justify-between px-4">
-                <span className="text-sm font-medium text-muted-foreground">{t('common.language') || "Language"}</span>
+            <div className="pt-6 border-t border-border mt-auto space-y-6 pb-10">
+              <div className="flex items-center justify-between px-4 h-14">
+                <span className="premium-label text-muted-foreground">{t('common.language') || "Language"}</span>
                 <LanguageSwitcher variant="minimal" />
               </div>
 
               {!isAuthenticated && (
-                <div className="flex flex-col gap-2">
-                  <Button asChild className="w-full rounded-xl py-6 rounded-full shadow-md bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg">
+                <div className="px-2">
+                  <Button asChild size="standard" className="w-full">
                     <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                      <User className="mr-3 h-6 w-6" />
                       {t('auth.getStarted') || "Get Started"}
                     </Link>
                   </Button>
@@ -395,29 +415,30 @@ export function Header() {
               )}
 
               {isAuthenticated && (
-                <>
-                  <Link href="/profile" className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
-                    <User className="mr-3 h-5 w-5" />
+                <div className="space-y-2">
+                  <Link href="/profile" className="flex items-center h-standard-target px-5 rounded-2xl text-lg font-black text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
+                    <User className="mr-4 h-6 w-6" />
                     {t('profile.title') || "Profile"}
                   </Link>
-                  <Link href="/settings" className="flex items-center px-4 py-3 rounded-xl text-base font-medium text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
-                    <Settings className="mr-3 h-5 w-5" />
+                  <Link href="/settings" className="flex items-center h-standard-target px-5 rounded-2xl text-lg font-black text-muted-foreground hover:bg-accent hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
+                    <Settings className="mr-4 h-6 w-6" />
                     {t('settings.title') || "Settings"}
                   </Link>
-                </>
-              )}
-
-              {isAuthenticated && (
-                <Button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full rounded-xl py-6 rounded-full shadow-md bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-lg mt-2"
-                >
-                  <LogOut className="mr-3 h-5 w-5" />
-                  {t('auth.logout') || "Sign Out"}
-                </Button>
+                  <div className="pt-2">
+                    <Button
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      size="standard"
+                      variant="destructive"
+                      className="w-full"
+                    >
+                      <LogOut className="mr-3 h-6 w-6" />
+                      {t('auth.logout') || "Sign Out"}
+                    </Button>
+                  </div>
+                </div>
               )}
             </div>
           </div>

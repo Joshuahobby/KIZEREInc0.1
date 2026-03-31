@@ -3,23 +3,23 @@
 @tailwind utilities;
 
 :root {
-  /* New Irembo-inspired Palette (HSL) */
-  --background: 210 20% 98%;
-  --foreground: 222 47% 11%;
+  /* High-Contrast Light Palette (Premium Paper/Ink) */
+  --background: 0 0% 100%;
+  --foreground: 224 41% 7%; /* Dark Midnight Text */
 
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 224 41% 7%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
+  --popover-foreground: 224 41% 7%;
 
-  /* Azure Blue Primary */
-  --primary: 202 80% 54%;
+  /* Premium Azure Blue Primary */
+  --primary: 221.2 83.2% 53.3%; /* #2563EB */
   --primary-foreground: 210 40% 98%;
 
-  /* Yellow Accent */
-  --secondary: 45 93% 47%;
-  --secondary-foreground: 222 47% 11%;
+  /* Subtle Gray Secondary */
+  --secondary: 210 40% 96.1%;
+  --secondary-foreground: 222.2 47.4% 11.2%;
 
   --muted: 210 40% 96.1%;
   --muted-foreground: 215.4 16.3% 46.9%;
@@ -32,9 +32,9 @@
 
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 202 80% 54%;
+  --ring: 221.2 83.2% 53.3%;
 
-  --radius: 0.5rem;
+  --radius: 1rem; /* Premium rounded corners (approx 16px) */
 
   /* Sidebar variables */
   --sidebar-width: 16rem;
@@ -46,34 +46,34 @@
 }
 
 .dark {
-  /* Deep Midnight (Blue-tinted black) */
-  --background: 222 47% 4%;
+  /* Solid Midnight Background (#0B0F1A) */
+  --background: 224 41% 7%;
   --foreground: 210 40% 98%;
 
-  --card: 222 47% 6%;
+  --card: 224 41% 9%; /* Slightly lighter than bg */
   --card-foreground: 210 40% 98%;
 
-  --popover: 222 47% 6%;
+  --popover: 224 41% 9%;
   --popover-foreground: 210 40% 98%;
 
-  --primary: 202 80% 54%;
+  --primary: 221.2 83.2% 53.3%;
   --primary-foreground: 210 40% 98%;
 
-  --secondary: 45 93% 47%;
+  --secondary: 217.2 32.6% 17.5%;
   --secondary-foreground: 210 40% 98%;
 
-  --muted: 217.2 32.6% 17.5%;
+  --muted: 224 41% 12%;
   --muted-foreground: 215 20.2% 65.1%;
 
-  --accent: 217.2 32.6% 17.5%;
+  --accent: 224 41% 15%;
   --accent-foreground: 210 40% 98%;
 
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 202 80% 54%;
+  --border: 224 41% 15%;
+  --input: 224 41% 15%;
+  --ring: 221.2 83.2% 53.3%;
 }
 
 @layer base {
@@ -111,9 +111,18 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/80;
   }
 
+  /* Premium UI Utilities */
+  .h-standard-target {
+    @apply h-14 min-h-[56px];
+  }
+
+  .premium-label {
+    @apply text-[10px] font-black uppercase tracking-[0.2em] text-primary;
+  }
+
   /* Improved button styles */
   .premium-button {
-    @apply relative overflow-hidden transition-all duration-300 active:scale-95 shadow-premium hover:shadow-lg;
+    @apply relative h-14 overflow-hidden transition-all duration-300 active:scale-95 shadow-premium hover:shadow-lg rounded-2xl px-8 font-black text-sm;
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%);
   }
 
@@ -141,7 +150,7 @@
   }
 
   .feature-card {
-    @apply p-6 bg-card rounded-xl border border-border transition-all duration-300 shadow-sm hover:shadow-premium hover:-translate-y-1 hover:border-primary/30;
+    @apply p-6 bg-card rounded-2xl border border-border transition-all duration-300 shadow-sm hover:shadow-premium hover:-translate-y-1 hover:border-primary/30;
   }
 
   .midnight-sidebar {

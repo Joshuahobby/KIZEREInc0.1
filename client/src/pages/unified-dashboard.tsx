@@ -91,6 +91,8 @@ import { UserPreferences } from "@shared/schema";
 import { AppLayout } from "@/components/layout/admin-layout";
 import { OnboardingTour } from "@/components/dashboard/OnboardingTour";
 import { AssistedRegistrationDialog } from "@/components/agent/AssistedRegistrationDialog";
+import { AssistedUserCreationDialog } from "@/components/agent/AssistedUserCreationDialog";
+import { ItemHandoverDialog } from "@/components/agent/ItemHandoverDialog";
 import { DirectVerificationDialog } from "@/components/agent/DirectVerificationDialog";
 
 
@@ -98,49 +100,55 @@ import { DirectVerificationDialog } from "@/components/agent/DirectVerificationD
 
 // Helper component for the header
 const WelcomeHeader = ({ user, isAdmin, t }: { user: any, isAdmin: boolean, t: any }) => (
-  <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2 lg:mb-8">
-    <div className="space-y-1">
-      <div className="flex items-center gap-2 mb-1">
-        <Badge variant="outline" className="text-[10px] font-black tracking-tighter uppercase border-primary/20 text-primary px-2 py-0">
+  <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10 lg:mb-16">
+    <div className="space-y-4 text-center md:text-left">
+      <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+        <Badge variant="outline" className="premium-label border-primary/40 bg-primary/10 text-primary px-4 py-1 rounded-full shadow-[0_0_15px_rgba(var(--primary),0.1)]">
           KIZERE {user?.role || 'User'}
         </Badge>
+        {isAdmin && (
+          <Badge className="bg-primary text-white premium-label px-3 py-1 rounded-full shadow-lg shadow-primary/20 animate-pulse">
+            SUDO
+          </Badge>
+        )}
       </div>
-      <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl text-foreground">
-        {t('dashboard.welcomeBack', { name: "" }).replace(/,?\s*$/, '')}{' '}
-        <span className="text-primary font-medium">
+      <h1 className="text-4xl font-black tracking-tighter sm:text-5xl lg:text-7xl text-foreground leading-[0.9]">
+        {t('dashboard.welcomeBack', { name: "" }).split(',')[0]}{' '}
+        <span className="text-primary block sm:inline mt-2 sm:mt-0 drop-shadow-[0_0_20px_rgba(var(--primary),0.2)]">
           {user?.fullName?.split(' ')[0] || user?.username}
         </span>
-        {isAdmin && <span className="ml-3 text-[10px] uppercase tracking-[0.2em] font-medium text-white bg-primary/80 px-2 py-0.5 rounded-full shadow-sm shadow-primary/10">SUDO</span>}
       </h1>
-      <p className="text-muted-foreground text-sm font-normal leading-relaxed max-w-2xl opacity-80 mt-1">
+      <p className="text-muted-foreground text-base sm:text-lg font-medium leading-relaxed max-w-2xl opacity-80 mt-4 mx-auto md:mx-0">
         {t('dashboard.welcomeSubtitle')}
       </p>
     </div>
-    <div className="flex items-center gap-3">
+    <div className="grid grid-cols-1 sm:flex sm:flex-row items-center justify-center md:justify-end gap-3 w-full md:w-auto">
       {/* Replay Walkthrough Button */}
       <Button
         variant="ghost"
-        size="sm"
-        className="h-9 w-9 rounded-full p-0 text-muted-foreground hover:text-primary transition-colors bg-background/60 dark:bg-slate-900/40 backdrop-blur-md border border-border/40 shadow-sm"
+        size="icon"
+        className="h-14 w-full sm:w-14 rounded-2xl text-muted-foreground hover:text-primary transition-all duration-300 bg-white dark:bg-slate-900 shadow-premium border border-border/50 group"
         onClick={() => window.dispatchEvent(new CustomEvent('replay-onboarding'))}
         title={t('walkthrough.replay') || "Replay Walkthrough"}
       >
-        <HelpCircle className="h-5 w-5" />
-        <span className="sr-only">{t('walkthrough.replay')}</span>
+        <HelpCircle className="h-6 w-6 group-hover:scale-110 transition-transform" />
+        <span className="sm:hidden ml-2 font-black text-xs uppercase tracking-widest">{t('walkthrough.replay') || "Replay Tour"}</span>
       </Button>
 
-      {/* Time Pill */}
-      <div className="flex items-center gap-2 bg-background/60 dark:bg-slate-900/40 backdrop-blur-md px-4 py-2 rounded-full border border-border/40 shadow-sm">
-        <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">{t('dashboard.localTime')}</span>
-        <span className="font-semibold text-sm tabular-nums text-foreground">{format(new Date(), 'HH:mm')}</span>
-      </div>
+      <div className="flex items-center gap-3 w-full sm:w-auto">
+        {/* Time Pill */}
+        <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-4 bg-background px-6 py-3 rounded-2xl border border-border shadow-premium h-14">
+          <span className="premium-label text-muted-foreground/60">{t('dashboard.localTime')}</span>
+          <span className="font-black text-sm tabular-nums text-foreground tracking-tight">{format(new Date(), 'HH:mm')}</span>
+        </div>
 
-      {/* Status Pill */}
-      <div className="flex items-center gap-2 bg-background/60 dark:bg-slate-900/40 backdrop-blur-md px-4 py-2 rounded-full border border-border/40 shadow-sm">
-        <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">Status</span>
-        <div className="flex items-center gap-1.5 pl-1">
-          <div className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
-          <span className="text-xs font-semibold text-foreground">Online</span>
+        {/* Status Pill */}
+        <div className="flex-1 sm:flex-none flex items-center justify-between sm:justify-start gap-4 bg-background px-6 py-3 rounded-2xl border border-border shadow-premium h-14">
+          <span className="premium-label text-muted-foreground/60">Status</span>
+          <div className="flex items-center gap-3 pl-1">
+            <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.6)] animate-pulse" />
+            <span className="text-xs font-black text-foreground tracking-tight uppercase">ONLINE</span>
+          </div>
         </div>
       </div>
     </div>
@@ -156,7 +164,7 @@ const KYCAlert = ({ t, navigate, verificationRequest }: { t: any, navigate: any,
 
   return (
     <Card data-tour="kyc-alert" className={cn(
-      "border-primary/20 shadow-premium mb-6 overflow-hidden relative group",
+      "border-primary/20 shadow-premium mb-6 overflow-hidden relative group rounded-3xl",
       isRejected ? "bg-destructive/5 border-destructive/20" : "bg-primary/5"
     )}>
       <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity pointer-events-none">
@@ -166,13 +174,13 @@ const KYCAlert = ({ t, navigate, verificationRequest }: { t: any, navigate: any,
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <div className="flex-1 text-center sm:text-left">
             <h3 className={cn(
-              "text-lg font-bold flex items-center justify-center sm:justify-start gap-2 mb-2",
+              "text-xl font-black tracking-tight flex items-center justify-center sm:justify-start gap-3 mb-2",
               isRejected ? "text-destructive" : "text-foreground"
             )}>
-              {isRejected ? <AlertTriangle className="h-5 w-5 animate-pulse" /> : <ShieldCheck className="h-5 w-5 text-primary animate-pulse" />}
+              {isRejected ? <AlertTriangle className="h-6 w-6 animate-pulse" /> : <ShieldCheck className="h-6 w-6 text-primary animate-pulse" />}
               {isRejected ? (t('dashboard.identityProtection.status_rejected') || "Verification Rejected") : (t('dashboard.action.verifyTitle') || "Complete Your Verification")}
             </h3>
-            <p className="text-muted-foreground text-sm max-w-xl">
+            <p className="text-muted-foreground text-sm max-w-xl font-medium leading-relaxed">
               {isRejected 
                 ? (rejectionReason || t('dashboard.identityProtection.rejected_desc') || "Your verification was not approved. Please review the requirements and try again.")
                 : (t('dashboard.action.verifyDesc') || "To fully secure your items and access all recovery features, please complete your identity verification.")
@@ -182,10 +190,8 @@ const KYCAlert = ({ t, navigate, verificationRequest }: { t: any, navigate: any,
           <Button 
             onClick={() => navigate('/verification')}
             variant={isRejected ? "destructive" : "default"}
-            className={cn(
-              "shadow-lg font-bold px-8",
-              !isRejected && "shadow-primary/20"
-            )}
+            size="standard"
+            className="w-full sm:w-auto"
           >
             {isRejected ? (t('dashboard.action.tryAgain') || "Try Again") : (t('dashboard.action.verifyAction') || "Verify Now")}
           </Button>
@@ -204,7 +210,11 @@ export default function UnifiedDashboard() {
   const { user, signOut } = useAuth();
   const { t } = useLanguage();
   const [assistedRegOpen, setAssistedRegOpen] = React.useState(false);
+  const [assistedUserOpen, setAssistedUserOpen] = React.useState(false);
   const [directVerifyOpen, setDirectVerifyOpen] = React.useState(false);
+  const [handoverOpen, setHandoverOpen] = React.useState(false);
+  const [selectedClaimId, setSelectedClaimId] = React.useState<number | null>(null);
+
 
   // Identity Protection Card (Rwanda Specific)
   const IdentityProtectionCard = ({ verificationRequest }: { verificationRequest?: any }) => {
@@ -251,7 +261,7 @@ export default function UnifiedDashboard() {
     const config = getStatusConfig();
 
     return (
-      <Card data-tour="identity-card" className="border-border/20 bg-card/60 backdrop-blur-sm shadow-sm hover:shadow-premium hover:shadow-primary/10 hover:border-primary/30 transition-all duration-300 overflow-hidden relative group h-full flex flex-col justify-between">
+      <Card data-tour="identity-card" className="border-border bg-card shadow-premium hover:border-primary transition-all duration-500 overflow-hidden relative group h-full flex flex-col justify-between rounded-3xl">
         <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
           <ShieldCheck className="h-24 w-24 text-primary" />
         </div>
@@ -287,8 +297,8 @@ export default function UnifiedDashboard() {
           </div>
           <Button 
             variant="link" 
-            size="sm" 
-            className="px-0 mt-4 text-xs font-medium text-primary group-hover:text-primary/80 h-auto"
+            size="standard" 
+            className="px-0 mt-4 text-sm font-black text-primary group-hover:text-primary/80 h-auto uppercase tracking-widest"
             onClick={() => navigate('/verification')}
           >
             {status === 'approved' ? t('dashboard.identityProtection.manage') : t('dashboard.action.verifyAction') || "Complete Verification"}
@@ -437,27 +447,27 @@ export default function UnifiedDashboard() {
             <KYCAlert t={t} navigate={navigate} verificationRequest={verificationRequest} />
           )}
           {/* Bento Box Action Grid */}
-          <div data-tour="quick-actions" className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 lg:grid-cols-5">
+          <div data-tour="quick-actions" className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:grid-cols-5">
             {/* Main Identity Block - Spans 3 columns on large screens, 2 on medium */}
             <motion.div data-tour="identity-protection" variants={itemVariants} className="md:col-span-2 lg:col-span-3">
               <IdentityProtectionCard verificationRequest={verificationRequest} />
             </motion.div>
 
             {/* Sub Action Blocks - Stacked vertically next to the identity block */}
-            <div className="flex flex-col gap-3 md:gap-4 md:col-span-1 lg:col-span-2">
+            <div className="flex flex-col gap-6 md:col-span-1 lg:col-span-2">
               <motion.div variants={itemVariants} className="flex-1">
                 <Card
                   data-tour="report-lost"
-                  className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-destructive/10 transition-all duration-300 border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group relative h-full flex flex-col justify-center"
+                  className="overflow-hidden cursor-pointer shadow-premium hover:shadow-destructive/20 transition-all duration-500 border-destructive/20 bg-destructive/5 hover:bg-destructive/10 group relative h-full flex flex-col justify-center min-h-[110px] rounded-3xl"
                   onClick={() => navigate('/report-lost')}
                 >
-                  <CardContent className="p-4 sm:p-5 flex items-center gap-4">
-                    <div className="p-2 sm:p-3 bg-destructive/10 rounded-xl shrink-0 group-hover:scale-105 transition-transform">
-                      <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-destructive" />
+                  <CardContent className="p-6 flex items-center gap-5">
+                    <div className="p-4 bg-destructive/10 rounded-2xl shrink-0 group-hover:scale-110 group-hover:bg-destructive/20 transition-all duration-300">
+                      <AlertTriangle className="h-7 w-7 text-destructive" />
                     </div>
                     <div>
-                      <h3 className="text-sm sm:text-base font-semibold text-destructive dark:text-red-400">{t('dashboard.action.lostTitle') || "I Lost Something"}</h3>
-                      <p className="text-muted-foreground text-xs leading-tight mt-0.5 font-normal">{t('dashboard.action.lostDesc') || "Report a lost item and notify others."}</p>
+                      <h3 className="text-base sm:text-lg font-black text-destructive dark:text-red-400 tracking-tight uppercase">{t('dashboard.action.lostTitle') || "I Lost Something"}</h3>
+                      <p className="text-muted-foreground text-xs leading-tight mt-1 font-medium opacity-70">{t('dashboard.action.lostDesc') || "Report a lost item and notify others."}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -466,16 +476,16 @@ export default function UnifiedDashboard() {
               <motion.div variants={itemVariants} className="flex-1">
                 <Card
                   data-tour="report-found"
-                  className="overflow-hidden cursor-pointer hover:shadow-premium hover:shadow-primary/10 transition-all duration-300 border-primary/20 bg-primary/5 hover:bg-primary/10 group relative h-full flex flex-col justify-center"
+                  className="overflow-hidden cursor-pointer shadow-premium hover:shadow-primary/20 transition-all duration-500 border-primary/20 bg-primary/5 hover:bg-primary/10 group relative h-full flex flex-col justify-center min-h-[110px] rounded-3xl"
                   onClick={() => navigate('/report-found')}
                 >
-                  <CardContent className="p-4 sm:p-5 flex items-center gap-4">
-                    <div className="p-2 sm:p-3 bg-primary/10 rounded-xl shrink-0 group-hover:scale-105 transition-transform">
-                      <Search className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                  <CardContent className="p-6 flex items-center gap-5">
+                    <div className="p-4 bg-primary/10 rounded-2xl shrink-0 group-hover:scale-110 group-hover:bg-primary/20 transition-all duration-300">
+                      <Search className="h-7 w-7 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-sm sm:text-base font-semibold text-primary dark:text-blue-400">{t('dashboard.action.foundTitle') || "I Found Something"}</h3>
-                      <p className="text-muted-foreground text-xs leading-tight mt-0.5 font-normal">{t('dashboard.action.foundDesc') || "Scan a QR code or report an item."}</p>
+                      <h3 className="text-base sm:text-lg font-black text-primary dark:text-blue-400 tracking-tight uppercase">{t('dashboard.action.foundTitle') || "I Found Something"}</h3>
+                      <p className="text-muted-foreground text-xs leading-tight mt-1 font-medium opacity-70">{t('dashboard.action.foundDesc') || "Scan a QR code or report an item."}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -495,20 +505,20 @@ export default function UnifiedDashboard() {
                   </p>
                 </div>
               </div>
-              <Button data-tour="register-item" onClick={() => navigate('/register-item')} variant="outline" size="sm" className="w-full sm:w-auto font-medium">
-                <Plus className="mr-2 h-4 w-4" />
+              <Button data-tour="register-item" onClick={() => navigate('/register-item')} variant="outline" size="standard" className="w-full sm:w-auto font-black uppercase tracking-widest text-xs">
+                <Plus className="mr-2 h-5 w-5" />
                 {t('dashboard.action.protectTitle')}
               </Button>
             </div>
 
-            <Card className="border-border/50 shadow-sm overflow-hidden bg-background/50 backdrop-blur-sm">
+            <Card className="border-border/50 shadow-premium overflow-hidden bg-background/50 backdrop-blur-sm rounded-3xl">
               <CardContent className="p-0">
                 <ItemsTable items={userStats.recentlyAddedItems?.slice(0, 4) || []} isLoading={false} />
               </CardContent>
             </Card>
 
             <div className="flex justify-center mt-6">
-              <Button variant="ghost" size="sm" onClick={() => navigate('/my-items')} className="text-muted-foreground font-bold hover:text-primary transition-colors">
+              <Button variant="ghost" size="standard" onClick={() => navigate('/my-items')} className="text-muted-foreground font-black uppercase tracking-widest text-xs hover:text-primary transition-colors">
                 {t('dashboard.viewAll')} →
               </Button>
             </div>
@@ -560,7 +570,7 @@ export default function UnifiedDashboard() {
             </motion.div>
 
             <motion.div variants={itemVariants} className="md:col-span-1">
-              <Card className="h-full border-primary/10 bg-primary/5">
+              <Card className="h-full border-primary/10 bg-primary/5 shadow-premium rounded-3xl overflow-hidden">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm font-bold flex items-center gap-2">
@@ -592,7 +602,7 @@ export default function UnifiedDashboard() {
 
           <div className="grid gap-6 md:grid-cols-3 mb-6">
             <motion.div variants={itemVariants} className="md:col-span-2 space-y-6">
-              <Card>
+              <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
                 <CardHeader>
                   <CardTitle>{t('dashboard.admin.monthlyRevenue')}</CardTitle>
                   <CardDescription>
@@ -605,7 +615,7 @@ export default function UnifiedDashboard() {
               </Card>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <Card>
+                <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
                   <CardHeader>
                     <CardTitle className="text-sm">{t('dashboard.admin.paymentStatus')}</CardTitle>
                   </CardHeader>
@@ -622,7 +632,7 @@ export default function UnifiedDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
                   <CardHeader>
                     <CardTitle className="text-sm">{t('dashboard.admin.paymentTypes')}</CardTitle>
                   </CardHeader>
@@ -641,7 +651,7 @@ export default function UnifiedDashboard() {
             </motion.div>
 
             <motion.div variants={itemVariants} className="space-y-6">
-              <Card className="h-full flex flex-col max-h-[600px]">
+              <Card className="h-full flex flex-col max-h-[600px] shadow-premium rounded-3xl overflow-hidden border-border/50">
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Clock className="h-4 w-4 text-primary" />
@@ -674,7 +684,7 @@ export default function UnifiedDashboard() {
                       </motion.div>
                     ))}
                   </motion.div>
-                  <Button variant="ghost" size="sm" className="w-full text-[10px] font-bold text-primary mt-2">
+                  <Button variant="ghost" size="standard" className="w-full text-xs font-black uppercase tracking-widest text-primary mt-2">
                     {t('dashboard.viewAll') || "VIEW ALL"}
                   </Button>
                 </CardContent>
@@ -698,8 +708,8 @@ export default function UnifiedDashboard() {
           animate="visible"
         >
           {/* Field Operations - Prominent for Agents */}
-          <div data-tour="agent-ops" className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <Card className="border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors cursor-pointer group" onClick={() => setDirectVerifyOpen(true)}>
+          <div data-tour="agent-ops" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <Card className="border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors cursor-pointer group shadow-premium rounded-3xl overflow-hidden" onClick={() => setDirectVerifyOpen(true)}>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2 group-hover:text-emerald-600 transition-colors">
                   <ShieldCheck className="h-4 w-4 text-emerald-500" />
@@ -708,20 +718,33 @@ export default function UnifiedDashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">Verify users directly by inspecting physical ID cards on site.</p>
-                <Button variant="link" size="sm" className="px-0 h-auto mt-2 text-emerald-600 group-hover:underline">Start Verification →</Button>
+                <Button variant="link" size="standard" className="px-0 h-auto mt-2 text-emerald-600 group-hover:underline font-black uppercase tracking-widest text-[10px]">Start Verification →</Button>
               </CardContent>
             </Card>
 
-            <Card className="border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group" onClick={() => setAssistedRegOpen(true)}>
+            <Card className="border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 transition-colors cursor-pointer group shadow-premium rounded-3xl overflow-hidden" onClick={() => setAssistedUserOpen(true)}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2 group-hover:text-primary transition-colors">
-                  <Search className="h-4 w-4 text-primary" />
-                  Assisted Registration
+                <CardTitle className="text-sm flex items-center gap-2 group-hover:text-blue-600 transition-colors">
+                  <Users className="h-4 w-4 text-blue-500" />
+                  Register New User
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-xs text-muted-foreground">Register items on behalf of unverified or non-technical users.</p>
-                <Button variant="link" size="sm" className="px-0 h-auto mt-2 text-primary group-hover:underline">Register for User →</Button>
+                <p className="text-xs text-muted-foreground">Create accounts for new subscribers in the field (assisted login).</p>
+                <Button variant="link" size="standard" className="px-0 h-auto mt-2 text-blue-600 group-hover:underline font-black uppercase tracking-widest text-[10px]">Create Account →</Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group shadow-premium rounded-3xl overflow-hidden" onClick={() => setAssistedRegOpen(true)}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 group-hover:text-primary transition-colors">
+                  <Search className="h-4 w-4 text-primary" />
+                  Assisted Item Registration
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground">Register items for unverified or non-technical users.</p>
+                <Button variant="link" size="standard" className="px-0 h-auto mt-2 text-primary group-hover:underline font-black uppercase tracking-widest text-[10px]">Register for User →</Button>
               </CardContent>
             </Card>
           </div>
@@ -778,7 +801,7 @@ export default function UnifiedDashboard() {
 
           {/* Report Tabs */}
           <motion.div data-tour="agent-reports" variants={itemVariants} className="mb-6">
-            <Card>
+            <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
               <CardHeader>
                 <CardTitle>{t('dashboard.agent.manageReports')}</CardTitle>
                 <CardDescription>{t('dashboard.agent.reportsDescription')}</CardDescription>
@@ -865,26 +888,26 @@ export default function UnifiedDashboard() {
 
           {/* Quick Actions for Agents */}
           <motion.div variants={itemVariants} className="mb-6">
-            <Card>
+            <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
               <CardHeader>
                 <CardTitle>{t('dashboard.agent.agentActions')}</CardTitle>
                 <CardDescription>{t('dashboard.agent.actionsDescription')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Button className="flex flex-col items-center justify-center h-24 space-y-2" variant="outline">
+                  <Button className="flex flex-col items-center justify-center h-24 space-y-2 rounded-2xl" variant="outline">
                     <Search className="h-6 w-6" />
                     <span>{t('dashboard.agent.actions.search')}</span>
                   </Button>
-                  <Button className="flex flex-col items-center justify-center h-24 space-y-2" variant="outline">
+                  <Button className="flex flex-col items-center justify-center h-24 space-y-2 rounded-2xl" variant="outline">
                     <FileText className="h-6 w-6" />
                     <span>{t('dashboard.agent.actions.newReport')}</span>
                   </Button>
-                  <Button className="flex flex-col items-center justify-center h-24 space-y-2" variant="outline">
+                  <Button className="flex flex-col items-center justify-center h-24 space-y-2 rounded-2xl" variant="outline">
                     <Clock className="h-6 w-6" />
                     <span>{t('dashboard.agent.actions.recentActivity')}</span>
                   </Button>
-                  <Button className="flex flex-col items-center justify-center h-24 space-y-2" variant="outline">
+                  <Button className="flex flex-col items-center justify-center h-24 space-y-2 rounded-2xl" variant="outline">
                     <Bell className="h-6 w-6" />
                     <span>{t('dashboard.agent.actions.notifications')}</span>
                   </Button>
@@ -905,13 +928,13 @@ export default function UnifiedDashboard() {
           animate="visible"
         >
           <motion.div variants={itemVariants} className="mb-6">
-            <Card>
+            <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>{t('dashboard.items.title')}</CardTitle>
                   <CardDescription>{t('dashboard.items.description')}</CardDescription>
                 </div>
-                <Button size="sm" onClick={() => navigate("/register-item")}>
+                <Button size="standard" className="h-12 sm:h-14 font-black uppercase tracking-widest text-xs" onClick={() => navigate("/register-item")}>
                   <Plus className="h-4 w-4 mr-2" /> {t('dashboard.items.registerNew')}
                 </Button>
               </CardHeader>
@@ -933,13 +956,13 @@ export default function UnifiedDashboard() {
           animate="visible"
         >
           <motion.div variants={itemVariants} className="mb-6">
-            <Card>
+            <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>{t('dashboard.reports.title')}</CardTitle>
                   <CardDescription>{t('dashboard.reports.description')}</CardDescription>
                 </div>
-                <Button size="sm" onClick={() => navigate("/report-lost")}>
+                <Button size="standard" className="h-12 sm:h-14 font-black uppercase tracking-widest text-xs" onClick={() => navigate("/report-lost")}>
                   <Plus className="h-4 w-4 mr-2" /> {t('dashboard.reports.newReport')}
                 </Button>
               </CardHeader>
@@ -1093,7 +1116,7 @@ export default function UnifiedDashboard() {
           animate="visible"
         >
           <div className="grid gap-6 md:grid-cols-2 mb-6">
-            <Card>
+            <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary" />
@@ -1133,7 +1156,7 @@ export default function UnifiedDashboard() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <BellRing className="h-5 w-5 text-primary" />
@@ -1160,7 +1183,7 @@ export default function UnifiedDashboard() {
                               {claim.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="flex gap-2">
                             <Button
                               size="sm"
                               variant="ghost"
@@ -1171,6 +1194,20 @@ export default function UnifiedDashboard() {
                             >
                               {t('common.actions.review')}
                             </Button>
+                            {(isAgent || isAdmin) && claim.status !== 'resolved' && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-primary/30 text-primary hover:bg-primary/5"
+                                onClick={() => {
+                                  setSelectedClaimId(claim.id);
+                                  setHandoverOpen(true);
+                                }}
+                              >
+                                <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+                                {t('dashboard.action.handover') || "Handover"}
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1302,6 +1339,23 @@ export default function UnifiedDashboard() {
         </div>
         <OnboardingTour />
 
+        <div className="mt-8 mb-6 hidden md:block">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="inline-flex h-12 items-center justify-center rounded-xl bg-muted/50 p-1 text-muted-foreground backdrop-blur-sm border border-border/50">
+              {getDashboardTabs().map((tab) => (
+                <TabsTrigger
+                  key={tab.id}
+                  value={tab.id}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                >
+                  {tab.icon && <span className="mr-2 opacity-70 group-data-[state=active]:opacity-100">{tab.icon}</span>}
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
+
         <div className="mt-2">
           <React.Suspense fallback={<div className="p-8 text-center italic">{t('dashboard.loadingComponents')}</div>}>
             {renderDashboardContent()}
@@ -1312,6 +1366,18 @@ export default function UnifiedDashboard() {
         <AssistedRegistrationDialog 
           isOpen={assistedRegOpen} 
           onClose={() => setAssistedRegOpen(false)} 
+        />
+        <AssistedUserCreationDialog
+          isOpen={assistedUserOpen}
+          onClose={() => setAssistedUserOpen(false)}
+        />
+        <ItemHandoverDialog
+          isOpen={handoverOpen}
+          claimId={selectedClaimId}
+          onClose={() => {
+            setHandoverOpen(false);
+            setSelectedClaimId(null);
+          }}
         />
         <DirectVerificationDialog 
           isOpen={directVerifyOpen} 

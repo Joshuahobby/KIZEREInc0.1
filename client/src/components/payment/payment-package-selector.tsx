@@ -93,9 +93,9 @@ export function PaymentPackageSelector({
               type="button"
               onClick={() => handleSelectPackage(pkg.id, Number(pkg.amount))}
               className={cn(
-                "w-full flex items-center gap-3 p-3.5 rounded-xl border text-left transition-all",
+                "w-full flex items-center gap-4 p-4 rounded-3xl border text-left transition-all",
                 isSelected
-                  ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/20 shadow-premium"
                   : "border-border hover:border-primary/40 hover:bg-muted/30"
               )}
             >

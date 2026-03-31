@@ -98,7 +98,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   return (
     <Card 
       onClick={onClick}
-      className={`h-full border border-border/60 bg-card/60 backdrop-blur-xl shadow-lg shadow-neutral-200/20 dark:shadow-none hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden ${className || ''} ${onClick ? 'cursor-pointer hover:bg-card/80' : ''}`}
+      className={`h-full border border-border/60 bg-card/60 backdrop-blur-xl shadow-premium dark:shadow-none hover:-translate-y-1 transition-all duration-300 overflow-hidden rounded-3xl ${className || ''} ${onClick ? 'cursor-pointer hover:bg-card/80' : ''}`}
     >
       <CardContent className="p-6 relative">
         <div className="flex items-center justify-between mb-4">

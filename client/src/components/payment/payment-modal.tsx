@@ -348,7 +348,7 @@ export function PaymentModal({
                 <Button
                   onClick={proceedToPhoneEntry}
                   disabled={!selectedPackage}
-                  className="h-11 rounded-xl w-full"
+                  className="h-14 rounded-2xl font-black uppercase tracking-wider w-full shadow-premium"
                 >
                   Continue — {selectedPackage ? `${selectedPackage.amount.toLocaleString()} RWF` : "Select a plan"}
                 </Button>
@@ -415,14 +415,14 @@ export function PaymentModal({
                         if (couponError) setCouponError(null);
                       }}
                       disabled={!!appliedCoupon || isValidatingCoupon}
-                      className="pl-10 h-11 rounded-xl bg-background border-border/60"
+                      className="pl-10 h-14 rounded-2xl bg-background border-border/60"
                     />
                   </div>
                   {appliedCoupon ? (
                     <Button 
                       variant="outline" 
                       onClick={removeCoupon}
-                      className="h-11 px-4 rounded-xl border-emerald-500/20 text-emerald-600 hover:bg-emerald-500/5 hover:text-emerald-700"
+                      className="h-14 px-5 rounded-2xl border-emerald-500/20 text-emerald-600 font-bold hover:bg-emerald-500/5 hover:text-emerald-700"
                     >
                       Remove
                     </Button>
@@ -431,7 +431,7 @@ export function PaymentModal({
                       variant="outline" 
                       onClick={validateCoupon}
                       disabled={!couponCode.trim() || isValidatingCoupon}
-                      className="h-11 px-4 rounded-xl"
+                      className="h-14 px-5 rounded-2xl font-bold"
                     >
                       {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                     </Button>
@@ -453,7 +453,7 @@ export function PaymentModal({
                     placeholder="Mobile Money Number"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="pl-10 h-11 rounded-xl bg-background border-border/60"
+                    className="pl-10 h-14 rounded-2xl bg-background border-border/60 text-base"
                     autoFocus
                   />
                 </div>
@@ -462,7 +462,7 @@ export function PaymentModal({
               <div className="payment-modal-inset">
                 <Button
                   onClick={initiatePayment}
-                  className="h-12 rounded-xl text-base font-bold shadow-lg shadow-primary/20 w-full"
+                  className="h-16 rounded-3xl text-base font-black uppercase tracking-widest shadow-premium w-full hover:-translate-y-1 transition-all"
                   disabled={isInitializing || !phoneNumber.trim() || resolvedAmount <= 0}
                 >
                   {isInitializing ? (
@@ -512,7 +512,7 @@ export function PaymentModal({
               <Button
                 onClick={verifyPayment}
                 variant="outline"
-                className="w-full h-11 rounded-xl"
+                className="w-full h-14 rounded-2xl font-bold"
                 disabled={isVerifying}
               >
                 {isVerifying ? (
@@ -552,7 +552,7 @@ export function PaymentModal({
                   setFailureMessage(null);
                   setStep("phone");
                 }}
-                className="w-full h-11 rounded-xl mt-2"
+                className="w-full h-14 rounded-2xl mt-2 font-bold"
               >
                 Try Again
               </Button>

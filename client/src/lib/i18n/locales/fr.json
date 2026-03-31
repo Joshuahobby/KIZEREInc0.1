@@ -1,5 +1,6 @@
 {
   "common": {
+    "scrollToTop": "Retour en Haut",
     "appName": "KIZERE",
     "slogan": "Enregistrer, Suivre, Protéger",
     "welcome": "Bienvenue sur KIZERE",
@@ -216,6 +217,13 @@
         "quote": "J'ai trouvé le portefeuille de quelqu'un et j'ai utilisé KIZERE pour localiser le propriétaire. La plateforme a facilité la connexion et le retour du portefeuille en toute sécurité."
       }
     },
+    "featured": {
+      "sectionTitle": "Articles Urgents",
+      "mainTitle": "Signalements à la Une",
+      "subtitle": "Boosté pour une visibilité maximale. Ces articles nécessitent votre attention immédiate.",
+      "viewAll": "Parcourir le Répertoire",
+      "noFeatured": "Aucun signalement à la une pour le moment."
+    },
     "footerDescription": "La plateforme ultime pour l'enregistrement d'objets, la gestion des objets perdus et trouvés, et la protection de la propriété.",
     "footer": {
       "quickLinks": "Liens Rapides",
@@ -374,9 +382,34 @@
     },
     "registeredItems": "Objets Enregistrés",
     "recentActivity": "Activité Récente",
+    "exportData": "Exporter les Données",
+    "importData": "Importer les Données",
     "quickActions": {
       "title": "Actions Rapides",
-      "subtitle": "Outils et raccourcis fréquemment utilisés"
+      "subtitle": "Outils et raccourcis fréquemment utilisés",
+      "actions": "Actions",
+      "quickAction": "Action Rapide",
+      "addUser": "Ajouter un Utilisateur",
+      "addUserDesc": "Créer un nouveau compte utilisateur",
+      "registerItem": "Enregistrer un Objet",
+      "registerItemDesc": "Enregistrer un nouvel objet de valeur",
+      "reportLost": "Signaler la Perte",
+      "reportLostDesc": "Déposer un signalement d'objet perdu",
+      "reportFound": "Signaler une Trouvaille",
+      "reportFoundDesc": "Déposer un signalement d'objet trouvé",
+      "pendingReports": "Signalements en Attente",
+      "pendingReportsDesc": "Passer en revue les signalements en attente",
+      "processReports": "Traiter les Signalements",
+      "processReportsDesc": "Vérifier et mettre à jour les signalements",
+      "newPackage": "Nouveau Forfait",
+      "newPackageDesc": "Créer un forfait de paiement",
+      "payments": "Paiements",
+      "paymentsDesc": "Voir le tableau de bord des paiements",
+      "analytics": "Analyses",
+      "analyticsDesc": "Voir les analyses du système",
+      "settings": "Paramètres",
+      "settingsDesc": "Configuration du système",
+      "scrollToTopDesc": "Retourner rapidement en haut de la page"
     },
     "viewAllItems": "Voir Tous les Objets",
     "reportLostItem": "Signaler un Objet Perdu",

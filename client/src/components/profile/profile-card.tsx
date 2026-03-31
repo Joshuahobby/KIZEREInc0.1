@@ -36,10 +36,10 @@ export function ProfileCard({ user, onEdit }: ProfileCardProps) {
   };
 
   return (
-    <Card className="border-border/50 shadow-lg overflow-hidden bg-background/60 backdrop-blur-xl transition-all duration-300">
+    <Card className="border-white/10 shadow-premium overflow-hidden bg-[#0B0F1A] transition-all duration-300">
       <CardHeader className="relative pb-8 bg-gradient-to-br from-primary/5 via-primary/5 to-transparent">
         <div className="absolute top-8 right-8">
-          <Badge variant="outline" className="font-medium capitalize bg-background/80 backdrop-blur-md border-primary/20 text-primary shadow-sm">
+          <Badge variant="outline" className="font-black capitalize bg-white/5 border-primary/20 text-primary shadow-sm h-8 px-4">
             {user.role}
           </Badge>
         </div>
@@ -57,8 +57,8 @@ export function ProfileCard({ user, onEdit }: ProfileCardProps) {
             </Avatar>
           </div>
           <div className="space-y-1 text-center">
-            <CardTitle className="text-2xl">{user.fullName}</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-3xl font-black tracking-tighter">{user.fullName}</CardTitle>
+            <CardDescription className="font-bold text-white/40">
               {t('profile.joinedOn', { date: formatDate(user.createdAt) })}
             </CardDescription>
           </div>
@@ -104,10 +104,10 @@ export function ProfileCard({ user, onEdit }: ProfileCardProps) {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end">
+      <CardFooter className="flex justify-end pt-2">
         {onEdit && (
-          <Button variant="outline" onClick={onEdit} className="flex items-center gap-2">
-            <Edit className="h-4 w-4" />
+          <Button variant="outline" onClick={onEdit} className="h-14 w-full md:w-auto flex items-center justify-center gap-3 rounded-2xl border-white/10 bg-white/5 font-black text-white hover:bg-white/10 transition-all">
+            <Edit className="h-5 w-5 text-primary" />
             {t('profile.editProfile')}
           </Button>
         )}

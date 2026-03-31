@@ -157,7 +157,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <Card className="h-full border border-border/50 bg-card/50 backdrop-blur-sm">
+    <Card className="h-full border border-border/50 bg-background/60 backdrop-blur-xl shadow-premium rounded-3xl">
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg font-display flex items-center">

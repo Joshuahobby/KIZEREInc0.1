@@ -59,6 +59,25 @@ export function startExpirationCron() {
           );
         }
       }
+
+      // Cleanup expired featured status (after 30 days)
+      try {
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const expiredFeatured = await db.update(reports)
+          .set({ isFeatured: false })
+          .where(and(
+            eq(reports.isFeatured, true),
+            lte(reports.featuredAt, thirtyDaysAgo)
+          ))
+          .returning();
+        
+        if (expiredFeatured.length > 0) {
+          logger.info(`Unfeatured ${expiredFeatured.length} reports due to expiration`);
+        }
+      } catch (error) {
+        logger.error('Error cleaning up expired featured status', { error });
+      }
+
     } catch (error) {
       logger.error('Error in expiration cron', { error });
     }

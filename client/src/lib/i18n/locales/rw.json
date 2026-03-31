@@ -12,6 +12,7 @@
     "returnToHome": "Garuka Ahabanza",
     "language": "Ururimi",
     "search": "Shakisha",
+    "scrollToTop": "Subira hejuru",
     "register_item": "Andika Ikintu",
     "complete_registration": "Uzuza Kwandikisha",
     "filter": "Shungura",
@@ -264,6 +265,13 @@
       },
       "viewMore": "Reba Ubundi Buhamya"
     },
+    "featured": {
+      "sectionTitle": "Ibintu Byehejejwe",
+      "mainTitle": "Ibimenyetso By'ingenzi",
+      "subtitle": "Byahawe intebe imbere kugira ngo biboneke vuba. Ibi bintu bikeneye kwitwararika vuba cyane.",
+      "viewAll": "Shakisha mu Bubiko",
+      "noFeatured": "Nta bimenyetso by'ingenzi bihari ubu."
+    },
     "mobileApp": {
       "sectionTitle": "Gukoresha Kuri Telefoni",
       "mainTitle": "KIZERE kuri Telefoni Yawe",
@@ -412,6 +420,8 @@
     "quickActions": {
       "title": "Ibikoresho by'Akokanya",
       "subtitle": "Ibikoresho n'inzira bikunze gukoreshwa",
+      "actions": "Ibikorwa",
+      "quickAction": "Igikorwa cy'Akokanya",
       "addUser": "Ongeramo Umukoresha",
       "addUserDesc": "Fungura konti nshya y'umukoresha",
       "registerItem": "Andika Ikintu",
@@ -431,7 +441,8 @@
       "analytics": "Ibarurishamibare",
       "analyticsDesc": "Reba imibare n'isesengura rya sisitemu",
       "settings": "Igenamiterere",
-      "settingsDesc": "Igenamiterere rya sisitemu"
+      "settingsDesc": "Igenamiterere rya sisitemu",
+      "scrollToTopDesc": "Subira vuba aho watangiriye ku rupapuro"
     },
     "moderation": {
       "title": "Kugenzura",
