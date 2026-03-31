@@ -221,6 +221,7 @@ export function generateApiKey(): string {
 
 /**
  * Create a new retailer.
+ * Validates the linked user exists and updates their role to "Retailer".
  */
 export async function createRetailer(data: {
   name: string;
@@ -232,6 +233,34 @@ export async function createRetailer(data: {
   logoUrl?: string;
   metadata?: Record<string, any>;
 }) {
+  // Validate the linked user exists
+  const [linkedUser] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, data.userId))
+    .limit(1);
+
+  if (!linkedUser) {
+    throw Object.assign(
+      new Error(`User with ID ${data.userId} does not exist. Please select a valid user.`),
+      { status: 400 }
+    );
+  }
+
+  // Check if user is already linked to another retailer
+  const [existingRetailer] = await db
+    .select()
+    .from(retailers)
+    .where(eq(retailers.userId, data.userId))
+    .limit(1);
+
+  if (existingRetailer) {
+    throw Object.assign(
+      new Error(`User ${linkedUser.fullName} (ID ${data.userId}) is already linked to retailer "${existingRetailer.name}".`),
+      { status: 409 }
+    );
+  }
+
   const apiKey = generateApiKey();
 
   const [retailer] = await db
@@ -250,7 +279,17 @@ export async function createRetailer(data: {
     })
     .returning();
 
-  logger.info("Retailer created", { retailerId: retailer.id, name: data.name });
+  // Update the linked user's role to "Retailer" (unless they are Admin)
+  if (linkedUser.role !== "Admin") {
+    await db
+      .update(users)
+      .set({ role: "Retailer" })
+      .where(eq(users.id, data.userId));
+
+    logger.info("User role updated to Retailer", { userId: data.userId, previousRole: linkedUser.role });
+  }
+
+  logger.info("Retailer created", { retailerId: retailer.id, name: data.name, linkedUserId: data.userId });
 
   return retailer;
 }

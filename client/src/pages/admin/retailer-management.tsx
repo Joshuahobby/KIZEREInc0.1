@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { toast } from "@/hooks/use-toast";
+import { useDebounce } from "@/hooks/use-debounce";
 import { PageLayout } from "@/components/layout/page-layout";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,6 +55,10 @@ import {
   EyeOff,
   Pencil,
   MoreHorizontal,
+  Search,
+  User,
+  Loader2,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -78,6 +83,130 @@ interface Retailer {
   updatedAt: string | null;
 }
 
+interface UserResult {
+  id: number;
+  fullName: string;
+  username: string;
+  email: string;
+  role: string;
+  phoneNumber: string | null;
+}
+
+/**
+ * Searchable user selector that queries /api/admin/users with debounced input.
+ */
+function UserSearchCombobox({
+  selectedUser,
+  onSelect,
+}: {
+  selectedUser: UserResult | null;
+  onSelect: (user: UserResult | null) => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const { data: usersData, isFetching } = useQuery<{ users: UserResult[]; total: number }>({
+    queryKey: ["/api/admin/users", { search: debouncedSearch, pageSize: 10, page: 1 }],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        search: debouncedSearch,
+        pageSize: "10",
+        page: "1",
+      });
+      return apiRequest<{ users: UserResult[]; total: number }>(`/api/admin/users?${params.toString()}`);
+    },
+    enabled: debouncedSearch.length >= 2,
+  });
+
+  const users = usersData?.users ?? [];
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (selectedUser) {
+    return (
+      <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-muted/50">
+        <User className="w-4 h-4 text-muted-foreground shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{selectedUser.fullName}</p>
+          <p className="text-xs text-muted-foreground truncate">
+            ID: {selectedUser.id} &middot; {selectedUser.email} &middot; {selectedUser.role}
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 shrink-0"
+          onClick={() => onSelect(null)}
+        >
+          <X className="w-3.5 h-3.5" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search by name, email, or username..."
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => {
+            if (searchQuery.length >= 2) setIsOpen(true);
+          }}
+          className="pl-9"
+        />
+        {isFetching && (
+          <Loader2 className="absolute right-2.5 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />
+        )}
+      </div>
+      {isOpen && debouncedSearch.length >= 2 && (
+        <div className="absolute z-50 top-full mt-1 w-full bg-popover border rounded-md shadow-md max-h-[200px] overflow-y-auto">
+          {users.length === 0 && !isFetching ? (
+            <p className="px-3 py-2 text-sm text-muted-foreground">No users found</p>
+          ) : (
+            users.map((user) => (
+              <button
+                key={user.id}
+                type="button"
+                className="w-full text-left px-3 py-2 hover:bg-accent transition-colors flex items-center gap-2"
+                onClick={() => {
+                  onSelect(user);
+                  setSearchQuery("");
+                  setIsOpen(false);
+                }}
+              >
+                <User className="w-4 h-4 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{user.fullName}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    ID: {user.id} &middot; {user.email} &middot; {user.role}
+                  </p>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RetailerManagementPage() {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -88,12 +217,12 @@ export default function RetailerManagementPage() {
   const [copiedKey, setCopiedKey] = useState(false);
 
   // Create form state
+  const [selectedLinkedUser, setSelectedLinkedUser] = useState<UserResult | null>(null);
   const [createForm, setCreateForm] = useState({
     name: "",
     email: "",
     phone: "",
     address: "",
-    userId: "",
     subscriptionPlan: "basic",
   });
 
@@ -114,12 +243,11 @@ export default function RetailerManagementPage() {
   const retailers = retailersData?.retailers ?? [];
 
   const createMutation = useMutation({
-    mutationFn: async (data: typeof createForm) => {
+    mutationFn: async (data: typeof createForm & { userId: number }) => {
       const res = await apiRequest<{ success: boolean; retailer: Retailer }>("/api/pos/admin/retailers", {
         method: "POST",
         data: {
           ...data,
-          userId: parseInt(data.userId, 10),
           phone: data.phone || undefined,
           address: data.address || undefined,
         },
@@ -130,7 +258,8 @@ export default function RetailerManagementPage() {
       toast({ title: "Retailer created", description: `API Key: ${data.retailer.apiKey}` });
       queryClient.invalidateQueries({ queryKey: ["/api/pos/admin/retailers"] });
       setIsCreateOpen(false);
-      setCreateForm({ name: "", email: "", phone: "", address: "", userId: "", subscriptionPlan: "basic" });
+      setCreateForm({ name: "", email: "", phone: "", address: "", subscriptionPlan: "basic" });
+      setSelectedLinkedUser(null);
     },
     onError: (err: any) => {
       toast({ title: "Failed to create retailer", description: err.message, variant: "destructive" });
@@ -251,16 +380,22 @@ export default function RetailerManagementPage() {
                         placeholder="+250 7XX XXX XXX"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="create-userId">Linked User ID</Label>
-                      <Input
-                        id="create-userId"
-                        type="number"
-                        value={createForm.userId}
-                        onChange={(e) => setCreateForm({ ...createForm, userId: e.target.value })}
-                        placeholder="User ID number"
-                      />
-                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Linked User Account</Label>
+                    <UserSearchCombobox
+                      selectedUser={selectedLinkedUser}
+                      onSelect={(user) => {
+                        setSelectedLinkedUser(user);
+                        // Auto-fill email from user if form email is empty
+                        if (user && !createForm.email) {
+                          setCreateForm((prev) => ({ ...prev, email: user.email }));
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Search for an existing user to link as the retailer operator. Their role will be updated to Retailer.
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="create-address">Address</Label>
@@ -292,8 +427,11 @@ export default function RetailerManagementPage() {
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
                   <Button
-                    onClick={() => createMutation.mutate(createForm)}
-                    disabled={createMutation.isPending || !createForm.name || !createForm.email || !createForm.userId}
+                    onClick={() => {
+                      if (!selectedLinkedUser) return;
+                      createMutation.mutate({ ...createForm, userId: selectedLinkedUser.id });
+                    }}
+                    disabled={createMutation.isPending || !createForm.name || !createForm.email || !selectedLinkedUser}
                   >
                     {createMutation.isPending ? "Creating..." : "Create Retailer"}
                   </Button>

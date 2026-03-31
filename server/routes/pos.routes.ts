@@ -318,7 +318,8 @@ router.post(
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
-      res.status(500).json({ message: error.message || "Internal server error" });
+      const status = error.status || 500;
+      res.status(status).json({ message: error.message || "Internal server error" });
     }
   }
 );
