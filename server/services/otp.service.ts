@@ -95,13 +95,13 @@ export async function sendOTP(
     expiresAt.setMinutes(expiresAt.getMinutes() + OTP_EXPIRY_MINUTES);
 
     // Store hashed code in database
-    await db.insert(verificationCodes).values({
+    const [insertedCode] = await db.insert(verificationCodes).values({
       userId,
       code: hashedCode,
       type,
       channel,
       expiresAt,
-    });
+    }).returning({ id: verificationCodes.id });
 
     // Send the code via the chosen channel
     let sent = false;
@@ -112,6 +112,9 @@ export async function sendOTP(
     }
 
     if (!sent) {
+      // Clean up the unused code so it doesn't count against their rate limit
+      await db.delete(verificationCodes).where(eq(verificationCodes.id, insertedCode.id));
+      
       logger.error('Failed to deliver OTP', { userId, channel, type });
       return {
         success: false,

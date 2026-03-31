@@ -239,9 +239,9 @@ export function setupAuth(app: Express) {
 
           // Determine available 2FA methods
           const methods: string[] = [];
-          if (user.phoneNumber && user.phoneVerified) methods.push('sms');
+          if (user.phoneNumber) methods.push('sms');
           if (user.email && !user.email.includes('@placeholder.kizere.rw')) methods.push('email');
-          // Fallback: always allow email if no phone is verified
+          // Fallback: always allow email if no phone is verified and no valid email is present
           if (methods.length === 0) methods.push('email');
 
           return res.status(200).json({
@@ -312,7 +312,11 @@ export function setupAuth(app: Express) {
       }
 
       const result = await sendOTP(user.id, channel, 'login_2fa', destination);
-      return res.status(result.success ? 200 : 429).json({ message: result.message });
+      if (!result.success) {
+        const isRateLimit = result.message.includes('Too many');
+        return res.status(isRateLimit ? 429 : 500).json({ message: result.message });
+      }
+      return res.status(200).json({ message: result.message });
     } catch (error) {
       next(error);
     }
