@@ -62,6 +62,12 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
     if (result.error) {
       logger.error('Failed to send email via Resend API', { error: result.error, to: options.to });
+      // In development, fall back to console logging to unblock the flow
+      if (process.env.NODE_ENV !== 'production') {
+        logger.warn('Email failed but simulating success in dev mode');
+        console.log(`\n📧 [DEV EMAIL FALLBACK] To: ${options.to}\n   Subject: ${options.subject}\n   Content (preview): ${options.html.substring(0, 50)}...\n`);
+        return true;
+      }
       return false;
     }
 
@@ -69,6 +75,10 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     return true;
   } catch (error) {
     logger.error('Failed to send email', { error, to: options.to });
+    if (process.env.NODE_ENV !== 'production') {
+      logger.warn('Email threw error but simulating success in dev mode');
+      return true;
+    }
     return false;
   }
 }
