@@ -40,9 +40,11 @@ export default function VerifyOTPPage() {
     setCountdown(60); // 60 second cooldown
   }, [send2FACode]);
 
+  const autoSendTriggered = React.useRef(false);
+
   // Auto-select and auto-send if a preferred method is set or only one method available
   useEffect(() => {
-    if (selectedChannel || codeSent || !pending2FA) return;
+    if (selectedChannel || codeSent || !pending2FA || autoSendTriggered.current) return;
 
     let channelToAutoSend: 'sms' | 'email' | null = null;
 
@@ -53,6 +55,7 @@ export default function VerifyOTPPage() {
     }
 
     if (channelToAutoSend) {
+      autoSendTriggered.current = true;
       console.log(`[VerifyOTPPage] Auto-selecting and sending to ${channelToAutoSend}`);
       handleSendCode(channelToAutoSend);
     }
