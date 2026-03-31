@@ -785,6 +785,17 @@
     "nidRequired": "Kitambulisho cha Taifa kinahitajika (angalau herufi 6)",
     "nameRequired": "Jina kamili linahitajika",
     "serialRequired": "Namba ya mfululizo inahitajika (angalau herufi 3)",
-    "printReceipt": "Chapisha"
+    "printReceipt": "Chapisha",
+    "retailerDashboard": "Dashibodi ya Muuzaji",
+    "retailerDashboardDesc": "Muhtasari wa usajili wako wa POS na shughuli",
+    "totalProducts": "Jumla ya Bidhaa",
+    "totalTransfers": "Jumla ya Uhamisho",
+    "uniqueCustomers": "Wateja wa Kipekee",
+    "recentActivity": "Shughuli za Hivi Karibuni",
+    "recentActivityDesc": "Matukio ya hivi karibuni yaliyosindikwa na kituo chako cha POS",
+    "recentProducts": "Usajili wa Hivi Karibuni",
+    "recentProductsDesc": "Bidhaa za hivi karibuni zilizosajiliwa na biashara yako",
+    "noActivity": "Hakuna shughuli za hivi karibuni zilizopatikana.",
+    "noProducts": "Hakuna bidhaa zilizosajiliwa bado."
   }
 }

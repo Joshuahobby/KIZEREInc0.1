@@ -228,6 +228,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
     // POS Category (Retailer/Admin)
     if (isRetailer || isAdmin) {
       const posItems: NavItem[] = [
+        { title: "Retailer Dashboard", href: "/retailer/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
         { title: "POS Terminal", href: "/pos", icon: <Store className="h-5 w-5" /> },
       ];
       categories.push({ title: "POS", items: posItems });

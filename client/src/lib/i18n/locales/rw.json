@@ -2045,6 +2045,17 @@
     "nidRequired": "Indangamuntu irasabwa (byibuze inyuguti 6)",
     "nameRequired": "Amazina yose arasabwa",
     "serialRequired": "Nimero y'umusaraba irasabwa (byibuze inyuguti 3)",
-    "printReceipt": "Capira"
+    "printReceipt": "Capira",
+    "retailerDashboard": "Incamake y'Umucuruzi",
+    "retailerDashboardDesc": "Incamake y'ibyanditswe muri POS hamwe n'ibyakozwe",
+    "totalProducts": "Ibiciro Byose",
+    "totalTransfers": "Ibyo Woherejwe",
+    "uniqueCustomers": "Abakiriya Bihariye",
+    "recentActivity": "Ibikorwa Biherutse",
+    "recentActivityDesc": "Ibikorwa bya nyuma byakozwe na terminal yawe ya POS",
+    "recentProducts": "Iyandikwa rya vuba",
+    "recentProductsDesc": "Ibicuruzwa bishya byanditswe n'ubucuruzi bwawe",
+    "noActivity": "Nta bikorwa biherutse kuboneka.",
+    "noProducts": "Nta bicuruzwa byanditswe kugeza ubu."
   }
 }

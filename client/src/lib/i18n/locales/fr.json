@@ -935,6 +935,17 @@
     "nidRequired": "L'ID national est requis (min. 6 caractères)",
     "nameRequired": "Le nom complet est requis",
     "serialRequired": "Le numéro de série est requis (min. 3 caractères)",
-    "printReceipt": "Imprimer"
+    "printReceipt": "Imprimer",
+    "retailerDashboard": "Tableau de Bord Détaillant",
+    "retailerDashboardDesc": "Aperçu de vos enregistrements POS et activités",
+    "totalProducts": "Total des Produits",
+    "totalTransfers": "Transferts Totaux",
+    "uniqueCustomers": "Clients Uniques",
+    "recentActivity": "Activité Récente",
+    "recentActivityDesc": "Derniers événements traités par votre terminal POS",
+    "recentProducts": "Enregistrements Récents",
+    "recentProductsDesc": "Derniers produits enregistrés par votre entreprise",
+    "noActivity": "Aucune activité récente trouvée.",
+    "noProducts": "Aucun produit enregistré pour le moment."
   }
 }

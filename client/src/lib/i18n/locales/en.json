@@ -2053,6 +2053,17 @@
     "nidRequired": "National ID is required (min 6 characters)",
     "nameRequired": "Full name is required",
     "serialRequired": "Serial number is required (min 3 characters)",
-    "printReceipt": "Print"
+    "printReceipt": "Print",
+    "retailerDashboard": "Retailer Dashboard",
+    "retailerDashboardDesc": "Overview of your POS registrations and activity",
+    "totalProducts": "Total Products",
+    "totalTransfers": "Total Transfers",
+    "uniqueCustomers": "Unique Customers",
+    "recentActivity": "Recent Activity",
+    "recentActivityDesc": "Latest events processed by your POS terminal",
+    "recentProducts": "Recent Registrations",
+    "recentProductsDesc": "Latest products registered by your business",
+    "noActivity": "No recent activity found.",
+    "noProducts": "No products registered yet."
   }
 }

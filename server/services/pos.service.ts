@@ -4,7 +4,7 @@ import {
   InsertUser, InsertPosProduct, InsertOwnershipLedger,
   Retailer, PosProduct, OwnershipLedgerEntry
 } from "@shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, count, sql } from "drizzle-orm";
 import { createLogger } from "../utils/logger";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -405,4 +405,97 @@ export async function getOwnerProducts(ownerId: number) {
     .from(posProducts)
     .where(eq(posProducts.currentOwnerId, ownerId))
     .orderBy(desc(posProducts.registrationDate));
+}
+
+// ─── Retailer Dashboard Stats ───
+
+export interface RetailerStats {
+  totalProducts: number;
+  totalTransfers: number;
+  totalCustomers: number;
+  productsByCategory: { category: string; count: number }[];
+  productsByStatus: { status: string; count: number }[];
+  recentActivity: {
+    id: number;
+    event: string;
+    productId: number;
+    toUserId: number;
+    notes: string | null;
+    timestamp: Date;
+  }[];
+}
+
+/**
+ * Get aggregate stats for a retailer's dashboard.
+ */
+export async function getRetailerStats(retailerId: number): Promise<RetailerStats> {
+  // Total products registered by this retailer
+  const [productCountResult] = await db
+    .select({ count: count() })
+    .from(posProducts)
+    .where(eq(posProducts.retailerId, retailerId));
+  const totalProducts = productCountResult?.count ?? 0;
+
+  // Total transfers facilitated by this retailer
+  const [transferCountResult] = await db
+    .select({ count: count() })
+    .from(ownershipLedger)
+    .where(and(
+      eq(ownershipLedger.registeredBy, retailerId),
+      eq(ownershipLedger.event, "transfer")
+    ));
+  const totalTransfers = transferCountResult?.count ?? 0;
+
+  // Unique customers (distinct currentOwnerId across retailer's products)
+  const [customerCountResult] = await db
+    .select({ count: sql<number>`count(distinct ${posProducts.currentOwnerId})` })
+    .from(posProducts)
+    .where(eq(posProducts.retailerId, retailerId));
+  const totalCustomers = customerCountResult?.count ?? 0;
+
+  // Products grouped by category
+  const productsByCategory = await db
+    .select({
+      category: posProducts.category,
+      count: count(),
+    })
+    .from(posProducts)
+    .where(eq(posProducts.retailerId, retailerId))
+    .groupBy(posProducts.category)
+    .orderBy(desc(count()));
+
+  // Products grouped by status
+  const productsByStatus = await db
+    .select({
+      status: posProducts.status,
+      count: count(),
+    })
+    .from(posProducts)
+    .where(eq(posProducts.retailerId, retailerId))
+    .groupBy(posProducts.status)
+    .orderBy(desc(count()));
+
+  // Recent activity (last 10 ledger entries for this retailer)
+  const recentActivity = await db
+    .select({
+      id: ownershipLedger.id,
+      event: ownershipLedger.event,
+      productId: ownershipLedger.productId,
+      toUserId: ownershipLedger.toUserId,
+      notes: ownershipLedger.notes,
+      timestamp: ownershipLedger.timestamp,
+    })
+    .from(ownershipLedger)
+    .where(eq(ownershipLedger.registeredBy, retailerId))
+    .orderBy(desc(ownershipLedger.timestamp))
+    .limit(10);
+
+  return {
+    totalProducts,
+    totalTransfers,
+    totalCustomers,
+    productsByCategory,
+    productsByStatus,
+    recentActivity,
+  };
 }

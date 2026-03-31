@@ -14,6 +14,7 @@ import {
   getRetailerProducts,
   getOwnerProducts,
   getRetailerByUserId,
+  getRetailerStats,
 } from "../services/pos.service";
 import { createLogger } from "../utils/logger";
 import { z } from "zod";
@@ -240,6 +241,25 @@ router.get(
       res.json({ success: true, products });
     } catch (error: any) {
       logger.error("getRetailerProducts failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/my-stats
+ * Get dashboard stats for the current retailer.
+ */
+router.get(
+  "/my-stats",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const stats = await getRetailerStats(retailer.id);
+      res.json({ success: true, stats });
+    } catch (error: any) {
+      logger.error("getRetailerStats failed", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
     }
   }
