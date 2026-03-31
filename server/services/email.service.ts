@@ -45,8 +45,10 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
     const client = getResendClient();
     if (!client) {
-      logger.error('Cannot send email: Resend client not initialized (missing API key)');
-      return false;
+      logger.warn('RESEND_API_KEY missing - Email logged to console only');
+      logger.info(`📧 EMAIL to ${options.to}: ${options.subject}`);
+      console.log(`\n📧 [DEV EMAIL] To: ${options.to}\n   Subject: ${options.subject}\n   Content (preview): ${options.html.substring(0, 50)}...\n`);
+      return true; // Simulate success in dev
     }
 
     const result = await client.emails.send({

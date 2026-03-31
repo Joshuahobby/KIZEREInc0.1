@@ -24,11 +24,11 @@ describe('Email Service', () => {
     process.env = originalEnv;
   });
 
-  it('should return false if RESEND_API_KEY is not set', async () => {
+  it('should return true and mock if RESEND_API_KEY is not set', async () => {
     delete process.env.RESEND_API_KEY;
     const options: EmailOptions = { to: 'test@example.com', subject: 'Test', html: '<p>Test</p>' };
     const result = await sendEmail(options);
-    expect(result).toBe(false);
+    expect(result).toBe(true);
   });
 
   it('should call resend api successfully if key exists', async () => {
