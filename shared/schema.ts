@@ -57,6 +57,35 @@ export const posProductStatuses = ['registered', 'transferred', 'stolen', 'archi
 export const ownershipEventTypes = ['sale', 'transfer', 'stolen_report', 'recovery'] as const;
 export const retailerSubscriptionPlans = ['basic', 'standard', 'premium', 'enterprise'] as const;
 
+export type RetailerSubscriptionPlan = typeof retailerSubscriptionPlans[number];
+
+export const SUBSCRIPTION_LIMITS: Record<RetailerSubscriptionPlan, {
+  maxProducts: number;
+  apiRequestsPerHour: number;
+  features: string[];
+}> = {
+  basic: {
+    maxProducts: 500,
+    apiRequestsPerHour: 0, // No API access
+    features: ['dashboard', 'manual_entry'],
+  },
+  standard: {
+    maxProducts: 5000,
+    apiRequestsPerHour: 1000,
+    features: ['dashboard', 'manual_entry', 'api_access', 'basic_analytics'],
+  },
+  premium: {
+    maxProducts: 50000,
+    apiRequestsPerHour: 10000,
+    features: ['dashboard', 'manual_entry', 'api_access', 'advanced_analytics', 'bulk_upload'],
+  },
+  enterprise: {
+    maxProducts: Number.MAX_SAFE_INTEGER, // Unlimited
+    apiRequestsPerHour: 100000,
+    features: ['dashboard', 'manual_entry', 'api_access', 'advanced_analytics', 'bulk_upload', 'custom_integration', 'dedicated_support'],
+  },
+};
+
 // Define claim statuses
 export const claimStatuses = ['pending', 'verified', 'rejected', 'resolved'] as const;
 
@@ -994,7 +1023,6 @@ export type InsertOwnershipLedger = z.infer<typeof insertOwnershipLedgerSchema>;
 export type RetailerStatus = typeof retailerStatuses[number];
 export type PosProductStatus = typeof posProductStatuses[number];
 export type OwnershipEventType = typeof ownershipEventTypes[number];
-export type RetailerSubscriptionPlan = typeof retailerSubscriptionPlans[number];
 export type TwoFactorMethod = 'sms' | 'email' | 'both';
 
 export type UserLogin = z.infer<typeof userLoginSchema>;

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { db } from "../db";
-import { retailers } from "@shared/schema";
+import { retailers, SUBSCRIPTION_LIMITS, RetailerSubscriptionPlan } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { createLogger } from "../utils/logger";
 
@@ -45,6 +45,20 @@ export async function requireRetailerApiKey(
       });
     }
 
+    const plan = (retailer.subscriptionPlan || "basic") as RetailerSubscriptionPlan;
+    const allowedFeatures = SUBSCRIPTION_LIMITS[plan].features;
+
+    if (!allowedFeatures.includes("api_access")) {
+      logger.warn("API access denied due to subscription limits", {
+        retailerId: retailer.id,
+        plan,
+      });
+      return res.status(403).json({
+        success: false,
+        message: `Your current subscription plan (${plan}) does not include API access. Please upgrade to use API keys.`,
+      });
+    }
+
     // Attach retailer to request for downstream usage
     (req as any).retailer = retailer;
     next();
@@ -53,3 +67,4 @@ export async function requireRetailerApiKey(
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+

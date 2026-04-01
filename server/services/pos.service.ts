@@ -2,7 +2,8 @@ import { db } from "../db";
 import {
   users, retailers, posProducts, ownershipLedger,
   InsertUser, InsertPosProduct, InsertOwnershipLedger,
-  Retailer, PosProduct, OwnershipLedgerEntry
+  Retailer, PosProduct, OwnershipLedgerEntry,
+  SUBSCRIPTION_LIMITS, RetailerSubscriptionPlan
 } from "@shared/schema";
 import { eq, and, desc, count, sql, gte, lte, or, ilike } from "drizzle-orm";
 import { createLogger } from "../utils/logger";
@@ -94,7 +95,33 @@ interface RegisterProductResult {
 export async function registerProduct(
   input: RegisterProductInput
 ): Promise<RegisterProductResult> {
-  // Check for duplicate serial
+  // 1. Get retailer and check subscription limits
+  const [retailer] = await db
+    .select()
+    .from(retailers)
+    .where(eq(retailers.id, input.retailerId))
+    .limit(1);
+
+  if (!retailer) {
+    throw new Error("Retailer not found");
+  }
+
+  const [{ count: currentProductCount }] = await db
+    .select({ count: count() })
+    .from(posProducts)
+    .where(eq(posProducts.retailerId, input.retailerId));
+
+  const plan = (retailer.subscriptionPlan || "basic") as RetailerSubscriptionPlan;
+  const maxProducts = SUBSCRIPTION_LIMITS[plan].maxProducts;
+
+  if (currentProductCount >= maxProducts) {
+    throw Object.assign(
+      new Error(`Subscription limit reached. Your ${plan} plan allows up to ${maxProducts} products.`),
+      { status: 403 }
+    );
+  }
+
+  // 2. Check for duplicate serial
   const [dupeCheck] = await db
     .select()
     .from(posProducts)
@@ -144,7 +171,6 @@ export async function registerProduct(
   });
 
   // Notify customer asynchronously (fire-and-forget)
-  const retailer = await db.query.retailers.findFirst({ where: eq(retailers.id, input.retailerId) });
   if (retailer) {
     notifyPosCustomer("registration", {
       userId: input.ownerId,

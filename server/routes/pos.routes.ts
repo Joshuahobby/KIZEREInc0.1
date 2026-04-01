@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { requireRetailerApiKey } from "../middleware/retailer-auth.middleware";
+import { posRateLimiter, requireFeature } from "../middleware/retailer-subscription.middleware";
 import { requireAuth, requireRole, requireAdmin } from "../middleware/auth.middleware";
 import {
   checkOrCreateCustomer,
@@ -89,7 +90,7 @@ async function posAuthMiddleware(req: Request, res: Response, next: NextFunction
  */
 router.post(
   "/check-or-create",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const schema = z.object({
@@ -135,7 +136,7 @@ router.post(
  */
 router.post(
   "/register",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const schema = z.object({
@@ -182,7 +183,7 @@ router.post(
  */
 router.post(
   "/transfer",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const schema = z.object({
@@ -223,7 +224,7 @@ router.post(
  */
 router.get(
   "/products/:productId/history",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.productId, 10);
@@ -246,7 +247,7 @@ router.get(
  */
 router.get(
   "/my-products",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const retailer = (req as any).retailer;
@@ -265,7 +266,7 @@ router.get(
  */
 router.get(
   "/my-stats",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const retailer = (req as any).retailer;
@@ -289,7 +290,7 @@ router.get(
  */
 router.get(
   "/my-products/search",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const retailer = (req as any).retailer;
@@ -321,7 +322,7 @@ router.get(
  */
 router.get(
   "/products/:productId",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.productId, 10);
@@ -350,7 +351,7 @@ router.get(
  */
 router.get(
   "/products/:productId/history-paginated",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.productId, 10);
@@ -376,7 +377,7 @@ router.get(
  */
 router.patch(
   "/products/:productId/archive",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.productId, 10);
@@ -402,7 +403,7 @@ router.patch(
  */
 router.post(
   "/products/:productId/report-stolen",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.productId, 10);
@@ -429,7 +430,7 @@ router.post(
  */
 router.post(
   "/products/:productId/recover",
-  posAuthMiddleware,
+  posAuthMiddleware, posRateLimiter,
   async (req: Request, res: Response) => {
     try {
       const productId = parseInt(req.params.productId, 10);
