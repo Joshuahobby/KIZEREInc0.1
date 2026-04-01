@@ -197,23 +197,30 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
     const categories: NavCategory[] = [];
 
     // MAIN Category
-    const mainItems: NavItem[] = [
-      { title: t('nav.dashboard'), href: "/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> }
-    ];
-    categories.push({ title: t('nav.mainHeader'), items: mainItems });
+    if (!isRetailer) {
+      const mainItems: NavItem[] = [
+        { title: t('nav.dashboard'), href: dashboardPath || "/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> }
+      ];
+      categories.push({ title: t('nav.mainHeader'), items: mainItems });
+    }
 
-    // PORTFOLIO Category (Available to all users to see My Items and Claims)
-    const portfolioItems: NavItem[] = [
-      { title: t('nav.myItems'), href: "/my-items", icon: <List className="h-5 w-5" /> },
-      { title: t('dashboard.tabs.claims') || "Claims", href: "/my-claims", icon: <FileText className="h-5 w-5" /> },
-      { title: t('nav.registerItems'), href: "/register-item", icon: <ArrowRightCircle className="h-5 w-5" /> }
-    ];
-    categories.push({ title: t('nav.portfolioHeader'), items: portfolioItems });
+    // PORTFOLIO Category (Subscriber/Business/Admin)
+    if (!isRetailer) {
+      const portfolioItems: NavItem[] = [
+        { title: t('nav.myItems'), href: "/my-items", icon: <List className="h-5 w-5" /> },
+        { title: t('dashboard.tabs.claims') || "Claims", href: "/my-claims", icon: <FileText className="h-5 w-5" /> },
+        { title: t('nav.registerItems'), href: "/register-item", icon: <ArrowRightCircle className="h-5 w-5" /> }
+      ];
+      categories.push({ title: t('nav.portfolioHeader'), items: portfolioItems });
+    }
 
-    const exploreItems: NavItem[] = [
-      { title: t('nav.search'), href: "/search", icon: <Search className="h-5 w-5" /> }
-    ];
-    categories.push({ title: t('nav.exploreHeader'), items: exploreItems });
+    // EXPLORE Category (Subscriber/Business/Admin/Agent)
+    if (!isRetailer) {
+      const exploreItems: NavItem[] = [
+        { title: t('nav.search'), href: "/search", icon: <Search className="h-5 w-5" /> }
+      ];
+      categories.push({ title: t('nav.exploreHeader'), items: exploreItems });
+    }
 
     // FIELD OPERATIONS Category (Agent/Admin)
     if (isAdmin || isAgent) {
@@ -229,6 +236,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
     if (isRetailer || isAdmin) {
       const posItems: NavItem[] = [
         { title: "Retailer Dashboard", href: "/retailer/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
+        { title: "Product Inventory", href: "/retailer/products", icon: <List className="h-5 w-5" /> },
         { title: "POS Terminal", href: "/pos", icon: <Store className="h-5 w-5" /> },
       ];
       if (isAdmin) {
@@ -260,15 +268,6 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
 
   const navCategories = getCategorizedNavItems();
   const allNavItems = navCategories.flatMap(c => c.items); // For mobile and other lookups
-
-  // Top Nav Items (Simplified for quick access)
-  const topNavItems: NavItem[] = [
-    { title: "Dashboard", href: "/dashboard", icon: <LayoutDashboard className="h-4 w-4" /> },
-    { title: "Search Directory", href: "/search", icon: <Search className="h-4 w-4" /> },
-    { title: "My Items", href: "/my-items", icon: <PackageIcon className="h-4 w-4" /> },
-  ];
-
-  // AdminLayout is now role-aware and available to all authenticated users
 
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans overflow-x-hidden">
@@ -682,27 +681,38 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
           <QuickActionMenu position="bottom-right" className="hidden md:flex mb-4 mr-4" />
           
           {/* Mobile Bottom Navigation - Field Optimized */}
-          <MobileBottomNav isAdmin={isAdmin} isAgent={isAgent} location={location} t={t} />
+          <MobileBottomNav isAdmin={isAdmin} isAgent={isAgent} isRetailer={isRetailer} location={location} t={t} />
         </div>
       </div>
     </div>
   );
 }
 
-function MobileBottomNav({ isAdmin, isAgent, location, t }: { isAdmin: boolean, isAgent: boolean, location: string, t: any }) {
-  const navItems = [
-    { id: 'home', icon: <Home className="h-5 w-5" />, label: t('nav.dashboard'), href: "/dashboard" },
-    { id: 'search', icon: <Search className="h-5 w-5" />, label: t('nav.search'), href: "/search" },
-    { id: 'items', icon: <PackageIcon className="h-5 w-5" />, label: t('nav.myItems'), href: "/my-items" },
-  ];
+function MobileBottomNav({ isAdmin, isAgent, isRetailer, location, t }: { isAdmin: boolean, isAgent: boolean, isRetailer: boolean, location: string, t: any }) {
+  const navItems: { id: string; icon: React.ReactNode; label: string; href: string }[] = [];
 
-  if (isAgent || isAdmin) {
-    navItems.push({ 
-      id: 'agent', 
-      icon: <ShieldCheck className="h-5 w-5" />, 
-      label: t('dashboard.tabs.agentConsole') || "Agent", 
-      href: "/dashboard?tab=agent" 
-    });
+  if (isRetailer) {
+    // Retailer-specific mobile nav
+    navItems.push(
+      { id: 'home', icon: <LayoutDashboard className="h-5 w-5" />, label: t('nav.dashboard'), href: "/retailer/dashboard" },
+      { id: 'pos', icon: <Store className="h-5 w-5" />, label: "POS", href: "/pos" },
+    );
+  } else {
+    // Standard mobile nav for all other roles
+    navItems.push(
+      { id: 'home', icon: <Home className="h-5 w-5" />, label: t('nav.dashboard'), href: "/dashboard" },
+      { id: 'search', icon: <Search className="h-5 w-5" />, label: t('nav.search'), href: "/search" },
+      { id: 'items', icon: <PackageIcon className="h-5 w-5" />, label: t('nav.myItems'), href: "/my-items" },
+    );
+
+    if (isAgent || isAdmin) {
+      navItems.push({ 
+        id: 'agent', 
+        icon: <ShieldCheck className="h-5 w-5" />, 
+        label: t('dashboard.tabs.agentConsole') || "Agent", 
+        href: "/dashboard?tab=agent" 
+      });
+    }
   }
 
   return (

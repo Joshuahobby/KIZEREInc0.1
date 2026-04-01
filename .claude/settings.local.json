@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(grep -E \"\\\\.ts$|index\")",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(npx vitest:*)",
+      "Bash(node -e \"const r = require\\('resend'\\); console.log\\(Object.keys\\(r\\)\\)\")",
+      "Bash(node -e \"const d = require\\('/dev/stdin'\\); console.log\\(JSON.stringify\\({main: d.main, module: d.module, exports: d.exports, type: d.type}, null, 2\\)\\)\")"
     ]
   }
 }

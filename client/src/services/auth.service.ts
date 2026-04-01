@@ -142,6 +142,8 @@ export const AuthService = {
     }
     
     switch(role) {
+      case 'Retailer':
+        return '/retailer/dashboard';
       case 'Business':
         // Business users go to the unified dashboard which has business-specific views
         return '/dashboard'; 

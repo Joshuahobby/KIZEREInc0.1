@@ -16,6 +16,12 @@ import {
   getRetailerByUserId,
   getRetailerStats,
   getPosAnalytics,
+  searchRetailerProducts,
+  getProductHistoryPaginated,
+  getProductById,
+  archiveProduct,
+  reportProductStolen,
+  recoverProduct,
 } from "../services/pos.service";
 import { createLogger } from "../utils/logger";
 import { z } from "zod";
@@ -268,6 +274,178 @@ router.get(
     } catch (error: any) {
       logger.error("getRetailerStats failed", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════
+// PRODUCT MANAGEMENT ENDPOINTS (Dual auth: session or API key)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * GET /api/pos/my-products/search
+ * Search and filter retailer products with pagination.
+ * Query params: search, category, status, page (default 1), limit (default 20)
+ */
+router.get(
+  "/my-products/search",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 20));
+      const search = (req.query.search as string) || undefined;
+      const category = (req.query.category as string) || undefined;
+      const status = (req.query.status as string) || undefined;
+
+      const result = await searchRetailerProducts(retailer.id, {
+        page,
+        limit,
+        search,
+        category,
+        status,
+      });
+
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      logger.error("searchRetailerProducts failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/products/:productId
+ * Get a single product detail, scoped to the current retailer.
+ */
+router.get(
+  "/products/:productId",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.productId, 10);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+
+      const retailer = (req as any).retailer;
+      const product = await getProductById(productId, retailer.id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      res.json({ success: true, product });
+    } catch (error: any) {
+      logger.error("getProductById failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/products/:productId/history-paginated
+ * Get paginated ownership history for a product.
+ * Query params: page (default 1), limit (default 20)
+ */
+router.get(
+  "/products/:productId/history-paginated",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.productId, 10);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+
+      const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
+      const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 20));
+
+      const result = await getProductHistoryPaginated(productId, { page, limit });
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      logger.error("getProductHistoryPaginated failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * PATCH /api/pos/products/:productId/archive
+ * Archive a product. Only for registered or transferred products.
+ */
+router.patch(
+  "/products/:productId/archive",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.productId, 10);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+
+      const retailer = (req as any).retailer;
+      const product = await archiveProduct(productId, retailer.id);
+
+      res.json({ success: true, product });
+    } catch (error: any) {
+      logger.error("archiveProduct failed", { error: error.message });
+      const status = error.status || 500;
+      res.status(status).json({ message: error.message || "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/products/:productId/report-stolen
+ * Report a product as stolen. Creates a stolen_report ledger entry.
+ */
+router.post(
+  "/products/:productId/report-stolen",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.productId, 10);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+
+      const retailer = (req as any).retailer;
+      const notes = req.body.notes as string | undefined;
+      const product = await reportProductStolen(productId, retailer.id, notes);
+
+      res.json({ success: true, product });
+    } catch (error: any) {
+      logger.error("reportProductStolen failed", { error: error.message });
+      const status = error.status || 500;
+      res.status(status).json({ message: error.message || "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/products/:productId/recover
+ * Recover a stolen product. Only for products with status 'stolen'.
+ */
+router.post(
+  "/products/:productId/recover",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const productId = parseInt(req.params.productId, 10);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+
+      const retailer = (req as any).retailer;
+      const notes = req.body.notes as string | undefined;
+      const product = await recoverProduct(productId, retailer.id, notes);
+
+      res.json({ success: true, product });
+    } catch (error: any) {
+      logger.error("recoverProduct failed", { error: error.message });
+      const status = error.status || 500;
+      res.status(status).json({ message: error.message || "Internal server error" });
     }
   }
 );

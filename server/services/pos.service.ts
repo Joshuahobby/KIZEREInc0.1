@@ -4,7 +4,7 @@ import {
   InsertUser, InsertPosProduct, InsertOwnershipLedger,
   Retailer, PosProduct, OwnershipLedgerEntry
 } from "@shared/schema";
-import { eq, and, desc, count, sql, gte, lte } from "drizzle-orm";
+import { eq, and, desc, count, sql, gte, lte, or, ilike } from "drizzle-orm";
 import { createLogger } from "../utils/logger";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -639,4 +639,267 @@ export async function getRetailerStats(retailerId: number): Promise<RetailerStat
     productsByStatus,
     recentActivity,
   };
+}
+
+// ─── Product search, filter & pagination ───
+
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+export interface ProductSearchParams extends PaginationParams {
+  search?: string;       // matches serial number, name, or SKU
+  category?: string;
+  status?: string;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/**
+ * Search and filter retailer products with pagination.
+ */
+export async function searchRetailerProducts(
+  retailerId: number,
+  params: ProductSearchParams
+): Promise<PaginatedResult<PosProduct>> {
+  const { page, limit, search, category, status } = params;
+  const offset = (page - 1) * limit;
+
+  const conditions = [eq(posProducts.retailerId, retailerId)];
+
+  if (category) {
+    conditions.push(eq(posProducts.category, category));
+  }
+  if (status) {
+    conditions.push(eq(posProducts.status, status));
+  }
+  if (search) {
+    conditions.push(
+      or(
+        ilike(posProducts.serialNumber, `%${search}%`),
+        ilike(posProducts.name, `%${search}%`),
+        ilike(posProducts.sku, `%${search}%`)
+      )!
+    );
+  }
+
+  const whereClause = and(...conditions);
+
+  const [countResult] = await db
+    .select({ count: count() })
+    .from(posProducts)
+    .where(whereClause);
+
+  const total = countResult?.count ?? 0;
+
+  const data = await db
+    .select()
+    .from(posProducts)
+    .where(whereClause)
+    .orderBy(desc(posProducts.registrationDate))
+    .limit(limit)
+    .offset(offset);
+
+  return {
+    data,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+/**
+ * Get paginated product history from the ownership ledger.
+ */
+export async function getProductHistoryPaginated(
+  productId: number,
+  params: PaginationParams
+): Promise<PaginatedResult<OwnershipLedgerEntry>> {
+  const { page, limit } = params;
+  const offset = (page - 1) * limit;
+
+  const [countResult] = await db
+    .select({ count: count() })
+    .from(ownershipLedger)
+    .where(eq(ownershipLedger.productId, productId));
+
+  const total = countResult?.count ?? 0;
+
+  const data = await db
+    .select()
+    .from(ownershipLedger)
+    .where(eq(ownershipLedger.productId, productId))
+    .orderBy(desc(ownershipLedger.timestamp))
+    .limit(limit)
+    .offset(offset);
+
+  return {
+    data,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit),
+  };
+}
+
+// ─── Product detail ───
+
+/**
+ * Get a single POS product by ID, optionally scoped to a retailer.
+ */
+export async function getProductById(
+  productId: number,
+  retailerId?: number
+): Promise<PosProduct | undefined> {
+  const conditions = [eq(posProducts.id, productId)];
+  if (retailerId !== undefined) {
+    conditions.push(eq(posProducts.retailerId, retailerId));
+  }
+
+  const [product] = await db
+    .select()
+    .from(posProducts)
+    .where(and(...conditions))
+    .limit(1);
+
+  return product;
+}
+
+// ─── Product status transitions ───
+
+/**
+ * Archive a product. Only allowed for registered or transferred products.
+ */
+export async function archiveProduct(
+  productId: number,
+  retailerId: number
+): Promise<PosProduct> {
+  const product = await getProductById(productId, retailerId);
+  if (!product) {
+    throw Object.assign(new Error("Product not found"), { status: 404 });
+  }
+
+  if (product.status === "archived") {
+    throw Object.assign(new Error("Product is already archived"), { status: 400 });
+  }
+  if (product.status === "stolen") {
+    throw Object.assign(
+      new Error("Cannot archive a product that has been reported stolen"),
+      { status: 400 }
+    );
+  }
+
+  const [updated] = await db
+    .update(posProducts)
+    .set({ status: "archived" })
+    .where(eq(posProducts.id, productId))
+    .returning();
+
+  // Log to ledger
+  await db.insert(ownershipLedger).values({
+    productId,
+    fromUserId: product.currentOwnerId,
+    toUserId: product.currentOwnerId,
+    registeredBy: retailerId,
+    event: "sale", // closest available event for archival
+    notes: "Product archived by retailer",
+  });
+
+  logger.info("Product archived", { productId, retailerId });
+
+  return updated;
+}
+
+/**
+ * Report a product as stolen. Creates a stolen_report ledger entry.
+ */
+export async function reportProductStolen(
+  productId: number,
+  retailerId: number,
+  notes?: string
+): Promise<PosProduct> {
+  const product = await getProductById(productId, retailerId);
+  if (!product) {
+    throw Object.assign(new Error("Product not found"), { status: 404 });
+  }
+
+  if (product.status === "stolen") {
+    throw Object.assign(new Error("Product is already reported as stolen"), { status: 400 });
+  }
+  if (product.status === "archived") {
+    throw Object.assign(new Error("Cannot report an archived product as stolen"), { status: 400 });
+  }
+
+  const [updated] = await db
+    .update(posProducts)
+    .set({ status: "stolen" })
+    .where(eq(posProducts.id, productId))
+    .returning();
+
+  const [ledgerEntry] = await db
+    .insert(ownershipLedger)
+    .values({
+      productId,
+      fromUserId: product.currentOwnerId,
+      toUserId: product.currentOwnerId,
+      registeredBy: retailerId,
+      event: "stolen_report",
+      notes: notes || "Product reported as stolen",
+    })
+    .returning();
+
+  logger.warn("Product reported stolen", { productId, retailerId, ownerId: product.currentOwnerId });
+
+  return updated;
+}
+
+/**
+ * Recover a stolen product. Only allowed for products with status 'stolen'.
+ */
+export async function recoverProduct(
+  productId: number,
+  retailerId: number,
+  notes?: string
+): Promise<PosProduct> {
+  const product = await getProductById(productId, retailerId);
+  if (!product) {
+    throw Object.assign(new Error("Product not found"), { status: 404 });
+  }
+
+  if (product.status !== "stolen") {
+    throw Object.assign(
+      new Error("Only stolen products can be recovered"),
+      { status: 400 }
+    );
+  }
+
+  const [updated] = await db
+    .update(posProducts)
+    .set({ status: "registered" })
+    .where(eq(posProducts.id, productId))
+    .returning();
+
+  const [ledgerEntry] = await db
+    .insert(ownershipLedger)
+    .values({
+      productId,
+      fromUserId: product.currentOwnerId,
+      toUserId: product.currentOwnerId,
+      registeredBy: retailerId,
+      event: "recovery",
+      notes: notes || "Product recovered",
+    })
+    .returning();
+
+  logger.info("Product recovered", { productId, retailerId, ownerId: product.currentOwnerId });
+
+  return updated;
 }

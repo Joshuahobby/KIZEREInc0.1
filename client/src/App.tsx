@@ -95,6 +95,7 @@ const CreateReport = lazyWithRetry(() => import("@/pages/create-report"));
 const PosTerminal = lazyWithRetry(() => import("@/pages/pos-terminal"));
 const RetailerManagement = lazyWithRetry(() => import("@/pages/admin/retailer-management"));
 const RetailerDashboard = lazyWithRetry(() => import("@/pages/retailer-dashboard"));
+const RetailerProducts = lazyWithRetry(() => import("@/pages/retailer-products"));
 const ClaimAccountPage = lazyWithRetry(() => import("@/pages/claim-account"));
 const PosAnalyticsPage = lazyWithRetry(() => import("@/pages/admin/pos-analytics"));
 
@@ -184,6 +185,7 @@ function App() {
                   </Route>
 
                   {/* Protected routes */}
+                  <ProtectedRoute path="/retailer/dashboard" component={RetailerDashboard} requiredRole={['Retailer', 'Admin']} />
                   <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
                   <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
                   <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
@@ -221,7 +223,7 @@ function App() {
 
                   {/* POS Terminal route */}
                   <ProtectedRoute path="/pos" component={PosTerminal} requiredRole={['Retailer', 'Admin']} />
-                  <ProtectedRoute path="/retailer/dashboard" component={RetailerDashboard} requiredRole={['Retailer', 'Admin']} />
+                  <ProtectedRoute path="/retailer/products" component={RetailerProducts} requiredRole={['Retailer', 'Admin']} />
                   <ProtectedRoute path="/admin/retailers" component={RetailerManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/pos-analytics" component={PosAnalyticsPage} requiredRole="Admin" />
 
