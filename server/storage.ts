@@ -13,6 +13,7 @@ import * as paymentOps from "./storage/payment.storage";
 import * as verificationOps from "./storage/verification.storage";
 import * as chatOps from "./storage/chat.storage";
 import * as couponOps from "./storage/coupon.storage";
+import * as posOps from "./storage/pos.storage";
 import {
   User, InsertUser, Item, InsertItem, Report, InsertReport,
   Notification, InsertNotification, Payment, InsertPayment,
@@ -66,6 +67,7 @@ export class DatabaseStorage implements IStorage {
   getUser = userOps.getUser;
   getUserByUsername = userOps.getUserByUsername;
   getUserByEmail = userOps.getUserByEmail;
+  getUserByNationalId = userOps.getUserByNationalId;
   createUser = userOps.createUser;
   updateUser = userOps.updateUser;
   getAllUsers = userOps.getAllUsers;
@@ -217,6 +219,31 @@ export class DatabaseStorage implements IStorage {
   getMessages = chatOps.getMessages;
   createMessage = chatOps.createMessage;
   markMessagesAsRead = chatOps.markMessagesAsRead;
+
+  // POS methods
+  getRetailer = posOps.getRetailer;
+  getRetailerByUserId = posOps.getRetailerByUserId;
+  getRetailerByApiKey = posOps.getRetailerByApiKey;
+  getRetailers = posOps.getRetailers;
+  createRetailer = posOps.createRetailer;
+  updateRetailer = posOps.updateRetailer;
+  
+  getPosProduct = posOps.getPosProduct;
+  getPosProductByIdAndRetailer = posOps.getPosProductByIdAndRetailer;
+  getPosProductBySerial = posOps.getPosProductBySerial;
+  getRetailerProducts = posOps.getRetailerProducts;
+  getOwnerProducts = posOps.getOwnerProducts;
+  createPosProduct = posOps.createPosProduct;
+  updatePosProduct = posOps.updatePosProduct;
+  countRetailerProducts = posOps.countRetailerProducts;
+  searchRetailerProducts = posOps.searchRetailerProducts;
+  
+  createOwnershipLedgerEntry = posOps.createOwnershipLedgerEntry;
+  getProductHistory = posOps.getProductHistory;
+  getProductHistoryPaginated = posOps.getProductHistoryPaginated;
+
+  getPosAnalytics = posOps.getPosAnalytics;
+  getRetailerStats = posOps.getRetailerStats;
 }
 
 export const storage = new DatabaseStorage();

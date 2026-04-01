@@ -8,7 +8,8 @@ import {
   PaymentPackage, InsertPaymentPackage, Coupon, InsertCoupon, Claim, InsertClaim,
   ClaimStatusLog, InsertClaimStatusLog, Chat, InsertChat, Message, InsertMessage,
   PushSubscription, InsertPushSubscription, VerificationRequest, InsertVerificationRequest,
-  AccountStatus, VerificationStatus, PaymentType
+  AccountStatus, VerificationStatus, PaymentType,
+  Retailer, InsertRetailer, PosProduct, InsertPosProduct, OwnershipLedgerEntry, InsertOwnershipLedger
 } from "@shared/schema";
 
 export interface IStorage {
@@ -16,6 +17,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByNationalId(nationalId: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
@@ -198,6 +200,37 @@ export interface IStorage {
   getMessages(chatId: number): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessagesAsRead(chatId: number, userId: number): Promise<void>;
+
+  // POS methods
+  getRetailer(id: number): Promise<Retailer | undefined>;
+  getRetailerByUserId(userId: number): Promise<Retailer | undefined>;
+  getRetailerByApiKey(apiKey: string): Promise<Retailer | undefined>;
+  getRetailers(statusFilter?: string): Promise<Retailer[]>;
+  createRetailer(retailer: InsertRetailer & { apiKey: string }): Promise<Retailer>;
+  updateRetailer(id: number, data: Partial<Retailer>): Promise<Retailer | undefined>;
+  
+  getPosProduct(id: number): Promise<PosProduct | undefined>;
+  getPosProductByIdAndRetailer(id: number, retailerId?: number): Promise<PosProduct | undefined>;
+  getPosProductBySerial(serialNumber: string): Promise<PosProduct | undefined>;
+  getRetailerProducts(retailerId: number): Promise<PosProduct[]>;
+  getOwnerProducts(ownerId: number): Promise<PosProduct[]>;
+  createPosProduct(product: InsertPosProduct): Promise<PosProduct>;
+  updatePosProduct(id: number, data: Partial<PosProduct>): Promise<PosProduct | undefined>;
+  countRetailerProducts(retailerId: number): Promise<number>;
+  searchRetailerProducts(
+    retailerId: number,
+    params: { page: number; limit: number; search?: string; category?: string; status?: string }
+  ): Promise<{ data: PosProduct[]; total: number; page: number; limit: number; totalPages: number }>;
+  
+  createOwnershipLedgerEntry(entry: InsertOwnershipLedger): Promise<OwnershipLedgerEntry>;
+  getProductHistory(productId: number): Promise<OwnershipLedgerEntry[]>;
+  getProductHistoryPaginated(
+    productId: number,
+    params: { page: number; limit: number }
+  ): Promise<{ data: OwnershipLedgerEntry[]; total: number; page: number; limit: number; totalPages: number }>;
+
+  getPosAnalytics(start: Date, end: Date): Promise<any>;
+  getRetailerStats(retailerId: number): Promise<any>;
 
   // Session management
   sessionStore: session.Store;

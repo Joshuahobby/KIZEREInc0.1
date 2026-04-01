@@ -28,6 +28,11 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
   return results[0];
 }
 
+export async function getUserByNationalId(nationalId: string): Promise<User | undefined> {
+  const results = await db.select().from(users).where(eq(users.nationalId, nationalId));
+  return results[0];
+}
+
 export async function createUser(insertUser: InsertUser): Promise<User> {
   const results = await db.insert(users).values([insertUser] as any).returning();
   return results[0]!;

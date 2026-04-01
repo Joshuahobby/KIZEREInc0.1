@@ -1,11 +1,10 @@
-import { db } from "../db";
+import { storage } from "../storage";
 import {
   users, retailers, posProducts, ownershipLedger,
   InsertUser, InsertPosProduct, InsertOwnershipLedger,
   Retailer, PosProduct, OwnershipLedgerEntry,
   SUBSCRIPTION_LIMITS, RetailerSubscriptionPlan
 } from "@shared/schema";
-import { eq, and, desc, count, sql, gte, lte, or, ilike } from "drizzle-orm";
 import { createLogger } from "../utils/logger";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -30,12 +29,7 @@ export async function checkOrCreateCustomer(
   phone?: string,
   email?: string
 ): Promise<CheckOrCreateResult> {
-  // Try to find existing user by nationalId
-  const [existing] = await db
-    .select()
-    .from(users)
-    .where(eq(users.nationalId, nationalId))
-    .limit(1);
+  const existing = await storage.getUserByNationalId(nationalId);
 
   if (existing) {
     logger.info("Customer found by NID", { userId: existing.id, nationalId });
@@ -48,20 +42,18 @@ export async function checkOrCreateCustomer(
   const hashedPassword = await bcrypt.hash(tempPassword, 10);
   const placeholderEmail = email || `${username}@pos.kizere.local`;
 
-  const [newUser] = await db
-    .insert(users)
-    .values({
-      username,
-      password: hashedPassword,
-      fullName,
-      nationalId,
-      phoneNumber: phone || null,
-      email: placeholderEmail,
-      role: "Subscriber",
-      status: "active",
-      verificationStatus: "unverified",
-    })
-    .returning();
+  const newUser = await storage.createUser({
+    username,
+    password: hashedPassword,
+    fullName,
+    nationalId,
+    phoneNumber: phone || undefined,
+    email: placeholderEmail,
+    role: "Subscriber",
+    status: "active",
+    verificationStatus: "unverified",
+    preferences: {} as any,
+  });
 
   logger.info("New customer created via POS", {
     userId: newUser.id,
@@ -96,20 +88,13 @@ export async function registerProduct(
   input: RegisterProductInput
 ): Promise<RegisterProductResult> {
   // 1. Get retailer and check subscription limits
-  const [retailer] = await db
-    .select()
-    .from(retailers)
-    .where(eq(retailers.id, input.retailerId))
-    .limit(1);
+  const retailer = await storage.getRetailer(input.retailerId);
 
   if (!retailer) {
     throw new Error("Retailer not found");
   }
 
-  const [{ count: currentProductCount }] = await db
-    .select({ count: count() })
-    .from(posProducts)
-    .where(eq(posProducts.retailerId, input.retailerId));
+  const currentProductCount = await storage.countRetailerProducts(input.retailerId);
 
   const plan = (retailer.subscriptionPlan || "basic") as RetailerSubscriptionPlan;
   const maxProducts = SUBSCRIPTION_LIMITS[plan].maxProducts;
@@ -122,11 +107,7 @@ export async function registerProduct(
   }
 
   // 2. Check for duplicate serial
-  const [dupeCheck] = await db
-    .select()
-    .from(posProducts)
-    .where(eq(posProducts.serialNumber, input.serialNumber))
-    .limit(1);
+  const dupeCheck = await storage.getPosProductBySerial(input.serialNumber);
 
   if (dupeCheck) {
     throw Object.assign(
@@ -136,32 +117,26 @@ export async function registerProduct(
   }
 
   // Insert product
-  const [product] = await db
-    .insert(posProducts)
-    .values({
-      serialNumber: input.serialNumber,
-      name: input.name,
-      category: input.category || "Other",
-      sku: input.sku || null,
-      retailerId: input.retailerId,
-      currentOwnerId: input.ownerId,
-      status: "registered",
-      metadata: input.metadata || null,
-    })
-    .returning();
+  const product = await storage.createPosProduct({
+    serialNumber: input.serialNumber,
+    name: input.name,
+    category: input.category || "Other",
+    sku: input.sku || undefined,
+    retailerId: input.retailerId,
+    currentOwnerId: input.ownerId,
+    status: "registered",
+    metadata: input.metadata,
+  });
 
   // Create first ledger entry (initial sale)
-  const [ledgerEntry] = await db
-    .insert(ownershipLedger)
-    .values({
-      productId: product.id,
-      fromUserId: null, // initial sale — no previous owner
-      toUserId: input.ownerId,
-      registeredBy: input.retailerId,
-      event: "sale",
-      notes: `Initial product registration at POS`,
-    })
-    .returning();
+  const ledgerEntry = await storage.createOwnershipLedgerEntry({
+    productId: product.id,
+    fromUserId: undefined, // initial sale — no previous owner
+    toUserId: input.ownerId,
+    registeredBy: input.retailerId,
+    event: "sale",
+    notes: `Initial product registration at POS`,
+  });
 
   logger.info("Product registered via POS", {
     productId: product.id,
@@ -199,11 +174,7 @@ interface TransferInput {
  */
 export async function transferOwnership(input: TransferInput) {
   // Get current product
-  const [product] = await db
-    .select()
-    .from(posProducts)
-    .where(eq(posProducts.id, input.productId))
-    .limit(1);
+  const product = await storage.getPosProduct(input.productId);
 
   if (!product) {
     throw Object.assign(new Error("Product not found"), { status: 404 });
@@ -219,27 +190,24 @@ export async function transferOwnership(input: TransferInput) {
   const previousOwnerId = product.currentOwnerId;
 
   // Update product ownership
-  const [updatedProduct] = await db
-    .update(posProducts)
-    .set({
-      currentOwnerId: input.newOwnerId,
-      status: "transferred",
-    })
-    .where(eq(posProducts.id, input.productId))
-    .returning();
+  const updatedProduct = await storage.updatePosProduct(input.productId, {
+    currentOwnerId: input.newOwnerId,
+    status: "transferred",
+  });
+
+  if (!updatedProduct) {
+    throw new Error("Failed to update product");
+  }
 
   // Create ledger entry
-  const [ledgerEntry] = await db
-    .insert(ownershipLedger)
-    .values({
-      productId: input.productId,
-      fromUserId: previousOwnerId,
-      toUserId: input.newOwnerId,
-      registeredBy: input.retailerId,
-      event: "transfer",
-      notes: input.notes || "Ownership transfer at POS",
-    })
-    .returning();
+  const ledgerEntry = await storage.createOwnershipLedgerEntry({
+    productId: input.productId,
+    fromUserId: previousOwnerId,
+    toUserId: input.newOwnerId,
+    registeredBy: input.retailerId,
+    event: "transfer",
+    notes: input.notes || "Ownership transfer at POS",
+  });
 
   logger.info("Ownership transferred", {
     productId: input.productId,
@@ -249,7 +217,7 @@ export async function transferOwnership(input: TransferInput) {
   });
 
   // Notify customer asynchronously (fire-and-forget)
-  const retailer = await db.query.retailers.findFirst({ where: eq(retailers.id, input.retailerId) });
+  const retailer = await storage.getRetailer(input.retailerId);
   if (retailer) {
     notifyPosCustomer("transfer", {
       userId: input.newOwnerId,
@@ -288,11 +256,7 @@ export async function createRetailer(data: {
   metadata?: Record<string, any>;
 }) {
   // Validate the linked user exists
-  const [linkedUser] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, data.userId))
-    .limit(1);
+  const linkedUser = await storage.getUser(data.userId);
 
   if (!linkedUser) {
     throw Object.assign(
@@ -302,11 +266,7 @@ export async function createRetailer(data: {
   }
 
   // Check if user is already linked to another retailer
-  const [existingRetailer] = await db
-    .select()
-    .from(retailers)
-    .where(eq(retailers.userId, data.userId))
-    .limit(1);
+  const existingRetailer = await storage.getRetailerByUserId(data.userId);
 
   if (existingRetailer) {
     throw Object.assign(
@@ -317,29 +277,22 @@ export async function createRetailer(data: {
 
   const apiKey = generateApiKey();
 
-  const [retailer] = await db
-    .insert(retailers)
-    .values({
-      name: data.name,
-      email: data.email,
-      phone: data.phone || null,
-      address: data.address || null,
-      userId: data.userId,
-      subscriptionPlan: data.subscriptionPlan || "basic",
-      logoUrl: data.logoUrl || null,
-      metadata: data.metadata || null,
-      apiKey,
-      status: "active",
-    })
-    .returning();
+  const retailer = await storage.createRetailer({
+    name: data.name,
+    email: data.email,
+    phone: data.phone,
+    address: data.address,
+    userId: data.userId,
+    subscriptionPlan: (data.subscriptionPlan as any) || "basic",
+    logoUrl: data.logoUrl,
+    metadata: data.metadata,
+    apiKey,
+    status: "active",
+  });
 
   // Update the linked user's role to "Retailer" (unless they are Admin)
   if (linkedUser.role !== "Admin") {
-    await db
-      .update(users)
-      .set({ role: "Retailer" })
-      .where(eq(users.id, data.userId));
-
+    await storage.updateUserRole(data.userId, "Retailer");
     logger.info("User role updated to Retailer", { userId: data.userId, previousRole: linkedUser.role });
   }
 
@@ -352,37 +305,21 @@ export async function createRetailer(data: {
  * Get all retailers with optional status filter.
  */
 export async function getRetailers(statusFilter?: string) {
-  const query = db.select().from(retailers);
-
-  if (statusFilter) {
-    return query.where(eq(retailers.status, statusFilter));
-  }
-
-  return query;
+  return storage.getRetailers(statusFilter);
 }
 
 /**
  * Get a single retailer by ID.
  */
 export async function getRetailerById(id: number) {
-  const [retailer] = await db
-    .select()
-    .from(retailers)
-    .where(eq(retailers.id, id))
-    .limit(1);
-  return retailer;
+  return storage.getRetailer(id);
 }
 
 /**
  * Get a retailer by linked user ID.
  */
 export async function getRetailerByUserId(userId: number) {
-  const [retailer] = await db
-    .select()
-    .from(retailers)
-    .where(eq(retailers.userId, userId))
-    .limit(1);
-  return retailer;
+  return storage.getRetailerByUserId(userId);
 }
 
 /**
@@ -401,16 +338,7 @@ export async function updateRetailer(
     metadata: Record<string, any> | null;
   }>
 ) {
-  const [updated] = await db
-    .update(retailers)
-    .set({
-      ...data,
-      updatedAt: new Date(),
-    })
-    .where(eq(retailers.id, id))
-    .returning();
-
-  return updated;
+  return storage.updateRetailer(id, data as any);
 }
 
 /**
@@ -418,47 +346,28 @@ export async function updateRetailer(
  */
 export async function regenerateApiKey(id: number) {
   const newKey = generateApiKey();
-
-  const [updated] = await db
-    .update(retailers)
-    .set({ apiKey: newKey, updatedAt: new Date() })
-    .where(eq(retailers.id, id))
-    .returning();
-
-  return updated;
+  return storage.updateRetailer(id, { apiKey: newKey });
 }
 
 /**
  * Get product ownership history from ledger.
  */
 export async function getProductHistory(productId: number) {
-  return db
-    .select()
-    .from(ownershipLedger)
-    .where(eq(ownershipLedger.productId, productId))
-    .orderBy(desc(ownershipLedger.timestamp));
+  return storage.getProductHistory(productId);
 }
 
 /**
  * Get all POS products for a particular retailer.
  */
 export async function getRetailerProducts(retailerId: number) {
-  return db
-    .select()
-    .from(posProducts)
-    .where(eq(posProducts.retailerId, retailerId))
-    .orderBy(desc(posProducts.registrationDate));
+  return storage.getRetailerProducts(retailerId);
 }
 
 /**
  * Get all POS products for a particular owner.
  */
 export async function getOwnerProducts(ownerId: number) {
-  return db
-    .select()
-    .from(posProducts)
-    .where(eq(posProducts.currentOwnerId, ownerId))
-    .orderBy(desc(posProducts.registrationDate));
+  return storage.getOwnerProducts(ownerId);
 }
 
 // ─── Retailer Dashboard Stats ───
@@ -480,100 +389,8 @@ export interface PosAnalyticsData {
 export async function getPosAnalytics(startDate?: Date, endDate?: Date): Promise<PosAnalyticsData> {
   const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default 30 days
   const end = endDate || new Date();
-
-  // Total Registrations within range
-  const [regCount] = await db
-    .select({ count: count() })
-    .from(posProducts)
-    .where(and(
-      gte(posProducts.registrationDate, start),
-      lte(posProducts.registrationDate, end)
-    ));
-  const totalRegistrations = regCount?.count ?? 0;
-
-  // Total Transfers within range
-  const [transCount] = await db
-    .select({ count: count() })
-    .from(ownershipLedger)
-    .where(and(
-      eq(ownershipLedger.event, "transfer"),
-      gte(ownershipLedger.timestamp, start),
-      lte(ownershipLedger.timestamp, end)
-    ));
-  const totalTransfers = transCount?.count ?? 0;
-
-  // Active Retailers (with at least one registration in range)
-  const [activeRetCount] = await db
-    .select({ count: sql<number>`count(distinct ${posProducts.retailerId})` })
-    .from(posProducts)
-    .where(and(
-      gte(posProducts.registrationDate, start),
-      lte(posProducts.registrationDate, end)
-    ));
-  const activeRetailers = activeRetCount?.count ?? 0;
-
-  // Category Breakdown
-  const categoryBreakdown = await db
-    .select({ category: posProducts.category, count: count() })
-    .from(posProducts)
-    .where(and(
-      gte(posProducts.registrationDate, start),
-      lte(posProducts.registrationDate, end)
-    ))
-    .groupBy(posProducts.category)
-    .orderBy(desc(count()));
-
-  // Top Retailers by volume
-  const topRetailers = await db
-    .select({ name: retailers.name, count: count() })
-    .from(posProducts)
-    .innerJoin(retailers, eq(posProducts.retailerId, retailers.id))
-    .where(and(
-      gte(posProducts.registrationDate, start),
-      lte(posProducts.registrationDate, end)
-    ))
-    .groupBy(retailers.name)
-    .orderBy(desc(count()))
-    .limit(10);
-
-  // Registrations over time (Daily)
-  const registrationsOverTime = await db
-    .select({
-      date: sql<string>`date_trunc('day', ${posProducts.registrationDate})::date::text`,
-      count: count(),
-    })
-    .from(posProducts)
-    .where(and(
-      gte(posProducts.registrationDate, start),
-      lte(posProducts.registrationDate, end)
-    ))
-    .groupBy(sql`date_trunc('day', ${posProducts.registrationDate})`)
-    .orderBy(sql`date_trunc('day', ${posProducts.registrationDate})`);
-
-  // Transfers over time (Daily)
-  const transfersOverTime = await db
-    .select({
-      date: sql<string>`date_trunc('day', ${ownershipLedger.timestamp})::date::text`,
-      count: count(),
-    })
-    .from(ownershipLedger)
-    .where(and(
-      eq(ownershipLedger.event, "transfer"),
-      gte(ownershipLedger.timestamp, start),
-      lte(ownershipLedger.timestamp, end)
-    ))
-    .groupBy(sql`date_trunc('day', ${ownershipLedger.timestamp})`)
-    .orderBy(sql`date_trunc('day', ${ownershipLedger.timestamp})`);
-
-  return {
-    registrationsOverTime,
-    transfersOverTime,
-    topRetailers,
-    categoryBreakdown,
-    totalRegistrations,
-    totalTransfers,
-    activeRetailers,
-  };
+  
+  return storage.getPosAnalytics(start, end);
 }
 
 export interface RetailerStats {
@@ -596,75 +413,7 @@ export interface RetailerStats {
  * Get aggregate stats for a retailer's dashboard.
  */
 export async function getRetailerStats(retailerId: number): Promise<RetailerStats> {
-  // Total products registered by this retailer
-  const [productCountResult] = await db
-    .select({ count: count() })
-    .from(posProducts)
-    .where(eq(posProducts.retailerId, retailerId));
-  const totalProducts = productCountResult?.count ?? 0;
-
-  // Total transfers facilitated by this retailer
-  const [transferCountResult] = await db
-    .select({ count: count() })
-    .from(ownershipLedger)
-    .where(and(
-      eq(ownershipLedger.registeredBy, retailerId),
-      eq(ownershipLedger.event, "transfer")
-    ));
-  const totalTransfers = transferCountResult?.count ?? 0;
-
-  // Unique customers (distinct currentOwnerId across retailer's products)
-  const [customerCountResult] = await db
-    .select({ count: sql<number>`count(distinct ${posProducts.currentOwnerId})` })
-    .from(posProducts)
-    .where(eq(posProducts.retailerId, retailerId));
-  const totalCustomers = customerCountResult?.count ?? 0;
-
-  // Products grouped by category
-  const productsByCategory = await db
-    .select({
-      category: posProducts.category,
-      count: count(),
-    })
-    .from(posProducts)
-    .where(eq(posProducts.retailerId, retailerId))
-    .groupBy(posProducts.category)
-    .orderBy(desc(count()));
-
-  // Products grouped by status
-  const productsByStatus = await db
-    .select({
-      status: posProducts.status,
-      count: count(),
-    })
-    .from(posProducts)
-    .where(eq(posProducts.retailerId, retailerId))
-    .groupBy(posProducts.status)
-    .orderBy(desc(count()));
-
-  // Recent activity (last 10 ledger entries for this retailer)
-  const recentActivity = await db
-    .select({
-      id: ownershipLedger.id,
-      event: ownershipLedger.event,
-      productId: ownershipLedger.productId,
-      toUserId: ownershipLedger.toUserId,
-      notes: ownershipLedger.notes,
-      timestamp: ownershipLedger.timestamp,
-    })
-    .from(ownershipLedger)
-    .where(eq(ownershipLedger.registeredBy, retailerId))
-    .orderBy(desc(ownershipLedger.timestamp))
-    .limit(10);
-
-  return {
-    totalProducts,
-    totalTransfers,
-    totalCustomers,
-    productsByCategory,
-    productsByStatus,
-    recentActivity,
-  };
+  return storage.getRetailerStats(retailerId);
 }
 
 // ─── Product search, filter & pagination ───
@@ -695,51 +444,7 @@ export async function searchRetailerProducts(
   retailerId: number,
   params: ProductSearchParams
 ): Promise<PaginatedResult<PosProduct>> {
-  const { page, limit, search, category, status } = params;
-  const offset = (page - 1) * limit;
-
-  const conditions = [eq(posProducts.retailerId, retailerId)];
-
-  if (category) {
-    conditions.push(eq(posProducts.category, category));
-  }
-  if (status) {
-    conditions.push(eq(posProducts.status, status));
-  }
-  if (search) {
-    conditions.push(
-      or(
-        ilike(posProducts.serialNumber, `%${search}%`),
-        ilike(posProducts.name, `%${search}%`),
-        ilike(posProducts.sku, `%${search}%`)
-      )!
-    );
-  }
-
-  const whereClause = and(...conditions);
-
-  const [countResult] = await db
-    .select({ count: count() })
-    .from(posProducts)
-    .where(whereClause);
-
-  const total = countResult?.count ?? 0;
-
-  const data = await db
-    .select()
-    .from(posProducts)
-    .where(whereClause)
-    .orderBy(desc(posProducts.registrationDate))
-    .limit(limit)
-    .offset(offset);
-
-  return {
-    data,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  };
+  return storage.searchRetailerProducts(retailerId, params);
 }
 
 /**
@@ -749,31 +454,7 @@ export async function getProductHistoryPaginated(
   productId: number,
   params: PaginationParams
 ): Promise<PaginatedResult<OwnershipLedgerEntry>> {
-  const { page, limit } = params;
-  const offset = (page - 1) * limit;
-
-  const [countResult] = await db
-    .select({ count: count() })
-    .from(ownershipLedger)
-    .where(eq(ownershipLedger.productId, productId));
-
-  const total = countResult?.count ?? 0;
-
-  const data = await db
-    .select()
-    .from(ownershipLedger)
-    .where(eq(ownershipLedger.productId, productId))
-    .orderBy(desc(ownershipLedger.timestamp))
-    .limit(limit)
-    .offset(offset);
-
-  return {
-    data,
-    total,
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-  };
+  return storage.getProductHistoryPaginated(productId, params);
 }
 
 // ─── Product detail ───
@@ -785,18 +466,7 @@ export async function getProductById(
   productId: number,
   retailerId?: number
 ): Promise<PosProduct | undefined> {
-  const conditions = [eq(posProducts.id, productId)];
-  if (retailerId !== undefined) {
-    conditions.push(eq(posProducts.retailerId, retailerId));
-  }
-
-  const [product] = await db
-    .select()
-    .from(posProducts)
-    .where(and(...conditions))
-    .limit(1);
-
-  return product;
+  return storage.getPosProductByIdAndRetailer(productId, retailerId);
 }
 
 // ─── Product status transitions ───
@@ -823,14 +493,13 @@ export async function archiveProduct(
     );
   }
 
-  const [updated] = await db
-    .update(posProducts)
-    .set({ status: "archived" })
-    .where(eq(posProducts.id, productId))
-    .returning();
+  const updated = await storage.updatePosProduct(productId, { status: "archived" });
+  if (!updated) {
+    throw new Error("Failed to update product");
+  }
 
   // Log to ledger
-  await db.insert(ownershipLedger).values({
+  await storage.createOwnershipLedgerEntry({
     productId,
     fromUserId: product.currentOwnerId,
     toUserId: product.currentOwnerId,
@@ -864,23 +533,19 @@ export async function reportProductStolen(
     throw Object.assign(new Error("Cannot report an archived product as stolen"), { status: 400 });
   }
 
-  const [updated] = await db
-    .update(posProducts)
-    .set({ status: "stolen" })
-    .where(eq(posProducts.id, productId))
-    .returning();
+  const updated = await storage.updatePosProduct(productId, { status: "stolen" });
+  if (!updated) {
+    throw new Error("Failed to update product");
+  }
 
-  const [ledgerEntry] = await db
-    .insert(ownershipLedger)
-    .values({
-      productId,
-      fromUserId: product.currentOwnerId,
-      toUserId: product.currentOwnerId,
-      registeredBy: retailerId,
-      event: "stolen_report",
-      notes: notes || "Product reported as stolen",
-    })
-    .returning();
+  await storage.createOwnershipLedgerEntry({
+    productId,
+    fromUserId: product.currentOwnerId,
+    toUserId: product.currentOwnerId,
+    registeredBy: retailerId,
+    event: "stolen_report",
+    notes: notes || "Product reported as stolen",
+  });
 
   logger.warn("Product reported stolen", { productId, retailerId, ownerId: product.currentOwnerId });
 
@@ -907,23 +572,19 @@ export async function recoverProduct(
     );
   }
 
-  const [updated] = await db
-    .update(posProducts)
-    .set({ status: "registered" })
-    .where(eq(posProducts.id, productId))
-    .returning();
+  const updated = await storage.updatePosProduct(productId, { status: "registered" });
+  if (!updated) {
+    throw new Error("Failed to update product");
+  }
 
-  const [ledgerEntry] = await db
-    .insert(ownershipLedger)
-    .values({
-      productId,
-      fromUserId: product.currentOwnerId,
-      toUserId: product.currentOwnerId,
-      registeredBy: retailerId,
-      event: "recovery",
-      notes: notes || "Product recovered",
-    })
-    .returning();
+  await storage.createOwnershipLedgerEntry({
+    productId,
+    fromUserId: product.currentOwnerId,
+    toUserId: product.currentOwnerId,
+    registeredBy: retailerId,
+    event: "recovery",
+    notes: notes || "Product recovered",
+  });
 
   logger.info("Product recovered", { productId, retailerId, ownerId: product.currentOwnerId });
 
