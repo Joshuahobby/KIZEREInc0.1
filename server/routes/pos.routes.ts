@@ -455,6 +455,55 @@ router.post(
 );
 
 // ═══════════════════════════════════════════════════════════
+// RETAILER SELF-ONBOARDING (Session auth - any authenticated user)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * POST /api/pos/onboard
+ * Self-registration for logged-in users to become a Retailer.
+ */
+router.post(
+  "/onboard",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      
+      const schema = z.object({
+        name: z.string().min(2, "Business name is required"),
+        email: z.string().email("Valid business email is required"),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+      });
+
+      const data = schema.parse(req.body);
+      
+      // Ensure the user doesn't already have a retailer profile
+      const existingRetailer = await getRetailerByUserId(user.id);
+      if (existingRetailer) {
+        return res.status(409).json({ message: "You already have a retailer profile." });
+      }
+
+      // Create the retailer and update user role
+      const retailer = await createRetailer({
+        ...data,
+        userId: user.id,
+        subscriptionPlan: "basic", // Default plan for self-registration
+      });
+
+      res.status(201).json({ success: true, retailer });
+    } catch (error: any) {
+      logger.error("Retailer self-onboarding failed", { error: error.message });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      const status = error.status || 500;
+      res.status(status).json({ message: error.message || "Internal server error" });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════
 // ADMIN RETAILER MANAGEMENT ENDPOINTS (Session auth - Admin only)
 // ═══════════════════════════════════════════════════════════
 

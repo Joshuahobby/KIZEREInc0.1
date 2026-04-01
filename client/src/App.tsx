@@ -94,6 +94,7 @@ const PublicSearch = lazyWithRetry(() => import("@/pages/public-search"));
 const CreateReport = lazyWithRetry(() => import("@/pages/create-report"));
 const PosTerminal = lazyWithRetry(() => import("@/pages/pos-terminal"));
 const RetailerManagement = lazyWithRetry(() => import("@/pages/admin/retailer-management"));
+const RetailerOnboarding = lazyWithRetry(() => import("@/pages/retailer-onboarding"));
 const RetailerDashboard = lazyWithRetry(() => import("@/pages/retailer-dashboard"));
 const RetailerProducts = lazyWithRetry(() => import("@/pages/retailer-products"));
 const ClaimAccountPage = lazyWithRetry(() => import("@/pages/claim-account"));
@@ -185,6 +186,7 @@ function App() {
                   </Route>
 
                   {/* Protected routes */}
+                  <ProtectedRoute path="/retailer/onboarding" component={RetailerOnboarding} requiredRole="any" />
                   <ProtectedRoute path="/retailer/dashboard" component={RetailerDashboard} requiredRole={['Retailer', 'Admin']} />
                   <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
                   <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />

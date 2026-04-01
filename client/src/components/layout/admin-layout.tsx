@@ -222,6 +222,14 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
       categories.push({ title: t('nav.exploreHeader'), items: exploreItems });
     }
 
+    // BUSINESS Category
+    if (!isRetailer && !isAdmin) {
+      const businessItems: NavItem[] = [
+        { title: "Become a Retailer", href: "/retailer/onboarding", icon: <Store className="h-5 w-5" /> }
+      ];
+      categories.push({ title: "Business Solutions", items: businessItems });
+    }
+
     // FIELD OPERATIONS Category (Agent/Admin)
     if (isAdmin || isAgent) {
       const fieldItems: NavItem[] = [
