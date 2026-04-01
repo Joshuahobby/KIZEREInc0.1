@@ -115,9 +115,33 @@ export async function sendOTPViaSMS(phoneNumber: string, code: string): Promise<
   return sendSMS(phoneNumber, message);
 }
 
+/**
+ * Send POS product registration SMS to customer
+ */
+export async function sendPosRegistrationSMS(
+  phone: string,
+  data: { productName: string; productId: string; retailerName: string }
+): Promise<boolean> {
+  const message = `KIZERE: Your ${data.productName} has been registered by ${data.retailerName}. Product ID: ${data.productId}. Claim your account at kizere.com/claim-account`;
+  return sendSMS(phone, message);
+}
+
+/**
+ * Send POS ownership transfer SMS to new owner
+ */
+export async function sendPosTransferSMS(
+  phone: string,
+  data: { productName: string; productId: string; retailerName: string }
+): Promise<boolean> {
+  const message = `KIZERE: ${data.productName} (${data.productId}) has been transferred to you by ${data.retailerName}. View at kizere.com`;
+  return sendSMS(phone, message);
+}
+
 export default {
   sendSMS,
   sendOTPViaSMS,
   normalizeRwandanPhone,
   isValidRwandanPhone,
+  sendPosRegistrationSMS,
+  sendPosTransferSMS,
 };

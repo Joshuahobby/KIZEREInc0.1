@@ -4,10 +4,12 @@ import {
   InsertUser, InsertPosProduct, InsertOwnershipLedger,
   Retailer, PosProduct, OwnershipLedgerEntry
 } from "@shared/schema";
-import { eq, and, desc, count, sql } from "drizzle-orm";
+import { eq, and, desc, count, sql, gte, lte } from "drizzle-orm";
 import { createLogger } from "../utils/logger";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
+
+import { notifyPosCustomer } from "./pos-notification.service";
 
 const logger = createLogger("PosService");
 
@@ -141,6 +143,19 @@ export async function registerProduct(
     retailerId: input.retailerId,
   });
 
+  // Notify customer asynchronously (fire-and-forget)
+  const retailer = await db.query.retailers.findFirst({ where: eq(retailers.id, input.retailerId) });
+  if (retailer) {
+    notifyPosCustomer("registration", {
+      userId: input.ownerId,
+      productId: product.id,
+      productName: input.name,
+      serialNumber: input.serialNumber,
+      category: input.category || "Other",
+      retailerName: retailer.name,
+    }).catch(err => logger.error("POS notification failed", { err }));
+  }
+
   return { product, ledgerEntry };
 }
 
@@ -206,6 +221,19 @@ export async function transferOwnership(input: TransferInput) {
     to: input.newOwnerId,
     retailerId: input.retailerId,
   });
+
+  // Notify customer asynchronously (fire-and-forget)
+  const retailer = await db.query.retailers.findFirst({ where: eq(retailers.id, input.retailerId) });
+  if (retailer) {
+    notifyPosCustomer("transfer", {
+      userId: input.newOwnerId,
+      productId: updatedProduct.id,
+      productName: updatedProduct.name,
+      serialNumber: updatedProduct.serialNumber,
+      category: updatedProduct.category,
+      retailerName: retailer.name,
+    }).catch(err => logger.error("POS notification failed", { err }));
+  }
 
   return { product: updatedProduct, ledgerEntry };
 }
@@ -408,6 +436,119 @@ export async function getOwnerProducts(ownerId: number) {
 }
 
 // ─── Retailer Dashboard Stats ───
+
+export function isPosStubAccount(email?: string | null): boolean {
+  return email?.endsWith("@pos.kizere.local") ?? false;
+}
+
+export interface PosAnalyticsData {
+  registrationsOverTime: { date: string; count: number }[];
+  transfersOverTime: { date: string; count: number }[];
+  topRetailers: { name: string; count: number }[];
+  categoryBreakdown: { category: string; count: number }[];
+  totalRegistrations: number;
+  totalTransfers: number;
+  activeRetailers: number;
+}
+
+export async function getPosAnalytics(startDate?: Date, endDate?: Date): Promise<PosAnalyticsData> {
+  const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default 30 days
+  const end = endDate || new Date();
+
+  // Total Registrations within range
+  const [regCount] = await db
+    .select({ count: count() })
+    .from(posProducts)
+    .where(and(
+      gte(posProducts.registrationDate, start),
+      lte(posProducts.registrationDate, end)
+    ));
+  const totalRegistrations = regCount?.count ?? 0;
+
+  // Total Transfers within range
+  const [transCount] = await db
+    .select({ count: count() })
+    .from(ownershipLedger)
+    .where(and(
+      eq(ownershipLedger.event, "transfer"),
+      gte(ownershipLedger.timestamp, start),
+      lte(ownershipLedger.timestamp, end)
+    ));
+  const totalTransfers = transCount?.count ?? 0;
+
+  // Active Retailers (with at least one registration in range)
+  const [activeRetCount] = await db
+    .select({ count: sql<number>`count(distinct ${posProducts.retailerId})` })
+    .from(posProducts)
+    .where(and(
+      gte(posProducts.registrationDate, start),
+      lte(posProducts.registrationDate, end)
+    ));
+  const activeRetailers = activeRetCount?.count ?? 0;
+
+  // Category Breakdown
+  const categoryBreakdown = await db
+    .select({ category: posProducts.category, count: count() })
+    .from(posProducts)
+    .where(and(
+      gte(posProducts.registrationDate, start),
+      lte(posProducts.registrationDate, end)
+    ))
+    .groupBy(posProducts.category)
+    .orderBy(desc(count()));
+
+  // Top Retailers by volume
+  const topRetailers = await db
+    .select({ name: retailers.name, count: count() })
+    .from(posProducts)
+    .innerJoin(retailers, eq(posProducts.retailerId, retailers.id))
+    .where(and(
+      gte(posProducts.registrationDate, start),
+      lte(posProducts.registrationDate, end)
+    ))
+    .groupBy(retailers.name)
+    .orderBy(desc(count()))
+    .limit(10);
+
+  // Registrations over time (Daily)
+  const registrationsOverTime = await db
+    .select({
+      date: sql<string>`date_trunc('day', ${posProducts.registrationDate})::date::text`,
+      count: count(),
+    })
+    .from(posProducts)
+    .where(and(
+      gte(posProducts.registrationDate, start),
+      lte(posProducts.registrationDate, end)
+    ))
+    .groupBy(sql`date_trunc('day', ${posProducts.registrationDate})`)
+    .orderBy(sql`date_trunc('day', ${posProducts.registrationDate})`);
+
+  // Transfers over time (Daily)
+  const transfersOverTime = await db
+    .select({
+      date: sql<string>`date_trunc('day', ${ownershipLedger.timestamp})::date::text`,
+      count: count(),
+    })
+    .from(ownershipLedger)
+    .where(and(
+      eq(ownershipLedger.event, "transfer"),
+      gte(ownershipLedger.timestamp, start),
+      lte(ownershipLedger.timestamp, end)
+    ))
+    .groupBy(sql`date_trunc('day', ${ownershipLedger.timestamp})`)
+    .orderBy(sql`date_trunc('day', ${ownershipLedger.timestamp})`);
+
+  return {
+    registrationsOverTime,
+    transfersOverTime,
+    topRetailers,
+    categoryBreakdown,
+    totalRegistrations,
+    totalTransfers,
+    activeRetailers,
+  };
+}
 
 export interface RetailerStats {
   totalProducts: number;

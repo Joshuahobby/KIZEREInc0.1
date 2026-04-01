@@ -796,6 +796,46 @@
     "recentProducts": "Usajili wa Hivi Karibuni",
     "recentProductsDesc": "Bidhaa za hivi karibuni zilizosajiliwa na biashara yako",
     "noActivity": "Hakuna shughuli za hivi karibuni zilizopatikana.",
-    "noProducts": "Hakuna bidhaa zilizosajiliwa bado."
+    "noProducts": "Hakuna bidhaa zilizosajiliwa bado.",
+    "scanBarcode": "Changanua Msimbo",
+    "scanInstruction": "Weka msimbopau au msimbo wa QR ndani ya fremu ili kuchanganua.",
+    "scanSuccess": "Uchanganuzi umefaulu",
+    "claimAccountHint": "Mteja lazima adai akaunti kwenye kizere.com/claim-account",
+    "claim": {
+      "title": "Dai Akaunti Yako",
+      "requestDesc": "Anzisha akaunti uliyoundiwa wakati wa ununuzi wako wa POS.",
+      "verifyDesc": "Weka OTP iliyotumwa kwa simu yako ili kuweka nenosiri lako jipya.",
+      "otp": "Nambari ya Uthibitishaji",
+      "newPassword": "Nenosiri Jipya",
+      "confirmPassword": "Thibitisha Nenosiri",
+      "email": "Barua pepe (Hiari)",
+      "emailHint": "Ongeza barua pepe ili kupokea arifa kuhusu bidhaa zako.",
+      "requestBtn": "Tuma Nambari ya Uthibitishaji",
+      "verifyBtn": "Dai Akaunti",
+      "backToLogin": "Rudi Kuingia",
+      "invalidInput": "Tafadhali weka Kitambulisho cha Taifa na nambari ya Simu halali",
+      "otpSent": "OTP Imetumwa",
+      "otpSentDesc": "Tafadhali angalia simu yako kwa nambari ya uthibitishaji",
+      "invalidOtp": "OTP lazima iwe na tarakimu 6",
+      "passwordLength": "Nenosiri lazima liwe na angalau herufi 8",
+      "passwordMismatch": "Nywila hazilingani",
+      "success": "Akaunti Imedaiwa!",
+      "successDesc": "Sasa unaweza kuingia na nenosiri lako jipya"
+    },
+    "analytics": {
+      "title": "Takwimu za POS",
+      "subtitle": "Fuatilia shughuli za vituo vya mauzo kwenye jukwaa zima.",
+      "last7Days": "Siku 7 zilizopita",
+      "last30Days": "Siku 30 zilizopita",
+      "last90Days": "Siku 90 zilizopita",
+      "lastYear": "Mwaka uliopita",
+      "totalRegistrations": "Jumla ya Usajili",
+      "totalTransfers": "Jumla ya Uhamisho",
+      "activeRetailers": "Wauzaji Wanaofanya Kazi",
+      "registrationsChart": "Usajili Kadiri ya Muda",
+      "transfersChart": "Uhamisho Kadiri ya Muda",
+      "topRetailers": "Wauzaji Bora",
+      "categoryBreakdown": "Mchanganuo wa Kategoria"
+    }
   }
 }

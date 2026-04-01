@@ -83,6 +83,7 @@
     "framer-motion": "^11.18.2",
     "helmet": "^8.1.0",
     "hpp": "^0.2.3",
+    "html5-qrcode": "^2.3.8",
     "http-message-signatures": "^1.0.4",
     "i18n": "^0.15.1",
     "i18next": "^25.7.4",

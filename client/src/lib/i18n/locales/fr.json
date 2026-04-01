@@ -946,6 +946,46 @@
     "recentProducts": "Enregistrements Récents",
     "recentProductsDesc": "Derniers produits enregistrés par votre entreprise",
     "noActivity": "Aucune activité récente trouvée.",
-    "noProducts": "Aucun produit enregistré pour le moment."
+    "noProducts": "Aucun produit enregistré pour le moment.",
+    "scanBarcode": "Scanner le code-barres",
+    "scanInstruction": "Positionnez le code-barres ou le code QR dans le cadre pour le scanner.",
+    "scanSuccess": "Scan réussi",
+    "claimAccountHint": "Le client doit réclamer son compte sur kizere.com/claim-account",
+    "claim": {
+      "title": "Réclamer votre compte",
+      "requestDesc": "Activez le compte créé pour vous lors de votre achat au point de vente.",
+      "verifyDesc": "Entrez l'OTP envoyé sur votre téléphone pour définir votre nouveau mot de passe.",
+      "otp": "Code de vérification",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "email": "Adresse e-mail (facultatif)",
+      "emailHint": "Ajoutez un e-mail pour recevoir des notifications sur vos produits.",
+      "requestBtn": "Envoyer le code de vérification",
+      "verifyBtn": "Réclamer le compte",
+      "backToLogin": "Retour à la connexion",
+      "invalidInput": "Veuillez entrer une carte d'identité nationale et un numéro de téléphone valides",
+      "otpSent": "OTP envoyé",
+      "otpSentDesc": "Veuillez vérifier votre téléphone pour le code de vérification",
+      "invalidOtp": "L'OTP doit comporter 6 chiffres",
+      "passwordLength": "Le mot de passe doit comporter au moins 8 caractères",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "success": "Compte réclamé!",
+      "successDesc": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe"
+    },
+    "analytics": {
+      "title": "Analytiques POS",
+      "subtitle": "Surveiller l'activité des points de vente sur l'ensemble de la plateforme.",
+      "last7Days": "7 derniers jours",
+      "last30Days": "30 derniers jours",
+      "last90Days": "90 derniers jours",
+      "lastYear": "L'année dernière",
+      "totalRegistrations": "Total des enregistrements",
+      "totalTransfers": "Total des transferts",
+      "activeRetailers": "Détaillants actifs",
+      "registrationsChart": "Enregistrements au fil du temps",
+      "transfersChart": "Transferts au fil du temps",
+      "topRetailers": "Meilleurs détaillants (par volume)",
+      "categoryBreakdown": "Répartition par catégorie"
+    }
   }
 }

@@ -411,6 +411,111 @@ export async function sendFoundNotificationEmail(
   });
 }
 
+/**
+ * Send POS product registration confirmation email to customer
+ */
+export async function sendPosRegistrationEmail(
+  email: string,
+  data: {
+    customerName: string;
+    productName: string;
+    serialNumber: string;
+    category: string;
+    productId: string;
+    retailerName: string;
+    isNewAccount: boolean;
+  }
+): Promise<boolean> {
+  const appUrl = process.env.APP_URL || 'https://kizere.com';
+
+  return sendEmail({
+    to: email,
+    subject: `Product Registered - ${data.productName} (${data.productId})`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Product Registered</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${data.customerName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Your product has been successfully registered on KIZERE by <strong>${data.retailerName}</strong>.
+          </p>
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="margin: 8px 0;"><strong>Product:</strong> ${data.productName}</p>
+            <p style="margin: 8px 0;"><strong>Serial Number:</strong> <code style="background: #f3f4f6; padding: 2px 8px; border-radius: 4px;">${data.serialNumber}</code></p>
+            <p style="margin: 8px 0;"><strong>Category:</strong> ${data.category}</p>
+            <p style="margin: 8px 0;"><strong>Product ID:</strong> <code style="background: #f3f4f6; padding: 2px 8px; border-radius: 4px; color: #10b981; font-weight: bold;">${data.productId}</code></p>
+            <p style="margin: 8px 0;"><strong>Registered by:</strong> ${data.retailerName}</p>
+          </div>
+          ${data.isNewAccount ? `
+            <div style="background: #fef3c7; padding: 16px; border-radius: 8px; border: 1px solid #fcd34d; margin: 20px 0;">
+              <p style="color: #92400e; margin: 0; font-weight: bold;">Claim Your Account</p>
+              <p style="color: #92400e; margin: 8px 0 0; font-size: 14px;">
+                A KIZERE account was created for you. Visit the link below to set your password and access your registered products.
+              </p>
+              <a href="${appUrl}/claim-account"
+                 style="display: inline-block; background: #f59e0b; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px; margin-top: 12px; font-weight: bold;">
+                Claim Your Account
+              </a>
+            </div>
+          ` : ''}
+          <p style="color: #4b5563; line-height: 1.6;">
+            This registration serves as a digital proof of ownership. Keep this email for your records.
+          </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>&copy; ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Send POS product ownership transfer confirmation email
+ */
+export async function sendPosTransferEmail(
+  email: string,
+  data: {
+    customerName: string;
+    productName: string;
+    serialNumber: string;
+    productId: string;
+    retailerName: string;
+  }
+): Promise<boolean> {
+  return sendEmail({
+    to: email,
+    subject: `Ownership Transfer - ${data.productName} (${data.productId})`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Ownership Transferred</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${data.customerName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            A product has been transferred to your ownership on KIZERE by <strong>${data.retailerName}</strong>.
+          </p>
+          <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="margin: 8px 0;"><strong>Product:</strong> ${data.productName}</p>
+            <p style="margin: 8px 0;"><strong>Serial Number:</strong> <code style="background: #f3f4f6; padding: 2px 8px; border-radius: 4px;">${data.serialNumber}</code></p>
+            <p style="margin: 8px 0;"><strong>Product ID:</strong> <code style="background: #f3f4f6; padding: 2px 8px; border-radius: 4px; color: #3b82f6; font-weight: bold;">${data.productId}</code></p>
+            <p style="margin: 8px 0;"><strong>Transfer facilitated by:</strong> ${data.retailerName}</p>
+          </div>
+          <p style="color: #4b5563; line-height: 1.6;">
+            You are now the registered owner of this product on KIZERE.
+          </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>&copy; ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
 export default {
   sendEmail,
   sendWelcomeEmail,
@@ -426,6 +531,8 @@ export default {
   sendAdminVerificationNotification,
   sendUserVerificationStatusEmail,
   sendResetPasswordEmail,
+  sendPosRegistrationEmail,
+  sendPosTransferEmail,
 };
 
 /**

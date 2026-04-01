@@ -18,12 +18,14 @@ export default function RetailerDashboard() {
   const { t } = useLanguage();
   const { user } = useAuth();
 
-  const { data: statsData, isLoading: statsLoading } = useQuery({
+  const { data: statsData, isLoading: statsLoading } = useQuery<{ success: boolean; stats: any }>({
     queryKey: ["/api/pos/my-stats"],
+    queryFn: () => apiRequest("/api/pos/my-stats"),
   });
 
-  const { data: productsData, isLoading: productsLoading } = useQuery({
+  const { data: productsData, isLoading: productsLoading } = useQuery<{ success: boolean; products: any[] }>({
     queryKey: ["/api/pos/my-products"],
+    queryFn: () => apiRequest("/api/pos/my-products"),
   });
 
   const stats = statsData?.stats;
@@ -93,7 +95,7 @@ export default function RetailerDashboard() {
                     <div key={activity.id} className="flex items-center justify-between border-b pb-2 last:border-0">
                       <div>
                         <p className="text-sm font-medium capitalize">{activity.event}</p>
-                        <p className="text-xs text-muted-foreground">Product ID: {activity.productId}</p>
+                        <p className="text-xs text-muted-foreground">Product ID: KZR-{String(activity.productId).padStart(6, "0")}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-xs font-mono">{format(new Date(activity.timestamp), "MMM d, yyyy HH:mm")}</p>

@@ -95,6 +95,8 @@ const CreateReport = lazyWithRetry(() => import("@/pages/create-report"));
 const PosTerminal = lazyWithRetry(() => import("@/pages/pos-terminal"));
 const RetailerManagement = lazyWithRetry(() => import("@/pages/admin/retailer-management"));
 const RetailerDashboard = lazyWithRetry(() => import("@/pages/retailer-dashboard"));
+const ClaimAccountPage = lazyWithRetry(() => import("@/pages/claim-account"));
+const PosAnalyticsPage = lazyWithRetry(() => import("@/pages/admin/pos-analytics"));
 
 function App() {
   // Handle Firebase redirect result
@@ -177,6 +179,9 @@ function App() {
                   <Route path="/verify-2fa">
                     <VerifyOTPPage />
                   </Route>
+                  <Route path="/claim-account">
+                    <ClaimAccountPage />
+                  </Route>
 
                   {/* Protected routes */}
                   <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
@@ -218,6 +223,7 @@ function App() {
                   <ProtectedRoute path="/pos" component={PosTerminal} requiredRole={['Retailer', 'Admin']} />
                   <ProtectedRoute path="/retailer/dashboard" component={RetailerDashboard} requiredRole={['Retailer', 'Admin']} />
                   <ProtectedRoute path="/admin/retailers" component={RetailerManagement} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/pos-analytics" component={PosAnalyticsPage} requiredRole="Admin" />
 
                   {/* Admin routes - Consolidated to UnifiedDashboard */}
                   <ProtectedRoute path="/admin" component={UnifiedDashboard} requiredRole="Admin" />

@@ -15,9 +15,16 @@ import {
   getOwnerProducts,
   getRetailerByUserId,
   getRetailerStats,
+  getPosAnalytics,
 } from "../services/pos.service";
 import { createLogger } from "../utils/logger";
 import { z } from "zod";
+import { db } from "../db";
+import { users } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
+import { sendOTP, verifyOTP } from "../services/otp.service";
+import bcrypt from "bcrypt";
+import { isPosStubAccount } from "../services/pos.service";
 
 const logger = createLogger("PosRoutes");
 const router = Router();
@@ -402,6 +409,159 @@ router.get(
       res.json({ success: true, products });
     } catch (error: any) {
       logger.error("getRetailerProducts failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════
+// OWNER PRODUCTS ENDPOINT (Session auth - any authenticated user)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * GET /api/pos/owner-products
+ * Get all POS products owned by the current user.
+ */
+router.get(
+  "/owner-products",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const products = await getOwnerProducts(user.id);
+      res.json({ success: true, products });
+    } catch (error: any) {
+      logger.error("getOwnerProducts failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════
+// CLAIM ACCOUNT ENDPOINTS (Public)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * POST /api/pos/claim/request-otp
+ * Request OTP to claim a POS stub account.
+ */
+router.post(
+  "/claim/request-otp",
+  async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        nationalId: z.string().min(6),
+        phone: z.string(),
+      });
+      const data = schema.parse(req.body);
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.nationalId, data.nationalId))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+
+      if (!isPosStubAccount(user.email)) {
+        return res.status(400).json({ message: "This account is already claimed or wasn't created via POS." });
+      }
+
+      // POS might have created the account with a different phone or no phone, but we must verify the provided phone
+      // Let's send the OTP to the provided phone
+      const result = await sendOTP(user.id, "sms", "phone_verify", data.phone);
+
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+
+      res.json({ success: true, message: "OTP sent" });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/claim/verify
+ * Verify OTP, set new password, and claim account.
+ */
+router.post(
+  "/claim/verify",
+  async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        nationalId: z.string().min(6),
+        phone: z.string(),
+        otp: z.string().length(6),
+        newPassword: z.string().min(8),
+        email: z.string().email().optional(),
+      });
+      const data = schema.parse(req.body);
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.nationalId, data.nationalId))
+        .limit(1);
+
+      if (!user) {
+        return res.status(404).json({ message: "Account not found" });
+      }
+
+      const verifyResult = await verifyOTP(user.id, data.otp, "phone_verify");
+      if (!verifyResult.valid) {
+        return res.status(400).json({ message: verifyResult.message });
+      }
+
+      const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+      
+      const updateData: any = {
+        password: hashedPassword,
+        verificationStatus: "verified",
+        phoneNumber: data.phone,
+      };
+
+      if (data.email) {
+        updateData.email = data.email;
+      }
+
+      await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, user.id));
+
+      res.json({ success: true, message: "Account successfully claimed" });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/admin/analytics
+ * Get POS analytics data. Auth: Admin
+ */
+router.get(
+  "/admin/analytics",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+      
+      const analytics = await getPosAnalytics(startDate, endDate);
+      res.json({ success: true, analytics });
+    } catch (error: any) {
+      logger.error("getPosAnalytics failed", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
     }
   }

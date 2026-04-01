@@ -2056,6 +2056,46 @@
     "recentProducts": "Iyandikwa rya vuba",
     "recentProductsDesc": "Ibicuruzwa bishya byanditswe n'ubucuruzi bwawe",
     "noActivity": "Nta bikorwa biherutse kuboneka.",
-    "noProducts": "Nta bicuruzwa byanditswe kugeza ubu."
+    "noProducts": "Nta bicuruzwa byanditswe kugeza ubu.",
+    "scanBarcode": "Sikana Barcode",
+    "scanInstruction": "Shyira barcode cyangwa QR code mu ishusho kugirango usikane.",
+    "scanSuccess": "Gusikana byagenze neza",
+    "claimAccountHint": "Umukiriya agomba kwemeza konti ye kuri kizere.com/claim-account",
+    "claim": {
+      "title": "Emeza Konti Yawe",
+      "requestDesc": "Fungura konti wakorewe mugihe waguraga muri POS.",
+      "verifyDesc": "Shyiramo kode yohererejwe kuri telefoni yawe kugirango ushyireho ijambo ryibanga rishya.",
+      "otp": "Kode Yemeza",
+      "newPassword": "Ijambo Ryibanga Rishya",
+      "confirmPassword": "Emeza Ijambo Ryibanga",
+      "email": "Imeri (Bidakomeje)",
+      "emailHint": "Ongeramo imeri kugirango ubone amakuru kubintu byawe.",
+      "requestBtn": "Ohereza Kode Yemeza",
+      "verifyBtn": "Emeza Konti",
+      "backToLogin": "Subira Aho Kwinjirira",
+      "invalidInput": "Nyamuneka shyiramo indangamuntu na nomero ya telefoni byemewe",
+      "otpSent": "Kode Yoherejwe",
+      "otpSentDesc": "Nyamuneka reba telefoni yawe kugirango ubone kode yemeza",
+      "invalidOtp": "Kode igomba kuba imibare 6",
+      "passwordLength": "Ijambo ryibanga rigomba kuba nibura inyuguti 8",
+      "passwordMismatch": "Amagambo yibanga ntabwo ahuye",
+      "success": "Konti Yemejwe!",
+      "successDesc": "Ubu ushobora kwinjira ukoresheje ijambo ryibanga rishya"
+    },
+    "analytics": {
+      "title": "Incamake ya POS",
+      "subtitle": "Reba uko ibikorwa bya POS bihagaze ku rubuga rwose.",
+      "last7Days": "Iminsi 7 ishize",
+      "last30Days": "Iminsi 30 ishize",
+      "last90Days": "Iminsi 90 ishize",
+      "lastYear": "Umwaka ushize",
+      "totalRegistrations": "Ibyanditswe byose",
+      "totalTransfers": "Ibyoherejwe byose",
+      "activeRetailers": "Abacuruzi bakora",
+      "registrationsChart": "Ibyanditswe uko igihe kigenda",
+      "transfersChart": "Ibyoherejwe uko igihe kigenda",
+      "topRetailers": "Abacuruzi b'imbere",
+      "categoryBreakdown": "Ubwoko bw'ibicuruzwa"
+    }
   }
 }

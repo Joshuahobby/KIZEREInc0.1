@@ -2064,6 +2064,46 @@
     "recentProducts": "Recent Registrations",
     "recentProductsDesc": "Latest products registered by your business",
     "noActivity": "No recent activity found.",
-    "noProducts": "No products registered yet."
+    "noProducts": "No products registered yet.",
+    "scanBarcode": "Scan Barcode",
+    "scanInstruction": "Position the barcode or QR code inside the frame to scan.",
+    "scanSuccess": "Scan successful",
+    "claimAccountHint": "Customer must claim account at kizere.com/claim-account",
+    "claim": {
+      "title": "Claim Your Account",
+      "requestDesc": "Activate the account created for you during your POS purchase.",
+      "verifyDesc": "Enter the OTP sent to your phone to set your new password.",
+      "otp": "Verification Code",
+      "newPassword": "New Password",
+      "confirmPassword": "Confirm Password",
+      "email": "Email Address (Optional)",
+      "emailHint": "Add an email to receive notifications about your products.",
+      "requestBtn": "Send Verification Code",
+      "verifyBtn": "Claim Account",
+      "backToLogin": "Back to Login",
+      "invalidInput": "Please enter valid National ID and Phone number",
+      "otpSent": "OTP Sent",
+      "otpSentDesc": "Please check your phone for the verification code",
+      "invalidOtp": "OTP must be 6 digits",
+      "passwordLength": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "success": "Account Claimed!",
+      "successDesc": "You can now log in with your new password"
+    },
+    "analytics": {
+      "title": "POS Analytics",
+      "subtitle": "Monitor platform-wide point of sale activity.",
+      "last7Days": "Last 7 Days",
+      "last30Days": "Last 30 Days",
+      "last90Days": "Last 90 Days",
+      "lastYear": "Last Year",
+      "totalRegistrations": "Total Registrations",
+      "totalTransfers": "Total Transfers",
+      "activeRetailers": "Active Retailers",
+      "registrationsChart": "Registrations Over Time",
+      "transfersChart": "Transfers Over Time",
+      "topRetailers": "Top Retailers (by volume)",
+      "categoryBreakdown": "Category Breakdown"
+    }
   }
 }
