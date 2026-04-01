@@ -270,7 +270,10 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const retailer = (req as any).retailer;
-      const stats = await getRetailerStats(retailer.id);
+      const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
+      const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
+      
+      const stats = await getRetailerStats(retailer.id, startDate, endDate);
       res.json({ success: true, stats });
     } catch (error: any) {
       logger.error("getRetailerStats failed", { error: error.message });

@@ -225,36 +225,44 @@ export async function getPosAnalytics(start: Date, end: Date) {
   };
 }
 
-export async function getRetailerStats(retailerId: number) {
+export async function getRetailerStats(retailerId: number, startDate?: Date, endDate?: Date) {
+  const productFilters: any[] = [eq(posProducts.retailerId, retailerId)];
+  if (startDate) productFilters.push(gte(posProducts.registrationDate, startDate));
+  if (endDate) productFilters.push(lte(posProducts.registrationDate, endDate));
+
+  const ledgerFilters: any[] = [eq(ownershipLedger.registeredBy, retailerId)];
+  if (startDate) ledgerFilters.push(gte(ownershipLedger.timestamp, startDate));
+  if (endDate) ledgerFilters.push(lte(ownershipLedger.timestamp, endDate));
+
   const [productCountResult] = await db
     .select({ count: count() })
     .from(posProducts)
-    .where(eq(posProducts.retailerId, retailerId));
+    .where(and(...productFilters));
   const totalProducts = productCountResult?.count ?? 0;
 
   const [transferCountResult] = await db
     .select({ count: count() })
     .from(ownershipLedger)
-    .where(and(eq(ownershipLedger.registeredBy, retailerId), eq(ownershipLedger.event, "transfer")));
+    .where(and(...ledgerFilters, eq(ownershipLedger.event, "transfer")));
   const totalTransfers = transferCountResult?.count ?? 0;
 
   const [customerCountResult] = await db
     .select({ count: sql<number>`count(distinct ${posProducts.currentOwnerId})` })
     .from(posProducts)
-    .where(eq(posProducts.retailerId, retailerId));
+    .where(and(...productFilters));
   const totalCustomers = customerCountResult?.count ?? 0;
 
   const productsByCategory = await db
     .select({ category: posProducts.category, count: count() })
     .from(posProducts)
-    .where(eq(posProducts.retailerId, retailerId))
+    .where(and(...productFilters))
     .groupBy(posProducts.category)
     .orderBy(desc(count()));
 
   const productsByStatus = await db
     .select({ status: posProducts.status, count: count() })
     .from(posProducts)
-    .where(eq(posProducts.retailerId, retailerId))
+    .where(and(...productFilters))
     .groupBy(posProducts.status)
     .orderBy(desc(count()));
 
@@ -268,7 +276,7 @@ export async function getRetailerStats(retailerId: number) {
       timestamp: ownershipLedger.timestamp,
     })
     .from(ownershipLedger)
-    .where(eq(ownershipLedger.registeredBy, retailerId))
+    .where(and(...ledgerFilters))
     .orderBy(desc(ownershipLedger.timestamp))
     .limit(10);
 

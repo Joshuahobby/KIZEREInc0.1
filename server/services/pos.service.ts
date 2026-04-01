@@ -412,8 +412,8 @@ export interface RetailerStats {
 /**
  * Get aggregate stats for a retailer's dashboard.
  */
-export async function getRetailerStats(retailerId: number): Promise<RetailerStats> {
-  return storage.getRetailerStats(retailerId);
+export async function getRetailerStats(retailerId: number, startDate?: Date, endDate?: Date): Promise<RetailerStats> {
+  return storage.getRetailerStats(retailerId, startDate, endDate);
 }
 
 // ─── Product search, filter & pagination ───

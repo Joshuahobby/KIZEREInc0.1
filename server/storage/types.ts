@@ -230,7 +230,7 @@ export interface IStorage {
   ): Promise<{ data: OwnershipLedgerEntry[]; total: number; page: number; limit: number; totalPages: number }>;
 
   getPosAnalytics(start: Date, end: Date): Promise<any>;
-  getRetailerStats(retailerId: number): Promise<any>;
+  getRetailerStats(retailerId: number, startDate?: Date, endDate?: Date): Promise<any>;
 
   // Session management
   sessionStore: session.Store;

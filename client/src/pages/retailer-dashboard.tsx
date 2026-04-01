@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -12,8 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Users, ArrowRightLeft, Activity, Store, Plus, TrendingUp } from "lucide-react";
-import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Package, Users, ArrowRightLeft, Activity, Store, Plus, TrendingUp, Calendar } from "lucide-react";
+import { format, subDays, startOfMonth, startOfYear } from "date-fns";
 import { useLocation } from "wouter";
 import {
   PieChart,
@@ -114,9 +115,29 @@ export default function RetailerDashboard() {
   const { user } = useAuth();
   const [, navigate] = useLocation();
 
+  const [dateRange, setDateRange] = useState<string>("all");
+
+  // Calculate start/end dates based on selection
+  const getDateParams = () => {
+    if (dateRange === "all") return "";
+    
+    const now = new Date();
+    let start;
+    
+    switch (dateRange) {
+      case "7days": start = subDays(now, 7); break;
+      case "30days": start = subDays(now, 30); break;
+      case "this_month": start = startOfMonth(now); break;
+      case "this_year": start = startOfYear(now); break;
+      default: return "";
+    }
+    
+    return `?startDate=${start.toISOString()}&endDate=${now.toISOString()}`;
+  };
+
   const { data: statsData, isLoading: statsLoading } = useQuery<{ success: boolean; stats: RetailerStats }>({
-    queryKey: ["/api/pos/my-stats"],
-    queryFn: () => apiRequest("/api/pos/my-stats"),
+    queryKey: ["/api/pos/my-stats", dateRange],
+    queryFn: () => apiRequest(`/api/pos/my-stats${getDateParams()}`),
   });
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{ success: boolean; products: PosProduct[] }>({
@@ -159,11 +180,24 @@ export default function RetailerDashboard() {
         transition={{ duration: 0.3, ease: "easeInOut" }}
         className="container max-w-7xl mx-auto py-6 space-y-6"
       >
-        <DashboardPageHeader
+          <DashboardPageHeader
           title={`${greeting}, ${user?.fullName || user?.username || t("pos.retailer") || "Retailer"}`}
           description={t("pos.retailerDashboardDesc") || "Overview of your POS registrations and activity"}
           actions={
             <div className="flex items-center gap-2">
+              <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="w-[160px] bg-background">
+                  <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="Select timeframe" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("common.allTime") || "All Time"}</SelectItem>
+                  <SelectItem value="7days">{t("common.last7Days") || "Last 7 Days"}</SelectItem>
+                  <SelectItem value="30days">{t("common.last30Days") || "Last 30 Days"}</SelectItem>
+                  <SelectItem value="this_month">{t("common.thisMonth") || "This Month"}</SelectItem>
+                  <SelectItem value="this_year">{t("common.thisYear") || "This Year"}</SelectItem>
+                </SelectContent>
+              </Select>
               <Button
                 onClick={() => navigate("/pos")}
                 className="gap-2"
