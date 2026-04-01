@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { AppLayout } from "@/components/layout/admin-layout";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
@@ -11,11 +12,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Users, ArrowRightLeft, Activity, Store, Plus, TrendingUp, Calendar } from "lucide-react";
+import { Package, Users, ArrowRightLeft, Activity, Store, Plus, TrendingUp, Calendar, Key, RefreshCw, CheckCircle2, Copy } from "lucide-react";
 import { format, subDays, startOfMonth, startOfYear } from "date-fns";
 import { useLocation } from "wouter";
+import type { Retailer } from "@shared/schema";
 import {
   PieChart,
   Pie,
@@ -135,7 +138,7 @@ export default function RetailerDashboard() {
     return `?startDate=${start.toISOString()}&endDate=${now.toISOString()}`;
   };
 
-  const { data: statsData, isLoading: statsLoading } = useQuery<{ success: boolean; stats: RetailerStats }>({
+  const { data: statsData, isLoading: statsLoading, refetch: refetchStats } = useQuery<{ success: boolean; stats: RetailerStats; retailer?: Retailer }>({
     queryKey: ["/api/pos/my-stats", dateRange],
     queryFn: () => apiRequest(`/api/pos/my-stats${getDateParams()}`),
   });
@@ -143,6 +146,42 @@ export default function RetailerDashboard() {
   const { data: productsData, isLoading: productsLoading } = useQuery<{ success: boolean; products: PosProduct[] }>({
     queryKey: ["/api/pos/my-products"],
     queryFn: () => apiRequest("/api/pos/my-products"),
+  });
+
+  const { toast } = useToast();
+  const [copiedKey, setCopiedKey] = React.useState(false);
+
+  const copyApiKey = () => {
+    if (statsData?.retailer?.apiKey) {
+      navigator.clipboard.writeText(statsData.retailer.apiKey);
+      setCopiedKey(true);
+      toast({
+        title: "API Key copied",
+        description: "Copied to clipboard successfully.",
+      });
+      setTimeout(() => setCopiedKey(false), 2000);
+    }
+  };
+
+  const regenerateMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("/api/pos/my-key/regenerate", { method: "POST" });
+      return res;
+    },
+    onSuccess: () => {
+      toast({
+        title: "API Key regenerated",
+        description: "Your new API key is active. Update your integrations immediately.",
+      });
+      refetchStats();
+    },
+    onError: (err) => {
+      toast({
+        title: "Failed to regenerate",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
   });
 
   const stats = statsData?.stats;
@@ -391,6 +430,58 @@ export default function RetailerDashboard() {
                 <Plus className="h-4 w-4" />
                 {t("pos.registerFirstProduct") || "Register Your First Product"}
               </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* API Settings */}
+        {statsData?.retailer && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Key className="h-5 w-5 text-muted-foreground" />
+                API & Integration Settings
+              </CardTitle>
+              <CardDescription>
+                Use this API key to connect your local POS system. Your current plan is <Badge variant="secondary" className="ml-1 capitalize">{statsData.retailer.subscriptionPlan}</Badge>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="flex-1 w-full flex items-center space-x-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type="password"
+                      value={statsData.retailer.apiKey}
+                      readOnly
+                      className="pr-10 font-mono tracking-widest text-muted-foreground"
+                    />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="absolute right-0 top-0 h-full rounded-l-none text-muted-foreground hover:text-foreground"
+                      onClick={copyApiKey}
+                    >
+                      {copiedKey ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="shrink-0 w-full sm:w-auto">
+                  <Button 
+                    variant="outline" 
+                    className="w-full gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20"
+                    onClick={() => {
+                      if (window.confirm("Are you sure? This will instantly break any existing integrations using the old key.")) {
+                        regenerateMutation.mutate();
+                      }
+                    }}
+                    disabled={regenerateMutation.isPending}
+                  >
+                    <RefreshCw className={`h-4 w-4 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
+                    Regenerate Key
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}

@@ -273,10 +273,32 @@ router.get(
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
       const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
       
-      const stats = await getRetailerStats(retailer.id, startDate, endDate);
-      res.json({ success: true, stats });
-    } catch (error: any) {
+        const stats = await getRetailerStats(retailer.id, startDate, endDate);
+        res.json({ success: true, stats, retailer });
+      } catch (error: any) {
       logger.error("getRetailerStats failed", { error: error.message });
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  );
+
+/**
+ * POST /api/pos/my-key/regenerate
+ * Regenerate API key for the current retailer.
+ */
+router.post(
+  "/my-key/regenerate",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const updated = await regenerateApiKey(retailer.id);
+      if (!updated) {
+        return res.status(404).json({ message: "Retailer not found" });
+      }
+      res.json({ success: true, retailer: updated });
+    } catch (error: any) {
+      logger.error("regenerateApiKey failed for retailer", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
     }
   }
