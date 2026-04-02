@@ -23,6 +23,9 @@ import { Footer } from "@/components/layout/footer";
 
 import heroBg from "../assets/hero-network.png";
 
+import { AuthService } from "@/services/auth.service";
+import { UserPreferences } from "@shared/schema";
+
 const smoothEase = [0.16, 1, 0.3, 1];
 
 const fadeInUp: Variants = {
@@ -43,7 +46,11 @@ export default function LandingPage() {
 
   React.useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      const dashboardPath = AuthService.getDashboardPathByRole(
+        user.role,
+        (user.preferences as UserPreferences)?.dashboardStyle
+      );
+      navigate(dashboardPath);
     }
   }, [user, navigate]);
 

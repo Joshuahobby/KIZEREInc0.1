@@ -215,6 +215,13 @@ export default function UnifiedDashboard() {
   const [handoverOpen, setHandoverOpen] = React.useState(false);
   const [selectedClaimId, setSelectedClaimId] = React.useState<number | null>(null);
 
+  // Redirect Retailer to their specific dashboard if they accidentally land here
+  React.useEffect(() => {
+    if (user && user.role === 'Retailer') {
+      navigate('/retailer/dashboard');
+    }
+  }, [user, navigate]);
+
 
   // Identity Protection Card (Rwanda Specific)
   const IdentityProtectionCard = ({ verificationRequest }: { verificationRequest?: any }) => {
