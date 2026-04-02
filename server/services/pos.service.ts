@@ -110,6 +110,17 @@ export async function registerProduct(
   const dupeCheck = await storage.getPosProductBySerial(input.serialNumber);
 
   if (dupeCheck) {
+    // If it's already in the retailer's inventory (registered to themselves), 
+    // treat this POS registration as a Point-of-Sale transfer/checkout.
+    if (dupeCheck.retailerId === input.retailerId && dupeCheck.currentOwnerId === retailer.userId) {
+      return transferOwnership({
+        productId: dupeCheck.id,
+        retailerId: input.retailerId,
+        newOwnerId: input.ownerId,
+        notes: "Point of Sale transfer from inventory"
+      });
+    }
+
     throw Object.assign(
       new Error(`Product with serial number ${input.serialNumber} already exists`),
       { status: 409 }

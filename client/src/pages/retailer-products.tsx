@@ -27,6 +27,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -111,6 +121,9 @@ export default function RetailerProducts() {
   const [page, setPage] = useState(1);
   const limit = 20;
 
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [formData, setFormData] = useState({ serialNumber: "", name: "", category: "Other", sku: "" });
+
   const debouncedSearch = useDebounce(searchInput, 300);
 
   // Confirmation dialog state
@@ -141,6 +154,30 @@ export default function RetailerProducts() {
   const categories = statsData?.stats?.productsByCategory?.map(c => c.category) || [];
 
   // Product action mutations
+  const registerMutation = useMutation({
+    mutationFn: (data: any) =>
+      apiRequest("/api/pos/register", { method: "POST", data }),
+    onSuccess: () => {
+      toast({ title: "Product Registered", description: "Product added to your inventory successfully." });
+      queryClient.invalidateQueries({ queryKey: ["/api/pos/my-products/search"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pos/my-stats"] });
+      setRegisterOpen(false);
+      setFormData({ serialNumber: "", name: "", category: "Other", sku: "" });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to register", description: err.message, variant: "destructive" });
+    }
+  });
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.serialNumber || !formData.name) return;
+    registerMutation.mutate({
+      ...formData,
+      ownerId: _user?.id // Register to themselves to fill inventory
+    });
+  };
+
   const archiveMutation = useMutation({
     mutationFn: (productId: number) =>
       apiRequest(`/api/pos/products/${productId}/archive`, { method: "PATCH" }),
@@ -273,10 +310,86 @@ export default function RetailerProducts() {
           title={t("pos.inventory.title") || "Product Inventory"}
           description={t("pos.inventory.description") || "Search, manage, and track all products registered through your POS terminal"}
           actions={
-            <Button onClick={() => navigate("/pos")} className="gap-2">
-              <Plus className="h-4 w-4" />
-              {t("pos.registerProduct") || "Register Product"}
-            </Button>
+            <div className="flex gap-2">
+              <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 border-primary/20 text-primary hover:bg-primary/10">
+                    <Plus className="h-4 w-4" />
+                    Add to Inventory
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add to Inventory</DialogTitle>
+                    <DialogDescription>
+                      Register a new product to your business inventory. You can transfer it to a customer later via the POS Terminal.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleRegister} className="space-y-4 pt-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="serialNumber">Serial Number / IMEI</Label>
+                      <Input 
+                        id="serialNumber" 
+                        value={formData.serialNumber} 
+                        onChange={(e) => setFormData({...formData, serialNumber: e.target.value})} 
+                        required 
+                        placeholder="e.g. 1234567890ABC" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Product Name</Label>
+                      <Input 
+                        id="name" 
+                        value={formData.name} 
+                        onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                        required 
+                        placeholder="e.g. Samsung Galaxy S24" 
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="category">Category</Label>
+                        <Select 
+                          value={formData.category} 
+                          onValueChange={(val) => setFormData({...formData, category: val})}
+                        >
+                          <SelectTrigger id="category">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Electronics">Electronics</SelectItem>
+                            <SelectItem value="Phones">Phones</SelectItem>
+                            <SelectItem value="Computers">Computers</SelectItem>
+                            <SelectItem value="Vehicles">Vehicles</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="sku">SKU (Optional)</Label>
+                        <Input 
+                          id="sku" 
+                          value={formData.sku} 
+                          onChange={(e) => setFormData({...formData, sku: e.target.value})} 
+                          placeholder="Stock Keeping Unit" 
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter className="pt-4">
+                      <Button type="button" variant="outline" onClick={() => setRegisterOpen(false)}>Cancel</Button>
+                      <Button type="submit" disabled={registerMutation.isPending || !formData.serialNumber || !formData.name}>
+                        {registerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Package className="h-4 w-4 mr-2" />}
+                        Add Product
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              <Button onClick={() => navigate("/pos")} className="gap-2">
+                <Plus className="h-4 w-4" />
+                POS Terminal
+              </Button>
+            </div>
           }
         />
 
