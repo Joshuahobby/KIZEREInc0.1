@@ -9,16 +9,16 @@ async function verifyClaims() {
     // for a pure integration test of the logic.
 
     // Clean up previous test users if any
-    await db.delete(users).where(eq(users.email, 'usera@test.kizere.com'));
-    await db.delete(users).where(eq(users.email, 'userb@test.kizere.com'));
-    await db.delete(users).where(eq(users.email, 'adminqa@test.kizere.com'));
+    await db.delete(users).where(eq(users.email, 'usera@test.kizere.rw'));
+    await db.delete(users).where(eq(users.email, 'userb@test.kizere.rw'));
+    await db.delete(users).where(eq(users.email, 'adminqa@test.kizere.rw'));
 
     console.log('1. Creating test users (Founder, Claimant, Admin)...');
     const [userA] = await db.insert(users).values({
         id: 90001,
         fullName: 'Test User A',
         username: 'userA_qa',
-        email: 'usera@test.kizere.com',
+        email: 'usera@test.kizere.rw',
         password: 'password123',
         role: 'User',
         reputationScore: 0
@@ -28,7 +28,7 @@ async function verifyClaims() {
         id: 90002,
         fullName: 'Test User B',
         username: 'userB_qa',
-        email: 'userb@test.kizere.com',
+        email: 'userb@test.kizere.rw',
         password: 'password123',
         role: 'User',
         reputationScore: 0
@@ -38,7 +38,7 @@ async function verifyClaims() {
         id: 90003,
         fullName: 'Test Admin',
         username: 'admin_qa',
-        email: 'adminqa@test.kizere.com',
+        email: 'adminqa@test.kizere.rw',
         password: 'password123',
         role: 'Admin',
         reputationScore: 0

@@ -10,7 +10,7 @@ async function createAgent() {
         const [agentUser] = await db.insert(users).values({
             username: "agent",
             password: hashedAgentPassword,
-            email: "agent@kizere.com",
+            email: "agent@kizere.rw",
             fullName: "Test Agent",
             role: "Agent",
             verificationStatus: "approved",

@@ -194,7 +194,7 @@ export default function PosTerminal() {
         </div>
         ${printContent.innerHTML}
         ${verifyUrl ? `<div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(verifyUrl)}" alt="Verify QR" /></div><p style="text-align:center;font-size:10px;color:#999;">Scan to verify ownership</p>` : ""}
-        <div class="footer">Verified by KIZERE &bull; kizere.com<br/>${new Date().toLocaleString()}</div>
+        <div class="footer">Verified by KIZERE &bull; kizere.rw<br/>${new Date().toLocaleString()}</div>
       </body>
       </html>
     `);
@@ -604,7 +604,7 @@ export default function PosTerminal() {
                   {isNewCustomer && (
                     <div className="flex justify-between bg-amber-50 p-2 rounded text-amber-900 border border-amber-200 mt-2">
                       <span className="font-semibold text-xs text-center w-full">
-                        {t("pos.claimAccountHint", "Customer must claim account at kizere.com/claim-account")}
+                        {t("pos.claimAccountHint", "Customer must claim account at kizere.rw/claim-account")}
                       </span>
                     </div>
                   )}
@@ -631,7 +631,7 @@ export default function PosTerminal() {
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-dashed border-slate-200 text-center">
-                  <p className="text-xs text-slate-400">{t("pos.receiptFooter", "Verified by KIZERE • kizere.com")}</p>
+                  <p className="text-xs text-slate-400">{t("pos.receiptFooter", "Verified by KIZERE • kizere.rw")}</p>
                 </div>
               </div>
 

@@ -48,7 +48,7 @@ async function seed() {
     const [adminUser] = await db.insert(users).values({
       username: "admin",
       password: hashedAdminPassword,
-      email: "admin@kizere.com",
+      email: "admin@kizere.rw",
       fullName: "System Admin",
       role: "Admin",
       verificationStatus: "approved",
@@ -58,7 +58,7 @@ async function seed() {
     const [testUser] = await db.insert(users).values({
       username: "user",
       password: hashedUserPassword,
-      email: "user@kizere.com",
+      email: "user@kizere.rw",
       fullName: "Test User",
       role: "User",
       verificationStatus: "pending",

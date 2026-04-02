@@ -136,7 +136,7 @@ async function startGracePeriod(report: Report): Promise<void> {
 
     // Send email
     if (user.email) {
-      const renewalLink = `${process.env.APP_URL || 'https://kizere.com'}/reports/${report.id}/renew`;
+      const renewalLink = `${process.env.APP_URL || 'https://kizere.rw'}/reports/${report.id}/renew`;
       await sendExpirationEmail(
         user.email,
         user.fullName || user.username,

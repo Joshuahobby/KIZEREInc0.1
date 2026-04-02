@@ -49,7 +49,7 @@ export function startExpirationCron() {
 
         // Send notification
         if (user && user.email) {
-          const renewalLink = `${process.env.APP_URL || 'https://kizere.com'}/renew/${report.id}`;
+          const renewalLink = `${process.env.APP_URL || 'https://kizere.rw'}/renew/${report.id}`;
           await sendExpirationEmail(
             user.email,
             user.fullName,

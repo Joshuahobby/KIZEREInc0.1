@@ -122,7 +122,7 @@ export async function sendPosRegistrationSMS(
   phone: string,
   data: { productName: string; productId: string; retailerName: string }
 ): Promise<boolean> {
-  const message = `KIZERE: Your ${data.productName} has been registered by ${data.retailerName}. Product ID: ${data.productId}. Claim your account at kizere.com/claim-account`;
+  const message = `KIZERE: Your ${data.productName} has been registered by ${data.retailerName}. Product ID: ${data.productId}. Claim your account at kizere.rw/claim-account`;
   return sendSMS(phone, message);
 }
 
@@ -133,7 +133,7 @@ export async function sendPosTransferSMS(
   phone: string,
   data: { productName: string; productId: string; retailerName: string }
 ): Promise<boolean> {
-  const message = `KIZERE: ${data.productName} (${data.productId}) has been transferred to you by ${data.retailerName}. View at kizere.com`;
+  const message = `KIZERE: ${data.productName} (${data.productId}) has been transferred to you by ${data.retailerName}. View at kizere.rw`;
   return sendSMS(phone, message);
 }
 

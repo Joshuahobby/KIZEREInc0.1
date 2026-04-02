@@ -26,7 +26,7 @@ function getResendClient(): Resend | null {
 }
 
 // Default sender email (must be verified in Resend)
-const FROM_EMAIL = process.env.FROM_EMAIL || 'KIZERE <noreply@kizere.com>';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'KIZERE <noreply@kizere.rw>';
 
 export interface EmailOptions {
   to: string | string[];
@@ -109,7 +109,7 @@ export async function sendWelcomeEmail(email: string, fullName: string): Promise
             <li>Get notified when your items are found</li>
             <li>Help others reunite with their belongings</li>
           </ul>
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/dashboard" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/dashboard" 
              style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             Go to Dashboard
           </a>
@@ -220,7 +220,7 @@ export async function sendReportConfirmationEmail(
           <p style="color: #4b5563; line-height: 1.6;">
             We'll notify you if there are any updates or matches for your report.
           </p>
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/report/${receiptNumber}" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/report/${receiptNumber}" 
              style="display: inline-block; background: ${typeColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             View Report
           </a>
@@ -263,7 +263,7 @@ export async function sendClaimNotificationEmail(
           <p style="color: #4b5563; line-height: 1.6;">
             Please review the claim and verify if the item belongs to the claimant.
           </p>
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/dashboard?tab=claims" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/dashboard?tab=claims" 
              style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             Review Claim
           </a>
@@ -315,7 +315,7 @@ export async function sendClaimStatusEmail(
               If you believe this is an error, you may file another claim with additional proof of ownership.
             </p>
           `}
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/dashboard?tab=claims" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/dashboard?tab=claims" 
              style="display: inline-block; background: ${statusColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             View Details
           </a>
@@ -398,7 +398,7 @@ export async function sendFoundNotificationEmail(
           <p style="color: #4b5563; line-height: 1.6;">
             This is part of KIZERE's Passive Protection. You didn't even have to report it lost yet!
           </p>
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/report/${reportId}" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/report/${reportId}" 
              style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             View Details & Claim
           </a>
@@ -426,7 +426,7 @@ export async function sendPosRegistrationEmail(
     isNewAccount: boolean;
   }
 ): Promise<boolean> {
-  const appUrl = process.env.APP_URL || 'https://kizere.com';
+  const appUrl = process.env.APP_URL || 'https://kizere.rw';
 
   return sendEmail({
     to: email,
@@ -661,7 +661,7 @@ export async function sendMatchNotificationEmail(
           <p style="color: #4b5563; line-height: 1.6;">
             Please click below to view the details and contact the other party if it matches.
           </p>
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/report/${matchId}" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/report/${matchId}" 
              style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             View Match
           </a>
@@ -716,7 +716,7 @@ export async function sendAppealUpdateEmail(
               This decision is final. If you have further questions, please contact our support team.
             </p>
           `}
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/dashboard?tab=claims" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/dashboard?tab=claims" 
              style="display: inline-block; background: ${statusColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             View Claim Status
           </a>
@@ -755,7 +755,7 @@ export async function sendAdminAppealNotification(
             <p style="margin: 0; color: #4b5563;"><strong>Appeal Reason:</strong></p>
             <p style="margin-top: 8px; color: #1f2937; white-space: pre-wrap;">${reason}</p>
           </div>
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/admin" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/admin" 
              style="display: inline-block; background: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             Review Appeal in Admin Panel
           </a>
@@ -786,7 +786,7 @@ export async function sendAdminVerificationNotification(
           <p style="color: #4b5563; line-height: 1.6;">
             <strong>${userName}</strong> (User ID: ${userId}) has submitted their identity documents for review.
           </p>
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/admin" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/admin" 
              style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             Review in Admin Panel
           </a>
@@ -831,7 +831,7 @@ export async function sendUserVerificationStatusEmail(
               Please review the feedback and submit a new verification request if needed.
             </p>
           ` : ''}
-          <a href="${process.env.APP_URL || 'https://kizere.com'}/profile" 
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/profile" 
              style="display: inline-block; background: ${statusColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
             View Profile
           </a>
