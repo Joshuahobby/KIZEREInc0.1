@@ -122,10 +122,10 @@ export const BulkReceiptPrinter = forwardRef<BulkReceiptPrinterHandle, BulkRecei
           
           <div className="qr-container">
             {/* We render the SVG here; innerHTML will capture it as static image/svg markup */}
-            <QRCodeSVG 
-              value={`https://kizere.rw/verify/${product.id}`} 
-              size={150} 
-              level="M" 
+            <QRCodeSVG
+              value={`https://kizere.rw/verify/${product.serialNumber}`}
+              size={150}
+              level="M"
               includeMargin={true}
             />
             <p className="qr-hint">
