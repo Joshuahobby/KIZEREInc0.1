@@ -97,7 +97,31 @@ router.post("/", reportSubmissionLimiter, async (req, res) => {
     }
 
     // Set expiration date based on package (default 30 days)
-    const expirationDays = 30; // TODO: Get from payment package
+    let expirationDays = 30;
+    try {
+      if (req.body.type === 'found') {
+        const defaultPackage = await (storage as any).getDefaultPackageByType('lost_report');
+        if (defaultPackage?.validityDays) {
+          expirationDays = defaultPackage.validityDays;
+        }
+      } else {
+        const packageId = req.body.packageId;
+        if (packageId) {
+          const pkg = await (storage as any).getPaymentPackage(packageId);
+          if (pkg?.validityDays) {
+            expirationDays = pkg.validityDays;
+          }
+        } else {
+          const defaultPackage = await (storage as any).getDefaultPackageByType('lost_report');
+          if (defaultPackage?.validityDays) {
+            expirationDays = defaultPackage.validityDays;
+          }
+        }
+      }
+    } catch (err) {
+      logger.warn('Failed to fetch package for expiration calculation, using default 30 days', { error: err });
+    }
+
     const expirationDate = new Date();
     expirationDate.setDate(expirationDate.getDate() + expirationDays);
 

@@ -97,8 +97,13 @@ const RetailerManagement = lazyWithRetry(() => import("@/pages/admin/retailer-ma
 const RetailerOnboarding = lazyWithRetry(() => import("@/pages/retailer-onboarding"));
 const RetailerDashboard = lazyWithRetry(() => import("@/pages/retailer-dashboard"));
 const RetailerProducts = lazyWithRetry(() => import("@/pages/retailer-products"));
+const RetailerTransactions = lazyWithRetry(() => import("@/pages/retailer-transactions"));
+const RetailerAnalytics = lazyWithRetry(() => import("@/pages/retailer-analytics"));
+const RetailerCustomers = lazyWithRetry(() => import("@/pages/retailer-customers"));
+const RetailerSettings = lazyWithRetry(() => import("@/pages/retailer-settings"));
 const ClaimAccountPage = lazyWithRetry(() => import("@/pages/claim-account"));
 const PosAnalyticsPage = lazyWithRetry(() => import("@/pages/admin/pos-analytics"));
+const PublicItemVerifyPage = lazyWithRetry(() => import("@/pages/PublicItemVerifyPage"));
 
 function App() {
   // Handle Firebase redirect result
@@ -206,6 +211,9 @@ function App() {
                   <Route path="/report/:id">
                     <ReportDetailPage />
                   </Route>
+                  <Route path="/verify/:uniqueIdentifier">
+                    <PublicItemVerifyPage />
+                  </Route>
                   <Route path="/reports/:id">
                     <ReportDetailPage />
                   </Route>
@@ -226,6 +234,10 @@ function App() {
                   {/* POS Terminal route */}
                   <ProtectedRoute path="/pos" component={PosTerminal} requiredRole={['Retailer', 'Admin']} />
                   <ProtectedRoute path="/retailer/products" component={RetailerProducts} requiredRole={['Retailer', 'Admin']} />
+                  <ProtectedRoute path="/retailer/transactions" component={RetailerTransactions} requiredRole={['Retailer', 'Admin']} />
+                  <ProtectedRoute path="/retailer/analytics" component={RetailerAnalytics} requiredRole={['Retailer', 'Admin']} />
+                  <ProtectedRoute path="/retailer/customers" component={RetailerCustomers} requiredRole={['Retailer', 'Admin']} />
+                  <ProtectedRoute path="/retailer/settings" component={RetailerSettings} requiredRole={['Retailer', 'Admin']} />
                   <ProtectedRoute path="/admin/retailers" component={RetailerManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/pos-analytics" component={PosAnalyticsPage} requiredRole="Admin" />
 

@@ -67,6 +67,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   // Generate SVG path for the sparkline
   const generateSparklinePath = (data: number[]) => {
     if (!data.length) return "";
+    if (data.length === 1) return `M 0 15 L 80 15`;
 
     const max = Math.max(...data);
     const min = Math.min(...data);
@@ -168,7 +169,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
                     strokeLinejoin="round"
                   />
                   <path
-                    d={`${sparklinePath} L ${trendData.length ? (trendData.length - 1) / (trendData.length - 1) * 80 : 0} 30 L 0 30 Z`}
+                    d={`${sparklinePath} L ${trendData.length > 1 ? 80 : (trendData.length === 1 ? 80 : 0)} 30 L 0 30 Z`}
                     fill={`url(#gradient-${title.replace(/\s+/g, '-')})`}
                     strokeWidth="0"
                   />

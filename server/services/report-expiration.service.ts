@@ -61,9 +61,19 @@ export async function processExpiredReports(): Promise<ExpirationJobResult> {
       try {
         // Check if report has expiration date
         if (!report.expirationDate) {
-          // Set default expiration if missing (30 days from creation)
+          // Set default expiration if missing
+          let validityDays = 30;
+          try {
+            const defaultPackage = await (storage as any).getDefaultPackageByType('lost_report');
+            if (defaultPackage?.validityDays) {
+              validityDays = defaultPackage.validityDays;
+            }
+          } catch (err) {
+            logger.warn('Failed to fetch default package for expiration, using 30 days');
+          }
+
           const defaultExpiration = new Date(report.reportedAt);
-          defaultExpiration.setDate(defaultExpiration.getDate() + 30);
+          defaultExpiration.setDate(defaultExpiration.getDate() + validityDays);
           
           await storage.updateReport(report.id, { expirationDate: defaultExpiration });
           continue;
@@ -206,8 +216,21 @@ export async function renewReport(reportId: number, extensionDays: number = 30):
     }
   }
 
+  // Resolve extension days from package if default 30 is passed
+  let actualExtensionDays = extensionDays;
+  if (extensionDays === 30) {
+    try {
+      const defaultPackage = await (storage as any).getDefaultPackageByType('lost_report');
+      if (defaultPackage?.validityDays) {
+        actualExtensionDays = defaultPackage.validityDays;
+      }
+    } catch (err) {
+      logger.warn('Failed to fetch default package for renewal, using 30 days');
+    }
+  }
+
   const newExpiration = new Date();
-  newExpiration.setDate(newExpiration.getDate() + extensionDays);
+  newExpiration.setDate(newExpiration.getDate() + actualExtensionDays);
 
   const updatedReport = await storage.updateReport(reportId, {
     expirationDate: newExpiration,

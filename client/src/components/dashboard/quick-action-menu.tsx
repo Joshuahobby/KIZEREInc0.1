@@ -15,7 +15,9 @@ import {
   DollarSign,
   AlertTriangle,
   CheckCircle2,
-  ArrowUp
+  ArrowUp,
+  ShoppingCart,
+  Tag
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/use-auth';
@@ -57,6 +59,27 @@ export function QuickActionMenu({
 
   // Actions available in the quick action menu filtered by role
   const allActions = [
+    {
+      icon: <ShoppingCart className="h-4 w-4" />,
+      label: t('retailer.pos', 'POS Terminal'),
+      description: t('retailer.posDesc', 'Open point of sale'),
+      onClick: () => navigate('/pos'),
+      roles: ['Retailer', 'Admin']
+    },
+    {
+      icon: <Tag className="h-4 w-4" />,
+      label: t('retailer.products', 'Inventory'),
+      description: t('retailer.productsDesc', 'Manage product catalog'),
+      onClick: () => navigate('/retailer/products'),
+      roles: ['Retailer', 'Admin']
+    },
+    {
+      icon: <Plus className="h-4 w-4" />,
+      label: t('retailer.addProduct', 'Add New Product'),
+      description: t('retailer.addProductDesc', 'Add item to inventory'),
+      onClick: () => navigate('/retailer/products?add=true'),
+      roles: ['Retailer', 'Admin']
+    },
     {
       icon: <UserPlus className="h-4 w-4" />,
       label: t('dashboard.quickActions.addUser'),
@@ -125,7 +148,7 @@ export function QuickActionMenu({
       label: t('common.scrollToTop', 'Scroll to Top'),
       description: t('dashboard.quickActions.scrollToTopDesc', 'Back to page top'),
       onClick: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
-      roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business', 'Guest'] // Everyone
+      roles: ['Admin', 'Agent', 'Moderator', 'Subscriber', 'Business', 'Retailer', 'Guest'] // Everyone
     }
   ];
 

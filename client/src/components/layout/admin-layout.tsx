@@ -240,17 +240,21 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
       categories.push({ title: "FIELD OPERATIONS", items: fieldItems });
     }
 
-    // POS Category (Retailer/Admin)
+    // RETAIL HUB Category (Retailer/Admin)
     if (isRetailer || isAdmin) {
       const posItems: NavItem[] = [
         { title: "Retailer Dashboard", href: "/retailer/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
-        { title: "Product Inventory", href: "/retailer/products", icon: <List className="h-5 w-5" /> },
-        { title: "POS Terminal", href: "/pos", icon: <Store className="h-5 w-5" /> },
+        { title: "Point of Sale", href: "/pos", icon: <Store className="h-5 w-5" /> },
+        { title: "Products", href: "/retailer/products", icon: <PackageIcon className="h-5 w-5" /> },
+        { title: "Transactions", href: "/retailer/transactions", icon: <CreditCard className="h-5 w-5" /> },
+        { title: "Analytics", href: "/retailer/analytics", icon: <BarChart3 className="h-5 w-5" /> },
+        { title: "Customers", href: "/retailer/customers", icon: <Users className="h-5 w-5" /> },
+        { title: "Settings", href: "/retailer/settings", icon: <Settings className="h-5 w-5" /> },
       ];
       if (isAdmin) {
         posItems.push({ title: "POS Analytics", href: "/admin/pos-analytics", icon: <BarChart3 className="h-5 w-5" /> });
       }
-      categories.push({ title: "POS", items: posItems });
+      categories.push({ title: "RETAIL HUB", items: posItems });
     }
 
     // ADMINISTRATION Category (Admin Only)
@@ -265,11 +269,8 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
       categories.push({ title: t('nav.adminHeader'), items: adminItems });
     }
 
-    // ACCOUNT Category
-    const accountItems: NavItem[] = [
-      { title: t('auth.logout'), href: "#logout", icon: <LogOut className="h-5 w-5" />, onClick: handleLogout }
-    ];
-    categories.push({ title: "Account", items: accountItems });
+    // ACCOUNT Category is intentionally removed from the sidebar. 
+    // Logout is now handled exclusively via the User Dropdown Menu at the top right.
 
     return categories;
   };

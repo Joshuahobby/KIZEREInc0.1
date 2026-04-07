@@ -26,7 +26,9 @@ import {
   ShieldCheck,
   FileUp,
   FileDown,
-  ChevronRight
+  ChevronRight,
+  Users,
+  HelpCircle
 } from "lucide-react";
 
 interface QuickActionItemProps {
@@ -92,6 +94,7 @@ const QuickActionItem: React.FC<QuickActionItemProps> = ({
 };
 
 export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) => {
+  const [, navigate] = useLocation();
   const isAdmin = user?.role === "Admin";
   const isAgent = user?.role === "Agent";
   const { t } = useLanguage();
@@ -192,6 +195,50 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
       ? [...agentActions, ...commonActions]
       : commonActions;
 
+  // Determine which footer quick actions to show
+  const getFooterActions = () => {
+    if (isAdmin) {
+      return (
+        <>
+          <Button variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all">
+            <FileDown className="h-4 w-4 mr-2 text-primary" />
+            <span>{t('dashboard.exportData') || "Export"}</span>
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all">
+            <Settings className="h-4 w-4 mr-2 text-primary" />
+            <span>System</span>
+          </Button>
+        </>
+      );
+    }
+    if (isAgent) {
+      return (
+        <>
+          <Button variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+            <ShieldCheck className="h-4 w-4 mr-2" />
+            <span>Verify User</span>
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all text-blue-600 dark:text-blue-400 border-blue-500/20">
+            <Users className="h-4 w-4 mr-2" />
+            <span>Register User</span>
+          </Button>
+        </>
+      );
+    }
+    return (
+      <>
+        <Button onClick={() => navigate('/my-items')} variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all">
+          <Package className="h-4 w-4 mr-2 text-primary" />
+          <span>My Items</span>
+        </Button>
+        <Button onClick={() => navigate('/search')} variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all">
+          <HelpCircle className="h-4 w-4 mr-2 text-primary" />
+          <span>Get Help</span>
+        </Button>
+      </>
+    );
+  };
+
   return (
     <Card className="h-full border border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="pb-3">
@@ -222,16 +269,10 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({ user }) =>
         </ScrollArea>
       </CardContent>
 
-        <CardFooter className="flex justify-between pt-5 border-t mt-3 gap-3">
-          <Button variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all">
-            <FileDown className="h-4 w-4 mr-2 text-primary" />
-            <span>{t('dashboard.exportData')}</span>
-          </Button>
-          <Button variant="outline" size="sm" className="flex-1 h-14 rounded-2xl border-dashed font-black uppercase tracking-widest text-[10px] hover:bg-primary/5 transition-all">
-            <FileUp className="h-4 w-4 mr-2 text-primary" />
-            <span>{t('dashboard.importData')}</span>
-          </Button>
-        </CardFooter>
+      <CardFooter className="flex justify-between pt-5 border-t mt-3 gap-3">
+        {getFooterActions()}
+      </CardFooter>
     </Card>
   );
 };
+

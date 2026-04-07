@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -59,11 +60,23 @@ import {
   History,
   X,
   Loader2,
+  Upload,
+  Scan,
+  Printer,
+  Download,
+  FileText,
+  CheckCircle2
 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
+import { useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useDebounce } from "@/hooks/use-debounce";
+import { BulkImportModal } from "@/components/retailer/BulkImportModal";
+import { BarcodeScanner } from "@/components/pos/barcode-scanner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkReceiptPrinter, BulkReceiptPrinterHandle } from "@/components/pos/BulkReceiptPrinter";
+import Papa from "papaparse";
 
 // Types
 interface PosProduct {
@@ -77,6 +90,8 @@ interface PosProduct {
   currentOwnerId: number;
   retailerId: number;
   metadata: any;
+  ownerName: string;
+  ownerNationalId: string | null;
 }
 
 interface PaginatedResponse {
@@ -122,7 +137,30 @@ export default function RetailerProducts() {
   const limit = 20;
 
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [formData, setFormData] = useState({ serialNumber: "", name: "", category: "Other", sku: "" });
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  
+  // Power features state
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [historyProductId, setHistoryProductId] = useState<number | null>(null);
+  const bulkPrintRef = useRef<BulkReceiptPrinterHandle>(null);
+
+  const [formData, setFormData] = useState({ 
+    serialNumber: "", 
+    name: "", 
+    brand: "", 
+    model: "", 
+    category: "Other", 
+    sku: "" 
+  });
+
+  useEffect(() => {
+    if (window.location.search.includes("add=true")) {
+      setRegisterOpen(true);
+      // Remove query param to prevent re-opening on manual refresh
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   const debouncedSearch = useDebounce(searchInput, 300);
 
@@ -162,19 +200,42 @@ export default function RetailerProducts() {
       queryClient.invalidateQueries({ queryKey: ["/api/pos/my-products/search"] });
       queryClient.invalidateQueries({ queryKey: ["/api/pos/my-stats"] });
       setRegisterOpen(false);
-      setFormData({ serialNumber: "", name: "", category: "Other", sku: "" });
+      setFormData({ 
+        serialNumber: "", 
+        name: "", 
+        brand: "", 
+        model: "", 
+        category: "Other", 
+        sku: "" 
+      });
     },
     onError: (err: any) => {
-      toast({ title: "Failed to register", description: err.message, variant: "destructive" });
+      const isSecurityAlert = err.message?.toUpperCase().includes("SECURITY ALERT");
+      toast({ 
+        title: isSecurityAlert ? "🚨 Security Alert" : "Failed to register", 
+        description: err.message, 
+        variant: "destructive",
+        duration: isSecurityAlert ? 10000 : 5000 // Show security alerts longer
+      });
     }
   });
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.serialNumber || !formData.name) return;
+    
+    if (!_user?.id) {
+      toast({ 
+        title: "Session Error", 
+        description: "Your session appears to be incomplete. Please refresh and try again.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     registerMutation.mutate({
       ...formData,
-      ownerId: _user?.id // Register to themselves to fill inventory
+      ownerId: _user.id // Now guaranteed to be defined
     });
   };
 
@@ -276,6 +337,49 @@ export default function RetailerProducts() {
   const totalPages = data?.totalPages || 1;
   const total = data?.total || 0;
 
+  // Bulk actions logic
+  const toggleSelect = (id: number) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === products.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(products.map(p => p.id)));
+    }
+  };
+
+  const handleBulkPrint = () => {
+    if (selectedIds.size === 0) return;
+    bulkPrintRef.current?.print();
+  };
+
+  const handleBulkExport = () => {
+    const selectedProducts = products.filter(p => selectedIds.has(p.id));
+    const csv = Papa.unparse(selectedProducts.map(p => ({
+      ID: `KZR-${String(p.id).padStart(6, '0')}`,
+      Name: p.name,
+      Serial: p.serialNumber,
+      SKU: p.sku || 'N/A',
+      Category: p.category,
+      Status: p.status,
+      Owner: p.ownerName,
+      OwnerID: p.ownerNationalId || 'N/A',
+      RegisteredAt: format(new Date(p.registrationDate), 'yyyy-MM-dd HH:mm:ss')
+    })));
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `kizere_inventory_export_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
+    link.click();
+    toast({ title: "Export Complete", description: `Exported ${selectedProducts.length} items to CSV.` });
+  };
+
   const confirmLabels: Record<string, { title: string; description: string; action: string; variant: string }> = {
     archive: {
       title: t("pos.inventory.confirmArchive") || "Archive Product",
@@ -327,17 +431,32 @@ export default function RetailerProducts() {
                   </DialogHeader>
                   <form onSubmit={handleRegister} className="space-y-4 pt-4">
                     <div className="space-y-2">
-                      <Label htmlFor="serialNumber">Serial Number / IMEI</Label>
-                      <Input 
-                        id="serialNumber" 
-                        value={formData.serialNumber} 
-                        onChange={(e) => setFormData({...formData, serialNumber: e.target.value})} 
-                        required 
-                        placeholder="e.g. 1234567890ABC" 
-                      />
+                      <Label htmlFor="serialNumber">{t("pos.inventory.scanBarcode")}</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Input 
+                            id="serialNumber" 
+                            value={formData.serialNumber} 
+                            onChange={(e) => setFormData({...formData, serialNumber: e.target.value})} 
+                            required 
+                            placeholder={t("pos.inventory.serialPlaceholder")} 
+                          />
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setIsScannerOpen(true)}
+                          className="hidden sm:flex gap-2"
+                        >
+                          <Scan className="h-4 w-4" />
+                          {t("pos.inventory.scanBtn")}
+                        </Button>
+                      </div>
                     </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="name">Product Name</Label>
+                      <Label htmlFor="name">{t("pos.inventory.productNameLabel")}</Label>
                       <Input 
                         id="name" 
                         value={formData.name} 
@@ -346,9 +465,31 @@ export default function RetailerProducts() {
                         placeholder="e.g. Samsung Galaxy S24" 
                       />
                     </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="category">Category</Label>
+                        <Label htmlFor="brand">{t("pos.inventory.brandLabel")}</Label>
+                        <Input 
+                          id="brand" 
+                          value={formData.brand} 
+                          onChange={(e) => setFormData({...formData, brand: e.target.value})} 
+                          placeholder={t("pos.inventory.brandPlaceholder")} 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="model">{t("pos.inventory.modelLabel")}</Label>
+                        <Input 
+                          id="model" 
+                          value={formData.model} 
+                          onChange={(e) => setFormData({...formData, model: e.target.value})} 
+                          placeholder={t("pos.inventory.modelPlaceholder")} 
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="category">{t("pos.category")}</Label>
                         <Select 
                           value={formData.category} 
                           onValueChange={(val) => setFormData({...formData, category: val})}
@@ -366,33 +507,57 @@ export default function RetailerProducts() {
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="sku">SKU (Optional)</Label>
+                        <Label htmlFor="sku">{t("pos.inventory.skuLabel")}</Label>
                         <Input 
                           id="sku" 
                           value={formData.sku} 
                           onChange={(e) => setFormData({...formData, sku: e.target.value})} 
-                          placeholder="Stock Keeping Unit" 
+                          placeholder={t("pos.inventory.skuPlaceholder")} 
                         />
                       </div>
                     </div>
+
                     <DialogFooter className="pt-4">
-                      <Button type="button" variant="outline" onClick={() => setRegisterOpen(false)}>Cancel</Button>
+                      <Button type="button" variant="outline" onClick={() => setRegisterOpen(false)}>{t("common.cancel")}</Button>
                       <Button type="submit" disabled={registerMutation.isPending || !formData.serialNumber || !formData.name}>
                         {registerMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Package className="h-4 w-4 mr-2" />}
-                        Add Product
+                        {t("pos.inventory.addProduct")}
                       </Button>
                     </DialogFooter>
                   </form>
                 </DialogContent>
               </Dialog>
-              <Button onClick={() => navigate("/pos")} className="gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsBulkImportOpen(true)}
+                className="gap-2 border-primary/20 text-primary hover:bg-primary/10"
+              >
+                <Upload className="h-4 w-4" />
+                {t("pos.inventory.bulkUpload") || "Bulk Upload"}
+              </Button>
+              <Button onClick={() => navigate("/pos")} className="gap-2 shadow-sm">
                 <Plus className="h-4 w-4" />
-                POS Terminal
+                {t("pos.openTerminal") || "POS Terminal"}
               </Button>
             </div>
           }
         />
 
+        <Tabs defaultValue="inventory" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <TabsList>
+              <TabsTrigger value="inventory" className="gap-2">
+                <Package className="h-4 w-4" />
+                Inventory
+              </TabsTrigger>
+              <TabsTrigger value="alerts" className="gap-2 text-amber-600 data-[state=active]:text-amber-700">
+                <ShieldAlert className="h-4 w-4" />
+                Security Alerts
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="inventory" className="space-y-6">
         {/* Search & Filters */}
         <Card>
           <CardContent className="pt-6">
@@ -443,6 +608,50 @@ export default function RetailerProducts() {
           </CardContent>
         </Card>
 
+        {/* Bulk Action Bar */}
+        {selectedIds.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 border border-slate-800 rounded-full py-3 px-6 shadow-2xl flex items-center gap-6"
+          >
+            <div className="flex items-center gap-2 pr-4 border-r border-slate-800">
+              <span className="h-6 w-6 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white">
+                {selectedIds.size}
+              </span>
+              <span className="text-sm font-medium text-slate-300">Selected</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-slate-300 hover:text-white" 
+                onClick={handleBulkPrint}
+              >
+                <Printer className="h-4 w-4 mr-2" />
+                Print Receipts
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-slate-300 hover:text-white"
+                onClick={handleBulkExport}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-slate-500 hover:text-slate-300"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                Cancel
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
         {/* Products Table */}
         <Card>
           <CardContent className="pt-6">
@@ -458,6 +667,12 @@ export default function RetailerProducts() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-[40px]">
+                          <Checkbox 
+                            checked={selectedIds.size === products.length && products.length > 0} 
+                            onCheckedChange={toggleSelectAll}
+                          />
+                        </TableHead>
                         <TableHead className="text-xs">{t("pos.inventory.id") || "ID"}</TableHead>
                         <TableHead className="text-xs">{t("pos.serial") || "Serial"}</TableHead>
                         <TableHead className="text-xs">{t("pos.productName") || "Name"}</TableHead>
@@ -469,15 +684,27 @@ export default function RetailerProducts() {
                     </TableHeader>
                     <TableBody>
                       {products.map((product) => (
-                        <TableRow key={product.id} className="group">
+                        <TableRow key={product.id} className={`group ${selectedIds.has(product.id) ? "bg-primary/5" : ""}`}>
+                          <TableCell>
+                            <Checkbox 
+                              checked={selectedIds.has(product.id)} 
+                              onCheckedChange={() => toggleSelect(product.id)}
+                            />
+                          </TableCell>
                           <TableCell className="font-mono text-xs text-muted-foreground">
                             KZR-{String(product.id).padStart(6, "0")}
                           </TableCell>
                           <TableCell className="font-mono text-xs">
                             {product.serialNumber}
                           </TableCell>
-                          <TableCell className="font-medium text-sm max-w-[200px] truncate">
-                            {product.name}
+                          <TableCell className="max-w-[200px]">
+                            <div className="flex flex-col">
+                              <span className="font-medium text-sm truncate">{product.name}</span>
+                              <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                                <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                                {product.ownerName}
+                              </span>
+                            </div>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground hidden md:table-cell">
                             {product.category}
@@ -497,11 +724,27 @@ export default function RetailerProducts() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem
-                                  onClick={() => navigate(`/pos?product=${product.id}`)}
+                                  onClick={() => setHistoryProductId(product.id)}
                                   className="gap-2"
                                 >
                                   <History className="h-4 w-4" />
                                   {t("pos.inventory.viewHistory") || "View History"}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    // Single print
+                                    const next = new Set<number>();
+                                    next.add(product.id);
+                                    // We need to wait for state to update or just trigger it with the list
+                                    // But since BulkReceiptPrinter takes a list, we'll just use a temp trigger
+                                    setSelectedIds(next);
+                                    setTimeout(() => bulkPrintRef.current?.print(), 100);
+                                  }}
+                                  className="gap-2"
+                                >
+                                  <Printer className="h-4 w-4" />
+                                  Print Receipt
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 {product.status !== "archived" && product.status !== "stolen" && (
@@ -605,7 +848,7 @@ export default function RetailerProducts() {
                     {t("pos.inventory.clearFilters") || "Clear Filters"}
                   </Button>
                 ) : (
-                  <Button onClick={() => navigate("/pos")} className="gap-2">
+                  <Button onClick={() => setRegisterOpen(true)} className="gap-2">
                     <Plus className="h-4 w-4" />
                     {t("pos.registerFirstProduct") || "Register Your First Product"}
                   </Button>
@@ -637,7 +880,169 @@ export default function RetailerProducts() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        <BulkImportModal 
+          open={isBulkImportOpen} 
+          onOpenChange={setIsBulkImportOpen} 
+        />
+
+        <BarcodeScanner
+          isOpen={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          onScan={(serial) => {
+            setFormData(prev => ({ ...prev, serialNumber: serial }));
+            setIsScannerOpen(false);
+          }}
+        />
+
+        <ProductHistoryDialog 
+          productId={historyProductId} 
+          onClose={() => setHistoryProductId(null)} 
+        />
+
+        <BulkReceiptPrinter 
+          ref={bulkPrintRef} 
+          products={products.filter(p => selectedIds.has(p.id))} 
+        />
+          </TabsContent>
+
+          <TabsContent value="alerts" className="space-y-6">
+            <SecurityAlertsTab />
+          </TabsContent>
+        </Tabs>
       </motion.div>
     </AppLayout>
+  );
+}
+
+// Inline Sub-component for Product History
+function ProductHistoryDialog({ productId, onClose }: { productId: number | null, onClose: () => void }) {
+  const { t } = useLanguage();
+  
+  const { data, isLoading } = useQuery<{ success: boolean; history: any[] }>({
+    queryKey: ["/api/pos/products", productId, "history"],
+    queryFn: () => apiRequest(`/api/pos/products/${productId}/history`),
+    enabled: !!productId,
+  });
+
+  return (
+    <Dialog open={!!productId} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <History className="h-5 w-5 text-primary" />
+            Product Ownership History
+          </DialogTitle>
+          <DialogDescription>
+            Full audit trail and ledger of transfers for this asset.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="py-4">
+          {isLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
+          ) : data?.history && data.history.length > 0 ? (
+            <div className="relative space-y-6">
+              <div className="absolute left-[17px] top-2 bottom-2 w-0.5 bg-slate-200 dark:bg-slate-800" />
+              {data.history.map((entry, i) => (
+                <div key={entry.id} className="relative pl-10">
+                  <div className={`absolute left-0 top-1 w-9 h-9 rounded-full flex items-center justify-center z-10 
+                    ${entry.event === 'registration' ? 'bg-blue-100 text-blue-600' : 
+                      entry.event === 'transfer' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-600'}`}>
+                    {entry.event === 'registration' ? <Plus className="h-4 w-4" /> : 
+                     entry.event === 'transfer' ? <RefreshCw className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-semibold text-sm capitalize">{entry.event}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {format(new Date(entry.timestamp), "MMM d, yyyy HH:mm")}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {entry.notes || (entry.event === 'registration' ? "Initial registration in system" : "Ownership transferred")}
+                    </p>
+                    {entry.toUserId && (
+                      <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 text-[10px]">
+                        <span className="text-slate-500">Destination:</span>
+                        <Badge variant="outline" className="text-[9px]">User #{entry.toUserId}</Badge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <History className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No history entries found for this product.</p>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Missing Lucide import for internal component
+import { RefreshCw } from "lucide-react";
+
+// Inline component for Security Alerts
+function SecurityAlertsTab() {
+  const { data, isLoading } = useQuery<{ alerts: any[] }>({
+    queryKey: ["/api/pos/security-alerts"],
+    queryFn: () => apiRequest("/api/pos/security-alerts")
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
+  }
+
+  if (!data?.alerts || data.alerts.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+          <ShieldCheck className="h-10 w-10 mb-4 opacity-20" />
+          <h3 className="text-lg font-semibold text-foreground mb-1">No Active Threats</h3>
+          <p className="text-sm">Your inventory is secure. No security alerts have been triggered recently.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {data.alerts.map(alert => (
+        <Card key={alert.id} className={alert.severity === 'high' ? 'border-red-200 bg-red-50/30' : 'border-amber-200 bg-amber-50/30'}>
+          <CardContent className="p-4 flex gap-4">
+            <div className={`p-2 rounded-full shrink-0 h-min ${alert.severity === 'high' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
+              <ShieldAlert className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between items-start">
+                <h4 className="font-semibold text-sm">{alert.alertType.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}</h4>
+                <Badge variant="outline" className={alert.severity === 'high' ? 'border-red-200 text-red-700 bg-red-50' : 'border-amber-200 text-amber-700 bg-amber-50'}>
+                  {alert.severity} priority
+                </Badge>
+              </div>
+              <p className="text-sm text-foreground/80 mt-1">{alert.description}</p>
+              <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1 font-mono bg-background px-2 py-1 rounded-md border"><Package className="h-3 w-3" /> {alert.product.serialNumber}</span>
+                <span className="flex items-center gap-1 bg-background px-2 py-1 rounded-md border"><History className="h-3 w-3" /> {format(new Date(alert.createdAt), "MMM d, HH:mm")}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 }

@@ -115,6 +115,20 @@ export function emitNotification(userId: number, notification: any) {
 }
 
 /**
+ * Emit a security alert to a specific user (Retailer/Admin)
+ */
+export function emitSecurityAlert(userId: number, data: {
+    type: "stolen_item_detected";
+    serialNumber: string;
+    itemName: string;
+    source: string;
+    timestamp: string;
+}) {
+    if (!io) return;
+    io.to(`user:${userId}`).emit("security:alert", data);
+}
+
+/**
  * Check if a user is currently online
  */
 export function isUserOnline(userId: number): boolean {
