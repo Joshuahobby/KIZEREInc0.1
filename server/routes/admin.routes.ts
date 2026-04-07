@@ -368,7 +368,7 @@ router.post("/users/:id/warnings", requireAdmin, async (req, res) => {
 // Create new user (Admin version) - Admin Only
 router.post("/users", requireAdmin, async (req, res) => {
   try {
-    const { fullName, email, username, password, role, phoneNumber, status, verificationStatus } = req.body;
+    const { fullName, email, username, password, role, phoneNumber, status, verificationStatus, twoFactorEnabled } = req.body;
     const adminId = req.user!.id;
 
     if (await storage.getUserByUsername(username)) return res.status(400).json({ message: "Username already exists" });
@@ -386,6 +386,7 @@ router.post("/users", requireAdmin, async (req, res) => {
       phoneNumber: phoneNumber || null,
       status: status || 'active',
       verificationStatus: verificationStatus || 'pending',
+      twoFactorEnabled: twoFactorEnabled ?? true,
       warningCount: 0,
       activityLevel: 'low',
       preferences: DEFAULT_USER_PREFERENCES

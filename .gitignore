@@ -19,13 +19,14 @@ tsc_errors_new.txt
 final_diagnostic.txt
 *.txt
 
-# Test results
+# Test results & auth state
 playwright-report/
 test-results/
 playwright-results.json
 playwright-report.json
 test-results.json
 e2e_*.txt
+playwright/.auth/
 e2e_*.json
 auth_*.json
 report_*.json
