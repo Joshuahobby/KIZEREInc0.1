@@ -130,6 +130,37 @@ export async function apiPut<T, D = any>(
 }
 
 /**
+ * Generic PATCH request with type safety
+ */
+export async function apiPatch<T, D = any>(
+  endpoint: string, 
+  data: D, 
+  options: ApiOptions = defaultApiOptions
+): Promise<T | null> {
+  try {
+    return await apiRequest<T>(endpoint, {
+      method: 'PATCH',
+      data
+    });
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      // Request was aborted, handle silently
+      return null;
+    }
+
+    if (options.showErrorToast) {
+      toast({
+        title: "Update Failed",
+        description: formatErrorMessage(error),
+        variant: "destructive",
+      });
+    }
+    console.error(`API PATCH error for ${endpoint}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Generic DELETE request with type safety
  */
 export async function apiDelete<T>(
@@ -237,4 +268,36 @@ export const adminApi = {
     document.body.removeChild(link);
     return Promise.resolve(true);
   }
+};
+
+// POS-related API calls
+export const posApi = {
+  checkOrCreateCustomer: (data: {
+    nationalId: string;
+    fullName: string;
+    phone?: string;
+    email?: string;
+  }) => apiPost<{ isNew: boolean; customer: any }, any>('/api/pos/check-or-create', data),
+
+  getProfile: () =>
+    apiGet<{ profile: any }>('/api/pos/my-profile'),
+
+  updateProfile: (data: { name?: string; email?: string; phone?: string; address?: string; walletPhone?: string }) =>
+    apiPatch<{ profile: any }, typeof data>('/api/pos/my-profile', data),
+
+  getTransactions: (page: number, limit = 20) =>
+    apiGet<{ data: any[]; total: number; totalPages: number; page: number }>(
+      `/api/pos/my-transactions?page=${page}&limit=${limit}`
+    ),
+
+  getCustomers: (page: number, limit = 50) =>
+    apiGet<{ data: any[]; total: number; totalPages: number }>(
+      `/api/pos/my-customers?page=${page}&limit=${limit}`
+    ),
+
+  getCustomerById: (id: number) =>
+    apiGet<{ customer: any }>(`/api/pos/my-customers/${id}`),
+
+  updateCustomerSettings: (id: number, data: { isBlocked?: boolean; internalNotes?: string }) =>
+    apiPatch<{ success: boolean }, typeof data>(`/api/pos/my-customers/${id}/settings`, data),
 };
