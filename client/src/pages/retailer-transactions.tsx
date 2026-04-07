@@ -5,16 +5,68 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { apiGet } from "@/lib/api";
 import { AppLayout } from "@/components/layout/admin-layout";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
-import { ArrowLeftRight, Download, Search, Filter, Plus, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ArrowLeftRight, Download, Search, Filter,
+  Plus, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight,
+  Package, Archive, ShieldAlert
+} from "lucide-react";
 
 const PAGE_SIZE = 20;
+
+const EVENT_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string; badge: string }> = {
+  stock_in: {
+    label: "Stock In",
+    icon: <Package className="h-4 w-4" />,
+    color: "bg-blue-500/10 text-blue-600",
+    badge: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  },
+  sale: {
+    label: "Sale",
+    icon: <Plus className="h-4 w-4" />,
+    color: "bg-emerald-500/10 text-emerald-600",
+    badge: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  },
+  transfer: {
+    label: "Transfer",
+    icon: <RefreshCw className="h-4 w-4" />,
+    color: "bg-indigo-500/10 text-indigo-500",
+    badge: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  },
+  stolen_report: {
+    label: "Stolen Report",
+    icon: <ShieldAlert className="h-4 w-4" />,
+    color: "bg-destructive/10 text-destructive",
+    badge: "",
+  },
+  recovery: {
+    label: "Recovery",
+    icon: <Package className="h-4 w-4" />,
+    color: "bg-amber-500/10 text-amber-600",
+    badge: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  },
+  archived: {
+    label: "Archived",
+    icon: <Archive className="h-4 w-4" />,
+    color: "bg-muted text-muted-foreground",
+    badge: "bg-muted text-muted-foreground border-border/50",
+  },
+};
+
+function getEventConfig(event: string) {
+  return EVENT_CONFIG[event] ?? {
+    label: event.replace(/_/g, " "),
+    icon: <AlertTriangle className="h-4 w-4" />,
+    color: "bg-muted text-muted-foreground",
+    badge: "bg-muted text-muted-foreground border-border/50",
+  };
+}
 
 export default function RetailerTransactions() {
   const { t } = useLanguage();
@@ -23,16 +75,26 @@ export default function RetailerTransactions() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["/api/pos/my-transactions", page],
-    queryFn: () => apiGet<{ data: any[]; total: number; totalPages: number; page: number }>(`/api/pos/my-transactions?page=${page}&limit=${PAGE_SIZE}`),
+    queryFn: () =>
+      apiGet<{ data: any[]; total: number; totalPages: number; page: number }>(
+        `/api/pos/my-transactions?page=${page}&limit=${PAGE_SIZE}`
+      ),
   });
 
   const transactions = data?.data || [];
   const totalPages = data?.totalPages || 1;
+  const total = data?.total || 0;
 
-  const filteredActivity = transactions.filter((act: any) =>
-    (act.productName || act.event || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    String(act.productId).includes(searchTerm)
-  );
+  const filtered = transactions.filter((tx: any) => {
+    const q = searchTerm.toLowerCase();
+    return (
+      !q ||
+      (tx.productName || "").toLowerCase().includes(q) ||
+      (tx.serialNumber || "").toLowerCase().includes(q) ||
+      (tx.ownerName || "").toLowerCase().includes(q) ||
+      (tx.event || "").toLowerCase().includes(q)
+    );
+  });
 
   return (
     <AppLayout>
@@ -44,15 +106,13 @@ export default function RetailerTransactions() {
         className="container max-w-7xl mx-auto py-6 space-y-6"
       >
         <DashboardPageHeader
-          title={t("pos.transactions") || "Transactions"}
-          description={t("pos.transactionsDesc") || "Monitor all registrations, transfers, and sales."}
+          title={t("pos.transactions") || "Transaction History"}
+          description={t("pos.transactionsDesc") || "View all registrations and sales processed by your store."}
           actions={
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="gap-2 shadow-sm border-primary/20 hover:bg-primary/5">
-                <Download className="h-4 w-4" />
-                {t("pos.export") || "Export CSV"}
-              </Button>
-            </div>
+            <Button variant="outline" className="gap-2 shadow-sm border-primary/20 hover:bg-primary/5">
+              <Download className="h-4 w-4" />
+              {t("pos.export") || "Export CSV"}
+            </Button>
           }
         />
 
@@ -62,14 +122,19 @@ export default function RetailerTransactions() {
               <CardTitle className="text-lg flex items-center gap-2">
                 <ArrowLeftRight className="h-5 w-5 text-primary" />
                 Transaction History
+                {total > 0 && (
+                  <Badge variant="outline" className="ml-2 font-mono text-xs font-normal">
+                    {total} total
+                  </Badge>
+                )}
               </CardTitle>
               <div className="flex w-full sm:w-auto items-center gap-2">
-                <div className="relative w-full sm:w-64">
+                <div className="relative w-full sm:w-72">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search transactions..."
+                    placeholder="Search by product, serial, or customer..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                     className="pl-9 rounded-xl bg-background border-border/50 shadow-sm"
                   />
                 </div>
@@ -79,72 +144,99 @@ export default function RetailerTransactions() {
               </div>
             </div>
           </CardHeader>
+
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-6 space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full rounded-xl" />
+                  <Skeleton key={i} className="h-14 w-full rounded-xl" />
                 ))}
               </div>
-            ) : filteredActivity.length > 0 ? (
+            ) : filtered.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-muted/30">
-                      <TableHead className="font-semibold text-xs tracking-wider uppercase pl-6">ID</TableHead>
+                      <TableHead className="font-semibold text-xs tracking-wider uppercase pl-6 w-32">ID</TableHead>
                       <TableHead className="font-semibold text-xs tracking-wider uppercase">Type</TableHead>
-                      <TableHead className="font-semibold text-xs tracking-wider uppercase">Reference</TableHead>
+                      <TableHead className="font-semibold text-xs tracking-wider uppercase">Product</TableHead>
+                      <TableHead className="font-semibold text-xs tracking-wider uppercase">Customer</TableHead>
                       <TableHead className="font-semibold text-xs tracking-wider uppercase">Date & Time</TableHead>
                       <TableHead className="font-semibold text-xs tracking-wider uppercase text-right pr-6">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredActivity.map((activity: any, index: number) => {
-                      const isStolen = activity.event === "stolen_report";
-                      const isTransfer = activity.event === "transfer";
-                      
+                    {filtered.map((tx: any, index: number) => {
+                      const cfg = getEventConfig(tx.transactionType ?? tx.event);
+                      const isStolen = tx.event === "stolen_report";
+                      const isStockIn = tx.transactionType === "stock_in";
+
                       return (
                         <motion.tr
-                          key={activity.id}
-                          initial={{ opacity: 0, y: 10 }}
+                          key={tx.id}
+                          initial={{ opacity: 0, y: 6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          transition={{ duration: 0.25, delay: index * 0.03 }}
                           className="group hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0"
                         >
-                          <TableCell className="pl-6 font-mono text-xs text-muted-foreground">
-                            TXN-{activity.id.toString().padStart(6, "0")}
+                          {/* ID */}
+                          <TableCell className="pl-6 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                            TXN-{String(tx.id).padStart(6, "0")}
                           </TableCell>
+
+                          {/* Type */}
                           <TableCell>
-                            <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-xl flex items-center justify-center shrink-0 ${
-                                isStolen ? "bg-destructive/10 text-destructive" :
-                                isTransfer ? "bg-indigo-500/10 text-indigo-500" :
-                                "bg-emerald-500/10 text-emerald-500"
-                              }`}>
-                                {isStolen ? <AlertTriangle className="h-4 w-4" /> :
-                                 isTransfer ? <RefreshCw className="h-4 w-4" /> :
-                                 <Plus className="h-4 w-4" />}
+                            <div className="flex items-center gap-2">
+                              <div className={`p-2 rounded-xl shrink-0 ${cfg.color}`}>
+                                {cfg.icon}
                               </div>
-                              <div>
-                                <p className="font-bold text-sm capitalize">{activity.event.replace("_", " ")}</p>
-                                {activity.notes && (
-                                  <p className="text-xs text-muted-foreground truncate max-w-[200px]">{activity.notes}</p>
-                                )}
-                              </div>
+                              <span className="font-semibold text-sm">{cfg.label}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="font-mono text-sm shadow-sm bg-muted/40 px-2 py-1 rounded inline-block mt-3">
-                            KZR-{String(activity.productId).padStart(6, "0")}
+
+                          {/* Product */}
+                          <TableCell>
+                            {tx.productName ? (
+                              <div>
+                                <p className="font-semibold text-sm">{tx.productName}</p>
+                                {tx.serialNumber && (
+                                  <p className="text-xs font-mono text-muted-foreground">{tx.serialNumber}</p>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground font-mono">
+                                #{String(tx.productId).padStart(6, "0")}
+                              </span>
+                            )}
                           </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {format(new Date(activity.timestamp), "MMM d, yyyy")}
-                            <span className="block text-xs opacity-70">{format(new Date(activity.timestamp), "HH:mm")}</span>
+
+                          {/* Customer */}
+                          <TableCell>
+                            {isStockIn ? (
+                              <span className="text-xs text-muted-foreground italic">Own inventory</span>
+                            ) : tx.ownerName ? (
+                              <p className="text-sm font-medium">{tx.ownerName}</p>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </TableCell>
+
+                          {/* Date */}
+                          <TableCell className="whitespace-nowrap">
+                            <p className="text-sm text-foreground">
+                              {format(new Date(tx.timestamp), "MMM d, yyyy")}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {format(new Date(tx.timestamp), "HH:mm")}
+                            </p>
+                          </TableCell>
+
+                          {/* Status */}
                           <TableCell className="text-right pr-6">
-                            <Badge variant={isStolen ? "destructive" : "outline"} className={`
-                              font-bold uppercase tracking-widest text-[10px]
-                              ${!isStolen ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : ""}
-                            `}>
+                            <Badge
+                              variant={isStolen ? "destructive" : "outline"}
+                              className={`font-bold uppercase tracking-widest text-[10px] ${!isStolen ? cfg.badge : ""}`}
+                            >
                               {isStolen ? "Flagged" : "Completed"}
                             </Badge>
                           </TableCell>
@@ -161,15 +253,18 @@ export default function RetailerTransactions() {
                 </div>
                 <h3 className="text-lg font-bold mb-2">No transactions found</h3>
                 <p className="text-muted-foreground max-w-sm mx-auto text-sm">
-                  There are no transactions matching your search criteria. Try adjusting your filters or wait for new activity.
+                  {searchTerm
+                    ? "No transactions match your search. Try a different product name, serial, or customer."
+                    : "Transactions will appear here once items are registered or transferred at your POS."}
                 </p>
               </div>
             )}
           </CardContent>
+
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-border/50">
               <p className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
+                Page {page} of {totalPages} &middot; {total} transactions
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -179,7 +274,7 @@ export default function RetailerTransactions() {
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page <= 1}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4 mr-1" />
                   Prev
                 </Button>
                 <Button
@@ -190,7 +285,7 @@ export default function RetailerTransactions() {
                   disabled={page >= totalPages}
                 >
                   Next
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>
               </div>
             </div>

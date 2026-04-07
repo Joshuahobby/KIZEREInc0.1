@@ -9,7 +9,8 @@ import {
   ClaimStatusLog, InsertClaimStatusLog, Chat, InsertChat, Message, InsertMessage,
   PushSubscription, InsertPushSubscription, VerificationRequest, InsertVerificationRequest,
   AccountStatus, VerificationStatus, PaymentType,
-  Retailer, InsertRetailer, PosProduct, InsertPosProduct, OwnershipLedgerEntry, InsertOwnershipLedger
+  Retailer, InsertRetailer, PosProduct, InsertPosProduct, OwnershipLedgerEntry, InsertOwnershipLedger,
+  PosSecurityAlert, InsertPosSecurityAlert
 } from "@shared/schema";
 
 export interface IStorage {
@@ -231,6 +232,19 @@ export interface IStorage {
 
   getPosAnalytics(start: Date, end: Date): Promise<any>;
   getRetailerStats(retailerId: number, startDate?: Date, endDate?: Date): Promise<any>;
+  getGlobalStolenStatus(serialNumber: string): Promise<{ 
+    isStolen: boolean; 
+    source: "pos" | "registry" | null;
+    itemData?: any;
+  }>;
+
+  createPosSecurityAlert(alert: InsertPosSecurityAlert): Promise<PosSecurityAlert>;
+  getRetailerSecurityAlerts(retailerId: number): Promise<PosSecurityAlert[]>;
+  getRetailerTransactionsPaginated(retailerId: number, params: { page: number; limit: number }): Promise<{ data: any[]; total: number; page: number; limit: number; totalPages: number }>;
+  getRetailerCustomersPaginated(retailerId: number, params: { page: number; limit: number }): Promise<{ data: any[]; total: number; page: number; limit: number; totalPages: number }>;
+  getOrCreateRetailerCustomerSettings(retailerId: number, customerId: number): Promise<any>;
+  getRetailerCustomerDetail(retailerId: number, customerId: number): Promise<any>;
+  updateRetailerCustomerSettings(retailerId: number, customerId: number, updates: { isBlocked?: boolean; internalNotes?: string }): Promise<any>;
 
   // Session management
   sessionStore: session.Store;

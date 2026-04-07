@@ -30,6 +30,7 @@ import {
   reportProductStolen,
   getRetailerCustomerDetail,
   updateCustomerSettings,
+  getOrCreateRetailerCustomerSettings,
 } from "../services/pos.service";
 import { createLogger } from "../utils/logger";
 import { z } from "zod";
@@ -383,6 +384,47 @@ router.get(
     } catch (error: any) {
       logger.error("Failed to get retailer transactions", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/my-customers
+ * Explicitly add a customer to this retailer's directory (create user if needed,
+ * then upsert a retailer_customer_settings row so they show in the list).
+ */
+router.post(
+  "/my-customers",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailerId = (req as any).retailer.id;
+      const schema = z.object({
+        nationalId: z.string().min(1),
+        fullName: z.string().min(1),
+        phone: z.string().optional(),
+        email: z.string().email().optional().or(z.literal("")),
+      });
+      const { nationalId, fullName, phone, email } = schema.parse(req.body);
+
+      const { user, isNew } = await checkOrCreateCustomer(
+        nationalId,
+        fullName,
+        phone || undefined,
+        email || undefined
+      );
+
+      // Ensure a settings row exists so the customer appears in the directory
+      await getOrCreateRetailerCustomerSettings(retailerId, user.id);
+
+      res.json({ success: true, isNew, customer: { id: user.id, fullName: user.fullName, email: user.email, phoneNumber: user.phoneNumber } });
+    } catch (error: any) {
+      logger.error("Failed to add customer", { error: error.message });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      const status = error.status || (error.message?.includes("already exists") ? 409 : 500);
+      res.status(status).json({ message: error.message || "Internal server error" });
     }
   }
 );

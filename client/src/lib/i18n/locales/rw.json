@@ -2219,6 +2219,21 @@
       "noWalletPhone": "Nimero ya wallet ntirishyizweho. Vugurura muri Retailer Settings.",
       "payoutQueued": "Kwishyurwa Gusabwe",
       "payoutQueuedDesc": "Kwishyurwa kwawe kwa komisiyoni gutunganijwe."
+    },
+    "crm": {
+      "history": "Amateka y'Ibicuruzwa",
+      "settings": "Igenamiterere ry'Iduka",
+      "noHistory": "Nta bikorwa by'iduka bibonetse kuri uyu mukiriya.",
+      "blockCustomer": "Funga Umukiriya",
+      "blockCustomerDesc": "Buza uyu mukiriya kwiyandikisha ibicuruzwa mu iduka ryawe. Ntabwo bigaruka ku bandi bavendeur.",
+      "internalNotes": "Amatangazo y'Imbere",
+      "notesPlaceholder": "Ongeraho amatangazo bwite ku mukiriya (urugero: gutunga, ubukuzi)...",
+      "customerSince": "Mukiriya kuva",
+      "totalRegistrations": "Ibicuruzwa byose by'Iduka",
+      "blocked": "Bifunze",
+      "notFound": "Umukiriya ntibabonetse",
+      "updateSuccess": "Igenamiterere ryahinduwe",
+      "updateSuccessDesc": "Igenamiterere ry'umukiriya ryabitswe."
     }
   }
 }

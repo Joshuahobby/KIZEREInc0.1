@@ -279,6 +279,13 @@ export const posApi = {
     email?: string;
   }) => apiPost<{ isNew: boolean; customer: any }, any>('/api/pos/check-or-create', data),
 
+  addCustomer: (data: {
+    nationalId: string;
+    fullName: string;
+    phone?: string;
+    email?: string;
+  }) => apiPost<{ isNew: boolean; customer: any }, any>('/api/pos/my-customers', data),
+
   getProfile: () =>
     apiGet<{ profile: any }>('/api/pos/my-profile'),
 

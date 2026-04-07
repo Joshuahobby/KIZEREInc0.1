@@ -237,6 +237,10 @@ export async function getRetailerCustomerDetail(retailerId: number, customerId: 
   return storage.getRetailerCustomerDetail(retailerId, customerId);
 }
 
+export async function getOrCreateRetailerCustomerSettings(retailerId: number, customerId: number) {
+  return storage.getOrCreateRetailerCustomerSettings(retailerId, customerId);
+}
+
 export async function updateCustomerSettings(retailerId: number, customerId: number, updates: any) {
   return storage.updateRetailerCustomerSettings(retailerId, customerId, updates);
 }

@@ -55,7 +55,7 @@ export function AddCustomerDialog({ open, onOpenChange }: AddCustomerDialogProps
   });
 
   const mutation = useMutation({
-    mutationFn: (values: AddCustomerValues) => posApi.checkOrCreateCustomer(values),
+    mutationFn: (values: AddCustomerValues) => posApi.addCustomer(values),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/pos/my-customers"] });
       toast({

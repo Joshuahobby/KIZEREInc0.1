@@ -1448,6 +1448,21 @@
       "noWalletPhone": "[TODO-sw] Nimero ya wallet ntirishyizweho. Vugurura muri Retailer Settings.",
       "payoutQueued": "[TODO-sw] Kwishyurwa Gusabwe",
       "payoutQueuedDesc": "[TODO-sw] Kwishyurwa kwawe kwa komisiyoni gutunganijwe."
+    },
+    "crm": {
+      "history": "[TODO-sw] Purchase History",
+      "settings": "[TODO-sw] Store Settings",
+      "noHistory": "[TODO-sw] No store activity found for this customer.",
+      "blockCustomer": "[TODO-sw] Block Customer",
+      "blockCustomerDesc": "[TODO-sw] Prevent this customer from registering items at your store.",
+      "internalNotes": "[TODO-sw] Internal Notes",
+      "notesPlaceholder": "[TODO-sw] Add private notes about this customer...",
+      "customerSince": "[TODO-sw] Customer Since",
+      "totalRegistrations": "[TODO-sw] Total Store Items",
+      "blocked": "[TODO-sw] Blocked",
+      "notFound": "[TODO-sw] Customer not found",
+      "updateSuccess": "[TODO-sw] Settings updated",
+      "updateSuccessDesc": "[TODO-sw] Customer settings have been saved."
     }
   },
   "claims": {

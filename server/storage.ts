@@ -244,6 +244,14 @@ export class DatabaseStorage implements IStorage {
 
   getPosAnalytics = posOps.getPosAnalytics;
   getRetailerStats = posOps.getRetailerStats;
+  getGlobalStolenStatus = posOps.getGlobalStolenStatus;
+  createPosSecurityAlert = posOps.createPosSecurityAlert;
+  getRetailerSecurityAlerts = posOps.getRetailerSecurityAlerts;
+  getRetailerTransactionsPaginated = posOps.getRetailerTransactionsPaginated;
+  getRetailerCustomersPaginated = posOps.getRetailerCustomersPaginated;
+  getOrCreateRetailerCustomerSettings = posOps.getOrCreateRetailerCustomerSettings;
+  getRetailerCustomerDetail = posOps.getRetailerCustomerDetail;
+  updateRetailerCustomerSettings = posOps.updateRetailerCustomerSettings;
 }
 
 export const storage = new DatabaseStorage();

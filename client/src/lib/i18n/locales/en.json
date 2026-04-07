@@ -2242,6 +2242,21 @@
       "noWalletPhone": "Wallet phone not configured. Update it in Retailer Settings.",
       "payoutQueued": "Payout Requested",
       "payoutQueuedDesc": "Your commission payout has been queued for processing."
+    },
+    "crm": {
+      "history": "Purchase History",
+      "settings": "Store Settings",
+      "noHistory": "No store activity found for this customer.",
+      "blockCustomer": "Block Customer",
+      "blockCustomerDesc": "Prevent this customer from registering items at your store. This does not affect other retailers.",
+      "internalNotes": "Internal Notes",
+      "notesPlaceholder": "Add private notes about this customer (e.g., payment performance, reliability)...",
+      "customerSince": "Customer Since",
+      "totalRegistrations": "Total Store Items",
+      "blocked": "Blocked",
+      "notFound": "Customer not found",
+      "updateSuccess": "Settings updated",
+      "updateSuccessDesc": "Customer settings have been saved."
     }
   },
   "fields": {
