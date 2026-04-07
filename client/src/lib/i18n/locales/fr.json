@@ -1501,7 +1501,27 @@
     "addCustomer": "[TODO-fr] Add New Customer",
     "addCustomerDesc": "[TODO-fr] Register a new customer or find an existing one by their National ID.",
     "settings": "[TODO-fr] Terminal Settings",
-    "settingsDesc": "[TODO-fr] Configure your API access and store identifiers."
+    "settingsDesc": "[TODO-fr] Configure your API access and store identifiers.",
+    "commissions": {
+      "title": "[TODO-fr] Inzego za Komisiyoni",
+      "subtitle": "[TODO-fr] Kurikirana inzego no gusaba kwishyurwa kuri konti yawe ya MoMo.",
+      "totalPending": "[TODO-fr] Imari Itegereje",
+      "noCommissions": "[TODO-fr] Nta komisiyoni nzarifashwe.",
+      "noCommissionsHint": "[TODO-fr] Komisiyoni zikorwa iyo wanditse kugurisha na agaciro ka buri transaction.",
+      "requestPayout": "[TODO-fr] Saba Kwishyurwa",
+      "transactionValue": "[TODO-fr] Agaciro ka Transaction",
+      "commissionAmount": "[TODO-fr] Komisiyoni",
+      "statusPending": "[TODO-fr] Itegereje",
+      "statusQueued": "[TODO-fr] Yateguwe",
+      "statusProcessing": "[TODO-fr] Irakora",
+      "statusPaid": "[TODO-fr] Yishyuwe",
+      "statusFailed": "[TODO-fr] Byanze",
+      "walletPhone": "[TODO-fr] Nimero ya MoMo Wallet",
+      "walletPhoneHint": "[TODO-fr] Iyi nimero izakira komisiyoni zawe via Mobile Money.",
+      "noWalletPhone": "[TODO-fr] Nimero ya wallet ntirishyizweho. Vugurura muri Retailer Settings.",
+      "payoutQueued": "[TODO-fr] Kwishyurwa Gusabwe",
+      "payoutQueuedDesc": "[TODO-fr] Kwishyurwa kwawe kwa komisiyoni gutunganijwe."
+    }
   },
   "claims": {
     "verify_title": "[TODO-fr] Guhitamo nyir'izina",

@@ -21,6 +21,7 @@ interface ProfileFormValues {
   email: string;
   phone: string;
   address: string;
+  walletPhone: string;
 }
 
 export default function RetailerSettings() {
@@ -45,6 +46,7 @@ export default function RetailerSettings() {
         email: p.email || "",
         phone: p.phone || "",
         address: p.address || "",
+        walletPhone: p.walletPhone || "",
       });
     }
   }, [profileData, reset]);
@@ -160,6 +162,11 @@ export default function RetailerSettings() {
                 <div className="space-y-2">
                   <Label htmlFor="address">Physical Address</Label>
                   <Input id="address" {...register("address")} disabled={isProfileLoading} className="rounded-xl bg-background border-border/50" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="walletPhone">MoMo Wallet Number (for commission payouts)</Label>
+                  <Input id="walletPhone" type="tel" placeholder="e.g. +250788123456" {...register("walletPhone")} disabled={isProfileLoading} className="rounded-xl bg-background border-border/50" />
+                  <p className="text-xs text-muted-foreground">This number will receive your POS commission payouts via Mobile Money.</p>
                 </div>
               </CardContent>
             </Card>

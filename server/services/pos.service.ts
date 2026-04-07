@@ -8,8 +8,13 @@ import {
 import { createLogger } from "../utils/logger";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
+import { db } from "../db";
+import { eq } from "drizzle-orm";
 
 import { notifyPosCustomer } from "./pos-notification.service";
+import { emitSecurityAlert } from "../websocket";
+import { AuthorizationError, ValidationError, NotFoundError, DatabaseError } from "../utils/error-handler";
+import { CommissionService } from "./commission.service";
 
 const logger = createLogger("PosService");
 
@@ -20,9 +25,6 @@ interface CheckOrCreateResult {
   isNew: boolean;
 }
 
-/**
- * Looks up a customer by nationalId. If not found, creates a stub account instantly.
- */
 export async function checkOrCreateCustomer(
   nationalId: string,
   fullName: string,
@@ -36,7 +38,18 @@ export async function checkOrCreateCustomer(
     return { user: existing, isNew: false };
   }
 
-  // Create stub account
+  if (email) {
+    const existingWithEmail = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    
+    if (existingWithEmail.length > 0) {
+      throw new ValidationError("An account with this email address already exists. Please use a different email or leave it empty.");
+    }
+  }
+
   const username = `kz_${nationalId.slice(-6)}_${Date.now().toString(36)}`;
   const tempPassword = crypto.randomBytes(16).toString("hex");
   const hashedPassword = await bcrypt.hash(tempPassword, 10);
@@ -64,38 +77,13 @@ export async function checkOrCreateCustomer(
   return { user: newUser, isNew: true };
 }
 
-// ─── Product registration ───
+// ─── Product registration & transfer ───
 
-interface RegisterProductInput {
-  serialNumber: string;
-  name: string;
-  category?: string;
-  sku?: string;
-  retailerId: number;
-  ownerId: number;
-  metadata?: Record<string, any>;
-}
-
-interface RegisterProductResult {
-  product: PosProduct;
-  ledgerEntry: OwnershipLedgerEntry;
-}
-
-/**
- * Registers a new product to its owner and creates the initial ownership ledger entry.
- */
-export async function registerProduct(
-  input: RegisterProductInput
-): Promise<RegisterProductResult> {
-  // 1. Get retailer and check subscription limits
+export async function registerProduct(input: any) {
   const retailer = await storage.getRetailer(input.retailerId);
-
-  if (!retailer) {
-    throw new Error("Retailer not found");
-  }
+  if (!retailer) throw new Error("Retailer not found");
 
   const currentProductCount = await storage.countRetailerProducts(input.retailerId);
-
   const plan = (retailer.subscriptionPlan || "basic") as RetailerSubscriptionPlan;
   const maxProducts = SUBSCRIPTION_LIMITS[plan].maxProducts;
 
@@ -106,12 +94,13 @@ export async function registerProduct(
     );
   }
 
-  // 2. Check for duplicate serial
-  const dupeCheck = await storage.getPosProductBySerial(input.serialNumber);
+  const customerDetail = await storage.getRetailerCustomerDetail(input.retailerId, input.ownerId);
+  if (customerDetail?.isBlocked) {
+    throw new AuthorizationError(`This customer has been blocked by your store.`);
+  }
 
+  const dupeCheck = await storage.getPosProductBySerial(input.serialNumber);
   if (dupeCheck) {
-    // If it's already in the retailer's inventory (registered to themselves), 
-    // treat this POS registration as a Point-of-Sale transfer/checkout.
     if (dupeCheck.retailerId === input.retailerId && dupeCheck.currentOwnerId === retailer.userId) {
       return transferOwnership({
         productId: dupeCheck.id,
@@ -120,97 +109,104 @@ export async function registerProduct(
         notes: "Point of Sale transfer from inventory"
       });
     }
-
-    throw Object.assign(
-      new Error(`Product with serial number ${input.serialNumber} already exists`),
-      { status: 409 }
-    );
+    throw Object.assign(new Error(`Product with serial number ${input.serialNumber} already exists`), { status: 409 });
   }
 
-  // Insert product
+  const stolenStatus = await storage.getGlobalStolenStatus(input.serialNumber);
+  if (stolenStatus.isStolen) {
+    const itemName = stolenStatus.itemData?.name || input.name;
+    emitSecurityAlert(retailer.userId, {
+      type: "stolen_item_detected",
+      serialNumber: input.serialNumber,
+      itemName,
+      source: stolenStatus.source || "registry",
+      timestamp: new Date().toISOString()
+    });
+
+    await logSecurityAlert({
+      retailerId: input.retailerId,
+      serialNumber: input.serialNumber,
+      productName: itemName,
+      alertType: stolenStatus.source === 'pos' ? 'local_blocked' : 'global_stolen',
+      details: `Attempted registration of item reported stolen.`,
+    }).catch(err => logger.error("Failed to persist security alert", { err }));
+
+    throw new AuthorizationError(`SECURITY ALERT: This item has been flagged as stolen.`);
+  }
+
   const product = await storage.createPosProduct({
-    serialNumber: input.serialNumber,
-    name: input.name,
-    category: input.category || "Other",
-    sku: input.sku || undefined,
-    retailerId: input.retailerId,
-    currentOwnerId: input.ownerId,
+    ...input,
     status: "registered",
-    metadata: input.metadata,
   });
 
-  // Create first ledger entry (initial sale)
   const ledgerEntry = await storage.createOwnershipLedgerEntry({
     productId: product.id,
-    fromUserId: undefined, // initial sale — no previous owner
     toUserId: input.ownerId,
     registeredBy: input.retailerId,
     event: "sale",
     notes: `Initial product registration at POS`,
+    purchaseAgreement: input.purchaseAgreement,
+    legalDocUrl: input.legalDocUrl,
   });
 
-  logger.info("Product registered via POS", {
+  notifyPosCustomer("registration", {
+    userId: input.ownerId,
     productId: product.id,
-    serial: input.serialNumber,
-    ownerId: input.ownerId,
-    retailerId: input.retailerId,
-  });
+    productName: input.name,
+    serialNumber: input.serialNumber,
+    category: input.category || "Other",
+    retailerName: retailer.name,
+  }).catch(err => logger.error("POS notification failed", { err }));
 
-  // Notify customer asynchronously (fire-and-forget)
-  if (retailer) {
-    notifyPosCustomer("registration", {
-      userId: input.ownerId,
-      productId: product.id,
-      productName: input.name,
-      serialNumber: input.serialNumber,
-      category: input.category || "Other",
-      retailerName: retailer.name,
-    }).catch(err => logger.error("POS notification failed", { err }));
+  // Record commission silently — never blocks the registration response
+  if (input.transactionValue && input.transactionValue > 0) {
+    CommissionService.recordCommission(ledgerEntry.id, input.retailerId, input.transactionValue)
+      .catch(err => logger.error("Commission recording failed", { err }));
   }
 
   return { product, ledgerEntry };
 }
 
-// ─── Ownership transfer ───
-
-interface TransferInput {
-  productId: number;
-  newOwnerId: number;
-  retailerId: number;
-  notes?: string;
-}
-
-/**
- * Transfers ownership of a product to a new owner and logs to the ledger.
- */
-export async function transferOwnership(input: TransferInput) {
-  // Get current product
+export async function transferOwnership(input: any) {
   const product = await storage.getPosProduct(input.productId);
-
-  if (!product) {
-    throw Object.assign(new Error("Product not found"), { status: 404 });
+  if (!product) throw Object.assign(new Error("Product not found"), { status: 404 });
+  if (product.status === "stolen") throw new AuthorizationError(`Cannot transfer stolen item.`);
+  
+  const stolenStatus = await storage.getGlobalStolenStatus(product.serialNumber);
+  if (stolenStatus.isStolen) {
+    const retailer = await storage.getRetailer(input.retailerId);
+    if (retailer) {
+      emitSecurityAlert(retailer.userId, {
+        type: "stolen_item_detected",
+        serialNumber: product.serialNumber,
+        itemName: product.name,
+        source: stolenStatus.source || "registry",
+        timestamp: new Date().toISOString()
+      });
+      await logSecurityAlert({
+        retailerId: input.retailerId,
+        serialNumber: product.serialNumber,
+        productName: product.name,
+        alertType: 'global_stolen',
+        details: `Attempted transfer of stolen item.`,
+      });
+    }
+    throw new AuthorizationError(`SECURITY ALERT: Item flagged as stolen.`);
   }
 
-  if (product.status === "stolen") {
-    throw Object.assign(
-      new Error("Cannot transfer a product that has been reported stolen"),
-      { status: 400 }
-    );
+  const customerDetail = await storage.getRetailerCustomerDetail(input.retailerId, input.newOwnerId);
+  if (customerDetail?.isBlocked) {
+    throw new AuthorizationError(`The recipient customer is blocked.`);
   }
 
   const previousOwnerId = product.currentOwnerId;
-
-  // Update product ownership
   const updatedProduct = await storage.updatePosProduct(input.productId, {
     currentOwnerId: input.newOwnerId,
     status: "transferred",
   });
 
-  if (!updatedProduct) {
-    throw new Error("Failed to update product");
-  }
+  if (!updatedProduct) throw new Error("Failed to update product");
 
-  // Create ledger entry
   const ledgerEntry = await storage.createOwnershipLedgerEntry({
     productId: input.productId,
     fromUserId: previousOwnerId,
@@ -220,14 +216,6 @@ export async function transferOwnership(input: TransferInput) {
     notes: input.notes || "Ownership transfer at POS",
   });
 
-  logger.info("Ownership transferred", {
-    productId: input.productId,
-    from: previousOwnerId,
-    to: input.newOwnerId,
-    retailerId: input.retailerId,
-  });
-
-  // Notify customer asynchronously (fire-and-forget)
   const retailer = await storage.getRetailer(input.retailerId);
   if (retailer) {
     notifyPosCustomer("transfer", {
@@ -243,361 +231,173 @@ export async function transferOwnership(input: TransferInput) {
   return { product: updatedProduct, ledgerEntry };
 }
 
-// ─── Retailer CRUD (Admin use) ───
+// ─── Retailer CRM & Analytics ───
 
-/**
- * Generate a unique API key for a retailer.
- */
-export function generateApiKey(): string {
-  return `kzr_${crypto.randomBytes(32).toString("hex")}`;
+export async function getRetailerCustomerDetail(retailerId: number, customerId: number) {
+  return storage.getRetailerCustomerDetail(retailerId, customerId);
 }
 
-/**
- * Create a new retailer.
- * Validates the linked user exists and updates their role to "Retailer".
- */
-export async function createRetailer(data: {
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  userId: number;
-  subscriptionPlan?: string;
-  logoUrl?: string;
-  metadata?: Record<string, any>;
-}) {
-  // Validate the linked user exists
-  const linkedUser = await storage.getUser(data.userId);
+export async function updateCustomerSettings(retailerId: number, customerId: number, updates: any) {
+  return storage.updateRetailerCustomerSettings(retailerId, customerId, updates);
+}
 
-  if (!linkedUser) {
-    throw Object.assign(
-      new Error(`User with ID ${data.userId} does not exist. Please select a valid user.`),
-      { status: 400 }
-    );
-  }
+export async function getRetailerStats(retailerId: number, startDate?: Date, endDate?: Date) {
+  return storage.getRetailerStats(retailerId, startDate, endDate);
+}
 
-  // Check if user is already linked to another retailer
-  const existingRetailer = await storage.getRetailerByUserId(data.userId);
+export async function getPosAnalytics(startDate?: Date, endDate?: Date) {
+  const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const end = endDate || new Date();
+  return storage.getPosAnalytics(start, end);
+}
 
-  if (existingRetailer) {
-    throw Object.assign(
-      new Error(`User ${linkedUser.fullName} (ID ${data.userId}) is already linked to retailer "${existingRetailer.name}".`),
-      { status: 409 }
-    );
-  }
+// ─── Retailer CRUD (Admin) ───
 
-  const apiKey = generateApiKey();
-
-  const retailer = await storage.createRetailer({
-    name: data.name,
-    email: data.email,
-    phone: data.phone,
-    address: data.address,
-    userId: data.userId,
-    subscriptionPlan: (data.subscriptionPlan as any) || "basic",
-    logoUrl: data.logoUrl,
-    metadata: data.metadata,
-    apiKey,
-    status: "active",
-  });
-
-  // Update the linked user's role to "Retailer" (unless they are Admin)
-  if (linkedUser.role !== "Admin") {
-    await storage.updateUserRole(data.userId, "Retailer");
-    logger.info("User role updated to Retailer", { userId: data.userId, previousRole: linkedUser.role });
-  }
-
-  logger.info("Retailer created", { retailerId: retailer.id, name: data.name, linkedUserId: data.userId });
-
+export async function createRetailer(data: any) {
+  const apiKey = `kzr_${crypto.randomBytes(32).toString("hex")}`;
+  const retailer = await storage.createRetailer({ ...data, apiKey, status: "active" });
+  await storage.updateUserRole(data.userId, "Retailer");
   return retailer;
 }
 
-/**
- * Get all retailers with optional status filter.
- */
 export async function getRetailers(statusFilter?: string) {
   return storage.getRetailers(statusFilter);
 }
 
-/**
- * Get a single retailer by ID.
- */
 export async function getRetailerById(id: number) {
   return storage.getRetailer(id);
 }
 
-/**
- * Get a retailer by linked user ID.
- */
 export async function getRetailerByUserId(userId: number) {
   return storage.getRetailerByUserId(userId);
 }
 
-/**
- * Update retailer details.
- */
-export async function updateRetailer(
-  id: number,
-  data: Partial<{
-    name: string;
-    email: string;
-    phone: string | null;
-    address: string | null;
-    status: string;
-    subscriptionPlan: string;
-    logoUrl: string | null;
-    metadata: Record<string, any> | null;
-  }>
-) {
-  return storage.updateRetailer(id, data as any);
+export async function updateRetailer(id: number, data: any) {
+  return storage.updateRetailer(id, data);
 }
 
-/**
- * Regenerate API key for a retailer.
- */
 export async function regenerateApiKey(id: number) {
-  const newKey = generateApiKey();
+  const newKey = `kzr_${crypto.randomBytes(32).toString("hex")}`;
   return storage.updateRetailer(id, { apiKey: newKey });
 }
 
-/**
- * Get product ownership history from ledger.
- */
+// ─── Product management & search ───
+
 export async function getProductHistory(productId: number) {
   return storage.getProductHistory(productId);
 }
 
-/**
- * Get all POS products for a particular retailer.
- */
 export async function getRetailerProducts(retailerId: number) {
   return storage.getRetailerProducts(retailerId);
 }
 
-/**
- * Get all POS products for a particular owner.
- */
 export async function getOwnerProducts(ownerId: number) {
   return storage.getOwnerProducts(ownerId);
 }
 
-// ─── Retailer Dashboard Stats ───
-
-export function isPosStubAccount(email?: string | null): boolean {
-  return email?.endsWith("@pos.kizere.local") ?? false;
-}
-
-export interface PosAnalyticsData {
-  registrationsOverTime: { date: string; count: number }[];
-  transfersOverTime: { date: string; count: number }[];
-  topRetailers: { name: string; count: number }[];
-  categoryBreakdown: { category: string; count: number }[];
-  totalRegistrations: number;
-  totalTransfers: number;
-  activeRetailers: number;
-}
-
-export async function getPosAnalytics(startDate?: Date, endDate?: Date): Promise<PosAnalyticsData> {
-  const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // Default 30 days
-  const end = endDate || new Date();
-  
-  return storage.getPosAnalytics(start, end);
-}
-
-export interface RetailerStats {
-  totalProducts: number;
-  totalTransfers: number;
-  totalCustomers: number;
-  productsByCategory: { category: string; count: number }[];
-  productsByStatus: { status: string; count: number }[];
-  recentActivity: {
-    id: number;
-    event: string;
-    productId: number;
-    toUserId: number;
-    notes: string | null;
-    timestamp: Date;
-  }[];
-}
-
-/**
- * Get aggregate stats for a retailer's dashboard.
- */
-export async function getRetailerStats(retailerId: number, startDate?: Date, endDate?: Date): Promise<RetailerStats> {
-  return storage.getRetailerStats(retailerId, startDate, endDate);
-}
-
-// ─── Product search, filter & pagination ───
-
-export interface PaginationParams {
-  page: number;
-  limit: number;
-}
-
-export interface ProductSearchParams extends PaginationParams {
-  search?: string;       // matches serial number, name, or SKU
-  category?: string;
-  status?: string;
-}
-
-export interface PaginatedResult<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-/**
- * Search and filter retailer products with pagination.
- */
-export async function searchRetailerProducts(
-  retailerId: number,
-  params: ProductSearchParams
-): Promise<PaginatedResult<PosProduct>> {
+export async function searchRetailerProducts(retailerId: number, params: any) {
   return storage.searchRetailerProducts(retailerId, params);
 }
 
-/**
- * Get paginated product history from the ownership ledger.
- */
-export async function getProductHistoryPaginated(
-  productId: number,
-  params: PaginationParams
-): Promise<PaginatedResult<OwnershipLedgerEntry>> {
+export async function getProductHistoryPaginated(productId: number, params: any) {
   return storage.getProductHistoryPaginated(productId, params);
 }
 
-// ─── Product detail ───
+export async function getRetailerTransactionsPaginated(retailerId: number, params: any) {
+  return storage.getRetailerTransactionsPaginated(retailerId, params);
+}
 
-/**
- * Get a single POS product by ID, optionally scoped to a retailer.
- */
-export async function getProductById(
-  productId: number,
-  retailerId?: number
-): Promise<PosProduct | undefined> {
+export async function getRetailerCustomersPaginated(retailerId: number, params: any) {
+  return storage.getRetailerCustomersPaginated(retailerId, params);
+}
+
+export async function getProductById(productId: number, retailerId?: number) {
   return storage.getPosProductByIdAndRetailer(productId, retailerId);
 }
 
-// ─── Product status transitions ───
-
-/**
- * Archive a product. Only allowed for registered or transferred products.
- */
-export async function archiveProduct(
-  productId: number,
-  retailerId: number
-): Promise<PosProduct> {
+export async function archiveProduct(productId: number, retailerId: number) {
   const product = await getProductById(productId, retailerId);
-  if (!product) {
-    throw Object.assign(new Error("Product not found"), { status: 404 });
-  }
-
-  if (product.status === "archived") {
-    throw Object.assign(new Error("Product is already archived"), { status: 400 });
-  }
-  if (product.status === "stolen") {
-    throw Object.assign(
-      new Error("Cannot archive a product that has been reported stolen"),
-      { status: 400 }
-    );
-  }
-
+  if (!product) throw Object.assign(new Error("Product not found"), { status: 404 });
   const updated = await storage.updatePosProduct(productId, { status: "archived" });
-  if (!updated) {
-    throw new Error("Failed to update product");
-  }
-
-  // Log to ledger
   await storage.createOwnershipLedgerEntry({
     productId,
     fromUserId: product.currentOwnerId,
     toUserId: product.currentOwnerId,
     registeredBy: retailerId,
-    event: "sale", // closest available event for archival
+    event: "sale",
     notes: "Product archived by retailer",
   });
-
-  logger.info("Product archived", { productId, retailerId });
-
   return updated;
 }
 
-/**
- * Report a product as stolen. Creates a stolen_report ledger entry.
- */
-export async function reportProductStolen(
-  productId: number,
-  retailerId: number,
-  notes?: string
-): Promise<PosProduct> {
+export async function recoverProduct(productId: number, retailerId: number, notes?: string) {
   const product = await getProductById(productId, retailerId);
-  if (!product) {
-    throw Object.assign(new Error("Product not found"), { status: 404 });
-  }
-
-  if (product.status === "stolen") {
-    throw Object.assign(new Error("Product is already reported as stolen"), { status: 400 });
-  }
-  if (product.status === "archived") {
-    throw Object.assign(new Error("Cannot report an archived product as stolen"), { status: 400 });
-  }
-
-  const updated = await storage.updatePosProduct(productId, { status: "stolen" });
-  if (!updated) {
-    throw new Error("Failed to update product");
-  }
-
-  await storage.createOwnershipLedgerEntry({
-    productId,
-    fromUserId: product.currentOwnerId,
-    toUserId: product.currentOwnerId,
-    registeredBy: retailerId,
-    event: "stolen_report",
-    notes: notes || "Product reported as stolen",
-  });
-
-  logger.warn("Product reported stolen", { productId, retailerId, ownerId: product.currentOwnerId });
-
-  return updated;
-}
-
-/**
- * Recover a stolen product. Only allowed for products with status 'stolen'.
- */
-export async function recoverProduct(
-  productId: number,
-  retailerId: number,
-  notes?: string
-): Promise<PosProduct> {
-  const product = await getProductById(productId, retailerId);
-  if (!product) {
-    throw Object.assign(new Error("Product not found"), { status: 404 });
-  }
-
-  if (product.status !== "stolen") {
-    throw Object.assign(
-      new Error("Only stolen products can be recovered"),
-      { status: 400 }
-    );
-  }
-
+  if (!product) throw Object.assign(new Error("Product not found"), { status: 404 });
   const updated = await storage.updatePosProduct(productId, { status: "registered" });
-  if (!updated) {
-    throw new Error("Failed to update product");
-  }
-
   await storage.createOwnershipLedgerEntry({
     productId,
-    fromUserId: product.currentOwnerId,
     toUserId: product.currentOwnerId,
     registeredBy: retailerId,
     event: "recovery",
     notes: notes || "Product recovered",
   });
-
-  logger.info("Product recovered", { productId, retailerId, ownerId: product.currentOwnerId });
-
   return updated;
+}
+
+export async function reportProductStolen(productId: number, retailerId: number, notes?: string) {
+  const product = await getProductById(productId, retailerId);
+  if (!product) throw Object.assign(new Error("Product not found"), { status: 404 });
+  const updated = await storage.updatePosProduct(productId, { status: "stolen" });
+  await storage.createOwnershipLedgerEntry({
+    productId,
+    toUserId: product.currentOwnerId,
+    registeredBy: retailerId,
+    event: "stolen_report",
+    notes: notes || "Product reported as stolen",
+  });
+  return updated;
+}
+
+export async function checkDuplicateSerial(serialNumber: string) {
+  const existing = await storage.getPosProductBySerial(serialNumber);
+  return !!existing;
+}
+
+export async function bulkRegisterProducts(retailerId: number, items: any[]) {
+  const results: { successCount: number; skipped: string[]; errors: string[] } = { 
+    successCount: 0, 
+    skipped: [], 
+    errors: [] 
+  };
+  const retailer = await storage.getRetailer(retailerId);
+  if (!retailer) throw new Error("Retailer not found");
+  const retailerUserId = retailer.userId as number;
+  for (const item of items) {
+    try {
+      await registerProduct({ ...item, retailerId, ownerId: retailerUserId });
+      results.successCount++;
+    } catch (error: any) {
+      if (error.status === 409) results.skipped.push(item.serialNumber);
+      else results.errors.push(`${item.serialNumber}: ${error.message}`);
+    }
+  }
+  return results;
+}
+
+// ─── Security Alerts ───
+
+export async function logSecurityAlert(data: any) {
+  return storage.createPosSecurityAlert({
+    ...data,
+    productId: 0,
+    timestamp: new Date(),
+  });
+}
+
+export async function getRetailerSecurityAlerts(retailerId: number) {
+  return storage.getRetailerSecurityAlerts(retailerId);
+}
+
+export function isPosStubAccount(email?: string | null): boolean {
+  return email?.endsWith("@pos.kizere.local") ?? false;
 }

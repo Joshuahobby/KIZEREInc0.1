@@ -882,6 +882,8 @@ export const retailers = pgTable("retailers", {
   userId: integer("user_id").notNull().references(() => users.id),
   logoUrl: text("logo_url"),
   metadata: json("metadata"),
+  commissionRate: numeric("commission_rate").notNull().default('0.05'),
+  walletPhone: text("wallet_phone"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -896,6 +898,8 @@ export const posProducts = pgTable("pos_products", {
   sku: text("sku"),
   serialNumber: text("serial_number").notNull().unique(),
   name: text("name").notNull(),
+  brand: text("brand"),
+  model: text("model"),
   category: text("category").notNull().default('Other'),
   retailerId: integer("retailer_id").notNull().references(() => retailers.id),
   currentOwnerId: integer("current_owner_id").notNull().references(() => users.id),
@@ -919,12 +923,64 @@ export const ownershipLedger = pgTable("ownership_ledger", {
   registeredBy: integer("registered_by").notNull().references(() => retailers.id),
   event: text("event").notNull().default('sale'),
   notes: text("notes"),
+  purchaseAgreement: text("purchase_agreement"),
+  legalDocUrl: text("legal_doc_url"),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 }, (table) => [
   index("ledger_product_idx").on(table.productId),
   index("ledger_to_user_idx").on(table.toUserId),
   index("ledger_event_idx").on(table.event),
   index("ledger_timestamp_idx").on(table.timestamp)
+]);
+
+// POS Security Alerts — persistent log of blocked stolen items
+export const posSecurityAlerts = pgTable("pos_security_alerts", {
+  id: serial("id").primaryKey(),
+  retailerId: integer("retailer_id").notNull().references(() => retailers.id),
+  serialNumber: text("serial_number").notNull(),
+  productName: text("product_name"),
+  alertType: text("alert_type").notNull(), // 'global_stolen', 'local_blocked', 'under_investigation'
+  details: text("details"),
+  metadata: json("metadata"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+}, (table) => [
+  index("security_alert_retailer_idx").on(table.retailerId),
+  index("security_alert_serial_idx").on(table.serialNumber),
+  index("security_alert_timestamp_idx").on(table.timestamp)
+]);
+
+// Retailer Customer Settings — for CRM features (blocking, private notes)
+export const retailerCustomerSettings = pgTable("retailer_customer_settings", {
+  id: serial("id").primaryKey(),
+  retailerId: integer("retailer_id").notNull().references(() => retailers.id),
+  customerId: integer("customer_id").notNull().references(() => users.id),
+  isBlocked: boolean("is_blocked").notNull().default(false),
+  internalNotes: text("internal_notes"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("retailer_customer_unique_idx").on(table.retailerId, table.customerId),
+  index("rcs_retailer_idx").on(table.retailerId),
+  index("rcs_customer_idx").on(table.customerId),
+]);
+
+// Retailer Commissions — tracks per-transaction earnings and MoMo payout state
+export const retailerCommissions = pgTable("retailer_commissions", {
+  id: serial("id").primaryKey(),
+  retailerId: integer("retailer_id").notNull().references(() => retailers.id),
+  ledgerEntryId: integer("ledger_entry_id").notNull().references(() => ownershipLedger.id),
+  transactionValue: numeric("transaction_value").notNull(),
+  commissionAmount: numeric("commission_amount").notNull(),
+  currency: text("currency").notNull().default('RWF'),
+  status: text("status").notNull().default('pending'), // pending | queued | processing | paid | failed
+  pawapayPayoutId: text("pawapay_payout_id"),
+  payoutDestination: text("payout_destination"),
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  paidAt: timestamp("paid_at"),
+}, (table) => [
+  index("commission_retailer_idx").on(table.retailerId),
+  index("commission_ledger_idx").on(table.ledgerEntryId),
+  index("commission_status_idx").on(table.status),
 ]);
 
 // Zod schemas for POS tables
@@ -935,10 +991,20 @@ export const insertRetailerSchema = createInsertSchema(retailers).omit({
   email: z.string().email("Valid email is required"),
   phone: z.string().optional(),
   address: z.string().optional(),
+  walletPhone: z.string().optional(),
   subscriptionPlan: z.enum(retailerSubscriptionPlans).default('basic'),
   status: z.enum(retailerStatuses).default('active'),
   logoUrl: z.string().url().optional().nullable(),
   metadata: z.record(z.any()).optional(),
+});
+
+export const insertRetailerCommissionSchema = createInsertSchema(retailerCommissions).omit({
+  id: true, createdAt: true
+}).extend({
+  transactionValue: z.string(),
+  commissionAmount: z.string(),
+  currency: z.string().default('RWF'),
+  status: z.enum(['pending', 'queued', 'processing', 'paid', 'failed']).default('pending'),
 });
 
 export const insertPosProductSchema = createInsertSchema(posProducts).omit({
@@ -956,6 +1022,22 @@ export const insertOwnershipLedgerSchema = createInsertSchema(ownershipLedger).o
 }).extend({
   event: z.enum(ownershipEventTypes).default('sale'),
   notes: z.string().optional(),
+  purchaseAgreement: z.string().optional(),
+  legalDocUrl: z.string().url().optional().nullable(),
+});
+
+export const insertRetailerCustomerSettingsSchema = createInsertSchema(retailerCustomerSettings).omit({
+  id: true, updatedAt: true
+}).extend({
+  isBlocked: z.boolean().default(false),
+  internalNotes: z.string().optional(),
+});
+
+export const insertPosSecurityAlertSchema = createInsertSchema(posSecurityAlerts).omit({
+  id: true, timestamp: true
+}).extend({
+  serialNumber: z.string().min(1, "Serial number is required"),
+  alertType: z.string().min(1, "Alert type is required"),
 });
 
 // Types and Schemas Exports
@@ -1020,6 +1102,12 @@ export type OwnershipLedgerEntry = typeof ownershipLedger.$inferSelect;
 export type InsertRetailer = z.infer<typeof insertRetailerSchema>;
 export type InsertPosProduct = z.infer<typeof insertPosProductSchema>;
 export type InsertOwnershipLedger = z.infer<typeof insertOwnershipLedgerSchema>;
+export type PosSecurityAlert = typeof posSecurityAlerts.$inferSelect;
+export type RetailerCommission = typeof retailerCommissions.$inferSelect;
+export type InsertRetailerCommission = z.infer<typeof insertRetailerCommissionSchema>;
+export type InsertPosSecurityAlert = z.infer<typeof insertPosSecurityAlertSchema>;
+export type RetailerCustomerSetting = typeof retailerCustomerSettings.$inferSelect;
+export type InsertRetailerCustomerSetting = z.infer<typeof insertRetailerCustomerSettingsSchema>;
 export type RetailerStatus = typeof retailerStatuses[number];
 export type PosProductStatus = typeof posProductStatuses[number];
 export type OwnershipEventType = typeof ownershipEventTypes[number];

@@ -21,8 +21,15 @@ import {
   getProductHistoryPaginated,
   getProductById,
   archiveProduct,
-  reportProductStolen,
   recoverProduct,
+  checkDuplicateSerial,
+  bulkRegisterProducts,
+  getRetailerSecurityAlerts,
+  getRetailerTransactionsPaginated,
+  getRetailerCustomersPaginated,
+  reportProductStolen,
+  getRetailerCustomerDetail,
+  updateCustomerSettings,
 } from "../services/pos.service";
 import { createLogger } from "../utils/logger";
 import { z } from "zod";
@@ -32,6 +39,7 @@ import { eq, and } from "drizzle-orm";
 import { sendOTP, verifyOTP } from "../services/otp.service";
 import bcrypt from "bcrypt";
 import { isPosStubAccount } from "../services/pos.service";
+import { CommissionService } from "../services/commission.service";
 
 const logger = createLogger("PosRoutes");
 const router = Router();
@@ -96,8 +104,8 @@ router.post(
       const schema = z.object({
         nationalId: z.string().min(6, "National ID is required"),
         fullName: z.string().min(2, "Full name is required"),
-        phone: z.string().optional(),
-        email: z.string().email().optional(),
+        phone: z.string().optional().or(z.literal("")).transform(v => v === "" ? undefined : v),
+        email: z.string().email().optional().or(z.literal("")).transform(e => e === "" ? undefined : e),
       });
 
       const data = schema.parse(req.body);
@@ -142,10 +150,15 @@ router.post(
       const schema = z.object({
         serialNumber: z.string().min(3, "Serial number is required"),
         name: z.string().min(2, "Product name is required"),
+        brand: z.string().optional(),
+        model: z.string().optional(),
         category: z.string().optional().default("Other"),
         sku: z.string().optional(),
-        ownerId: z.number().int().positive("Valid owner ID is required"),
+        ownerId: z.coerce.number().int().positive("Valid owner ID is required"),
         metadata: z.record(z.any()).optional(),
+        purchaseAgreement: z.string().optional(),
+        legalDocUrl: z.string().url().optional(),
+        transactionValue: z.number().positive().optional(),
       });
 
       const data = schema.parse(req.body);
@@ -154,11 +167,16 @@ router.post(
       const result = await registerProduct({
         serialNumber: data.serialNumber,
         name: data.name,
+        brand: data.brand,
+        model: data.model,
         category: data.category,
         sku: data.sku,
         retailerId: retailer.id,
         ownerId: data.ownerId,
         metadata: data.metadata,
+        purchaseAgreement: data.purchaseAgreement,
+        legalDocUrl: data.legalDocUrl,
+        transactionValue: data.transactionValue,
       });
 
       res.status(201).json({
@@ -167,7 +185,73 @@ router.post(
         ledger: result.ledgerEntry,
       });
     } catch (error: any) {
-      logger.error("register failed", { error: error.message });
+      if (error instanceof z.ZodError) {
+        logger.warn("POS registration validation failed", { 
+          errors: error.errors,
+          body: req.body 
+        });
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+
+      logger.error("POS registration error", { 
+        error: error.message,
+        statusCode: error.statusCode,
+        status: error.status 
+      });
+      
+      const status = error.statusCode || error.status || 500;
+      res.status(status).json({ 
+        message: error.message || "Internal server error",
+        ...(process.env.NODE_ENV !== "production" && { details: error.details })
+      });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/check-duplicate
+ * Checks if a serial number is already registered.
+ */
+router.get(
+  "/check-duplicate",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const serial = req.query.serial as string;
+      if (!serial) return res.status(400).json({ message: "Serial number required" });
+      const isDuplicate = await checkDuplicateSerial(serial);
+      res.json({ success: true, isDuplicate });
+    } catch (error: any) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/bulk-register
+ * Bulk registers products to inventory.
+ */
+router.post(
+  "/bulk-register",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const schema = z.array(z.object({
+        serialNumber: z.string().min(3),
+        name: z.string().min(2),
+        brand: z.string().optional(),
+        model: z.string().optional(),
+        category: z.string().optional().default("Other"),
+        sku: z.string().optional(),
+        metadata: z.record(z.any()).optional(),
+      })).min(1, "At least one product is required");
+
+      const items = schema.parse(req.body);
+      const retailer = (req as any).retailer;
+
+      const results = await bulkRegisterProducts(retailer.id, items);
+      res.json({ success: true, ...results });
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
@@ -272,15 +356,255 @@ router.get(
       const retailer = (req as any).retailer;
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
       const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
-      
-        const stats = await getRetailerStats(retailer.id, startDate, endDate);
-        res.json({ success: true, stats, retailer });
-      } catch (error: any) {
+      const stats = await getRetailerStats(retailer.id, startDate, endDate);
+      res.json({ success: true, stats, retailer });
+    } catch (error: any) {
       logger.error("getRetailerStats failed", { error: error.message });
-        res.status(500).json({ message: "Internal server error" });
-      }
+      res.status(500).json({ message: "Internal server error" });
     }
-  );
+  }
+);
+
+/**
+ * GET /api/pos/my-transactions
+ * Get paginated transactions for the retailer.
+ */
+router.get(
+  "/my-transactions",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailerId = (req as any).retailer.id;
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      
+      const result = await getRetailerTransactionsPaginated(retailerId, { page, limit });
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      logger.error("Failed to get retailer transactions", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/my-customers
+ * Get paginated customers tied to the retailer.
+ */
+router.get(
+  "/my-customers",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailerId = (req as any).retailer.id;
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 10;
+      const result = await getRetailerCustomersPaginated(retailerId, { page, limit });
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      logger.error("Failed to get retailer customers", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/my-customers/:id
+ * Get detailed customer profile with transaction history.
+ */
+router.get(
+  "/my-customers/:id",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailerId = (req as any).retailer.id;
+      const customerId = parseInt(req.params.id, 10);
+      if (isNaN(customerId)) {
+        return res.status(400).json({ message: "Invalid customer ID" });
+      }
+
+      const result = await getRetailerCustomerDetail(retailerId, customerId);
+      if (!result) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      res.json({ success: true, customer: result });
+    } catch (error: any) {
+      logger.error("Failed to get customer detail", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * PATCH /api/pos/my-customers/:id/settings
+ * Update CRM settings (blocking, notes) for a customer.
+ */
+router.patch(
+  "/my-customers/:id/settings",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailerId = (req as any).retailer.id;
+      const customerId = parseInt(req.params.id, 10);
+      if (isNaN(customerId)) {
+        return res.status(400).json({ message: "Invalid customer ID" });
+      }
+
+      const schema = z.object({
+        isBlocked: z.boolean().optional(),
+        internalNotes: z.string().optional(),
+      });
+
+      const data = schema.parse(req.body);
+      const result = await updateCustomerSettings(retailerId, customerId, data);
+      res.json({ success: true, settings: result });
+    } catch (error: any) {
+      logger.error("Failed to update customer settings", { error: error.message });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/my-profile
+ * Get retailer profile/settings information.
+ */
+router.get(
+  "/my-profile",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailerId = (req as any).retailer.id;
+      const profile = await getRetailerById(retailerId);
+      res.json({ success: true, profile });
+    } catch (error: any) {
+      logger.error("Failed to get retailer profile", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * PATCH /api/pos/my-profile
+ * Update retailer profile/settings.
+ */
+router.patch(
+  "/my-profile",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailerId = (req as any).retailer.id;
+      const schema = z.object({
+        name: z.string().min(2).optional(),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+        logoUrl: z.string().url().optional(),
+        walletPhone: z.string().optional(),
+      });
+
+      const data = schema.parse(req.body);
+      const updated = await updateRetailer(retailerId, data);
+      
+      if (!updated) {
+        return res.status(404).json({ message: "Retailer not found" });
+      }
+      res.json({ success: true, profile: updated });
+    } catch (error: any) {
+      logger.error("Failed to update retailer profile", { error: error.message });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════
+// COMMISSION ENDPOINTS
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * GET /api/pos/my-commissions
+ * Get paginated commission history for the current retailer.
+ */
+router.get(
+  "/my-commissions",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailerId = (req as any).retailer.id;
+      const page = parseInt(req.query.page as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 20;
+      const result = await CommissionService.getCommissionHistory(retailerId, { page, limit });
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      logger.error("Failed to get commission history", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/my-commissions/:id/queue
+ * Request a payout for a pending commission (Retailer action).
+ */
+router.post(
+  "/my-commissions/:id/queue",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const commissionId = parseInt(req.params.id, 10);
+      const commission = await CommissionService.queuePayout(commissionId);
+      res.json({ success: true, commission });
+    } catch (error: any) {
+      logger.error("Failed to queue commission payout", { error: error.message });
+      const status = error.status || 500;
+      res.status(status).json({ message: error.message || "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/my-commissions/:id/pay
+ * Process a queued commission via PawaPay (Admin only).
+ */
+router.post(
+  "/my-commissions/:id/pay",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const commissionId = parseInt(req.params.id, 10);
+      const commission = await CommissionService.processPayout(commissionId);
+      res.json({ success: true, commission });
+    } catch (error: any) {
+      logger.error("Failed to process commission payout", { error: error.message });
+      res.status(500).json({ message: error.message || "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/security-alerts
+ * Get all security alerts for the current retailer.
+ */
+router.get(
+  "/security-alerts",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const alerts = await getRetailerSecurityAlerts(retailer.id);
+      res.json({ success: true, alerts });
+    } catch (error: any) {
+      logger.error("getRetailerSecurityAlerts failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
 
 /**
  * POST /api/pos/my-key/regenerate

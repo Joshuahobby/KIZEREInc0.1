@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { apiGet, apiPost } from "@/lib/api";
 import { AppLayout } from "@/components/layout/admin-layout";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { StatsCard } from "@/components/dashboard/stats-card";
@@ -15,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Users, ArrowRightLeft, Activity, Store, Plus, TrendingUp, Calendar, Key, RefreshCw, CheckCircle2, Copy } from "lucide-react";
+import { Package, Users, ArrowRightLeft, Activity, Store, Plus, TrendingUp, Calendar, Key, RefreshCw, CheckCircle2, Copy, Wallet, Clock } from "lucide-react";
 import { format, subDays, startOfMonth, startOfYear } from "date-fns";
 import { useLocation } from "wouter";
 import type { Retailer } from "@shared/schema";
@@ -62,6 +63,32 @@ interface RetailerStats {
     notes: string | null;
     timestamp: string;
   }[];
+  trends: {
+    registrations: { date: string; count: number }[];
+    transfers: { date: string; count: number }[];
+  };
+  securityAlerts: {
+    id: number;
+    productId: number;
+    productName: string;
+    serialNumber: string;
+    event: string;
+    notes: string | null;
+    timestamp: string;
+    reportedBy: string;
+  }[];
+}
+
+interface PosSecurityAlert {
+  id: number;
+  retailerId: number;
+  productId: number;
+  serialNumber: string;
+  productName: string;
+  type: "blocked_registration" | "blocked_transfer";
+  reason: string;
+  timestamp: string;
+  details: any;
 }
 
 interface PosProduct {
@@ -76,12 +103,13 @@ interface PosProduct {
 
 // Custom tooltip for category donut chart
 function CategoryTooltip({ active, payload, total }: { active?: boolean; payload?: any[]; total: number }) {
+  const { t } = useLanguage();
   if (active && payload && payload.length) {
     return (
       <div className="bg-card p-3 border shadow-sm rounded-lg">
         <p className="font-medium text-sm">{payload[0].name}</p>
         <p className="text-sm text-muted-foreground">
-          Count: <span className="font-semibold text-foreground">{payload[0].value}</span>
+          {t("pos.count")}: <span className="font-semibold text-foreground">{payload[0].value}</span>
         </p>
         <p className="text-sm text-muted-foreground">
           Share: <span className="font-semibold text-foreground">
@@ -96,6 +124,7 @@ function CategoryTooltip({ active, payload, total }: { active?: boolean; payload
 
 // Status badge with appropriate color
 function StatusBadge({ status }: { status: string }) {
+  const { t } = useLanguage();
   const variants: Record<string, string> = {
     registered: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
     transferred: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
@@ -108,7 +137,7 @@ function StatusBadge({ status }: { status: string }) {
       variant="outline"
       className={`text-[10px] capitalize font-semibold ${variants[status] || ""}`}
     >
-      {status}
+      {t(`pos.inventory.status${status.charAt(0).toUpperCase() + status.slice(1)}`)}
     </Badge>
   );
 }
@@ -147,6 +176,11 @@ export default function RetailerDashboard() {
     queryKey: ["/api/pos/my-products"],
     queryFn: () => apiRequest("/api/pos/my-products"),
   });
+  
+  const { data: alertsData, isLoading: alertsLoading } = useQuery<{ success: boolean; alerts: PosSecurityAlert[] }>({
+    queryKey: ["/api/pos/security-alerts"],
+    queryFn: () => apiRequest("/api/pos/security-alerts"),
+  });
 
   const { toast } = useToast();
   const [copiedKey, setCopiedKey] = React.useState(false);
@@ -156,8 +190,8 @@ export default function RetailerDashboard() {
       navigator.clipboard.writeText(statsData.retailer.apiKey);
       setCopiedKey(true);
       toast({
-        title: "API Key copied",
-        description: "Copied to clipboard successfully.",
+        title: t("pos.apiKeyCopied") || "API Key copied",
+        description: t("pos.apiKeyCopiedDesc") || "Copied to clipboard successfully.",
       });
       setTimeout(() => setCopiedKey(false), 2000);
     }
@@ -170,14 +204,14 @@ export default function RetailerDashboard() {
     },
     onSuccess: () => {
       toast({
-        title: "API Key regenerated",
-        description: "Your new API key is active. Update your integrations immediately.",
+        title: t("pos.apiKeyRegenerated") || "API Key regenerated",
+        description: t("pos.apiKeyRegeneratedDesc") || "Your new API key is active. Update your integrations immediately.",
       });
       refetchStats();
     },
     onError: (err) => {
       toast({
-        title: "Failed to regenerate",
+        title: t("pos.regenerateError") || "Failed to regenerate",
         description: err.message,
         variant: "destructive",
       });
@@ -227,7 +261,7 @@ export default function RetailerDashboard() {
               <Select value={dateRange} onValueChange={setDateRange}>
                 <SelectTrigger className="w-[160px] bg-background">
                   <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="Select timeframe" />
+                  <SelectValue placeholder={t("pos.selectTimeframe") || "Select timeframe"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t("common.allTime") || "All Time"}</SelectItem>
@@ -238,7 +272,7 @@ export default function RetailerDashboard() {
                 </SelectContent>
               </Select>
               <Button
-                onClick={() => navigate("/pos")}
+                onClick={() => navigate("/retailer/products?add=true")}
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" />
@@ -252,15 +286,98 @@ export default function RetailerDashboard() {
                 <Store className="h-4 w-4" />
                 {t("pos.openTerminal") || "Open POS"}
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/retailer/customers")}
+                className="gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary"
+              >
+                <Users className="h-4 w-4" />
+                {t("pos.customers") || "Customers"}
+              </Button>
             </div>
           }
         />
+
+        {/* Security Watchlist (High Priority Alerts) */}
+        {alertsData?.alerts && alertsData.alerts.length > 0 && (
+          <Card className="border-red-200 bg-red-50/30 dark:bg-red-950/10 dark:border-red-900/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold text-red-600 dark:text-red-400 flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                {t("pos.securityWatchlist") || "Security Watchlist"}
+              </CardTitle>
+              <CardDescription className="text-xs text-red-600/70 dark:text-red-400/70">
+                {t("pos.securityAlertsDesc") || "High-priority alerts for items you registered that have been reported stolen."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {alertsData.alerts.map((alert) => (
+                  <div key={alert.id} className="flex items-center justify-between bg-background/50 p-3 rounded-xl border border-red-100 dark:border-red-900/20">
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                      <div>
+                        <p className="text-sm font-bold">{alert.productName}</p>
+                        <p className="text-xs font-mono text-muted-foreground">{alert.serialNumber}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="destructive" className="text-[10px] uppercase font-black tracking-tighter">
+                        {t("pos.stolenReport") || "Stolen Report"}
+                      </Badge>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {format(new Date(alert.timestamp), "MMM d, HH:mm")}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Security Alert History (Persistent) */}
+        {alertsData?.alerts && alertsData.alerts.length > 0 && (
+          <Card className="border-orange-200 bg-orange-50/20 dark:bg-orange-950/10 dark:border-orange-900/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold text-orange-600 dark:text-orange-400 flex items-center gap-2">
+                <Activity className="h-4 w-4" />
+                {t("pos.securityAlertHistory") || "Security Alert History"}
+              </CardTitle>
+              <CardDescription className="text-xs text-orange-600/70 dark:text-orange-400/70">
+                {t("pos.securityAlertHistoryDesc") || "History of blocked attempts involving stolen items."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {alertsData.alerts.slice(0, 6).map((alert) => (
+                  <div key={alert.id} className="bg-background/50 p-3 rounded-xl border border-orange-100 dark:border-orange-900/20">
+                    <div className="flex items-center justify-between mb-2">
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold text-orange-600 border-orange-200">
+                        {alert.type === "blocked_registration" ? t("pos.blockedRegistration") || "Blocked Registration" : t("pos.blockedTransfer") || "Blocked Transfer"}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground font-medium">
+                        {format(new Date(alert.timestamp), "MMM d, HH:mm")}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold truncate">{alert.productName}</p>
+                      <p className="text-xs font-mono text-muted-foreground">{alert.serialNumber}</p>
+                      <p className="text-[11px] mt-2 text-orange-800 dark:text-orange-300 italic">{alert.reason}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Stats Grid */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <StatsCard
             title={t("pos.totalProducts") || "Total Products"}
             value={statsLoading ? "..." : stats?.totalProducts || 0}
+            trendData={stats?.trends.registrations.map(d => d.count)}
             icon={<Package className="h-5 w-5" />}
             iconBgClass="bg-blue-100 dark:bg-blue-900/30"
             iconTextClass="text-blue-600 dark:text-blue-400"
@@ -269,6 +386,8 @@ export default function RetailerDashboard() {
           <StatsCard
             title={t("pos.totalTransfers") || "Total Transfers"}
             value={statsLoading ? "..." : stats?.totalTransfers || 0}
+            trendData={stats?.trends.transfers.map(d => d.count)}
+            chartColor="#10b981"
             icon={<ArrowRightLeft className="h-5 w-5" />}
             iconBgClass="bg-green-100 dark:bg-green-900/30"
             iconTextClass="text-green-600 dark:text-green-400"
@@ -281,6 +400,7 @@ export default function RetailerDashboard() {
             iconBgClass="bg-purple-100 dark:bg-purple-900/30"
             iconTextClass="text-purple-600 dark:text-purple-400"
             isLoading={statsLoading}
+            onClick={() => navigate("/retailer/customers")}
           />
           <StatsCard
             title={t("pos.categories") || "Categories"}
@@ -393,7 +513,7 @@ export default function RetailerDashboard() {
                             border: "1px solid hsl(var(--border))",
                             color: "hsl(var(--foreground))",
                           }}
-                          formatter={(value: number) => [`${value}`, "Count"]}
+                          formatter={(value: number) => [`${value}`, t("pos.count") || "Count"]}
                         />
                         <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
                           {statusChartData.map((entry, index) => (
@@ -426,7 +546,7 @@ export default function RetailerDashboard() {
               <p className="text-muted-foreground mb-6 max-w-md">
                 {t("pos.welcomeDesc") || "Start registering products through the POS terminal to see your activity, stats, and analytics here."}
               </p>
-              <Button onClick={() => navigate("/pos")} className="gap-2">
+              <Button onClick={() => navigate("/retailer/products?add=true")} className="gap-2">
                 <Plus className="h-4 w-4" />
                 {t("pos.registerFirstProduct") || "Register Your First Product"}
               </Button>
@@ -440,10 +560,10 @@ export default function RetailerDashboard() {
             <CardHeader className="pb-3">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Key className="h-5 w-5 text-muted-foreground" />
-                API & Integration Settings
+                {t("pos.apiSettingsTitle") || "API & Integration Settings"}
               </CardTitle>
               <CardDescription>
-                Use this API key to connect your local POS system. Your current plan is <Badge variant="secondary" className="ml-1 capitalize">{statsData.retailer.subscriptionPlan}</Badge>.
+                {t("pos.apiKeyDescription") || "Use this API key to connect your local POS system. Your current plan is"} <Badge variant="secondary" className="ml-1 capitalize">{statsData.retailer.subscriptionPlan}</Badge>.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -471,14 +591,14 @@ export default function RetailerDashboard() {
                     variant="outline" 
                     className="w-full gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20"
                     onClick={() => {
-                      if (window.confirm("Are you sure? This will instantly break any existing integrations using the old key.")) {
+                      if (window.confirm(t("pos.regenerateConfirm") || "Are you sure? This will instantly break any existing integrations using the old key.")) {
                         regenerateMutation.mutate();
                       }
                     }}
                     disabled={regenerateMutation.isPending}
                   >
                     <RefreshCw className={`h-4 w-4 ${regenerateMutation.isPending ? 'animate-spin' : ''}`} />
-                    Regenerate Key
+                    {t("pos.regenerateKey") || "Regenerate Key"}
                   </Button>
                 </div>
               </div>
@@ -575,10 +695,10 @@ export default function RetailerDashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-xs">{t("pos.serial") || "Serial"}</TableHead>
-                        <TableHead className="text-xs">{t("pos.productName") || "Name"}</TableHead>
-                        <TableHead className="text-xs hidden sm:table-cell">{t("pos.category") || "Category"}</TableHead>
-                        <TableHead className="text-xs">{t("pos.status") || "Status"}</TableHead>
+                        <TableHead className="text-xs">{t("pos.inventory.serialNumber")}</TableHead>
+                        <TableHead className="text-xs">{t("pos.inventory.productName")}</TableHead>
+                        <TableHead className="text-xs hidden sm:table-cell">{t("pos.inventory.category")}</TableHead>
+                        <TableHead className="text-xs">{t("pos.inventory.status")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -609,7 +729,135 @@ export default function RetailerDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <CommissionCard />
       </motion.div>
     </AppLayout>
+  );
+}
+
+// ─── Commission Card ───────────────────────────────────────────────────────────
+
+const STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  pending:    { label: "Pending",    className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  queued:     { label: "Queued",     className: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+  processing: { label: "Processing", className: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" },
+  paid:       { label: "Paid",       className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  failed:     { label: "Failed",     className: "bg-destructive/10 text-destructive border-destructive/20" },
+};
+
+function CommissionCard() {
+  const { t } = useLanguage();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["/api/pos/my-commissions"],
+    queryFn: () => apiGet<{ data: any[]; total: number }>("/api/pos/my-commissions?page=1&limit=10"),
+  });
+
+  const commissions = data?.data || [];
+  const totalPending = commissions
+    .filter((c: any) => c.status === "pending")
+    .reduce((sum: number, c: any) => sum + parseFloat(c.commissionAmount || "0"), 0);
+
+  const queueMutation = useMutation({
+    mutationFn: (id: number) => apiPost(`/api/pos/my-commissions/${id}/queue`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pos/my-commissions"] });
+      toast({ title: t("pos.commissions.payoutQueued") || "Payout Requested", description: t("pos.commissions.payoutQueuedDesc") || "Your commission payout has been queued for processing." });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message || "Failed to queue payout.", variant: "destructive" });
+    },
+  });
+
+  return (
+    <Card className="border-border/50 shadow-premium overflow-hidden bg-background/50 backdrop-blur-md rounded-3xl">
+      <CardHeader className="border-b border-border/50 bg-muted/20 pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+              <Wallet className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">{t("pos.commissions.title") || "Commission Payouts"}</CardTitle>
+              <p className="text-sm text-muted-foreground">{t("pos.commissions.subtitle") || "Track earnings and request payouts to your MoMo wallet."}</p>
+            </div>
+          </div>
+          {totalPending > 0 && (
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">{t("pos.commissions.totalPending") || "Total Pending"}</p>
+              <p className="text-xl font-black text-emerald-600">RWF {totalPending.toLocaleString()}</p>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {isLoading ? (
+          <div className="p-6 space-y-3">
+            {[1, 2, 3].map(i => <Skeleton key={i} className="h-10 w-full rounded-xl" />)}
+          </div>
+        ) : commissions.length === 0 ? (
+          <div className="text-center py-10 px-4">
+            <Clock className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="font-bold text-sm">{t("pos.commissions.noCommissions") || "No commissions recorded yet."}</p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+              {t("pos.commissions.noCommissionsHint") || "Commissions are generated when you record a sale with a transaction value."}
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30">
+                  <TableHead className="pl-6 text-xs font-semibold uppercase tracking-wider">Date</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider">{t("pos.commissions.transactionValue") || "Transaction"}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider">{t("pos.commissions.commissionAmount") || "Commission"}</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="text-right pr-6"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {commissions.map((c: any) => {
+                  const badge = STATUS_BADGE[c.status] || STATUS_BADGE.pending;
+                  return (
+                    <TableRow key={c.id} className="hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0">
+                      <TableCell className="pl-6 text-sm text-muted-foreground">
+                        {format(new Date(c.createdAt), "MMM d, yyyy")}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {c.currency} {parseFloat(c.transactionValue).toLocaleString()}
+                      </TableCell>
+                      <TableCell className="font-bold text-emerald-600">
+                        +{c.currency} {parseFloat(c.commissionAmount).toLocaleString()}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-widest ${badge.className}`}>
+                          {badge.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        {c.status === "pending" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-xl text-xs h-7"
+                            onClick={() => queueMutation.mutate(c.id)}
+                            disabled={queueMutation.isPending}
+                          >
+                            {t("pos.commissions.requestPayout") || "Request Payout"}
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
