@@ -4,6 +4,7 @@ import { insertItemSchema } from "@shared/schema";
 import { z } from "zod";
 import { createLogger } from "../utils/logger";
 import { OCRService } from "../services/ocr.service";
+import { QRCodeService } from "../services/qrcode.service";
 
 // Schema for updating an item - restricts fields that can be modified
 const updateItemSchema = z.object({
@@ -321,6 +322,103 @@ router.post("/:id/mark-found", async (req, res) => {
   } catch (error) {
     logger.error('Failed to mark item as found', { error: error });
     res.status(500).json({ message: "Failed to mark item as found" });
+  }
+});
+
+/**
+ * GET /api/items/:id/qrcode
+ * Generate a QR code for the item's public verification page
+ */
+router.get("/:id/qrcode", async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid item ID" });
+    }
+
+    const item = await storage.getItem(id);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    // Only allow owner or admin to generate the QR code
+    const isOwner = item.userId === req.user!.id;
+    const isAdmin = ['Admin', 'Agent'].includes(req.user!.role);
+
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+    const verificationUrl = `${baseUrl}/verify/${item.uniqueIdentifier}`;
+    
+    // Support multiple formats via query param
+    const format = req.query.format as string;
+    
+    if (format === 'svg') {
+      const svg = await QRCodeService.generateSVG(verificationUrl);
+      res.setHeader('Content-Type', 'image/svg+xml');
+      return res.send(svg);
+    }
+    
+    const dataUrl = await QRCodeService.generateDataURL(verificationUrl);
+    res.json({ dataUrl, verificationUrl });
+  } catch (error) {
+    logger.error('Failed to generate QR code', { error });
+    res.status(500).json({ message: "Failed to generate QR code" });
+  }
+});
+
+/**
+ * GET /api/items/public/:uniqueIdentifier
+ * Public endpoint to verify an item's registration status via QR code
+ */
+router.get("/public/:uniqueIdentifier", async (req, res) => {
+  try {
+    const { uniqueIdentifier } = req.params;
+    if (!uniqueIdentifier) {
+      return res.status(400).json({ message: "Identifier required" });
+    }
+
+    // Check the lost-and-found items registry first
+    const item = await storage.getItemByUniqueIdentifier(uniqueIdentifier);
+    if (item) {
+      return res.json({
+        name: item.name,
+        category: item.category,
+        status: item.status,
+        isRegistered: true,
+        registeredAt: item.registeredAt,
+        isFlagged: item.status === 'Lost',
+        description: item.description,
+        imageCount: item.imageUrls?.length || 0,
+        source: 'registry',
+      });
+    }
+
+    // Fall back to POS product registry (lookup by serial number)
+    const posProduct = await storage.getPosProductBySerial(uniqueIdentifier);
+    if (posProduct) {
+      return res.json({
+        name: posProduct.name,
+        category: posProduct.category || 'Product',
+        status: posProduct.status,
+        isRegistered: true,
+        registeredAt: posProduct.registrationDate,
+        isFlagged: posProduct.status === 'stolen',
+        description: null,
+        imageCount: 0,
+        source: 'pos',
+      });
+    }
+
+    return res.status(404).json({
+      message: "Item not found",
+      description: "This item is not registered in the KIZERE global registry."
+    });
+  } catch (error) {
+    logger.error('Public verification failed', { error });
+    res.status(500).json({ message: "Verification service error" });
   }
 });
 

@@ -46,7 +46,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true, s
       // Create a URL that the QR code should point to
       // This could be a link to view the item details in the app
       const baseUrl = window.location.origin;
-      const qrUrl = `${baseUrl}/items/${itemIdentifier}`;
+      const qrUrl = `${baseUrl}/verify/${itemIdentifier}`;
       setQRValue(qrUrl);
     }
   }, [itemIdentifier]);
@@ -109,7 +109,7 @@ export function QRCodeGenerator({ itemIdentifier, itemName, showHeader = true, s
   const refreshQRCode = () => {
     const baseUrl = window.location.origin;
     const randomSuffix = Math.random().toString(36).substring(2, 8);
-    const qrUrl = `${baseUrl}/items/${itemIdentifier}?ref=${randomSuffix}`;
+    const qrUrl = `${baseUrl}/verify/${itemIdentifier}?ref=${randomSuffix}`;
     setQRValue(qrUrl);
 
     toast({

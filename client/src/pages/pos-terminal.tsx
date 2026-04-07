@@ -21,6 +21,7 @@ import {
   Store,
   Printer,
   LayoutDashboard,
+  Activity,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -72,6 +73,10 @@ export default function PosTerminal() {
   const [sku, setSku] = React.useState("");
   const [isScannerOpen, setIsScannerOpen] = React.useState(false);
 
+  // Security
+  const [isStolen, setIsStolen] = React.useState(false);
+  const [alertReason, setAlertReason] = React.useState("");
+
   // Result
   const [registeredProduct, setRegisteredProduct] = React.useState<RegisteredProduct | null>(null);
   const [verifyUrl, setVerifyUrl] = React.useState<string>("");
@@ -112,7 +117,7 @@ export default function PosTerminal() {
         });
       }
     } catch (err: any) {
-      toast({ title: t("pos.error", "Error"), description: err.message || "Failed to lookup customer", variant: "destructive" });
+      toast({ title: t("pos.error", "Error"), description: err.message || t("pos.customerLookupError", "Failed to lookup customer"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -153,12 +158,22 @@ export default function PosTerminal() {
         setStep("receipt");
         toast({ title: t("pos.registrationSuccess", "Product Registered!"), description: t("pos.registrationSuccessDesc", "Product has been registered to the customer") });
 
-        // Set verification URL for QR code
-        const productId = `KZR-${String(res.product.id).padStart(6, "0")}`;
-        setVerifyUrl(`${window.location.origin}/verify/${productId}`);
+        // Set verification URL for QR code — use serial number so the public
+        // endpoint can look it up in posProducts by serialNumber
+        setVerifyUrl(`${window.location.origin}/verify/${res.product.serialNumber}`);
       }
     } catch (err: any) {
-      toast({ title: t("pos.error", "Error"), description: err.message || "Registration failed", variant: "destructive" });
+      if (err.status === 403) {
+        setIsStolen(true);
+        setAlertReason(err.message || t("pos.stolenAlert", "This item has been reported as stolen!"));
+        toast({ 
+          title: t("pos.securityAlert", "SECURITY ALERT"), 
+          description: err.message || t("pos.stolenAlert", "This item has been reported as stolen!"), 
+          variant: "destructive" 
+        });
+      } else {
+        toast({ title: t("pos.error", "Error"), description: err.message || t("pos.registrationError", "Registration failed"), variant: "destructive" });
+      }
     } finally {
       setLoading(false);
     }
@@ -174,7 +189,7 @@ export default function PosTerminal() {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>KIZERE Receipt</title>
+        <title>${t("pos.title", "KIZERE POS")} - ${t("pos.receiptConfirm", "Receipt")}</title>
         <style>
           body { font-family: monospace; max-width: 300px; margin: 0 auto; padding: 16px; }
           .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 12px; margin-bottom: 12px; }
@@ -190,10 +205,10 @@ export default function PosTerminal() {
       <body>
         <div class="header">
           <h1>KIZERE POS</h1>
-          <p style="margin:4px 0 0;font-size:11px;color:#666;">Product Registration Receipt</p>
+          <p style="margin:4px 0 0;font-size:11px;color:#666;">${t("pos.receiptDesc", "Product Registration Receipt")}</p>
         </div>
         ${printContent.innerHTML}
-        ${verifyUrl ? `<div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(verifyUrl)}" alt="Verify QR" /></div><p style="text-align:center;font-size:10px;color:#999;">Scan to verify ownership</p>` : ""}
+        ${verifyUrl ? `<div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(verifyUrl)}" alt="Verify QR" /></div><p style="text-align:center;font-size:10px;color:#999;">${t("pos.scanToVerify", "Scan to verify ownership")}</p>` : ""}
         <div class="footer">Verified by KIZERE &bull; kizere.rw<br/>${new Date().toLocaleString()}</div>
       </body>
       </html>
@@ -218,6 +233,8 @@ export default function PosTerminal() {
     setSku("");
     setRegisteredProduct(null);
     setVerifyUrl("");
+    setIsStolen(false);
+    setAlertReason("");
   };
 
   // ─── Step indicator ───
@@ -248,7 +265,7 @@ export default function PosTerminal() {
             <Link href="/retailer/dashboard">
               <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-sm font-medium">
                 <LayoutDashboard className="w-4 h-4" />
-                <span className="hidden sm:inline">Dashboard</span>
+                <span className="hidden sm:inline">{t("nav.dashboard", "Dashboard")}</span>
               </button>
             </Link>
             <div className="text-right text-xs text-slate-400">
@@ -287,8 +304,37 @@ export default function PosTerminal() {
           ))}
         </div>
 
+        {/* Theft Alert Card */}
+        {isStolen && (
+          <div className="mb-6 bg-red-600/20 border-2 border-red-500 rounded-2xl p-6 text-center animate-in zoom-in duration-300">
+            <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center mx-auto mb-4 animate-pulse shadow-lg shadow-red-600/50">
+              <Activity className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-black text-red-500 mb-2 uppercase tracking-tighter">
+              {t("pos.securityAlert", "SECURITY ALERT")}
+            </h2>
+            <p className="text-white font-bold text-lg mb-4">{alertReason}</p>
+            <div className="bg-black/40 p-4 rounded-xl border border-red-500/30 text-left mb-6">
+              <p className="text-xs text-red-400 font-bold uppercase mb-2 italic">
+                {t("pos.safeProtocol", "SAFETY PROTOCOL:")}
+              </p>
+              <ul className="text-xs space-y-1 text-slate-300 list-disc pl-4">
+                <li>{t("pos.protocol1", "Do not confront the individual.")}</li>
+                <li>{t("pos.protocol2", "Politely decline the registration as 'system blocked'.")}</li>
+                <li>{t("pos.protocol3", "This attempt has been logged for security purposes.")}</li>
+              </ul>
+            </div>
+            <button
+              onClick={resetFlow}
+              className="px-8 py-3 bg-white text-red-600 font-bold rounded-xl hover:bg-slate-100 transition-colors"
+            >
+              {t("pos.dismissAlert", "Dismiss & Reset")}
+            </button>
+          </div>
+        )}
+
         {/* Step Content */}
-        <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-2xl">
+        <div className={`bg-slate-800/50 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-2xl ${isStolen ? 'opacity-20 pointer-events-none grayscale' : ''}`}>
           {/* ─── STEP: Customer ─── */}
           {step === "customer" && (
             <div className="space-y-6 animate-in fade-in duration-300">
@@ -339,7 +385,7 @@ export default function PosTerminal() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+250 7XX XXX XXX"
-                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono"
                     />
                   </div>
                   <div>
@@ -349,7 +395,7 @@ export default function PosTerminal() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="email@example.com"
-                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
+                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono"
                     />
                   </div>
                 </div>
@@ -646,7 +692,7 @@ export default function PosTerminal() {
                 </button>
                 <button
                   onClick={() => {
-                    const receiptText = `KIZERE Receipt\nProduct: ${registeredProduct.name}\nSerial: ${registeredProduct.serialNumber}\nOwner: ${customer?.fullName}\nID: KZR-${String(registeredProduct.id).padStart(6, "0")}\nDate: ${new Date().toLocaleDateString()}`;
+                    const receiptText = `${t("pos.title", "KIZERE POS")} ${t("pos.confirmTitle", "Registration")}\n${t("pos.productName", "Product")}: ${registeredProduct.name}\n${t("pos.serialNumber", "Serial")}: ${registeredProduct.serialNumber}\n${t("pos.owner", "Owner")}: ${customer?.fullName}\nID: KZR-${String(registeredProduct.id).padStart(6, "0")}\n${t("pos.registeredAt", "Date")}: ${new Date().toLocaleDateString()}`;
                     navigator.clipboard.writeText(receiptText);
                     toast({ title: t("pos.copied", "Copied!"), description: t("pos.copiedDesc", "Receipt copied to clipboard") });
                   }}
