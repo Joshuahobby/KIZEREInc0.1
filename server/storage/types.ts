@@ -213,6 +213,7 @@ export interface IStorage {
   getPosProduct(id: number): Promise<PosProduct | undefined>;
   getPosProductByIdAndRetailer(id: number, retailerId?: number): Promise<PosProduct | undefined>;
   getPosProductBySerial(serialNumber: string): Promise<PosProduct | undefined>;
+  getPosProductBySerialWithRetailer(serialNumber: string): Promise<(PosProduct & { retailerName: string | null }) | undefined>;
   getRetailerProducts(retailerId: number): Promise<PosProduct[]>;
   getOwnerProducts(ownerId: number): Promise<PosProduct[]>;
   createPosProduct(product: InsertPosProduct): Promise<PosProduct>;

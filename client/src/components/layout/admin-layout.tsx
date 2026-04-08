@@ -253,6 +253,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
       ];
       if (isAdmin) {
         posItems.push({ title: "POS Analytics", href: "/admin/pos-analytics", icon: <BarChart3 className="h-5 w-5" /> });
+        posItems.push({ title: "Commissions", href: "/admin/commissions", icon: <CreditCard className="h-5 w-5" /> });
       }
       categories.push({ title: "RETAIL HUB", items: posItems });
     }

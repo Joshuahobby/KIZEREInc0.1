@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { retailerCommissions, retailers } from "@shared/schema";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc, count, and } from "drizzle-orm";
 import { initiatePayout, generateDepositId } from "../utils/pawapay";
 import { createLogger } from "../utils/logger";
 
@@ -163,5 +163,48 @@ export class CommissionService {
       limit,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  /**
+   * Admin: get all commissions across all retailers, joined with retailer name.
+   */
+  static async getAllCommissions(params: { page: number; limit: number; status?: string }) {
+    const { page, limit, status } = params;
+    const offset = (page - 1) * limit;
+
+    const where = status ? eq(retailerCommissions.status, status) : undefined;
+
+    const [countResult] = await db
+      .select({ count: count() })
+      .from(retailerCommissions)
+      .where(where);
+
+    const total = Number(countResult?.count ?? 0);
+
+    const data = await db
+      .select({
+        id:               retailerCommissions.id,
+        retailerId:       retailerCommissions.retailerId,
+        retailerName:     retailers.name,
+        walletPhone:      retailers.walletPhone,
+        ledgerEntryId:    retailerCommissions.ledgerEntryId,
+        transactionValue: retailerCommissions.transactionValue,
+        commissionAmount: retailerCommissions.commissionAmount,
+        currency:         retailerCommissions.currency,
+        status:           retailerCommissions.status,
+        pawapayPayoutId:  retailerCommissions.pawapayPayoutId,
+        payoutDestination:retailerCommissions.payoutDestination,
+        failureReason:    retailerCommissions.failureReason,
+        createdAt:        retailerCommissions.createdAt,
+        paidAt:           retailerCommissions.paidAt,
+      })
+      .from(retailerCommissions)
+      .leftJoin(retailers, eq(retailerCommissions.retailerId, retailers.id))
+      .where(where)
+      .orderBy(desc(retailerCommissions.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 }

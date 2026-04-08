@@ -103,6 +103,7 @@ const RetailerCustomers = lazyWithRetry(() => import("@/pages/retailer-customers
 const RetailerSettings = lazyWithRetry(() => import("@/pages/retailer-settings"));
 const ClaimAccountPage = lazyWithRetry(() => import("@/pages/claim-account"));
 const PosAnalyticsPage = lazyWithRetry(() => import("@/pages/admin/pos-analytics"));
+const AdminCommissionsPage = lazyWithRetry(() => import("@/pages/admin/commissions"));
 const PublicItemVerifyPage = lazyWithRetry(() => import("@/pages/PublicItemVerifyPage"));
 
 function App() {
@@ -240,6 +241,7 @@ function App() {
                   <ProtectedRoute path="/retailer/settings" component={RetailerSettings} requiredRole={['Retailer', 'Admin']} />
                   <ProtectedRoute path="/admin/retailers" component={RetailerManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/pos-analytics" component={PosAnalyticsPage} requiredRole="Admin" />
+                  <ProtectedRoute path="/admin/commissions" component={AdminCommissionsPage} requiredRole="Admin" />
 
                   {/* Admin routes - Consolidated to UnifiedDashboard */}
                   <ProtectedRoute path="/admin" component={UnifiedDashboard} requiredRole="Admin" />

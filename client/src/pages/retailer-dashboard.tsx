@@ -640,7 +640,7 @@ export default function RetailerDashboard() {
                         <div>
                           <p className="text-sm font-medium capitalize">{activity.event.replace("_", " ")}</p>
                           <p className="text-xs text-muted-foreground">
-                            KZR-{String(activity.productId).padStart(6, "0")}
+                            POS-{String(activity.productId).padStart(6, "0")}
                           </p>
                         </div>
                       </div>

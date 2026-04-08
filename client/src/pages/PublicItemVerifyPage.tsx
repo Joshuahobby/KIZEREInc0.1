@@ -20,6 +20,7 @@ interface PublicItemInfo {
   description?: string;
   imageCount: number;
   source?: 'registry' | 'pos';
+  retailerName?: string | null;
 }
 
 export default function PublicItemVerifyPage() {
@@ -171,8 +172,14 @@ export default function PublicItemVerifyPage() {
                       <Package className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">Registry</p>
-                      <p className="font-semibold text-sm">{item.source === 'pos' ? 'POS Product' : 'Lost & Found'}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">
+                        {item.source === 'pos' ? 'Sold By' : 'Registry'}
+                      </p>
+                      <p className="font-semibold text-sm">
+                        {item.source === 'pos'
+                          ? (item.retailerName || 'KIZERE Retailer')
+                          : 'Lost & Found'}
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -116,7 +116,7 @@ export const BulkReceiptPrinter = forwardRef<BulkReceiptPrinterHandle, BulkRecei
           <div className="field border-none">
             <span className="label">Digital Identity</span>
             <span className="value mono digital-id">
-              KZR-{String(product.id).padStart(6, "0")}
+              POS-{String(product.id).padStart(6, "0")}
             </span>
           </div>
           

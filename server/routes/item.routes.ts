@@ -5,6 +5,8 @@ import { z } from "zod";
 import { createLogger } from "../utils/logger";
 import { OCRService } from "../services/ocr.service";
 import { QRCodeService } from "../services/qrcode.service";
+import { config } from "../config";
+import { publicVerifyLimiter } from "../middleware/claim-rate-limit.middleware";
 
 // Schema for updating an item - restricts fields that can be modified
 const updateItemSchema = z.object({
@@ -349,7 +351,7 @@ router.get("/:id/qrcode", async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const baseUrl = process.env.APP_URL || `${req.protocol}://${req.get('host')}`;
+    const baseUrl = config.APP_URL;
     const verificationUrl = `${baseUrl}/verify/${item.uniqueIdentifier}`;
     
     // Support multiple formats via query param
@@ -373,7 +375,7 @@ router.get("/:id/qrcode", async (req, res) => {
  * GET /api/items/public/:uniqueIdentifier
  * Public endpoint to verify an item's registration status via QR code
  */
-router.get("/public/:uniqueIdentifier", async (req, res) => {
+router.get("/public/:uniqueIdentifier", publicVerifyLimiter, async (req, res) => {
   try {
     const { uniqueIdentifier } = req.params;
     if (!uniqueIdentifier) {
@@ -383,6 +385,15 @@ router.get("/public/:uniqueIdentifier", async (req, res) => {
     // Check the lost-and-found items registry first
     const item = await storage.getItemByUniqueIdentifier(uniqueIdentifier);
     if (item) {
+      if (item.status === 'Lost') {
+        logger.warn('Stolen/lost item lookup via public verify', {
+          identifier: uniqueIdentifier,
+          itemId: item.id,
+          status: item.status,
+          ip: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
       return res.json({
         name: item.name,
         category: item.category,
@@ -397,8 +408,17 @@ router.get("/public/:uniqueIdentifier", async (req, res) => {
     }
 
     // Fall back to POS product registry (lookup by serial number)
-    const posProduct = await storage.getPosProductBySerial(uniqueIdentifier);
+    const posProduct = await storage.getPosProductBySerialWithRetailer(uniqueIdentifier);
     if (posProduct) {
+      if (posProduct.status === 'stolen') {
+        logger.warn('Stolen POS product lookup via public verify', {
+          identifier: uniqueIdentifier,
+          productId: posProduct.id,
+          status: posProduct.status,
+          ip: req.ip,
+          userAgent: req.get('user-agent'),
+        });
+      }
       return res.json({
         name: posProduct.name,
         category: posProduct.category || 'Product',
@@ -409,6 +429,7 @@ router.get("/public/:uniqueIdentifier", async (req, res) => {
         description: null,
         imageCount: 0,
         source: 'pos',
+        retailerName: posProduct.retailerName,
       });
     }
 

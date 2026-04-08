@@ -44,7 +44,7 @@ export async function notifyPosCustomer(
     const hasRealEmail = user.email && !isStubAccount;
     const hasValidPhone = user.phoneNumber && isValidRwandanPhone(user.phoneNumber);
 
-    const formattedProductId = `KZR-${String(data.productId).padStart(6, "0")}`;
+    const formattedProductId = `POS-${String(data.productId).padStart(6, "0")}`;
 
     // 2. In-App Notification (Always)
     const notificationTitle =

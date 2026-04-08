@@ -231,6 +231,7 @@ export class DatabaseStorage implements IStorage {
   getPosProduct = posOps.getPosProduct;
   getPosProductByIdAndRetailer = posOps.getPosProductByIdAndRetailer;
   getPosProductBySerial = posOps.getPosProductBySerial;
+  getPosProductBySerialWithRetailer = posOps.getPosProductBySerialWithRetailer;
   getRetailerProducts = posOps.getRetailerProducts;
   getOwnerProducts = posOps.getOwnerProducts;
   createPosProduct = posOps.createPosProduct;

@@ -59,6 +59,23 @@ export async function getPosProductBySerial(serialNumber: string): Promise<PosPr
   return product;
 }
 
+export async function getPosProductBySerialWithRetailer(
+  serialNumber: string
+): Promise<(PosProduct & { retailerName: string | null }) | undefined> {
+  const [product] = await db
+    .select()
+    .from(posProducts)
+    .where(eq(posProducts.serialNumber, serialNumber))
+    .limit(1);
+  if (!product) return undefined;
+  const [retailer] = await db
+    .select({ name: retailers.name })
+    .from(retailers)
+    .where(eq(retailers.id, product.retailerId))
+    .limit(1);
+  return { ...product, retailerName: retailer?.name ?? null };
+}
+
 export async function getRetailerProducts(retailerId: number): Promise<PosProduct[]> {
   return await db.select().from(posProducts).where(eq(posProducts.retailerId, retailerId)).orderBy(desc(posProducts.registrationDate));
 }

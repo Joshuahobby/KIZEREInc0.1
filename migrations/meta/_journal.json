@@ -36,6 +36,13 @@
       "when": 1775554854845,
       "tag": "0004_friendly_elektra",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1744070400000,
+      "tag": "0005_pos_kizere_id",
+      "breakpoints": true
     }
   ]
 }

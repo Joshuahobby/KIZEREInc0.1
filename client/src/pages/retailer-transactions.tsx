@@ -205,7 +205,7 @@ export default function RetailerTransactions() {
                               </div>
                             ) : (
                               <span className="text-xs text-muted-foreground font-mono">
-                                #{String(tx.productId).padStart(6, "0")}
+                                POS-{String(tx.productId).padStart(6, "0")}
                               </span>
                             )}
                           </TableCell>

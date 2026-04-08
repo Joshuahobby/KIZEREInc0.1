@@ -86,8 +86,33 @@ export const reportSubmissionLimiter = rateLimit({
   }
 });
 
+/**
+ * Rate limiter for the public item verify endpoint.
+ * Prevents bulk enumeration of registered items by sequential identifier guessing.
+ * 30 requests per minute per IP.
+ */
+export const publicVerifyLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: Request) => req.ip || 'unknown',
+  handler: (req: Request, res: Response) => {
+    logger.warn('Public verify rate limit exceeded', {
+      ip: req.ip,
+      identifier: req.params.uniqueIdentifier,
+    });
+    res.status(429).json({
+      status: 'error',
+      message: 'Too many lookup attempts. Please try again later.',
+      retryAfter: 1,
+    });
+  },
+});
+
 export default {
   claimSubmissionLimiter,
   claimVerificationLimiter,
-  reportSubmissionLimiter
+  reportSubmissionLimiter,
+  publicVerifyLimiter,
 };

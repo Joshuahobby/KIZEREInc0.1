@@ -41,7 +41,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { BatchImageUpload } from "@/components/item-registration/batch-image-upload";
-import { foundItemReportSchema, lostItemReportSchema, itemCategories } from "@shared/schema";
+import { foundItemReportSchema, lostItemReportSchema, itemCategories, validateIdentifierForCategory } from "@shared/schema";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/useTranslation";
 import { useAuth } from "@/hooks/use-auth";
@@ -77,6 +77,11 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
   const baseSchema = type === "lost" ? lostItemReportSchema : foundItemReportSchema;
   const schema = baseSchema.extend({
     bountyAmount: z.coerce.number().min(0).optional()
+  }).superRefine((data, ctx) => {
+    const err = validateIdentifierForCategory(data.uniqueIdentifier, data.category);
+    if (err) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: err, path: ["uniqueIdentifier"] });
+    }
   });
 
   const form = useForm({
@@ -100,6 +105,24 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
   });
 
   const itemId = form.watch("itemId");
+  const selectedCategory = form.watch("category");
+
+  const IDENTIFIER_HINTS: Record<string, { label: string; placeholder: string; hint: string }> = {
+    Phones: { label: "IMEI Number", placeholder: "e.g. 356938035643809", hint: "15-digit IMEI. Dial *#06# on the phone to reveal it." },
+    Computers: { label: "Serial Number", placeholder: "e.g. C02Q7KHTGFWM", hint: "Found on the bottom of the device or in System Info." },
+    Electronics: { label: "Serial Number", placeholder: "e.g. SN123456789", hint: "Usually on the back of the device or its original packaging." },
+    Transportation: { label: "VIN / Plate Number", placeholder: "e.g. RAB 123A", hint: "Vehicle Identification Number or license plate." },
+    Documents: { label: "Document Number", placeholder: "e.g. PC12345678", hint: "Passport, NIN, or other official document number." },
+    Wallets: { label: "Identifier", placeholder: "e.g. brand + distinguishing feature", hint: "Any unique detail that helps identify this item." },
+    Jewelry: { label: "Identifier", placeholder: "e.g. inscription or hallmark", hint: "Engraving, hallmark, or any unique marking." },
+    Keys: { label: "Identifier", placeholder: "e.g. key tag or label", hint: "Tag number, label text, or any identifier on the keyring." },
+  };
+
+  const identifierMeta = IDENTIFIER_HINTS[selectedCategory] ?? {
+    label: "Unique Identifier",
+    placeholder: "e.g. serial number, tag, or any identifying code",
+    hint: "Any serial number, tag, or code that uniquely identifies this item.",
+  };
 
   const totalSteps = 2;
 
@@ -321,6 +344,29 @@ export function ReportWizard({ type, onSubmit, isSubmitting, initialValues }: Re
                       </FormControl>
                       <FormDescription className="text-[9px] text-muted-foreground dark:text-zinc-500">
                         {type === 'found' ? t('report_wizard.contact_hint_found') : t('report_wizard.contact_hint_lost')}
+                      </FormDescription>
+                      <FormMessage className="text-[10px]" />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="uniqueIdentifier"
+                  render={({ field }) => (
+                    <FormItem className="bg-muted/40 dark:bg-zinc-900/40 border border-border/50 dark:border-white/5 rounded-3xl p-5 space-y-1">
+                      <FormLabel className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground dark:text-zinc-400">
+                        {identifierMeta.label}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={identifierMeta.placeholder}
+                          className="h-14 rounded-2xl border-border/50 dark:border-white/5 bg-background/50 dark:bg-zinc-950/50 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-zinc-600 focus:border-primary/50 dark:focus:border-zinc-700 transition-all font-medium font-mono"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-[9px] text-muted-foreground dark:text-zinc-500">
+                        {identifierMeta.hint}
                       </FormDescription>
                       <FormMessage className="text-[10px]" />
                     </FormItem>

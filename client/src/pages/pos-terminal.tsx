@@ -660,7 +660,7 @@ export default function PosTerminal() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">{t("pos.productId", "Product ID")}</span>
-                    <span className="font-mono font-bold text-emerald-600">KZR-{String(registeredProduct.id).padStart(6, "0")}</span>
+                    <span className="font-mono font-bold text-emerald-600">POS-{String(registeredProduct.id).padStart(6, "0")}</span>
                   </div>
                 </div>
 
@@ -692,7 +692,7 @@ export default function PosTerminal() {
                 </button>
                 <button
                   onClick={() => {
-                    const receiptText = `${t("pos.title", "KIZERE POS")} ${t("pos.confirmTitle", "Registration")}\n${t("pos.productName", "Product")}: ${registeredProduct.name}\n${t("pos.serialNumber", "Serial")}: ${registeredProduct.serialNumber}\n${t("pos.owner", "Owner")}: ${customer?.fullName}\nID: KZR-${String(registeredProduct.id).padStart(6, "0")}\n${t("pos.registeredAt", "Date")}: ${new Date().toLocaleDateString()}`;
+                    const receiptText = `${t("pos.title", "KIZERE POS")} ${t("pos.confirmTitle", "Registration")}\n${t("pos.productName", "Product")}: ${registeredProduct.name}\n${t("pos.serialNumber", "Serial")}: ${registeredProduct.serialNumber}\n${t("pos.owner", "Owner")}: ${customer?.fullName}\nID: POS-${String(registeredProduct.id).padStart(6, "0")}\n${t("pos.registeredAt", "Date")}: ${new Date().toLocaleDateString()}`;
                     navigator.clipboard.writeText(receiptText);
                     toast({ title: t("pos.copied", "Copied!"), description: t("pos.copiedDesc", "Receipt copied to clipboard") });
                   }}

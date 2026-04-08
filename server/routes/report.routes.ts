@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { storage } from "../storage";
-import { insertReportSchema } from "@shared/schema";
+import { insertReportSchema, validateIdentifierForCategory } from "@shared/schema";
 import { z } from "zod";
 import { createLogger } from "../utils/logger";
 import { ReportMatchingService } from "../services/report-matching.service";
@@ -94,6 +94,15 @@ router.post("/", reportSubmissionLimiter, async (req, res) => {
       return res.status(400).json({
         message: "Report date cannot be in the future"
       });
+    }
+
+    // Validate identifier format for category (when provided)
+    const identifierError = validateIdentifierForCategory(
+      validatedData.uniqueIdentifier,
+      validatedData.category
+    );
+    if (identifierError) {
+      return res.status(400).json({ message: identifierError });
     }
 
     // Set expiration date based on package (default 30 days)

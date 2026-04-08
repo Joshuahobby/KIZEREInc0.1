@@ -31,6 +31,10 @@ export default function CreateReport() {
   const [isLostRoute] = useRoute("/report-lost");
   const type: "lost" | "found" = isLostRoute ? "lost" : "found";
 
+  // Pre-fill uniqueIdentifier from ?identifier= query param (e.g. from /verify/:id stolen alert)
+  const prefillIdentifier = new URLSearchParams(window.location.search).get("identifier") || undefined;
+  const initialValues = prefillIdentifier ? { uniqueIdentifier: prefillIdentifier } : undefined;
+
   const mutation = useMutation({
     mutationFn: async ({ data, images }: { data: any; images: File[] }) => {
       // Upload images first if any
@@ -250,6 +254,7 @@ export default function CreateReport() {
                   type={type}
                   onSubmit={handleSubmit}
                   isSubmitting={mutation.isPending}
+                  initialValues={initialValues}
                 />
               </CardContent>
             </Card>

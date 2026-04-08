@@ -630,6 +630,27 @@ router.post(
 );
 
 /**
+ * GET /api/pos/admin/commissions
+ * Admin: list all commissions across all retailers with retailer name.
+ */
+router.get(
+  "/admin/commissions",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const page  = parseInt(req.query.page  as string, 10) || 1;
+      const limit = parseInt(req.query.limit as string, 10) || 25;
+      const status = req.query.status as string | undefined;
+      const result = await CommissionService.getAllCommissions({ page, limit, status });
+      res.json({ success: true, ...result });
+    } catch (error: any) {
+      logger.error("Failed to list all commissions", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
  * GET /api/pos/security-alerts
  * Get all security alerts for the current retailer.
  */

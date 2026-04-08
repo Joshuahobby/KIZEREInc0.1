@@ -361,7 +361,7 @@ export default function RetailerProducts() {
   const handleBulkExport = () => {
     const selectedProducts = products.filter(p => selectedIds.has(p.id));
     const csv = Papa.unparse(selectedProducts.map(p => ({
-      ID: `KZR-${String(p.id).padStart(6, '0')}`,
+      ID: `POS-${String(p.id).padStart(6, '0')}`,
       Name: p.name,
       Serial: p.serialNumber,
       SKU: p.sku || 'N/A',
@@ -692,7 +692,7 @@ export default function RetailerProducts() {
                             />
                           </TableCell>
                           <TableCell className="font-mono text-xs text-muted-foreground">
-                            KZR-{String(product.id).padStart(6, "0")}
+                            POS-{String(product.id).padStart(6, "0")}
                           </TableCell>
                           <TableCell className="font-mono text-xs">
                             {product.serialNumber}

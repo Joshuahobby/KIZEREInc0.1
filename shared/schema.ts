@@ -21,6 +21,44 @@ export const itemCategories = [
   'Computers', 'Transportation', 'Other'
 ] as const;
 
+/**
+ * Identifier validation rules per item category.
+ * Returns null if valid, or an error message string if invalid.
+ * Identifier is always optional — only validated when provided and non-empty.
+ */
+export const IDENTIFIER_RULES: Record<string, { pattern: RegExp; message: string }> = {
+  Phones: {
+    pattern: /^\d{15}$/,
+    message: "Phone IMEI must be exactly 15 digits (dial *#06# to find it)",
+  },
+  Computers: {
+    pattern: /^[A-Za-z0-9\-\.]{4,30}$/,
+    message: "Serial number must be 4–30 alphanumeric characters",
+  },
+  Electronics: {
+    pattern: /^[A-Za-z0-9\-\.]{4,30}$/,
+    message: "Serial number must be 4–30 alphanumeric characters",
+  },
+  Transportation: {
+    pattern: /^[A-Za-z0-9 \-]{3,20}$/,
+    message: "VIN or plate number must be 3–20 characters",
+  },
+  Documents: {
+    pattern: /^[A-Za-z0-9\-]{5,20}$/,
+    message: "Document number must be 5–20 alphanumeric characters",
+  },
+};
+
+export function validateIdentifierForCategory(
+  identifier: string | undefined | null,
+  category: string | undefined | null
+): string | null {
+  if (!identifier || identifier.trim() === "") return null; // optional field
+  const rule = IDENTIFIER_RULES[category ?? ""];
+  if (!rule) return null; // no rule for this category
+  return rule.pattern.test(identifier.trim()) ? null : rule.message;
+}
+
 // Define item statuses
 export const itemStatuses = ['Pending_Payment', 'Registered', 'Lost', 'Found', 'Recovered', 'Archived'] as const;
 
@@ -895,6 +933,8 @@ export const retailers = pgTable("retailers", {
 // POS Products table
 export const posProducts = pgTable("pos_products", {
   id: serial("id").primaryKey(),
+  // KIZERE-generated immutable trust anchor — separate from retailer-supplied serialNumber
+  kizereId: text("kizere_id").notNull().unique().$defaultFn(() => crypto.randomUUID()),
   sku: text("sku"),
   serialNumber: text("serial_number").notNull().unique(),
   name: text("name").notNull(),
@@ -908,6 +948,7 @@ export const posProducts = pgTable("pos_products", {
   metadata: json("metadata"),
 }, (table) => [
   uniqueIndex("pos_product_serial_idx").on(table.serialNumber),
+  uniqueIndex("pos_product_kizere_id_idx").on(table.kizereId),
   index("pos_product_sku_idx").on(table.sku),
   index("pos_product_retailer_idx").on(table.retailerId),
   index("pos_product_owner_idx").on(table.currentOwnerId),
