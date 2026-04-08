@@ -100,8 +100,12 @@ export default function PosTerminal() {
   const [productName, setProductName] = React.useState("");
   const [category, setCategory] = React.useState("Electronics");
   const [sku, setSku] = React.useState("");
+  const [purchasePrice, setPurchasePrice] = React.useState("");
+  const [supplier, setSupplier] = React.useState("");
   const [isScannerOpen, setIsScannerOpen] = React.useState(false);
   const [isFromInventory, setIsFromInventory] = React.useState(false);
+  const [inventoryProductId, setInventoryProductId] = React.useState<number | null>(null);
+  const [inventorySearch, setInventorySearch] = React.useState("");
 
   // Security State
   const [isStolen, setIsStolen] = React.useState(false);
@@ -257,13 +261,36 @@ export default function PosTerminal() {
       toast({ title: "Invalid ID", description: "Rwanda National ID must be exactly 16 digits.", variant: "destructive" });
       return;
     }
+
+    if (!isNewCustomer) {
+      setLoading(true);
+      try {
+        const res = await apiRequest<any>("/api/pos/check-or-create", { method: "POST", data: { nationalId } });
+        if (res.success) {
+          setCustomer(res.customer);
+          setFullName(res.customer.fullName);
+          setPhone(res.customer.phone || "");
+          setEmail(res.customer.email || "");
+          setIsNewCustomer(false);
+          setStep("product"); 
+        } else {
+          setIsNewCustomer(true);
+          setCustomer(null);
+          toast({ title: t("pos.customerNotFound", "Not Found"), description: "Please enter new details." });
+        }
+      } catch (err: any) {
+        toast({ title: "Error", description: err.message, variant: "destructive" });
+      } finally { setLoading(false); }
+      return;
+    }
+
     if (!fullName) {
       toast({ title: "Missing Name", description: "Please enter the customer's full name.", variant: "destructive" });
       return;
     }
     if (!isOnline) {
       setCustomer({ id: -1, fullName, username: `off_${nationalId}`, nationalId });
-      setStep("confirm");
+      setStep("product");
       return;
     }
     setLoading(true);
@@ -275,7 +302,7 @@ export default function PosTerminal() {
       if (res.success) {
         setCustomer(res.customer);
         setIsNewCustomer(res.isNew);
-        setStep("confirm");
+        setStep("product");
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -303,21 +330,39 @@ export default function PosTerminal() {
     }
     setLoading(true);
     try {
-      const endpoint = isStockInMode ? "/api/pos/stock-in" : "/api/pos/register";
-      const data: any = isStockInMode 
-        ? { serialNumber, name: productName, category, sku }
-        : { serialNumber, name: productName, category, sku, ownerId: customer?.id };
-      
-      // Ensure ownerId is a number if present
-      if (data.ownerId) {
-        data.ownerId = parseInt(data.ownerId.toString(), 10);
-      }
-      
-      const res = await apiRequest<any>(endpoint, { method: "POST", data });
-      if (res.success) {
-        setRegisteredProduct(res.product);
-        setStep("receipt");
-        if (!isStockInMode) setVerifyUrl(`${window.location.origin}/verify/${res.product.serialNumber}`);
+      if (isFromInventory && inventoryProductId && customer?.id) {
+        // Direct Sales from existing inventory -> implies ownership transfer
+        const res = await apiRequest<any>("/api/pos/transfer", {
+          method: "POST",
+          data: {
+            productId: inventoryProductId,
+            newOwnerId: customer.id,
+          }
+        });
+        if (res.success) {
+          setRegisteredProduct(res.product);
+          setStep("receipt");
+          setVerifyUrl(`${window.location.origin}/verify/${res.product.serialNumber}`);
+        }
+      } else {
+        const endpoint = scenario === "stock-in" ? "/api/pos/stock-in" : "/api/pos/register";
+        const metadata = scenario === "stock-in" ? { purchasePrice, supplier } : {};
+        const data: any = scenario === "stock-in" 
+          ? { serialNumber, name: productName, category, sku, metadata }
+          : { serialNumber, name: productName, category, sku, ownerId: customer?.id, metadata };
+        
+        // Ensure ownerId is a number if present
+        if (data.ownerId) {
+          data.ownerId = parseInt(data.ownerId.toString(), 10);
+        }
+        
+        const res = await apiRequest<any>(endpoint, { method: "POST", data });
+        if (res.success) {
+          setRegisteredProduct(res.product);
+          setStep("receipt");
+          if (scenario !== "stock-in") setVerifyUrl(`${window.location.origin}/verify/${res.product.serialNumber}`);
+          else setVerifyUrl(""); // Clear QR for stock-in if not needed
+        }
       }
     } catch (err: any) {
       if (err.status === 403) {
@@ -334,14 +379,23 @@ export default function PosTerminal() {
     setScenario(null);
     setNationalId(""); setFullName(""); setPhone(""); setEmail("");
     setCustomer(null); setSerialNumber(""); setProductName(""); setRegisteredProduct(null);
+    setPurchasePrice(""); setSupplier(""); setSku("");
     setIsStolen(false);
     setIsStockInMode(false);
+    setIsFromInventory(false);
+    setInventoryProductId(null);
+    setInventorySearch("");
   };
 
   // ─── Rendering Helpers ───
   const steps: { key: Step; icon: any; label: string }[] = React.useMemo(() => {
     if (step === "scenario") return [];
     
+    const filteredInventory = inventory.filter(p => 
+      p.name.toLowerCase().includes(inventorySearch.toLowerCase()) || 
+      (p.serialNumber && p.serialNumber.toLowerCase().includes(inventorySearch.toLowerCase()))
+    );
+
     if (scenario === "stock-in") 
       return [
         { key: "product", icon: Package, label: "Inventory" },
@@ -415,7 +469,15 @@ export default function PosTerminal() {
           </div>
           <div>
             <h1 className="font-bold tracking-tight text-white leading-none">KIZERE POS</h1>
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">{isStockInMode ? "Stock Management" : "Direct Sales"}</span>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">{scenario === "stock-in" ? "Stock Management" : "Retail Terminal"}</span>
+              <Badge variant="outline" className={cn(
+                "h-4 text-[8px] border-none uppercase tracking-tighter",
+                scenario === "stock-in" ? "bg-amber-500/10 text-amber-500" : "bg-emerald-500/10 text-emerald-500"
+              )}>
+                {scenario === "stock-in" ? "Stock-In" : "Sales Mode"}
+              </Badge>
+            </div>
           </div>
         </div>
 
@@ -560,9 +622,7 @@ export default function PosTerminal() {
 
                   <div className="pt-10 border-t border-slate-800 flex justify-center">
                     <div className="flex items-center gap-8 opacity-40">
-                      <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500" /> <span className="text-[10px] font-bold uppercase">Secure Sales</span></div>
-                      <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500" /> <span className="text-[10px] font-bold uppercase">Inventory Control</span></div>
-                      <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500" /> <span className="text-[10px] font-bold uppercase">Theft Protected</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-slate-500" /> <span className="text-[10px] font-bold uppercase">Public Registry</span></div>
                     </div>
                   </div>
                 </div>
@@ -570,64 +630,92 @@ export default function PosTerminal() {
 
               {/* Step: Customer */}
               {step === "customer" && (
-                <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
                   <div className="flex flex-col gap-2">
-                    <h2 className="text-3xl font-black text-white">Find Customer</h2>
+                    <h2 className="text-3xl font-black text-white tracking-tight">Find Customer</h2>
                     <p className="text-slate-400">Identify the customer via National ID to begin registration</p>
                   </div>
                   
                   <div className="space-y-6">
                     <div className="grid gap-6">
                       <div className="relative group">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
+                        <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-emerald-500 transition-all duration-300" />
                         <Input
-                          placeholder="National ID Number"
-                          className="h-16 pl-12 text-lg font-mono tracking-[0.2em] bg-slate-900/50 border-slate-800 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+                          placeholder="National ID Number (16 digits)"
+                          className="h-20 pl-14 text-2xl font-mono tracking-[0.25em] bg-slate-900/40 border-slate-800/50 focus:border-emerald-500/50 focus:ring-emerald-500/10 rounded-2xl transition-all"
                           value={nationalId}
-                          onChange={(e) => setNationalId(e.target.value)}
+                          maxLength={16}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, "");
+                            setNationalId(val);
+                          }}
                           onKeyDown={(e) => e.key === 'Enter' && handleCustomerLookup()}
                         />
-                        <Button
-                          variant="ghost"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 hover:bg-emerald-500/10 text-emerald-500"
-                          onClick={handleCustomerLookup}
-                        >
-                          <Search className="w-5 h-5" />
-                        </Button>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                          {loading ? (
+                            <Loader2 className="w-6 h-6 animate-spin text-emerald-500 mr-2" />
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              className="h-14 w-14 rounded-xl hover:bg-emerald-500/10 text-emerald-500 group"
+                              onClick={handleCustomerLookup}
+                            >
+                              <Search className="w-6 h-6 group-hover:scale-110 transition-transform" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
 
                       {isNewCustomer && (
-                        <div className="grid gap-6 p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl animate-in fade-in">
-                          <div className="flex items-center gap-2 text-emerald-400 mb-2">
-                            <UserPlus className="w-4 h-4" />
-                            <span className="text-xs font-bold uppercase">New Account Registration</span>
+                        <div className="grid gap-6 p-8 bg-emerald-500/[0.03] border border-emerald-500/20 rounded-[2rem] animate-in zoom-in-95 duration-500 shadow-xl shadow-emerald-500/5">
+                          <div className="flex items-center gap-3 text-emerald-400 mb-2">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                              <UserPlus className="w-4 h-4" />
+                            </div>
+                            <span className="text-xs font-black uppercase tracking-widest">New Account Registration</span>
                           </div>
-                          <Input
-                            placeholder="Customer Full Name"
-                            className="h-14 bg-slate-900/50 border-slate-800"
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                          />
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <Input placeholder="Phone Number" className="h-14 bg-slate-900/50 border-slate-800" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                            <Input placeholder="Email Address" className="h-14 bg-slate-900/50 border-slate-800" value={email} onChange={(e) => setEmail(e.target.value)} />
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Full Name</label>
+                              <Input
+                                placeholder="Legal Name (matching ID)"
+                                className="h-14 bg-slate-950/50 border-slate-800 focus:border-emerald-500/30 rounded-xl"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                              />
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Phone Number</label>
+                                <Input placeholder="07XXXXXXXX" className="h-14 bg-slate-950/50 border-slate-800 rounded-xl" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Email (Optional)</label>
+                                <Input placeholder="customer@example.com" className="h-14 bg-slate-950/50 border-slate-800 rounded-xl" value={email} onChange={(e) => setEmail(e.target.value)} />
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
                     </div>
 
-                  <div className="flex gap-4 pt-4">
-                    <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep("product")}>
-                      Back
-                    </Button>
-                    <Button
-                      className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-2xl shadow-xl shadow-emerald-600/20"
-                      disabled={loading || nationalId.length !== 16 || (isNewCustomer && !fullName)}
-                      onClick={handleCustomerSubmit}
-                    >
-                      {loading ? <Loader2 className="animate-spin" /> : "Review & Sell Item"}
-                    </Button>
-                  </div>
+                    <div className="flex gap-4 pt-6">
+                      <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-500 hover:text-white hover:bg-slate-800 font-bold rounded-2xl transition-all" onClick={() => setStep("scenario")}>
+                        Cancel
+                      </Button>
+                      <Button
+                        className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-2xl shadow-2xl shadow-emerald-600/20 active:scale-95 transition-all group"
+                        disabled={loading || nationalId.length !== 16 || (isNewCustomer && !fullName)}
+                        onClick={handleCustomerSubmit}
+                      >
+                        {loading ? <Loader2 className="animate-spin" /> : (
+                          <div className="flex items-center gap-2">
+                             <span>{isNewCustomer ? "Register & Continue" : "Identify & Continue"}</span>
+                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -636,8 +724,12 @@ export default function PosTerminal() {
               {step === "product" && (
                 <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                   <div className="flex flex-col gap-2">
-                    <h2 className="text-3xl font-black text-white">Product Details</h2>
-                    <p className="text-slate-400">Scanning or manual entry for the item being processed</p>
+                    <h2 className="text-3xl font-black text-white">{scenario === "stock-in" ? "Stock Entry Details" : "Product Details"}</h2>
+                    <p className="text-slate-400">
+                      {scenario === "stock-in" 
+                        ? "Registering new inventory arrivals to your store" 
+                        : "Scanning or manual entry for the item being processed"}
+                    </p>
                   </div>
 
                   {customer && (
@@ -653,14 +745,22 @@ export default function PosTerminal() {
                     </div>
                   )}
 
-                  <Tabs defaultValue="manual" className="w-full">
-                    <TabsList className="bg-slate-900 border border-slate-800 h-14 p-1 rounded-2xl w-full">
-                      <TabsTrigger value="manual" className="flex-1 rounded-xl data-[state=active]:bg-slate-800 h-full">Manual Entry</TabsTrigger>
-                      <TabsTrigger value="inventory" className="flex-1 rounded-xl data-[state=active]:bg-slate-800 h-full">From Inventory</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="manual" className="mt-8 space-y-6">
-                      <div className="grid gap-6">
+                  {/* From Inventory vs Manual Entry */}
+                  {scenario === "sale" && inventory.length > 0 ? (
+                    <Tabs 
+                      defaultValue="manual" 
+                      className="w-full"
+                      onValueChange={(val) => {
+                        setIsFromInventory(val === "inventory");
+                        if (val === "manual") setInventoryProductId(null);
+                      }}
+                    >
+                      <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-900 border border-slate-800">
+                        <TabsTrigger value="manual" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">New Device</TabsTrigger>
+                        <TabsTrigger value="inventory" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">From Inventory</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="manual" className="space-y-6 mt-0">
                         <div className="relative group">
                           <BarcodeScanner
                             isOpen={isScannerOpen}
@@ -669,61 +769,164 @@ export default function PosTerminal() {
                           />
                           <Input
                             placeholder="Serial / IMEI Number"
-                            className="h-16 pr-24 font-mono text-lg bg-slate-900/50 border-slate-800"
+                            className="h-16 pr-14 font-mono text-lg bg-slate-900/50 border-slate-800"
                             value={serialNumber}
                             onChange={(e) => setSerialNumber(e.target.value)}
                             onBlur={handleInventorySearch}
                           />
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                            <Button variant="ghost" className="h-12 w-12 text-emerald-500" onClick={() => setIsScannerOpen(true)}>
-                              <QrCode className="w-5 h-5" />
-                            </Button>
-                          </div>
+                          <Button variant="ghost" className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 text-emerald-500" onClick={() => setIsScannerOpen(true)}>
+                            <QrCode className="w-5 h-5" />
+                          </Button>
                         </div>
 
                         <Input placeholder="Product Name (e.g. iPhone 15 Pro)" className="h-14 bg-slate-900/50 border-slate-800" value={productName} onChange={(e) => setProductName(e.target.value)} />
-                        
-                        <div className="grid grid-cols-2 gap-4">
-                           <select
-                              className="h-14 bg-slate-900/50 border-slate-800 rounded-xl px-4 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
-                              value={category}
-                              onChange={(e) => setCategory(e.target.value)}
-                            >
-                              <option value="Electronics">Electronics</option>
-                              <option value="Phones">Phones</option>
-                              <option value="Computers">Computers</option>
-                              <option value="Other">Other</option>
-                            </select>
-                            <Input placeholder="SKU (Optional)" className="h-14 bg-slate-900/50 border-slate-800" value={sku} onChange={(e) => setSku(e.target.value)} />
-                        </div>
-                      </div>
-                    </TabsContent>
 
-                    <TabsContent value="inventory" className="mt-8">
-                       <div className="grid gap-4">
-                        {inventory.length > 0 ? (
-                          inventory.slice(0, 5).map(p => (
+                        <div className="grid grid-cols-2 gap-4">
+                          <select
+                            className="h-14 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                            value={category}
+                            onChange={(e) => setCategory(e.target.value)}
+                          >
+                            <option value="Electronics">📱 Electronics</option>
+                            <option value="Phones">📞 Phones</option>
+                            <option value="Computers">💻 Computers</option>
+                            <option value="Accessories">🎧 Accessories</option>
+                            <option value="Other">📦 Other</option>
+                          </select>
+                          <Input placeholder="SKU (Optional)" className="h-14 bg-slate-900/50 border-slate-800" value={sku} onChange={(e) => setSku(e.target.value)} />
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="inventory" className="mt-0 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="mb-4">
+                          <div className="relative group">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
+                            <Input
+                              placeholder="Search inventory by name or serial..."
+                              className="h-12 pl-12 bg-slate-950/40 border-slate-800/50 focus:border-emerald-500/50 focus:ring-emerald-500/10 rounded-xl"
+                              value={inventorySearch}
+                              onChange={(e) => setInventorySearch(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="grid gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                          {inventory.filter(p => 
+                            p.name.toLowerCase().includes(inventorySearch.toLowerCase()) || 
+                            (p.serialNumber && p.serialNumber.toLowerCase().includes(inventorySearch.toLowerCase()))
+                          ).length === 0 ? (
+                            <div className="text-center p-12 bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl">
+                              <Package className="w-8 h-8 text-slate-700 mx-auto mb-2" />
+                              <p className="text-sm text-slate-500 font-medium">No matching items in stock</p>
+                            </div>
+                          ) : inventory.filter(p => 
+                            p.name.toLowerCase().includes(inventorySearch.toLowerCase()) || 
+                            (p.serialNumber && p.serialNumber.toLowerCase().includes(inventorySearch.toLowerCase()))
+                          ).map(p => (
                             <button
                               key={p.id}
-                              className="flex items-center gap-4 p-4 bg-slate-900/50 border border-slate-800 rounded-2xl hover:bg-slate-800 transition-colors text-left"
-                              onClick={() => { setSerialNumber(p.serialNumber); setProductName(p.name); setCategory(p.category); setStep("confirm"); }}
+                              className={cn(
+                                "group relative flex items-center gap-4 p-5 bg-slate-900/40 border rounded-2xl transition-all duration-300 text-left overflow-hidden",
+                                inventoryProductId === p.id 
+                                  ? "border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500" 
+                                  : "border-slate-800 hover:border-emerald-500/40 hover:bg-emerald-500/5 hover:translate-x-1"
+                              )}
+                              onClick={() => { 
+                                setSerialNumber(p.serialNumber); 
+                                setProductName(p.name); 
+                                setCategory(p.category); 
+                                setInventoryProductId(p.id);
+                                setIsFromInventory(true);
+                                setStep("confirm");
+                              }}
                             >
-                              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center"><Package className="w-5 h-5 text-slate-500" /></div>
-                              <div className="flex-1">
-                                <p className="text-sm font-bold text-white">{p.name}</p>
-                                <p className="text-xs text-slate-500 font-mono">{p.serialNumber}</p>
+                              <div className={cn(
+                                "w-12 h-12 rounded-xl flex items-center justify-center transition-all",
+                                inventoryProductId === p.id ? "bg-emerald-500 text-white" : "bg-slate-800 text-slate-400 group-hover:bg-emerald-500/20 group-hover:text-emerald-500"
+                              )}>
+                                <Package className="w-6 h-6" />
                               </div>
-                              <Badge variant="secondary" className="bg-slate-800 text-slate-400">IN STOCK</Badge>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-sm font-bold text-white tracking-tight">{p.name}</p>
+                                  {p.status === 'registered' && <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 text-[8px] h-4">VERIFIED</Badge>}
+                                </div>
+                                <p className="text-xs text-slate-500 font-mono mt-0.5">{p.serialNumber}</p>
+                              </div>
+                              <div className="flex flex-col items-end gap-1">
+                                <Badge variant="secondary" className="bg-slate-800 text-slate-400 text-[10px] font-bold">STOCK</Badge>
+                                {inventoryProductId === p.id && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+                              </div>
+                              {/* Selection overlay */}
+                              {inventoryProductId === p.id && (
+                                <div className="absolute inset-0 bg-emerald-500/5 pointer-events-none" />
+                              )}
                             </button>
-                          ))
-                        ) : (
-                          <div className="py-10 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
-                            No inventory items found.
+                          ))}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="relative group">
+                        <BarcodeScanner
+                          isOpen={isScannerOpen}
+                          onClose={() => setIsScannerOpen(false)}
+                          onScan={(text) => { setSerialNumber(text); setIsScannerOpen(false); }}
+                        />
+                        <Input
+                          placeholder="Serial / IMEI Number"
+                          className="h-16 pr-14 font-mono text-lg bg-slate-900/50 border-slate-800"
+                          value={serialNumber}
+                          onChange={(e) => setSerialNumber(e.target.value)}
+                          onBlur={handleInventorySearch}
+                        />
+                        <Button variant="ghost" className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 text-emerald-500" onClick={() => setIsScannerOpen(true)}>
+                          <QrCode className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      <Input placeholder="Product Name (e.g. iPhone 15 Pro)" className="h-14 bg-slate-900/50 border-slate-800" value={productName} onChange={(e) => setProductName(e.target.value)} />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <select
+                          className="h-14 bg-slate-900 border border-slate-700 text-slate-200 rounded-xl px-4 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer"
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value)}
+                        >
+                          <option value="Electronics">📱 Electronics</option>
+                          <option value="Phones">📞 Phones</option>
+                          <option value="Computers">💻 Computers</option>
+                          <option value="Accessories">🎧 Accessories</option>
+                          <option value="Other">📦 Other</option>
+                        </select>
+                        <Input placeholder="SKU (Optional)" className="h-14 bg-slate-900/50 border-slate-800" value={sku} onChange={(e) => setSku(e.target.value)} />
+                      </div>
+
+                      {scenario === "stock-in" && (
+                        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Purchase Price (Cost)</label>
+                            <Input 
+                              type="number" 
+                              placeholder="0.00" 
+                              className="h-14 bg-slate-900/50 border-slate-800"
+                              value={purchasePrice}
+                              onChange={(e) => setPurchasePrice(e.target.value)}
+                            />
                           </div>
-                        )}
-                       </div>
-                    </TabsContent>
-                  </Tabs>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Supplier Info</label>
+                            <Input 
+                              placeholder="Name of Wholesaler" 
+                              className="h-14 bg-slate-900/50 border-slate-800"
+                              value={supplier}
+                              onChange={(e) => setSupplier(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex gap-4 pt-4">
                     <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep(scenario === "stock-in" ? "scenario" : "customer")}>
@@ -744,8 +947,12 @@ export default function PosTerminal() {
               {step === "confirm" && (
                 <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                   <div className="flex flex-col gap-2">
-                    <h2 className="text-3xl font-black text-white">Review & Confirm</h2>
-                    <p className="text-slate-400">Please verify all information is correct before submitting</p>
+                    <h2 className="text-3xl font-black text-white">{scenario === "stock-in" ? "Review Stock Registration" : "Review & Confirm"}</h2>
+                    <p className="text-slate-400">
+                      {scenario === "stock-in" 
+                        ? "Verify arrival details before updating warehouse ledger" 
+                        : "Please verify all information is correct before submitting"}
+                    </p>
                   </div>
 
                   <div className="grid gap-6">
@@ -759,9 +966,30 @@ export default function PosTerminal() {
                           <p className="text-slate-500">Model Name</p><p className="text-right font-bold text-white">{productName}</p>
                           <p className="text-slate-500">Serial/IMEI</p><p className="text-right font-mono text-emerald-400">{serialNumber}</p>
                           <p className="text-slate-500">Category</p><p className="text-right">{category}</p>
+                          {sku && (<><p className="text-slate-500">SKU</p><p className="text-right font-mono text-xs">{sku}</p></>)}
+                          {scenario === "stock-in" && purchasePrice && (
+                            <>
+                              <p className="text-slate-500">Unit Cost</p>
+                              <p className="text-right font-bold text-amber-500">{new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF' }).format(Number(purchasePrice))}</p>
+                            </>
+                          )}
                         </div>
                       </div>
                     </Card>
+
+                    {scenario === "stock-in" && supplier && (
+                      <Card className="bg-slate-900/50 border-slate-800 overflow-hidden rounded-2xl border-l-4 border-l-amber-500">
+                        <div className="p-6 space-y-4">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-amber-500/10 rounded-lg"><Store className="w-4 h-4 text-amber-500" /></div>
+                            <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Supplier / Source</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-y-4 text-sm">
+                            <p className="text-slate-500">Origin</p><p className="text-right font-bold text-white">{supplier}</p>
+                          </div>
+                        </div>
+                      </Card>
+                    )}
 
                     {!isStockInMode && (
                       <Card className="bg-slate-900/50 border-slate-800 overflow-hidden rounded-2xl">
@@ -778,13 +1006,15 @@ export default function PosTerminal() {
                       </Card>
                     )}
 
-                    <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
-                      <p className="text-xs text-emerald-400 font-bold flex items-center gap-2">
+                    <div className={cn("p-6 rounded-2xl border", scenario === "stock-in" ? "bg-amber-500/5 border-amber-500/20" : "bg-emerald-500/5 border-emerald-500/20")}>
+                      <p className={cn("text-xs font-bold flex items-center gap-2", scenario === "stock-in" ? "text-amber-500" : "text-emerald-400")}>
                         <ShieldCheck className="w-4 h-4" />
-                        LEGAL CONFIRMATION
+                        {scenario === "stock-in" ? "INVENTORY CERTIFICATION" : "LEGAL CONFIRMATION"}
                       </p>
                       <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                        By clicking register, I confirm this device belongs to the identified individual and its provenance has been verified according to KIZERE guidelines.
+                        {scenario === "stock-in"
+                          ? "By proceeding, I certify that these items have been physically received, inspected for quality, and match the purchase invoice. This entry will update the store's retail ledger."
+                          : "By clicking register, I confirm this device belongs to the identified individual and its provenance has been verified according to KIZERE guidelines."}
                       </p>
                     </div>
                   </div>
@@ -808,55 +1038,119 @@ export default function PosTerminal() {
               {step === "receipt" && (
                 <div className="space-y-10 animate-in slide-in-from-bottom-4 duration-500 flex flex-col items-center">
                   <div className="text-center">
-                    <div className="w-24 h-24 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-600/30">
-                      <Check className="w-12 h-12 text-white stroke-[3px]" />
+                    <div className={cn(
+                      "w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl animate-in zoom-in duration-500",
+                      scenario === "stock-in" ? "bg-amber-500 shadow-amber-500/30" : "bg-emerald-600 shadow-emerald-600/30"
+                    )}>
+                      {scenario === "stock-in" ? <ListPlus className="w-12 h-12 text-white stroke-[3px]" /> : <Check className="w-12 h-12 text-white stroke-[3px]" />}
                     </div>
-                    <h2 className="text-4xl font-black text-white">Success!</h2>
-                    <p className="text-slate-400 mt-2">Ownership has been secured and registered.</p>
+                    <h2 className="text-4xl font-black text-white">{scenario === "stock-in" ? "Stock Registered" : "Success!"}</h2>
+                    <p className="text-slate-400 mt-2">
+                       {scenario === "stock-in" 
+                        ? "The inventory has been updated and the device is ready for sale." 
+                        : "Ownership has been secured and registered."}
+                    </p>
                   </div>
 
-                  <Card className="w-full max-w-sm bg-white text-slate-900 overflow-hidden shadow-2xl rounded-[2rem]">
+                  <Card className={cn(
+                    "w-full max-w-sm overflow-hidden shadow-2xl rounded-[2rem] transition-all",
+                    scenario === "stock-in" ? "bg-slate-900 border-amber-500/20 text-white" : "bg-white text-slate-900"
+                  )}>
                     <div className="p-8 space-y-6">
                       <div className="flex flex-col items-center text-center space-y-1">
-                        <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white mb-2"><ShieldCheck /></div>
-                        <p className="font-black text-lg">KIZERE SECURE</p>
-                        <p className="text-[10px] text-slate-500 font-bold tracking-[0.2em] uppercase">Digital Ownership Receipt</p>
-                      </div>
-
-                      <div className="border-t border-b border-dashed border-slate-200 py-6 space-y-4">
-                        <div className="flex justify-between text-xs"><span className="text-slate-400 font-bold uppercase">Product</span><span className="font-black text-right">{productName}</span></div>
-                        <div className="flex justify-between text-xs"><span className="text-slate-400 font-bold uppercase">Serial</span><span className="font-mono text-emerald-600 font-bold">{serialNumber}</span></div>
-                        {!isStockInMode && <div className="flex justify-between text-xs"><span className="text-slate-400 font-bold uppercase">Owner</span><span className="font-black text-right">{customer?.fullName}</span></div>}
-                        <div className="flex justify-between text-xs"><span className="text-slate-400 font-bold uppercase">Date</span><span>{new Date().toLocaleDateString()}</span></div>
-                      </div>
-
-                      <div className="flex flex-col items-center space-y-4">
-                        <div className="p-2 bg-slate-50 rounded-2xl border border-slate-100">
-                           {verifyUrl ? <QRCodeSVG value={verifyUrl} size={140} level="H" /> : <QrCode size={140} className="text-slate-200" />}
+                        <div className={cn(
+                          "w-12 h-12 rounded-xl flex items-center justify-center mb-2",
+                          scenario === "stock-in" ? "bg-amber-500 text-white" : "bg-emerald-600 text-white"
+                        )}>
+                          {scenario === "stock-in" ? <Package /> : <ShieldCheck />}
                         </div>
-                        <p className="text-[10px] text-slate-400 font-bold">SCAN TO VERIFY AUTHENTICITY</p>
+                        <p className="font-black text-lg">{scenario === "stock-in" ? "INVENTORY GRN" : "KIZERE SECURE"}</p>
+                        <p className={cn(
+                          "text-[10px] font-bold tracking-[0.2em] uppercase",
+                          scenario === "stock-in" ? "text-amber-500/70" : "text-slate-500"
+                        )}>
+                          {scenario === "stock-in" ? "Goods Received Note" : "Digital Ownership Receipt"}
+                        </p>
                       </div>
+
+                      <div className={cn(
+                        "border-t border-b border-dashed py-6 space-y-4",
+                        scenario === "stock-in" ? "border-slate-700" : "border-slate-200"
+                      )}>
+                        <div className="flex justify-between text-xs">
+                          <span className={scenario === "stock-in" ? "text-slate-500" : "text-slate-400 font-bold uppercase"}>Product</span>
+                          <span className="font-black text-right">{productName}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className={scenario === "stock-in" ? "text-slate-500" : "text-slate-400 font-bold uppercase"}>Serial</span>
+                          <span className={cn("font-mono font-bold", scenario === "stock-in" ? "text-amber-400" : "text-emerald-600")}>{serialNumber}</span>
+                        </div>
+                        
+                        {scenario === "stock-in" && purchasePrice && (
+                          <div className="flex justify-between text-xs border-t border-slate-800 pt-4 mt-4">
+                            <span className="text-slate-500">Value Added</span>
+                            <span className="font-black text-right text-amber-500">
+                              {new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF' }).format(Number(purchasePrice))}
+                            </span>
+                          </div>
+                        )}
+
+                        {scenario !== "stock-in" && customer && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-slate-400 font-bold uppercase">Owner</span>
+                            <span className="font-black text-right">{customer.fullName}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex justify-between text-xs">
+                          <span className={scenario === "stock-in" ? "text-slate-500" : "text-slate-400 font-bold uppercase"}>Date</span>
+                          <span>{new Date().toLocaleDateString()}</span>
+                        </div>
+                      </div>
+
+                      {scenario !== "stock-in" && (
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="p-2 bg-slate-50 rounded-2xl border border-slate-100">
+                             {verifyUrl ? <QRCodeSVG value={verifyUrl} size={140} level="H" /> : <QrCode size={140} className="text-slate-200" />}
+                          </div>
+                          <p className="text-[10px] text-slate-400 font-bold">SCAN TO VERIFY AUTHENTICITY</p>
+                        </div>
+                      )}
+
+                      {scenario === "stock-in" && (
+                        <div className="flex flex-col items-center py-4">
+                           <ShieldCheck className="w-12 h-12 text-amber-500/20 mb-2" />
+                           <p className="text-[10px] text-slate-500 font-bold">INVENTORY VERIFIED</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="bg-slate-50 p-4 text-center border-t border-slate-100">
-                      <p className="text-[10px] font-bold text-slate-400">TRX ID: {registeredProduct?.id || 'POS-88294'}</p>
+                    <div className={cn(
+                      "p-4 text-center border-t",
+                      scenario === "stock-in" ? "bg-slate-800/50 border-slate-800 text-slate-500" : "bg-slate-50 border-slate-100 text-slate-400"
+                    )}>
+                      <p className="text-[10px] font-bold uppercase tracking-widest">Entry ID: {registeredProduct?.id || 'POS-88294'}</p>
                     </div>
                   </Card>
 
                   <div className="flex flex-wrap justify-center gap-4 w-full">
                     <Button variant="outline" className="h-14 px-8 border-slate-800 bg-slate-900/50 rounded-xl font-bold gap-3" onClick={() => window.print()}>
                       <Printer className="w-4 h-4" />
-                      Print Receipt
+                      {scenario === "stock-in" ? "Print GRN" : "Print Receipt"}
                     </Button>
-                    <Button variant="outline" className="h-14 px-8 border-slate-800 bg-slate-900/50 rounded-xl font-bold gap-3" onClick={() => {
-                      navigator.clipboard.writeText(verifyUrl);
-                      toast({ title: "Copied", description: "Verification link copied to clipboard" });
-                    }}>
-                      <Copy className="w-4 h-4" />
-                      Copy Link
-                    </Button>
-                    <Button className="h-14 px-10 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold gap-3" onClick={resetFlow}>
-                      <Plus className="w-4 h-4" />
-                      New Registration
+                    {scenario !== "stock-in" && (
+                      <Button variant="outline" className="h-14 px-8 border-slate-800 bg-slate-900/50 rounded-xl font-bold gap-3" onClick={() => {
+                        if (verifyUrl) {
+                          navigator.clipboard.writeText(verifyUrl);
+                          toast({ title: "Copied", description: "Verification link copied to clipboard" });
+                        }
+                      }}>
+                        <Copy className="w-4 h-4" />
+                        Copy Link
+                      </Button>
+                    )}
+                    <Button className={cn("h-14 px-10 rounded-xl font-bold gap-3", scenario === "stock-in" ? "bg-amber-600 hover:bg-amber-500" : "bg-emerald-600 hover:bg-emerald-500")} onClick={resetFlow}>
+                      {scenario === "stock-in" ? <ListPlus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                      {scenario === "stock-in" ? "Stock Another Device" : "New Registration"}
                     </Button>
                   </div>
                 </div>
