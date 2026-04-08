@@ -26,6 +26,7 @@ interface PublicItemInfo {
 
 export default function PublicItemVerifyPage() {
   const { uniqueIdentifier } = useParams();
+  const qrKizereId = new URLSearchParams(window.location.search).get("kizereId");
 
   const { data: item, isLoading, error } = useQuery<PublicItemInfo>({
     queryKey: [`/api/items/public/${uniqueIdentifier}`],
@@ -185,17 +186,32 @@ export default function PublicItemVerifyPage() {
                   </div>
                 </div>
 
-                {item.source === 'pos' && item.kizereId && (
-                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-background/50 border border-white/10 dark:border-white/5">
-                    <div className="p-3 bg-primary/10 rounded-xl text-primary shrink-0">
-                      <Fingerprint className="h-5 w-5" />
+                {item.source === 'pos' && item.kizereId && (() => {
+                  const trustMatch = !qrKizereId || qrKizereId === item.kizereId;
+                  return (
+                    <div className={`flex items-center gap-4 p-4 rounded-2xl border ${trustMatch ? 'bg-background/50 border-white/10 dark:border-white/5' : 'bg-destructive/10 border-destructive/30'}`}>
+                      <div className={`p-3 rounded-xl shrink-0 ${trustMatch ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                        <Fingerprint className="h-5 w-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">KIZERE Trust ID</p>
+                          {qrKizereId && (
+                            <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${trustMatch ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' : 'bg-destructive/15 text-destructive'}`}>
+                              {trustMatch ? '✓ Verified' : '✗ Mismatch'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="font-mono text-xs text-foreground/70 truncate">{item.kizereId}</p>
+                        {!trustMatch && (
+                          <p className="text-[10px] text-destructive mt-1 font-semibold">
+                            The QR code Trust ID does not match this product's record. This label may have been swapped.
+                          </p>
+                        )}
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">KIZERE Trust ID</p>
-                      <p className="font-mono text-xs text-foreground/70 truncate">{item.kizereId}</p>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {item.description && (
                   <div className="bg-background/40 backdrop-blur-sm border border-border/30 p-5 rounded-2xl">

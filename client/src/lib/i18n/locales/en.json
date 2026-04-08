@@ -2223,6 +2223,15 @@
     "count": "Count",
     "share": "Share",
     "selectTimeframe": "Select timeframe",
+    "stockIn": "Stock-In",
+    "shiftSummary": {
+      "title": "Daily Shift Summary",
+      "subtitle": "Real-time overview of today's business activity."
+    },
+    "printSummary": "Print EOD",
+    "registrations": "Registrations",
+    "transfers": "Transfers",
+    "returns": "Returns",
     "commissions": {
       "title": "Commission Payouts",
       "subtitle": "Track earnings and request payouts to your MoMo wallet.",

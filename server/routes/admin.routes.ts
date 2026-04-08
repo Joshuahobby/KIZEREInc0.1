@@ -882,4 +882,21 @@ router.get("/stats", requireAdmin, async (req, res) => {
   }
 });
 
+/**
+ * GET /api/admin/verify-audit-logs
+ * Returns persisted audit log of stolen/flagged item lookups via the public verify endpoint.
+ */
+router.get("/verify-audit-logs", requireAdmin, async (req, res) => {
+  try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const identifier = req.query.identifier as string | undefined;
+    const result = await storage.getPublicVerifyLogs({ page, limit, identifier });
+    res.json(result);
+  } catch (error) {
+    logger.error("Failed to fetch verify audit logs:", error);
+    res.status(500).json({ message: "Failed to fetch verify audit logs" });
+  }
+});
+
 export default router;

@@ -143,6 +143,12 @@ export const userPreferencesSchema = z.object({
   currency: z.string().optional().default('USD'),
   timezone: z.string().optional().default('UTC'),
   onboardingTourSeen: z.boolean().optional().default(false),
+  cashiers: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    pin: z.string(), // Lightweight PIN for terminal access
+    isActive: z.boolean().default(true),
+  })).optional().default([]),
 });
 
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
@@ -158,6 +164,7 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   currency: 'USD',
   timezone: 'UTC',
   onboardingTourSeen: false,
+  cashiers: [],
 };
 
 // Shared validation fragments for consistency
@@ -966,6 +973,7 @@ export const ownershipLedger = pgTable("ownership_ledger", {
   notes: text("notes"),
   purchaseAgreement: text("purchase_agreement"),
   legalDocUrl: text("legal_doc_url"),
+  metadata: json("metadata"), // Auditing: cashierId, cashierName, etc.
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 }, (table) => [
   index("ledger_product_idx").on(table.productId),
@@ -1023,6 +1031,23 @@ export const retailerCommissions = pgTable("retailer_commissions", {
   index("commission_ledger_idx").on(table.ledgerEntryId),
   index("commission_status_idx").on(table.status),
 ]);
+
+// Public verify audit log — persisted on every stolen/flagged item lookup
+export const publicVerifyLogs = pgTable("public_verify_logs", {
+  id: serial("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  source: text("source").notNull(), // 'registry' | 'pos'
+  itemStatus: text("item_status").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  lookedUpAt: timestamp("looked_up_at").defaultNow().notNull(),
+}, (table) => [
+  index("pvl_identifier_idx").on(table.identifier),
+  index("pvl_looked_up_at_idx").on(table.lookedUpAt),
+]);
+
+export type PublicVerifyLog = typeof publicVerifyLogs.$inferSelect;
+export type InsertPublicVerifyLog = typeof publicVerifyLogs.$inferInsert;
 
 // Zod schemas for POS tables
 export const insertRetailerSchema = createInsertSchema(retailers).omit({

@@ -9,7 +9,7 @@ import { createLogger } from "../utils/logger";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
 
 import { notifyPosCustomer } from "./pos-notification.service";
 import { emitSecurityAlert } from "../websocket";
@@ -144,9 +144,10 @@ export async function registerProduct(input: any) {
     toUserId: input.ownerId,
     registeredBy: input.retailerId,
     event: "sale",
-    notes: `Initial product registration at POS`,
+    notes: input.notes || `Initial product registration at POS`,
     purchaseAgreement: input.purchaseAgreement,
     legalDocUrl: input.legalDocUrl,
+    metadata: input.metadata,
   });
 
   notifyPosCustomer("registration", {
@@ -214,6 +215,7 @@ export async function transferOwnership(input: any) {
     registeredBy: input.retailerId,
     event: "transfer",
     notes: input.notes || "Ownership transfer at POS",
+    metadata: input.metadata,
   });
 
   const retailer = await storage.getRetailer(input.retailerId);
@@ -229,6 +231,107 @@ export async function transferOwnership(input: any) {
   }
 
   return { product: updatedProduct, ledgerEntry };
+}
+
+export async function processReturn(input: {
+  productId: number;
+  retailerId: number;
+  reason: string;
+  notes?: string;
+  metadata?: any;
+}) {
+  const product = await storage.getPosProduct(input.productId);
+  if (!product) throw Object.assign(new Error("Product not found"), { status: 404 });
+  if (product.retailerId !== input.retailerId) throw new AuthorizationError("Not authorized for this product");
+  if (product.status === "stolen") throw new AuthorizationError("Cannot return a stolen item.");
+  
+  const retailer = await storage.getRetailer(input.retailerId);
+  if (!retailer) throw new Error("Retailer not found");
+
+  const retailerUserId = retailer.userId as number;
+  const previousOwnerId = product.currentOwnerId;
+
+  const updatedProduct = await storage.updatePosProduct(input.productId, {
+    currentOwnerId: retailerUserId,
+    status: "registered",
+  });
+
+  if (!updatedProduct) throw new Error("Failed to update product");
+
+  const ledgerEntry = await storage.createOwnershipLedgerEntry({
+    productId: input.productId,
+    fromUserId: previousOwnerId,
+    toUserId: retailerUserId,
+    registeredBy: input.retailerId,
+    event: "transfer",
+    notes: `Product Returned. Reason: ${input.reason}. ${input.notes || ""}`,
+    metadata: input.metadata,
+  });
+
+  return { product: updatedProduct, ledgerEntry };
+}
+
+// ─── Shift Summary ───
+
+export async function getShiftSummary(retailerId: number, shiftDate?: Date) {
+  const target = shiftDate || new Date();
+  const startOfDay = new Date(target);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(target);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const ledgerEntries = await db
+    .select({
+      id: ownershipLedger.id,
+      event: ownershipLedger.event,
+      notes: ownershipLedger.notes,
+      timestamp: ownershipLedger.timestamp,
+      productId: ownershipLedger.productId,
+    })
+    .from(ownershipLedger)
+    .where(
+      and(
+        eq(ownershipLedger.registeredBy, retailerId),
+        gte(ownershipLedger.timestamp, startOfDay),
+        lte(ownershipLedger.timestamp, endOfDay)
+      )
+    );
+
+  // Get product details for each entry
+  const productIds = [...new Set(ledgerEntries.map(e => e.productId))];
+  const productDetails: Record<number, { name: string; category: string }> = {};
+  for (const pid of productIds) {
+    const p = await storage.getPosProduct(pid);
+    if (p) productDetails[pid] = { name: p.name, category: p.category };
+  }
+
+  // Group by event
+  const registrations = ledgerEntries.filter(e => e.event === "sale");
+  const transfers = ledgerEntries.filter(e => e.event === "transfer");
+  const returns = ledgerEntries.filter(e => e.notes?.startsWith("Product Returned"));
+  const stolenReports = ledgerEntries.filter(e => e.event === "stolen_report");
+
+  // Group registrations by category
+  const byCategory: Record<string, number> = {};
+  for (const entry of registrations) {
+    const cat = productDetails[entry.productId]?.category || "Other";
+    byCategory[cat] = (byCategory[cat] || 0) + 1;
+  }
+
+  return {
+    date: startOfDay.toISOString(),
+    totalRegistrations: registrations.length,
+    totalTransfers: transfers.length,
+    totalReturns: returns.length,
+    totalStolenReports: stolenReports.length,
+    totalTransactions: ledgerEntries.length,
+    registrationsByCategory: Object.entries(byCategory).map(([category, count]) => ({ category, count })),
+    recentEntries: ledgerEntries.slice(-10).reverse().map(e => ({
+      ...e,
+      productName: productDetails[e.productId]?.name || "Unknown",
+      productCategory: productDetails[e.productId]?.category || "Other",
+    })),
+  };
 }
 
 // ─── Retailer CRM & Analytics ───

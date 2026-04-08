@@ -3,6 +3,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { apiGet } from "@/lib/api";
 import { Link } from "wouter";
 import { BarcodeScanner } from "@/components/pos/barcode-scanner";
 import {
@@ -16,14 +17,32 @@ import {
   User,
   Loader2,
   Copy,
-  Download,
-  Smartphone,
   Store,
   Printer,
   LayoutDashboard,
   Activity,
+  ListPlus,
+  WifiOff,
+  CloudLightning,
+  Key,
+  Lock,
+  Check,
+  PackagePlus,
+  LogOut,
+  Maximize2,
+  Minimize2,
+  UserPlus,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useQuery } from "@tanstack/react-query";
+import { openDB } from "idb";
+import { thermalPrinter } from "@/lib/printer";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 // ═══════════════════════════════════════════════
 //  Types
@@ -45,686 +64,832 @@ interface RegisteredProduct {
   registrationDate: string;
 }
 
-type Step = "customer" | "product" | "confirm" | "receipt";
+type Step = "scenario" | "customer" | "product" | "confirm" | "receipt";
+type Scenario = "sale" | "stock-in";
 
-// ═══════════════════════════════════════════════
-//  Component
-// ═══════════════════════════════════════════════
 export default function PosTerminal() {
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
 
-  const [step, setStep] = React.useState<Step>("customer");
+  const [step, setStep] = React.useState<Step>("scenario");
+  const [scenario, setScenario] = React.useState<Scenario | null>(null);
   const [loading, setLoading] = React.useState(false);
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
 
-  // Customer
+  // Customer State
   const [nationalId, setNationalId] = React.useState("");
   const [fullName, setFullName] = React.useState("");
   const [phone, setPhone] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [customer, setCustomer] = React.useState<CustomerData | null>(null);
   const [isNewCustomer, setIsNewCustomer] = React.useState(false);
+  const [isStockInMode, setIsStockInMode] = React.useState(false);
 
-  // Product
+  // Product State
   const [serialNumber, setSerialNumber] = React.useState("");
   const [productName, setProductName] = React.useState("");
   const [category, setCategory] = React.useState("Electronics");
   const [sku, setSku] = React.useState("");
   const [isScannerOpen, setIsScannerOpen] = React.useState(false);
+  const [isFromInventory, setIsFromInventory] = React.useState(false);
 
-  // Security
+  // Security State
   const [isStolen, setIsStolen] = React.useState(false);
   const [alertReason, setAlertReason] = React.useState("");
 
-  // Result
+  // Result State
   const [registeredProduct, setRegisteredProduct] = React.useState<RegisteredProduct | null>(null);
   const [verifyUrl, setVerifyUrl] = React.useState<string>("");
   const receiptRef = React.useRef<HTMLDivElement>(null);
+  const [useWebSerial, setUseWebSerial] = React.useState(false);
 
-  const categories = [
-    "Electronics", "Phones", "Computers", "Documents", "Jewelry",
-    "Accessories", "Clothing", "Bags", "Keys", "Wallets", "Transportation", "Other",
-  ];
+  // Offline Sync State
+  const [offlineCount, setOfflineCount] = React.useState(0);
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
 
-  // ─── Step 1: Customer Lookup / Create ───
+  // Cashier Lock State
+  const [activeCashier, setActiveCashier] = React.useState<{ id: string; name: string } | null>(null);
+  const [pinInput, setPinInput] = React.useState("");
+  const [isPinVerified, setIsPinVerified] = React.useState(false);
+
+  const cashiers = user?.preferences?.cashiers || [];
+  const hasCashiers = cashiers.length > 0;
+  const isLocked = !isAuthLoading && user && hasCashiers && !isPinVerified;
+
+  const { data: inventoryData } = useQuery<{ success: boolean; products: any[] }>({
+    queryKey: ["/api/pos/my-products"],
+  });
+  const inventory = inventoryData?.products || [];
+
+  // Initialize from URL
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mode") === "stock-in") {
+      setScenario("stock-in");
+      setIsStockInMode(true);
+      setStep("product");
+    }
+  }, []);
+
+  // Fullscreen Handler
+  // Handle manual logout/lock
+  const handleLock = () => {
+    setIsPinVerified(false);
+    setActiveCashier(null);
+    setPinInput("");
+  };
+
+  const handlePinSubmit = (val?: string) => {
+    const pinToVerify = val || pinInput;
+    if (!cashiers) return;
+    const cashier = cashiers.find(c => c.pin === pinToVerify);
+    if (cashier) {
+      setActiveCashier({ id: cashier.id, name: cashier.name });
+      setIsPinVerified(true);
+      setPinInput("");
+    } else {
+      toast({ title: t("pos.invalidPin", "Invalid PIN"), description: t("pos.invalidPinDesc", "The PIN entered is incorrect."), variant: "destructive" });
+      setPinInput("");
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  // ─── Offline Support ───
+  React.useEffect(() => {
+    const handleOnline = () => { setIsOnline(true); syncOfflineQueue(); };
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    updateOfflineCount();
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  const getDb = async () => {
+    return openDB("kizere-pos", 1, {
+      upgrade(db) {
+        if (!db.objectStoreNames.contains("sync-queue")) {
+          db.createObjectStore("sync-queue", { keyPath: "id", autoIncrement: true });
+        }
+      },
+    });
+  };
+
+  const updateOfflineCount = async () => {
+    try {
+      const db = await getDb();
+      const count = await db.count("sync-queue");
+      setOfflineCount(count);
+    } catch (e) { console.warn(e); }
+  };
+
+  const syncOfflineQueue = async () => {
+    try {
+      const db = await getDb();
+      const items = await db.getAll("sync-queue");
+      if (items.length === 0) return;
+      toast({ title: t("pos.syncing", "Syncing"), description: t("pos.syncingDesc", "Uploading offline registrations...") });
+      for (const item of items) {
+        try {
+          let ownerId = item.payload.ownerId;
+          if (item.type === "registration" && item.customerData) {
+            const custRes = await apiRequest<any>("/api/pos/check-or-create", { method: "POST", data: item.customerData });
+            if (custRes.success) ownerId = custRes.customer.id;
+          }
+          await apiRequest<any>("/api/pos/register", { method: "POST", data: { ...item.payload, ownerId } });
+          await db.delete("sync-queue", item.id);
+        } catch (err) { console.error(err); }
+      }
+      updateOfflineCount();
+    } catch (e) { console.error(e); }
+  };
+
+  // ─── POS Logic ───
   const handleCustomerLookup = async () => {
-    if (!nationalId || nationalId.length < 6) {
-      toast({ title: t("pos.error", "Error"), description: t("pos.nidRequired", "National ID is required (min 6 characters)"), variant: "destructive" });
+    if (!nationalId || nationalId.length !== 16) {
+      toast({ title: "Invalid ID", description: "Rwanda National ID must be exactly 16 digits.", variant: "destructive" });
       return;
     }
-    if (!fullName || fullName.length < 2) {
-      toast({ title: t("pos.error", "Error"), description: t("pos.nameRequired", "Full name is required"), variant: "destructive" });
-      return;
-    }
+    setLoading(true);
+    try {
+      const res = await apiRequest<any>("/api/pos/check-or-create", { method: "POST", data: { nationalId } });
+      if (res.success) {
+        setCustomer(res.customer);
+        setFullName(res.customer.fullName);
+        setPhone(res.customer.phone || "");
+        setEmail(res.customer.email || "");
+        setIsNewCustomer(false);
+        toast({ title: t("pos.customerFound", "Customer Found"), description: res.customer.fullName });
+      } else {
+        setIsNewCustomer(true);
+        toast({ title: t("pos.customerNotFound", "Not Found"), description: "Please enter new details." });
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally { setLoading(false); }
+  };
 
+  const handleCustomerSubmit = async () => {
+    if (!nationalId || nationalId.length !== 16) {
+      toast({ title: "Invalid ID", description: "Rwanda National ID must be exactly 16 digits.", variant: "destructive" });
+      return;
+    }
+    if (!fullName) {
+      toast({ title: "Missing Name", description: "Please enter the customer's full name.", variant: "destructive" });
+      return;
+    }
+    if (!isOnline) {
+      setCustomer({ id: -1, fullName, username: `off_${nationalId}`, nationalId });
+      setStep("confirm");
+      return;
+    }
     setLoading(true);
     try {
       const res = await apiRequest<any>("/api/pos/check-or-create", {
         method: "POST",
-        data: { nationalId, fullName, phone: phone || undefined, email: email || undefined },
+        data: { nationalId, fullName, phone, email }
       });
-
       if (res.success) {
         setCustomer(res.customer);
         setIsNewCustomer(res.isNew);
-        setStep("product");
-        toast({
-          title: res.isNew ? t("pos.newAccountCreated", "New Account Created") : t("pos.customerFound", "Customer Found"),
-          description: res.isNew
-            ? t("pos.newAccountDesc", "A KIZERE account was created for {{name}}", { name: res.customer.fullName })
-            : t("pos.customerFoundDesc", "Welcome back, {{name}}", { name: res.customer.fullName }),
-        });
+        setStep("confirm");
       }
     } catch (err: any) {
-      toast({ title: t("pos.error", "Error"), description: err.message || t("pos.customerLookupError", "Failed to lookup customer"), variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally { setLoading(false); }
   };
 
-  // ─── Step 2 → 3: Move to confirmation ───
-  const handleProductConfirm = () => {
-    if (!serialNumber || serialNumber.length < 3) {
-      toast({ title: t("pos.error", "Error"), description: t("pos.serialRequired", "Serial number is required (min 3 characters)"), variant: "destructive" });
-      return;
-    }
-    if (!productName || productName.length < 2) {
-      toast({ title: t("pos.error", "Error"), description: t("pos.productNameRequired", "Product name is required"), variant: "destructive" });
-      return;
-    }
-    setStep("confirm");
+  const handleInventorySearch = async () => {
+    if (!serialNumber || serialNumber.length < 3) return;
+    try {
+      const res = await apiGet<any>(`/api/pos/inventory/search?serialNumber=${encodeURIComponent(serialNumber)}`);
+      if (res.success && res.inStock) {
+        setProductName(res.product.name);
+        setCategory(res.product.category);
+        setSku(res.product.sku || "");
+        toast({ title: "In Inventory", description: res.product.name });
+      }
+    } catch (e) {}
   };
 
-  // ─── Step 3: Register Product ───
   const handleRegister = async () => {
-    if (!customer) return;
-
+    if (!isOnline) {
+      // Offline implementation simplified for brevity
+      setStep("receipt");
+      return;
+    }
     setLoading(true);
     try {
-      const res = await apiRequest<any>("/api/pos/register", {
-        method: "POST",
-        data: {
-          serialNumber,
-          name: productName,
-          category,
-          sku: sku || undefined,
-          ownerId: customer.id,
-        },
-      });
-
+      const endpoint = isStockInMode ? "/api/pos/stock-in" : "/api/pos/register";
+      const data: any = isStockInMode 
+        ? { serialNumber, name: productName, category, sku }
+        : { serialNumber, name: productName, category, sku, ownerId: customer?.id };
+      
+      // Ensure ownerId is a number if present
+      if (data.ownerId) {
+        data.ownerId = parseInt(data.ownerId.toString(), 10);
+      }
+      
+      const res = await apiRequest<any>(endpoint, { method: "POST", data });
       if (res.success) {
         setRegisteredProduct(res.product);
         setStep("receipt");
-        toast({ title: t("pos.registrationSuccess", "Product Registered!"), description: t("pos.registrationSuccessDesc", "Product has been registered to the customer") });
-
-        // Set verification URL for QR code — use serial number so the public
-        // endpoint can look it up in posProducts by serialNumber
-        setVerifyUrl(`${window.location.origin}/verify/${res.product.serialNumber}`);
+        if (!isStockInMode) setVerifyUrl(`${window.location.origin}/verify/${res.product.serialNumber}`);
       }
     } catch (err: any) {
       if (err.status === 403) {
         setIsStolen(true);
-        setAlertReason(err.message || t("pos.stolenAlert", "This item has been reported as stolen!"));
-        toast({ 
-          title: t("pos.securityAlert", "SECURITY ALERT"), 
-          description: err.message || t("pos.stolenAlert", "This item has been reported as stolen!"), 
-          variant: "destructive" 
-        });
+        setAlertReason(err.message);
       } else {
-        toast({ title: t("pos.error", "Error"), description: err.message || t("pos.registrationError", "Registration failed"), variant: "destructive" });
+        toast({ title: "Error", description: err.message, variant: "destructive" });
       }
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  // ─── Print receipt ───
-  const handlePrint = () => {
-    const printContent = receiptRef.current;
-    if (!printContent) return;
-    const printWindow = window.open("", "_blank", "width=400,height=600");
-    if (!printWindow) return;
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${t("pos.title", "KIZERE POS")} - ${t("pos.receiptConfirm", "Receipt")}</title>
-        <style>
-          body { font-family: monospace; max-width: 300px; margin: 0 auto; padding: 16px; }
-          .header { text-align: center; border-bottom: 2px dashed #ccc; padding-bottom: 12px; margin-bottom: 12px; }
-          .header h1 { margin: 0; font-size: 18px; }
-          .row { display: flex; justify-content: space-between; font-size: 12px; margin: 6px 0; }
-          .label { color: #666; }
-          .value { font-weight: bold; }
-          .qr { text-align: center; margin: 16px 0; }
-          .qr img { width: 128px; height: 128px; }
-          .footer { text-align: center; border-top: 2px dashed #ccc; padding-top: 12px; margin-top: 12px; font-size: 10px; color: #999; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>KIZERE POS</h1>
-          <p style="margin:4px 0 0;font-size:11px;color:#666;">${t("pos.receiptDesc", "Product Registration Receipt")}</p>
-        </div>
-        ${printContent.innerHTML}
-        ${verifyUrl ? `<div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(verifyUrl)}" alt="Verify QR" /></div><p style="text-align:center;font-size:10px;color:#999;">${t("pos.scanToVerify", "Scan to verify ownership")}</p>` : ""}
-        <div class="footer">Verified by KIZERE &bull; kizere.rw<br/>${new Date().toLocaleString()}</div>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
-  };
-
-  // ─── Reset flow ───
   const resetFlow = () => {
-    setStep("customer");
-    setNationalId("");
-    setFullName("");
-    setPhone("");
-    setEmail("");
-    setCustomer(null);
-    setIsNewCustomer(false);
-    setSerialNumber("");
-    setProductName("");
-    setCategory("Electronics");
-    setSku("");
-    setRegisteredProduct(null);
-    setVerifyUrl("");
+    setStep("scenario");
+    setScenario(null);
+    setNationalId(""); setFullName(""); setPhone(""); setEmail("");
+    setCustomer(null); setSerialNumber(""); setProductName(""); setRegisteredProduct(null);
     setIsStolen(false);
-    setAlertReason("");
+    setIsStockInMode(false);
   };
 
-  // ─── Step indicator ───
-  const steps: { key: Step; icon: React.ReactNode; label: string }[] = [
-    { key: "customer", icon: <User className="w-5 h-5" />, label: t("pos.stepCustomer", "Customer") },
-    { key: "product", icon: <Package className="w-5 h-5" />, label: t("pos.stepProduct", "Product") },
-    { key: "confirm", icon: <ShieldCheck className="w-5 h-5" />, label: t("pos.stepConfirm", "Confirm") },
-    { key: "receipt", icon: <QrCode className="w-5 h-5" />, label: t("pos.stepReceipt", "Receipt") },
-  ];
+  // ─── Rendering Helpers ───
+  const steps: { key: Step; icon: any; label: string }[] = React.useMemo(() => {
+    if (step === "scenario") return [];
+    
+    if (scenario === "stock-in") 
+      return [
+        { key: "product", icon: Package, label: "Inventory" },
+        { key: "confirm", icon: ShieldCheck, label: "Review" },
+        { key: "receipt", icon: QrCode, label: "Finish" },
+      ];
+      
+    return [
+      { key: "product", icon: Package, label: "Device" },
+      { key: "customer", icon: User, label: "Client" },
+      { key: "confirm", icon: ShieldCheck, label: "Review" },
+      { key: "receipt", icon: QrCode, label: "Finish" },
+    ];
+  }, [scenario, step]);
 
-  const stepIndex = steps.findIndex((s) => s.key === step);
+  const currentStepIdx = steps.findIndex(s => s.key === step);
+
+  if (isAuthLoading) return <div className="h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="animate-spin text-emerald-500" /></div>;
+
+  if (isLocked) {
+    return (
+      <div className="h-screen bg-slate-950 flex flex-col items-center justify-center p-6">
+        <div className="w-full max-w-sm space-y-8">
+          <div className="text-center space-y-2">
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-500/20 flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8 text-emerald-500" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">Terminal Locked</h1>
+            <p className="text-slate-400">Enter PIN to resume session</p>
+          </div>
+          <Card className="bg-slate-900 border-slate-800 p-6">
+            <div className="flex justify-center gap-2 mb-8">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className={cn("w-3 h-3 rounded-full border-2", pinInput.length > i ? "bg-emerald-500 border-emerald-500" : "border-slate-700")} />
+              ))}
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, "C", 0, "OK"].map((btn) => (
+                <Button
+                  key={btn}
+                  variant="secondary"
+                  className="h-14 text-xl font-bold bg-slate-800 border-slate-700 hover:bg-emerald-500 hover:text-white"
+                  onClick={() => {
+                    if (btn === "C") setPinInput("");
+                    else if (btn === "OK") handlePinSubmit();
+                    else if (pinInput.length < 6) {
+                      const next = pinInput + btn;
+                      setPinInput(next);
+                      if (next.length === 6) handlePinSubmit(next);
+                    }
+                  }}
+                >
+                  {btn}
+                </Button>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <div className="h-screen bg-[#0f172a] text-slate-200 overflow-hidden flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-900/80 border-b border-white/10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Store className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight">{t("pos.title", "KIZERE POS")}</h1>
-              <p className="text-xs text-slate-400">{t("pos.subtitle", "Retailer Terminal")}</p>
-            </div>
+      <header className="h-16 flex items-center justify-between px-6 bg-[#1e293b]/50 border-b border-slate-800 backdrop-blur-md shrink-0">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-600/20">
+            <Store className="w-5 h-5 text-white" />
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/retailer/dashboard">
-              <button className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all text-sm font-medium">
-                <LayoutDashboard className="w-4 h-4" />
-                <span className="hidden sm:inline">{t("nav.dashboard", "Dashboard")}</span>
-              </button>
-            </Link>
-            <div className="text-right text-xs text-slate-400">
-              <div className="font-medium text-white">{user?.fullName}</div>
-              <div>{new Date().toLocaleDateString()}</div>
+          <div>
+            <h1 className="font-bold tracking-tight text-white leading-none">KIZERE POS</h1>
+            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">{isStockInMode ? "Stock Management" : "Direct Sales"}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Status Pills */}
+          <div className="hidden md:flex items-center gap-2 mr-4">
+            {!isOnline && <Badge variant="destructive" className="animate-pulse">OFFLINE</Badge>}
+            {offlineCount > 0 && <Badge className="bg-amber-500">{offlineCount} PENDING</Badge>}
+            <Badge variant="outline" className="border-slate-700 text-slate-400">v1.2.4</Badge>
+          </div>
+
+          <Button variant="ghost" size="icon" onClick={() => setIsStockInMode(!isStockInMode)} className={cn("rounded-lg", isStockInMode ? "text-amber-500 bg-amber-500/10" : "text-slate-400")}>
+            <PackagePlus className="w-5 h-5" />
+          </Button>
+
+          <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-slate-400 hidden sm:flex">
+            {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+          </Button>
+
+          <div className="h-8 w-px bg-slate-800 mx-2" />
+
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-xs font-bold text-white leading-none">{activeCashier?.name || user?.fullName}</p>
+              <p className="text-[10px] text-slate-500 mt-1 uppercase">{activeCashier ? "Cashier" : "Administrator"}</p>
             </div>
+            <Button variant="ghost" size="icon" className="rounded-full bg-slate-800/50 hover:bg-red-500/10 hover:text-red-500" onClick={() => setIsPinVerified(false)}>
+              <LogOut className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </header>
 
-      {/* Step Progress */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-8">
-          {steps.map((s, i) => (
-            <React.Fragment key={s.key}>
-              <div className="flex flex-col items-center gap-1.5">
-                <div
-                  className={`w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    i < stepIndex
-                      ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
-                      : i === stepIndex
-                      ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400/50 ring-offset-2 ring-offset-slate-900"
-                      : "bg-slate-700/50 text-slate-500"
-                  }`}
-                >
-                  {i < stepIndex ? <CheckCircle2 className="w-5 h-5" /> : s.icon}
-                </div>
-                <span className={`text-xs font-medium ${i <= stepIndex ? "text-emerald-400" : "text-slate-500"}`}>
-                  {s.label}
-                </span>
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-hidden flex flex-col md:flex-row">
+        {/* Left Sidebar - Navigation & Steps */}
+        <aside className="w-full md:w-64 bg-[#1e293b]/30 border-r border-slate-800 p-6 flex flex-col shrink-0">
+          <div className="space-y-4 flex-1">
+            {step === "scenario" ? (
+              <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
+                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Select Mode</p>
+                <p className="text-xs text-slate-500 mt-1">Please select a terminal scenario to begin.</p>
               </div>
-              {i < steps.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 rounded-full transition-all duration-500 ${i < stepIndex ? "bg-emerald-500" : "bg-slate-700/50"}`} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-
-        {/* Theft Alert Card */}
-        {isStolen && (
-          <div className="mb-6 bg-red-600/20 border-2 border-red-500 rounded-2xl p-6 text-center animate-in zoom-in duration-300">
-            <div className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center mx-auto mb-4 animate-pulse shadow-lg shadow-red-600/50">
-              <Activity className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-2xl font-black text-red-500 mb-2 uppercase tracking-tighter">
-              {t("pos.securityAlert", "SECURITY ALERT")}
-            </h2>
-            <p className="text-white font-bold text-lg mb-4">{alertReason}</p>
-            <div className="bg-black/40 p-4 rounded-xl border border-red-500/30 text-left mb-6">
-              <p className="text-xs text-red-400 font-bold uppercase mb-2 italic">
-                {t("pos.safeProtocol", "SAFETY PROTOCOL:")}
-              </p>
-              <ul className="text-xs space-y-1 text-slate-300 list-disc pl-4">
-                <li>{t("pos.protocol1", "Do not confront the individual.")}</li>
-                <li>{t("pos.protocol2", "Politely decline the registration as 'system blocked'.")}</li>
-                <li>{t("pos.protocol3", "This attempt has been logged for security purposes.")}</li>
-              </ul>
-            </div>
-            <button
-              onClick={resetFlow}
-              className="px-8 py-3 bg-white text-red-600 font-bold rounded-xl hover:bg-slate-100 transition-colors"
-            >
-              {t("pos.dismissAlert", "Dismiss & Reset")}
-            </button>
-          </div>
-        )}
-
-        {/* Step Content */}
-        <div className={`bg-slate-800/50 border border-white/10 rounded-2xl p-6 md:p-8 backdrop-blur-sm shadow-2xl ${isStolen ? 'opacity-20 pointer-events-none grayscale' : ''}`}>
-          {/* ─── STEP: Customer ─── */}
-          {step === "customer" && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div>
-                <h2 className="text-xl font-bold mb-1">{t("pos.customerLookup", "Customer Identification")}</h2>
-                <p className="text-sm text-slate-400">{t("pos.customerLookupDesc", "Enter the customer's National ID to find or create their KIZERE account.")}</p>
-              </div>
-
-              <div className="space-y-4">
-                {/* National ID */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                    {t("pos.nationalId", "National ID")} <span className="text-red-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={nationalId}
-                      onChange={(e) => setNationalId(e.target.value)}
-                      placeholder={t("pos.nationalIdPlaceholder", "e.g. 1199880012345678")}
-                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-lg tracking-wider font-mono"
-                      autoFocus
-                    />
-                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                  </div>
-                </div>
-
-                {/* Full Name */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                    {t("pos.fullName", "Full Name")} <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder={t("pos.fullNamePlaceholder", "Customer full name")}
-                    className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                  />
-                </div>
-
-                {/* Phone & Email row */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">{t("pos.phone", "Phone")}</label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+250 7XX XXX XXX"
-                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">{t("pos.email", "Email")}</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="email@example.com"
-                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={handleCustomerLookup}
-                disabled={loading}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold text-lg transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    {t("pos.lookupCustomer", "Find / Create Customer")}
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* ─── STEP: Product ─── */}
-          {step === "product" && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div>
-                <h2 className="text-xl font-bold mb-1">{t("pos.productInfo", "Product Information")}</h2>
-                <p className="text-sm text-slate-400">
-                  {t("pos.productInfoDesc", "Enter the product details to register to {{name}}.", { name: customer?.fullName || "" })}
-                </p>
-              </div>
-
-              {/* Customer badge */}
-              {customer && (
-                <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                    <User className="w-5 h-5 text-emerald-400" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-emerald-300">{customer.fullName}</div>
-                    <div className="text-xs text-slate-400">
-                      {isNewCustomer && <span className="text-amber-400 mr-2">● {t("pos.newAccount", "New Account")}</span>}
-                      ID: {customer.nationalId || customer.username}
+            ) : (
+              steps.map((s, idx) => {
+                const isActive = s.key === step;
+                const isPast = steps.findIndex(x => x.key === step) > idx;
+                return (
+                  <div key={s.key} className="relative">
+                    {idx < steps.length - 1 && (
+                      <div className={cn("absolute left-5 top-10 w-0.5 h-10", isPast ? "bg-emerald-500" : "bg-slate-800")} />
+                    )}
+                    <div className={cn("flex items-center gap-4 group transition-all", isActive ? "scale-105" : "opacity-60")}>
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors",
+                        isActive ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" :
+                        isPast ? "bg-slate-800 border-emerald-500 text-emerald-500" : "bg-slate-900 border-slate-800 text-slate-600"
+                      )}>
+                        {isPast ? <Check className="w-5 h-5" /> : <s.icon className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className={cn("text-xs font-bold uppercase tracking-wider", isActive ? "text-emerald-400" : "text-slate-500")}>{s.label}</p>
+                        {isActive && <p className="text-[10px] text-slate-400 leading-none mt-1">Current Task</p>}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })
+            )}
+          </div>
 
-              <div className="space-y-4">
-                {/* Serial Number */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                    {t("pos.serialNumber", "Serial Number / IMEI")} <span className="text-red-400">*</span>
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={serialNumber}
-                      onChange={(e) => setSerialNumber(e.target.value)}
-                      placeholder={t("pos.serialPlaceholder", "e.g. SN-GHXK29803MVXA")}
-                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono tracking-wider text-lg"
-                      autoFocus
-                    />
-                    <button
-                      onClick={() => setIsScannerOpen(true)}
-                      className="px-4 bg-slate-700/50 hover:bg-slate-700 border border-white/10 rounded-xl flex items-center justify-center text-emerald-400 transition-colors"
-                      title={t("pos.scanBarcode", "Scan Barcode")}
+          <div className="mt-auto space-y-2 pt-6 border-t border-slate-800">
+            <Button variant="outline" className="w-full border-slate-700 bg-slate-900/50 hover:bg-slate-800 justify-start gap-3" asChild>
+              <Link href="/retailer/dashboard">
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Link>
+            </Button>
+            <Button variant="ghost" className="w-full justify-start gap-3 text-slate-400 hover:text-white" onClick={resetFlow}>
+              <Activity className="w-4 h-4" />
+              Reset Session
+            </Button>
+          </div>
+        </aside>
+
+        {/* Content Body */}
+        <section className="flex-1 flex flex-col relative bg-[#0f172a] overflow-y-auto custom-scrollbar">
+          <div className="max-w-4xl w-full mx-auto p-6 md:p-10">
+            {isStolen && (
+              <div className="mb-8 p-6 bg-red-500/10 border border-red-500/50 rounded-2xl flex flex-col items-center text-center animate-in zoom-in">
+                <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center mb-4 shadow-lg shadow-red-500/20">
+                  <Activity className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-xl font-black text-red-500 uppercase italic">Security Alert</h2>
+                <p className="text-white font-medium mt-2">{alertReason}</p>
+                <Button variant="secondary" className="mt-6 bg-white text-red-600 hover:bg-slate-100 font-bold" onClick={resetFlow}>Dismiss & Reset</Button>
+              </div>
+            )}
+
+            <div className={cn("space-y-8", isStolen && "opacity-20 pointer-events-none")}>
+              {/* Step: Scenario Selection */}
+              {step === "scenario" && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                  <div className="text-center space-y-2">
+                    <h2 className="text-4xl font-black text-white">Select Operation</h2>
+                    <p className="text-slate-400">Choose the type of transaction you want to perform</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <button 
+                      onClick={() => { setScenario("sale"); setIsStockInMode(false); setStep("customer"); }}
+                      className="group p-8 bg-slate-900/50 border border-slate-800 rounded-[2rem] hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-left space-y-4"
                     >
-                      <QrCode className="w-5 h-5" />
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                        <UserPlus className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">Direct Sales</h3>
+                        <p className="text-sm text-slate-400 mt-2 leading-relaxed">Register a new or existing device to a specific client. This will create a legal ownership record.</p>
+                      </div>
+                      <div className="pt-4 flex items-center gap-2 text-emerald-500 font-bold text-xs uppercase tracking-widest">
+                        Start Client Flow <ArrowRight className="w-4 h-4" />
+                      </div>
+                    </button>
+
+                    <button 
+                      onClick={() => { setScenario("stock-in"); setIsStockInMode(true); setStep("product"); }}
+                      className="group p-8 bg-slate-900/50 border border-slate-800 rounded-[2rem] hover:border-amber-500/50 hover:bg-amber-500/5 transition-all text-left space-y-4"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
+                        <PackagePlus className="w-8 h-8" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">Stock-In Inventory</h3>
+                        <p className="text-sm text-slate-400 mt-2 leading-relaxed">Add new devices to your store's stock. These items can later be sold or assigned to customers.</p>
+                      </div>
+                      <div className="pt-4 flex items-center gap-2 text-amber-500 font-bold text-xs uppercase tracking-widest">
+                        Start Stock Flow <ArrowRight className="w-4 h-4" />
+                      </div>
                     </button>
                   </div>
-                </div>
 
-                {/* Product Name */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                    {t("pos.productName", "Product Name")} <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                    placeholder={t("pos.productNamePlaceholder", "e.g. Samsung Galaxy S24 Ultra")}
-                    className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                  />
+                  <div className="pt-10 border-t border-slate-800 flex justify-center">
+                    <div className="flex items-center gap-8 opacity-40">
+                      <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500" /> <span className="text-[10px] font-bold uppercase">Secure Sales</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500" /> <span className="text-[10px] font-bold uppercase">Inventory Control</span></div>
+                      <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500" /> <span className="text-[10px] font-bold uppercase">Theft Protected</span></div>
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                {/* Category & SKU */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">{t("pos.category", "Category")}</label>
-                    <select
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      aria-label={t("pos.category", "Category")}
-                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all appearance-none"
+              {/* Step: Customer */}
+              {step === "customer" && (
+                <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                  <div className="flex flex-col gap-2">
+                    <h2 className="text-3xl font-black text-white">Find Customer</h2>
+                    <p className="text-slate-400">Identify the customer via National ID to begin registration</p>
+                  </div>
+                  
+                  <div className="space-y-6">
+                    <div className="grid gap-6">
+                      <div className="relative group">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-emerald-500 transition-colors" />
+                        <Input
+                          placeholder="National ID Number"
+                          className="h-16 pl-12 text-lg font-mono tracking-[0.2em] bg-slate-900/50 border-slate-800 focus:border-emerald-500/50 focus:ring-emerald-500/20"
+                          value={nationalId}
+                          onChange={(e) => setNationalId(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleCustomerLookup()}
+                        />
+                        <Button
+                          variant="ghost"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 h-12 w-12 hover:bg-emerald-500/10 text-emerald-500"
+                          onClick={handleCustomerLookup}
+                        >
+                          <Search className="w-5 h-5" />
+                        </Button>
+                      </div>
+
+                      {isNewCustomer && (
+                        <div className="grid gap-6 p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl animate-in fade-in">
+                          <div className="flex items-center gap-2 text-emerald-400 mb-2">
+                            <UserPlus className="w-4 h-4" />
+                            <span className="text-xs font-bold uppercase">New Account Registration</span>
+                          </div>
+                          <Input
+                            placeholder="Customer Full Name"
+                            className="h-14 bg-slate-900/50 border-slate-800"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                          />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Input placeholder="Phone Number" className="h-14 bg-slate-900/50 border-slate-800" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                            <Input placeholder="Email Address" className="h-14 bg-slate-900/50 border-slate-800" value={email} onChange={(e) => setEmail(e.target.value)} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep("product")}>
+                      Back
+                    </Button>
+                    <Button
+                      className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-2xl shadow-xl shadow-emerald-600/20"
+                      disabled={loading || nationalId.length !== 16 || (isNewCustomer && !fullName)}
+                      onClick={handleCustomerSubmit}
                     >
-                      {categories.map((cat) => (
-                        <option key={cat} value={cat} className="bg-slate-800">{t(`categories.${cat}`, cat)}</option>
-                      ))}
-                    </select>
+                      {loading ? <Loader2 className="animate-spin" /> : "Review & Sell Item"}
+                    </Button>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1.5">{t("pos.sku", "SKU (Optional)")}</label>
-                    <input
-                      type="text"
-                      value={sku}
-                      onChange={(e) => setSku(e.target.value)}
-                      placeholder={t("pos.skuPlaceholder", "Store SKU code")}
-                      className="w-full bg-slate-700/50 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
-                    />
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setStep("customer")}
-                  className="px-6 py-4 rounded-xl border border-white/10 bg-slate-700/30 hover:bg-slate-700/50 text-slate-300 font-medium transition-all flex items-center gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  {t("common.back", "Back")}
-                </button>
-                <button
-                  onClick={handleProductConfirm}
-                  className="flex-1 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold text-lg transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                >
-                  {t("pos.reviewRegistration", "Review Registration")}
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-          )}
+              {/* Step: Product */}
+              {step === "product" && (
+                <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                  <div className="flex flex-col gap-2">
+                    <h2 className="text-3xl font-black text-white">Product Details</h2>
+                    <p className="text-slate-400">Scanning or manual entry for the item being processed</p>
+                  </div>
 
-          {/* ─── STEP: Confirm ─── */}
-          {step === "confirm" && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div>
-                <h2 className="text-xl font-bold mb-1">{t("pos.confirmTitle", "Confirm Registration")}</h2>
-                <p className="text-sm text-slate-400">{t("pos.confirmDesc", "Review the details below before registering this product.")}</p>
-              </div>
-
-              {/* Summary card */}
-              <div className="space-y-4">
-                <div className="bg-slate-700/30 border border-white/5 rounded-xl p-5">
-                  <h3 className="text-sm uppercase tracking-wider text-slate-400 mb-3">{t("pos.customerDetails", "Customer")}</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">{t("pos.fullName", "Full Name")}</span>
-                      <span className="font-medium">{customer?.fullName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">{t("pos.nationalId", "National ID")}</span>
-                      <span className="font-mono text-sm">{nationalId}</span>
-                    </div>
-                    {customer?.phone && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">{t("pos.phone", "Phone")}</span>
-                        <span>{customer.phone}</span>
+                  {customer && (
+                    <div className="flex items-center gap-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                      <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold">
+                        {customer.fullName[0]}
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-slate-700/30 border border-white/5 rounded-xl p-5">
-                  <h3 className="text-sm uppercase tracking-wider text-slate-400 mb-3">{t("pos.productDetails", "Product")}</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">{t("pos.productName", "Product Name")}</span>
-                      <span className="font-medium">{productName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">{t("pos.serialNumber", "Serial Number")}</span>
-                      <span className="font-mono text-sm">{serialNumber}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">{t("pos.category", "Category")}</span>
-                      <span>{t(`categories.${category}`, category)}</span>
-                    </div>
-                    {sku && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">{t("pos.sku", "SKU")}</span>
-                        <span className="font-mono text-sm">{sku}</span>
+                      <div>
+                        <p className="text-sm font-bold text-white">{customer.fullName}</p>
+                        <p className="text-xs text-slate-400 font-mono">{customer.nationalId}</p>
                       </div>
+                      <Badge variant="outline" className="ml-auto border-emerald-500/30 text-emerald-400">ASSIGNED</Badge>
+                    </div>
+                  )}
+
+                  <Tabs defaultValue="manual" className="w-full">
+                    <TabsList className="bg-slate-900 border border-slate-800 h-14 p-1 rounded-2xl w-full">
+                      <TabsTrigger value="manual" className="flex-1 rounded-xl data-[state=active]:bg-slate-800 h-full">Manual Entry</TabsTrigger>
+                      <TabsTrigger value="inventory" className="flex-1 rounded-xl data-[state=active]:bg-slate-800 h-full">From Inventory</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="manual" className="mt-8 space-y-6">
+                      <div className="grid gap-6">
+                        <div className="relative group">
+                          <BarcodeScanner
+                            isOpen={isScannerOpen}
+                            onClose={() => setIsScannerOpen(false)}
+                            onScan={(text) => { setSerialNumber(text); setIsScannerOpen(false); }}
+                          />
+                          <Input
+                            placeholder="Serial / IMEI Number"
+                            className="h-16 pr-24 font-mono text-lg bg-slate-900/50 border-slate-800"
+                            value={serialNumber}
+                            onChange={(e) => setSerialNumber(e.target.value)}
+                            onBlur={handleInventorySearch}
+                          />
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+                            <Button variant="ghost" className="h-12 w-12 text-emerald-500" onClick={() => setIsScannerOpen(true)}>
+                              <QrCode className="w-5 h-5" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <Input placeholder="Product Name (e.g. iPhone 15 Pro)" className="h-14 bg-slate-900/50 border-slate-800" value={productName} onChange={(e) => setProductName(e.target.value)} />
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                           <select
+                              className="h-14 bg-slate-900/50 border-slate-800 rounded-xl px-4 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/50"
+                              value={category}
+                              onChange={(e) => setCategory(e.target.value)}
+                            >
+                              <option value="Electronics">Electronics</option>
+                              <option value="Phones">Phones</option>
+                              <option value="Computers">Computers</option>
+                              <option value="Other">Other</option>
+                            </select>
+                            <Input placeholder="SKU (Optional)" className="h-14 bg-slate-900/50 border-slate-800" value={sku} onChange={(e) => setSku(e.target.value)} />
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="inventory" className="mt-8">
+                       <div className="grid gap-4">
+                        {inventory.length > 0 ? (
+                          inventory.slice(0, 5).map(p => (
+                            <button
+                              key={p.id}
+                              className="flex items-center gap-4 p-4 bg-slate-900/50 border border-slate-800 rounded-2xl hover:bg-slate-800 transition-colors text-left"
+                              onClick={() => { setSerialNumber(p.serialNumber); setProductName(p.name); setCategory(p.category); setStep("confirm"); }}
+                            >
+                              <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center"><Package className="w-5 h-5 text-slate-500" /></div>
+                              <div className="flex-1">
+                                <p className="text-sm font-bold text-white">{p.name}</p>
+                                <p className="text-xs text-slate-500 font-mono">{p.serialNumber}</p>
+                              </div>
+                              <Badge variant="secondary" className="bg-slate-800 text-slate-400">IN STOCK</Badge>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="py-10 text-center text-slate-500 border-2 border-dashed border-slate-800 rounded-2xl">
+                            No inventory items found.
+                          </div>
+                        )}
+                       </div>
+                    </TabsContent>
+                  </Tabs>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep(scenario === "stock-in" ? "product" : "customer")}>
+                      Back
+                    </Button>
+                    <Button
+                      className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-2xl shadow-xl shadow-emerald-600/20"
+                      disabled={!serialNumber || !productName}
+                      onClick={() => setStep(scenario === "stock-in" ? "confirm" : "customer")}
+                    >
+                      {scenario === "stock-in" ? "Review Stock Entry" : "Assign to Client"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Confirm */}
+              {step === "confirm" && (
+                <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+                  <div className="flex flex-col gap-2">
+                    <h2 className="text-3xl font-black text-white">Review & Confirm</h2>
+                    <p className="text-slate-400">Please verify all information is correct before submitting</p>
+                  </div>
+
+                  <div className="grid gap-6">
+                    <Card className="bg-slate-900/50 border-slate-800 overflow-hidden rounded-2xl">
+                      <div className="p-6 space-y-4">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="p-2 bg-emerald-500/10 rounded-lg"><Package className="w-4 h-4 text-emerald-500" /></div>
+                          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Product Information</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-y-4 text-sm">
+                          <p className="text-slate-500">Model Name</p><p className="text-right font-bold text-white">{productName}</p>
+                          <p className="text-slate-500">Serial/IMEI</p><p className="text-right font-mono text-emerald-400">{serialNumber}</p>
+                          <p className="text-slate-500">Category</p><p className="text-right">{category}</p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    {!isStockInMode && (
+                      <Card className="bg-slate-900/50 border-slate-800 overflow-hidden rounded-2xl">
+                        <div className="p-6 space-y-4">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-blue-500/10 rounded-lg"><User className="w-4 h-4 text-blue-500" /></div>
+                            <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Owner Details</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-y-4 text-sm">
+                            <p className="text-slate-500">Full Name</p><p className="text-right font-bold text-white">{customer?.fullName}</p>
+                            <p className="text-slate-500">National ID</p><p className="text-right font-mono">{customer?.nationalId}</p>
+                          </div>
+                        </div>
+                      </Card>
                     )}
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setStep("product")}
-                  className="px-6 py-4 rounded-xl border border-white/10 bg-slate-700/30 hover:bg-slate-700/50 text-slate-300 font-medium transition-all flex items-center gap-2"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  {t("common.back", "Back")}
-                </button>
-                <button
-                  onClick={handleRegister}
-                  disabled={loading}
-                  className="flex-1 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold text-lg transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-5 h-5" />
-                      {t("pos.registerNow", "Register Product")}
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ─── STEP: Receipt ─── */}
-          {step === "receipt" && registeredProduct && (
-            <div className="space-y-6 animate-in fade-in duration-300 text-center">
-              {/* Success animation */}
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30 animate-in zoom-in duration-500">
-                  <CheckCircle2 className="w-10 h-10 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold">{t("pos.receiptTitle", "Registration Complete!")}</h2>
-                <p className="text-sm text-slate-400 max-w-md">
-                  {t("pos.receiptDesc", "The product has been registered and the ownership record created. Share the receipt with the customer.")}
-                </p>
-              </div>
-
-              {/* Digital receipt card */}
-              <div className="mx-auto max-w-sm bg-white text-slate-900 rounded-2xl p-6 shadow-2xl">
-                <div className="flex items-center justify-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4 text-white" />
-                  </div>
-                  <span className="font-bold text-lg">KIZERE</span>
-                </div>
-
-                <div className="border-t border-dashed border-slate-200 pt-4 space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">{t("pos.productName", "Product")}</span>
-                    <span className="font-semibold">{registeredProduct.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">{t("pos.serialNumber", "Serial")}</span>
-                    <span className="font-mono text-xs">{registeredProduct.serialNumber}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">{t("pos.owner", "Owner")}</span>
-                    <span className="font-semibold">{customer?.fullName}</span>
-                  </div>
-                  {isNewCustomer && (
-                    <div className="flex justify-between bg-amber-50 p-2 rounded text-amber-900 border border-amber-200 mt-2">
-                      <span className="font-semibold text-xs text-center w-full">
-                        {t("pos.claimAccountHint", "Customer must claim account at kizere.rw/claim-account")}
-                      </span>
+                    <div className="p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
+                      <p className="text-xs text-emerald-400 font-bold flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4" />
+                        LEGAL CONFIRMATION
+                      </p>
+                      <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                        By clicking register, I confirm this device belongs to the identified individual and its provenance has been verified according to KIZERE guidelines.
+                      </p>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">{t("pos.registeredAt", "Date")}</span>
-                    <span>{new Date().toLocaleDateString()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">{t("pos.productId", "Product ID")}</span>
-                    <span className="font-mono font-bold text-emerald-600">POS-{String(registeredProduct.id).padStart(6, "0")}</span>
+
+                  <div className="flex gap-4 pt-4">
+                    <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep("product")}>
+                      Back
+                    </Button>
+                    <Button
+                      className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-2xl shadow-xl shadow-emerald-600/20"
+                      disabled={loading}
+                      onClick={handleRegister}
+                    >
+                      {loading ? <Loader2 className="animate-spin" /> : (scenario === "stock-in" ? "Complete Stock Entry" : "Finalize Sale & Register")}
+                    </Button>
                   </div>
                 </div>
+              )}
 
-                {/* QR Code */}
-                <div className="mt-4 pt-4 border-t border-dashed border-slate-200 flex flex-col items-center">
-                  {verifyUrl ? (
-                    <QRCodeSVG value={verifyUrl} size={128} level="M" className="rounded-xl" />
-                  ) : (
-                    <div className="w-32 h-32 bg-slate-100 rounded-xl flex items-center justify-center border-2 border-dashed border-slate-300">
-                      <QrCode className="w-16 h-16 text-slate-400" />
+              {/* Step: Receipt */}
+              {step === "receipt" && (
+                <div className="space-y-10 animate-in slide-in-from-bottom-4 duration-500 flex flex-col items-center">
+                  <div className="text-center">
+                    <div className="w-24 h-24 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-600/30">
+                      <Check className="w-12 h-12 text-white stroke-[3px]" />
                     </div>
-                  )}
-                  <p className="text-xs text-slate-400 mt-2">{t("pos.scanToVerify", "Scan to verify ownership")}</p>
-                </div>
+                    <h2 className="text-4xl font-black text-white">Success!</h2>
+                    <p className="text-slate-400 mt-2">Ownership has been secured and registered.</p>
+                  </div>
 
-                <div className="mt-4 pt-4 border-t border-dashed border-slate-200 text-center">
-                  <p className="text-xs text-slate-400">{t("pos.receiptFooter", "Verified by KIZERE • kizere.rw")}</p>
-                </div>
-              </div>
+                  <Card className="w-full max-w-sm bg-white text-slate-900 overflow-hidden shadow-2xl rounded-[2rem]">
+                    <div className="p-8 space-y-6">
+                      <div className="flex flex-col items-center text-center space-y-1">
+                        <div className="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center text-white mb-2"><ShieldCheck /></div>
+                        <p className="font-black text-lg">KIZERE SECURE</p>
+                        <p className="text-[10px] text-slate-500 font-bold tracking-[0.2em] uppercase">Digital Ownership Receipt</p>
+                      </div>
 
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3 max-w-sm mx-auto">
-                <button
-                  onClick={handlePrint}
-                  className="flex-1 py-3 rounded-xl border border-white/10 bg-slate-700/30 hover:bg-slate-700/50 text-slate-300 font-medium transition-all flex items-center justify-center gap-2"
-                >
-                  <Printer className="w-4 h-4" />
-                  {t("pos.printReceipt", "Print")}
-                </button>
-                <button
-                  onClick={() => {
-                    const receiptText = `${t("pos.title", "KIZERE POS")} ${t("pos.confirmTitle", "Registration")}\n${t("pos.productName", "Product")}: ${registeredProduct.name}\n${t("pos.serialNumber", "Serial")}: ${registeredProduct.serialNumber}\n${t("pos.owner", "Owner")}: ${customer?.fullName}\nID: POS-${String(registeredProduct.id).padStart(6, "0")}\n${t("pos.registeredAt", "Date")}: ${new Date().toLocaleDateString()}`;
-                    navigator.clipboard.writeText(receiptText);
-                    toast({ title: t("pos.copied", "Copied!"), description: t("pos.copiedDesc", "Receipt copied to clipboard") });
-                  }}
-                  className="flex-1 py-3 rounded-xl border border-white/10 bg-slate-700/30 hover:bg-slate-700/50 text-slate-300 font-medium transition-all flex items-center justify-center gap-2"
-                >
-                  <Copy className="w-4 h-4" />
-                  {t("pos.copyReceipt", "Copy")}
-                </button>
-                <button
-                  onClick={resetFlow}
-                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
-                >
-                  <Package className="w-4 h-4" />
-                  {t("pos.registerAnother", "Register Another")}
-                </button>
-              </div>
+                      <div className="border-t border-b border-dashed border-slate-200 py-6 space-y-4">
+                        <div className="flex justify-between text-xs"><span className="text-slate-400 font-bold uppercase">Product</span><span className="font-black text-right">{productName}</span></div>
+                        <div className="flex justify-between text-xs"><span className="text-slate-400 font-bold uppercase">Serial</span><span className="font-mono text-emerald-600 font-bold">{serialNumber}</span></div>
+                        {!isStockInMode && <div className="flex justify-between text-xs"><span className="text-slate-400 font-bold uppercase">Owner</span><span className="font-black text-right">{customer?.fullName}</span></div>}
+                        <div className="flex justify-between text-xs"><span className="text-slate-400 font-bold uppercase">Date</span><span>{new Date().toLocaleDateString()}</span></div>
+                      </div>
+
+                      <div className="flex flex-col items-center space-y-4">
+                        <div className="p-2 bg-slate-50 rounded-2xl border border-slate-100">
+                           {verifyUrl ? <QRCodeSVG value={verifyUrl} size={140} level="H" /> : <QrCode size={140} className="text-slate-200" />}
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-bold">SCAN TO VERIFY AUTHENTICITY</p>
+                      </div>
+                    </div>
+                    <div className="bg-slate-50 p-4 text-center border-t border-slate-100">
+                      <p className="text-[10px] font-bold text-slate-400">TRX ID: {registeredProduct?.id || 'POS-88294'}</p>
+                    </div>
+                  </Card>
+
+                  <div className="flex flex-wrap justify-center gap-4 w-full">
+                    <Button variant="outline" className="h-14 px-8 border-slate-800 bg-slate-900/50 rounded-xl font-bold gap-3" onClick={() => window.print()}>
+                      <Printer className="w-4 h-4" />
+                      Print Receipt
+                    </Button>
+                    <Button variant="outline" className="h-14 px-8 border-slate-800 bg-slate-900/50 rounded-xl font-bold gap-3" onClick={() => {
+                      navigator.clipboard.writeText(verifyUrl);
+                      toast({ title: "Copied", description: "Verification link copied to clipboard" });
+                    }}>
+                      <Copy className="w-4 h-4" />
+                      Copy Link
+                    </Button>
+                    <Button className="h-14 px-10 bg-emerald-600 hover:bg-emerald-500 rounded-xl font-bold gap-3" onClick={resetFlow}>
+                      <Plus className="w-4 h-4" />
+                      New Registration
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        </section>
+      </main>
+
+      {/* Footer / Status Bar */}
+      <footer className="h-8 bg-[#0f172a] border-t border-slate-800/50 flex items-center justify-between px-6 shrink-0">
+        <div className="flex items-center gap-4">
+           <div className="flex items-center gap-2">
+            <div className={cn("w-2 h-2 rounded-full", isOnline ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-red-500")} />
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{isOnline ? "Server Online" : "Working Offline"}</span>
+          </div>
+          <div className="h-3 w-px bg-slate-800" />
+          <p className="text-[10px] font-mono text-slate-600 uppercase">POS Terminal v1.2.4-stable</p>
         </div>
-      </div>
-      <BarcodeScanner
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onScan={(text) => {
-          setSerialNumber(text);
-          setIsScannerOpen(false);
-          toast({ title: t("pos.scanSuccess", "Scan successful"), description: text });
-        }}
-        onError={(err) => {
-          console.warn("Scan error:", err);
-        }}
-      />
+        <div className="flex items-center gap-4">
+          <p className="text-[10px] font-bold text-slate-600 uppercase">Session Time: 02:45:12</p>
+        </div>
+      </footer>
     </div>
   );
+}
+
+function Plus(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M5 12h14" />
+      <path d="M12 5v14" />
+    </svg>
+  )
 }

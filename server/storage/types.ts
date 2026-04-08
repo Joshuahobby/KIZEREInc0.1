@@ -10,7 +10,7 @@ import {
   PushSubscription, InsertPushSubscription, VerificationRequest, InsertVerificationRequest,
   AccountStatus, VerificationStatus, PaymentType,
   Retailer, InsertRetailer, PosProduct, InsertPosProduct, OwnershipLedgerEntry, InsertOwnershipLedger,
-  PosSecurityAlert, InsertPosSecurityAlert
+  PosSecurityAlert, InsertPosSecurityAlert, PublicVerifyLog, InsertPublicVerifyLog
 } from "@shared/schema";
 
 export interface IStorage {
@@ -241,6 +241,10 @@ export interface IStorage {
 
   createPosSecurityAlert(alert: InsertPosSecurityAlert): Promise<PosSecurityAlert>;
   getRetailerSecurityAlerts(retailerId: number): Promise<PosSecurityAlert[]>;
+
+  // Public verify audit logs
+  createPublicVerifyLog(data: InsertPublicVerifyLog): Promise<PublicVerifyLog>;
+  getPublicVerifyLogs(options: { page: number; limit: number; identifier?: string }): Promise<{ logs: PublicVerifyLog[]; total: number }>;
   getRetailerTransactionsPaginated(retailerId: number, params: { page: number; limit: number }): Promise<{ data: any[]; total: number; page: number; limit: number; totalPages: number }>;
   getRetailerCustomersPaginated(retailerId: number, params: { page: number; limit: number }): Promise<{ data: any[]; total: number; page: number; limit: number; totalPages: number }>;
   getOrCreateRetailerCustomerSettings(retailerId: number, customerId: number): Promise<any>;

@@ -65,7 +65,8 @@ import {
   Printer,
   Download,
   FileText,
-  CheckCircle2
+  CheckCircle2,
+  Undo2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
@@ -77,6 +78,7 @@ import { BarcodeScanner } from "@/components/pos/barcode-scanner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BulkReceiptPrinter, BulkReceiptPrinterHandle } from "@/components/pos/BulkReceiptPrinter";
 import Papa from "papaparse";
+import { thermalPrinter } from "@/lib/printer";
 
 // Types
 interface PosProduct {
@@ -168,10 +170,13 @@ export default function RetailerProducts() {
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
-    action: "archive" | "report-stolen" | "recover";
+    action: "archive" | "report-stolen" | "recover" | "return";
     productId: number;
     productName: string;
   }>({ open: false, action: "archive", productId: 0, productName: "" });
+
+  const [returnReason, setReturnReason] = useState<string>("Refund");
+  const [returnNotes, setReturnNotes] = useState<string>("");
 
   // Build query params
   const queryParams = new URLSearchParams();
@@ -291,6 +296,25 @@ export default function RetailerProducts() {
     },
   });
 
+  const returnMutation = useMutation({
+    mutationFn: (data: { productId: number; reason: string; notes?: string }) =>
+      apiRequest("/api/pos/return", { method: "POST", data }),
+    onSuccess: () => {
+      toast({ title: t("pos.inventory.returnSuccess") || "Product returned successfully" });
+      queryClient.invalidateQueries({ queryKey: ["/api/pos/my-products/search"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pos/my-stats"] });
+      setReturnReason("Refund");
+      setReturnNotes("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: t("pos.error") || "Error",
+        description: error.message || "Failed to process return",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleConfirmAction = useCallback(() => {
     const { action, productId } = confirmDialog;
     switch (action) {
@@ -303,11 +327,14 @@ export default function RetailerProducts() {
       case "recover":
         recoverMutation.mutate(productId);
         break;
+      case "return":
+        returnMutation.mutate({ productId, reason: returnReason, notes: returnNotes || undefined });
+        break;
     }
     setConfirmDialog(prev => ({ ...prev, open: false }));
-  }, [confirmDialog, archiveMutation, reportStolenMutation, recoverMutation]);
+  }, [confirmDialog, archiveMutation, reportStolenMutation, recoverMutation, returnMutation, returnReason, returnNotes]);
 
-  const isMutating = archiveMutation.isPending || reportStolenMutation.isPending || recoverMutation.isPending;
+  const isMutating = archiveMutation.isPending || reportStolenMutation.isPending || recoverMutation.isPending || returnMutation.isPending;
 
   // Reset page when filters change
   const handleSearchChange = (value: string) => {
@@ -398,6 +425,12 @@ export default function RetailerProducts() {
       title: t("pos.inventory.confirmRecover") || "Recover Product",
       description: t("pos.inventory.confirmRecoverDesc") || "This will mark the stolen product as recovered and restore it to active status. Are you sure?",
       action: t("pos.inventory.recover") || "Recover",
+      variant: "default",
+    },
+    return: {
+      title: t("pos.inventory.confirmReturn") || "Return Product",
+      description: t("pos.inventory.confirmReturnDesc") || "This will transfer ownership of this product back to your store inventory.",
+      action: t("pos.inventory.return") || "Process Return",
       variant: "default",
     },
   };
@@ -747,6 +780,44 @@ export default function RetailerProducts() {
                                   <Printer className="h-4 w-4" />
                                   Print Receipt
                                 </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={async () => {
+                                    const ok = await thermalPrinter.printLabel({
+                                      productName: product.name,
+                                      serialNumber: product.serialNumber,
+                                      sku: product.sku || undefined,
+                                      kizereId: `POS-${String(product.id).padStart(6, "0")}`,
+                                    });
+                                    if (ok) {
+                                      toast({ title: "Label Printed", description: `Label for ${product.name} sent to printer.` });
+                                    } else {
+                                      toast({ title: "Printer Unavailable", description: "Could not connect to thermal printer. Ensure Web Serial is enabled.", variant: "destructive" });
+                                    }
+                                  }}
+                                  className="gap-2"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  Print Label
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {product.status === "transferred" && (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setReturnReason("Refund");
+                                      setReturnNotes("");
+                                      setConfirmDialog({
+                                        open: true,
+                                        action: "return",
+                                        productId: product.id,
+                                        productName: product.name,
+                                      });
+                                    }}
+                                    className="gap-2 text-orange-600 focus:text-orange-600"
+                                  >
+                                    <Undo2 className="h-4 w-4" />
+                                    {t("pos.inventory.return") || "Return / Reclaim"}
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuSeparator />
                                 {product.status !== "archived" && product.status !== "stolen" && (
                                   <DropdownMenuItem
@@ -879,6 +950,35 @@ export default function RetailerProducts() {
                 {confirmLabels[confirmDialog.action]?.action}
               </AlertDialogAction>
             </AlertDialogFooter>
+
+            {/* Return-specific fields */}
+            {confirmDialog.action === "return" && (
+              <div className="space-y-3 pt-2 border-t mt-2">
+                <div className="space-y-1.5">
+                  <Label>{t("pos.inventory.returnReason") || "Return Reason"}</Label>
+                  <Select value={returnReason} onValueChange={setReturnReason}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Refund">Refund</SelectItem>
+                      <SelectItem value="Repair">Repair / Service</SelectItem>
+                      <SelectItem value="Exchange">Exchange</SelectItem>
+                      <SelectItem value="Defective">Defective Product</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t("pos.inventory.returnNotes") || "Notes (optional)"}</Label>
+                  <Input
+                    value={returnNotes}
+                    onChange={(e) => setReturnNotes(e.target.value)}
+                    placeholder={t("pos.inventory.returnNotesPlaceholder") || "e.g. Screen defect, customer wants exchange"}
+                  />
+                </div>
+              </div>
+            )}
           </AlertDialogContent>
         </AlertDialog>
 

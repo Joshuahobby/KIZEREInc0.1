@@ -22,11 +22,22 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { AuthWall } from "@/components/ui/auth-wall";
 import { PageLayout } from "@/components/layout/page-layout";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,6 +100,32 @@ export default function CommandCenter() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { toast } = useToast();
   const [jobsLoading, setJobsLoading] = useState(false);
+
+  // Broadcast notification dialog state
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastTitle, setBroadcastTitle] = useState("");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcastRole, setBroadcastRole] = useState<string>("all");
+  const [broadcastLoading, setBroadcastLoading] = useState(false);
+
+  const handleBroadcast = async () => {
+    if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
+    setBroadcastLoading(true);
+    try {
+      const body: Record<string, string> = { title: broadcastTitle, message: broadcastMessage };
+      if (broadcastRole !== "all") body.targetRole = broadcastRole;
+      const res = await apiRequest("/api/notifications/broadcast", { method: "POST", data: body }) as { sent: number };
+      toast({ title: "Broadcast sent", description: `Delivered to ${res.sent} users.` });
+      setBroadcastOpen(false);
+      setBroadcastTitle("");
+      setBroadcastMessage("");
+      setBroadcastRole("all");
+    } catch {
+      toast({ title: "Broadcast failed", variant: "destructive" });
+    } finally {
+      setBroadcastLoading(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -340,6 +377,72 @@ export default function CommandCenter() {
                     <Download className="mr-2 h-4 w-4" />
                     Export Report
                   </Button>
+
+                  {/* Broadcast Notification */}
+                  <Dialog open={broadcastOpen} onOpenChange={setBroadcastOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-start">
+                        <Bell className="mr-2 h-4 w-4" />
+                        Broadcast Notification
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Broadcast Notification</DialogTitle>
+                        <DialogDescription>
+                          Send an in-app notification to all users or a specific role.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-2">
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="bc-title">Title</Label>
+                          <Input
+                            id="bc-title"
+                            placeholder="e.g. Platform Maintenance"
+                            value={broadcastTitle}
+                            onChange={e => setBroadcastTitle(e.target.value)}
+                            maxLength={200}
+                          />
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label htmlFor="bc-message">Message</Label>
+                          <Textarea
+                            id="bc-message"
+                            placeholder="Enter your message…"
+                            rows={4}
+                            value={broadcastMessage}
+                            onChange={e => setBroadcastMessage(e.target.value)}
+                            maxLength={1000}
+                          />
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label>Target Audience</Label>
+                          <Select value={broadcastRole} onValueChange={setBroadcastRole}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Users</SelectItem>
+                              <SelectItem value="Subscriber">Subscribers</SelectItem>
+                              <SelectItem value="Retailer">Retailers</SelectItem>
+                              <SelectItem value="Agent">Agents</SelectItem>
+                              <SelectItem value="Admin">Admins</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setBroadcastOpen(false)}>Cancel</Button>
+                        <Button
+                          onClick={handleBroadcast}
+                          disabled={broadcastLoading || !broadcastTitle.trim() || !broadcastMessage.trim()}
+                        >
+                          {broadcastLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bell className="mr-2 h-4 w-4" />}
+                          Send
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </div>

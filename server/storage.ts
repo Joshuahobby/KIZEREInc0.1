@@ -253,6 +253,10 @@ export class DatabaseStorage implements IStorage {
   getOrCreateRetailerCustomerSettings = posOps.getOrCreateRetailerCustomerSettings;
   getRetailerCustomerDetail = posOps.getRetailerCustomerDetail;
   updateRetailerCustomerSettings = posOps.updateRetailerCustomerSettings;
+
+  // Public verify audit logs
+  createPublicVerifyLog = posOps.createPublicVerifyLog;
+  getPublicVerifyLogs = posOps.getPublicVerifyLogs;
 }
 
 export const storage = new DatabaseStorage();

@@ -393,6 +393,13 @@ router.get("/public/:uniqueIdentifier", publicVerifyLimiter, async (req, res) =>
           ip: req.ip,
           userAgent: req.get('user-agent'),
         });
+        storage.createPublicVerifyLog({
+          identifier: uniqueIdentifier,
+          source: 'registry',
+          itemStatus: item.status,
+          ipAddress: req.ip || null,
+          userAgent: req.get('user-agent') || null,
+        }).catch(err => logger.error('Failed to persist verify audit log', { err }));
       }
       return res.json({
         name: item.name,
@@ -418,6 +425,13 @@ router.get("/public/:uniqueIdentifier", publicVerifyLimiter, async (req, res) =>
           ip: req.ip,
           userAgent: req.get('user-agent'),
         });
+        storage.createPublicVerifyLog({
+          identifier: uniqueIdentifier,
+          source: 'pos',
+          itemStatus: posProduct.status,
+          ipAddress: req.ip || null,
+          userAgent: req.get('user-agent') || null,
+        }).catch(err => logger.error('Failed to persist verify audit log', { err }));
       }
       return res.json({
         name: posProduct.name,

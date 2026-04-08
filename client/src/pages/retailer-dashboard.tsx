@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Users, ArrowRightLeft, Activity, Store, Plus, TrendingUp, Calendar, Key, RefreshCw, CheckCircle2, Copy, Wallet, Clock } from "lucide-react";
+import { Package, Users, ArrowRightLeft, Activity, Store, Plus, TrendingUp, Calendar, Key, RefreshCw, CheckCircle2, Copy, Wallet, Clock, Printer, ClipboardList, PackagePlus } from "lucide-react";
 import { format, subDays, startOfMonth, startOfYear } from "date-fns";
 import { useLocation } from "wouter";
 import type { Retailer } from "@shared/schema";
@@ -33,6 +33,76 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { thermalPrinter } from "@/lib/printer";
+
+// ─── Shift Summary Card ───────────────────────────────────────────────────────
+
+function ShiftSummaryCard() {
+  const { t } = useLanguage();
+  const { toast } = useToast();
+
+  const { data, isLoading } = useQuery<{ success: boolean; summary: ShiftSummary }>({
+    queryKey: ["/api/pos/shift-summary"],
+    queryFn: () => apiRequest("/api/pos/shift-summary"),
+  });
+
+  const summary = data?.summary;
+
+  const handlePrint = async () => {
+    if (!summary) return;
+    const ok = await thermalPrinter.printShiftSummary(summary);
+    if (ok) {
+      toast({ title: "Summary Printed", description: "Daily shift summary sent to printer." });
+    } else {
+      toast({ title: "Printer Error", description: "Could not connect to thermal printer.", variant: "destructive" });
+    }
+  };
+
+  if (isLoading) return <Skeleton className="h-[200px] w-full rounded-3xl" />;
+
+  return (
+    <Card className="border-border/50 shadow-premium overflow-hidden bg-background/50 backdrop-blur-md rounded-3xl">
+      <CardHeader className="border-b border-border/50 bg-muted/20 pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <ClipboardList className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">{t("pos.shiftSummary.title") || "Daily Shift Summary"}</CardTitle>
+              <p className="text-sm text-muted-foreground">{t("pos.shiftSummary.subtitle") || "Real-time overview of today's business activity."}</p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" onClick={handlePrint} className="gap-2">
+            <Printer className="h-4 w-4" />
+            {t("pos.printSummary") || "Print EOD"}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t("pos.registrations") || "Registrations"}</p>
+            <p className="text-2xl font-black text-primary">{summary?.totalRegistrations || 0}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t("pos.transfers") || "Transfers"}</p>
+            <p className="text-2xl font-black text-green-600">{summary?.totalTransfers || 0}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t("pos.returns") || "Returns"}</p>
+            <p className="text-2xl font-black text-orange-600">{summary?.totalReturns || 0}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{t("pos.transactions") || "Total Tx"}</p>
+            <p className="text-2xl font-black text-slate-700 dark:text-slate-200">{summary?.totalTransactions || 0}</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 // Chart color palette (consistent with existing dashboard charts)
 const CATEGORY_COLORS = [
@@ -99,6 +169,17 @@ interface PosProduct {
   status: string;
   registrationDate: string;
   sku: string | null;
+}
+
+interface ShiftSummary {
+  date: string;
+  totalRegistrations: number;
+  totalTransfers: number;
+  totalReturns: number;
+  totalStolenReports: number;
+  totalTransactions: number;
+  registrationsByCategory: { category: string; count: number }[];
+  recentEntries: any[];
 }
 
 // Custom tooltip for category donut chart
@@ -272,7 +353,14 @@ export default function RetailerDashboard() {
                 </SelectContent>
               </Select>
               <Button
-                onClick={() => navigate("/retailer/products?add=true")}
+                onClick={() => navigate("/pos?mode=stock-in")}
+                className="gap-2 bg-amber-500 hover:bg-amber-600 text-white border-none shadow-lg shadow-amber-500/20"
+              >
+                <PackagePlus className="h-4 w-4" />
+                {t("pos.stockIn") || "Stock-In"}
+              </Button>
+              <Button
+                onClick={() => navigate("/pos")}
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" />
@@ -609,128 +697,14 @@ export default function RetailerDashboard() {
         {/* Activity & Products Row */}
         <div className="grid gap-4 md:grid-cols-2">
           {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Activity className="h-5 w-5 text-muted-foreground" />
-                {t("pos.recentActivity") || "Recent Activity"}
-              </CardTitle>
-              <CardDescription>
-                {t("pos.recentActivityDesc") || "Latest events processed by your POS terminal"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {statsLoading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))}
-                </div>
-              ) : stats?.recentActivity && stats.recentActivity.length > 0 ? (
-                <div className="space-y-3">
-                  {stats.recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                      <div className="flex items-center gap-3">
-                        <div className={`h-2 w-2 rounded-full shrink-0 ${
-                          activity.event === "sale" ? "bg-blue-500" :
-                          activity.event === "transfer" ? "bg-green-500" :
-                          activity.event === "stolen_report" ? "bg-red-500" :
-                          "bg-gray-500"
-                        }`} />
-                        <div>
-                          <p className="text-sm font-medium capitalize">{activity.event.replace("_", " ")}</p>
-                          <p className="text-xs text-muted-foreground">
-                            POS-{String(activity.productId).padStart(6, "0")}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-mono text-muted-foreground">
-                          {format(new Date(activity.timestamp), "MMM d, HH:mm")}
-                        </p>
-                        {activity.notes && (
-                          <p className="text-xs text-muted-foreground max-w-[150px] truncate">{activity.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                  {t("pos.noActivity") || "No recent activity found."}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
+...
           {/* Recent Products */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Package className="h-5 w-5 text-muted-foreground" />
-                    {t("pos.recentProducts") || "Recent Registrations"}
-                  </CardTitle>
-                  <CardDescription>
-                    {t("pos.recentProductsDesc") || "Latest products registered by your business"}
-                  </CardDescription>
-                </div>
-                {products.length > 5 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {products.length} {t("pos.total") || "total"}
-                  </Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {productsLoading ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton key={i} className="h-10 w-full" />
-                  ))}
-                </div>
-              ) : products.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-xs">{t("pos.inventory.serialNumber")}</TableHead>
-                        <TableHead className="text-xs">{t("pos.inventory.productName")}</TableHead>
-                        <TableHead className="text-xs hidden sm:table-cell">{t("pos.inventory.category")}</TableHead>
-                        <TableHead className="text-xs">{t("pos.inventory.status")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {products.slice(0, 8).map((product) => (
-                        <TableRow key={product.id} className="group">
-                          <TableCell className="font-mono text-xs">
-                            {product.serialNumber}
-                          </TableCell>
-                          <TableCell className="font-medium text-sm max-w-[160px] truncate">
-                            {product.name}
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">
-                            {product.category}
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge status={product.status} />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-muted-foreground text-sm">
-                  {t("pos.noProducts") || "No products registered yet."}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+...
         </div>
 
+        <ShiftSummaryCard />
         <CommissionCard />
+
       </motion.div>
     </AppLayout>
   );

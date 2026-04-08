@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Save, Store, Shield, Bell, CreditCard, Upload, Loader2 } from "lucide-react";
+import { Save, Store, Shield, Bell, CreditCard, Upload, Loader2, Users, Plus, Trash2, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ProfileFormValues {
   name: string;
@@ -24,10 +25,23 @@ interface ProfileFormValues {
   walletPhone: string;
 }
 
+interface Cashier {
+  id: string;
+  name: string;
+  pin: string;
+  isActive: boolean;
+}
+
 export default function RetailerSettings() {
   const { t } = useLanguage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user, refreshUser } = useAuth();
+  
+  const [cashiers, setCashiers] = React.useState<Cashier[]>([]);
+  const [newCashierName, setNewCashierName] = React.useState("");
+  const [newCashierPin, setNewCashierPin] = React.useState("");
+  const isInitialized = React.useRef(false);
 
   const { data: profileData, isLoading: isProfileLoading } = useQuery({
     queryKey: ["/api/pos/my-profile"],
@@ -48,12 +62,25 @@ export default function RetailerSettings() {
         address: p.address || "",
         walletPhone: p.walletPhone || "",
       });
+      
+      // Load cashiers from user preferences ONLY ONCE or if user changes
+      if (user?.preferences?.cashiers && !isInitialized.current) {
+        setCashiers(user.preferences.cashiers);
+        isInitialized.current = true;
+      }
     }
-  }, [profileData, reset]);
+  }, [profileData, reset, user]);
 
   const updateMutation = useMutation({
-    mutationFn: (values: ProfileFormValues) => apiPatch("/api/pos/my-profile", values),
-    onSuccess: () => {
+    mutationFn: (values: ProfileFormValues) => apiPatch("/api/pos/my-profile", {
+      ...values,
+      preferences: {
+        ...user?.preferences,
+        cashiers
+      }
+    }),
+    onSuccess: async () => {
+      await refreshUser();
       queryClient.invalidateQueries({ queryKey: ["/api/pos/my-profile"] });
       toast({
         title: "Settings Saved",
@@ -71,6 +98,36 @@ export default function RetailerSettings() {
 
   const onSubmit = (values: ProfileFormValues) => {
     updateMutation.mutate(values);
+  };
+
+  const addCashier = () => {
+    if (!newCashierName.trim() || !newCashierPin.match(/^\d{4,6}$/)) {
+      toast({
+        title: "Invalid Input",
+        description: "Please provide a name and a 4-6 digit numeric PIN.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const newCashier: Cashier = {
+      id: Math.random().toString(36).substring(2, 9),
+      name: newCashierName.trim(),
+      pin: newCashierPin,
+      isActive: true
+    };
+
+    setCashiers([...cashiers, newCashier]);
+    setNewCashierName("");
+    setNewCashierPin("");
+    toast({
+      title: "Cashier Added",
+      description: "Remember to save your changes to permanentely store the new cashier."
+    });
+  };
+
+  const removeCashier = (id: string) => {
+    setCashiers(cashiers.filter(c => c.id !== id));
   };
 
   return (
@@ -110,6 +167,10 @@ export default function RetailerSettings() {
             <TabsTrigger value="notifications" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Bell className="h-4 w-4 mr-2" />
               Notifications
+            </TabsTrigger>
+            <TabsTrigger value="cashiers" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Users className="h-4 w-4 mr-2" />
+              Cashiers
             </TabsTrigger>
             <TabsTrigger value="security" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Shield className="h-4 w-4 mr-2" />
@@ -202,8 +263,82 @@ export default function RetailerSettings() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-6">
+          <TabsContent value="cashiers" className="space-y-6">
             <Card className="border-border/50 shadow-premium bg-background/50 backdrop-blur-md rounded-3xl overflow-hidden">
+              <CardHeader className="border-b border-border/50 bg-muted/20">
+                <CardTitle>Cashier Sub-Accounts</CardTitle>
+                <CardDescription>Manage staff accounts for the POS terminal. Each cashier requires a unique PIN.</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                <div className="grid gap-4 sm:grid-cols-[1fr_120px_auto] items-end border-b border-border/50 pb-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="cashierName">Full Name</Label>
+                    <Input 
+                      id="cashierName" 
+                      placeholder="e.g. Jean Pierre" 
+                      value={newCashierName}
+                      onChange={(e) => setNewCashierName(e.target.value)}
+                      className="rounded-xl bg-background border-border/50" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cashierPin">PIN (4-6 digits)</Label>
+                    <Input 
+                      id="cashierPin" 
+                      type="password" 
+                      maxLength={6}
+                      placeholder="****"
+                      value={newCashierPin}
+                      onChange={(e) => setNewCashierPin(e.target.value)}
+                      className="rounded-xl bg-background border-border/50" 
+                    />
+                  </div>
+                  <Button onClick={addCashier} className="rounded-xl gap-2 h-10">
+                    <Plus className="h-4 w-4" />
+                    Add Cashier
+                  </Button>
+                </div>
+
+                <div className="space-y-4">
+                  {cashiers.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground bg-muted/5 rounded-2xl border border-dashed border-border/50">
+                      <Users className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                      <p>No cashiers added yet.</p>
+                      <p className="text-xs">Add cashiers to enable PIN-based terminal locking and auditing.</p>
+                    </div>
+                  ) : (
+                    cashiers.map((cashier) => (
+                      <div key={cashier.id} className="flex items-center justify-between p-4 bg-muted/10 rounded-2xl border border-border/50 group">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                            {cashier.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-bold">{cashier.name}</p>
+                            <div className="flex items-center text-xs text-muted-foreground gap-2">
+                              <Key className="h-3 w-3" />
+                              <span>PIN Active</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => removeCashier(cashier.id)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-6">
+             <Card className="border-border/50 shadow-premium bg-background/50 backdrop-blur-md rounded-3xl overflow-hidden">
               <CardHeader className="border-b border-border/50 bg-muted/20">
                 <CardTitle>Alert Preferences</CardTitle>
                 <CardDescription>Manage how you want to be notified.</CardDescription>

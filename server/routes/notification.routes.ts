@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { storage } from "../storage";
 import { createLogger } from "../utils/logger";
+import { requireAdmin } from "../middleware/auth.middleware";
+import { z } from "zod";
 
 const logger = createLogger('NotificationRoutes');
 const router = Router();
@@ -144,6 +146,65 @@ router.delete("/", async (req, res) => {
         logger.error("Failed to clear notifications:", error);
         res.status(500).json({ message: "Failed to clear notifications" });
     }
+});
+
+/**
+ * POST /api/notifications/broadcast
+ * Admin-only: create an in-app notification for all users (or a specific role).
+ */
+const broadcastSchema = z.object({
+  title: z.string().min(1).max(200),
+  message: z.string().min(1).max(1000),
+  type: z.string().default("system_alert"),
+  targetRole: z.string().optional(), // omit to broadcast to all users
+});
+
+router.post("/broadcast", requireAdmin, async (req, res) => {
+  try {
+    const { title, message, type, targetRole } = broadcastSchema.parse(req.body);
+
+    const recipients = targetRole
+      ? await storage.getUsersByRole([targetRole])
+      : await storage.getAllUsers();
+
+    if (recipients.length === 0) {
+      return res.status(400).json({ message: "No recipients matched the specified role" });
+    }
+
+    // Insert notifications in batches to avoid overwhelming the DB
+    const BATCH_SIZE = 200;
+    let sent = 0;
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const batch = recipients.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(user =>
+        storage.createNotification({
+          userId: user.id,
+          title,
+          message,
+          type,
+          isRead: false,
+          relatedItemId: null,
+          relatedReportId: null,
+        })
+      ));
+      sent += batch.length;
+    }
+
+    logger.info("Broadcast notification sent", {
+      adminId: req.user!.id,
+      title,
+      targetRole: targetRole ?? "all",
+      recipientCount: sent,
+    });
+
+    res.json({ success: true, sent });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: "Invalid broadcast data", errors: error.errors });
+    }
+    logger.error("Failed to broadcast notification", { error });
+    res.status(500).json({ message: "Failed to send broadcast" });
+  }
 });
 
 export default router;

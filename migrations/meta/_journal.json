@@ -43,6 +43,13 @@
       "when": 1744070400000,
       "tag": "0005_pos_kizere_id",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1744156800000,
+      "tag": "0006_public_verify_logs",
+      "breakpoints": true
     }
   ]
 }

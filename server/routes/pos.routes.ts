@@ -6,6 +6,7 @@ import {
   checkOrCreateCustomer,
   registerProduct,
   transferOwnership,
+  processReturn,
   createRetailer,
   getRetailers,
   getRetailerById,
@@ -31,6 +32,7 @@ import {
   getRetailerCustomerDetail,
   updateCustomerSettings,
   getOrCreateRetailerCustomerSettings,
+  getShiftSummary,
 } from "../services/pos.service";
 import { createLogger } from "../utils/logger";
 import { z } from "zod";
@@ -40,6 +42,7 @@ import { eq, and } from "drizzle-orm";
 import { sendOTP, verifyOTP } from "../services/otp.service";
 import bcrypt from "bcrypt";
 import { isPosStubAccount } from "../services/pos.service";
+import { storage } from "../storage";
 import { CommissionService } from "../services/commission.service";
 
 const logger = createLogger("PosRoutes");
@@ -104,12 +107,33 @@ router.post(
     try {
       const schema = z.object({
         nationalId: z.string().min(6, "National ID is required"),
-        fullName: z.string().min(2, "Full name is required"),
+        fullName: z.string().min(2, "Full name is required").optional().or(z.literal("")).transform(v => v === "" ? undefined : v),
         phone: z.string().optional().or(z.literal("")).transform(v => v === "" ? undefined : v),
         email: z.string().email().optional().or(z.literal("")).transform(e => e === "" ? undefined : e),
       });
 
       const data = schema.parse(req.body);
+      
+      // If no name is provided, we only perform a lookup
+      if (!data.fullName) {
+        const existing = await storage.getUserByNationalId(data.nationalId);
+        if (existing) {
+          return res.json({
+            success: true,
+            isNew: false,
+            customer: {
+              id: existing.id,
+              fullName: existing.fullName,
+              username: existing.username,
+              phone: existing.phoneNumber,
+              email: existing.email,
+              nationalId: existing.nationalId,
+            },
+          });
+        }
+        return res.json({ success: false, message: "Customer not found. Please provide name to create account." });
+      }
+
       const result = await checkOrCreateCustomer(
         data.nationalId,
         data.fullName,
@@ -140,9 +164,70 @@ router.post(
 );
 
 /**
- * POST /api/pos/register
- * Register a new product and assign ownership.
+ * GET /api/pos/inventory/search?serialNumber=XYZ
+ * Search for an item in the retailer's own inventory (unassigned items).
  */
+router.get(
+  "/inventory/search",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const serialNumber = req.query.serialNumber as string;
+      if (!serialNumber) {
+        return res.status(400).json({ message: "Serial number is required" });
+      }
+
+      const retailer = (req as any).retailer;
+      const product = await storage.getPosProductBySerial(serialNumber);
+
+      if (product && product.retailerId === retailer.id && product.currentOwnerId === retailer.userId) {
+        return res.json({ 
+          success: true, 
+          inStock: true,
+          product: {
+            id: product.id,
+            name: product.name,
+            category: product.category,
+            sku: product.sku,
+            metadata: product.metadata,
+          }
+        });
+      }
+
+      res.json({ success: true, inStock: false, message: "Product not found in store stock" });
+    } catch (error: any) {
+      logger.error("Inventory search failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/stock-in
+ * Register a product directly to the retailer's inventory (owned by retailer).
+ */
+router.post(
+  "/stock-in",
+  posAuthMiddleware,
+  posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const productData = {
+        ...req.body,
+        retailerId: retailer.id,
+        ownerId: retailer.userId, // Owned by retailer originally
+        status: "registered",
+      };
+
+      const product = await registerProduct(productData);
+      res.json({ success: true, product });
+    } catch (error: any) {
+      logger.error("Stocking in failed", { error: error.message });
+      res.status(error.status || 500).json({ message: error.message });
+    }
+  }
+);
 router.post(
   "/register",
   posAuthMiddleware, posRateLimiter,
@@ -275,6 +360,7 @@ router.post(
         productId: z.number().int().positive("Valid product ID is required"),
         newOwnerId: z.number().int().positive("Valid new owner ID is required"),
         notes: z.string().optional(),
+        metadata: z.record(z.any()).optional(),
       });
 
       const data = schema.parse(req.body);
@@ -285,6 +371,7 @@ router.post(
         newOwnerId: data.newOwnerId,
         retailerId: retailer.id,
         notes: data.notes,
+        metadata: data.metadata,
       });
 
       res.json({
@@ -299,6 +386,74 @@ router.post(
       }
       const status = error.status || 500;
       res.status(status).json({ message: error.message || "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/return
+ * Return a product back to the retailer's inventory.
+ * Supports reason: Refund, Repair, Exchange, Other.
+ */
+router.post(
+  "/return",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        productId: z.number().int().positive("Valid product ID is required"),
+        reason: z.enum(["Refund", "Repair", "Exchange", "Defective", "Other"], {
+          errorMap: () => ({ message: "Return reason is required" })
+        }),
+        notes: z.string().optional(),
+        metadata: z.record(z.any()).optional(),
+      });
+
+      const data = schema.parse(req.body);
+      const retailer = (req as any).retailer;
+
+      const result = await processReturn({
+        productId: data.productId,
+        retailerId: retailer.id,
+        reason: data.reason,
+        notes: data.notes,
+        metadata: data.metadata,
+      });
+
+      res.json({
+        success: true,
+        product: result.product,
+        ledger: result.ledgerEntry,
+      });
+    } catch (error: any) {
+      logger.error("return failed", { error: error.message });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      const status = error.status || 500;
+      res.status(status).json({ message: error.message || "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/shift-summary
+ * Get today's shift summary (registrations, transfers, returns by category).
+ */
+router.get(
+  "/shift-summary",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const dateParam = req.query.date as string | undefined;
+      const shiftDate = dateParam ? new Date(dateParam) : undefined;
+
+      const summary = await getShiftSummary(retailer.id, shiftDate);
+      res.json({ success: true, summary });
+    } catch (error: any) {
+      logger.error("shift-summary failed", { error: error.message });
+      res.status(500).json({ message: "Failed to fetch shift summary" });
     }
   }
 );
@@ -546,14 +701,34 @@ router.patch(
         address: z.string().optional(),
         logoUrl: z.string().url().optional(),
         walletPhone: z.string().optional(),
+        preferences: z.object({
+          cashiers: z.array(z.object({
+            id: z.string(),
+            name: z.string(),
+            pin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
+            isActive: z.boolean().default(true),
+          })).optional(),
+        }).passthrough().optional(), // Allow other preferences like theme/language
       });
 
-      const data = schema.parse(req.body);
-      const updated = await updateRetailer(retailerId, data);
+      const { preferences, ...rest } = schema.parse(req.body);
+      const updated = await updateRetailer(retailerId, rest);
       
       if (!updated) {
         return res.status(404).json({ message: "Retailer not found" });
       }
+
+      // If preferences are provided, update the linked user record
+      if (preferences) {
+        const retailer = (req as any).retailer;
+        logger.info("Updating user preferences for retailer", { 
+          retailerId, 
+          userId: retailer.userId,
+          cashierCount: (preferences as any).cashiers?.length 
+        });
+        await storage.updateUser(retailer.userId, { preferences: preferences as any });
+      }
+
       res.json({ success: true, profile: updated });
     } catch (error: any) {
       logger.error("Failed to update retailer profile", { error: error.message });

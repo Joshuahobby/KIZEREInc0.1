@@ -4,11 +4,20 @@ import { PageLayout } from "@/components/layout/page-layout";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "wouter";
-import { Search, Loader2, ShieldCheck, ShieldAlert, FileSearch, ArrowRight, User as UserIcon, Phone, AlertCircle, Shield } from "lucide-react";
-import { motion } from "framer-motion";
+import { Search, Loader2, ShieldCheck, ShieldAlert, FileSearch, ArrowRight, User as UserIcon, Phone, AlertCircle, Shield, ExternalLink, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+
+// Category-aware hints displayed below the search box
+const IDENTIFIER_EXAMPLES = [
+  { label: "Phone / Tablet", hint: "Enter IMEI (dial *#06# to reveal)", example: "356938035643809" },
+  { label: "Vehicle", hint: "Enter VIN or licence plate", example: "RAB 123A" },
+  { label: "Laptop / Computer", hint: "Enter serial number from the bottom sticker", example: "C02Q7KHTGFWM" },
+  { label: "Document", hint: "Enter passport or NIN number", example: "PC12345678" },
+  { label: "Other", hint: "Enter any unique identifier or serial number", example: "SN-00123456" },
+];
 
 interface SearchResponse {
   status: 'found' | 'not_found' | 'error';

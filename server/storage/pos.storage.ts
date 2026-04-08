@@ -1,9 +1,10 @@
 import { db } from "../db";
-import { 
-  retailers, Retailer, InsertRetailer, 
-  posProducts, PosProduct, InsertPosProduct, 
+import {
+  retailers, Retailer, InsertRetailer,
+  posProducts, PosProduct, InsertPosProduct,
   ownershipLedger, OwnershipLedgerEntry, InsertOwnershipLedger,
   posSecurityAlerts, PosSecurityAlert, InsertPosSecurityAlert,
+  publicVerifyLogs, PublicVerifyLog, InsertPublicVerifyLog,
   items, users, retailerCustomerSettings
 } from "@shared/schema";
 import { eq, desc, count, and, gte, lte, or, ilike, sql } from "drizzle-orm";
@@ -649,4 +650,37 @@ export async function createPosSecurityAlert(alertData: InsertPosSecurityAlert):
 
 export async function getRetailerSecurityAlerts(retailerId: number): Promise<PosSecurityAlert[]> {
   return await db.select().from(posSecurityAlerts).where(eq(posSecurityAlerts.retailerId, retailerId)).orderBy(desc(posSecurityAlerts.timestamp));
+}
+
+export async function createPublicVerifyLog(data: InsertPublicVerifyLog): Promise<PublicVerifyLog> {
+  const [log] = await db.insert(publicVerifyLogs).values(data).returning();
+  return log;
+}
+
+export async function getPublicVerifyLogs(options: {
+  page: number;
+  limit: number;
+  identifier?: string;
+}): Promise<{ logs: PublicVerifyLog[]; total: number }> {
+  const { page, limit, identifier } = options;
+  const offset = (page - 1) * limit;
+
+  const where = identifier ? eq(publicVerifyLogs.identifier, identifier) : undefined;
+
+  const [countResult] = await db
+    .select({ count: count() })
+    .from(publicVerifyLogs)
+    .where(where);
+
+  const total = Number(countResult?.count ?? 0);
+
+  const logs = await db
+    .select()
+    .from(publicVerifyLogs)
+    .where(where)
+    .orderBy(desc(publicVerifyLogs.lookedUpAt))
+    .limit(limit)
+    .offset(offset);
+
+  return { logs, total };
 }
