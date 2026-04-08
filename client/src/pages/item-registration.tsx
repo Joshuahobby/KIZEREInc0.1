@@ -79,7 +79,7 @@ import { VoiceHelper } from "@/components/ui/voice-helper";
 import { PaymentModal } from "@/components/payment/payment-modal";
 
 // Schema & Constants
-import { insertItemSchema } from "@shared/schema";
+import { insertItemSchema, validateIdentifierForCategory } from "@shared/schema";
 
 const CATEGORIES = [
   "Electronics",
@@ -127,6 +127,17 @@ const CATEGORY_VISUALS: { id: string; icon: any; gradient: string }[] = [
   { id: "Other", icon: Package, gradient: "from-rose-400 to-pink-600" },
 ];
 
+const IDENTIFIER_HINTS: Record<string, { label: string; placeholder: string; hint: string }> = {
+  Phones: { label: "IMEI Number", placeholder: "e.g. 356938035643809", hint: "15-digit IMEI. Dial *#06# on the phone to reveal it." },
+  Computers: { label: "Serial Number", placeholder: "e.g. C02Q7KHTGFWM", hint: "Found on the bottom of the device or in System Info." },
+  Electronics: { label: "Serial Number", placeholder: "e.g. SN123456789", hint: "Usually on the back of the device or its original packaging." },
+  Transportation: { label: "VIN / Plate Number", placeholder: "e.g. RAB 123A", hint: "Vehicle Identification Number or license plate." },
+  Documents: { label: "Document Number", placeholder: "e.g. PC12345678", hint: "Passport, NIN, or other official document number." },
+  Wallets: { label: "Identifier", placeholder: "e.g. brand + distinguishing feature", hint: "Any unique detail that helps identify this item." },
+  Jewelry: { label: "Identifier", placeholder: "e.g. inscription or hallmark", hint: "Engraving, hallmark, or any unique marking." },
+  Keys: { label: "Identifier", placeholder: "e.g. key tag or label", hint: "Tag number, label text, or any identifier on the keyring." },
+};
+
 const formSchema = insertItemSchema.omit({ userId: true }).extend({
   subCategory: z.string().optional(),
   color: z.string().optional(),
@@ -136,6 +147,11 @@ const formSchema = insertItemSchema.omit({ userId: true }).extend({
   description: z.string().optional().refine(val => !val || val.length >= 5, {
     message: "Description must be at least 5 characters if provided"
   }),
+}).superRefine((data, ctx) => {
+  const error = validateIdentifierForCategory(data.uniqueIdentifier, data.category);
+  if (error) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: error, path: ["uniqueIdentifier"] });
+  }
 });
 
 type ItemRegistrationValues = z.infer<typeof formSchema>;
@@ -881,11 +897,13 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                               <FormField
                                 control={form.control}
                                 name="uniqueIdentifier"
-                                render={({ field }) => (
+                                render={({ field }) => {
+                                  const identifierMeta = IDENTIFIER_HINTS[watchedCategory] ?? { label: "Unique Identifier", placeholder: "e.g. Serial number, IMEI, VIN…", hint: "Enter any identifying tag for this item." };
+                                  return (
                                   <FormItem>
                                     <FormLabel className="premium-label mb-3 flex items-center justify-between">
                                       <span className="flex items-center gap-1.5">
-                                        {t("registration.fields.uuid_label")}
+                                        {identifierMeta.label}
                                         <span className="text-primary text-xs">*</span>
                                         <TooltipProvider>
                                           <Tooltip>
@@ -893,7 +911,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                               <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                              <p>This helps verify ownership if your item is found.</p>
+                                              <p>{identifierMeta.hint}</p>
                                             </TooltipContent>
                                           </Tooltip>
                                         </TooltipProvider>
@@ -903,7 +921,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                     <FormControl>
                                       <div className="relative group">
                                         <Input
-                                          placeholder={t("registration.fields.uuid_placeholder")}
+                                          placeholder={identifierMeta.placeholder}
                                           className="h-16 bg-background dark:bg-slate-950/40 border-border/30 shadow-none focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-2xl text-lg font-black pr-36 tracking-[0.1em] transition-all"
                                           {...field}
                                           disabled={isEditMode}
@@ -924,7 +942,8 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
                                     </FormControl>
                                     <FormMessage />
                                   </FormItem>
-                                )}
+                                  );
+                                }}
                               />
 
                               {/* Upload Photo in Step 0 */}
