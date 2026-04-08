@@ -72,6 +72,15 @@ export default function PosTerminal() {
   const { user, isLoading: isAuthLoading } = useAuth();
   const { toast } = useToast();
 
+  // Session timer
+  const [sessionSeconds, setSessionSeconds] = React.useState(0);
+  React.useEffect(() => {
+    const timer = setInterval(() => setSessionSeconds(s => s + 1), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const sessionTime = `${String(Math.floor(sessionSeconds / 3600)).padStart(2, "0")}:${String(Math.floor((sessionSeconds % 3600) / 60)).padStart(2, "0")}:${String(sessionSeconds % 60).padStart(2, "0")}`;
+
+
   const [step, setStep] = React.useState<Step>("scenario");
   const [scenario, setScenario] = React.useState<Scenario | null>(null);
   const [loading, setLoading] = React.useState(false);
@@ -340,9 +349,10 @@ export default function PosTerminal() {
         { key: "receipt", icon: QrCode, label: "Finish" },
       ];
       
+    // Direct Sales: customer first, then product
     return [
-      { key: "product", icon: Package, label: "Device" },
       { key: "customer", icon: User, label: "Client" },
+      { key: "product", icon: Package, label: "Device" },
       { key: "confirm", icon: ShieldCheck, label: "Review" },
       { key: "receipt", icon: QrCode, label: "Finish" },
     ];
@@ -716,15 +726,15 @@ export default function PosTerminal() {
                   </Tabs>
 
                   <div className="flex gap-4 pt-4">
-                    <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep(scenario === "stock-in" ? "product" : "customer")}>
+                    <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep(scenario === "stock-in" ? "scenario" : "customer")}>
                       Back
                     </Button>
                     <Button
                       className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-2xl shadow-xl shadow-emerald-600/20"
                       disabled={!serialNumber || !productName}
-                      onClick={() => setStep(scenario === "stock-in" ? "confirm" : "customer")}
+                      onClick={() => setStep("confirm")}
                     >
-                      {scenario === "stock-in" ? "Review Stock Entry" : "Assign to Client"}
+                      {scenario === "stock-in" ? "Review Stock Entry" : "Review & Confirm"}
                     </Button>
                   </div>
                 </div>
@@ -867,7 +877,7 @@ export default function PosTerminal() {
           <p className="text-[10px] font-mono text-slate-600 uppercase">POS Terminal v1.2.4-stable</p>
         </div>
         <div className="flex items-center gap-4">
-          <p className="text-[10px] font-bold text-slate-600 uppercase">Session Time: 02:45:12</p>
+          <p className="text-[10px] font-bold text-slate-600 uppercase">Session Time: {sessionTime}</p>
         </div>
       </footer>
     </div>
