@@ -21,6 +21,7 @@ interface PublicItemInfo {
   imageCount: number;
   source?: 'registry' | 'pos';
   retailerName?: string | null;
+  kizereId?: string | null;
 }
 
 export default function PublicItemVerifyPage() {
@@ -183,6 +184,18 @@ export default function PublicItemVerifyPage() {
                     </div>
                   </div>
                 </div>
+
+                {item.source === 'pos' && item.kizereId && (
+                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-background/50 border border-white/10 dark:border-white/5">
+                    <div className="p-3 bg-primary/10 rounded-xl text-primary shrink-0">
+                      <Fingerprint className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">KIZERE Trust ID</p>
+                      <p className="font-mono text-xs text-foreground/70 truncate">{item.kizereId}</p>
+                    </div>
+                  </div>
+                )}
 
                 {item.description && (
                   <div className="bg-background/40 backdrop-blur-sm border border-border/30 p-5 rounded-2xl">

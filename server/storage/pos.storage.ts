@@ -152,6 +152,7 @@ export async function searchRetailerProducts(
       registrationDate: posProducts.registrationDate,
       status: posProducts.status,
       metadata: posProducts.metadata,
+      kizereId: posProducts.kizereId,
       ownerName: users.fullName,
       ownerNationalId: users.nationalId,
     })

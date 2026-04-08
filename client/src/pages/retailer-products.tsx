@@ -92,6 +92,7 @@ interface PosProduct {
   metadata: any;
   ownerName: string;
   ownerNationalId: string | null;
+  kizereId: string;
 }
 
 interface PaginatedResponse {

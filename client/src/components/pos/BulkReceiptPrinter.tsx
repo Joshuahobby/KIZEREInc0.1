@@ -7,6 +7,7 @@ export interface PrintableProduct {
   id: number;
   name: string;
   serialNumber: string;
+  kizereId?: string;
   ownerName: string;
   registrationDate: string | Date;
 }
@@ -58,6 +59,9 @@ export const BulkReceiptPrinter = forwardRef<BulkReceiptPrinterHandle, BulkRecei
               .footer { text-align: center; margin-top: 20px; font-size: 0.8rem; color: #666; border-top: 1px solid #eee; padding-top: 10px; }
               .cut-line-hint { display: none; }
               .hidden { display: none !important; }
+              .trust-id-row { margin-top: 8px; padding-top: 8px; border-top: 1px dotted #eee; border-bottom: none; }
+              .trust-id-label { color: #666; font-size: 0.75rem; }
+              .trust-id-value { font-family: "Courier New", Courier, monospace; font-size: 0.65rem; color: #888; word-break: break-all; max-width: 55%; text-align: right; font-weight: 600; }
               @media print {
                 .receipt { border-bottom: 1px dashed #000; width: 100%; padding: 40px 20px; }
                 .no-print { display: none; }
@@ -119,6 +123,13 @@ export const BulkReceiptPrinter = forwardRef<BulkReceiptPrinterHandle, BulkRecei
               POS-{String(product.id).padStart(6, "0")}
             </span>
           </div>
+
+          {product.kizereId && (
+            <div className="field trust-id-row">
+              <span className="trust-id-label">KIZERE Trust ID</span>
+              <span className="trust-id-value">{product.kizereId}</span>
+            </div>
+          )}
           
           <div className="qr-container">
             {/* We render the SVG here; innerHTML will capture it as static image/svg markup */}

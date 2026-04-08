@@ -430,6 +430,7 @@ router.get("/public/:uniqueIdentifier", publicVerifyLimiter, async (req, res) =>
         imageCount: 0,
         source: 'pos',
         retailerName: posProduct.retailerName,
+        kizereId: posProduct.kizereId,
       });
     }
 
