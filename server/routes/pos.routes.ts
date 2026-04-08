@@ -212,17 +212,33 @@ router.post(
   posRateLimiter,
   async (req: Request, res: Response) => {
     try {
+      const schema = z.object({
+        serialNumber: z.string().min(3, "Serial number is required"),
+        name: z.string().min(2, "Product name is required"),
+        brand: z.string().optional(),
+        model: z.string().optional(),
+        category: z.string().optional().default("Other"),
+        sku: z.string().optional(),
+        metadata: z.record(z.any()).optional(),
+        notes: z.string().optional(),
+      });
+
+      const data = schema.parse(req.body);
       const retailer = (req as any).retailer;
+
       const productData = {
-        ...req.body,
+        ...data,
         retailerId: retailer.id,
         ownerId: retailer.userId, // Owned by retailer originally
         status: "registered",
       };
 
-      const product = await registerProduct(productData);
-      res.json({ success: true, product });
+      const result = await registerProduct(productData);
+      res.json({ success: true, product: result.product });
     } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
       logger.error("Stocking in failed", { error: error.message });
       res.status(error.status || 500).json({ message: error.message });
     }

@@ -94,7 +94,10 @@ export async function registerProduct(input: any) {
     );
   }
 
-  const customerDetail = await storage.getRetailerCustomerDetail(input.retailerId, input.ownerId);
+  const customerDetail = input.ownerId === retailer.userId 
+    ? null 
+    : await storage.getRetailerCustomerDetail(input.retailerId, input.ownerId);
+
   if (customerDetail?.isBlocked) {
     throw new AuthorizationError(`This customer has been blocked by your store.`);
   }
@@ -102,12 +105,16 @@ export async function registerProduct(input: any) {
   const dupeCheck = await storage.getPosProductBySerial(input.serialNumber);
   if (dupeCheck) {
     if (dupeCheck.retailerId === input.retailerId && dupeCheck.currentOwnerId === retailer.userId) {
-      return transferOwnership({
-        productId: dupeCheck.id,
-        retailerId: input.retailerId,
-        newOwnerId: input.ownerId,
-        notes: "Point of Sale transfer from inventory"
-      });
+      if (input.ownerId !== retailer.userId) {
+        return transferOwnership({
+          productId: dupeCheck.id,
+          retailerId: input.retailerId,
+          newOwnerId: input.ownerId,
+          notes: "Point of Sale transfer from inventory"
+        });
+      }
+      // If already in stock and we try to stock-in again, just return it
+      return { product: dupeCheck, ledgerEntry: null };
     }
     throw Object.assign(new Error(`Product with serial number ${input.serialNumber} already exists`), { status: 409 });
   }
@@ -134,30 +141,44 @@ export async function registerProduct(input: any) {
     throw new AuthorizationError(`SECURITY ALERT: This item has been flagged as stolen.`);
   }
 
-  const product = await storage.createPosProduct({
-    ...input,
-    status: "registered",
-  });
+  // Sanitize input for createPosProduct to match schema exactly
+  const productData = {
+    serialNumber: input.serialNumber,
+    name: input.name,
+    brand: input.brand,
+    model: input.model,
+    category: input.category || "Other",
+    sku: input.sku,
+    retailerId: input.retailerId,
+    currentOwnerId: input.ownerId,
+    metadata: input.metadata,
+    status: "registered" as const,
+  };
+
+  const product = await storage.createPosProduct(productData);
 
   const ledgerEntry = await storage.createOwnershipLedgerEntry({
     productId: product.id,
     toUserId: input.ownerId,
     registeredBy: input.retailerId,
-    event: "sale",
-    notes: input.notes || `Initial product registration at POS`,
+    event: input.ownerId === retailer.userId ? "stock_in" as any : "sale",
+    notes: input.notes || (input.ownerId === retailer.userId ? `Inventory stock-in` : `Initial product registration at POS`),
     purchaseAgreement: input.purchaseAgreement,
     legalDocUrl: input.legalDocUrl,
     metadata: input.metadata,
   });
 
-  notifyPosCustomer("registration", {
-    userId: input.ownerId,
-    productId: product.id,
-    productName: input.name,
-    serialNumber: input.serialNumber,
-    category: input.category || "Other",
-    retailerName: retailer.name,
-  }).catch(err => logger.error("POS notification failed", { err }));
+  // Side effects: Notifications & Commission (don't block return)
+  if (input.ownerId !== retailer.userId) {
+    notifyPosCustomer("registration", {
+      userId: input.ownerId,
+      productId: product.id,
+      productName: input.name,
+      serialNumber: input.serialNumber,
+      category: input.category || "Other",
+      retailerName: retailer.name || "KIZERE Store",
+    }).catch(err => logger.error("POS notification failed", { err }));
+  }
 
   // Record commission silently — never blocks the registration response
   if (input.transactionValue && input.transactionValue > 0) {

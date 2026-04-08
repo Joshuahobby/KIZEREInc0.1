@@ -64,7 +64,7 @@ interface RegisteredProduct {
   registrationDate: string;
 }
 
-type Step = "scenario" | "customer" | "product" | "confirm" | "receipt";
+type Step = "scenario" | "customer" | "product" | "confirm" | "receipt" | "new-customer";
 type Scenario = "sale" | "stock-in";
 
 export default function PosTerminal() {
@@ -116,6 +116,7 @@ export default function PosTerminal() {
   const [verifyUrl, setVerifyUrl] = React.useState<string>("");
   const receiptRef = React.useRef<HTMLDivElement>(null);
   const [useWebSerial, setUseWebSerial] = React.useState(false);
+  const [isPrinterConnected, setIsPrinterConnected] = React.useState(false);
 
   // Offline Sync State
   const [offlineCount, setOfflineCount] = React.useState(0);
@@ -208,6 +209,18 @@ export default function PosTerminal() {
       const count = await db.count("sync-queue");
       setOfflineCount(count);
     } catch (e) { console.warn(e); }
+  };
+
+  const handleConnectPrinter = async () => {
+    try {
+      const connected = await thermalPrinter.connect();
+      setIsPrinterConnected(connected);
+      if (connected) {
+        toast({ title: t("pos.printerConnected", "Printer Connected"), description: t("pos.printerReady", "Thermal printer is ready.") });
+      }
+    } catch (err: any) {
+      toast({ title: t("pos.printerError", "Printer error"), description: err.message, variant: "destructive" });
+    }
   };
 
   const syncOfflineQueue = async () => {
@@ -399,6 +412,15 @@ export default function PosTerminal() {
     if (scenario === "stock-in") 
       return [
         { key: "product", icon: Package, label: "Inventory" },
+        { key: "confirm", icon: ShieldCheck, label: "Review" },
+        { key: "receipt", icon: QrCode, label: "Finish" },
+      ];
+
+    if (step === "new-customer")
+      return [
+        { key: "customer", icon: User, label: "Client" },
+        { key: "new-customer", icon: UserPlus, label: "Registration" },
+        { key: "product", icon: Package, label: "Device" },
         { key: "confirm", icon: ShieldCheck, label: "Review" },
         { key: "receipt", icon: QrCode, label: "Finish" },
       ];
@@ -1133,24 +1155,55 @@ export default function PosTerminal() {
                   </Card>
 
                   <div className="flex flex-wrap justify-center gap-4 w-full">
-                    <Button variant="outline" className="h-14 px-8 border-slate-800 bg-slate-900/50 rounded-xl font-bold gap-3" onClick={() => window.print()}>
-                      <Printer className="w-4 h-4" />
-                      {scenario === "stock-in" ? "Print GRN" : "Print Receipt"}
-                    </Button>
-                    {scenario !== "stock-in" && (
-                      <Button variant="outline" className="h-14 px-8 border-slate-800 bg-slate-900/50 rounded-xl font-bold gap-3" onClick={() => {
-                        if (verifyUrl) {
-                          navigator.clipboard.writeText(verifyUrl);
-                          toast({ title: "Copied", description: "Verification link copied to clipboard" });
-                        }
-                      }}>
-                        <Copy className="w-4 h-4" />
-                        Copy Link
+                    {!isPrinterConnected && (
+                      <Button variant="outline" className="h-14 px-8 border-emerald-500/30 bg-emerald-500/5 text-emerald-500 rounded-xl font-bold gap-3" onClick={handleConnectPrinter}>
+                        <Printer className="w-4 h-4" />
+                        Pair Printer
                       </Button>
                     )}
-                    <Button className={cn("h-14 px-10 rounded-xl font-bold gap-3", scenario === "stock-in" ? "bg-amber-600 hover:bg-amber-500" : "bg-emerald-600 hover:bg-emerald-500")} onClick={resetFlow}>
+                    <Button 
+                      variant="outline" 
+                      className="h-14 px-8 border-slate-800 bg-slate-900/50 rounded-xl font-bold gap-3" 
+                      onClick={async () => {
+                        if (!isPrinterConnected) {
+                          const ok = await thermalPrinter.connect();
+                          setIsPrinterConnected(ok);
+                          if (!ok) return;
+                        }
+                        
+                        const success = await thermalPrinter.printReceipt({
+                          header: scenario === "stock-in" ? "INVENTORY GRN" : "KIZERE POS RECEIPT",
+                          items: [
+                            { label: "Date", value: new Date().toLocaleDateString() },
+                            { label: "Product", value: registeredProduct?.name || productName },
+                            { label: "S/N", value: serialNumber },
+                            { label: "SKU", value: sku || "N/A" },
+                            { label: "Retailer", value: user?.businessName || user?.fullName || "KIZERE Store" },
+                            ...(scenario === "stock-in" ? [
+                              { label: "Type", value: "Goods Received" },
+                              { label: "Supplier", value: supplier || "Direct" }
+                            ] : [
+                              { label: "Owner", value: customer?.fullName || "N/A" }
+                            ])
+                          ],
+                          footer: scenario === "stock-in" ? "Inventory certified and logged." : "Thank you for using KIZERE.",
+                          url: verifyUrl || `https://kizere.com/v/${serialNumber}`
+                        });
+
+                        if (success) toast({ title: t("pos.printed", "Printed"), description: t("pos.receiptPrinted", "Receipt printed successfully.") });
+                        else toast({ title: t("pos.printFailed", "Print Failed"), description: t("pos.connectPrinterError", "Could not print. Check printer connection."), variant: "destructive" });
+                      }}
+                    >
+                      <Printer className="w-4 h-4" />
+                      {scenario === "stock-in" ? "Thermal GRN" : "Thermal Receipt"}
+                    </Button>
+                    <Button variant="outline" className="h-14 px-8 border-slate-800 bg-slate-900/50 rounded-xl font-bold gap-3" onClick={() => window.print()}>
+                      <Copy className="w-4 h-4" />
+                      Standard Print
+                    </Button>
+                    <Button className={cn("h-14 px-10 rounded-xl font-bold gap-3 shadow-lg shadow-emerald-600/20", scenario === "stock-in" ? "bg-amber-600 hover:bg-amber-500" : "bg-emerald-600 hover:bg-emerald-500")} onClick={resetFlow}>
                       {scenario === "stock-in" ? <ListPlus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                      {scenario === "stock-in" ? "Stock Another Device" : "New Registration"}
+                      {scenario === "stock-in" ? "Stock Another" : "New Registration"}
                     </Button>
                   </div>
                 </div>
