@@ -395,6 +395,8 @@ export class ReportMatchingService {
 
     for (const report of openReports.reports) {
       try {
+        const matches = await this.findPotentialMatches(report);
+        if (matches.length > 0) matchesFound += matches.length;
         await this.findMatches(report);
         processed++;
       } catch (err) {

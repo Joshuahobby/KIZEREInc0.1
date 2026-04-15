@@ -35,8 +35,13 @@ interface SearchResponse {
 
 export default function PublicSearch() {
   const { t } = useLanguage();
-  const [searchInput, setSearchInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+
+  // Read ?q from URL (populated by landing page hero search)
+  const initialQuery = new URLSearchParams(window.location.search).get("q") ?? "";
+
+  const [searchInput, setSearchInput] = useState(initialQuery);
+  // Pre-set searchQuery so the TanStack Query fires immediately when ?q is present
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
 
   const { data: result, isLoading, isError } = useQuery<SearchResponse>({
     queryKey: [`/api/public/items/search?query=${searchQuery}`],

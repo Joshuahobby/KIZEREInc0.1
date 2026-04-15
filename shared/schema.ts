@@ -269,7 +269,10 @@ export const reports = pgTable("reports", {
   index("report_user_idx").on(table.userId),
   index("report_type_status_idx").on(table.type, table.status),
   index("report_status_idx").on(table.status),
-  index("report_expiration_idx").on(table.expirationDate)
+  index("report_expiration_idx").on(table.expirationDate),
+  index("report_payment_status_idx").on(table.paymentStatus),
+  index("report_category_idx").on(table.category),
+  index("report_unique_id_idx").on(table.uniqueIdentifier)
 ]);
 
 // Claims table

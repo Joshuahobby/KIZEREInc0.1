@@ -140,7 +140,7 @@ export default function LandingPage() {
                                         <Search className="w-5 h-5 md:w-6 md:h-6 text-gray-400 ml-2 mr-3 group-focus-within:text-cyan-400 transition-colors shrink-0" />
                                         <Input
                                             type="text"
-                                            placeholder="Enter Tag ID or Serial Number..."
+                                            placeholder="Enter IMEI, Serial Number, or KIZERE ID..."
                                             className="flex-1 bg-transparent border-0 text-white placeholder:text-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 text-base md:text-lg h-full p-0 w-full truncate"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -156,7 +156,7 @@ export default function LandingPage() {
                                     </motion.div>
                                 </form>
                                 <div className="mt-4 md:mt-5 text-xs md:text-sm text-gray-400 font-medium px-2">
-                                    Try: <button type="button" onClick={() => setSearchQuery("MacBook Pro - SN: C02X1234")} className="text-cyan-400 hover:text-cyan-300 active:text-cyan-500 underline decoration-cyan-400/30 underline-offset-4 transition-colors p-1 -m-1 ml-1 touch-manipulation">MacBook Pro – SN: C02X1234</button>
+                                    Try: <button type="button" onClick={() => setSearchQuery("C02X1234GFWM")} className="text-cyan-400 hover:text-cyan-300 active:text-cyan-500 underline decoration-cyan-400/30 underline-offset-4 transition-colors p-1 -m-1 ml-1 touch-manipulation">C02X1234GFWM</button> or <button type="button" onClick={() => setSearchQuery("356938035643809")} className="text-cyan-400 hover:text-cyan-300 active:text-cyan-500 underline decoration-cyan-400/30 underline-offset-4 transition-colors p-1 -m-1 ml-1 touch-manipulation">356938035643809</button>
                                 </div>
                             </div>
                         </motion.div>

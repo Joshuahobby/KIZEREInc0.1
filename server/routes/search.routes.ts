@@ -1,173 +1,169 @@
 import { Router } from "express";
-import { storage } from "../storage";
 import { db } from "../db";
-import { items, reports } from "@shared/schema";
-import { and, eq, like, or, sql, desc } from "drizzle-orm";
+import { reports } from "@shared/schema";
+import { and, eq, like, or, sql, inArray, notInArray } from "drizzle-orm";
 import { createLogger } from "../utils/logger";
 
 const logger = createLogger('SearchRoutes');
 const router = Router();
 
+/** Escape LIKE special chars so user input is treated as a literal substring. */
+function escapeLike(str: string): string {
+  return str.replace(/[\\%_]/g, c => `\\${c}`);
+}
+
 router.get("/", async (req, res) => {
   try {
-    const { q, status, category, location, dateFilter, startDate, endDate, type: typeFilter, sortBy } = req.query;
+    const {
+      q, status, category, location, dateFilter,
+      startDate, endDate, type: typeFilter, sortBy,
+      page: pageParam, limit: limitParam
+    } = req.query;
+
     const queryStr = (q as string || '').toLowerCase().trim();
     const keywords = queryStr.split(/\s+/).filter(k => k.length > 1);
 
-    // Parse status and category filters (support multi-select)
+    // Pagination
+    const page = Math.max(1, parseInt(pageParam as string || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(limitParam as string || '20', 10)));
+    const offset = (page - 1) * limit;
+
+    // Parse multi-select filters
     const statusFilters = status ? (status as string).split(',').filter(s => s) : [];
     const categoryFilters = category ? (category as string).split(',').filter(c => c) : [];
 
-    let results: any[] = [];
-
-    // Helper for date filter
     const getStartOfDay = (date: Date) => {
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      return d;
+      const d = new Date(date); d.setHours(0, 0, 0, 0); return d;
     };
-
     const getEndOfDay = (date: Date) => {
-      const d = new Date(date);
-      d.setHours(23, 59, 59, 999);
-      return d;
+      const d = new Date(date); d.setHours(23, 59, 59, 999); return d;
     };
 
     const getDateRangeConditions = (column: any) => {
-      const conditions = [];
+      const conditions: any[] = [];
       const now = new Date();
-
-      if (startDate) {
-        conditions.push(sql`${column} >= ${getStartOfDay(new Date(startDate as string))}`);
-      }
-      if (endDate) {
-        conditions.push(sql`${column} <= ${getEndOfDay(new Date(endDate as string))}`);
-      }
-
-      if (dateFilter) {
-        if (dateFilter === 'today') {
-          conditions.push(sql`${column} >= ${getStartOfDay(now)}`);
-        } else if (dateFilter === 'week') {
-          conditions.push(sql`${column} >= ${new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)}`);
-        } else if (dateFilter === 'month') {
-          conditions.push(sql`${column} >= ${new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)}`);
-        } else if (dateFilter === 'year') {
-          conditions.push(sql`${column} >= ${new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)}`);
-        }
-      }
+      if (startDate) conditions.push(sql`${column} >= ${getStartOfDay(new Date(startDate as string))}`);
+      if (endDate) conditions.push(sql`${column} <= ${getEndOfDay(new Date(endDate as string))}`);
+      if (dateFilter === 'today') conditions.push(sql`${column} >= ${getStartOfDay(now)}`);
+      else if (dateFilter === 'week') conditions.push(sql`${column} >= ${new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)}`);
+      else if (dateFilter === 'month') conditions.push(sql`${column} >= ${new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)}`);
+      else if (dateFilter === 'year') conditions.push(sql`${column} >= ${new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)}`);
       return conditions;
     };
 
-    // Use typeFilter from search query
-
-    // Only search Lost/Found reports (do not search registered items in global search)
     const shouldSearchReports = !typeFilter || typeFilter === 'all' || typeFilter === 'lost' || typeFilter === 'found';
 
-    if (shouldSearchReports) {
-      const reportConditions = [];
+    if (!shouldSearchReports) {
+      return res.json({ results: [], total: 0, page, totalPages: 0 });
+    }
 
-      // Only show fully paid items
-      reportConditions.push(eq(reports.paymentStatus, 'successful'));
+    const reportConditions: any[] = [];
 
-      if (typeFilter && typeFilter !== 'all') {
-        reportConditions.push(eq(reports.type, typeFilter as string));
-      }
+    // Only show fully paid reports
+    reportConditions.push(eq(reports.paymentStatus, 'successful'));
 
-      if (keywords.length > 0) {
-        keywords.forEach(keyword => {
-          const pattern = `%${keyword}%`;
-          reportConditions.push(or(
-            like(sql`lower(${reports.title})`, pattern),
-            like(sql`lower(${reports.description})`, pattern),
-            like(sql`lower(${reports.uniqueIdentifier})`, pattern),
-            like(sql`lower(${reports.ocrText})`, pattern)
-          ));
+    if (typeFilter && typeFilter !== 'all') {
+      reportConditions.push(eq(reports.type, typeFilter as string));
+    }
+
+    if (keywords.length > 0) {
+      keywords.forEach(keyword => {
+        const pattern = `%${escapeLike(keyword)}%`;
+        reportConditions.push(or(
+          like(sql`lower(${reports.title})`, pattern),
+          like(sql`lower(${reports.description})`, pattern),
+          like(sql`lower(${reports.uniqueIdentifier})`, pattern),
+          like(sql`lower(${reports.ocrText})`, pattern)
+        ));
+      });
+    }
+
+    if (categoryFilters.length > 0 && !categoryFilters.includes('any')) {
+      reportConditions.push(inArray(reports.category, categoryFilters));
+    }
+
+    if (statusFilters.length > 0) {
+      reportConditions.push(inArray(reports.status, statusFilters));
+    } else {
+      // Exclude terminal statuses by default so stale reports don't pollute results
+      reportConditions.push(notInArray(reports.status, ['Expired', 'Closed']));
+    }
+
+    if (location) {
+      reportConditions.push(like(reports.location, `%${escapeLike(location as string)}%`));
+    }
+
+    reportConditions.push(...getDateRangeConditions(reports.reportedAt));
+
+    const whereClause = and(...reportConditions);
+
+    // Count total matching rows for pagination metadata
+    const [{ total }] = await db
+      .select({ total: sql<number>`count(*)`.mapWith(Number) })
+      .from(reports)
+      .where(whereClause);
+
+    const totalPages = Math.ceil(total / limit);
+
+    const rawReports = await db
+      .select()
+      .from(reports)
+      .where(whereClause)
+      .limit(limit)
+      .offset(offset);
+
+    const results = rawReports.map(report => {
+      let score = 0;
+      if (queryStr) {
+        if (report.title.toLowerCase().includes(queryStr)) score += 10;
+        if (report.uniqueIdentifier?.toLowerCase().includes(queryStr)) score += 15;
+        keywords.forEach(k => {
+          if (report.title.toLowerCase().includes(k)) score += 2;
+          if (report.description?.toLowerCase().includes(k)) score += 1;
+          if (report.ocrText?.toLowerCase().includes(k)) score += 3;
         });
       }
 
-      if (categoryFilters.length > 0 && !categoryFilters.includes('any')) {
-        const cats = categoryFilters.map(c => `'${c}'`).join(',');
-        if (cats) {
-          reportConditions.push(sql`${reports.category} IN (${sql.raw(cats)})`);
-        }
-      }
+      // Both sides lowercased so "IMEI123" == "imei123" resolves correctly
+      const isExactMatch = !!report.uniqueIdentifier &&
+        report.uniqueIdentifier.toLowerCase() === queryStr &&
+        queryStr.length > 3;
 
-      if (statusFilters.length > 0) {
-        const stats = statusFilters.map(s => `'${s}'`).join(',');
-        if (stats) {
-          reportConditions.push(sql`${reports.status} IN (${sql.raw(stats)})`);
-        }
-      } else {
-        // Default to Open if no legacy status provided? No, search everything if filters are empty usually.
-        // But usually we only want 'Open' reports for matching. For global search, maybe all?
-        // Let's default to no filter (all statuses) unless specified.
-      }
+      const displayDescription = report.description && report.description.length > 120
+        ? report.description.substring(0, 120) + "..."
+        : report.description;
 
-      if (location) {
-        reportConditions.push(like(reports.location, `%${location as string}%`));
-      }
+      // Safe null guard: report.location is NOT NULL in schema but guard defensively
+      const regionLabel = report.location
+        ? (report.location.split(',').pop()?.trim() || 'Central')
+        : 'Central';
 
-      const dateConditions = getDateRangeConditions(reports.reportedAt);
-      reportConditions.push(...dateConditions);
- 
-      const reportResults = await db.select().from(reports).where(reportConditions.length ? and(...reportConditions) : undefined);
- 
-      results.push(...reportResults.map(report => {
-        let score = 0;
-        if (queryStr) {
-          if (report.title.toLowerCase().includes(queryStr)) score += 10;
-          if (report.uniqueIdentifier?.toLowerCase().includes(queryStr)) score += 15;
-          keywords.forEach(k => {
-            if (report.title.toLowerCase().includes(k)) score += 2;
-            if (report.description?.toLowerCase().includes(k)) score += 1;
-            if (report.ocrText?.toLowerCase().includes(k)) score += 3;
-          });
-        }
+      return {
+        id: report.id,
+        title: isExactMatch ? report.title : `[Item in ${report.category}]`,
+        description: displayDescription,
+        category: report.category,
+        status: report.status,
+        location: isExactMatch ? report.location : `[Region: ${regionLabel}]`,
+        date: report.reportedAt,
+        imageUrls: report.imageUrls,
+        type: report.type,
+        isFeatured: report.isFeatured,
+        isExactMatch,
+        score: report.isFeatured ? score + 100 : score
+      };
+    });
 
-        const isExactMatch = report.uniqueIdentifier === queryStr && queryStr.length > 3;
-        
-        // Privacy logic: Discoverability in the public hub should be restrictive
-        // Hide location and title unless it's a generic identification
-        // Truncate description for general view
-        const displayDescription = report.description && report.description.length > 120 
-          ? report.description.substring(0, 120) + "..." 
-          : report.description;
-
-        return {
-          id: report.id,
-          title: isExactMatch ? report.title : `[Item in ${report.category}]`, 
-          description: displayDescription,
-          category: report.category,
-          status: report.status,
-          location: isExactMatch ? report.location : `[Region: ${report.location.split(',').pop()?.trim() || 'Central'}]`,
-          date: report.reportedAt,
-          imageUrls: report.imageUrls,
-          type: report.type,
-          isFeatured: report.isFeatured,
-          isExactMatch,
-          score: report.isFeatured ? score + 100 : score
-        };
-      }));
-    }
-
-    // Sort: Featured first, then by specified sorting method
+    // Sort: featured first, then by the requested method
     results.sort((a, b) => {
-      // 1. Featured items always appear first
       if (a.isFeatured && !b.isFeatured) return -1;
       if (!a.isFeatured && b.isFeatured) return 1;
-      
-      // 2. Custom sorting logic
-      if (sortBy === 'oldest') {
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
-      }
-      if (sortBy === 'relevance' || (queryStr && !sortBy)) {
-        return b.score - a.score;
-      }
-      // Default: newest
+      if (sortBy === 'oldest') return new Date(a.date).getTime() - new Date(b.date).getTime();
+      if (sortBy === 'relevance' || (queryStr && !sortBy)) return b.score - a.score;
       return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
 
-    res.json(results);
+    res.json({ results, total, page, totalPages });
   } catch (error) {
     logger.error('Search failed', { error });
     res.status(500).json({ message: "Search failed", detail: (error as Error).message });

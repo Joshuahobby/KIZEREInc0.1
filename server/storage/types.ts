@@ -99,7 +99,6 @@ export interface IStorage {
   getReportsWithFilters(options: any): Promise<{ reports: Report[]; total: number; page: number; totalPages: number }>;
   getReportWithRelatedData(id: number): Promise<any>;
   generateReportCSV(): Promise<string>;
-  findPotentialMatches(reportId: number): Promise<any[]>;
 
   // Notification methods
   getNotification(id: number): Promise<Notification | undefined>;

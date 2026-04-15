@@ -53,20 +53,32 @@ export async function getAllReports(): Promise<Report[]> {
 }
 
 export async function getReportStats(): Promise<any> {
-  const allReports = await getAllReports();
-  const oneWeekAgo = new Date(); oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const oneMonthAgo = new Date(); oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+  const now = new Date();
+  const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const [counts] = await db.select({
+    total:          sql<number>`count(*)`.mapWith(Number),
+    lost:           sql<number>`count(*) filter (where type = 'lost')`.mapWith(Number),
+    found:          sql<number>`count(*) filter (where type = 'found')`.mapWith(Number),
+    open:           sql<number>`count(*) filter (where status = 'Open')`.mapWith(Number),
+    inProgress:     sql<number>`count(*) filter (where status = 'In_Progress')`.mapWith(Number),
+    resolved:       sql<number>`count(*) filter (where status = 'Resolved')`.mapWith(Number),
+    closed:         sql<number>`count(*) filter (where status = 'Closed')`.mapWith(Number),
+    thisWeek:       sql<number>`count(*) filter (where reported_at >= ${oneWeekAgo})`.mapWith(Number),
+    thisMonth:      sql<number>`count(*) filter (where reported_at >= ${oneMonthAgo})`.mapWith(Number),
+  }).from(reports);
 
   return {
-    totalReports: allReports.length,
-    lostReports: allReports.filter(r => r.type === 'lost').length,
-    foundReports: allReports.filter(r => r.type === 'found').length,
-    openReports: allReports.filter(r => r.status === 'Open').length,
-    inProgressReports: allReports.filter(r => r.status === 'In_Progress').length,
-    resolvedReports: allReports.filter(r => r.status === 'Resolved').length,
-    closedReports: allReports.filter(r => r.status === 'Closed').length,
-    reportsThisWeek: allReports.filter(r => new Date(r.reportedAt) >= oneWeekAgo).length,
-    reportsThisMonth: allReports.filter(r => new Date(r.reportedAt) >= oneMonthAgo).length
+    totalReports:      counts.total,
+    lostReports:       counts.lost,
+    foundReports:      counts.found,
+    openReports:       counts.open,
+    inProgressReports: counts.inProgress,
+    resolvedReports:   counts.resolved,
+    closedReports:     counts.closed,
+    reportsThisWeek:   counts.thisWeek,
+    reportsThisMonth:  counts.thisMonth,
   };
 }
 
@@ -267,49 +279,3 @@ export async function generateReportCSV(): Promise<string> {
   return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
 }
 
-export async function findPotentialMatches(reportId: number): Promise<any[]> {
-  const sourceReport = await getReport(reportId);
-  if (!sourceReport) return [];
-
-  const oppositeType = sourceReport.type === 'lost' ? 'found' : 'lost';
-  const category = sourceReport.category;
-
-  // Get reports of opposite type in the same category
-  const candidates = await db.select()
-    .from(reports)
-    .where(and(
-      eq(reports.type, oppositeType),
-      eq(reports.category, category),
-      eq(reports.status, 'Open')
-    ));
-
-  // Simple keyword matching for relevance
-  const keywords = sourceReport.title.toLowerCase().split(/\s+/).filter(k => k.length > 3);
-
-  const matches = candidates.map(c => {
-    let score = 0;
-
-    // Exact Unique Identifier match
-    if (sourceReport.uniqueIdentifier && c.uniqueIdentifier &&
-      sourceReport.uniqueIdentifier.trim().toLowerCase() === c.uniqueIdentifier.trim().toLowerCase()) {
-      score += 95;
-    }
-
-    // Exact Item ID match
-    if (sourceReport.itemId && c.itemId && sourceReport.itemId === c.itemId) {
-      score += 90;
-    }
-
-    const cTitle = c.title.toLowerCase();
-    const cDesc = (c.description || "").toLowerCase();
-
-    keywords.forEach(kw => {
-      if (cTitle.includes(kw)) score += 5;
-      if (cDesc.includes(kw)) score += 2;
-    });
-
-    return { ...c, matchScore: Math.min(100, score) };
-  });
-
-  return matches.sort((a, b) => b.matchScore - a.matchScore).slice(0, 5);
-}

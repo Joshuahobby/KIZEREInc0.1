@@ -71,13 +71,15 @@ export default function Search() {
 
   // Search results query
   const {
-    data: searchResults,
+    data: searchData,
     isLoading
-  } = useQuery<(Item | Report)[]>({
+  } = useQuery<{ results: any[]; total: number; page: number; totalPages: number }>({
     queryKey: [`/api/search?${buildQueryParams()}`],
-    // Only fetch search results if the user is authenticated
-    enabled: user !== null, // Changed from isAuthenticated to user !== null
+    enabled: user !== null,
   });
+
+  const searchResults = searchData?.results ?? [];
+  const searchTotal = searchData?.total ?? 0;
 
   const handleSearch = (newFilters: any) => {
     setFilters(newFilters);
@@ -192,11 +194,11 @@ export default function Search() {
                     <>
                       {viewMode === 'list' ? (
                         <div className="space-y-3">
-                          {searchResults && searchResults.length > 0 ? (
+                          {searchResults.length > 0 ? (
                             <>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs font-bold text-muted-foreground bg-muted/50 px-2.5 py-1 rounded-lg">
-                                  {searchResults.length} {t('searchPage.resultsFound')}
+                                  {searchTotal} {t('searchPage.resultsFound')}
                                 </span>
                               </div>
                               <motion.div
@@ -384,7 +386,7 @@ export default function Search() {
                         </div>
                       ) : (
                         <div className="h-[600px] w-full border rounded-xl overflow-hidden shadow-sm relative">
-                          {searchResults && <MapView items={searchResults} className="h-full w-full" />}
+                          {searchResults.length > 0 && <MapView items={searchResults} className="h-full w-full" />}
                         </div>
                       )}
                     </>

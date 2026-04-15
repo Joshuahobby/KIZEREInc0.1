@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDebounce } from '../../hooks/use-debounce';
 import { createLogger } from '@/lib/logger';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { apiGet } from '@/lib/api';
 import {
   Search,
   LayoutGrid,
@@ -120,16 +121,18 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({
       setIsLoading(true);
 
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}${activeFilter ? `&status=${activeFilter}` : ''}`);
+        const data = await apiGet<{ results: any[]; total: number; page: number; totalPages: number }>(
+          `/api/search?q=${encodeURIComponent(debouncedQuery)}${activeFilter ? `&status=${activeFilter}` : ''}`,
+          { showErrorToast: false }
+        );
 
-        if (!response.ok) {
-          throw new Error('Search request failed');
+        if (!data) {
+          setResults([]);
+          return;
         }
 
-        const data = await response.json();
-
         // Map API results to SearchResult interface
-        const mappedResults: SearchResult[] = data.map((item: any) => ({
+        const mappedResults: SearchResult[] = data.results.map((item: any) => ({
           id: String(item.id),
           type: item.type === 'registered' ? 'item' : 'report',
           title: item.name || item.title || 'Untitled',
