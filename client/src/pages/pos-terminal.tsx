@@ -533,10 +533,43 @@ export default function PosTerminal() {
         </div>
       </header>
 
+      {/* Mobile Step Indicator */}
+      {step !== "scenario" && steps.length > 0 && (
+        <div className="md:hidden shrink-0 px-4 py-3 bg-[#1e293b]/60 border-b border-slate-800">
+          <div className="flex items-center">
+            {steps.map((s, idx) => {
+              const isActive = s.key === step;
+              const isPast = currentStepIdx > idx;
+              return (
+                <React.Fragment key={s.key}>
+                  <div className="flex flex-col items-center gap-1 min-w-0">
+                    <div className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center border-2 transition-colors shrink-0",
+                      isActive ? "bg-emerald-500 border-emerald-500 text-white" :
+                      isPast ? "bg-slate-800 border-emerald-500 text-emerald-500" :
+                      "bg-slate-900 border-slate-700 text-slate-600"
+                    )}>
+                      {isPast ? <Check className="w-3 h-3" /> : <s.icon className="w-3 h-3" />}
+                    </div>
+                    <span className={cn(
+                      "text-[8px] font-bold uppercase tracking-wide",
+                      isActive ? "text-emerald-400" : isPast ? "text-slate-500" : "text-slate-700"
+                    )}>{s.label}</span>
+                  </div>
+                  {idx < steps.length - 1 && (
+                    <div className={cn("h-0.5 flex-1 mx-1 -mt-3", isPast ? "bg-emerald-500" : "bg-slate-800")} />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <main className="flex-1 overflow-hidden flex flex-col md:flex-row">
         {/* Left Sidebar - Navigation & Steps */}
-        <aside className="w-full md:w-64 bg-[#1e293b]/30 border-r border-slate-800 p-6 flex flex-col shrink-0">
+        <aside className="hidden md:flex md:flex-col md:w-64 bg-[#1e293b]/30 border-r border-slate-800 p-6 shrink-0">
           <div className="space-y-4 flex-1">
             {step === "scenario" ? (
               <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl">
@@ -587,7 +620,7 @@ export default function PosTerminal() {
 
         {/* Content Body */}
         <section className="flex-1 flex flex-col relative bg-[#0f172a] overflow-y-auto custom-scrollbar">
-          <div className="max-w-4xl w-full mx-auto p-6 md:p-10">
+          <div className="max-w-4xl w-full mx-auto p-4 md:p-10 pb-28 md:pb-10">
             {isStolen && (
               <div className="mb-8 p-6 bg-red-500/10 border border-red-500/50 rounded-2xl flex flex-col items-center text-center animate-in zoom-in">
                 <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center mb-4 shadow-lg shadow-red-500/20">
@@ -604,14 +637,14 @@ export default function PosTerminal() {
               {step === "scenario" && (
                 <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
                   <div className="text-center space-y-2">
-                    <h2 className="text-4xl font-black text-white">Select Operation</h2>
-                    <p className="text-slate-400">Choose the type of transaction you want to perform</p>
+                    <h2 className="text-2xl md:text-4xl font-black text-white">Select Operation</h2>
+                    <p className="text-slate-400 text-sm md:text-base">Choose the type of transaction you want to perform</p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <button 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <button
                       onClick={() => { setScenario("sale"); setIsStockInMode(false); setStep("customer"); }}
-                      className="group p-8 bg-slate-900/50 border border-slate-800 rounded-[2rem] hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-left space-y-4"
+                      className="group p-5 md:p-8 bg-slate-900/50 border border-slate-800 rounded-[2rem] hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-left space-y-3 md:space-y-4"
                     >
                       <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
                         <UserPlus className="w-8 h-8" />
@@ -625,9 +658,9 @@ export default function PosTerminal() {
                       </div>
                     </button>
 
-                    <button 
+                    <button
                       onClick={() => { setScenario("stock-in"); setIsStockInMode(true); setStep("product"); }}
-                      className="group p-8 bg-slate-900/50 border border-slate-800 rounded-[2rem] hover:border-amber-500/50 hover:bg-amber-500/5 transition-all text-left space-y-4"
+                      className="group p-5 md:p-8 bg-slate-900/50 border border-slate-800 rounded-[2rem] hover:border-amber-500/50 hover:bg-amber-500/5 transition-all text-left space-y-3 md:space-y-4"
                     >
                       <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform">
                         <PackagePlus className="w-8 h-8" />
@@ -654,8 +687,8 @@ export default function PosTerminal() {
               {step === "customer" && (
                 <div className="space-y-8 animate-in slide-in-from-right-4 duration-500">
                   <div className="flex flex-col gap-2">
-                    <h2 className="text-3xl font-black text-white tracking-tight">Find Customer</h2>
-                    <p className="text-slate-400">Identify the customer via National ID to begin registration</p>
+                    <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">Find Customer</h2>
+                    <p className="text-slate-400 text-sm md:text-base">Identify the customer via National ID to begin registration</p>
                   </div>
                   
                   <div className="space-y-6">
@@ -664,7 +697,7 @@ export default function PosTerminal() {
                         <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-emerald-500 transition-all duration-300" />
                         <Input
                           placeholder="National ID Number (16 digits)"
-                          className="h-20 pl-14 text-2xl font-mono tracking-[0.25em] bg-slate-900/40 border-slate-800/50 focus:border-emerald-500/50 focus:ring-emerald-500/10 rounded-2xl transition-all"
+                          className="h-14 sm:h-20 pl-14 text-lg sm:text-2xl font-mono tracking-[0.15em] sm:tracking-[0.25em] bg-slate-900/40 border-slate-800/50 focus:border-emerald-500/50 focus:ring-emerald-500/10 rounded-2xl transition-all"
                           value={nationalId}
                           maxLength={16}
                           onChange={(e) => {
@@ -721,12 +754,12 @@ export default function PosTerminal() {
                       )}
                     </div>
 
-                    <div className="flex gap-4 pt-6">
-                      <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-500 hover:text-white hover:bg-slate-800 font-bold rounded-2xl transition-all" onClick={() => setStep("scenario")}>
+                    <div className="flex gap-3 pt-4 md:pt-6">
+                      <Button variant="outline" className="h-12 md:h-16 flex-1 border-slate-800 text-slate-500 hover:text-white hover:bg-slate-800 font-bold rounded-2xl transition-all" onClick={() => setStep("scenario")}>
                         Cancel
                       </Button>
                       <Button
-                        className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-2xl shadow-2xl shadow-emerald-600/20 active:scale-95 transition-all group"
+                        className="h-12 md:h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-2xl shadow-emerald-600/20 active:scale-95 transition-all group"
                         disabled={loading || nationalId.length !== 16 || (isNewCustomer && !fullName)}
                         onClick={handleCustomerSubmit}
                       >
@@ -746,10 +779,10 @@ export default function PosTerminal() {
               {step === "product" && (
                 <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                   <div className="flex flex-col gap-2">
-                    <h2 className="text-3xl font-black text-white">{scenario === "stock-in" ? "Stock Entry Details" : "Product Details"}</h2>
-                    <p className="text-slate-400">
-                      {scenario === "stock-in" 
-                        ? "Registering new inventory arrivals to your store" 
+                    <h2 className="text-2xl md:text-3xl font-black text-white">{scenario === "stock-in" ? "Stock Entry Details" : "Product Details"}</h2>
+                    <p className="text-slate-400 text-sm md:text-base">
+                      {scenario === "stock-in"
+                        ? "Registering new inventory arrivals to your store"
                         : "Scanning or manual entry for the item being processed"}
                     </p>
                   </div>
@@ -925,7 +958,7 @@ export default function PosTerminal() {
                       </div>
 
                       {scenario === "stock-in" && (
-                        <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-500">
                           <div className="space-y-2">
                             <label className="text-[10px] font-bold text-slate-500 uppercase ml-1">Purchase Price (Cost)</label>
                             <Input 
@@ -950,12 +983,12 @@ export default function PosTerminal() {
                     </div>
                   )}
 
-                  <div className="flex gap-4 pt-4">
-                    <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep(scenario === "stock-in" ? "scenario" : "customer")}>
+                  <div className="flex gap-3 pt-4">
+                    <Button variant="outline" className="h-12 md:h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep(scenario === "stock-in" ? "scenario" : "customer")}>
                       Back
                     </Button>
                     <Button
-                      className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-2xl shadow-xl shadow-emerald-600/20"
+                      className="h-12 md:h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-xl shadow-emerald-600/20"
                       disabled={!serialNumber || !productName}
                       onClick={() => setStep("confirm")}
                     >
@@ -969,10 +1002,10 @@ export default function PosTerminal() {
               {step === "confirm" && (
                 <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
                   <div className="flex flex-col gap-2">
-                    <h2 className="text-3xl font-black text-white">{scenario === "stock-in" ? "Review Stock Registration" : "Review & Confirm"}</h2>
-                    <p className="text-slate-400">
-                      {scenario === "stock-in" 
-                        ? "Verify arrival details before updating warehouse ledger" 
+                    <h2 className="text-2xl md:text-3xl font-black text-white">{scenario === "stock-in" ? "Review Stock Registration" : "Review & Confirm"}</h2>
+                    <p className="text-slate-400 text-sm md:text-base">
+                      {scenario === "stock-in"
+                        ? "Verify arrival details before updating warehouse ledger"
                         : "Please verify all information is correct before submitting"}
                     </p>
                   </div>
@@ -1041,12 +1074,12 @@ export default function PosTerminal() {
                     </div>
                   </div>
 
-                  <div className="flex gap-4 pt-4">
-                    <Button variant="outline" className="h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep("product")}>
+                  <div className="flex gap-3 pt-4">
+                    <Button variant="outline" className="h-12 md:h-16 flex-1 border-slate-800 text-slate-400 font-bold rounded-2xl" onClick={() => setStep("product")}>
                       Back
                     </Button>
                     <Button
-                      className="h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-bold rounded-2xl shadow-xl shadow-emerald-600/20"
+                      className="h-12 md:h-16 flex-[2] bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-xl shadow-emerald-600/20"
                       disabled={loading}
                       onClick={handleRegister}
                     >
@@ -1178,7 +1211,7 @@ export default function PosTerminal() {
                             { label: "Product", value: registeredProduct?.name || productName },
                             { label: "S/N", value: serialNumber },
                             { label: "SKU", value: sku || "N/A" },
-                            { label: "Retailer", value: user?.businessName || user?.fullName || "KIZERE Store" },
+                            { label: "Retailer", value: user?.fullName || "KIZERE Store" },
                             ...(scenario === "stock-in" ? [
                               { label: "Type", value: "Goods Received" },
                               { label: "Supplier", value: supplier || "Direct" }
@@ -1213,8 +1246,22 @@ export default function PosTerminal() {
         </section>
       </main>
 
+      {/* Mobile Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#1e293b]/95 backdrop-blur-md border-t border-slate-800 p-3 flex gap-2">
+        <Button variant="outline" size="sm" className="flex-1 border-slate-700 bg-slate-900/50 hover:bg-slate-800 justify-center gap-2 h-11" asChild>
+          <Link href="/retailer/dashboard">
+            <LayoutDashboard className="w-4 h-4" />
+            <span className="text-xs font-bold">Dashboard</span>
+          </Link>
+        </Button>
+        <Button variant="ghost" size="sm" className="flex-1 justify-center gap-2 text-slate-400 hover:text-white h-11" onClick={resetFlow}>
+          <Activity className="w-4 h-4" />
+          <span className="text-xs font-bold">Reset Session</span>
+        </Button>
+      </div>
+
       {/* Footer / Status Bar */}
-      <footer className="h-8 bg-[#0f172a] border-t border-slate-800/50 flex items-center justify-between px-6 shrink-0">
+      <footer className="hidden md:flex h-8 bg-[#0f172a] border-t border-slate-800/50 items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-4">
            <div className="flex items-center gap-2">
             <div className={cn("w-2 h-2 rounded-full", isOnline ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-red-500")} />

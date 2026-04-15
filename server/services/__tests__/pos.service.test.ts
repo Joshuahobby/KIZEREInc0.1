@@ -1,25 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { isPosStubAccount, checkOrCreateCustomer, registerProduct, transferOwnership } from "../pos.service";
-import { db } from "../../db";
+import { storage } from "../../storage";
 import bcrypt from "bcrypt";
 import { notifyPosCustomer } from "../pos-notification.service";
 
-vi.mock("../../db", () => ({
-  db: {
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    query: {
-      retailers: {
-        findFirst: vi.fn(),
-      }
-    }
+vi.mock("../../storage", () => ({
+  storage: {
+    getUserByNationalId: vi.fn(),
+    createUser: vi.fn(),
+    getRetailer: vi.fn(),
+    countRetailerProducts: vi.fn(),
+    getRetailerCustomerDetail: vi.fn(),
+    getPosProductBySerial: vi.fn(),
+    getGlobalStolenStatus: vi.fn(),
+    createPosProduct: vi.fn(),
+    createOwnershipLedgerEntry: vi.fn(),
+    getPosProduct: vi.fn(),
+    updatePosProduct: vi.fn(),
+    createPosSecurityAlert: vi.fn(),
   },
 }));
 
@@ -30,6 +28,16 @@ vi.mock("../pos-notification.service", () => ({
 vi.mock("bcrypt", () => ({
   default: {
     hash: vi.fn().mockResolvedValue("hashed-password"),
+  },
+}));
+
+vi.mock("../../websocket", () => ({
+  emitSecurityAlert: vi.fn(),
+}));
+
+vi.mock("../commission.service", () => ({
+  CommissionService: {
+    recordCommission: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -56,7 +64,7 @@ describe("POS Service", () => {
   describe("checkOrCreateCustomer", () => {
     it("returns existing user if found", async () => {
       const mockUser = { id: 1, nationalId: "123456" };
-      (db.limit as any).mockResolvedValueOnce([mockUser]);
+      (storage.getUserByNationalId as any).mockResolvedValueOnce(mockUser);
 
       const result = await checkOrCreateCustomer("123456", "John Doe");
       expect(result.isNew).toBe(false);
@@ -64,9 +72,9 @@ describe("POS Service", () => {
     });
 
     it("creates a new stub user if not found", async () => {
-      (db.limit as any).mockResolvedValueOnce([]); // No existing user
-      const mockNewUser = { id: 2, nationalId: "987654", email: "kz_87654_xyz@pos.kizere.local" };
-      (db.returning as any).mockResolvedValueOnce([mockNewUser]);
+      const mockNewUser = { id: 2, nationalId: "987654", email: "kz_987654_xyz@pos.kizere.local" };
+      (storage.getUserByNationalId as any).mockResolvedValueOnce(undefined);
+      (storage.createUser as any).mockResolvedValueOnce(mockNewUser);
 
       const result = await checkOrCreateCustomer("987654", "Jane Doe");
       expect(result.isNew).toBe(true);
@@ -76,33 +84,47 @@ describe("POS Service", () => {
   });
 
   describe("registerProduct", () => {
+    // retailer.userId=1, ownerId=2 → customerDetail check runs, notifyPosCustomer fires
+    const mockRetailer = { id: 1, userId: 1, name: "Test Retailer", subscriptionPlan: "basic" };
+
     it("throws 409 if serial number already exists", async () => {
-      (db.limit as any).mockResolvedValueOnce([{ id: 1 }]); // Duplicate found
-      
-      await expect(registerProduct({
-        serialNumber: "SN123",
-        name: "Test Product",
-        retailerId: 1,
-        ownerId: 2
-      })).rejects.toThrow(/already exists/);
+      (storage.getRetailer as any).mockResolvedValueOnce(mockRetailer);
+      (storage.countRetailerProducts as any).mockResolvedValueOnce(0);
+      (storage.getRetailerCustomerDetail as any).mockResolvedValueOnce(null);
+      // Product exists at a different retailer → triggers the 409 branch
+      (storage.getPosProductBySerial as any).mockResolvedValueOnce({
+        id: 1,
+        retailerId: 999,
+        currentOwnerId: 999,
+      });
+
+      await expect(
+        registerProduct({
+          serialNumber: "SN123",
+          name: "Test Product",
+          retailerId: 1,
+          ownerId: 2,
+        })
+      ).rejects.toThrow(/already exists/);
     });
 
     it("registers product and creates ledger entry", async () => {
-      (db.limit as any).mockResolvedValueOnce([]); // No duplicate
-      const mockProduct = { id: 10, name: "Test Product", serialNumber: "SN123" };
+      const mockProduct = { id: 10, name: "Test Product", serialNumber: "SN123", category: "Other" };
       const mockLedger = { id: 100, event: "sale" };
-      
-      (db.returning as any)
-        .mockResolvedValueOnce([mockProduct]) // Product insert
-        .mockResolvedValueOnce([mockLedger]); // Ledger insert
-      
-      (db.query.retailers.findFirst as any).mockResolvedValueOnce({ id: 1, name: "Test Retailer" });
+
+      (storage.getRetailer as any).mockResolvedValueOnce(mockRetailer);
+      (storage.countRetailerProducts as any).mockResolvedValueOnce(0);
+      (storage.getRetailerCustomerDetail as any).mockResolvedValueOnce(null);
+      (storage.getPosProductBySerial as any).mockResolvedValueOnce(null);
+      (storage.getGlobalStolenStatus as any).mockResolvedValueOnce({ isStolen: false });
+      (storage.createPosProduct as any).mockResolvedValueOnce(mockProduct);
+      (storage.createOwnershipLedgerEntry as any).mockResolvedValueOnce(mockLedger);
 
       const result = await registerProduct({
         serialNumber: "SN123",
         name: "Test Product",
         retailerId: 1,
-        ownerId: 2
+        ownerId: 2,
       });
 
       expect(result.product).toEqual(mockProduct);
@@ -113,23 +135,27 @@ describe("POS Service", () => {
 
   describe("transferOwnership", () => {
     it("throws 404 if product not found", async () => {
-      (db.limit as any).mockResolvedValueOnce([]);
-      
-      await expect(transferOwnership({
-        productId: 99,
-        newOwnerId: 3,
-        retailerId: 1
-      })).rejects.toThrow("Product not found");
+      (storage.getPosProduct as any).mockResolvedValueOnce(null);
+
+      await expect(
+        transferOwnership({
+          productId: 99,
+          newOwnerId: 3,
+          retailerId: 1,
+        })
+      ).rejects.toThrow("Product not found");
     });
 
-    it("throws 400 if product is stolen", async () => {
-      (db.limit as any).mockResolvedValueOnce([{ id: 99, status: "stolen" }]);
-      
-      await expect(transferOwnership({
-        productId: 99,
-        newOwnerId: 3,
-        retailerId: 1
-      })).rejects.toThrow("stolen");
+    it("throws if product is stolen", async () => {
+      (storage.getPosProduct as any).mockResolvedValueOnce({ id: 99, status: "stolen" });
+
+      await expect(
+        transferOwnership({
+          productId: 99,
+          newOwnerId: 3,
+          retailerId: 1,
+        })
+      ).rejects.toThrow("stolen");
     });
   });
 });

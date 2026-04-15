@@ -1,3 +1,7 @@
+import React from "react";
+import { Html5QrcodeScanner } from "html5-qrcode";
+import { Camera } from "lucide-react";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import {
   Dialog,
   DialogContent,
