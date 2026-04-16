@@ -1,6 +1,6 @@
 import { storage } from "../storage";
 import { createLogger } from "../utils/logger";
-import type { Item, User } from "@shared/schema";
+import type { Item, PosProduct, User } from "@shared/schema";
 
 const logger = createLogger("VerificationReportService");
 
@@ -28,14 +28,25 @@ export class VerificationReportService {
     }
 
     const item = await storage.getItemByUniqueIdentifier(identifier);
-    const reportData = await VerificationReportService.buildReport(item ?? null, identifier);
+    let reportData: Record<string, any>;
+    let itemId: number | null = null;
+
+    if (item) {
+      reportData = await VerificationReportService.buildReport(item, identifier);
+      itemId = item.id;
+    } else {
+      const posProduct = await storage.getPosProductBySerialWithRetailer(identifier);
+      reportData = posProduct
+        ? await VerificationReportService.buildPosReport(posProduct, identifier)
+        : await VerificationReportService.buildReport(null, identifier);
+    }
 
     const expiresAt = new Date(Date.now() + REPORT_TTL_MS);
 
     await storage.createVerificationPurchase({
       userId: payment.userId,
       identifier,
-      itemId: item?.id ?? null,
+      itemId,
       reportData,
       paymentId: payment.id,
       expiresAt,
@@ -67,7 +78,10 @@ export class VerificationReportService {
 
     if (isPremium) {
       const item = await storage.getItemByUniqueIdentifier(identifier);
-      return VerificationReportService.buildReport(item ?? null, identifier);
+      if (item) return VerificationReportService.buildReport(item, identifier);
+      const posProduct = await storage.getPosProductBySerialWithRetailer(identifier);
+      if (posProduct) return VerificationReportService.buildPosReport(posProduct, identifier);
+      return VerificationReportService.buildReport(null, identifier);
     }
 
     // Non-premium: check for an active purchase
@@ -124,20 +138,74 @@ export class VerificationReportService {
 
   /**
    * Build the free (public) summary — no owner info, minimal fields.
+   * Checks the items registry first, then falls back to POS products.
    */
   static async buildFreeSummary(identifier: string): Promise<Record<string, any>> {
     const item = await storage.getItemByUniqueIdentifier(identifier);
-    if (!item) {
-      return { identifier, isRegistered: false, isFlagged: false, status: null, category: null };
+    if (item) {
+      const isFlagged = ["Lost", "Stolen"].includes(item.status);
+      return {
+        identifier,
+        isRegistered: true,
+        isFlagged,
+        status: item.status,
+        category: item.category,
+        source: "registry",
+      };
     }
 
-    const isFlagged = ["Lost", "Stolen"].includes(item.status);
+    // Fall back to POS product registry
+    const posProduct = await storage.getPosProductBySerialWithRetailer(identifier);
+    if (posProduct) {
+      const isFlagged = posProduct.status === "stolen";
+      return {
+        identifier,
+        isRegistered: true,
+        isFlagged,
+        status: posProduct.status,
+        category: posProduct.category || "Product",
+        source: "pos",
+        retailerName: posProduct.retailerName,
+      };
+    }
+
+    return { identifier, isRegistered: false, isFlagged: false, status: null, category: null };
+  }
+
+  /**
+   * Build a full report for a POS product.
+   * Shows current owner if they are a KIZERE user; otherwise owner is null.
+   */
+  static async buildPosReport(
+    posProduct: PosProduct & { retailerName: string | null },
+    identifier: string
+  ): Promise<Record<string, any>> {
+    const isFlagged = posProduct.status === "stolen";
+
+    let owner: Pick<User, "fullName" | "email" | "phoneNumber"> | null = null;
+    if (posProduct.currentOwnerId) {
+      const ownerUser = await storage.getUser(posProduct.currentOwnerId);
+      if (ownerUser) {
+        owner = {
+          fullName: ownerUser.fullName,
+          email: ownerUser.email,
+          phoneNumber: ownerUser.phoneNumber ?? null,
+        };
+      }
+    }
+
     return {
       identifier,
       isRegistered: true,
       isFlagged,
-      status: item.status,
-      category: item.category,
+      status: posProduct.status,
+      category: posProduct.category || "Product",
+      name: posProduct.name,
+      owner,
+      registeredAt: posProduct.registrationDate,
+      source: "pos",
+      retailerName: posProduct.retailerName,
+      kizereId: posProduct.kizereId,
     };
   }
 }
