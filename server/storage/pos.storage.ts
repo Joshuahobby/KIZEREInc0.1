@@ -59,7 +59,9 @@ export async function getPosProductByIdAndRetailer(id: number, retailerId?: numb
 }
 
 export async function getPosProductBySerial(serialNumber: string): Promise<PosProduct | undefined> {
-  const [product] = await db.select().from(posProducts).where(eq(posProducts.serialNumber, serialNumber)).limit(1);
+  const [product] = await db.select().from(posProducts)
+    .where(sql`LOWER(${posProducts.serialNumber}) = LOWER(${serialNumber.trim()})`)
+    .limit(1);
   return product;
 }
 
@@ -69,7 +71,10 @@ export async function getPosProductBySerialWithRetailer(
   const [product] = await db
     .select()
     .from(posProducts)
-    .where(eq(posProducts.serialNumber, serialNumber))
+    .where(or(
+      sql`LOWER(${posProducts.serialNumber}) = LOWER(${serialNumber.trim()})`,
+      sql`LOWER(${posProducts.kizereId}) = LOWER(${serialNumber.trim()})`
+    ))
     .limit(1);
   if (!product) return undefined;
   const [retailer] = await db

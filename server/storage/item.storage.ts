@@ -133,6 +133,8 @@ export async function getItemReports(itemId: number): Promise<any[]> {
 }
 
 export async function getItemByUniqueIdentifier(identifier: string): Promise<Item | undefined> {
-  const [item] = await db.select().from(items).where(eq(items.uniqueIdentifier, identifier));
+  const [item] = await db.select().from(items)
+    .where(sql`LOWER(${items.uniqueIdentifier}) = LOWER(${identifier.trim()})`)
+    .limit(1);
   return item;
 }
