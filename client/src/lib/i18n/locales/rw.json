@@ -2235,5 +2235,89 @@
       "updateSuccess": "Igenamiterere ryahinduwe",
       "updateSuccessDesc": "Igenamiterere ry'umukiriya ryabitswe."
     }
+  },
+  "consumer": {
+    "verify": {
+      "title": "Kugenzura Icyuma",
+      "subtitle": "Injiza IMEI, inomero ya série, cyangwa ID ya KIZERE kugira ngo urebe ko icyuma cyanditswe. Shakisha raporo yuzuye uguze raporo imwe cyangwa ukunguka Premium.",
+      "searchPlaceholder": "IMEI, inomero ya série, cyangwa ID ya KIZERE…",
+      "searching": "Gushakisha mu bubiko…",
+      "lookupFailed": "Gushakisha ntibyakunze. Ongera ugerageze.",
+      "flaggedWarning": "Iki cyuma cyatangajwe ko gitakaye cyangwa cyibye. Ibikorwa by'ubucuruzi bishobora kuba biburiwe.",
+      "registered": "Cyanditswe",
+      "notRegistered": "Ntibabonetse",
+      "report": {
+        "title": "Raporo Yuzuye y'Ubunikuze",
+        "available": "Raporo Yuzuye Ihari",
+        "availableDesc": "Amakuru y'nyiricyuma, itariki yo kwandikisha, n'amateka yose. Ingana amasaha 48. Abafite Premium babona vuba.",
+        "getReport": "Kubona Raporo Yuzuye",
+        "loading": "Gufungura…",
+        "registeredOwner": "Nyiricyuma Wanditswe",
+        "validFor": "Uburenganzira bwo kubona raporo bugumye amasaha 48 nyuma yo kugura.",
+        "ready": "Raporo iteguye",
+        "readyDesc": "Raporo yawe yuzuye yo kugenzura yafunguwe.",
+        "fetchFailed": "Raporo ntiyafunguwe"
+      },
+      "signin": {
+        "required": "Raporo yuzuye isaba kwinjira",
+        "requiredDesc": "Injira kugura cyangwa kubona raporo yuzuye y'ubunikuze.",
+        "cta": "Injira gukomeza"
+      },
+      "payment": {
+        "title": "Kubona Raporo Yuzuye",
+        "desc": "Gura uburenganzira bw'amasaha 48 kuri raporo yuzuye y'ubunikuze ya {{identifier}}. Cyangwa unguka Premium kubona raporo zidaharurwa.",
+        "momoLabel": "Inomero ya Telefone ya MoMo",
+        "momoPlaceholder": "+250 78 000 0000",
+        "payBtn": "Kwishyura & Kubona Raporo",
+        "cancel": "Guhagarika",
+        "initiating": "Gutangira…",
+        "initiated": "Kwishyura gutangiye",
+        "initiatedDesc": "Reba telefone yawe kugira ngo wemeze ubusabe bwa MoMo. Raporo yawe izafunguka vuba kwishyura kwemejwe.",
+        "failed": "Kugura ntibyakunze. Ongera ugerageze.",
+        "waiting": "Gutegereza kwemezwa kw'iyishyura…",
+        "waitingDesc": "Emeza ubusabe bwa MoMo kuri telefone yawe. Raporo yawe izafunguka vuba.",
+        "timeout": "Kwishyura bihagaze kurenza igihe",
+        "timeoutDesc": "Kwishyura kwa MoMo bishobora kuba biracyakorwa. Subiramo paji mu minota mike."
+      }
+    },
+    "premium": {
+      "title": "KIZERE Premium",
+      "subtitle": "Fungura kwandikisha kudaharurwa n'amatangazo yuzuye yo kugenzura mu mwaka wose.",
+      "benefit1": "Kwandikisha ibicuruzwa kudaharurwa (ubuntu: 3)",
+      "benefit2": "Amatangazo yuzuye yo kugenzura kudaharurwa",
+      "benefit3": "Inkunga ya mbere & ibikorwa bishya",
+      "benefit4": "Ingana umwaka 1 — bishobora kongererwa",
+      "upgradeCta": "Kuzamuka kuri Premium",
+      "maybeLater": "Bishobora nyuma",
+      "momoLabel": "Inomero ya Telefone ya MoMo",
+      "initiating": "Gutangira…",
+      "initiated": "Kwishyura gutangiye",
+      "initiatedDesc": "Emeza ubusabe bwa MoMo kuri telefone yawe kugira ngo ubone KIZERE Premium.",
+      "failed": "Kugura ntibyakunze",
+      "failedDesc": "Reba inomero ya telefone yawe hanyuma ugerageze nanone.",
+      "banner": {
+        "active": "KIZERE Premium",
+        "limitReached": "Umubare wo kwandikisha ugeze ku mupaka",
+        "limitApproaching": "Umusaruro wo kwandikisha uregeye",
+        "usage": "{{count}}/{{limit}} ibicuruzwa by'ubuntu bikoreshejwe",
+        "upgradeCta": "Kuzamuka kuri Premium →"
+      }
+    },
+    "certificate": {
+      "title": "Icyemezo cy'Ubunikuze",
+      "download": "Kurura Icyemezo PNG",
+      "purchase": "Kugura Icyemezo",
+      "view": "Reba Icyemezo",
+      "get": "Kubona Icyemezo",
+      "noCertDesc": "Kubona Icyemezo cy'Ubunikuze cya KIZERE gifite ubuzimagatozi kuri iki gicuruzwa nk'ibimenyetso by'ubunikuze bwanditswe.",
+      "certCode": "Kode y'Icyemezo",
+      "momoLabel": "Inomero ya Telefone ya MoMo",
+      "momoPlaceholder": "+250 78 000 0000",
+      "purchasing": "Kugura…",
+      "initiated": "Kwishyura icyemezo gutangiye",
+      "initiatedDesc": "Emeza ubusabe bwa MoMo. Icyemezo cyawe kizateguwa kwishyura kwemejwe.",
+      "failed": "Kugura ntibyakunze",
+      "failedDesc": "Reba inomero yawe hanyuma ugerageze nanone."
+    }
   }
 }

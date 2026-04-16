@@ -2323,6 +2323,90 @@
     "privacyHintShort": "[TODO-fr] Some details generalized",
     "privacyHintLong": "[TODO-fr] Sensitive details are masked in public search and only revealed after verification."
   },
+  "consumer": {
+    "verify": {
+      "title": "Vérification d'Article",
+      "subtitle": "Entrez un IMEI, numéro de série ou ID KIZERE pour vérifier le statut d'enregistrement. Obtenez un rapport complet en achetant un rapport unique ou en passant à Premium.",
+      "searchPlaceholder": "IMEI, numéro de série ou ID KIZERE…",
+      "searching": "Recherche dans le registre…",
+      "lookupFailed": "Recherche échouée. Veuillez réessayer.",
+      "flaggedWarning": "Cet article a été signalé comme perdu ou volé. Les transactions peuvent être interdites.",
+      "registered": "Enregistré",
+      "notRegistered": "Non trouvé",
+      "report": {
+        "title": "Rapport Complet de Propriété",
+        "available": "Rapport Complet Disponible",
+        "availableDesc": "Coordonnées du propriétaire, date d'enregistrement et historique complet. Valable 48 heures. Accès instantané pour les membres Premium.",
+        "getReport": "Obtenir le Rapport Complet",
+        "loading": "Chargement…",
+        "registeredOwner": "Propriétaire Enregistré",
+        "validFor": "L'accès au rapport est valable 48 heures après l'achat.",
+        "ready": "Rapport prêt",
+        "readyDesc": "Votre rapport de vérification complet a été chargé.",
+        "fetchFailed": "Échec du chargement du rapport"
+      },
+      "signin": {
+        "required": "Le rapport complet nécessite une connexion",
+        "requiredDesc": "Connectez-vous pour acheter ou accéder au rapport complet de propriété.",
+        "cta": "Se connecter pour continuer"
+      },
+      "payment": {
+        "title": "Obtenir le Rapport Complet",
+        "desc": "Achetez un accès de 48 heures au rapport complet de propriété pour {{identifier}}. Ou passez à Premium pour des rapports illimités.",
+        "momoLabel": "Numéro de Téléphone MoMo",
+        "momoPlaceholder": "+250 78 000 0000",
+        "payBtn": "Payer & Obtenir le Rapport",
+        "cancel": "Annuler",
+        "initiating": "Initialisation…",
+        "initiated": "Paiement initié",
+        "initiatedDesc": "Vérifiez votre téléphone pour la demande MoMo. Votre rapport se chargera automatiquement une fois le paiement confirmé.",
+        "failed": "Achat échoué. Veuillez réessayer.",
+        "waiting": "En attente de confirmation de paiement…",
+        "waitingDesc": "Approuvez la demande MoMo sur votre téléphone. Votre rapport se chargera automatiquement.",
+        "timeout": "Le paiement prend plus de temps que prévu",
+        "timeoutDesc": "Votre paiement MoMo est peut-être encore en cours. Rafraîchissez la page dans quelques minutes."
+      }
+    },
+    "premium": {
+      "title": "KIZERE Premium",
+      "subtitle": "Débloquez des enregistrements illimités et des rapports de vérification complets pour une année entière.",
+      "benefit1": "Enregistrements d'articles illimités (gratuit : 3)",
+      "benefit2": "Rapports de vérification complets illimités",
+      "benefit3": "Support prioritaire & fonctionnalités anticipées",
+      "benefit4": "Valable 1 an — cumulable au renouvellement",
+      "upgradeCta": "Passer à Premium",
+      "maybeLater": "Peut-être plus tard",
+      "momoLabel": "Numéro de Téléphone MoMo",
+      "initiating": "Initialisation…",
+      "initiated": "Paiement initié",
+      "initiatedDesc": "Approuvez la demande MoMo sur votre téléphone pour activer KIZERE Premium.",
+      "failed": "Achat échoué",
+      "failedDesc": "Veuillez vérifier votre numéro de téléphone et réessayer.",
+      "banner": {
+        "active": "KIZERE Premium",
+        "limitReached": "Limite d'enregistrement atteinte",
+        "limitApproaching": "Limite d'enregistrement approchée",
+        "usage": "{{count}}/{{limit}} articles gratuits utilisés",
+        "upgradeCta": "Passer à Premium →"
+      }
+    },
+    "certificate": {
+      "title": "Certificat de Propriété",
+      "download": "Télécharger le Certificat PNG",
+      "purchase": "Acheter le Certificat",
+      "view": "Voir le Certificat",
+      "get": "Obtenir le Certificat",
+      "noCertDesc": "Recevez un Certificat de Propriété KIZERE officiel pour cet article comme preuve de propriété enregistrée.",
+      "certCode": "Code du Certificat",
+      "momoLabel": "Numéro de Téléphone MoMo",
+      "momoPlaceholder": "+250 78 000 0000",
+      "purchasing": "Achat en cours…",
+      "initiated": "Paiement du certificat initié",
+      "initiatedDesc": "Approuvez la demande MoMo. Votre certificat sera prêt une fois le paiement confirmé.",
+      "failed": "Achat échoué",
+      "failedDesc": "Veuillez vérifier votre numéro et réessayer."
+    }
+  },
   "fields": {
     "fullName": "[TODO-fr] Full Name",
     "nationalId": "[TODO-fr] National ID / Passport",

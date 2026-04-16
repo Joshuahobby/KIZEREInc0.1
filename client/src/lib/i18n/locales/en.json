@@ -2268,6 +2268,90 @@
       "updateSuccessDesc": "Customer settings have been saved."
     }
   },
+  "consumer": {
+    "verify": {
+      "title": "Item Verification",
+      "subtitle": "Enter any IMEI, serial number, or KIZERE ID to check registration status. Get a full ownership report by purchasing a one-time report or upgrading to Premium.",
+      "searchPlaceholder": "IMEI, serial number, or KIZERE ID…",
+      "searching": "Searching registry…",
+      "lookupFailed": "Lookup failed. Please try again.",
+      "flaggedWarning": "This item has been reported as lost or stolen. Transactions may be prohibited.",
+      "registered": "Registered",
+      "notRegistered": "Not Found",
+      "report": {
+        "title": "Full Ownership Report",
+        "available": "Full Ownership Report Available",
+        "availableDesc": "Owner details, registration date, and full history. Valid 48 hours. Premium users get instant access.",
+        "getReport": "Get Full Report",
+        "loading": "Loading…",
+        "registeredOwner": "Registered Owner",
+        "validFor": "Report access is valid for 48 hours from purchase.",
+        "ready": "Report ready",
+        "readyDesc": "Your full verification report has been loaded.",
+        "fetchFailed": "Failed to fetch report"
+      },
+      "signin": {
+        "required": "Full report requires sign-in",
+        "requiredDesc": "Sign in to purchase or access the full ownership report.",
+        "cta": "Sign in to continue"
+      },
+      "payment": {
+        "title": "Get Full Report",
+        "desc": "Purchase a 48-hour access window to the full ownership report for {{identifier}}. Or upgrade to Premium for unlimited reports.",
+        "momoLabel": "MoMo Phone Number",
+        "momoPlaceholder": "+250 78 000 0000",
+        "payBtn": "Pay & Get Report",
+        "cancel": "Cancel",
+        "initiating": "Initiating…",
+        "initiated": "Payment initiated",
+        "initiatedDesc": "Check your phone for the MoMo prompt. Your report will load automatically once payment is confirmed.",
+        "failed": "Purchase failed. Please try again.",
+        "waiting": "Waiting for payment confirmation…",
+        "waitingDesc": "Approve the MoMo prompt on your phone. Your report will load automatically.",
+        "timeout": "Payment taking longer than expected",
+        "timeoutDesc": "Your MoMo payment may still be processing. Refresh the page in a few minutes to check your report."
+      }
+    },
+    "premium": {
+      "title": "KIZERE Premium",
+      "subtitle": "Unlock unlimited registrations and full verification reports for an entire year.",
+      "benefit1": "Unlimited item registrations (free tier: 3)",
+      "benefit2": "Unlimited full verification reports",
+      "benefit3": "Priority support & early features",
+      "benefit4": "Valid for 1 year — stackable on renewal",
+      "upgradeCta": "Upgrade to Premium",
+      "maybeLater": "Maybe later",
+      "momoLabel": "MoMo Phone Number",
+      "initiating": "Initiating…",
+      "initiated": "Payment initiated",
+      "initiatedDesc": "Approve the MoMo prompt on your phone to activate KIZERE Premium.",
+      "failed": "Purchase failed",
+      "failedDesc": "Please check your phone number and try again.",
+      "banner": {
+        "active": "KIZERE Premium",
+        "limitReached": "Registration limit reached",
+        "limitApproaching": "Approaching registration limit",
+        "usage": "{{count}}/{{limit}} free items used",
+        "upgradeCta": "Upgrade to Premium →"
+      }
+    },
+    "certificate": {
+      "title": "Ownership Certificate",
+      "download": "Download Certificate PNG",
+      "purchase": "Purchase Certificate",
+      "view": "View Certificate",
+      "get": "Get Certificate",
+      "noCertDesc": "Receive an official KIZERE Ownership Certificate for this item as proof of registered ownership.",
+      "certCode": "Certificate Code",
+      "momoLabel": "MoMo Phone Number",
+      "momoPlaceholder": "+250 78 000 0000",
+      "purchasing": "Purchasing…",
+      "initiated": "Certificate payment initiated",
+      "initiatedDesc": "Approve the MoMo prompt. Your certificate will be ready once payment confirms.",
+      "failed": "Purchase failed",
+      "failedDesc": "Please check your number and try again."
+    }
+  },
   "fields": {
     "fullName": "Full Name",
     "nationalId": "National ID / Passport",

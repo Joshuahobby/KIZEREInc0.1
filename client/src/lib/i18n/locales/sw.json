@@ -2303,6 +2303,90 @@
     "privacyHintShort": "[TODO-sw] Some details generalized",
     "privacyHintLong": "[TODO-sw] Sensitive details are masked in public search and only revealed after verification."
   },
+  "consumer": {
+    "verify": {
+      "title": "Uthibitisho wa Bidhaa",
+      "subtitle": "Ingiza IMEI, nambari ya serial, au KIZERE ID kuangalia hali ya usajili. Pata ripoti kamili kwa kununua ripoti mara moja au kuboresha hadi Premium.",
+      "searchPlaceholder": "IMEI, nambari ya serial, au KIZERE ID…",
+      "searching": "Inatafuta kwenye rejista…",
+      "lookupFailed": "Utafutaji umeshindwa. Tafadhali jaribu tena.",
+      "flaggedWarning": "Bidhaa hii imeripotiwa kama imepotea au kuibiwa. Miamala inaweza kuwa imezuiwa.",
+      "registered": "Imesajiliwa",
+      "notRegistered": "Haipatikani",
+      "report": {
+        "title": "Ripoti Kamili ya Umiliki",
+        "available": "Ripoti Kamili Inapatikana",
+        "availableDesc": "Maelezo ya mmiliki, tarehe ya usajili, na historia kamili. Halali masaa 48. Watumiaji wa Premium wanapata ufikiaji wa haraka.",
+        "getReport": "Pata Ripoti Kamili",
+        "loading": "Inapakia…",
+        "registeredOwner": "Mmiliki Aliyesajiliwa",
+        "validFor": "Ufikiaji wa ripoti ni halali kwa masaa 48 baada ya ununuzi.",
+        "ready": "Ripoti iko tayari",
+        "readyDesc": "Ripoti yako kamili ya uthibitisho imepakiwa.",
+        "fetchFailed": "Imeshindwa kupata ripoti"
+      },
+      "signin": {
+        "required": "Ripoti kamili inahitaji kuingia",
+        "requiredDesc": "Ingia kununua au kufikia ripoti kamili ya umiliki.",
+        "cta": "Ingia kuendelea"
+      },
+      "payment": {
+        "title": "Pata Ripoti Kamili",
+        "desc": "Nunua ufikiaji wa masaa 48 kwa ripoti kamili ya umiliki ya {{identifier}}. Au boresha hadi Premium kwa ripoti zisizo na kikomo.",
+        "momoLabel": "Nambari ya Simu ya MoMo",
+        "momoPlaceholder": "+250 78 000 0000",
+        "payBtn": "Lipa & Pata Ripoti",
+        "cancel": "Ghairi",
+        "initiating": "Inaanzisha…",
+        "initiated": "Malipo yameanzishwa",
+        "initiatedDesc": "Angalia simu yako kwa ombi la MoMo. Ripoti yako itapakia moja kwa moja malipo yakithibitishwa.",
+        "failed": "Ununuzi umeshindwa. Tafadhali jaribu tena.",
+        "waiting": "Inasubiri uthibitisho wa malipo…",
+        "waitingDesc": "Idhinisha ombi la MoMo kwenye simu yako. Ripoti yako itapakia moja kwa moja.",
+        "timeout": "Malipo yanachukua muda mrefu kuliko ilivyotarajiwa",
+        "timeoutDesc": "Malipo yako ya MoMo yanaweza bado yanafanywa. Rejesha ukurasa baada ya dakika chache."
+      }
+    },
+    "premium": {
+      "title": "KIZERE Premium",
+      "subtitle": "Fungua usajili usio na kikomo na ripoti kamili za uthibitisho kwa mwaka mzima.",
+      "benefit1": "Usajili wa bidhaa usio na kikomo (bure: 3)",
+      "benefit2": "Ripoti kamili za uthibitisho zisizo na kikomo",
+      "benefit3": "Msaada wa kipaumbele & vipengele vya mapema",
+      "benefit4": "Halali kwa mwaka 1 — inaweza kuongezwa unapohuisha",
+      "upgradeCta": "Boresha hadi Premium",
+      "maybeLater": "Labda baadaye",
+      "momoLabel": "Nambari ya Simu ya MoMo",
+      "initiating": "Inaanzisha…",
+      "initiated": "Malipo yameanzishwa",
+      "initiatedDesc": "Idhinisha ombi la MoMo kwenye simu yako ili kuanzisha KIZERE Premium.",
+      "failed": "Ununuzi umeshindwa",
+      "failedDesc": "Tafadhali angalia nambari yako ya simu na ujaribu tena.",
+      "banner": {
+        "active": "KIZERE Premium",
+        "limitReached": "Kikomo cha usajili kimefikiwa",
+        "limitApproaching": "Unakaribia kikomo cha usajili",
+        "usage": "{{count}}/{{limit}} bidhaa za bure zimetumika",
+        "upgradeCta": "Boresha hadi Premium →"
+      }
+    },
+    "certificate": {
+      "title": "Cheti cha Umiliki",
+      "download": "Pakua Cheti PNG",
+      "purchase": "Nunua Cheti",
+      "view": "Angalia Cheti",
+      "get": "Pata Cheti",
+      "noCertDesc": "Pokea Cheti rasmi cha Umiliki cha KIZERE kwa bidhaa hii kama uthibitisho wa umiliki uliosajiliwaw.",
+      "certCode": "Msimbo wa Cheti",
+      "momoLabel": "Nambari ya Simu ya MoMo",
+      "momoPlaceholder": "+250 78 000 0000",
+      "purchasing": "Inanunua…",
+      "initiated": "Malipo ya cheti yameanzishwa",
+      "initiatedDesc": "Idhinisha ombi la MoMo. Cheti chako kitakuwa tayari malipo yakithibitishwa.",
+      "failed": "Ununuzi umeshindwa",
+      "failedDesc": "Tafadhali angalia nambari yako na ujaribu tena."
+    }
+  },
   "fields": {
     "fullName": "[TODO-sw] Full Name",
     "nationalId": "[TODO-sw] National ID / Passport",
