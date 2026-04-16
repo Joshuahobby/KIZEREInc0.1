@@ -14,7 +14,11 @@ import {
   Printer,
   ChevronRight,
   Edit,
-  CreditCard
+  CreditCard,
+  Award,
+  Loader2,
+  X,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -45,6 +49,14 @@ import {
 import { ShareWhatsAppButton } from "@/components/ui/share-whatsapp-button";
 import { ReportRegisteredItemDialog } from "@/components/reports/report-registered-item-dialog";
 import { AuthWall } from "@/components/ui/auth-wall";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 export default function ItemDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -56,6 +68,9 @@ export default function ItemDetailPage() {
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [showMarkFoundDialog, setShowMarkFoundDialog] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [certModalOpen, setCertModalOpen] = useState(false);
+  const [certPhone, setCertPhone] = useState("");
+  const [certPurchasing, setCertPurchasing] = useState(false);
 
   if (!user) {
     return (
@@ -70,6 +85,108 @@ export default function ItemDetailPage() {
     queryFn: () => apiRequest(`/api/items/${itemId}`),
     enabled: !!itemId && !!user
   });
+
+  const isOwner = item && user && item.userId === user.id;
+
+  const { data: certificates = [] } = useQuery<any[]>({
+    queryKey: [`/api/items/${itemId}/certificates`],
+    queryFn: () => apiRequest(`/api/items/${itemId}/certificates`),
+    enabled: !!itemId && !!user && !!isOwner,
+    staleTime: 30_000,
+    retry: false,
+  });
+
+  const activeCert = certificates[0] ?? null;
+
+  const handleCertPurchase = async () => {
+    if (!certPhone.trim() || !item) return;
+    setCertPurchasing(true);
+    try {
+      await apiRequest("/api/payments/initiate", {
+        method: "POST",
+        data: {
+          type: "ownership_certificate",
+          itemId: item.id,
+          phoneNumber: certPhone.trim(),
+        },
+      });
+      toast({
+        title: "Certificate payment initiated",
+        description: "Approve the MoMo prompt. Your certificate will be ready once payment confirms.",
+      });
+      setCertModalOpen(false);
+      setCertPhone("");
+    } catch {
+      toast({ title: "Purchase failed. Please try again.", variant: "destructive" });
+    } finally {
+      setCertPurchasing(false);
+    }
+  };
+
+  const handleCertDownload = () => {
+    if (!activeCert || !item) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = 800;
+    canvas.height = 500;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Background
+    ctx.fillStyle = "#0f172a";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Border
+    ctx.strokeStyle = "#3b82f6";
+    ctx.lineWidth = 8;
+    ctx.strokeRect(16, 16, canvas.width - 32, canvas.height - 32);
+
+    // Title
+    ctx.fillStyle = "#f8fafc";
+    ctx.font = "bold 28px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("KIZERE OWNERSHIP CERTIFICATE", canvas.width / 2, 80);
+
+    // Item name
+    ctx.font = "bold 22px sans-serif";
+    ctx.fillStyle = "#94a3b8";
+    ctx.fillText(item.name, canvas.width / 2, 130);
+
+    // Category
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = "#64748b";
+    ctx.fillText(item.category, canvas.width / 2, 160);
+
+    // Cert code label
+    ctx.fillStyle = "#3b82f6";
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillText("CERTIFICATE CODE", canvas.width / 2, 230);
+
+    // Cert code value
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 36px monospace";
+    ctx.fillText(activeCert.certificateCode, canvas.width / 2, 285);
+
+    // Identifier
+    ctx.font = "14px sans-serif";
+    ctx.fillStyle = "#475569";
+    ctx.fillText(`Identifier: ${item.uniqueIdentifier}`, canvas.width / 2, 340);
+
+    // Date
+    const issuedDate = activeCert.createdAt
+      ? new Date(activeCert.createdAt).toLocaleDateString("en-RW", { year: "numeric", month: "long", day: "numeric" })
+      : "";
+    ctx.fillText(`Issued: ${issuedDate}`, canvas.width / 2, 370);
+
+    // Footer
+    ctx.font = "italic 11px sans-serif";
+    ctx.fillStyle = "#1e40af";
+    ctx.fillText("KIZERE INC. — Official Ownership Certificate", canvas.width / 2, 460);
+
+    const link = document.createElement("a");
+    link.download = `KIZERE-Certificate-${activeCert.certificateCode}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  };
 
   const markAsFoundMutation = useMutation({
     mutationFn: async () => {
@@ -412,16 +529,19 @@ export default function ItemDetailPage() {
                 </Button>
               )}
 
-              <Button
-                className="w-full justify-between bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all text-foreground group h-12"
-                variant="outline"
-              >
-                <span className="flex items-center font-bold">
-                  <FileText className="mr-3 h-4 w-4 text-sky-500" />
-                  View Certificate
-                </span>
-                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-              </Button>
+              {isOwner && (
+                <Button
+                  className="w-full justify-between bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all text-foreground group h-12"
+                  variant="outline"
+                  onClick={() => setCertModalOpen(true)}
+                >
+                  <span className="flex items-center font-bold">
+                    <Award className="mr-3 h-4 w-4 text-sky-500" />
+                    {activeCert ? "View Certificate" : "Get Certificate"}
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </Button>
+              )}
 
               <Button
                 className="w-full justify-between bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all text-foreground group h-12"
@@ -484,6 +604,81 @@ export default function ItemDetailPage() {
           />
         )
       }
+      {/* Certificate Modal */}
+      <Dialog open={certModalOpen} onOpenChange={setCertModalOpen}>
+        <DialogContent className="sm:max-w-[440px] rounded-3xl p-0 overflow-hidden border-none">
+          <div className="bg-gradient-to-b from-sky-500/10 to-background p-8 pt-10 text-center relative">
+            <button
+              onClick={() => setCertModalOpen(false)}
+              className="absolute top-4 right-4 text-muted-foreground/40 hover:text-muted-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="h-16 w-16 bg-sky-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Award className="h-8 w-8 text-sky-500" />
+            </div>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-black tracking-tight">
+                {activeCert ? "Ownership Certificate" : "Get Ownership Certificate"}
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-relaxed mt-2">
+                {activeCert
+                  ? `Certificate code: ${activeCert.certificateCode}`
+                  : "Receive an official KIZERE Ownership Certificate for this item as proof of registered ownership."}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="px-8 pb-8 space-y-4">
+            {activeCert ? (
+              <>
+                <div className="p-4 rounded-2xl bg-muted/40 border border-border/30 text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Certificate Code</p>
+                  <p className="font-mono text-xl font-black tracking-widest text-foreground">{activeCert.certificateCode}</p>
+                  <p className="text-[10px] text-muted-foreground mt-2">
+                    Issued {activeCert.createdAt ? new Date(activeCert.createdAt).toLocaleDateString("en-RW", { year: "numeric", month: "long", day: "numeric" }) : ""}
+                  </p>
+                </div>
+                <Button onClick={handleCertDownload} className="w-full h-12 rounded-xl font-bold">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Certificate PNG
+                </Button>
+              </>
+            ) : (
+              <>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                    MoMo Phone Number
+                  </label>
+                  <Input
+                    value={certPhone}
+                    onChange={(e) => setCertPhone(e.target.value)}
+                    placeholder="+250 78 000 0000"
+                    className="h-12 rounded-xl"
+                    type="tel"
+                  />
+                </div>
+                <Button
+                  onClick={handleCertPurchase}
+                  disabled={certPurchasing || !certPhone.trim()}
+                  className="w-full h-12 rounded-xl font-bold"
+                >
+                  {certPurchasing
+                    ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Initiating…</>
+                    : <><Award className="h-4 w-4 mr-2" /> Purchase Certificate</>}
+                </Button>
+              </>
+            )}
+            <Button
+              variant="ghost"
+              onClick={() => setCertModalOpen(false)}
+              className="w-full h-10 rounded-xl text-xs text-muted-foreground"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageLayout >
   );
 }

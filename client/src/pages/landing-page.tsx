@@ -57,7 +57,7 @@ export default function LandingPage() {
   const handleVerifySearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/verify-item?q=${encodeURIComponent(searchQuery)}`);
+      navigate(`/verify-item?id=${encodeURIComponent(searchQuery)}`);
     } else {
       navigate(`/verify-item`);
     }

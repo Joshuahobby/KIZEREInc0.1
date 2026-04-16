@@ -476,4 +476,26 @@ router.get("/public/:uniqueIdentifier", publicVerifyLimiter, async (req, res) =>
   }
 });
 
+/**
+ * GET /api/items/:id/certificates
+ * Authenticated — owner or admin only.
+ * Returns all ownership certificates issued for this item.
+ */
+router.get("/:id/certificates", async (req, res) => {
+  const itemId = parseInt(req.params.id);
+  if (isNaN(itemId)) return res.status(400).json({ message: "Invalid item ID" });
+  try {
+    const item = await storage.getItem(itemId);
+    if (!item) return res.status(404).json({ message: "Item not found" });
+    if (item.userId !== req.user!.id && req.user!.role !== "Admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+    const certs = await storage.getOwnershipCertificatesByItem(itemId);
+    res.json(certs);
+  } catch (error) {
+    logger.error("Certificates fetch failed", { error, itemId });
+    res.status(500).json({ message: "Failed to fetch certificates" });
+  }
+});
+
 export default router;

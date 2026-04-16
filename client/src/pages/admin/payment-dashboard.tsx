@@ -65,7 +65,20 @@ interface RevenueSummary {
   successfulTransactions: number;
   failedTransactions: number;
   pendingTransactions: number;
+  revenueByType: Record<string, number>;
 }
+
+const TYPE_LABELS: Record<string, string> = {
+  registration: "Item Registration",
+  lost_report: "Lost Reports",
+  bounty: "Bounties",
+  featured_upgrade: "Featured Upgrade",
+  transfer_fee: "Ownership Transfer",
+  retailer_subscription: "Retailer Subscription",
+  ownership_certificate: "Ownership Certificate",
+  verification_report: "Verification Reports",
+  consumer_subscription: "Consumer Premium",
+};
 
 export default function AdminPaymentDashboard() {
   const { user, isLoading: isLoadingAuth } = useAuth();
@@ -386,6 +399,39 @@ export default function AdminPaymentDashboard() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Revenue by Type */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Revenue by Payment Type</CardTitle>
+              <CardDescription>Successful payments broken down by product category</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isRevenueSummaryLoading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Loading…</span>
+                </div>
+              ) : revenueSummary?.revenueByType && Object.keys(revenueSummary.revenueByType).length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {Object.entries(revenueSummary.revenueByType)
+                    .sort(([, a], [, b]) => b - a)
+                    .map(([type, amount]) => (
+                      <div key={type} className="p-3 rounded-xl border border-border/40 bg-muted/20">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1 truncate">
+                          {TYPE_LABELS[type] ?? type}
+                        </p>
+                        <p className="text-lg font-black tabular-nums">
+                          {amount.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">{DEFAULT_CURRENCY}</span>
+                        </p>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No successful payments recorded yet.</p>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Transactions Table */}
           <Card>

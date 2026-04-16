@@ -3,7 +3,9 @@ import { ErrorBoundary } from "@/components/error-boundary";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation, useSearch } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { useDashboardData, DashboardData, DashboardStats } from "../hooks/use-dashboard-data";
+import { PremiumUpgradeModal } from "@/components/subscription/PremiumUpgradeModal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -60,7 +62,8 @@ import {
   Activity,
   LayoutDashboard,
   BarChart3,
-  LogOut
+  LogOut,
+  Crown
 } from "lucide-react";
 import {
   Table,
@@ -352,6 +355,19 @@ export default function UnifiedDashboard() {
   const [selectedReportId, setSelectedReportId] = React.useState<number | null>(null);
   const [selectedClaim, setSelectedClaim] = React.useState<Claim | null>(null);
   const [reviewOpen, setReviewOpen] = React.useState(false);
+  const [upgradeOpen, setUpgradeOpen] = React.useState(false);
+
+  const { data: subscriptionStatus } = useQuery<{
+    isPremium: boolean;
+    premiumExpiresAt: string | null;
+    registrationCount: number;
+    registrationLimit: number | null;
+  }>({
+    queryKey: ["/api/consumer/subscription"],
+    enabled: !!user && !["Admin", "Agent", "Business", "Retailer"].includes(user.role),
+    staleTime: 60_000,
+    retry: false,
+  });
 
 
   const dashboardData = useDashboardData();
@@ -453,6 +469,51 @@ export default function UnifiedDashboard() {
           {user.verificationStatus !== 'approved' && (
             <KYCAlert t={t} navigate={navigate} verificationRequest={verificationRequest} />
           )}
+
+          {/* ── Subscription status / premium upsell ── */}
+          {subscriptionStatus && (
+            subscriptionStatus.isPremium ? (
+              <motion.div variants={itemVariants}>
+                <div className="flex items-center gap-3 px-5 py-3 rounded-2xl border border-primary/20 bg-primary/5 w-full">
+                  <Crown className="h-4 w-4 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-black uppercase tracking-widest text-primary">KIZERE Premium</span>
+                    {subscriptionStatus.premiumExpiresAt && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        · expires {new Date(subscriptionStatus.premiumExpiresAt).toLocaleDateString("en-RW", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              subscriptionStatus.registrationCount >= (subscriptionStatus.registrationLimit ?? 3) - 1 && (
+                <motion.div variants={itemVariants}>
+                  <div
+                    className="flex items-center gap-4 px-5 py-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 cursor-pointer hover:bg-amber-500/10 transition-colors"
+                    onClick={() => setUpgradeOpen(true)}
+                  >
+                    <div className="h-8 w-8 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                      <Crown className="h-4 w-4 text-amber-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                        {subscriptionStatus.registrationCount >= (subscriptionStatus.registrationLimit ?? 3)
+                          ? "Registration limit reached"
+                          : "Approaching registration limit"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {subscriptionStatus.registrationCount}/{subscriptionStatus.registrationLimit ?? 3} free items used
+                        {" · "}
+                        <span className="text-primary font-semibold">Upgrade to Premium →</span>
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            )
+          )}
+
           {/* Bento Box Action Grid */}
           <div data-tour="quick-actions" className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:grid-cols-5">
             {/* Main Identity Block - Spans 3 columns on large screens, 2 on medium */}
@@ -1386,10 +1447,11 @@ export default function UnifiedDashboard() {
             setSelectedClaimId(null);
           }}
         />
-        <DirectVerificationDialog 
-          isOpen={directVerifyOpen} 
-          onClose={() => setDirectVerifyOpen(false)} 
+        <DirectVerificationDialog
+          isOpen={directVerifyOpen}
+          onClose={() => setDirectVerifyOpen(false)}
         />
+        <PremiumUpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} />
       </motion.div>
     </AppLayout>
   );

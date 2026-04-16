@@ -67,6 +67,7 @@ import { cn } from "@/lib/utils";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { PageLayout } from "@/components/layout/page-layout";
 import { AuthWall } from "@/components/ui/auth-wall";
+import { PremiumUpgradeModal } from "@/components/subscription/PremiumUpgradeModal";
 import ReactGA from "react-ga4";
 
 // Custom Registration Components
@@ -182,6 +183,7 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showVerificationRequired, setShowVerificationRequired] = useState(false);
+  const [showPremiumUpgrade, setShowPremiumUpgrade] = useState(false);
   const [registeredItemData, setRegisteredItemData] = useState<any>(null);
 
   const isEditMode = !!params?.id;
@@ -499,9 +501,15 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
     onError: (error: any) => {
       console.error("[Registration] Mutation error:", error);
       
-      // Handle the specific 403 Verification Required error polished in Phase 4
+      // Handle the specific 403 Verification Required error
       if (error?.status === 403 || error?.message?.includes("Verification Required")) {
         setShowVerificationRequired(true);
+        return;
+      }
+
+      // Handle 402 free-tier registration limit reached
+      if (error?.message?.startsWith("402:") || error?.message?.includes("PREMIUM_REQUIRED") || error?.message?.includes("Registration Limit")) {
+        setShowPremiumUpgrade(true);
         return;
       }
 
@@ -1423,6 +1431,11 @@ export default function ItemRegistrationPage({ params }: { params?: { id?: strin
           </div>
         </DialogContent>
       </Dialog>
+
+      <PremiumUpgradeModal
+        open={showPremiumUpgrade}
+        onOpenChange={setShowPremiumUpgrade}
+      />
     </PageLayout >
   );
 }

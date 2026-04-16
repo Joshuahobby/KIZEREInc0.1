@@ -708,12 +708,25 @@ router.get("/revenue-summary", requireAdmin, async (req, res) => {
 router.get("/payments/summary", requireAdmin, async (req, res) => {
   try {
     const allPayments = await storage.getAllPayments();
-    const successful = allPayments.filter(p => p.status === 'successful');
+    const successful = allPayments.filter(p => p.status === "successful");
+    const failed = allPayments.filter(p => p.status === "failed");
+    const pending = allPayments.filter(p => p.status === "pending");
+
+    // Revenue aggregated per payment type
+    const revenueByType: Record<string, number> = {};
+    for (const p of successful) {
+      revenueByType[p.type] = (revenueByType[p.type] ?? 0) + Number(p.amount);
+    }
 
     res.json({
       totalRevenue: successful.reduce((sum, p) => sum + Number(p.amount), 0),
       successfulTransactions: successful.length,
+      failedTransactions: failed.length,
+      pendingTransactions: pending.length,
       totalTransactions: allPayments.length,
+      registrationRevenue: revenueByType["registration"] ?? 0,
+      lostReportRevenue: revenueByType["lost_report"] ?? 0,
+      revenueByType,
     });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch summary" });
