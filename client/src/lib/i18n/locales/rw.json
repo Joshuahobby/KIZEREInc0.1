@@ -2318,6 +2318,31 @@
       "initiatedDesc": "Emeza ubusabe bwa MoMo. Icyemezo cyawe kizateguwa kwishyura kwemejwe.",
       "failed": "Kugura ntibyakunze",
       "failedDesc": "Reba inomero yawe hanyuma ugerageze nanone."
+    },
+    "transfer": {
+      "title": "Guha undi muntu ubutunzi",
+      "subtitle": "Shakisha umukoresha wa KIZERE ukoresheje imeri, nimero ya telefoni, cyangwa izina rya konti.",
+      "confirm": "Emeza guha ubutunzi",
+      "confirmDesc": "Urashaka guha «{item}» {user}. Iyi cyemezo ntishobora kuguruka.",
+      "inputLabel": "Imeri, telefoni, cyangwa izina rya konti",
+      "inputPlaceholder": "+250 78... / user@email.com / @izina",
+      "lookingUp": "Gushakisha…",
+      "findUser": "Shakisha umukoresha",
+      "continueWith": "Komeza na {name}",
+      "irreversible": "Igikorwa kitagira inshuro ya kabiri",
+      "warning": "Uzarekura {item} burundu ubihe {user}.",
+      "transferring": "Guha ubutunzi…",
+      "confirmBtn": "Emeza guha ubutunzi",
+      "goBack": "Garuka",
+      "cancel": "Reka",
+      "success": "Ubutunzi bwaherewe",
+      "successDesc": "Ibintu byaherewe nyir'umubare mushya.",
+      "failed": "Guha ubutunzi byanze",
+      "failedDesc": "Ntibyashobotse guha ubutunzi.",
+      "notFound": "Nta mukoresha wa KIZERE wabonetse kuri iyo imeri, telefoni, cyangwa izina.",
+      "selfError": "Ntushobora kwiherereza ibintu.",
+      "minChars": "Injira byibuze inyuguti 3",
+      "button": "Guha undi muntu ubutunzi"
     }
   }
 }

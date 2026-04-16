@@ -2385,6 +2385,31 @@
       "initiatedDesc": "Idhinisha ombi la MoMo. Cheti chako kitakuwa tayari malipo yakithibitishwa.",
       "failed": "Ununuzi umeshindwa",
       "failedDesc": "Tafadhali angalia nambari yako na ujaribu tena."
+    },
+    "transfer": {
+      "title": "Hamisha Umiliki",
+      "subtitle": "Tafuta mtumiaji wa KIZERE kwa barua pepe, nambari ya simu, au jina la mtumiaji.",
+      "confirm": "Thibitisha Uhamishaji",
+      "confirmDesc": "Unakaribia kuhamisha \"{item}\" kwa {user}. Hii haiwezi kutenduliwa.",
+      "inputLabel": "Barua pepe, Simu, au Jina la Mtumiaji",
+      "inputPlaceholder": "+250 78... / user@email.com / @jina",
+      "lookingUp": "Inatafuta…",
+      "findUser": "Tafuta Mtumiaji",
+      "continueWith": "Endelea na {name}",
+      "irreversible": "Kitendo Kisichoweza Kutenduliwa",
+      "warning": "Utahamisha {item} kwa {user} milele.",
+      "transferring": "Kuhamisha…",
+      "confirmBtn": "Thibitisha Uhamishaji",
+      "goBack": "Rudi",
+      "cancel": "Ghairi",
+      "success": "Umiliki umehamishwa",
+      "successDesc": "Bidhaa imehamishiwa mmiliki mpya.",
+      "failed": "Uhamishaji umeshindwa",
+      "failedDesc": "Haiwezekani kuhamisha umiliki.",
+      "notFound": "Hakuna mtumiaji wa KIZERE aliyepatikana kwa barua pepe, simu, au jina hilo.",
+      "selfError": "Huwezi kujihamishia bidhaa yako mwenyewe.",
+      "minChars": "Ingiza angalau herufi 3",
+      "button": "Hamisha Umiliki"
     }
   },
   "fields": {

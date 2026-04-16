@@ -2405,6 +2405,31 @@
       "initiatedDesc": "Approuvez la demande MoMo. Votre certificat sera prêt une fois le paiement confirmé.",
       "failed": "Achat échoué",
       "failedDesc": "Veuillez vérifier votre numéro et réessayer."
+    },
+    "transfer": {
+      "title": "Transférer la propriété",
+      "subtitle": "Rechercher un utilisateur KIZERE par e-mail, numéro de téléphone ou nom d'utilisateur.",
+      "confirm": "Confirmer le transfert",
+      "confirmDesc": "Vous êtes sur le point de transférer « {item} » à {user}. Cette action est irréversible.",
+      "inputLabel": "E-mail, téléphone ou nom d'utilisateur",
+      "inputPlaceholder": "+250 78... / user@email.com / @nomutilisateur",
+      "lookingUp": "Recherche…",
+      "findUser": "Trouver l'utilisateur",
+      "continueWith": "Continuer avec {name}",
+      "irreversible": "Action irréversible",
+      "warning": "Vous allez définitivement transférer {item} à {user}.",
+      "transferring": "Transfert en cours…",
+      "confirmBtn": "Confirmer le transfert",
+      "goBack": "Retour",
+      "cancel": "Annuler",
+      "success": "Propriété transférée",
+      "successDesc": "L'objet a été transféré au nouveau propriétaire.",
+      "failed": "Échec du transfert",
+      "failedDesc": "Impossible de transférer la propriété.",
+      "notFound": "Aucun utilisateur KIZERE trouvé avec cet e-mail, téléphone ou nom d'utilisateur.",
+      "selfError": "Vous ne pouvez pas vous transférer un objet à vous-même.",
+      "minChars": "Saisissez au moins 3 caractères",
+      "button": "Transférer la propriété"
     }
   },
   "fields": {

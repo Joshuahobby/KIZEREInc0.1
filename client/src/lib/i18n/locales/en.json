@@ -2350,6 +2350,31 @@
       "initiatedDesc": "Approve the MoMo prompt. Your certificate will be ready once payment confirms.",
       "failed": "Purchase failed",
       "failedDesc": "Please check your number and try again."
+    },
+    "transfer": {
+      "title": "Transfer Ownership",
+      "subtitle": "Find a KIZERE user by email, phone number, or username.",
+      "confirm": "Confirm Transfer",
+      "confirmDesc": "You are about to transfer \"{item}\" to {user}. This cannot be undone.",
+      "inputLabel": "Email, Phone, or Username",
+      "inputPlaceholder": "+250 78... / user@email.com / @username",
+      "lookingUp": "Looking up…",
+      "findUser": "Find User",
+      "continueWith": "Continue with {name}",
+      "irreversible": "Irreversible Action",
+      "warning": "You will permanently transfer {item} to {user}.",
+      "transferring": "Transferring…",
+      "confirmBtn": "Confirm Transfer",
+      "goBack": "Go Back",
+      "cancel": "Cancel",
+      "success": "Ownership transferred",
+      "successDesc": "The item has been transferred to the new owner.",
+      "failed": "Transfer failed",
+      "failedDesc": "Could not transfer ownership.",
+      "notFound": "No KIZERE user found with that email, phone, or username.",
+      "selfError": "You cannot transfer an item to yourself.",
+      "minChars": "Enter at least 3 characters",
+      "button": "Transfer Ownership"
     }
   },
   "fields": {
