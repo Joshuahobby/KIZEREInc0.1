@@ -633,6 +633,51 @@ export async function sendExpirationEmail(
 }
 
 /**
+ * Send subscription expiry reminder to a retailer
+ */
+export async function sendSubscriptionReminderEmail(
+  email: string,
+  retailerName: string,
+  plan: string,
+  expiresAt: Date,
+  renewalLink: string
+): Promise<boolean> {
+  const expiryStr = expiresAt.toLocaleDateString("en-RW", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  return sendEmail({
+    to: email,
+    subject: `Action Required: Your KIZERE ${plan} subscription expires soon`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #2563eb; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Subscription Expiring Soon</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${retailerName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Your <strong>${plan}</strong> KIZERE POS subscription will expire on
+            <strong>${expiryStr}</strong> — that is in 7 days.
+          </p>
+          <p style="color: #4b5563; line-height: 1.6;">
+            To avoid any interruption to your POS service, please renew before the expiry date.
+          </p>
+          <a href="${renewalLink}"
+             style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
+            Renew Subscription
+          </a>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>© ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+/**
  * Send match notification email
  */
 export async function sendMatchNotificationEmail(

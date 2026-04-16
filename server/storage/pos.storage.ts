@@ -5,6 +5,9 @@ import {
   ownershipLedger, OwnershipLedgerEntry, InsertOwnershipLedger,
   posSecurityAlerts, PosSecurityAlert, InsertPosSecurityAlert,
   publicVerifyLogs, PublicVerifyLog, InsertPublicVerifyLog,
+  platformSettings, PlatformSetting,
+  ownershipCertificates, OwnershipCertificate, InsertOwnershipCertificate,
+  verificationPurchases, VerificationPurchase, InsertVerificationPurchase,
   items, users, retailerCustomerSettings
 } from "@shared/schema";
 import { eq, desc, count, and, gte, lte, or, ilike, sql } from "drizzle-orm";
@@ -683,4 +686,99 @@ export async function getPublicVerifyLogs(options: {
     .offset(offset);
 
   return { logs, total };
+}
+
+// ─── Platform Settings ───
+
+export async function getPlatformSetting(key: string): Promise<PlatformSetting | undefined> {
+  const [row] = await db.select().from(platformSettings).where(eq(platformSettings.key, key)).limit(1);
+  return row;
+}
+
+export async function getAllPlatformSettings(): Promise<PlatformSetting[]> {
+  return db.select().from(platformSettings).orderBy(platformSettings.key);
+}
+
+export async function upsertPlatformSetting(
+  key: string,
+  value: string,
+  description: string | undefined,
+  updatedBy: number
+): Promise<PlatformSetting> {
+  const [row] = await db
+    .insert(platformSettings)
+    .values({ key, value, description, updatedBy, updatedAt: new Date() })
+    .onConflictDoUpdate({
+      target: platformSettings.key,
+      set: { value, description, updatedBy, updatedAt: new Date() },
+    })
+    .returning();
+  return row;
+}
+
+// ─── Ownership Certificates ───
+
+export async function createOwnershipCertificate(data: InsertOwnershipCertificate): Promise<OwnershipCertificate> {
+  const [cert] = await db.insert(ownershipCertificates).values(data).returning();
+  return cert;
+}
+
+export async function getOwnershipCertificateByCode(code: string): Promise<OwnershipCertificate | undefined> {
+  const [cert] = await db
+    .select()
+    .from(ownershipCertificates)
+    .where(eq(ownershipCertificates.certificateCode, code))
+    .limit(1);
+  return cert;
+}
+
+export async function getOwnershipCertificatesByItem(itemId: number): Promise<OwnershipCertificate[]> {
+  return db
+    .select()
+    .from(ownershipCertificates)
+    .where(eq(ownershipCertificates.itemId, itemId))
+    .orderBy(desc(ownershipCertificates.issuedAt));
+}
+
+export async function getOwnershipCertificatesByUser(userId: number): Promise<OwnershipCertificate[]> {
+  return db
+    .select()
+    .from(ownershipCertificates)
+    .where(eq(ownershipCertificates.userId, userId))
+    .orderBy(desc(ownershipCertificates.issuedAt));
+}
+
+// ─── Verification Purchases ───
+
+export async function createVerificationPurchase(data: InsertVerificationPurchase): Promise<VerificationPurchase> {
+  const [row] = await db.insert(verificationPurchases).values(data).returning();
+  return row;
+}
+
+export async function getActiveVerificationPurchase(
+  userId: number,
+  identifier: string
+): Promise<VerificationPurchase | undefined> {
+  const now = new Date();
+  const [row] = await db
+    .select()
+    .from(verificationPurchases)
+    .where(
+      and(
+        eq(verificationPurchases.userId, userId),
+        eq(verificationPurchases.identifier, identifier),
+        sql`${verificationPurchases.expiresAt} > ${now}`
+      )
+    )
+    .orderBy(desc(verificationPurchases.createdAt))
+    .limit(1);
+  return row;
+}
+
+export async function getUserVerificationPurchases(userId: number): Promise<VerificationPurchase[]> {
+  return db
+    .select()
+    .from(verificationPurchases)
+    .where(eq(verificationPurchases.userId, userId))
+    .orderBy(desc(verificationPurchases.createdAt));
 }

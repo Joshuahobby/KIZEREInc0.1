@@ -29,54 +29,55 @@ describe("CommissionService", () => {
   });
 
   describe("recordCommission — commission amount calculation", () => {
-    it("calculates 5% commission (default rate) and inserts a record", async () => {
-      // Retailer with default 5% commission rate
-      (db.where as any).mockResolvedValueOnce([{ commissionRate: "0.05" }]);
+    // transactionValue is now KIZERE's collected fee (e.g. 500 RWF registration fee),
+    // NOT the product sale price. Commission = kizereFeee × commissionRate.
+    it("calculates 20% commission on 500 RWF KIZERE registration fee (= 100 RWF to retailer)", async () => {
+      (db.where as any).mockResolvedValueOnce([{ commissionRate: "0.20" }]);
       const mockCommission = {
         id: 1, retailerId: 10, ledgerEntryId: 5,
-        transactionValue: "100000", commissionAmount: "5000",
+        transactionValue: "500", commissionAmount: "100",
         currency: "RWF", status: "pending",
       };
       (db.returning as any).mockResolvedValueOnce([mockCommission]);
 
-      const result = await CommissionService.recordCommission(5, 10, 100000);
+      const result = await CommissionService.recordCommission(5, 10, 500);
 
       expect(result).toEqual(mockCommission);
       expect(db.values).toHaveBeenCalledWith(expect.objectContaining({
-        commissionAmount: "5000",   // floor(100000 * 0.05)
-        transactionValue: "100000",
+        commissionAmount: "100",   // floor(500 * 0.20) — KIZERE keeps 400 RWF
+        transactionValue: "500",
         status: "pending",
         currency: "RWF",
       }));
     });
 
-    it("calculates 10% commission for a retailer with custom rate", async () => {
+    it("calculates 10% commission on 300 RWF KIZERE transfer fee (= 30 RWF to retailer)", async () => {
       (db.where as any).mockResolvedValueOnce([{ commissionRate: "0.10" }]);
       const mockCommission = {
         id: 2, retailerId: 11, ledgerEntryId: 6,
-        transactionValue: "50000", commissionAmount: "5000",
+        transactionValue: "300", commissionAmount: "30",
         currency: "RWF", status: "pending",
       };
       (db.returning as any).mockResolvedValueOnce([mockCommission]);
 
-      const result = await CommissionService.recordCommission(6, 11, 50000);
+      const result = await CommissionService.recordCommission(6, 11, 300);
 
-      expect(result.commissionAmount).toBe("5000");
+      expect(result.commissionAmount).toBe("30");
       expect(db.values).toHaveBeenCalledWith(expect.objectContaining({
-        commissionAmount: "5000",   // floor(50000 * 0.10)
+        commissionAmount: "30",   // floor(300 * 0.10)
       }));
     });
 
     it("floors fractional commission amounts", async () => {
-      (db.where as any).mockResolvedValueOnce([{ commissionRate: "0.05" }]);
-      const mockCommission = { id: 3, commissionAmount: "4999", commissionRate: "0.05" };
+      (db.where as any).mockResolvedValueOnce([{ commissionRate: "0.20" }]);
+      const mockCommission = { id: 3, commissionAmount: "149", commissionRate: "0.20" };
       (db.returning as any).mockResolvedValueOnce([mockCommission]);
 
-      await CommissionService.recordCommission(7, 12, 99990);
+      await CommissionService.recordCommission(7, 12, 749);
 
-      // floor(99990 * 0.05) = floor(4999.5) = 4999
+      // floor(749 * 0.20) = floor(149.8) = 149
       expect(db.values).toHaveBeenCalledWith(expect.objectContaining({
-        commissionAmount: "4999",
+        commissionAmount: "149",
       }));
     });
 

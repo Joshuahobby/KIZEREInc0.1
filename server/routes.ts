@@ -80,6 +80,7 @@ import consentRoutes from './routes/consent.routes';
 import dataRightsRoutes from './routes/data-rights.routes';
 import agentRoutes from './routes/agent.routes';
 import posRoutes from './routes/pos.routes';
+import consumerRoutes from './routes/consumer.routes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
@@ -94,6 +95,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // POS routes (handles its own auth: API key for POS, session for admin)
   app.use('/api/pos', posRoutes);
+
+  // Consumer routes (verify: public + auth; subscription: auth)
+  app.use('/api/consumer', consumerRoutes);
 
   // Public/Semi-public routes
   app.get('/robots.txt', (req, res) => {

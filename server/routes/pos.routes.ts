@@ -6,6 +6,7 @@ import {
   checkOrCreateCustomer,
   registerProduct,
   transferOwnership,
+  finalizeTransferAfterPayment,
   processReturn,
   createRetailer,
   getRetailers,
@@ -34,6 +35,8 @@ import {
   getOrCreateRetailerCustomerSettings,
   getShiftSummary,
 } from "../services/pos.service";
+import { generateDepositId, initiateDeposit } from "../utils/pawapay";
+import { getPaymentAmount } from "../config/payment.config";
 import { createLogger } from "../utils/logger";
 import { z } from "zod";
 import { db } from "../db";
@@ -44,6 +47,9 @@ import bcrypt from "bcrypt";
 import { isPosStubAccount } from "../services/pos.service";
 import { storage } from "../storage";
 import { CommissionService } from "../services/commission.service";
+import { RetailerSubscriptionService } from "../services/retailer-subscription.service";
+import { PlatformSettingsService } from "../services/platform-settings.service";
+import { CertificateService } from "../services/certificate.service";
 
 const logger = createLogger("PosRoutes");
 const router = Router();
@@ -365,7 +371,8 @@ router.post(
 
 /**
  * POST /api/pos/transfer
- * Transfer product ownership to a new customer.
+ * Initiate a transfer_fee payment; actual ownership transfer runs in the webhook
+ * after PawaPay confirms the deposit. Returns paymentId for client polling.
  */
 router.post(
   "/transfer",
@@ -375,28 +382,61 @@ router.post(
       const schema = z.object({
         productId: z.number().int().positive("Valid product ID is required"),
         newOwnerId: z.number().int().positive("Valid new owner ID is required"),
+        phoneNumber: z.string().min(10, "Phone number required for transfer fee payment"),
         notes: z.string().optional(),
         metadata: z.record(z.any()).optional(),
       });
 
       const data = schema.parse(req.body);
       const retailer = (req as any).retailer;
+      const actingUserId: number = (req as any).user?.id ?? retailer.userId;
 
-      const result = await transferOwnership({
-        productId: data.productId,
-        newOwnerId: data.newOwnerId,
-        retailerId: retailer.id,
-        notes: data.notes,
-        metadata: data.metadata,
+      // Pre-validate the product before creating a payment
+      const product = await storage.getPosProduct(data.productId);
+      if (!product) return res.status(404).json({ message: "Product not found" });
+      if (product.status === "stolen") {
+        return res.status(403).json({ message: "Cannot transfer a stolen item" });
+      }
+
+      const transferFeeAmount = await getPaymentAmount("transfer_fee");
+      const depositId = generateDepositId();
+
+      const payment = await storage.createPayment({
+        userId: actingUserId,
+        amount: transferFeeAmount.toString(),
+        currency: "RWF",
+        status: "pending",
+        transactionRef: depositId,
+        type: "transfer_fee",
+        posProductId: data.productId,
+        posRetailerId: retailer.id,
+        metadata: {
+          newOwnerId: data.newOwnerId,
+          notes: data.notes ?? null,
+        },
+      });
+
+      const depositResponse = await initiateDeposit({
+        amount: transferFeeAmount,
+        currency: "RWF",
+        depositId,
+        phoneNumber: data.phoneNumber,
+        metadata: {
+          payment_id: payment.id.toString(),
+          payment_type: "transfer_fee",
+          product_id: data.productId.toString(),
+        },
       });
 
       res.json({
-        success: true,
-        product: result.product,
-        ledger: result.ledgerEntry,
+        paymentId: payment.id,
+        transactionRef: depositId,
+        amount: transferFeeAmount,
+        currency: "RWF",
+        depositStatus: depositResponse.status,
       });
     } catch (error: any) {
-      logger.error("transfer failed", { error: error.message });
+      logger.error("Transfer payment initiation failed", { error: error.message });
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
@@ -1227,6 +1267,54 @@ router.post(
 );
 
 /**
+ * PATCH /api/pos/admin/retailers/:id/subscription
+ * Manually set or extend a retailer's subscription.
+ * Body: { expiresAt: ISO date string } — absolute expiry date.
+ * Auth: Admin
+ */
+router.patch(
+  "/admin/retailers/:id/subscription",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid retailer ID" });
+      }
+
+      const schema = z.object({
+        expiresAt: z.string().datetime({ message: "expiresAt must be an ISO 8601 date string" }),
+      });
+      const { expiresAt } = schema.parse(req.body);
+
+      const retailer = await storage.getRetailer(id);
+      if (!retailer) {
+        return res.status(404).json({ message: "Retailer not found" });
+      }
+
+      const updated = await storage.updateRetailer(id, {
+        subscriptionExpiresAt: new Date(expiresAt),
+        subscriptionPaidAt: new Date(),
+      });
+
+      logger.info("Admin manually updated retailer subscription", {
+        adminId: (req as any).user?.id,
+        retailerId: id,
+        expiresAt,
+      });
+
+      res.json({ success: true, retailer: updated });
+    } catch (error: any) {
+      if (error?.name === "ZodError") {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      logger.error("Admin subscription update failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
  * GET /api/pos/admin/retailers/:id/products
  * Get products registered by a retailer. Auth: Admin
  */
@@ -1393,6 +1481,90 @@ router.get(
       res.json({ success: true, analytics });
     } catch (error: any) {
       logger.error("getPosAnalytics failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+// ─── Platform Settings (admin) ───────────────────────────────────────────────
+
+/**
+ * GET /api/pos/admin/platform-settings
+ * List all platform settings. Auth: Admin
+ */
+router.get(
+  "/admin/platform-settings",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const settings = await PlatformSettingsService.listSettings();
+      res.json({ success: true, settings });
+    } catch (error: any) {
+      logger.error("listPlatformSettings failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * PUT /api/pos/admin/platform-settings/:key
+ * Create or update a platform setting. Auth: Admin
+ * Body: { value: string, description?: string }
+ */
+router.put(
+  "/admin/platform-settings/:key",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const { key } = req.params;
+      const schema = z.object({
+        value: z.string().min(1, "value is required"),
+        description: z.string().optional(),
+      });
+      const { value, description } = schema.parse(req.body);
+      await PlatformSettingsService.setSetting(key, value, req.user!.id, description);
+      const updated = await PlatformSettingsService.listSettings();
+      res.json({ success: true, settings: updated });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      logger.error("upsertPlatformSetting failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+// ─── Ownership Certificates ───────────────────────────────────────────────────
+
+/**
+ * GET /api/pos/certificates/:code
+ * Public endpoint — look up an ownership certificate by its unique code.
+ * Used by the QR code printed on the certificate.
+ */
+router.get(
+  "/certificates/:code",
+  async (req: Request, res: Response) => {
+    try {
+      const cert = await storage.getOwnershipCertificateByCode(req.params.code);
+      if (!cert) {
+        return res.status(404).json({ success: false, message: "Certificate not found" });
+      }
+
+      // Return the certificate plus the generated HTML so the client can render it
+      const item = await storage.getItem(cert.itemId);
+      if (!item) {
+        return res.status(404).json({ success: false, message: "Associated item not found" });
+      }
+      const owner = await storage.getUser(cert.userId);
+      if (!owner) {
+        return res.status(404).json({ success: false, message: "Associated owner not found" });
+      }
+
+      const html = await CertificateService.generateHtml(cert, item, owner);
+      res.json({ success: true, certificate: cert, html });
+    } catch (error: any) {
+      logger.error("getCertificate failed", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
     }
   }

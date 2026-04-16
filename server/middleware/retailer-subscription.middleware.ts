@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 import { createLogger } from "../utils/logger";
 import { SUBSCRIPTION_LIMITS, RetailerSubscriptionPlan } from "@shared/schema";
+import { RetailerSubscriptionService } from "../services/retailer-subscription.service";
 
 const logger = createLogger("RetailerSubscription");
 
@@ -70,4 +71,32 @@ export function requireFeature(featureName: string) {
 
     next();
   };
+}
+
+/**
+ * Middleware that blocks non-basic retailers whose subscription has expired.
+ * basic plan: always passes (no subscription billing required).
+ * standard/premium/enterprise: requires subscriptionExpiresAt > now.
+ * Must be placed after posAuthMiddleware which sets req.retailer.
+ */
+export function requireActiveSubscription(req: Request, res: Response, next: NextFunction) {
+  const retailer = (req as any).retailer;
+  if (!retailer) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+
+  if (!RetailerSubscriptionService.isSubscriptionActive(retailer)) {
+    logger.warn("Subscription expired — access denied", {
+      retailerId: retailer.id,
+      plan: retailer.subscriptionPlan,
+      subscriptionExpiresAt: retailer.subscriptionExpiresAt,
+    });
+    return res.status(402).json({
+      success: false,
+      message: `Your ${retailer.subscriptionPlan} subscription has expired. Please renew to continue using KIZERE POS.`,
+      code: "SUBSCRIPTION_EXPIRED",
+    });
+  }
+
+  next();
 }

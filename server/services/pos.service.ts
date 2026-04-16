@@ -15,6 +15,7 @@ import { notifyPosCustomer } from "./pos-notification.service";
 import { emitSecurityAlert } from "../websocket";
 import { AuthorizationError, ValidationError, NotFoundError, DatabaseError } from "../utils/error-handler";
 import { CommissionService } from "./commission.service";
+import { getPaymentAmount } from "../config/payment.config";
 
 const logger = createLogger("PosService");
 
@@ -180,11 +181,16 @@ export async function registerProduct(input: any) {
     }).catch(err => logger.error("POS notification failed", { err }));
   }
 
-  // Record commission silently — never blocks the registration response
-  if (input.transactionValue && input.transactionValue > 0) {
-    CommissionService.recordCommission(ledgerEntry.id, input.retailerId, input.transactionValue)
-      .catch(err => logger.error("Commission recording failed", { err }));
-  }
+  // Record commission on KIZERE's registration fee (not the product sale price).
+  // Commission = kizereRegistrationFee × retailer.commissionRate — self-funded from KIZERE's own revenue.
+  getPaymentAmount("registration")
+    .then(kizereRegistrationFee => {
+      if (kizereRegistrationFee > 0) {
+        CommissionService.recordCommission(ledgerEntry.id, input.retailerId, kizereRegistrationFee)
+          .catch(err => logger.error("Commission recording failed", { err }));
+      }
+    })
+    .catch(err => logger.warn("Could not resolve registration fee for commission — skipping", { err }));
 
   return { product, ledgerEntry };
 }
@@ -528,4 +534,49 @@ export async function getRetailerSecurityAlerts(retailerId: number) {
 
 export function isPosStubAccount(email?: string | null): boolean {
   return email?.endsWith("@pos.kizere.local") ?? false;
+}
+
+// ─── Transfer fee finalization (called from payment webhook) ───
+
+/**
+ * Finalize an ownership transfer after the transfer_fee payment succeeds.
+ * Idempotent: safe to call multiple times — checks current owner before acting.
+ */
+export async function finalizeTransferAfterPayment(paymentId: number) {
+  const payment = await storage.getPayment(paymentId);
+  if (!payment) throw new Error(`Transfer payment ${paymentId} not found`);
+
+  const meta = payment.metadata as Record<string, any> | null;
+  const posProductId = payment.posProductId ?? meta?.posProductId;
+  const newOwnerId = meta?.newOwnerId as number | undefined;
+  const retailerId = payment.posRetailerId ?? meta?.retailerId;
+
+  if (!posProductId || !newOwnerId || !retailerId) {
+    throw new Error(
+      `Transfer payment ${paymentId} missing required context (posProductId, newOwnerId, retailerId)`
+    );
+  }
+
+  // Idempotency: skip if transfer already applied
+  const product = await storage.getPosProduct(posProductId);
+  if (product?.currentOwnerId === newOwnerId) {
+    logger.info("Transfer already finalized — skipping (idempotent)", { paymentId, posProductId });
+    return;
+  }
+
+  const result = await transferOwnership({
+    productId: posProductId,
+    newOwnerId,
+    retailerId,
+    notes: meta?.notes || `Ownership transfer finalized via payment #${paymentId}`,
+  });
+
+  // Record commission on KIZERE's collected transfer fee
+  if (result.ledgerEntry) {
+    const kizereTransferFee = parseFloat(payment.amount);
+    if (kizereTransferFee > 0) {
+      CommissionService.recordCommission(result.ledgerEntry.id, retailerId, kizereTransferFee)
+        .catch(err => logger.error("Transfer commission recording failed", { err }));
+    }
+  }
 }

@@ -95,6 +95,14 @@ export const startServer = async () => {
     } catch (err) {
       logger.error("Failed to start expiration cron", { error: err });
     }
+
+    try {
+      const { startSubscriptionReminderCron } = await import("./cron/subscription-reminder");
+      startSubscriptionReminderCron();
+      logger.info("Subscription reminder cron job started");
+    } catch (err) {
+      logger.error("Failed to start subscription reminder cron", { error: err });
+    }
   } else {
     logger.info("Vercel: Skipping expiration cron job in serverless environment");
   }

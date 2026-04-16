@@ -10,7 +10,9 @@ import {
   PushSubscription, InsertPushSubscription, VerificationRequest, InsertVerificationRequest,
   AccountStatus, VerificationStatus, PaymentType,
   Retailer, InsertRetailer, PosProduct, InsertPosProduct, OwnershipLedgerEntry, InsertOwnershipLedger,
-  PosSecurityAlert, InsertPosSecurityAlert, PublicVerifyLog, InsertPublicVerifyLog
+  PosSecurityAlert, InsertPosSecurityAlert, PublicVerifyLog, InsertPublicVerifyLog,
+  PlatformSetting, OwnershipCertificate, InsertOwnershipCertificate,
+  VerificationPurchase, InsertVerificationPurchase
 } from "@shared/schema";
 
 export interface IStorage {
@@ -249,6 +251,22 @@ export interface IStorage {
   getOrCreateRetailerCustomerSettings(retailerId: number, customerId: number): Promise<any>;
   getRetailerCustomerDetail(retailerId: number, customerId: number): Promise<any>;
   updateRetailerCustomerSettings(retailerId: number, customerId: number, updates: { isBlocked?: boolean; internalNotes?: string }): Promise<any>;
+
+  // Platform settings
+  getPlatformSetting(key: string): Promise<PlatformSetting | undefined>;
+  getAllPlatformSettings(): Promise<PlatformSetting[]>;
+  upsertPlatformSetting(key: string, value: string, description: string | undefined, updatedBy: number): Promise<PlatformSetting>;
+
+  // Ownership certificates
+  createOwnershipCertificate(data: InsertOwnershipCertificate): Promise<OwnershipCertificate>;
+  getOwnershipCertificateByCode(code: string): Promise<OwnershipCertificate | undefined>;
+  getOwnershipCertificatesByItem(itemId: number): Promise<OwnershipCertificate[]>;
+  getOwnershipCertificatesByUser(userId: number): Promise<OwnershipCertificate[]>;
+
+  // Verification purchases
+  createVerificationPurchase(data: InsertVerificationPurchase): Promise<VerificationPurchase>;
+  getActiveVerificationPurchase(userId: number, identifier: string): Promise<VerificationPurchase | undefined>;
+  getUserVerificationPurchases(userId: number): Promise<VerificationPurchase[]>;
 
   // Session management
   sessionStore: session.Store;

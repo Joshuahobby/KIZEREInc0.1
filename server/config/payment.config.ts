@@ -111,6 +111,16 @@ export async function getPaymentDescription(type: PaymentType, packageId?: numbe
       return "Bounty Payment";
     case "featured_upgrade":
       return "Report Featured Upgrade";
+    case "transfer_fee":
+      return "Product Ownership Transfer Fee";
+    case "retailer_subscription":
+      return "Annual Retailer Subscription";
+    case "ownership_certificate":
+      return "Item Ownership Certificate";
+    case "verification_report":
+      return "Full Item Verification Report";
+    case "consumer_subscription":
+      return "KIZERE Premium Annual Subscription";
     default:
       return "Payment";
   }

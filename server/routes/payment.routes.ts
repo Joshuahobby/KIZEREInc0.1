@@ -24,6 +24,11 @@ import type { PawaPayDepositCallback } from "../utils/pawapay";
 import { getPaymentDescription } from "../config/payment.config";
 import { sendPaymentConfirmationEmail } from "../services/email.service";
 import { CouponService } from "../services/coupon.service";
+import { finalizeTransferAfterPayment } from "../services/pos.service";
+import { RetailerSubscriptionService } from "../services/retailer-subscription.service";
+import { CertificateService } from "../services/certificate.service";
+import { VerificationReportService } from "../services/verification-report.service";
+import { ConsumerSubscriptionService } from "../services/consumer-subscription.service";
 
 const logger = createLogger('PaymentRoutes');
 import { config as serverConfig } from "../config";
@@ -252,16 +257,46 @@ router.post("/webhook", validatePawaPayIP, verifyPawaPaySignature, async (req, r
               ).catch(err => logger.error('Failed to send payment email', { error: err }));
             }
 
-            // Phase: Finalize item registration or report payment if this was a registration/report payment
-            if (payment.type === 'registration' && payment.itemId) {
-              logger.info("Finalizing item registration after successful payment", { itemId: payment.itemId });
-              await storage.updateItem(payment.itemId, { status: 'Registered' });
-            } else if (payment.type === 'lost_report' && payment.reportId) {
-              logger.info("Finalizing lost report after successful payment", { reportId: payment.reportId });
-              await storage.updateReport(payment.reportId, { paymentStatus: 'successful' });
-            } else if (payment.type === 'featured_upgrade' && payment.reportId) {
-              logger.info("Featuring report after successful upgrade payment", { reportId: payment.reportId });
-              await storage.updateReport(payment.reportId, { isFeatured: true, featuredAt: new Date() });
+            // Finalize post-payment side effects by payment type
+            switch (payment.type) {
+              case 'registration':
+                if (payment.itemId) {
+                  logger.info("Finalizing item registration after payment", { itemId: payment.itemId });
+                  await storage.updateItem(payment.itemId, { status: 'Registered' });
+                }
+                break;
+              case 'lost_report':
+                if (payment.reportId) {
+                  logger.info("Finalizing lost report after payment", { reportId: payment.reportId });
+                  await storage.updateReport(payment.reportId, { paymentStatus: 'successful' });
+                }
+                break;
+              case 'featured_upgrade':
+                if (payment.reportId) {
+                  logger.info("Featuring report after upgrade payment", { reportId: payment.reportId });
+                  await storage.updateReport(payment.reportId, { isFeatured: true, featuredAt: new Date() });
+                }
+                break;
+              case 'transfer_fee':
+                logger.info("Finalizing ownership transfer after payment", { paymentId: payment.id });
+                await finalizeTransferAfterPayment(payment.id);
+                break;
+              case 'retailer_subscription':
+                logger.info("Finalizing retailer subscription after payment", { paymentId: payment.id });
+                await RetailerSubscriptionService.finalizeSubscription(payment.id);
+                break;
+              case 'ownership_certificate':
+                logger.info("Issuing ownership certificate after payment", { paymentId: payment.id });
+                await CertificateService.finalizeIssuance(payment.id);
+                break;
+              case 'verification_report':
+                logger.info("Finalizing verification report purchase after payment", { paymentId: payment.id });
+                await VerificationReportService.finalizeReport(payment.id);
+                break;
+              case 'consumer_subscription':
+                logger.info("Activating consumer premium subscription after payment", { paymentId: payment.id });
+                await ConsumerSubscriptionService.finalizeSubscription(payment.id);
+                break;
             }
 
             // Record coupon usage if applicable
@@ -372,16 +407,46 @@ router.get("/verify/:txRef", async (req, res) => {
           ).catch(err => logger.error('Failed to send payment email', { error: err }));
         }
 
-        // Phase: Finalize item registration or report payment if this was a registration/report payment
-        if (payment.type === 'registration' && payment.itemId) {
-          logger.info("Finalizing item registration after manual verification", { itemId: payment.itemId });
-          await storage.updateItem(payment.itemId, { status: 'Registered' });
-        } else if (payment.type === 'lost_report' && payment.reportId) {
-          logger.info("Finalizing lost report after manual verification", { reportId: payment.reportId });
-          await storage.updateReport(payment.reportId, { paymentStatus: 'successful' });
-        } else if (payment.type === 'featured_upgrade' && payment.reportId) {
-          logger.info("Featuring report after manual verification", { reportId: payment.reportId });
-          await storage.updateReport(payment.reportId, { isFeatured: true, featuredAt: new Date() });
+        // Finalize post-payment side effects by payment type
+        switch (payment.type) {
+          case 'registration':
+            if (payment.itemId) {
+              logger.info("Finalizing item registration after manual verification", { itemId: payment.itemId });
+              await storage.updateItem(payment.itemId, { status: 'Registered' });
+            }
+            break;
+          case 'lost_report':
+            if (payment.reportId) {
+              logger.info("Finalizing lost report after manual verification", { reportId: payment.reportId });
+              await storage.updateReport(payment.reportId, { paymentStatus: 'successful' });
+            }
+            break;
+          case 'featured_upgrade':
+            if (payment.reportId) {
+              logger.info("Featuring report after manual verification", { reportId: payment.reportId });
+              await storage.updateReport(payment.reportId, { isFeatured: true, featuredAt: new Date() });
+            }
+            break;
+          case 'transfer_fee':
+            logger.info("Finalizing ownership transfer after manual verification", { paymentId: payment.id });
+            await finalizeTransferAfterPayment(payment.id);
+            break;
+          case 'retailer_subscription':
+            logger.info("Finalizing retailer subscription after manual verification", { paymentId: payment.id });
+            await RetailerSubscriptionService.finalizeSubscription(payment.id);
+            break;
+          case 'ownership_certificate':
+            logger.info("Issuing ownership certificate after manual verification", { paymentId: payment.id });
+            await CertificateService.finalizeIssuance(payment.id);
+            break;
+          case 'verification_report':
+            logger.info("Finalizing verification report purchase after manual verification", { paymentId: payment.id });
+            await VerificationReportService.finalizeReport(payment.id);
+            break;
+          case 'consumer_subscription':
+            logger.info("Activating consumer premium subscription after manual verification", { paymentId: payment.id });
+            await ConsumerSubscriptionService.finalizeSubscription(payment.id);
+            break;
         }
 
         // Record coupon usage if applicable

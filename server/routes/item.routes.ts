@@ -7,6 +7,7 @@ import { OCRService } from "../services/ocr.service";
 import { QRCodeService } from "../services/qrcode.service";
 import { config } from "../config";
 import { publicVerifyLimiter } from "../middleware/claim-rate-limit.middleware";
+import { ConsumerSubscriptionService } from "../services/consumer-subscription.service";
 
 // Schema for updating an item - restricts fields that can be modified
 const updateItemSchema = z.object({
@@ -77,10 +78,20 @@ router.post("/", async (req, res) => {
       // Subscriber self-registration check
       const user = await storage.getUser(req.user!.id);
       if (user?.role === 'Subscriber' && user.verificationStatus !== 'approved') {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: "Account Verification Required",
           description: "To maintain the security of the KIZERE registry, item registration is only available to verified profiles. Please complete your identity verification to continue.",
           code: "VERIFICATION_REQUIRED"
+        });
+      }
+
+      // Free-tier registration cap
+      const { allowed, reason } = await ConsumerSubscriptionService.canRegisterItem(req.user!.id);
+      if (!allowed) {
+        return res.status(402).json({
+          message: "Registration Limit Reached",
+          description: reason,
+          code: "PREMIUM_REQUIRED"
         });
       }
     }
@@ -108,6 +119,13 @@ router.post("/", async (req, res) => {
     }
 
     const newItem = await storage.createItem(validatedData);
+
+    // Increment free-tier registration counter (no-op for premium/admin)
+    if (!isAdminOrAgent) {
+      ConsumerSubscriptionService.incrementRegistrationCount(targetUserId).catch(
+        err => logger.error("Failed to increment registration count", { error: err, userId: targetUserId })
+      );
+    }
 
     // Phase 3: Trigger OCR for registered item
     if (newItem.imageUrls && newItem.imageUrls.length > 0) {

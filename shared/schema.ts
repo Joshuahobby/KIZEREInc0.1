@@ -79,7 +79,7 @@ export const permissionTypes = [
 export const paymentStatuses = ['pending', 'successful', 'failed', 'cancelled'] as const;
 
 // Define payment types
-export const paymentTypes = ['registration', 'lost_report', 'bounty', 'featured_upgrade'] as const;
+export const paymentTypes = ['registration', 'lost_report', 'bounty', 'featured_upgrade', 'transfer_fee', 'retailer_subscription', 'ownership_certificate', 'verification_report', 'consumer_subscription'] as const;
 
 // Define package status
 export const packageStatuses = ['active', 'inactive', 'archived'] as const;
@@ -213,6 +213,8 @@ export const users = pgTable("users", {
   deletionRequestedAt: timestamp("deletion_requested_at"),
   resetPasswordToken: text("reset_password_token"),
   resetPasswordExpires: timestamp("reset_password_expires"),
+  premiumExpiresAt: timestamp("premium_expires_at"),
+  premiumRegistrationCount: integer("premium_registration_count").default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -360,6 +362,9 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   metadata: json("metadata"),
   packageId: integer("package_id").references(() => paymentPackages.id),
+  // POS-context: set when type = 'transfer_fee'
+  posProductId: integer("pos_product_id").references(() => posProducts.id),
+  posRetailerId: integer("pos_retailer_id").references(() => retailers.id),
 });
 
 // Coupons table
@@ -915,6 +920,72 @@ export const insertVerificationCodeSchema = createInsertSchema(verificationCodes
 
 
 
+// ===================== Platform Settings =====================
+// Admin-managed key-value store (e.g. bounty_platform_cut)
+
+export const platformSettings = pgTable("platform_settings", {
+  id: serial("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  updatedBy: integer("updated_by").references(() => users.id),
+});
+
+export const insertPlatformSettingSchema = z.object({
+  key: z.string().min(1, "Key is required"),
+  value: z.string().min(1, "Value is required"),
+  description: z.string().optional(),
+});
+
+export type PlatformSetting = typeof platformSettings.$inferSelect;
+export type InsertPlatformSetting = z.infer<typeof insertPlatformSettingSchema>;
+
+// ===================== Ownership Certificates =====================
+// Issued after a successful ownership_certificate payment
+
+export const ownershipCertificates = pgTable("ownership_certificates", {
+  id: serial("id").primaryKey(),
+  itemId: integer("item_id").notNull().references(() => items.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  paymentId: integer("payment_id").references(() => payments.id),
+  certificateCode: text("certificate_code").notNull().unique(),
+  issuedAt: timestamp("issued_at").defaultNow().notNull(),
+  metadata: json("metadata"), // snapshot: item name, category, uniqueIdentifier at issuance
+}, (table) => [
+  index("cert_item_idx").on(table.itemId),
+  index("cert_user_idx").on(table.userId),
+  uniqueIndex("cert_code_idx").on(table.certificateCode),
+]);
+
+export const insertOwnershipCertificateSchema = createInsertSchema(ownershipCertificates).omit({
+  id: true, issuedAt: true
+});
+
+export type OwnershipCertificate = typeof ownershipCertificates.$inferSelect;
+export type InsertOwnershipCertificate = z.infer<typeof insertOwnershipCertificateSchema>;
+
+export const verificationPurchases = pgTable("verification_purchases", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  identifier: text("identifier").notNull(),
+  itemId: integer("item_id").references(() => items.id),
+  reportData: json("report_data"),
+  paymentId: integer("payment_id").references(() => payments.id),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("vp_user_idx").on(table.userId),
+  index("vp_identifier_idx").on(table.identifier),
+]);
+
+export const insertVerificationPurchaseSchema = createInsertSchema(verificationPurchases).omit({
+  id: true, createdAt: true
+});
+
+export type VerificationPurchase = typeof verificationPurchases.$inferSelect;
+export type InsertVerificationPurchase = z.infer<typeof insertVerificationPurchaseSchema>;
+
 // ===================== Retailer POS Tables =====================
 
 // Retailers table
@@ -932,6 +1003,8 @@ export const retailers = pgTable("retailers", {
   metadata: json("metadata"),
   commissionRate: numeric("commission_rate").notNull().default('0.05'),
   walletPhone: text("wallet_phone"),
+  subscriptionExpiresAt: timestamp("subscription_expires_at"),
+  subscriptionPaidAt: timestamp("subscription_paid_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
@@ -1202,7 +1275,7 @@ export type ModerationStatus = typeof reportModerationStatuses[number];
 export const initiatePaymentSchema = z.object({
   amount: z.number().positive("Amount must be positive").optional(),
   type: z.enum(paymentTypes, {
-    errorMap: () => ({ message: "Payment type must be either 'registration', 'lost_report', or 'bounty'" })
+    errorMap: () => ({ message: "Invalid payment type" })
   }),
   packageId: z.number().optional(),
   itemId: z.number().optional(),

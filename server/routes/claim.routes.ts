@@ -6,6 +6,7 @@ import { createLogger } from "../utils/logger";
 import { sendClaimNotificationEmail, sendClaimStatusEmail, sendAdminAppealNotification } from "../services/email.service";
 import { claimSubmissionLimiter, claimVerificationLimiter } from "../middleware/claim-rate-limit.middleware";
 import { ReputationService } from "../services/reputation.service";
+import { PlatformSettingsService, PLATFORM_SETTING_KEYS } from "../services/platform-settings.service";
 
 const logger = createLogger('ClaimRoutes');
 const router = Router();
@@ -606,11 +607,26 @@ router.post("/:id/handover", async (req, res) => {
         try {
           const { payoutService } = await import("../services/payout.service");
 
-          // Create payout record
+          // Deduct KIZERE platform cut before paying the finder
+          const platformCut = await PlatformSettingsService.getSettingAsNumber(
+            PLATFORM_SETTING_KEYS.BOUNTY_PLATFORM_CUT,
+            0.10 // default 10%
+          );
+          const grossAmount = Number(report.bountyAmount);
+          const netAmount = Math.floor(grossAmount * (1 - platformCut));
+
+          logger.info('Bounty payout: applying platform cut', {
+            reportId: report.id,
+            grossAmount,
+            platformCut,
+            netAmount,
+          });
+
+          // Create payout record for the net (after platform cut)
           const payout = await payoutService.createPayout(
             req.user!.id, // Finder receives the money
             report.id,
-            Number(report.bountyAmount),
+            netAmount,
             req.user!.phoneNumber || "0000000000" // Use user's phone or placeholder if missing (should be validated)
           );
 
@@ -621,7 +637,9 @@ router.post("/:id/handover", async (req, res) => {
 
           logger.info('Bounty payout initiated', {
             reportId: report.id,
-            amount: report.bountyAmount,
+            grossAmount,
+            netAmount,
+            platformCut,
             finderId: req.user!.id
           });
         } catch (payoutError) {

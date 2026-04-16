@@ -256,6 +256,22 @@ export class DatabaseStorage implements IStorage {
   // Public verify audit logs
   createPublicVerifyLog = posOps.createPublicVerifyLog;
   getPublicVerifyLogs = posOps.getPublicVerifyLogs;
+
+  // Platform settings
+  getPlatformSetting = posOps.getPlatformSetting;
+  getAllPlatformSettings = posOps.getAllPlatformSettings;
+  upsertPlatformSetting = posOps.upsertPlatformSetting;
+
+  // Ownership certificates
+  createOwnershipCertificate = posOps.createOwnershipCertificate;
+  getOwnershipCertificateByCode = posOps.getOwnershipCertificateByCode;
+  getOwnershipCertificatesByItem = posOps.getOwnershipCertificatesByItem;
+  getOwnershipCertificatesByUser = posOps.getOwnershipCertificatesByUser;
+
+  // Verification purchases
+  createVerificationPurchase = posOps.createVerificationPurchase;
+  getActiveVerificationPurchase = posOps.getActiveVerificationPurchase;
+  getUserVerificationPurchases = posOps.getUserVerificationPurchases;
 }
 
 export const storage = new DatabaseStorage();
