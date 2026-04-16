@@ -12,6 +12,10 @@ const TEST_RETAILER_USERNAME = "e2e_retailer_test";
 const TEST_RETAILER_EMAIL = "e2e-retailer@test.kizere.local";
 const TEST_RETAILER_PASSWORD = "E2eRetailer123!";
 
+const TEST_SUBSCRIBER_USERNAME = "e2e_subscriber_test";
+const TEST_SUBSCRIBER_EMAIL = "e2e-subscriber@test.kizere.local";
+const TEST_SUBSCRIBER_PASSWORD = "E2eSubscriber123!";
+
 /**
  * Global setup runs once before all Playwright tests.
  * It seeds:
@@ -149,6 +153,55 @@ export default async function globalSetup(_config: FullConfig) {
   } catch (err: any) {
     console.warn(`[global-setup] Retailer browser login failed: ${err.message}`);
     console.warn("[global-setup] retailer.json not saved — retailer tests will be skipped.");
+  }
+
+  // ──────────────────────────────────────────────
+  // Step 4: Create test subscriber user via admin API
+  // ──────────────────────────────────────────────
+  const subCsrfRes = await ctx.get("/api/auth/csrf");
+  const subCsrfToken = (await subCsrfRes.json().catch(() => ({}))).csrfToken || "";
+
+  const createSubscriberRes = await ctx.post("/api/admin/users", {
+    data: {
+      fullName: "E2E Test Subscriber",
+      username: TEST_SUBSCRIBER_USERNAME,
+      email: TEST_SUBSCRIBER_EMAIL,
+      password: TEST_SUBSCRIBER_PASSWORD,
+      role: "Subscriber",
+      status: "active",
+      verificationStatus: "approved",
+      twoFactorEnabled: false,
+    },
+    headers: { "x-csrf-token": subCsrfToken },
+  });
+
+  if (!createSubscriberRes.ok()) {
+    const body = await createSubscriberRes.text();
+    if (!body.includes("already exists")) {
+      console.warn(`[global-setup] Could not create test subscriber user: ${body}`);
+    }
+  } else {
+    console.log("[global-setup] Test subscriber user created.");
+  }
+
+  // ──────────────────────────────────────────────
+  // Step 5: Login as subscriber and save state
+  // ──────────────────────────────────────────────
+  const subscriberCtx = await browser.newContext();
+  const subscriberPage = await subscriberCtx.newPage();
+
+  await subscriberPage.goto(`${BASE_URL}/auth`);
+  await subscriberPage.fill('input[name="username"]', TEST_SUBSCRIBER_USERNAME);
+  await subscriberPage.fill('input[name="password"]', TEST_SUBSCRIBER_PASSWORD);
+  await subscriberPage.locator("form").first().locator('button[type="submit"]').click();
+
+  try {
+    await subscriberPage.waitForURL(/\/(dashboard|home|verify)/i, { timeout: 15000 });
+    await subscriberCtx.storageState({ path: path.join(AUTH_DIR, "subscriber.json") });
+    console.log("[global-setup] Subscriber storage state saved.");
+  } catch (err: any) {
+    console.warn(`[global-setup] Subscriber browser login failed: ${err.message}`);
+    console.warn("[global-setup] subscriber.json not saved — subscriber tests will be skipped.");
   }
 
   await browser.close();

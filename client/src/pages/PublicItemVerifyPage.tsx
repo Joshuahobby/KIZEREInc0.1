@@ -4,11 +4,12 @@ import { apiGet } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, AlertTriangle, Package, Calendar, Tag, ShieldCheck, Fingerprint } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Package, Calendar, Tag, ShieldCheck, Fingerprint, FileSearch } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/use-auth";
 
 interface PublicItemInfo {
   name: string;
@@ -27,6 +28,7 @@ interface PublicItemInfo {
 export default function PublicItemVerifyPage() {
   const { uniqueIdentifier } = useParams();
   const qrKizereId = new URLSearchParams(window.location.search).get("kizereId");
+  const { user } = useAuth();
 
   const { data: item, isLoading, error } = useQuery<PublicItemInfo>({
     queryKey: [`/api/items/public/${uniqueIdentifier}`],
@@ -223,9 +225,35 @@ export default function PublicItemVerifyPage() {
                   </div>
                 )}
 
+                {/* Full Report CTA — shown to all users; unauthenticated users are prompted to sign in */}
+                <div className="flex flex-col items-center gap-3 p-5 rounded-2xl border border-primary/20 bg-primary/5">
+                  <div className="flex items-center gap-2 text-center">
+                    <FileSearch className="h-4 w-4 text-primary shrink-0" />
+                    <p className="text-xs font-semibold text-foreground/80">
+                      Get the full ownership report — owner details, registration history, and more.
+                    </p>
+                  </div>
+                  <Button
+                    asChild
+                    size="sm"
+                    className="rounded-xl w-full h-10 font-bold text-sm"
+                  >
+                    <Link
+                      href={
+                        user
+                          ? `/verify-item?id=${encodeURIComponent(uniqueIdentifier ?? "")}`
+                          : `/auth?redirect=${encodeURIComponent(`/verify-item?id=${encodeURIComponent(uniqueIdentifier ?? "")}`)}`
+                      }
+                    >
+                      <ShieldCheck className="h-4 w-4 mr-2" />
+                      {user ? "Get Full Report" : "Sign in to Get Full Report"}
+                    </Link>
+                  </Button>
+                </div>
+
                 <AnimatePresence>
                   {item.isFlagged ? (
-                    <motion.div 
+                    <motion.div
                       className="bg-destructive/10 border-2 border-destructive/20 p-6 rounded-2xl text-center relative overflow-hidden"
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
