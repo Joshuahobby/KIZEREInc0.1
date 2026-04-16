@@ -8,6 +8,7 @@ import { QRCodeService } from "../services/qrcode.service";
 import { config } from "../config";
 import { publicVerifyLimiter } from "../middleware/claim-rate-limit.middleware";
 import { ConsumerSubscriptionService } from "../services/consumer-subscription.service";
+import { UserService } from "../services/user.service";
 
 // Schema for updating an item - restricts fields that can be modified
 const updateItemSchema = z.object({
@@ -222,6 +223,43 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+/**
+ * GET /api/items/transfer/lookup?q=<email|phone|username>
+ * Look up a KIZERE user by email, phone number, or username for ownership transfer.
+ * Returns safe public fields only (id, fullName, username).
+ */
+router.get("/transfer/lookup", async (req, res) => {
+  const q = (req.query.q as string || "").trim();
+  if (!q || q.length < 3) {
+    return res.status(400).json({ message: "Query must be at least 3 characters" });
+  }
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    let found = await storage.getUserByEmail(q);
+    if (!found) found = await UserService.getUserByPhoneNumber(q) ?? undefined;
+    if (!found) found = await UserService.getUserByUsername(q) ?? undefined;
+
+    if (!found) {
+      return res.status(404).json({ message: "No KIZERE user found with that email, phone, or username" });
+    }
+    if (found.id === req.user.id) {
+      return res.status(400).json({ message: "You cannot transfer an item to yourself" });
+    }
+
+    // Return only safe public fields
+    res.json({
+      id: found.id,
+      fullName: found.fullName,
+      username: found.username,
+      avatarUrl: (found as any).avatarUrl ?? null,
+    });
+  } catch (error) {
+    logger.error("User lookup failed", { q, error });
+    res.status(500).json({ message: "Lookup failed" });
+  }
+});
+
 // Item Ownership Transfer API
 router.post("/:id/transfer", async (req, res) => {
   try {
@@ -230,9 +268,9 @@ router.post("/:id/transfer", async (req, res) => {
       return res.status(400).json({ message: "Invalid item ID" });
     }
 
-    const { recipientEmail } = req.body;
-    if (!recipientEmail) {
-      return res.status(400).json({ message: "Recipient email is required" });
+    const { recipientEmail, recipientPhone, recipientId } = req.body;
+    if (!recipientEmail && !recipientPhone && !recipientId) {
+      return res.status(400).json({ message: "Recipient email, phone, or user ID is required" });
     }
 
     const item = await storage.getItem(itemId);
@@ -244,7 +282,12 @@ router.post("/:id/transfer", async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const recipient = await storage.getUserByEmail(recipientEmail);
+    let recipient = recipientId
+      ? await storage.getUser(recipientId)
+      : recipientEmail
+        ? await storage.getUserByEmail(recipientEmail)
+        : await UserService.getUserByPhoneNumber(recipientPhone);
+
     if (!recipient) {
       return res.status(404).json({ message: "Recipient user not found" });
     }

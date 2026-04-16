@@ -18,7 +18,8 @@ import {
   Award,
   Loader2,
   X,
-  Download
+  Download,
+  ArrowLeftRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -71,6 +72,12 @@ export default function ItemDetailPage() {
   const [certModalOpen, setCertModalOpen] = useState(false);
   const [certPhone, setCertPhone] = useState("");
   const [certPurchasing, setCertPurchasing] = useState(false);
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [transferQuery, setTransferQuery] = useState("");
+  const [transferStep, setTransferStep] = useState<"search" | "confirm">("search");
+  const [foundUser, setFoundUser] = useState<{ id: number; fullName: string | null; username: string; avatarUrl: string | null } | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
 
   if (!user) {
     return (
@@ -201,6 +208,26 @@ export default function ItemDetailPage() {
     onError: (err: Error) => {
       toast({ variant: "destructive", title: "Failed to update item", description: err.message });
     }
+  });
+
+  const transferMutation = useMutation({
+    mutationFn: async (recipientId: number) => {
+      await apiRequest(`/api/items/${itemId}/transfer`, {
+        method: "POST",
+        data: { recipientId },
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Ownership transferred", description: "The item has been transferred to the new owner." });
+      setTransferModalOpen(false);
+      setTransferQuery("");
+      setFoundUser(null);
+      setTransferStep("search");
+      navigate("/dashboard");
+    },
+    onError: (err: any) => {
+      toast({ variant: "destructive", title: "Transfer failed", description: err.message || "Could not transfer ownership." });
+    },
   });
 
   if (isLoading) {
@@ -543,6 +570,20 @@ export default function ItemDetailPage() {
                 </Button>
               )}
 
+              {isOwner && item.status === "Registered" && (
+                <Button
+                  className="w-full justify-between bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-violet-500/30 hover:bg-violet-500/5 transition-all text-foreground group h-12"
+                  variant="outline"
+                  onClick={() => { setTransferStep("search"); setFoundUser(null); setLookupError(null); setTransferQuery(""); setTransferModalOpen(true); }}
+                >
+                  <span className="flex items-center font-bold">
+                    <ArrowLeftRight className="mr-3 h-4 w-4 text-violet-500" />
+                    Transfer Ownership
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </Button>
+              )}
+
               <Button
                 className="w-full justify-between bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-border/40 dark:border-white/10 hover:border-primary/30 hover:bg-primary/5 transition-all text-foreground group h-12"
                 variant="outline"
@@ -604,11 +645,145 @@ export default function ItemDetailPage() {
           />
         )
       }
+      {/* Transfer Ownership Modal */}
+      <Dialog open={transferModalOpen} onOpenChange={(open) => {
+        setTransferModalOpen(open);
+        if (!open) { setTransferStep("search"); setTransferQuery(""); setFoundUser(null); setLookupError(null); }
+      }}>
+        <DialogContent className="sm:max-w-[420px] rounded-3xl p-0 overflow-hidden border-none">
+          <div className="bg-gradient-to-b from-violet-500/10 to-background p-8 pt-10 text-center relative">
+            <button
+              type="button"
+              title="Close"
+              onClick={() => setTransferModalOpen(false)}
+              className="absolute top-4 right-4 text-muted-foreground/40 hover:text-muted-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="h-16 w-16 bg-violet-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ArrowLeftRight className="h-8 w-8 text-violet-500" />
+            </div>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-black tracking-tight">
+                {transferStep === "search" ? "Transfer Ownership" : "Confirm Transfer"}
+              </DialogTitle>
+              <DialogDescription className="text-sm leading-relaxed mt-2">
+                {transferStep === "search"
+                  ? "Find a KIZERE user by email, phone number, or username."
+                  : `You are about to transfer "${item?.name}" to ${foundUser?.fullName || foundUser?.username}. This cannot be undone.`}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="px-8 pb-8 space-y-3">
+            {transferStep === "search" ? (
+              <>
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                    Email, Phone, or Username
+                  </label>
+                  <Input
+                    value={transferQuery}
+                    onChange={(e) => { setTransferQuery(e.target.value); setLookupError(null); setFoundUser(null); }}
+                    placeholder="+250 78... / user@email.com / @username"
+                    className="h-12 rounded-xl"
+                    type="text"
+                  />
+                </div>
+                {lookupError && (
+                  <p className="text-xs text-destructive font-medium">{lookupError}</p>
+                )}
+                {foundUser && (
+                  <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                    <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-black text-muted-foreground shrink-0 overflow-hidden">
+                      {foundUser.avatarUrl
+                        ? <img src={foundUser.avatarUrl} alt="" className="h-full w-full object-cover" />
+                        : (foundUser.fullName || foundUser.username).charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate">{foundUser.fullName || foundUser.username}</p>
+                      <p className="text-xs text-muted-foreground truncate">@{foundUser.username}</p>
+                    </div>
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  onClick={async () => {
+                    const q = transferQuery.trim();
+                    if (q.length < 3) { setLookupError("Enter at least 3 characters"); return; }
+                    if (foundUser) { setTransferStep("confirm"); return; }
+                    setLookupLoading(true);
+                    setLookupError(null);
+                    try {
+                      const data = await apiRequest<{ id: number; fullName: string | null; username: string; avatarUrl: string | null }>(
+                        `/api/items/transfer/lookup?q=${encodeURIComponent(q)}`
+                      );
+                      setFoundUser(data);
+                    } catch (err: any) {
+                      setLookupError(err?.message || "User not found");
+                    } finally {
+                      setLookupLoading(false);
+                    }
+                  }}
+                  disabled={lookupLoading || transferQuery.trim().length < 3}
+                  className="w-full h-12 rounded-xl font-bold"
+                >
+                  {lookupLoading
+                    ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Looking up…</>
+                    : foundUser
+                      ? <><ArrowLeftRight className="h-4 w-4 mr-2" /> Continue with {foundUser.fullName || foundUser.username}</>
+                      : "Find User"}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="p-4 rounded-2xl bg-destructive/5 border border-destructive/20 text-center">
+                  <p className="text-xs font-bold uppercase tracking-widest text-destructive mb-1">Irreversible Action</p>
+                  <p className="text-sm text-foreground/80">
+                    You will permanently transfer <span className="font-bold">{item?.name}</span> to{" "}
+                    <span className="font-bold">{foundUser?.fullName || foundUser?.username}</span>.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => foundUser && transferMutation.mutate(foundUser.id)}
+                  disabled={transferMutation.isPending || !foundUser}
+                  variant="destructive"
+                  className="w-full h-12 rounded-xl font-bold"
+                >
+                  {transferMutation.isPending
+                    ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Transferring…</>
+                    : "Confirm Transfer"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setTransferStep("search")}
+                  className="w-full h-10 rounded-xl text-xs text-muted-foreground"
+                >
+                  Go Back
+                </Button>
+              </>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setTransferModalOpen(false)}
+              className="w-full h-10 rounded-xl text-xs text-muted-foreground"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Certificate Modal */}
       <Dialog open={certModalOpen} onOpenChange={setCertModalOpen}>
         <DialogContent className="sm:max-w-[440px] rounded-3xl p-0 overflow-hidden border-none">
           <div className="bg-gradient-to-b from-sky-500/10 to-background p-8 pt-10 text-center relative">
             <button
+              type="button"
+              title="Close"
               onClick={() => setCertModalOpen(false)}
               className="absolute top-4 right-4 text-muted-foreground/40 hover:text-muted-foreground"
             >
