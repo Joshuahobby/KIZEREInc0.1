@@ -11,13 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Crown, Check, Loader2, X, Infinity } from "lucide-react";
-
-const BENEFITS = [
-  "Unlimited item registrations (free tier: 3)",
-  "Unlimited full verification reports",
-  "Priority support & early features",
-  "Valid for 1 year — stackable on renewal",
-];
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 interface PremiumUpgradeModalProps {
   open: boolean;
@@ -32,8 +26,16 @@ export function PremiumUpgradeModal({
   onInitiated,
 }: PremiumUpgradeModalProps) {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const BENEFITS = [
+    t("consumer.premium.benefit1"),
+    t("consumer.premium.benefit2"),
+    t("consumer.premium.benefit3"),
+    t("consumer.premium.benefit4"),
+  ];
 
   const handleUpgrade = async () => {
     if (!phoneNumber.trim()) return;
@@ -45,8 +47,8 @@ export function PremiumUpgradeModal({
       });
 
       toast({
-        title: "Payment initiated",
-        description: "Approve the MoMo prompt on your phone to activate KIZERE Premium.",
+        title: t("consumer.premium.initiated"),
+        description: t("consumer.premium.initiatedDesc"),
       });
 
       onOpenChange(false);
@@ -57,8 +59,8 @@ export function PremiumUpgradeModal({
       }
     } catch {
       toast({
-        title: "Purchase failed",
-        description: "Please check your phone number and try again.",
+        title: t("consumer.premium.failed"),
+        description: t("consumer.premium.failedDesc"),
         variant: "destructive",
       });
     } finally {
@@ -72,6 +74,8 @@ export function PremiumUpgradeModal({
         {/* Header */}
         <div className="bg-gradient-to-b from-primary/15 to-background p-8 pt-10 text-center relative">
           <button
+            type="button"
+            title="Close"
             onClick={() => onOpenChange(false)}
             className="absolute top-4 right-4 text-muted-foreground/40 hover:text-muted-foreground transition-colors"
           >
@@ -87,10 +91,10 @@ export function PremiumUpgradeModal({
 
           <DialogHeader>
             <DialogTitle className="text-2xl font-black tracking-tight">
-              KIZERE Premium
+              {t("consumer.premium.title")}
             </DialogTitle>
             <DialogDescription className="text-sm leading-relaxed mt-2">
-              Unlock unlimited registrations and full verification reports for an entire year.
+              {t("consumer.premium.subtitle")}
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -113,7 +117,7 @@ export function PremiumUpgradeModal({
         <div className="px-8 pb-8 space-y-3">
           <div>
             <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-              MoMo Phone Number
+              {t("consumer.premium.momoLabel")}
             </label>
             <Input
               value={phoneNumber}
@@ -132,12 +136,12 @@ export function PremiumUpgradeModal({
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                Initiating…
+                {t("consumer.premium.initiating")}
               </>
             ) : (
               <>
                 <Crown className="h-4 w-4 mr-2" />
-                Upgrade to Premium
+                {t("consumer.premium.upgradeCta")}
               </>
             )}
           </Button>
@@ -147,7 +151,7 @@ export function PremiumUpgradeModal({
             onClick={() => onOpenChange(false)}
             className="w-full h-10 rounded-xl text-xs text-muted-foreground"
           >
-            Maybe later
+            {t("consumer.premium.maybeLater")}
           </Button>
         </div>
       </DialogContent>

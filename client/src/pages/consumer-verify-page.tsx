@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,6 +79,7 @@ function is402(err: unknown): boolean {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ConsumerVerifyPage() {
+  const { t } = useLanguage();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -118,8 +120,8 @@ export default function ConsumerVerifyPage() {
       if (pollAttempts.current > MAX_POLLS) {
         setPendingRef(null);
         toast({
-          title: "Payment taking longer than expected",
-          description: "Your MoMo payment may still be processing. Refresh the page in a few minutes to check your report.",
+          title: t("consumer.verify.payment.timeout"),
+          description: t("consumer.verify.payment.timeoutDesc"),
         });
         return;
       }
@@ -151,7 +153,7 @@ export default function ConsumerVerifyPage() {
       );
       setFreeSummary(data ?? null);
     } catch (err) {
-      toast({ title: "Lookup failed. Please try again.", variant: "destructive" });
+      toast({ title: t("consumer.verify.lookupFailed"), variant: "destructive" });
     } finally {
       setSummaryLoading(false);
     }
@@ -168,7 +170,7 @@ export default function ConsumerVerifyPage() {
         setFullReport(data);
         setPendingRef(null);
         if (fromPoll) {
-          toast({ title: "Report ready", description: "Your full verification report has been loaded." });
+          toast({ title: t("consumer.verify.report.ready"), description: t("consumer.verify.report.readyDesc") });
         }
       }
     } catch (err) {
@@ -180,7 +182,7 @@ export default function ConsumerVerifyPage() {
           setPurchaseOpen(true);
         }
       } else {
-        toast({ title: "Failed to fetch report", variant: "destructive" });
+        toast({ title: t("consumer.verify.report.fetchFailed"), variant: "destructive" });
       }
     } finally {
       setReportLoading(false);
@@ -206,11 +208,11 @@ export default function ConsumerVerifyPage() {
       setPurchaseOpen(false);
       pollAttempts.current = 0;
       toast({
-        title: "Payment initiated",
-        description: "Check your phone for the MoMo prompt. Your report will load automatically once payment is confirmed.",
+        title: t("consumer.verify.payment.initiated"),
+        description: t("consumer.verify.payment.initiatedDesc"),
       });
     } catch (err) {
-      toast({ title: "Purchase failed. Please try again.", variant: "destructive" });
+      toast({ title: t("consumer.verify.payment.failed"), variant: "destructive" });
     } finally {
       setPurchaseLoading(false);
     }
@@ -231,12 +233,11 @@ export default function ConsumerVerifyPage() {
           <div className="inline-flex items-center gap-2 mb-4">
             <Fingerprint className="h-7 w-7 text-primary" />
             <span className="text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-600">
-              Item Verification
+              {t("consumer.verify.title")}
             </span>
           </div>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Enter any IMEI, serial number, or KIZERE ID to check registration status.
-            Get a full ownership report by purchasing a one-time report or upgrading to Premium.
+            {t("consumer.verify.subtitle")}
           </p>
         </motion.div>
 
@@ -257,7 +258,7 @@ export default function ConsumerVerifyPage() {
             <Input
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="IMEI, serial number, or KIZERE ID…"
+              placeholder={t("consumer.verify.searchPlaceholder")}
               className="h-12 rounded-xl text-sm"
             />
             <Button
@@ -283,7 +284,7 @@ export default function ConsumerVerifyPage() {
               className="mt-10 flex flex-col items-center gap-3 text-muted-foreground"
             >
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-medium">Searching registry…</p>
+              <p className="text-sm font-medium">{t("consumer.verify.searching")}</p>
             </motion.div>
           )}
 
@@ -320,6 +321,8 @@ export default function ConsumerVerifyPage() {
         <DialogContent className="sm:max-w-[400px] rounded-3xl p-0 overflow-hidden border-none">
           <div className="bg-gradient-to-b from-primary/10 to-background p-8 pt-10 text-center relative">
             <button
+              type="button"
+              title="Close"
               onClick={() => setPurchaseOpen(false)}
               className="absolute top-4 right-4 text-muted-foreground/40 hover:text-muted-foreground"
             >
@@ -329,15 +332,9 @@ export default function ConsumerVerifyPage() {
               <ShieldCheck className="h-8 w-8 text-primary" />
             </div>
             <DialogHeader>
-              <DialogTitle className="text-xl font-black tracking-tight">Get Full Report</DialogTitle>
+              <DialogTitle className="text-xl font-black tracking-tight">{t("consumer.verify.payment.title")}</DialogTitle>
               <DialogDescription className="text-sm leading-relaxed mt-2">
-                Purchase a 48-hour access window to the full ownership report for{" "}
-                <span className="font-semibold text-foreground font-mono text-xs">{activeId}</span>.
-                Or{" "}
-                <Link href="/subscription" className="text-primary underline-offset-2 hover:underline">
-                  upgrade to Premium
-                </Link>{" "}
-                for unlimited reports.
+                {t("consumer.verify.payment.desc", { identifier: activeId ?? "" })}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -345,12 +342,12 @@ export default function ConsumerVerifyPage() {
           <div className="px-8 pb-8 pt-4 space-y-4">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                MoMo Phone Number
+                {t("consumer.verify.payment.momoLabel")}
               </label>
               <Input
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+250 78 000 0000"
+                placeholder={t("consumer.verify.payment.momoPlaceholder")}
                 className="h-12 rounded-xl"
                 type="tel"
               />
@@ -361,15 +358,15 @@ export default function ConsumerVerifyPage() {
               className="w-full h-12 rounded-xl font-bold"
             >
               {purchaseLoading
-                ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Initiating…</>
-                : <><ShieldCheck className="h-4 w-4 mr-2" /> Pay & Get Report</>}
+                ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("consumer.verify.payment.initiating")}</>
+                : <><ShieldCheck className="h-4 w-4 mr-2" /> {t("consumer.verify.payment.payBtn")}</>}
             </Button>
             <Button
               variant="ghost"
               onClick={() => setPurchaseOpen(false)}
               className="w-full h-10 rounded-xl text-muted-foreground text-xs"
             >
-              Cancel
+              {t("consumer.verify.payment.cancel")}
             </Button>
           </div>
         </DialogContent>
@@ -381,6 +378,7 @@ export default function ConsumerVerifyPage() {
 // ─── FreeSummaryCard ──────────────────────────────────────────────────────────
 
 function FreeSummaryCard({ summary }: { summary: FreeSummary }) {
+  const { t } = useLanguage();
   return (
     <Card
       className={cn(
@@ -434,11 +432,11 @@ function FreeSummaryCard({ summary }: { summary: FreeSummary }) {
             </Badge>
           ) : summary.isRegistered ? (
             <Badge className="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white border-transparent uppercase text-[10px] tracking-wide">
-              Registered
+              {t("consumer.verify.registered")}
             </Badge>
           ) : (
             <Badge variant="outline" className="shrink-0 uppercase text-[10px] tracking-wide text-muted-foreground">
-              Not Found
+              {t("consumer.verify.notRegistered")}
             </Badge>
           )}
         </div>
@@ -459,7 +457,7 @@ function FreeSummaryCard({ summary }: { summary: FreeSummary }) {
         {summary.isFlagged && (
           <div className="mt-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive font-medium flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 shrink-0" />
-            This item has been reported as lost or stolen. Transactions may be prohibited.
+            {t("consumer.verify.flaggedWarning")}
           </div>
         )}
       </CardContent>
@@ -488,6 +486,7 @@ function FullReportSection({
   onGetReport,
   onCancelPending,
 }: FullReportSectionProps) {
+  const { t } = useLanguage();
   // Already have the report
   if (fullReport) {
     return <FullReportCard report={fullReport} />;
@@ -500,9 +499,9 @@ function FullReportSection({
         <CardContent className="py-6 flex flex-col items-center gap-3 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <div>
-            <p className="font-semibold text-sm">Waiting for payment confirmation…</p>
+            <p className="font-semibold text-sm">{t("consumer.verify.payment.waiting")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Approve the MoMo prompt on your phone. Your report will load automatically.
+              {t("consumer.verify.payment.waitingDesc")}
             </p>
           </div>
           <Button
@@ -511,7 +510,7 @@ function FullReportSection({
             onClick={onCancelPending}
             className="text-xs text-muted-foreground mt-1"
           >
-            Cancel
+            {t("consumer.verify.payment.cancel")}
           </Button>
         </CardContent>
       </Card>
@@ -527,15 +526,15 @@ function FullReportSection({
             <Lock className="h-5 w-5 text-muted-foreground" />
           </div>
           <div>
-            <p className="font-semibold text-sm">Full report requires sign-in</p>
+            <p className="font-semibold text-sm">{t("consumer.verify.signin.required")}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Sign in to purchase or access the full ownership report.
+              {t("consumer.verify.signin.requiredDesc")}
             </p>
           </div>
           <Button asChild size="sm" className="rounded-xl">
             <Link href={`/auth?redirect=${encodeURIComponent(`/verify-item?id=${encodeURIComponent(activeId)}`)}`}>
               <LogIn className="h-4 w-4 mr-2" />
-              Sign in to continue
+              {t("consumer.verify.signin.cta")}
             </Link>
           </Button>
         </CardContent>
@@ -551,10 +550,9 @@ function FullReportSection({
           <ShieldCheck className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <p className="font-semibold text-sm">Full Ownership Report Available</p>
+          <p className="font-semibold text-sm">{t("consumer.verify.report.available")}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            Owner details, registration date, and full history. Valid 48 hours.
-            Premium users get instant access.
+            {t("consumer.verify.report.availableDesc")}
           </p>
         </div>
         <Button
@@ -563,8 +561,8 @@ function FullReportSection({
           className="rounded-xl px-6"
         >
           {reportLoading
-            ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading…</>
-            : <><ShieldCheck className="h-4 w-4 mr-2" /> Get Full Report</>}
+            ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("consumer.verify.report.loading")}</>
+            : <><ShieldCheck className="h-4 w-4 mr-2" /> {t("consumer.verify.report.getReport")}</>}
         </Button>
       </CardContent>
     </Card>
@@ -574,13 +572,14 @@ function FullReportSection({
 // ─── FullReportCard ───────────────────────────────────────────────────────────
 
 function FullReportCard({ report }: { report: FullReport }) {
+  const { t } = useLanguage();
   return (
     <Card className="border-primary/20 bg-primary/5 relative overflow-hidden">
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-blue-500" />
       <CardHeader className="pb-2 pt-6">
         <div className="flex items-center gap-2 text-primary">
           <ShieldCheck className="h-5 w-5" />
-          <p className="text-xs font-black uppercase tracking-widest">Full Ownership Report</p>
+          <p className="text-xs font-black uppercase tracking-widest">{t("consumer.verify.report.title")}</p>
         </div>
         <p className="font-bold text-lg tracking-tight">{report.name ?? report.identifier}</p>
       </CardHeader>
@@ -600,7 +599,7 @@ function FullReportCard({ report }: { report: FullReport }) {
         {report.owner && (
           <div className="mt-4 p-4 rounded-2xl bg-background/60 border border-border/40 space-y-3">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              Registered Owner
+              {t("consumer.verify.report.registeredOwner")}
             </p>
             <div className="flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -622,7 +621,7 @@ function FullReportCard({ report }: { report: FullReport }) {
         )}
 
         <p className="text-[10px] text-muted-foreground/60 text-center">
-          Report access is valid for 48 hours from purchase.
+          {t("consumer.verify.report.validFor")}
         </p>
       </CardContent>
     </Card>

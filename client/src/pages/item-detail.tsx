@@ -58,8 +58,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function ItemDetailPage() {
+  const { t } = useLanguage();
   const { id } = useParams<{ id: string }>();
   const itemId = parseInt(id || "");
   const { user } = useAuth();
@@ -118,8 +120,8 @@ export default function ItemDetailPage() {
         },
       });
       toast({
-        title: "Certificate payment initiated",
-        description: "Approve the MoMo prompt. Your certificate will be ready once payment confirms.",
+        title: t("consumer.certificate.initiated"),
+        description: t("consumer.certificate.initiatedDesc"),
       });
       setCertModalOpen(false);
       setCertPhone("");
@@ -218,7 +220,7 @@ export default function ItemDetailPage() {
       });
     },
     onSuccess: () => {
-      toast({ title: "Ownership transferred", description: "The item has been transferred to the new owner." });
+      toast({ title: t("consumer.transfer.success"), description: t("consumer.transfer.successDesc") });
       setTransferModalOpen(false);
       setTransferQuery("");
       setFoundUser(null);
@@ -226,7 +228,7 @@ export default function ItemDetailPage() {
       navigate("/dashboard");
     },
     onError: (err: any) => {
-      toast({ variant: "destructive", title: "Transfer failed", description: err.message || "Could not transfer ownership." });
+      toast({ variant: "destructive", title: t("consumer.transfer.failed"), description: err.message || t("consumer.transfer.failedDesc") });
     },
   });
 
@@ -564,7 +566,7 @@ export default function ItemDetailPage() {
                 >
                   <span className="flex items-center font-bold">
                     <Award className="mr-3 h-4 w-4 text-sky-500" />
-                    {activeCert ? "View Certificate" : "Get Certificate"}
+                    {activeCert ? t("consumer.certificate.view") : t("consumer.certificate.get")}
                   </span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </Button>
@@ -578,7 +580,7 @@ export default function ItemDetailPage() {
                 >
                   <span className="flex items-center font-bold">
                     <ArrowLeftRight className="mr-3 h-4 w-4 text-violet-500" />
-                    Transfer Ownership
+                    {t("consumer.transfer.button")}
                   </span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                 </Button>
@@ -665,12 +667,12 @@ export default function ItemDetailPage() {
             </div>
             <DialogHeader>
               <DialogTitle className="text-xl font-black tracking-tight">
-                {transferStep === "search" ? "Transfer Ownership" : "Confirm Transfer"}
+                {transferStep === "search" ? t("consumer.transfer.title") : t("consumer.transfer.confirm")}
               </DialogTitle>
               <DialogDescription className="text-sm leading-relaxed mt-2">
                 {transferStep === "search"
-                  ? "Find a KIZERE user by email, phone number, or username."
-                  : `You are about to transfer "${item?.name}" to ${foundUser?.fullName || foundUser?.username}. This cannot be undone.`}
+                  ? t("consumer.transfer.subtitle")
+                  : t("consumer.transfer.confirmDesc", { item: item?.name ?? "", user: foundUser?.fullName || foundUser?.username || "" })}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -680,12 +682,12 @@ export default function ItemDetailPage() {
               <>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                    Email, Phone, or Username
+                    {t("consumer.transfer.inputLabel")}
                   </label>
                   <Input
                     value={transferQuery}
                     onChange={(e) => { setTransferQuery(e.target.value); setLookupError(null); setFoundUser(null); }}
-                    placeholder="+250 78... / user@email.com / @username"
+                    placeholder={t("consumer.transfer.inputPlaceholder")}
                     className="h-12 rounded-xl"
                     type="text"
                   />
@@ -710,7 +712,7 @@ export default function ItemDetailPage() {
                   type="button"
                   onClick={async () => {
                     const q = transferQuery.trim();
-                    if (q.length < 3) { setLookupError("Enter at least 3 characters"); return; }
+                    if (q.length < 3) { setLookupError(t("consumer.transfer.minChars")); return; }
                     if (foundUser) { setTransferStep("confirm"); return; }
                     setLookupLoading(true);
                     setLookupError(null);
@@ -729,19 +731,18 @@ export default function ItemDetailPage() {
                   className="w-full h-12 rounded-xl font-bold"
                 >
                   {lookupLoading
-                    ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Looking up…</>
+                    ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("consumer.transfer.lookingUp")}</>
                     : foundUser
-                      ? <><ArrowLeftRight className="h-4 w-4 mr-2" /> Continue with {foundUser.fullName || foundUser.username}</>
-                      : "Find User"}
+                      ? <><ArrowLeftRight className="h-4 w-4 mr-2" /> {t("consumer.transfer.continueWith", { name: foundUser.fullName || foundUser.username })}</>
+                      : t("consumer.transfer.findUser")}
                 </Button>
               </>
             ) : (
               <>
                 <div className="p-4 rounded-2xl bg-destructive/5 border border-destructive/20 text-center">
-                  <p className="text-xs font-bold uppercase tracking-widest text-destructive mb-1">Irreversible Action</p>
+                  <p className="text-xs font-bold uppercase tracking-widest text-destructive mb-1">{t("consumer.transfer.irreversible")}</p>
                   <p className="text-sm text-foreground/80">
-                    You will permanently transfer <span className="font-bold">{item?.name}</span> to{" "}
-                    <span className="font-bold">{foundUser?.fullName || foundUser?.username}</span>.
+                    {t("consumer.transfer.warning", { item: item?.name ?? "", user: foundUser?.fullName || foundUser?.username || "" })}
                   </p>
                 </div>
                 <Button
@@ -752,8 +753,8 @@ export default function ItemDetailPage() {
                   className="w-full h-12 rounded-xl font-bold"
                 >
                   {transferMutation.isPending
-                    ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Transferring…</>
-                    : "Confirm Transfer"}
+                    ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("consumer.transfer.transferring")}</>
+                    : t("consumer.transfer.confirmBtn")}
                 </Button>
                 <Button
                   type="button"
@@ -761,7 +762,7 @@ export default function ItemDetailPage() {
                   onClick={() => setTransferStep("search")}
                   className="w-full h-10 rounded-xl text-xs text-muted-foreground"
                 >
-                  Go Back
+                  {t("consumer.transfer.goBack")}
                 </Button>
               </>
             )}
@@ -771,7 +772,7 @@ export default function ItemDetailPage() {
               onClick={() => setTransferModalOpen(false)}
               className="w-full h-10 rounded-xl text-xs text-muted-foreground"
             >
-              Cancel
+              {t("consumer.transfer.cancel")}
             </Button>
           </div>
         </DialogContent>
@@ -794,12 +795,12 @@ export default function ItemDetailPage() {
             </div>
             <DialogHeader>
               <DialogTitle className="text-xl font-black tracking-tight">
-                {activeCert ? "Ownership Certificate" : "Get Ownership Certificate"}
+                {activeCert ? t("consumer.certificate.title") : t("consumer.certificate.get")}
               </DialogTitle>
               <DialogDescription className="text-sm leading-relaxed mt-2">
                 {activeCert
-                  ? `Certificate code: ${activeCert.certificateCode}`
-                  : "Receive an official KIZERE Ownership Certificate for this item as proof of registered ownership."}
+                  ? `${t("consumer.certificate.certCode")}: ${activeCert.certificateCode}`
+                  : t("consumer.certificate.noCertDesc")}
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -808,7 +809,7 @@ export default function ItemDetailPage() {
             {activeCert ? (
               <>
                 <div className="p-4 rounded-2xl bg-muted/40 border border-border/30 text-center">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Certificate Code</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{t("consumer.certificate.certCode")}</p>
                   <p className="font-mono text-xl font-black tracking-widest text-foreground">{activeCert.certificateCode}</p>
                   <p className="text-[10px] text-muted-foreground mt-2">
                     Issued {activeCert.createdAt ? new Date(activeCert.createdAt).toLocaleDateString("en-RW", { year: "numeric", month: "long", day: "numeric" }) : ""}
@@ -816,19 +817,19 @@ export default function ItemDetailPage() {
                 </div>
                 <Button onClick={handleCertDownload} className="w-full h-12 rounded-xl font-bold">
                   <Download className="h-4 w-4 mr-2" />
-                  Download Certificate PNG
+                  {t("consumer.certificate.download")}
                 </Button>
               </>
             ) : (
               <>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
-                    MoMo Phone Number
+                    {t("consumer.certificate.momoLabel")}
                   </label>
                   <Input
                     value={certPhone}
                     onChange={(e) => setCertPhone(e.target.value)}
-                    placeholder="+250 78 000 0000"
+                    placeholder={t("consumer.certificate.momoPlaceholder")}
                     className="h-12 rounded-xl"
                     type="tel"
                   />
@@ -839,8 +840,8 @@ export default function ItemDetailPage() {
                   className="w-full h-12 rounded-xl font-bold"
                 >
                   {certPurchasing
-                    ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Initiating…</>
-                    : <><Award className="h-4 w-4 mr-2" /> Purchase Certificate</>}
+                    ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> {t("consumer.certificate.purchasing")}</>
+                    : <><Award className="h-4 w-4 mr-2" /> {t("consumer.certificate.purchase")}</>}
                 </Button>
               </>
             )}
