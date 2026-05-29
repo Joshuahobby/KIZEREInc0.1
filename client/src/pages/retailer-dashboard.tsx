@@ -34,6 +34,7 @@ import {
   Legend,
 } from "recharts";
 import { thermalPrinter } from "@/lib/printer";
+import { getBusinessConfig } from "@/lib/business-type-config";
 
 // ─── Shift Summary Card ───────────────────────────────────────────────────────
 
@@ -301,6 +302,7 @@ export default function RetailerDashboard() {
 
   const stats = statsData?.stats;
   const products = productsData?.products || [];
+  const bizConfig = getBusinessConfig((statsData?.retailer?.metadata as any)?.businessType);
 
   // Transform data for charts
   const categoryChartData = (stats?.productsByCategory || []).map((item, index) => ({
@@ -336,7 +338,7 @@ export default function RetailerDashboard() {
       >
           <DashboardPageHeader
           title={`${greeting}, ${user?.fullName || user?.username || t("pos.retailer") || "Retailer"}`}
-          description={t("pos.retailerDashboardDesc") || "Overview of your POS registrations and activity"}
+          description={bizConfig.dashboardDesc}
           actions={
             <div className="flex items-center gap-2">
               <Select value={dateRange} onValueChange={setDateRange}>
@@ -352,35 +354,39 @@ export default function RetailerDashboard() {
                   <SelectItem value="this_year">{t("common.thisYear") || "This Year"}</SelectItem>
                 </SelectContent>
               </Select>
+              {bizConfig.showPOS && (
+                <Button
+                  onClick={() => navigate("/pos?mode=stock-in")}
+                  className="gap-2 bg-amber-500 hover:bg-amber-600 text-white border-none shadow-lg shadow-amber-500/20"
+                >
+                  <PackagePlus className="h-4 w-4" />
+                  {t("pos.stockIn") || "Stock-In"}
+                </Button>
+              )}
               <Button
-                onClick={() => navigate("/pos?mode=stock-in")}
-                className="gap-2 bg-amber-500 hover:bg-amber-600 text-white border-none shadow-lg shadow-amber-500/20"
-              >
-                <PackagePlus className="h-4 w-4" />
-                {t("pos.stockIn") || "Stock-In"}
-              </Button>
-              <Button
-                onClick={() => navigate("/pos")}
+                onClick={() => navigate("/retailer/products?add=true")}
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" />
-                {t("pos.registerProduct") || "Register Product"}
+                Register {bizConfig.itemLabel}
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/pos")}
-                className="gap-2"
-              >
-                <Store className="h-4 w-4" />
-                {t("pos.openTerminal") || "Open POS"}
-              </Button>
+              {bizConfig.showPOS && (
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/pos")}
+                  className="gap-2"
+                >
+                  <Store className="h-4 w-4" />
+                  {t("pos.openTerminal") || "Open POS"}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={() => navigate("/retailer/customers")}
                 className="gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary"
               >
                 <Users className="h-4 w-4" />
-                {t("pos.customers") || "Customers"}
+                {bizConfig.customersLabel}
               </Button>
             </div>
           }
@@ -463,7 +469,7 @@ export default function RetailerDashboard() {
         {/* Stats Grid */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <StatsCard
-            title={t("pos.totalProducts") || "Total Products"}
+            title={`Total ${bizConfig.itemsLabel}`}
             value={statsLoading ? "..." : stats?.totalProducts || 0}
             trendData={stats?.trends.registrations.map(d => d.count)}
             icon={<Package className="h-5 w-5" />}
@@ -472,7 +478,7 @@ export default function RetailerDashboard() {
             isLoading={statsLoading}
           />
           <StatsCard
-            title={t("pos.totalTransfers") || "Total Transfers"}
+            title={`Total ${bizConfig.transfersLabel}`}
             value={statsLoading ? "..." : stats?.totalTransfers || 0}
             trendData={stats?.trends.transfers.map(d => d.count)}
             chartColor="#10b981"
@@ -482,7 +488,7 @@ export default function RetailerDashboard() {
             isLoading={statsLoading}
           />
           <StatsCard
-            title={t("pos.uniqueCustomers") || "Unique Customers"}
+            title={`Unique ${bizConfig.customersLabel}`}
             value={statsLoading ? "..." : stats?.totalCustomers || 0}
             icon={<Users className="h-5 w-5" />}
             iconBgClass="bg-purple-100 dark:bg-purple-900/30"
@@ -508,10 +514,10 @@ export default function RetailerDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Package className="h-5 w-5 text-muted-foreground" />
-                  {t("pos.productsByCategory") || "Products by Category"}
+                  {`${bizConfig.itemsLabel} by Category`}
                 </CardTitle>
                 <CardDescription>
-                  {t("pos.productsByCategoryDesc") || "Distribution of registered products across categories"}
+                  {`Distribution of registered ${bizConfig.itemsLabel.toLowerCase()} across categories`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -559,10 +565,10 @@ export default function RetailerDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
                   <Activity className="h-5 w-5 text-muted-foreground" />
-                  {t("pos.productsByStatus") || "Products by Status"}
+                  {`${bizConfig.itemsLabel} by Status`}
                 </CardTitle>
                 <CardDescription>
-                  {t("pos.productsByStatusDesc") || "Current status of all registered products"}
+                  {`Current status of all registered ${bizConfig.itemsLabel.toLowerCase()}`}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -621,7 +627,7 @@ export default function RetailerDashboard() {
           </div>
         )}
 
-        {/* Empty state for new retailers */}
+        {/* Empty state for new businesses */}
         {!isLoading && !hasData && (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-12 text-center">
@@ -629,14 +635,14 @@ export default function RetailerDashboard() {
                 <Store className="h-10 w-10 text-primary" />
               </div>
               <h3 className="text-lg font-semibold mb-2">
-                {t("pos.welcomeTitle") || "Welcome to your POS Dashboard"}
+                Welcome to your {bizConfig.label} Dashboard
               </h3>
               <p className="text-muted-foreground mb-6 max-w-md">
-                {t("pos.welcomeDesc") || "Start registering products through the POS terminal to see your activity, stats, and analytics here."}
+                Start registering {bizConfig.itemsLabel.toLowerCase()} to see your activity, stats, and analytics here.
               </p>
               <Button onClick={() => navigate("/retailer/products?add=true")} className="gap-2">
                 <Plus className="h-4 w-4" />
-                {t("pos.registerFirstProduct") || "Register Your First Product"}
+                Register Your First {bizConfig.itemLabel}
               </Button>
             </CardContent>
           </Card>
@@ -702,8 +708,8 @@ export default function RetailerDashboard() {
 ...
         </div>
 
-        <ShiftSummaryCard />
-        <CommissionCard />
+        {bizConfig.showShiftSummary && <ShiftSummaryCard />}
+        {bizConfig.showCommissions && <CommissionCard />}
 
       </motion.div>
     </AppLayout>

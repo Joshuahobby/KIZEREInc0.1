@@ -6,20 +6,13 @@ import { RetailerSubscriptionService } from "../services/retailer-subscription.s
 
 const logger = createLogger("RetailerSubscription");
 
-/**
- * Dynamic rate limiter based on the retailer's subscription plan.
- * Must be placed after posAuthMiddleware which sets req.retailer.
- */
-export const posRateLimiter = rateLimit({
+const _posRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour window
   standardHeaders: true,
   legacyHeaders: false,
   limit: async (req: Request) => {
     const retailer = (req as any).retailer;
-    if (!retailer) {
-      // If no retailer is found (e.g., error in auth), apply a strict default limit
-      return 10;
-    }
+    if (!retailer) return 10;
     const plan = (retailer.subscriptionPlan || "basic") as RetailerSubscriptionPlan;
     return SUBSCRIPTION_LIMITS[plan].apiRequestsPerHour;
   },
@@ -41,6 +34,18 @@ export const posRateLimiter = rateLimit({
     });
   },
 });
+
+/**
+ * Dynamic rate limiter based on the retailer's subscription plan.
+ * Only applies to external API key requests — session-authenticated (web dashboard)
+ * requests bypass it so the basic plan dashboard works without restrictions.
+ * Must be placed after posAuthMiddleware which sets req.retailer.
+ */
+export const posRateLimiter = (req: Request, res: Response, next: NextFunction) => {
+  // Session-authenticated requests come from the web dashboard; don't rate-limit them.
+  if (!req.headers["x-api-key"]) return next();
+  return _posRateLimiter(req, res, next);
+};
 
 /**
  * Middleware factory to check if the retailer's subscription includes a specific feature.

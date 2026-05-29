@@ -56,24 +56,9 @@ export default function AuthPage() {
   const [location, navigate] = useLocation();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  // Redirect if already logged in
-  React.useEffect(() => {
-    if (user) {
-      const params = new URLSearchParams(window.location.search);
-      const returnUrl = params.get("returnUrl");
-
-      if (returnUrl) {
-        navigate(returnUrl);
-      } else {
-        // Use role-specific dashboard instead of landing page
-        const dashboardPath = AuthService.getDashboardPathByRole(
-          user.role,
-          (user.preferences as UserPreferences)?.dashboardStyle
-        );
-        navigate(dashboardPath);
-      }
-    }
-  }, [user, navigate]);
+  const returnUrl = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("returnUrl") ?? undefined
+    : undefined;
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -200,7 +185,7 @@ export default function AuthPage() {
                       type="button"
                       variant="outline"
                       className="w-full h-14 border-white/10 bg-white/5 hover:bg-white/10 rounded-2xl transition-all duration-300 font-bold"
-                      onClick={() => loginWithGoogle()}
+                      onClick={() => loginWithGoogle(returnUrl)}
                       disabled={authLoading || loginMutation.isPending}
                     >
                       <SiGoogle className="mr-3 h-5 w-5 text-[#4285F4]" />
@@ -310,7 +295,7 @@ export default function AuthPage() {
                       type="button"
                       variant="outline"
                       className="w-full h-14 border-white/10 bg-white/5 hover:bg-white/10 rounded-2xl transition-all duration-300 font-bold"
-                      onClick={() => loginWithGoogle()}
+                      onClick={() => loginWithGoogle(returnUrl)}
                       disabled={authLoading || registerMutation.isPending}
                     >
                       <SiGoogle className="mr-3 h-5 w-5 text-[#4285F4]" />

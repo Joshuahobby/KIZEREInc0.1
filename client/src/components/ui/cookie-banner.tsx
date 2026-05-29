@@ -28,27 +28,23 @@ export function CookieBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 sm:p-6 bg-background/95 backdrop-blur-md border-t shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-in slide-in-from-bottom-full duration-500">
-      <div className="flex-1 max-w-4xl">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold mb-1">Cookie & Privacy Consent</h3>
-          <button onClick={handleDecline} className="sm:hidden text-muted-foreground hover:text-foreground" aria-label="Close cookie banner" title="Close cookie banner">
-            <X className="h-5 w-5" />
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 animate-in slide-in-from-bottom-4 duration-300">
+      <div className="flex items-center gap-3 rounded-xl border bg-background/95 backdrop-blur-md shadow-lg px-4 py-3">
+        <p className="flex-1 text-xs text-muted-foreground leading-snug">
+          We use cookies for security and analytics as per Rwanda Law No. 058/2021.{" "}
+          <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+        </p>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button size="sm" variant="outline" onClick={handleDecline} className="text-xs h-7 px-3 whitespace-nowrap">
+            Decline
+          </Button>
+          <Button size="sm" onClick={handleAccept} className="text-xs h-7 px-3 whitespace-nowrap font-semibold">
+            Accept
+          </Button>
+          <button type="button" onClick={handleDecline} className="text-muted-foreground hover:text-foreground ml-1" aria-label="Dismiss">
+            <X className="h-4 w-4" />
           </button>
         </div>
-        <p className="text-sm text-muted-foreground w-full sm:w-[85%]">
-          We use essential cookies to make KIZERE work securely. With your consent, we may also use non-essential cookies to improve user experience, analyze website traffic, and understand our audience as per Rwanda Law No. 058/2021. 
-          Read our <a href="/privacy" className="text-primary hover:underline font-medium">Privacy Policy</a> to learn more about how we process your personal data.
-        </p>
-      </div>
-      
-      <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
-        <Button variant="outline" onClick={handleDecline} className="flex-1 sm:flex-none whitespace-nowrap">
-          Decline Non-Essential
-        </Button>
-        <Button onClick={handleAccept} className="flex-1 sm:flex-none whitespace-nowrap font-bold">
-          Accept All Cookies
-        </Button>
       </div>
     </div>
   );

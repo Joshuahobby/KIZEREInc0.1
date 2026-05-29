@@ -74,6 +74,10 @@ Two auth paths merge into the same session:
 
 2FA is handled via OTP (email/SMS). Session persists in DB. CSRF double-token pattern is applied globally.
 
+**Retailer/POS auth** is a separate path: `/api/pos` and `/api/consumer` do **not** use `requireAuth`. They use `retailer-auth.middleware.ts` (which sets `req.retailer`) and are gated by `retailer-subscription.middleware.ts`. Webhooks (`/api/webhooks/*`) bypass auth entirely.
+
+**Fine-grained permissions** beyond roles: `checkPermission(permissionType)` from `server/middleware/permissions.ts` checks the `roles` table with a 5-minute in-memory cache. Permission types are defined in `shared/schema.ts` as `permissionTypes`.
+
 ### Path Aliases
 
 - `@/*` → `client/src/*`
@@ -92,6 +96,16 @@ Two auth paths merge into the same session:
 - **Cron jobs** — in `server/cron/`; skipped automatically on Vercel (detected via env).
 - **Payments** — set `MOCK_PAYMENTS=true` in dev to skip PawaPay API calls.
 - **Logging** — always `createLogger('ContextName')` per file; `debug` is suppressed in production.
+
+### i18n
+
+Four locales: **en / fr / rw / sw** — JSON files in `client/src/lib/i18n/locales/`. When adding new UI text:
+
+1. Add the key to **all four** locale files (`en.json`, `fr.json`, `rw.json`, `sw.json`).
+2. Use the `useTranslation()` hook (`client/src/lib/i18n/useTranslation.tsx`) to get `t('key')`.
+3. Run `node audit-locales.cjs` from the project root to detect missing keys.
+
+`t()` signature: `t(key, defaultOrOptions?, options?)` — the second arg can be a fallback string.
 
 ### Code Style Essentials
 

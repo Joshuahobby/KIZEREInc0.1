@@ -1114,21 +1114,28 @@ router.post(
         email: z.string().email("Valid business email is required"),
         phone: z.string().optional(),
         address: z.string().optional(),
+        businessType: z.enum([
+          "Retailer", "Wholesaler", "InsuranceCompany", "EventOrganizer",
+          "NGO", "GovernmentAgency", "TechCompany", "Other"
+        ]).default("Retailer"),
       });
 
       const data = schema.parse(req.body);
-      
-      // Ensure the user doesn't already have a retailer profile
+
+      // Ensure the user doesn't already have a business profile
       const existingRetailer = await getRetailerByUserId(user.id);
       if (existingRetailer) {
-        return res.status(409).json({ message: "You already have a retailer profile." });
+        return res.status(409).json({ message: "You already have a business profile." });
       }
 
-      // Create the retailer and update user role
+      const { businessType, ...coreData } = data;
+
+      // Create the business profile and update user role
       const retailer = await createRetailer({
-        ...data,
+        ...coreData,
         userId: user.id,
-        subscriptionPlan: "basic", // Default plan for self-registration
+        subscriptionPlan: "basic",
+        metadata: { businessType },
       });
 
       res.status(201).json({ success: true, retailer });

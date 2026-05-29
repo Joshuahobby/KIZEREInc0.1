@@ -27,7 +27,8 @@ import {
   Info,
   Users,
   HelpCircle,
-  Phone
+  Phone,
+  Store
 } from "lucide-react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
@@ -50,6 +51,7 @@ export function Header() {
   const isOnline = useOnlineStatus();
 
   const isAdmin = user?.role === "Admin";
+  const isRetailer = user?.role === "Retailer";
   const isAuthenticated = !!user;
 
   // Fetch unread count
@@ -122,6 +124,7 @@ export function Header() {
       { name: t('nav.dashboard'), href: "/dashboard", icon: LayoutDashboard },
       { name: "Features", href: "/features", icon: Info },
       { name: "Use Cases", href: "/use-cases", icon: Users },
+      ...(!isRetailer && !isAdmin ? [{ name: "For Business", href: "/business/register", icon: Store }] : []),
     ]
     : [
       { name: "Verify Item", href: "/verify-item", icon: Shield },
@@ -129,6 +132,7 @@ export function Header() {
       { name: "Features", href: "/features", icon: Info },
       { name: "Use Cases", href: "/use-cases", icon: Info },
       { name: t('nav.howItWorks'), href: "/how-it-works", icon: Users },
+      { name: "For Business", href: "/business/register", icon: Store },
     ];
 
   // Admin access is now handled via the sidebar in the dashboard layout

@@ -7,6 +7,15 @@ import { AuthService } from "@/services/auth.service";
 import { useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest, clearCsrfToken, setAuthSyncing } from "@/lib/queryClient";
 
+function safeReturnUrl(url: string | null): string | null {
+  if (!url) return null;
+  // Block absolute URLs and protocol-relative URLs to prevent open redirects
+  if (!url.startsWith("/") || url.startsWith("//")) return null;
+  return url;
+}
+
+const RETURN_URL_SESSION_KEY = "kizere_post_auth_returnUrl";
+
 export interface Pending2FAData {
   userId: number;
   methods: string[];
@@ -287,6 +296,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const authPaths = ["/", "/auth", "/login", "/register"];
     
     if (authPaths.includes(pathname)) {
+      const returnUrl = safeReturnUrl(new URLSearchParams(window.location.search).get("returnUrl"));
+      if (returnUrl) {
+        setLocation(returnUrl);
+        return;
+      }
       const preferredStyle = (user.preferences as UserPreferences)?.dashboardStyle;
       const dashboardPath = AuthService.getDashboardPathByRole(user.role, preferredStyle);
       console.log("[useAuth] Redirecting to dashboard:", dashboardPath);
@@ -315,8 +329,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
     },
     onSuccess: (data: any) => {
+      const currentReturnUrl = safeReturnUrl(new URLSearchParams(window.location.search).get("returnUrl"));
+
       // Check if 2FA is required
       if (data.requires2FA) {
+        if (currentReturnUrl) sessionStorage.setItem(RETURN_URL_SESSION_KEY, currentReturnUrl);
         setPending2FA({
           userId: data.userId,
           methods: data.methods,
@@ -334,7 +351,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(userData);
       const preferredStyle = (userData.preferences as UserPreferences)?.dashboardStyle;
       const dashboardPath = AuthService.getDashboardPathByRole(userData.role, preferredStyle);
-      setLocation(dashboardPath);
+      setLocation(currentReturnUrl || dashboardPath);
     },
     onError: (err: Error) => {
       toast({
@@ -354,12 +371,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     },
     onSuccess: (data: any) => {
       console.log("[useAuth] Registration successful data:", data);
+      const currentReturnUrl = safeReturnUrl(new URLSearchParams(window.location.search).get("returnUrl"));
+
       if (data.requires2FA) {
         console.log("[useAuth] Registration requires 2FA, setting pending state and redirecting", {
           userId: data.userId,
           methods: data.methods,
           maskedPhone: data.maskedPhone
         });
+        if (currentReturnUrl) sessionStorage.setItem(RETURN_URL_SESSION_KEY, currentReturnUrl);
         setPending2FA({
           userId: data.userId,
           methods: data.methods,
@@ -373,7 +393,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       setUser(data as User);
-      setLocation("/dashboard");
+      setLocation(currentReturnUrl || "/dashboard");
     },
     onError: (err: Error) => {
       console.error("[useAuth] Registration failed error:", err);
@@ -518,7 +538,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(userData);
       const preferredStyle = (userData.preferences as UserPreferences)?.dashboardStyle;
       const dashboardPath = AuthService.getDashboardPathByRole(userData.role, preferredStyle);
-      setLocation(dashboardPath);
+      const storedReturnUrl = safeReturnUrl(sessionStorage.getItem(RETURN_URL_SESSION_KEY));
+      sessionStorage.removeItem(RETURN_URL_SESSION_KEY);
+      setLocation(storedReturnUrl || dashboardPath);
       toast({
         title: 'Welcome!',
         description: `Signed in as ${userData.fullName || userData.username}`,

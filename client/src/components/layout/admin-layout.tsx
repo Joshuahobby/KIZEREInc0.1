@@ -73,6 +73,7 @@ import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { DashboardStyleSwitcher } from "@/components/dashboard/dashboard-style-switcher";
 import { AuthService } from "@/services/auth.service";
 import { UserPreferences } from "@shared/schema";
+import { getBusinessConfig } from "@/lib/business-type-config";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/ui/language-switcher-custom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -121,6 +122,14 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
   });
   const unreadCount = unreadData?.count ?? 0;
 
+  const isRetailer = user?.role === "Retailer";
+  const { data: retailerProfileData } = useQuery<{ success: boolean; profile: any }>({
+    queryKey: ["/api/pos/my-profile"],
+    enabled: isRetailer,
+    staleTime: Infinity,
+  });
+  const bizConfig = getBusinessConfig(retailerProfileData?.profile?.metadata?.businessType);
+
   // Real-time: invalidate unread count when a notification arrives
   useEffect(() => {
     const cleanup = onEvent("notification:new", (notification: any) => {
@@ -160,7 +169,6 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
   // Check roles
   const isAdmin = user?.role === "Admin";
   const isAgent = user?.role === "Agent" || user?.role === "Moderator";
-  const isRetailer = user?.role === "Retailer";
   const isSubscriber = user?.role === "Subscriber" || user?.role === "Business";
 
   // Get current dashboard path dynamically based on role and preference
@@ -222,14 +230,6 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
       categories.push({ title: t('nav.exploreHeader'), items: exploreItems });
     }
 
-    // BUSINESS Category
-    if (!isRetailer && !isAdmin) {
-      const businessItems: NavItem[] = [
-        { title: "Become a Retailer", href: "/retailer/onboarding", icon: <Store className="h-5 w-5" /> }
-      ];
-      categories.push({ title: "Business Solutions", items: businessItems });
-    }
-
     // FIELD OPERATIONS Category (Agent/Admin)
     if (isAdmin || isAgent) {
       const fieldItems: NavItem[] = [
@@ -240,22 +240,23 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
       categories.push({ title: "FIELD OPERATIONS", items: fieldItems });
     }
 
-    // RETAIL HUB Category (Retailer/Admin)
+    // BUSINESS HUB Category (Retailer/Admin) — labels adapt to businessType
     if (isRetailer || isAdmin) {
+      const cfg = isRetailer ? bizConfig : getBusinessConfig("Retailer");
       const posItems: NavItem[] = [
-        { title: "Retailer Dashboard", href: "/retailer/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
-        { title: "Point of Sale", href: "/pos", icon: <Store className="h-5 w-5" /> },
-        { title: "Products", href: "/retailer/products", icon: <PackageIcon className="h-5 w-5" /> },
-        { title: "Transactions", href: "/retailer/transactions", icon: <CreditCard className="h-5 w-5" /> },
+        { title: cfg.navLabels.dashboard, href: "/retailer/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
+        ...(cfg.showPOS ? [{ title: cfg.navLabels.pos!, href: "/pos", icon: <Store className="h-5 w-5" /> }] : []),
+        { title: cfg.navLabels.items, href: "/retailer/products", icon: <PackageIcon className="h-5 w-5" /> },
+        { title: cfg.navLabels.transactions, href: "/retailer/transactions", icon: <CreditCard className="h-5 w-5" /> },
         { title: "Analytics", href: "/retailer/analytics", icon: <BarChart3 className="h-5 w-5" /> },
-        { title: "Customers", href: "/retailer/customers", icon: <Users className="h-5 w-5" /> },
+        { title: cfg.navLabels.customers, href: "/retailer/customers", icon: <Users className="h-5 w-5" /> },
         { title: "Settings", href: "/retailer/settings", icon: <Settings className="h-5 w-5" /> },
       ];
       if (isAdmin) {
         posItems.push({ title: "POS Analytics", href: "/admin/pos-analytics", icon: <BarChart3 className="h-5 w-5" /> });
         posItems.push({ title: "Commissions", href: "/admin/commissions", icon: <CreditCard className="h-5 w-5" /> });
       }
-      categories.push({ title: "RETAIL HUB", items: posItems });
+      categories.push({ title: cfg.hubTitle, items: posItems });
     }
 
     // ADMINISTRATION Category (Admin Only)
@@ -645,6 +646,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
 
             {/* Smart Expand/Collapse Handle */}
             <button
+              type="button"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className={cn(
                 "absolute top-10 -right-3 z-50 flex items-center justify-center h-6 w-6 rounded-full border border-slate-200 dark:border-white/10",

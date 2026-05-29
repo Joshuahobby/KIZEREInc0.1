@@ -16,7 +16,10 @@ import {
   QrCode,
   Globe,
   Database,
-  Fingerprint
+  Fingerprint,
+  Store,
+  BarChart3,
+  RefreshCw
 } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
@@ -443,6 +446,71 @@ export default function LandingPage() {
                     <motion.p variants={fadeInUp} className="text-lg md:text-3xl lg:text-4xl font-bold text-gray-300 max-w-xs sm:max-w-2xl mx-auto leading-relaxed md:leading-snug tracking-tight">
                         KIZERE is building the infrastructure <br className="hidden md:block"/>for trusted global ownership.
                     </motion.p>
+                </motion.div>
+            </div>
+        </section>
+
+        {/* FOR BUSINESSES SECTION */}
+        <section className="py-20 md:py-32 relative z-20 bg-[#0A0D14] border-y border-white/5 w-full overflow-hidden">
+            <div className="absolute top-1/2 left-0 w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[150px] pointer-events-none -translate-y-1/2"></div>
+            <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 relative z-10">
+                <motion.div
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, margin: "-80px" }}
+                    variants={staggerContainer}
+                    className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20"
+                >
+                    {/* Text */}
+                    <motion.div variants={fadeInUp} className="flex-1 text-center lg:text-left">
+                        <span className="inline-block text-xs font-black uppercase tracking-[0.2em] text-indigo-400 mb-4 border border-indigo-400/30 bg-indigo-400/10 px-3 py-1 rounded-full">
+                            For Organizations &amp; Businesses
+                        </span>
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-white leading-[1.1] tracking-tighter mb-6">
+                            Built for every<br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">kind of business.</span>
+                        </h2>
+                        <p className="text-gray-400 text-base md:text-xl leading-relaxed mb-4 max-w-lg mx-auto lg:mx-0">
+                            Retailers, wholesalers, insurance companies, event organizers, NGOs — any organization that deals with physical assets can register on KIZERE and give every item a verified digital identity.
+                        </p>
+                        <div className="flex flex-wrap gap-2 justify-center lg:justify-start mb-8">
+                            {["Retailers", "Wholesalers", "Insurers", "Event Hosts", "NGOs", "Gov't Agencies"].map((type) => (
+                                <span key={type} className="text-xs font-bold text-indigo-300 bg-indigo-500/10 border border-indigo-400/20 px-3 py-1 rounded-full">
+                                    {type}
+                                </span>
+                            ))}
+                        </div>
+                        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="inline-block w-full sm:w-auto">
+                            <Button
+                                onClick={() => navigate("/business/register")}
+                                size="lg"
+                                className="h-14 px-10 text-base md:text-lg rounded-xl bg-gradient-to-b from-indigo-500 to-indigo-700 hover:from-indigo-400 hover:to-indigo-600 text-white font-black border border-indigo-400/30 shadow-lg shadow-indigo-900/40 w-full sm:w-auto transition-all duration-300"
+                            >
+                                <Store className="mr-2 h-5 w-5" />
+                                Register Your Organization
+                            </Button>
+                        </motion.div>
+                    </motion.div>
+
+                    {/* Feature pills */}
+                    <motion.div variants={fadeInUp} className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-lg mx-auto">
+                        {[
+                            { icon: Store, title: "Product Registry", desc: "Give every item you sell or manage a verified digital identity." },
+                            { icon: RefreshCw, title: "Ownership Transfers", desc: "Transfer asset ownership to clients or buyers instantly." },
+                            { icon: BarChart3, title: "Asset Analytics", desc: "Track inventory, transactions, and ownership history." },
+                            { icon: ShieldCheck, title: "Verified Organization", desc: "Build trust with a KIZERE-verified business badge." },
+                        ].map((item, idx) => (
+                            <div key={idx} className="flex items-start gap-4 p-5 rounded-2xl bg-[#111827]/60 border border-white/5 hover:border-indigo-400/30 transition-colors duration-300">
+                                <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-400/20 flex items-center justify-center shrink-0">
+                                    <item.icon className="w-5 h-5 text-indigo-400" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-white mb-1">{item.title}</p>
+                                    <p className="text-xs text-gray-400 leading-snug">{item.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </motion.div>
                 </motion.div>
             </div>
         </section>

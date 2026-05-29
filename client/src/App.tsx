@@ -193,7 +193,12 @@ function App() {
                   </Route>
 
                   {/* Protected routes */}
-                  <ProtectedRoute path="/retailer/onboarding" component={RetailerOnboarding} requiredRole="any" />
+                  <Route path="/business/register">
+                    <RetailerOnboarding />
+                  </Route>
+                  <Route path="/retailer/onboarding">
+                    <RetailerOnboarding />
+                  </Route>
                   <ProtectedRoute path="/retailer/dashboard" component={RetailerDashboard} requiredRole={['Retailer', 'Admin']} />
                   <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
                   <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />

@@ -45,6 +45,16 @@ export function Footer() {
         { label: t('nav.foundDirectory') || "Found Items", href: "/search?type=found" },
         { label: t('landing.footer.community') || "Community", href: "/community" },
       ]
+    },
+    {
+      title: "For Business",
+      links: [
+        { label: "Register Your Business", href: "/business/register" },
+        { label: "Retailers & Wholesalers", href: "/business/register" },
+        { label: "Insurance Companies", href: "/business/register" },
+        { label: "Event Organizers", href: "/business/register" },
+        { label: "Use Cases", href: "/use-cases" },
+      ]
     }
   ];
 
