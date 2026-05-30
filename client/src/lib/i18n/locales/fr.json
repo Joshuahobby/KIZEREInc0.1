@@ -2437,5 +2437,48 @@
     "nationalId": "[TODO-fr] National ID / Passport",
     "phone": "[TODO-fr] Phone Number",
     "email": "[TODO-fr] Email Address"
+  },
+  "business": {
+    "onboard": {
+      "pageTitle": "Enregistrer Votre Entreprise",
+      "pageDesc": "Que vous soyez un detaillant, une compagnie d'assurance, un organisateur d'evenements ou toute autre entreprise — KIZERE donne a votre organisation une presence numerique verifiee.",
+      "pageDescAuth": "Enregistrez votre organisation sur KIZERE pour gerer vos produits, verifier la propriete et renforcer la confiance des clients.",
+      "step1": "Creer un compte",
+      "step2": "Profil professionnel",
+      "signIn": "Se connecter",
+      "createAccount": "Creer un compte et continuer",
+      "signInPrompt": "Connectez-vous ou creez un compte KIZERE personnel gratuit — vous completerez ensuite votre profil professionnel.",
+      "justRegisteredTitle": "Compte cree — une derniere etape!",
+      "justRegisteredDesc": "Remplissez vos informations ci-dessous et cliquez sur Finaliser l'inscription pour activer votre profil professionnel.",
+      "cardTitle": "Informations professionnelles",
+      "cardDesc": "Dites-nous tout sur votre organisation afin que nous puissions configurer le bon profil pour vous.",
+      "typeLabel": "Type d'entreprise",
+      "typePlaceholder": "Selectionnez votre type d'entreprise",
+      "typeDesc": "Cela nous aide a configurer les bons outils et permissions pour votre organisation.",
+      "nameLabel": "Nom de l'entreprise / organisation",
+      "namePlaceholder": "Ex. : Kigali Electronics SARL",
+      "emailLabel": "E-mail professionnel",
+      "emailPlaceholder": "contact@votreorganisation.com",
+      "emailDesc": "Nous l'utiliserons pour les notifications importantes",
+      "phoneLabel": "Telephone professionnel",
+      "phonePlaceholder": "+250 788 000 000",
+      "addressLabel": "Adresse",
+      "addressPlaceholder": "Ville, Rue",
+      "submit": "Finaliser l'inscription",
+      "submitting": "Creation du profil...",
+      "successTitle": "Inscription reussie!",
+      "successDesc": "Votre profil professionnel a ete cree. Bienvenue sur KIZERE Business.",
+      "errorTitle": "Echec de l'inscription"
+    },
+    "type": {
+      "Retailer": "Detaillant",
+      "Wholesaler": "Grossiste / Distributeur",
+      "InsuranceCompany": "Compagnie d'assurance",
+      "EventOrganizer": "Organisateur d'evenements",
+      "NGO": "ONG / Association",
+      "GovernmentAgency": "Agence gouvernementale",
+      "TechCompany": "Entreprise technologique",
+      "Other": "Autre"
+    }
   }
 }

@@ -2382,5 +2382,48 @@
     "nationalId": "National ID / Passport",
     "phone": "Phone Number",
     "email": "Email Address"
+  },
+  "business": {
+    "onboard": {
+      "pageTitle": "Register Your Business",
+      "pageDesc": "Whether you are a retailer, insurance company, event organizer, or any other business — KIZERE gives your organization a verified digital presence.",
+      "pageDescAuth": "Register your organization on KIZERE to manage products, verify ownership, and build customer trust.",
+      "step1": "Create Account",
+      "step2": "Business Profile",
+      "signIn": "Sign In",
+      "createAccount": "Create Account & Continue",
+      "signInPrompt": "Sign in or create a free personal KIZERE account first — then you will complete your business profile on the next screen.",
+      "justRegisteredTitle": "Account created — one more step!",
+      "justRegisteredDesc": "Fill in your business details below and click Complete Registration to activate your business profile.",
+      "cardTitle": "Business Information",
+      "cardDesc": "Tell us about your organization so we can set up the right profile for you.",
+      "typeLabel": "Business Type",
+      "typePlaceholder": "Select your business type",
+      "typeDesc": "This helps us configure the right tools and permissions for your organization.",
+      "nameLabel": "Business / Organization Name",
+      "namePlaceholder": "E.g., Kigali Electronics Ltd",
+      "emailLabel": "Business Email",
+      "emailPlaceholder": "contact@yourorganization.com",
+      "emailDesc": "We will use this for important notifications",
+      "phoneLabel": "Business Phone",
+      "phonePlaceholder": "+250 788 000 000",
+      "addressLabel": "Address",
+      "addressPlaceholder": "City, Street",
+      "submit": "Complete Registration",
+      "submitting": "Creating profile...",
+      "successTitle": "Registration successful!",
+      "successDesc": "Your business profile has been created. Welcome to KIZERE Business.",
+      "errorTitle": "Registration failed"
+    },
+    "type": {
+      "Retailer": "Retailer",
+      "Wholesaler": "Wholesaler / Distributor",
+      "InsuranceCompany": "Insurance Company",
+      "EventOrganizer": "Event Organizer / Host",
+      "NGO": "NGO / Non-Profit",
+      "GovernmentAgency": "Government Agency",
+      "TechCompany": "Tech Company",
+      "Other": "Other"
+    }
   }
 }

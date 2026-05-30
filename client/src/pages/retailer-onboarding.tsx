@@ -14,16 +14,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Building2, ArrowRight, Loader2, LogIn, CheckCircle2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/admin-layout";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
-const BUSINESS_TYPES = [
-  { value: "Retailer",        label: "Retailer" },
-  { value: "Wholesaler",      label: "Wholesaler / Distributor" },
-  { value: "InsuranceCompany",label: "Insurance Company" },
-  { value: "EventOrganizer",  label: "Event Organizer / Host" },
-  { value: "NGO",             label: "NGO / Non-Profit" },
-  { value: "GovernmentAgency",label: "Government Agency" },
-  { value: "TechCompany",     label: "Tech Company" },
-  { value: "Other",           label: "Other" },
+const BUSINESS_TYPE_VALUES = [
+  "Retailer", "Wholesaler", "InsuranceCompany", "EventOrganizer",
+  "NGO", "GovernmentAgency", "TechCompany", "Other",
 ] as const;
 
 const onboardingSchema = z.object({
@@ -43,6 +38,7 @@ export default function BusinessOnboarding() {
   const [location, navigate] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   // Detect if arriving from account creation (returnUrl flow)
   const searchParams = new URLSearchParams(
@@ -68,14 +64,14 @@ export default function BusinessOnboarding() {
     },
     onSuccess: () => {
       toast({
-        title: "Registration successful!",
-        description: "Your business profile has been created. Welcome to KIZERE Business.",
+        title: t("business.onboard.successTitle"),
+        description: t("business.onboard.successDesc"),
       });
       window.location.href = "/retailer/dashboard";
     },
     onError: (error: Error) => {
       toast({
-        title: "Registration failed",
+        title: t("business.onboard.errorTitle"),
         description: error.message,
         variant: "destructive",
       });
@@ -86,8 +82,8 @@ export default function BusinessOnboarding() {
     onboardMutation.mutate(data);
   };
 
-  // Already a retailer or admin — redirect to dashboard
-  if (user && (user.role === "Retailer" || user.role === "Admin")) {
+  // Already onboarded — redirect to dashboard
+  if (user && (user.role === "Retailer" || user.role === "Business" || user.role === "Admin")) {
     window.location.replace("/retailer/dashboard");
     return null;
   }
@@ -101,9 +97,9 @@ export default function BusinessOnboarding() {
             <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <Building2 className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Register Your Business</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t("business.onboard.pageTitle")}</h1>
             <p className="text-muted-foreground mt-2 max-w-lg">
-              Whether you're a retailer, insurance company, event organizer, or any other business — KIZERE gives your organization a verified digital presence.
+              {t("business.onboard.pageDesc")}
             </p>
           </div>
 
@@ -111,19 +107,19 @@ export default function BusinessOnboarding() {
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="flex items-center gap-2 text-sm font-medium text-primary">
               <span className="h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</span>
-              Create Account
+              {t("business.onboard.step1")}
             </div>
             <div className="h-px w-10 bg-muted-foreground/30" />
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <span className="h-7 w-7 rounded-full border border-muted-foreground/40 flex items-center justify-center text-xs font-bold">2</span>
-              Business Profile
+              {t("business.onboard.step2")}
             </div>
           </div>
 
           <Card>
             <CardContent className="pt-8 pb-8 flex flex-col items-center gap-4 text-center">
               <p className="text-muted-foreground">
-                Sign in or create a free personal KIZERE account first — then you'll complete your business profile on the next screen.
+                {t("business.onboard.signInPrompt")}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
                 <Button
@@ -131,14 +127,14 @@ export default function BusinessOnboarding() {
                   onClick={() => navigate(`/auth?returnUrl=/business/register%3Fnew%3D1`)}
                 >
                   <LogIn className="mr-2 h-4 w-4" />
-                  Sign In
+                  {t("business.onboard.signIn")}
                 </Button>
                 <Button
                   size="lg"
                   variant="outline"
                   onClick={() => navigate(`/auth?tab=register&returnUrl=/business/register%3Fnew%3D1`)}
                 >
-                  Create Account & Continue
+                  {t("business.onboard.createAccount")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
@@ -158,9 +154,9 @@ export default function BusinessOnboarding() {
           <div className="mb-6 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
             <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 mt-0.5 shrink-0" />
             <div>
-              <p className="font-medium text-green-800 dark:text-green-200">Account created — one more step!</p>
+              <p className="font-medium text-green-800 dark:text-green-200">{t("business.onboard.justRegisteredTitle")}</p>
               <p className="text-sm text-green-700 dark:text-green-300 mt-0.5">
-                Fill in your business details below and click <strong>Complete Registration</strong> to activate your business profile.
+                {t("business.onboard.justRegisteredDesc")}
               </p>
             </div>
           </div>
@@ -170,12 +166,12 @@ export default function BusinessOnboarding() {
         <div className="flex items-center justify-center gap-3 mb-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <CheckCircle2 className="h-5 w-5 text-green-500" />
-            Create Account
+            {t("business.onboard.step1")}
           </div>
           <div className="h-px w-10 bg-muted-foreground/30" />
           <div className="flex items-center gap-2 text-sm font-medium text-primary">
             <span className="h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</span>
-            Business Profile
+            {t("business.onboard.step2")}
           </div>
         </div>
 
@@ -183,17 +179,17 @@ export default function BusinessOnboarding() {
           <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
             <Building2 className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Register Your Business</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("business.onboard.pageTitle")}</h1>
           <p className="text-muted-foreground mt-2 max-w-lg">
-            Retailers, wholesalers, insurers, event organizers and more — register your organization on KIZERE to manage products, verify ownership, and build customer trust.
+            {t("business.onboard.pageDescAuth")}
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Business Information</CardTitle>
+            <CardTitle>{t("business.onboard.cardTitle")}</CardTitle>
             <CardDescription>
-              Tell us about your organization so we can set up the right profile for you.
+              {t("business.onboard.cardDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -205,23 +201,23 @@ export default function BusinessOnboarding() {
                   name="businessType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business Type <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>{t("business.onboard.typeLabel")} <span className="text-destructive">*</span></FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select your business type" />
+                            <SelectValue placeholder={t("business.onboard.typePlaceholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {BUSINESS_TYPES.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
+                          {BUSINESS_TYPE_VALUES.map((value) => (
+                            <SelectItem key={value} value={value}>
+                              {t(`business.type.${value}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        This helps us configure the right tools and permissions for your organization.
+                        {t("business.onboard.typeDesc")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -233,9 +229,9 @@ export default function BusinessOnboarding() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business / Organization Name <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>{t("business.onboard.nameLabel")} <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input placeholder="E.g., Kigali Electronics Ltd" {...field} />
+                        <Input placeholder={t("business.onboard.namePlaceholder")} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -247,11 +243,11 @@ export default function BusinessOnboarding() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Business Email <span className="text-destructive">*</span></FormLabel>
+                      <FormLabel>{t("business.onboard.emailLabel")} <span className="text-destructive">*</span></FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="contact@yourorganization.com" {...field} />
+                        <Input type="email" placeholder={t("business.onboard.emailPlaceholder")} {...field} />
                       </FormControl>
-                      <FormDescription>We'll use this for important notifications</FormDescription>
+                      <FormDescription>{t("business.onboard.emailDesc")}</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -263,9 +259,9 @@ export default function BusinessOnboarding() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Business Phone</FormLabel>
+                        <FormLabel>{t("business.onboard.phoneLabel")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="+250 788 000 000" {...field} />
+                          <Input placeholder={t("business.onboard.phonePlaceholder")} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -277,9 +273,9 @@ export default function BusinessOnboarding() {
                     name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Address</FormLabel>
+                        <FormLabel>{t("business.onboard.addressLabel")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="City, Street" {...field} />
+                          <Input placeholder={t("business.onboard.addressPlaceholder")} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -296,11 +292,11 @@ export default function BusinessOnboarding() {
                   {onboardMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating profile...
+                      {t("business.onboard.submitting")}
                     </>
                   ) : (
                     <>
-                      Complete Registration
+                      {t("business.onboard.submit")}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </>
                   )}

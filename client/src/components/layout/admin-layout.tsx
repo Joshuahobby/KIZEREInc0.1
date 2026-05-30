@@ -122,7 +122,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
   });
   const unreadCount = unreadData?.count ?? 0;
 
-  const isRetailer = user?.role === "Retailer";
+  const isRetailer = user?.role === "Retailer" || user?.role === "Business";
   const { data: retailerProfileData } = useQuery<{ success: boolean; profile: any }>({
     queryKey: ["/api/pos/my-profile"],
     enabled: isRetailer,
@@ -169,7 +169,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
   // Check roles
   const isAdmin = user?.role === "Admin";
   const isAgent = user?.role === "Agent" || user?.role === "Moderator";
-  const isSubscriber = user?.role === "Subscriber" || user?.role === "Business";
+  const isSubscriber = user?.role === "Subscriber";
 
   // Get current dashboard path dynamically based on role and preference
   // Handle logout
@@ -240,9 +240,9 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
       categories.push({ title: "FIELD OPERATIONS", items: fieldItems });
     }
 
-    // BUSINESS HUB Category (Retailer/Admin) — labels adapt to businessType
-    if (isRetailer || isAdmin) {
-      const cfg = isRetailer ? bizConfig : getBusinessConfig("Retailer");
+    // BUSINESS HUB Category (Retailer/Business/Admin) — labels adapt to businessType
+    if (isRetailer || user?.role === "Business" || isAdmin) {
+      const cfg = (isRetailer || user?.role === "Business") ? bizConfig : getBusinessConfig("Retailer");
       const posItems: NavItem[] = [
         { title: cfg.navLabels.dashboard, href: "/retailer/dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
         ...(cfg.showPOS ? [{ title: cfg.navLabels.pos!, href: "/pos", icon: <Store className="h-5 w-5" /> }] : []),

@@ -1130,13 +1130,14 @@ router.post(
 
       const { businessType, ...coreData } = data;
 
-      // Create the business profile and update user role
       const retailer = await createRetailer({
         ...coreData,
         userId: user.id,
         subscriptionPlan: "basic",
         metadata: { businessType },
       });
+
+      await storage.updateUserRole(user.id, "Retailer");
 
       res.status(201).json({ success: true, retailer });
     } catch (error: any) {

@@ -2417,5 +2417,48 @@
     "nationalId": "[TODO-sw] National ID / Passport",
     "phone": "[TODO-sw] Phone Number",
     "email": "[TODO-sw] Email Address"
+  },
+  "business": {
+    "onboard": {
+      "pageTitle": "Sajili Biashara Yako",
+      "pageDesc": "Iwe ni mwuzaji wa rejareja, kampuni ya bima, mpangaji wa matukio, au biashara nyingine yoyote — KIZERE inapa shirika lako uwepo wa kidijitali uliothibitishwa.",
+      "pageDescAuth": "Sajili shirika lako kwenye KIZERE ili usimamie bidhaa, uthibitishe umiliki, na ujenga uaminifu wa wateja.",
+      "step1": "Fungua Akaunti",
+      "step2": "Wasifu wa Biashara",
+      "signIn": "Ingia",
+      "createAccount": "Fungua Akaunti & Endelea",
+      "signInPrompt": "Ingia au fungua akaunti ya kibinafsi ya KIZERE bure kwanza — kisha utakamilisha wasifu wako wa biashara kwenye skrini inayofuata.",
+      "justRegisteredTitle": "Akaunti imeundwa — hatua moja tu!",
+      "justRegisteredDesc": "Jaza maelezo ya biashara yako hapa chini na ubonyeze Kamilisha Usajili kuamilisha wasifu wako wa biashara.",
+      "cardTitle": "Taarifa za Biashara",
+      "cardDesc": "Tuambie kuhusu shirika lako ili tuweze kuweka wasifu unaofaa.",
+      "typeLabel": "Aina ya Biashara",
+      "typePlaceholder": "Chagua aina ya biashara yako",
+      "typeDesc": "Hii inatusaidia kusanidi zana na ruhusa sahihi kwa shirika lako.",
+      "nameLabel": "Jina la Biashara / Shirika",
+      "namePlaceholder": "Mf., Kigali Electronics Ltd",
+      "emailLabel": "Barua Pepe ya Biashara",
+      "emailPlaceholder": "mawasiliano@shirikaylako.com",
+      "emailDesc": "Tutatumia hii kwa arifa muhimu",
+      "phoneLabel": "Simu ya Biashara",
+      "phonePlaceholder": "+250 788 000 000",
+      "addressLabel": "Anwani",
+      "addressPlaceholder": "Mji, Barabara",
+      "submit": "Kamilisha Usajili",
+      "submitting": "Inaunda wasifu...",
+      "successTitle": "Usajili umefanikiwa!",
+      "successDesc": "Wasifu wako wa biashara umeundwa. Karibu kwenye KIZERE Business.",
+      "errorTitle": "Usajili umeshindwa"
+    },
+    "type": {
+      "Retailer": "Mwuzaji wa Rejareja",
+      "Wholesaler": "Jumla / Msambazaji",
+      "InsuranceCompany": "Kampuni ya Bima",
+      "EventOrganizer": "Mpangaji wa Matukio",
+      "NGO": "NGO / Shirika Lisilo la Faida",
+      "GovernmentAgency": "Wakala wa Serikali",
+      "TechCompany": "Kampuni ya Teknolojia",
+      "Other": "Nyingine"
+    }
   }
 }

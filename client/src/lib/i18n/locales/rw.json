@@ -2344,5 +2344,48 @@
       "minChars": "Injira byibuze inyuguti 3",
       "button": "Guha undi muntu ubutunzi"
     }
+  },
+  "business": {
+    "onboard": {
+      "pageTitle": "Iyandikishe Ubucuruzi Bwawe",
+      "pageDesc": "Niba uri umucuruzi, isosiyete y'ubwishingizi, umuganganyi w'ibikorwa, cyangwa ubundi bucuruzi — KIZERE itanga ubusugire bwa digitale ku itsinda ryawe.",
+      "pageDescAuth": "Iyandikishe itsinda ryawe kuri KIZERE kugira ngo uyoboze ibicuruzwa, ugenzure ubunyangamugayo, kandi ugabanye zaufiance y'abakiriya.",
+      "step1": "Fungura Konti",
+      "step2": "Umwirondoro w'Ubucuruzi",
+      "signIn": "Injira",
+      "createAccount": "Fungura Konti & Komeza",
+      "signInPrompt": "Injira cyangwa fungura konti KIZERE ya bwite buhere — uzuzuza umwirondoro w'ubucuruzi bwawe ku rupapuro rukurikira.",
+      "justRegisteredTitle": "Konti yarashyizweho — intambwe imwe gusa!",
+      "justRegisteredDesc": "Uzuza amakuru y'ubucuruzi hano hasi kanda Soza Iyandikisha kugira ngo urungike umwirondoro wawe.",
+      "cardTitle": "Amakuru y'Ubucuruzi",
+      "cardDesc": "Tubishire ibyo itsinda ryawe kugira ngo dushyireho umwirondoro ukwiye.",
+      "typeLabel": "Ubwoko bw'Ubucuruzi",
+      "typePlaceholder": "Hitamo ubwoko bw'ubucuruzi bwawe",
+      "typeDesc": "Bitugenza dushyireho ibikoresho n'uburenganzira bwiza ku itsinda ryawe.",
+      "nameLabel": "Izina ry'Ubucuruzi / Itsinda",
+      "namePlaceholder": "Urugero: Kigali Electronics Ltd",
+      "emailLabel": "Imeli y'Ubucuruzi",
+      "emailPlaceholder": "contact@itsindaryawe.com",
+      "emailDesc": "Tuzayikoresha kohereza amamenyesha y'ingenzi",
+      "phoneLabel": "Telefone y'Ubucuruzi",
+      "phonePlaceholder": "+250 788 000 000",
+      "addressLabel": "Aderesi",
+      "addressPlaceholder": "Umujyi, Umuhanda",
+      "submit": "Soza Iyandikisha",
+      "submitting": "Dushyiraho umwirondoro...",
+      "successTitle": "Iyandikisha ryakunze!",
+      "successDesc": "Umwirondoro w'ubucuruzi bwawe washyizweho. Murakaza neza kuri KIZERE Business.",
+      "errorTitle": "Iyandikisha ryanze"
+    },
+    "type": {
+      "Retailer": "Umucuruzi",
+      "Wholesaler": "Mugurisha / Usambaza ibicuruzwa",
+      "InsuranceCompany": "Isosiyete y'Ubwishingizi",
+      "EventOrganizer": "Umuganganyi w'Ibikorwa",
+      "NGO": "ONG / Inzego z'Iterambere",
+      "GovernmentAgency": "Urwego rwa Leta",
+      "TechCompany": "Isosiyete ya Tekinoloji",
+      "Other": "Ikindi"
+    }
   }
 }

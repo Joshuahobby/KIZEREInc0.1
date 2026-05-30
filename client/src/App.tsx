@@ -199,7 +199,7 @@ function App() {
                   <Route path="/retailer/onboarding">
                     <RetailerOnboarding />
                   </Route>
-                  <ProtectedRoute path="/retailer/dashboard" component={RetailerDashboard} requiredRole={['Retailer', 'Admin']} />
+                  <ProtectedRoute path="/retailer/dashboard" component={RetailerDashboard} requiredRole={['Retailer', 'Business', 'Admin']} />
                   <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
                   <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
                   <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
@@ -240,11 +240,11 @@ function App() {
 
                   {/* POS Terminal route */}
                   <ProtectedRoute path="/pos" component={PosTerminal} requiredRole={['Retailer', 'Admin']} />
-                  <ProtectedRoute path="/retailer/products" component={RetailerProducts} requiredRole={['Retailer', 'Admin']} />
-                  <ProtectedRoute path="/retailer/transactions" component={RetailerTransactions} requiredRole={['Retailer', 'Admin']} />
-                  <ProtectedRoute path="/retailer/analytics" component={RetailerAnalytics} requiredRole={['Retailer', 'Admin']} />
-                  <ProtectedRoute path="/retailer/customers" component={RetailerCustomers} requiredRole={['Retailer', 'Admin']} />
-                  <ProtectedRoute path="/retailer/settings" component={RetailerSettings} requiredRole={['Retailer', 'Admin']} />
+                  <ProtectedRoute path="/retailer/products" component={RetailerProducts} requiredRole={['Retailer', 'Business', 'Admin']} />
+                  <ProtectedRoute path="/retailer/transactions" component={RetailerTransactions} requiredRole={['Retailer', 'Business', 'Admin']} />
+                  <ProtectedRoute path="/retailer/analytics" component={RetailerAnalytics} requiredRole={['Retailer', 'Business', 'Admin']} />
+                  <ProtectedRoute path="/retailer/customers" component={RetailerCustomers} requiredRole={['Retailer', 'Business', 'Admin']} />
+                  <ProtectedRoute path="/retailer/settings" component={RetailerSettings} requiredRole={['Retailer', 'Business', 'Admin']} />
                   <ProtectedRoute path="/admin/retailers" component={RetailerManagement} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/pos-analytics" component={PosAnalyticsPage} requiredRole="Admin" />
                   <ProtectedRoute path="/admin/commissions" component={AdminCommissionsPage} requiredRole="Admin" />
