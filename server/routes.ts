@@ -288,9 +288,11 @@ ${xmlUrls}
   app.use('/api/items', requireAuth, itemRoutes);
   app.use('/api/reports', requireAuth, reportRoutes);
   app.use('/api/notifications', requireAuth, notificationRoutes);
-  // Payment routes (webhook must be public)
+  // Payment routes — webhook + package pricing are public; everything else requires auth
   app.use('/api/payments', (req: any, res: any, next: any) => {
     if (req.method === 'POST' && req.path === '/webhook') return next();
+    if (req.method === 'GET' && req.path.startsWith('/type/')) return next();
+    if (req.method === 'GET' && (req.path === '/' || req.path === '/packages')) return next();
     requireAuth(req, res, next);
   }, paymentRoutes);
   app.use('/api/payment-packages', requireAuth, paymentRoutes);
