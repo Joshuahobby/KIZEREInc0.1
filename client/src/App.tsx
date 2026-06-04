@@ -106,6 +106,7 @@ const PosAnalyticsPage = lazyWithRetry(() => import("@/pages/admin/pos-analytics
 const AdminCommissionsPage = lazyWithRetry(() => import("@/pages/admin/commissions"));
 const PublicItemVerifyPage = lazyWithRetry(() => import("@/pages/PublicItemVerifyPage"));
 const ConsumerVerifyPage = lazyWithRetry(() => import("@/pages/consumer-verify-page"));
+const PremiumPage = lazyWithRetry(() => import("@/pages/premium-page"));
 
 function App() {
   // Handle Firebase redirect result
@@ -214,6 +215,9 @@ function App() {
                   <ProtectedRoute path="/report-found" component={CreateReport} requiredRole="any" />
                   <Route path="/verify-item">
                     <ConsumerVerifyPage />
+                  </Route>
+                  <Route path="/premium">
+                    <PremiumPage />
                   </Route>
                   <Route path="/report/:id">
                     <ReportDetailPage />

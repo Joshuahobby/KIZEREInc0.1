@@ -498,7 +498,8 @@
       "moderation": "Modération",
       "businessInsights": "Aperçus Commerciaux",
       "admin": "Admin",
-      "agent": "[TODO-fr] Umukozi"
+      "agent": "[TODO-fr] Umukozi",
+      "revenue": "Revenus"
     },
     "experience": {
       "title": "Expérience du Tableau de Bord",
@@ -800,7 +801,13 @@
     "noData": "[TODO-fr] Nta makuru ahari",
     "loginRequired": "[TODO-fr] Kwinjira Bisabwa",
     "notAuthenticated": "[TODO-fr] Ugomba kwinjira kugira ngo urebe iyi paji",
-    "returnToHome": "[TODO-fr] Garuka Ahabanza"
+    "returnToHome": "[TODO-fr] Garuka Ahabanza",
+    "revenue": {
+      "title": "Analytiques de revenus",
+      "subtitle": "Revenus par flux de paiement — paiements complétés",
+      "byStream": "Par catégorie",
+      "noData": "Aucune donnée de revenus"
+    }
   },
   "items": {
     "registerNewItem": "Enregistrer un Nouvel Objet",
@@ -1536,7 +1543,16 @@
       "notFound": "[TODO-fr] Customer not found",
       "updateSuccess": "[TODO-fr] Settings updated",
       "updateSuccessDesc": "[TODO-fr] Customer settings have been saved."
-    }
+    },
+    "stockIn": "Entrée en stock",
+    "shiftSummary": {
+      "title": "Résumé du quart de travail",
+      "subtitle": "Aperçu en temps réel de l'activité commerciale du jour."
+    },
+    "printSummary": "Imprimer le bilan EOD",
+    "registrations": "Inscriptions",
+    "transfers": "Transferts",
+    "returns": "Retours"
   },
   "claims": {
     "verify_title": "[TODO-fr] Guhitamo nyir'izina",
@@ -2388,7 +2404,23 @@
         "limitApproaching": "Limite d'enregistrement approchée",
         "usage": "{{count}}/{{limit}} articles gratuits utilisés",
         "upgradeCta": "Passer à Premium →"
-      }
+      },
+      "pageFreeTitle": "Gratuit",
+      "pagePremiumTitle": "KIZERE Premium",
+      "pageFreeDesc": "Protection de base pour commencer",
+      "pagePremiumDesc": "Protection illimitée & vérification complète",
+      "pricePerYear": "/ an",
+      "priceFetching": "Chargement du prix…",
+      "alreadyPremium": "Vous êtes Premium",
+      "expiresOn": "Actif jusqu’au {{date}}",
+      "freeFeat1": "Jusqu’à {{limit}} articles enregistrés",
+      "freeFeat2": "Rapports perdus & trouvés de base",
+      "freeFeat3": "Vérification publique d’articles",
+      "premFeat1": "Enregistrements illimités",
+      "premFeat2": "Rapports de vérification illimités",
+      "premFeat3": "Assistance prioritaire & nouvelles fonctionnalités",
+      "premFeat4": "Validité 1 an, renouvelable",
+      "subscribeCta": "S’abonner"
     },
     "certificate": {
       "title": "Certificat de Propriété",

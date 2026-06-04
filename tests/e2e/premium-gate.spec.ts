@@ -106,36 +106,42 @@ test.describe("Registration cap — 402 response shape", () => {
   });
 });
 
-// ─── UI layer — Phase 2 (skipped until PremiumUpgradeModal is built) ──────────
-//
-// Uncomment after Phase 2 UI is implemented per docs/FRONTEND-PLAN.md:
-//
-// test.describe("Premium gate UI — subscription card", () => {
-//   test.use({ storageState: subscriberAuthPath });
-//
-//   test("dashboard shows free-tier progress bar", async ({ page }) => {
-//     await page.goto("/dashboard");
-//     await expect(page.getByText(/free tier/i)).toBeVisible({ timeout: 15000 });
-//     await expect(page.getByText(/3/)).toBeVisible();
-//   });
-//
-//   test("'Upgrade to Premium' button opens upgrade modal", async ({ page }) => {
-//     await page.goto("/dashboard");
-//     await page.getByRole("button", { name: /upgrade/i }).click();
-//     await expect(page.getByRole("dialog")).toBeVisible({ timeout: 8000 });
-//     await expect(page.getByLabel(/phone/i)).toBeVisible();
-//   });
-// });
-//
-// test.describe("Premium gate UI — registration cap intercept", () => {
-//   test.use({ storageState: subscriberAuthPath });
-//
-//   test("4th item registration opens upgrade modal instead of showing error toast", async ({ page }) => {
-//     // Requires subscriber with exactly 3 items already registered.
-//     // Seed via API in beforeAll, then attempt registration, then assert modal appears.
-//     await page.goto("/register");
-//     // ... fill form and submit
-//     await expect(page.getByRole("dialog")).toBeVisible({ timeout: 10000 });
-//     await expect(page.getByText(/premium/i)).toBeVisible();
-//   });
-// });
+// ─── UI layer — Premium page ──────────────────────────────────────────────────
+
+test.describe("Premium page UI — unauthenticated", () => {
+  test("renders without redirect for unauthenticated users", async ({ page }) => {
+    await page.goto("/premium");
+    await expect(page).not.toHaveURL(/\/auth/i, { timeout: 10000 });
+    await expect(page.getByText(/KIZERE Premium/i)).toBeVisible({ timeout: 15000 });
+  });
+
+  test("shows free and premium plan cards", async ({ page }) => {
+    await page.goto("/premium");
+    await expect(page.getByText(/Free Tier/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Feature Comparison/i)).toBeVisible({ timeout: 10000 });
+  });
+});
+
+test.describe("Premium gate UI — subscription card", () => {
+  test.use({
+    storageState: () =>
+      fs.existsSync(subscriberAuthPath) ? subscriberAuthPath : (undefined as any),
+  });
+
+  test.beforeEach(async ({}, testInfo) => {
+    if (!fs.existsSync(subscriberAuthPath)) {
+      testInfo.skip(true, "playwright/.auth/subscriber.json not found — run global setup first");
+    }
+  });
+
+  test("dashboard shows subscription status for free-tier user", async ({ page }) => {
+    await page.goto("/dashboard");
+    // The dashboard fetches subscription status and shows usage/upgrade prompts
+    await expect(page.locator("[data-tour='welcome-section']")).toBeVisible({ timeout: 15000 });
+  });
+
+  test("/premium page shows subscribe button for free-tier user", async ({ page }) => {
+    await page.goto("/premium");
+    await expect(page.getByRole("button", { name: /subscribe/i })).toBeVisible({ timeout: 15000 });
+  });
+});

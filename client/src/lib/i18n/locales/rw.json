@@ -385,7 +385,8 @@
     "clearAll": "Gusiba Byose",
     "deleteError": "Gusiba imenyesha byanze",
     "clearAllSuccess": "Imenyesha ryose ryasibwe",
-    "clearAllError": "Gusiba imenyesha ryose byanze"
+    "clearAllError": "Gusiba imenyesha ryose byanze",
+    "deleteSuccess": "Ubutumwa bwasibwe"
   },
   "dashboard": {
     "welcomeMessage": "Murakaza neza, {name}",
@@ -420,7 +421,10 @@
       "lostDesc": "Tanga raporo y'ikintu cyabuze maze umenyeshe abaturage.",
       "foundTitle": "Nabonye Ikintu",
       "foundDesc": "Sikana (scan) kode QR cyangwa utange raporo y'ikintu wabonye.",
-      "protectTitle": "Rinda Ikintu"
+      "protectTitle": "Rinda Ikintu",
+      "verifyTitle": "Sooza Imenyekanisha Ryawe",
+      "verifyDesc": "Kugira ngo urinde neza ibintu byawe, sooza imenyekanisha ry'ubunga bwawe.",
+      "verifyAction": "Emeza Ubu"
     },
     "quickActions": {
       "title": "Ibikoresho by'Akokanya",
@@ -475,7 +479,8 @@
       "agent": "Umukozi",
       "agentConsole": "Igice cy'Umukozi",
       "moderation": "Kugenzura",
-      "businessInsights": "Ubucuruzi"
+      "businessInsights": "Ubucuruzi",
+      "revenue": "Amafaranga"
     },
     "experience": {
       "title": "Imigaragarire y'Ikibaho",
@@ -565,7 +570,10 @@
         "paymentReceivedDesc": "RWF 5,000 yakiriwe kuri Momo"
       },
       "verificationReview": "Gusuzuma Umwirondoro",
-      "verificationReviewDesc": "Genziura impapuro nshingiro n'amakuru y'uwiyandikishije."
+      "verificationReviewDesc": "Genziura impapuro nshingiro n'amakuru y'uwiyandikishije.",
+      "pendingActions": "Ibikorwa Bitegereje",
+      "pendingVerifications": "Imenyekanisha Ritegeye",
+      "commandCenter": "Icyicaro cy'Ubuyobozi"
     },
     "agent": {
       "title": "Igice cy'Umukozi",
@@ -590,7 +598,15 @@
         "newReport": "Raporo Nshya",
         "recentActivity": "Ibikorwa Bishya",
         "notifications": "Integuza"
-      }
+      },
+      "handover": "Igurura Rifite Umutekano",
+      "handoverInitiate": "Tangira igurura ry'ibintu ku nyir'ibyo bintu cyangwa uwabibonye.",
+      "handoverVerify": "Suzuma kode yoherejwe kuri {{channel}} y'uwakiriye.",
+      "handoverSuccess": "Ihererekanya ry'ibintu ryasohotse neza.",
+      "assistedCreation": "Kwiyandikisha Gufashwe",
+      "assistedCreationDesc": "Fungura konti nshya ya KIZERE ku mwandikwa mu gasozi.",
+      "unauthorized": "Kwinjira Bidakuye",
+      "unauthorizedDesc": "Ntufite uburenganzira bwo kureba Aho Abakozi Bakorera."
     },
     "common": {
       "table": {
@@ -666,7 +682,16 @@
       "desc": "Bika neza ibiranga Indangamuntu cyangwa Pasiporo yawe.",
       "nid_protected": "INDANGAMUNTU: IRARINZWE",
       "passport_protected": "PASIPORO: IRARINZWE",
-      "manage": "Gucunga Inyandiko ziranga Umuntu"
+      "manage": "Gucunga Inyandiko ziranga Umuntu",
+      "status": "Imimerere y'Imenyekanisha",
+      "status_unverified": "Ntiremejwe",
+      "status_pending": "Itegereje Isuzumwa",
+      "status_approved": "Umwirondoro Wemejwe",
+      "status_rejected": "Hakenewe Igikorwa",
+      "pending_msg": "Itsinda ryacu riri gusuzuma impapuro zawe. Ibi kenshi bikora mu masaha 24.",
+      "approved_msg": "Umwirondoro wawe wemejwe. Ubu ufite uburenganzira bwuzuye kuri ibikorwa byose.",
+      "rejected_msg": "Imenyekanisha ntirikunze. Reba impamvu maze ugerageze nanone.",
+      "unverified_msg": "Emeza indangamuntu yawe kugira ngo wongere amanota y'icizere no kurinda ibintu byawe."
     },
     "table": {
       "reportId": "ID ya Raporo",
@@ -698,7 +723,19 @@
     "noData": "Nta makuru ahari",
     "loginRequired": "Kwinjira Bisabwa",
     "notAuthenticated": "Ugomba kwinjira kugira ngo urebe iyi paji",
-    "returnToHome": "Garuka Ahabanza"
+    "returnToHome": "Garuka Ahabanza",
+    "revenue": {
+      "title": "Isesengura ry’Amafaranga",
+      "subtitle": "Amafaranga atuye mu bwoko bw’ubwishyu",
+      "byStream": "Mu Bwoko",
+      "noData": "Nta makuru y’amafaranga"
+    },
+    "kyc": {
+      "verificationRequired": "Imenyekanisha Rirakenewe",
+      "verificationDesc": "Kugira ngo ubone ibikorwa byose nka kwandikisha ibintu, emeza indangamuntu yawe.",
+      "completeButton": "Sooza Imenyekanisha",
+      "verifiedTooltip": "Umwirondoro Wemejwe"
+    }
   },
   "categories": {
     "Electronics": "Iby'Ikoran.",
@@ -1106,7 +1143,14 @@
     "extract_error": "Ntibishoboye gukura amagambo mu ifoto.",
     "scanning": "Irimo gusuzuma...",
     "scan_button": "Sura ID/Nimero",
-    "upload_hint": "Shyiraho ifoto kugira ngo ukoreshe isuzuma rya AI"
+    "upload_hint": "Shyiraho ifoto kugira ngo ukoreshe isuzuma rya AI",
+    "kyc_helper": "Umufasha wa Indangamuntu",
+    "kyc_name_match": "Izina Ryahuye",
+    "kyc_name_mismatch": "Ijambo ry'Izina Ryinyuranya",
+    "kyc_low_confidence": "Ubwiza bw'Ifoto Buke",
+    "kyc_mismatch_desc": "Izina riri ku ndangamuntu ntirishoboka ko ryuhuye neza n'izina rya konti yawe.",
+    "kyc_low_conf_desc": "Inyandiko nzigama gusobanuka. Ifoto nziza yihuta kwemezwa.",
+    "kyc_success_desc": "AI yemeje neza izina riri ku nyandiko zawe."
   },
   "profile": {
     "title": "Umwirondoro",
@@ -1907,7 +1951,12 @@
     "noResultsHint": "Hindura ibisuzuma cyangwa ushakishe na IMEI/Serial.",
     "tryIMEI": "Shakisha na IMEI",
     "browseFound": "Reba Ibyabonetse",
-    "browseLost": "Reba Ibyatakaye"
+    "browseLost": "Reba Ibyatakaye",
+    "featured": "Ifeatured",
+    "verifiedMatch": "Guhuza Kwemejwe",
+    "privacyProtected": "Ubuzima bw'Amakuru Burindwa",
+    "privacyHintShort": "Amakuru amwe yageneraliye",
+    "privacyHintLong": "Amakuru y'ibanga ayubitswe mu gushakisha rusange kandi akerekwa gusa nyuma y'imenyekanisha."
   },
   "directoryPage": {
     "title": "Ishakiro ry'Ibyatakaye n'Ibyabonetse",
@@ -2150,7 +2199,18 @@
       "scanBtn": "Sikana na Kamera",
       "dragDropCsv": "Kanda cyangwa ukurure dosiye ya CSV hano",
       "parsingError": "Ikosa ryo Gusoma",
-      "noValidProducts": "Nta bicuruzwa byemewe byabonetse. Reba neza ko 'Serial_Number' na 'Name' buzujwe."
+      "noValidProducts": "Nta bicuruzwa byemewe byabonetse. Reba neza ko 'Serial_Number' na 'Name' buzujwe.",
+      "addTitle": "Ongeraho mu Bubiko",
+      "addDesc": "Ongeraho igicuruzwa gishya mu bubiko bwawe.",
+      "productNameLabel": "Izina ry'Igicuruzwa",
+      "skuLabel": "SKU (Si bisabwa)",
+      "skuPlaceholder": "Inomero y'Ububiko",
+      "brandLabel": "Icyapa",
+      "brandPlaceholder": "nk'urugero Samsung, Apple",
+      "modelLabel": "Modeli",
+      "modelPlaceholder": "nk'urugero Galaxy S24, iPhone 15",
+      "serialPlaceholder": "Injiza Numero ya Seri cyangwa IMEI",
+      "addProduct": "Ongeraho mu Bubiko"
     },
     "claim": {
       "title": "Emeza Konti Yawe",
@@ -2234,7 +2294,25 @@
       "notFound": "Umukiriya ntibabonetse",
       "updateSuccess": "Igenamiterere ryahinduwe",
       "updateSuccessDesc": "Igenamiterere ry'umukiriya ryabitswe."
-    }
+    },
+    "transactions": "Amateka y'Ibikorwa",
+    "transactionsDesc": "Reba iyandikwa n'ubucuruzi bwose bwakoze iduka ryawe.",
+    "export": "Sohora CSV",
+    "customers": "Ububiko bw'Abakiriya",
+    "customersDesc": "Gucunga imishyikirano no kureba amateka y'ibicuruzwa byaguriwe.",
+    "addCustomer": "Ongeraho Umukiriya Mushya",
+    "addCustomerDesc": "Andikisha umukiriya mushya cyangwa shakisha uwasanzemo ukoresheje indangamuntu.",
+    "settings": "Igenamiterere ry'Urwego",
+    "settingsDesc": "Shiraho iyinjira rya API n'ibibonabona by'iduka ryawe.",
+    "stockIn": "Injiza mu Bubiko",
+    "shiftSummary": {
+      "title": "Incamake y'Akazi k'Umunsi",
+      "subtitle": "Incamake y'igihe nyacyo y'ibikorwa by'ubucuruzi bw'uyu munsi."
+    },
+    "printSummary": "Shyira ku Mpapuro Incamake",
+    "registrations": "Iyandikwa",
+    "transfers": "Irsimburana ry'Ubuzimagatozi",
+    "returns": "Gusubiza"
   },
   "consumer": {
     "verify": {
@@ -2301,7 +2379,23 @@
         "limitApproaching": "Umusaruro wo kwandikisha uregeye",
         "usage": "{{count}}/{{limit}} ibicuruzwa by'ubuntu bikoreshejwe",
         "upgradeCta": "Kuzamuka kuri Premium →"
-      }
+      },
+      "pageFreeTitle": "Bure",
+      "pagePremiumTitle": "KIZERE Premium",
+      "pageFreeDesc": "Kurinda ibintu mu buryo busanzwe",
+      "pagePremiumDesc": "Kurindiha ntantarengwa no kugenzura uburenganzira",
+      "pricePerYear": "/ umwaka",
+      "priceFetching": "Gushakisha igiciro…",
+      "alreadyPremium": "Ufite Premium",
+      "expiresOn": "Igihe gihera: {{date}}",
+      "freeFeat1": "Kwandika ibintu {{limit}} bya bure",
+      "freeFeat2": "Raporo z’ibintu byatakaye n’ibyabonetse",
+      "freeFeat3": "Kugenzura ibintu mu ruhame",
+      "premFeat1": "Kwandika ibintu nta mupaka",
+      "premFeat2": "Raporo nta mupaka zo kugenzura",
+      "premFeat3": "Ubufasha buhoraho n’ibikorwa bishya",
+      "premFeat4": "Agaciro k’umwaka umwe, gishobora gusubirwaho",
+      "subscribeCta": "Kwiyandikisha"
     },
     "certificate": {
       "title": "Icyemezo cy'Ubunikuze",
@@ -2387,5 +2481,11 @@
       "TechCompany": "Isosiyete ya Tekinoloji",
       "Other": "Ikindi"
     }
+  },
+  "fields": {
+    "fullName": "Amazina Yuzuye",
+    "nationalId": "Indangamuntu / Pasiporo",
+    "phone": "Nimero ya Telefoni",
+    "email": "Imeli"
   }
 }

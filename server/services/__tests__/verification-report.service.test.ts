@@ -6,6 +6,7 @@ vi.mock("../../storage", () => ({
   storage: {
     getPayment: vi.fn(),
     getItemByUniqueIdentifier: vi.fn(),
+    getPosProductBySerialWithRetailer: vi.fn(),
     getUser: vi.fn(),
     createVerificationPurchase: vi.fn(),
     getActiveVerificationPurchase: vi.fn(),
@@ -82,6 +83,7 @@ describe("VerificationReportService", () => {
     it("creates a purchase even when the item is not found (identifier unregistered)", async () => {
       (storage.getPayment as any).mockResolvedValueOnce(BASE_PAYMENT);
       (storage.getItemByUniqueIdentifier as any).mockResolvedValueOnce(null);
+      (storage.getPosProductBySerialWithRetailer as any).mockResolvedValueOnce(null);
       (storage.createVerificationPurchase as any).mockResolvedValueOnce({ id: 2 });
 
       await VerificationReportService.finalizeReport(1);
@@ -163,6 +165,7 @@ describe("VerificationReportService", () => {
   describe("buildFreeSummary", () => {
     it("returns not-registered summary for unknown identifier", async () => {
       (storage.getItemByUniqueIdentifier as any).mockResolvedValueOnce(null);
+      (storage.getPosProductBySerialWithRetailer as any).mockResolvedValueOnce(null);
       const summary = await VerificationReportService.buildFreeSummary("UNKNOWN");
       expect(summary.isRegistered).toBe(false);
       expect(summary).not.toHaveProperty("owner");

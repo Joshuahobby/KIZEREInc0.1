@@ -118,30 +118,40 @@ test.describe("Certificates API — subscriber (non-owner access)", () => {
   });
 });
 
-// ─── UI layer — Phase 3 (skipped until certificate UI is built) ───────────────
-//
-// Uncomment after Phase 3 UI is implemented per docs/FRONTEND-PLAN.md:
-//
-// test.describe("Certificate UI — item detail button", () => {
-//   test.use({ storageState: subscriberAuthPath });
-//
-//   test("owner sees 'Get Official Certificate' button on item detail", async ({ page }) => {
-//     // Navigate to a real item owned by the subscriber
-//     await page.goto("/dashboard");
-//     await page.getByRole("link", { name: /my items/i }).click();
-//     await page.getByRole("row").first().getByRole("link").click();
-//     await expect(page.getByRole("button", { name: /certificate/i })).toBeVisible({ timeout: 15000 });
-//   });
-// });
-//
-// test.describe("Certificate UI — view and download", () => {
-//   test.use({ storageState: subscriberAuthPath });
-//
-//   test("certificate page renders printable card with item details", async ({ page }) => {
-//     // Requires a seeded item ID that has a confirmed certificate payment
-//     await page.goto("/items/1/certificate");
-//     await expect(page.getByText(/KIZERE/i)).toBeVisible({ timeout: 10000 });
-//     await expect(page.getByRole("button", { name: /download/i })).toBeVisible();
-//     await expect(page.getByRole("button", { name: /print/i })).toBeVisible();
-//   });
-// });
+// ─── UI layer — Certificate button on item detail ─────────────────────────────
+
+test.describe("Certificate UI — item detail button (subscriber owns items)", () => {
+  test.use({
+    storageState: () =>
+      fs.existsSync(subscriberAuthPath) ? subscriberAuthPath : (undefined as any),
+  });
+
+  test.beforeEach(async ({}, testInfo) => {
+    if (!fs.existsSync(subscriberAuthPath)) {
+      testInfo.skip(true, "playwright/.auth/subscriber.json not found — run global setup first");
+    }
+  });
+
+  test("owner sees Get Certificate action on their item detail page", async ({ page, request }) => {
+    const itemsRes = await request.get("/api/items");
+    if (!itemsRes.ok()) { test.skip(); return; }
+    const items = await itemsRes.json();
+    if (!Array.isArray(items) || items.length === 0) { test.skip(); return; }
+    const itemId = items[0].id;
+
+    await page.goto(`/items/${itemId}`);
+    await expect(page.getByRole("button", { name: /certificate/i })).toBeVisible({ timeout: 15000 });
+  });
+
+  test("clicking Get Certificate opens the certificate modal", async ({ page, request }) => {
+    const itemsRes = await request.get("/api/items");
+    if (!itemsRes.ok()) { test.skip(); return; }
+    const items = await itemsRes.json();
+    if (!Array.isArray(items) || items.length === 0) { test.skip(); return; }
+    const itemId = items[0].id;
+
+    await page.goto(`/items/${itemId}`);
+    await page.getByRole("button", { name: /certificate/i }).click();
+    await expect(page.getByRole("dialog")).toBeVisible({ timeout: 8000 });
+  });
+});

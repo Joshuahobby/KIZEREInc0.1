@@ -582,7 +582,8 @@
       "agent": "[TODO-sw] Umukozi",
       "agentConsole": "[TODO-sw] Igice cy'Umukozi",
       "moderation": "[TODO-sw] Kugenzura",
-      "businessInsights": "[TODO-sw] Ubucuruzi"
+      "businessInsights": "[TODO-sw] Ubucuruzi",
+      "revenue": "Mapato"
     },
     "experience": {
       "title": "[TODO-sw] Imigaragarire y'Ikibaho",
@@ -788,7 +789,13 @@
     "noData": "[TODO-sw] Nta makuru ahari",
     "loginRequired": "[TODO-sw] Kwinjira Bisabwa",
     "notAuthenticated": "[TODO-sw] Ugomba kwinjira kugira ngo urebe iyi paji",
-    "returnToHome": "[TODO-sw] Garuka Ahabanza"
+    "returnToHome": "[TODO-sw] Garuka Ahabanza",
+    "revenue": {
+      "title": "Uchanganuzi wa Mapato",
+      "subtitle": "Mapato kwa aina ya malipo",
+      "byStream": "Kwa Aina",
+      "noData": "Hakuna data ya mapato"
+    }
   },
   "items": {
     "registerNewItem": "Sajili Kitu Kipya",
@@ -1463,7 +1470,16 @@
       "notFound": "[TODO-sw] Customer not found",
       "updateSuccess": "[TODO-sw] Settings updated",
       "updateSuccessDesc": "[TODO-sw] Customer settings have been saved."
-    }
+    },
+    "stockIn": "Ingizo la Hifadhi",
+    "shiftSummary": {
+      "title": "Muhtasari wa Zamu ya Kila Siku",
+      "subtitle": "Muhtasari wa wakati halisi wa shughuli za biashara ya leo."
+    },
+    "printSummary": "Chapisha Muhtasari wa Mwisho wa Siku",
+    "registrations": "Usajili",
+    "transfers": "Uhamisho",
+    "returns": "Marejesho"
   },
   "claims": {
     "verify_title": "[TODO-sw] Guhitamo nyir'izina",
@@ -2368,7 +2384,23 @@
         "limitApproaching": "Unakaribia kikomo cha usajili",
         "usage": "{{count}}/{{limit}} bidhaa za bure zimetumika",
         "upgradeCta": "Boresha hadi Premium →"
-      }
+      },
+      "pageFreeTitle": "Bila Malipo",
+      "pagePremiumTitle": "KIZERE Premium",
+      "pageFreeDesc": "Ulinzi wa msingi kuanza",
+      "pagePremiumDesc": "Ulinzi usio na kikomo na uthibitishaji kamili",
+      "pricePerYear": "/ mwaka",
+      "priceFetching": "Inapakua bei…",
+      "alreadyPremium": "Uko kwenye Premium",
+      "expiresOn": "Inafanya kazi hadi {{date}}",
+      "freeFeat1": "Sajili hadi vitu {{limit}}",
+      "freeFeat2": "Ripoti za kimsingi za kupoteza na kupata",
+      "freeFeat3": "Uthibitishaji wa umma wa bidhaa",
+      "premFeat1": "Usajili wa bidhaa bila kikomo",
+      "premFeat2": "Ripoti za uthibitishaji bila kikomo",
+      "premFeat3": "Msaada wa kipaumbele na vipengele vipya",
+      "premFeat4": "Mwaka mmoja, inaweza kurejeshwa",
+      "subscribeCta": "Jiandikishe Sasa"
     },
     "certificate": {
       "title": "Cheti cha Umiliki",

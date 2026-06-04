@@ -483,7 +483,8 @@
       "agent": "Agent",
       "agentConsole": "Agent Console",
       "moderation": "Moderation",
-      "businessInsights": "Business Insights"
+      "businessInsights": "Business Insights",
+      "revenue": "Revenue"
     },
     "experience": {
       "title": "Dashboard Experience",
@@ -695,7 +696,13 @@
     "noData": "No data available",
     "loginRequired": "Login Required",
     "notAuthenticated": "You need to be logged in to view this page",
-    "returnToHome": "Return to Home"
+    "returnToHome": "Return to Home",
+    "revenue": {
+      "title": "Revenue Analytics",
+      "subtitle": "Revenue by payment stream — all completed payments",
+      "byStream": "Revenue by Stream",
+      "noData": "No revenue data yet"
+    }
   },
   "categories": {
     "Electronics": "Electronics",
@@ -2333,7 +2340,23 @@
         "limitApproaching": "Approaching registration limit",
         "usage": "{{count}}/{{limit}} free items used",
         "upgradeCta": "Upgrade to Premium →"
-      }
+      },
+      "pageFreeTitle": "Free Tier",
+      "pagePremiumTitle": "KIZERE Premium",
+      "pageFreeDesc": "Basic protection to get started",
+      "pagePremiumDesc": "Unlimited protection & full ownership verification",
+      "pricePerYear": "/ year",
+      "priceFetching": "Loading price…",
+      "alreadyPremium": "You’re on Premium",
+      "expiresOn": "Active until {{date}}",
+      "freeFeat1": "Register up to {{limit}} items",
+      "freeFeat2": "Basic lost & found reports",
+      "freeFeat3": "Public item verification",
+      "premFeat1": "Unlimited item registrations",
+      "premFeat2": "Unlimited full verification reports",
+      "premFeat3": "Priority support & early features",
+      "premFeat4": "1-year validity, stackable on renewal",
+      "subscribeCta": "Subscribe Now"
     },
     "certificate": {
       "title": "Ownership Certificate",

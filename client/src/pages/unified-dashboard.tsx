@@ -573,7 +573,14 @@ export default function UnifiedDashboard() {
                   </p>
                 </div>
               </div>
-              <Button data-tour="register-item" onClick={() => navigate('/register-item')} variant="outline" size="standard" className="w-full sm:w-auto font-black uppercase tracking-widest text-xs">
+              <Button data-tour="register-item" onClick={() => {
+                if (subscriptionStatus && !subscriptionStatus.isPremium &&
+                    (subscriptionStatus.registrationCount >= (subscriptionStatus.registrationLimit ?? 3))) {
+                  setUpgradeOpen(true);
+                } else {
+                  navigate('/register-item');
+                }
+              }} variant="outline" size="standard" className="w-full sm:w-auto font-black uppercase tracking-widest text-xs">
                 <Plus className="mr-2 h-5 w-5" />
                 {t('dashboard.action.protectTitle')}
               </Button>
@@ -1002,7 +1009,14 @@ export default function UnifiedDashboard() {
                   <CardTitle>{t('dashboard.items.title')}</CardTitle>
                   <CardDescription>{t('dashboard.items.description')}</CardDescription>
                 </div>
-                <Button size="standard" className="h-12 sm:h-14 font-black uppercase tracking-widest text-xs" onClick={() => navigate("/register-item")}>
+                <Button size="standard" className="h-12 sm:h-14 font-black uppercase tracking-widest text-xs" onClick={() => {
+                  if (subscriptionStatus && !subscriptionStatus.isPremium &&
+                      (subscriptionStatus.registrationCount >= (subscriptionStatus.registrationLimit ?? 3))) {
+                    setUpgradeOpen(true);
+                  } else {
+                    navigate("/register-item");
+                  }
+                }}>
                   <Plus className="h-4 w-4 mr-2" /> {t('dashboard.items.registerNew')}
                 </Button>
               </CardHeader>
@@ -1152,6 +1166,93 @@ export default function UnifiedDashboard() {
                     )}
                   </TabsContent>
                 </Tabs>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.div>
+      );
+    }
+
+    // Revenue analytics tab (admin only)
+    if (isAdmin && activeTab === "revenue") {
+      const REVENUE_STREAMS = [
+        { type: "verification_report", label: "Verification Reports", color: "#3b82f6" },
+        { type: "consumer_subscription", label: "Consumer Premium", color: "#8b5cf6" },
+        { type: "ownership_certificate", label: "Certificates", color: "#0ea5e9" },
+        { type: "transfer_fee", label: "Ownership Transfers", color: "#7c3aed" },
+        { type: "registration", label: "Item Registration", color: "#10b981" },
+        { type: "retailer_subscription", label: "Retailer Subscriptions", color: "#f59e0b" },
+      ];
+
+      const streamTotals: Record<string, { amount: number; count: number }> = {};
+      for (const p of (adminStats?.paymentsByType ?? [])) {
+        streamTotals[p.type] = { amount: p.amount, count: p.count };
+      }
+
+      return (
+        <motion.div variants={containerVariants} initial="hidden" animate="visible">
+          <motion.div variants={itemVariants} className="mb-6">
+            <h2 className="text-2xl font-semibold mb-1">{t('dashboard.revenue.title')}</h2>
+            <p className="text-sm text-muted-foreground">{t('dashboard.revenue.subtitle')}</p>
+          </motion.div>
+
+          {/* Revenue stream cards */}
+          <motion.div variants={itemVariants} className="mb-6">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-3">
+              {t('dashboard.revenue.byStream')}
+            </p>
+            {adminStats?.paymentsByType?.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-3">
+                {REVENUE_STREAMS.map(({ type, label, color }) => {
+                  const data = streamTotals[type];
+                  return (
+                    <Card key={type} className="border-border/50 rounded-2xl overflow-hidden">
+                      <div className="h-1" style={{ background: color }} />
+                      <CardContent className="pt-4 pb-4">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
+                        <p className="text-xl font-black tabular-nums">
+                          {data ? data.amount.toLocaleString() : 0} <span className="text-xs font-normal text-muted-foreground">RWF</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {data ? data.count : 0} transactions
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <Card className="border-border/50 rounded-2xl">
+                <CardContent className="py-10 text-center text-sm text-muted-foreground">
+                  {t('dashboard.revenue.noData')}
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
+
+          {/* Monthly trend chart */}
+          <motion.div variants={itemVariants} className="mb-6">
+            <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
+              <CardHeader>
+                <CardTitle className="text-base">{t('dashboard.admin.monthlyRevenue')}</CardTitle>
+                <CardDescription className="text-xs">{t('dashboard.admin.revenueDescription')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <PaymentAnalyticsChart
+                  data={(adminStats?.monthlyRevenue ?? []).map((item: any) => ({ date: item.month, amount: item.revenue }))}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Recent transactions */}
+          <motion.div variants={itemVariants}>
+            <Card className="shadow-premium rounded-3xl overflow-hidden border-border/50">
+              <CardHeader>
+                <CardTitle className="text-base">{t('dashboard.admin.recentTransactions') || "Recent Payments"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RecentTransactions transactions={adminStats?.recentTransactions?.slice(0, 10) ?? []} />
               </CardContent>
             </Card>
           </motion.div>
@@ -1375,6 +1476,11 @@ export default function UnifiedDashboard() {
         id: "admin",
         label: t('dashboard.tabs.adminPanel'),
         icon: <Settings className="h-5 w-5" />
+      });
+      tabs.push({
+        id: "revenue",
+        label: t('dashboard.tabs.revenue'),
+        icon: <BarChart3 className="h-4 w-5" />
       });
     }
 
