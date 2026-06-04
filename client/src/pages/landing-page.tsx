@@ -185,6 +185,16 @@ export default function LandingPage() {
                                     Learn More
                                 </Button>
                             </motion.div>
+                            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+                                <Button
+                                    onClick={() => navigate("/premium")}
+                                    variant="outline"
+                                    size="lg"
+                                    className="h-14 md:h-14 px-10 text-base md:text-lg rounded-xl border-yellow-400/40 text-yellow-300 hover:bg-yellow-400/10 hover:border-yellow-400/60 font-bold w-full backdrop-blur-sm transition-all duration-300 gap-2"
+                                >
+                                    ✦ Go Premium
+                                </Button>
+                            </motion.div>
                         </motion.div>
                     </motion.div>
                 </div>

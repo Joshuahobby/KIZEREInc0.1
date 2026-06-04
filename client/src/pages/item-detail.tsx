@@ -24,6 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import QRCode from "qrcode";
 import { PaymentModal } from "@/components/payment/payment-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -80,6 +81,7 @@ export default function ItemDetailPage() {
   const [foundUser, setFoundUser] = useState<{ id: number; fullName: string | null; username: string; avatarUrl: string | null } | null>(null);
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState<string | null>(null);
+  const [labelDownloading, setLabelDownloading] = useState(false);
 
   if (!user) {
     return (
@@ -195,6 +197,67 @@ export default function ItemDetailPage() {
     link.download = `KIZERE-Certificate-${activeCert.certificateCode}.png`;
     link.href = canvas.toDataURL("image/png");
     link.click();
+  };
+
+  const handleLabelDownload = async () => {
+    if (!item) return;
+    setLabelDownloading(true);
+    try {
+      const verifyUrl = `${window.location.origin}/verify/${encodeURIComponent(item.uniqueIdentifier)}`;
+      const qrDataUrl = await QRCode.toDataURL(verifyUrl, { width: 300, margin: 1 });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 400;
+      canvas.height = 480;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "#e2e8f0";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
+
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 18px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("KIZERE", canvas.width / 2, 42);
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "11px sans-serif";
+      ctx.fillText("Registered Item", canvas.width / 2, 60);
+
+      const qrImg = new Image();
+      await new Promise<void>((resolve, reject) => {
+        qrImg.onload = () => resolve();
+        qrImg.onerror = reject;
+        qrImg.src = qrDataUrl;
+      });
+      ctx.drawImage(qrImg, 50, 75, 300, 300);
+
+      ctx.fillStyle = "#1e293b";
+      ctx.font = "bold 13px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(item.name, canvas.width / 2, 400);
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "10px monospace";
+      ctx.fillText(item.uniqueIdentifier, canvas.width / 2, 420);
+
+      ctx.fillStyle = "#94a3b8";
+      ctx.font = "9px sans-serif";
+      ctx.fillText("Scan to verify ownership at kizere.rw", canvas.width / 2, 460);
+
+      const link = document.createElement("a");
+      link.download = `KIZERE-Label-${item.uniqueIdentifier}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    } catch {
+      toast({ title: "Failed to generate label", variant: "destructive" });
+    } finally {
+      setLabelDownloading(false);
+    }
   };
 
   const markAsFoundMutation = useMutation({
@@ -503,9 +566,14 @@ export default function ItemDetailPage() {
                       variant="link"
                       size="sm"
                       className="h-auto p-0 text-sky-600 text-xs"
-                      disabled={item.status === 'Pending_Payment'}
+                      disabled={item.status === 'Pending_Payment' || labelDownloading}
+                      onClick={item.status !== 'Pending_Payment' ? handleLabelDownload : undefined}
                     >
-                      {item.status === 'Pending_Payment' ? 'Payment Required' : 'Download Label'}
+                      {item.status === 'Pending_Payment'
+                        ? 'Payment Required'
+                        : labelDownloading
+                          ? 'Generating…'
+                          : 'Download Label'}
                     </Button>
                   </div>
                 </div>

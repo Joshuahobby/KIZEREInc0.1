@@ -888,3 +888,50 @@ export async function sendUserVerificationStatusEmail(
     `,
   });
 }
+
+/**
+ * Send a 7-day expiry reminder to a KIZERE Premium consumer.
+ */
+export async function sendConsumerPremiumReminderEmail(
+  email: string,
+  fullName: string,
+  expiresAt: Date,
+  renewalLink: string
+): Promise<boolean> {
+  const expiryStr = expiresAt.toLocaleDateString("en-RW", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  return sendEmail({
+    to: email,
+    subject: "Your KIZERE Premium expires in 7 days",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #6366f1, #3b82f6); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">⏰ Premium Expiring Soon</h1>
+        </div>
+        <div style="padding: 30px; background: #f9fafb;">
+          <h2 style="color: #1f2937;">Hello ${fullName},</h2>
+          <p style="color: #4b5563; line-height: 1.6;">
+            Your <strong>KIZERE Premium</strong> subscription expires on <strong>${expiryStr}</strong>.
+            After that date you'll return to the free tier (3 item registrations, no full verification reports).
+          </p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${renewalLink}"
+               style="background: #6366f1; color: white; padding: 14px 32px; border-radius: 8px;
+                      text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">
+              Renew Premium →
+            </a>
+          </div>
+          <p style="color: #6b7280; font-size: 13px; line-height: 1.6;">
+            Renewing keeps your unlimited registrations, full verification reports, and priority support active without interruption.
+          </p>
+        </div>
+        <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
+          <p>© ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
+        </div>
+      </div>
+    `,
+  });
+}

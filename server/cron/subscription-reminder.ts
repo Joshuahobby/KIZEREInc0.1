@@ -1,8 +1,8 @@
 import { db } from "../db";
 import { retailers, users } from "@shared/schema";
-import { eq, and, lte, gte, ne } from "drizzle-orm";
+import { eq, and, lte, gte, ne, isNotNull } from "drizzle-orm";
 import { createLogger } from "../utils/logger";
-import { sendSubscriptionReminderEmail } from "../services/email.service";
+import { sendSubscriptionReminderEmail, sendConsumerPremiumReminderEmail } from "../services/email.service";
 
 const logger = createLogger("SubscriptionReminderCron");
 
@@ -65,7 +65,44 @@ async function runReminderCheck() {
         });
       }
     }
+    // Also remind consumer premium users expiring within 7 days
+    await runConsumerPremiumReminderCheck(now, windowEnd);
   } catch (error) {
     logger.error("Error in subscription reminder cron", { error });
+  }
+}
+
+async function runConsumerPremiumReminderCheck(now: Date, windowEnd: Date) {
+  try {
+    const expiringUsers = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          isNotNull(users.premiumExpiresAt),
+          gte(users.premiumExpiresAt, now),
+          lte(users.premiumExpiresAt, windowEnd)
+        )
+      );
+
+    logger.info(`Found ${expiringUsers.length} premium users expiring within 7 days`);
+
+    const appUrl = process.env.APP_URL || "https://kizere.rw";
+    for (const user of expiringUsers) {
+      if (!user.email || !user.premiumExpiresAt) continue;
+      try {
+        await sendConsumerPremiumReminderEmail(
+          user.email,
+          user.fullName || user.username,
+          user.premiumExpiresAt,
+          `${appUrl}/premium`
+        );
+        logger.info("Consumer premium reminder sent", { userId: user.id, email: user.email });
+      } catch (err) {
+        logger.error("Failed to send consumer premium reminder", { userId: user.id, error: err });
+      }
+    }
+  } catch (error) {
+    logger.error("Error in consumer premium reminder check", { error });
   }
 }
