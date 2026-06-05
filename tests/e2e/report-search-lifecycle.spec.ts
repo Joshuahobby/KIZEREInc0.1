@@ -47,8 +47,8 @@ test.describe('Report & Search Lifecycle', () => {
     const registerPanel = page.getByRole('tabpanel', { name: /Create Account/i });
     await registerPanel.locator('input[name="fullName"]').fill('Reporter User');
     await registerPanel.locator('input[name="username"]').fill(username);
-    await registerPanel.locator('input[name="password"]').fill('password123');
-    await registerPanel.locator('input[name="confirmPassword"]').fill('password123');
+    await registerPanel.locator('input[name="password"]').fill('Password123!');
+    await registerPanel.locator('input[name="confirmPassword"]').fill('Password123!');
     await registerPanel.locator('input[id="terms"]').check();
 
     const submitBtn = registerPanel.getByRole('button', { name: /Create Account/i });

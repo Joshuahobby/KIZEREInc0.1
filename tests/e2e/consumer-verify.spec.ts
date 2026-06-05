@@ -12,12 +12,7 @@
 import { test, expect, request as playwrightRequest } from "@playwright/test";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
+const AUTH_DIR = path.join(process.cwd(), "playwright/.auth");
 const subscriberAuthPath = path.join(AUTH_DIR, "subscriber.json");
 const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
 
@@ -72,8 +67,7 @@ test.describe("Consumer Verify API — full report gate (unauthenticated)", () =
 
 test.describe("Consumer Verify API — full report gate (subscriber, no purchase)", () => {
   test.use({
-    storageState: () =>
-      fs.existsSync(subscriberAuthPath) ? subscriberAuthPath : (undefined as any),
+    storageState: subscriberAuthPath,
   });
 
   test.beforeEach(async ({}, testInfo) => {
@@ -139,8 +133,7 @@ test.describe("Consumer Verify Page UI — unauthenticated", () => {
 
 test.describe("Consumer Verify Page UI — authenticated subscriber", () => {
   test.use({
-    storageState: () =>
-      fs.existsSync(subscriberAuthPath) ? subscriberAuthPath : (undefined as any),
+    storageState: subscriberAuthPath,
   });
 
   test.beforeEach(async ({}, testInfo) => {

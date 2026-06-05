@@ -1,15 +1,10 @@
-/**
+﻿﻿/**
  * E2E tests: public verify page, rate-limiting, and category-aware identifier validation.
  */
 import { test, expect, request as playwrightRequest } from "@playwright/test";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
+const AUTH_DIR = path.join(process.cwd(), "playwright/.auth");
 const adminAuthExists = () => fs.existsSync(path.join(AUTH_DIR, "admin.json"));
 const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
 
@@ -43,7 +38,10 @@ test.describe("Public Verify Page — unauthenticated", () => {
 // ─── Rate-Limit on /api/items/public/:id ─────────────────────────────────────
 
 test.describe("Public verify endpoint rate-limiting", () => {
-  test("returns 429 after 30 rapid requests from the same IP", async () => {
+  test("returns 429 after 30 rapid requests from the same IP", async ({}, testInfo) => {
+    if (process.env.NODE_ENV !== "production") {
+      testInfo.skip(true, "Rate limit test requires production rate limits (1000 req/5min in dev never triggers 429)");
+    }
     const ctx = await playwrightRequest.newContext({ baseURL: BASE_URL });
 
     const LIMIT = 30;
@@ -73,14 +71,11 @@ test.describe("Item Registration — category-aware identifier field", () => {
   });
 
   test.use({
-    storageState: () => {
-      const p = path.join(AUTH_DIR, "admin.json");
-      return fs.existsSync(p) ? p : undefined as any;
-    },
+    storageState: path.join(AUTH_DIR, "subscriber.json"),
   });
 
   test("Phones category changes identifier label to 'IMEI Number'", async ({ page }) => {
-    await page.goto("/register");
+    await page.goto("/register-item");
     // Wait for the form to render
     await page.waitForSelector("select, [data-testid='category-select'], [role='combobox']", { timeout: 15000 });
 
@@ -94,7 +89,7 @@ test.describe("Item Registration — category-aware identifier field", () => {
   });
 
   test("Phones category shows IMEI validation error for non-IMEI input", async ({ page }) => {
-    await page.goto("/register");
+    await page.goto("/register-item");
     await page.waitForSelector("[role='combobox']", { timeout: 15000 });
 
     // Select Phones
@@ -116,7 +111,7 @@ test.describe("Item Registration — category-aware identifier field", () => {
   });
 
   test("Transportation category changes identifier label to 'VIN / Plate Number'", async ({ page }) => {
-    await page.goto("/register");
+    await page.goto("/register-item");
     await page.waitForSelector("[role='combobox']", { timeout: 15000 });
 
     const categoryTrigger = page.locator("[role='combobox']").first();
@@ -137,10 +132,7 @@ test.describe("Report Wizard — category-aware identifier field", () => {
   });
 
   test.use({
-    storageState: () => {
-      const p = path.join(AUTH_DIR, "admin.json");
-      return fs.existsSync(p) ? p : undefined as any;
-    },
+    storageState: path.join(AUTH_DIR, "subscriber.json"),
   });
 
   test("Phones category shows IMEI hint text in report wizard", async ({ page }) => {

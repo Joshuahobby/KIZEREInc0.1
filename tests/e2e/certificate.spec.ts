@@ -12,12 +12,7 @@
 import { test, expect, request as playwrightRequest } from "@playwright/test";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
+const AUTH_DIR = path.join(process.cwd(), "playwright/.auth");
 const adminAuthPath = path.join(AUTH_DIR, "admin.json");
 const subscriberAuthPath = path.join(AUTH_DIR, "subscriber.json");
 const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
@@ -39,8 +34,7 @@ test.describe("Certificates API — unauthenticated", () => {
 
 test.describe("Certificates API — admin", () => {
   test.use({
-    storageState: () =>
-      fs.existsSync(adminAuthPath) ? adminAuthPath : (undefined as any),
+    storageState: adminAuthPath,
   });
 
   test.beforeEach(async ({}, testInfo) => {
@@ -84,8 +78,7 @@ test.describe("Certificates API — admin", () => {
 
 test.describe("Certificates API — subscriber (non-owner access)", () => {
   test.use({
-    storageState: () =>
-      fs.existsSync(subscriberAuthPath) ? subscriberAuthPath : (undefined as any),
+    storageState: subscriberAuthPath,
   });
 
   test.beforeEach(async ({}, testInfo) => {
@@ -126,8 +119,7 @@ test.describe("Certificates API — subscriber (non-owner access)", () => {
 
 test.describe("Certificate UI — item detail button (subscriber owns items)", () => {
   test.use({
-    storageState: () =>
-      fs.existsSync(subscriberAuthPath) ? subscriberAuthPath : (undefined as any),
+    storageState: subscriberAuthPath,
   });
 
   test.beforeEach(async ({}, testInfo) => {

@@ -30,8 +30,8 @@ test.describe('Claim Appeals Flow', () => {
     const registerPanel = page.getByRole('tabpanel', { name: /Create Account/i });
     await registerPanel.locator('input[name="fullName"]').fill('Finder User');
     await registerPanel.locator('input[name="username"]').fill(finderUsername);
-    await registerPanel.locator('input[name="password"]').fill('password123');
-    await registerPanel.locator('input[name="confirmPassword"]').fill('password123');
+    await registerPanel.locator('input[name="password"]').fill('Password123!');
+    await registerPanel.locator('input[name="confirmPassword"]').fill('Password123!');
     await registerPanel.locator('input[id="terms"]').check();
     console.log('Filled Finder registration form');
     
@@ -53,8 +53,8 @@ test.describe('Claim Appeals Flow', () => {
     const registerPanelB = page.getByRole('tabpanel', { name: /Create Account/i });
     await registerPanelB.locator('input[name="fullName"]').fill('Claimant User');
     await registerPanelB.locator('input[name="username"]').fill(claimantUsername);
-    await registerPanelB.locator('input[name="password"]').fill('password123');
-    await registerPanelB.locator('input[name="confirmPassword"]').fill('password123');
+    await registerPanelB.locator('input[name="password"]').fill('Password123!');
+    await registerPanelB.locator('input[name="confirmPassword"]').fill('Password123!');
     await registerPanelB.locator('input[id="terms"]').check();
     console.log('Filled Claimant registration form');
     
@@ -72,7 +72,7 @@ test.describe('Claim Appeals Flow', () => {
     await page.goto('/auth');
     await page.getByRole('tab', { name: /Sign In|login/i }).click();
     await page.fill('input[name="username"]', finderUsername);
-    await page.fill('input[name="password"]', 'password123');
+    await page.fill('input[name="password"]', 'Password123!');
     await page.locator('form').first().locator('button[type="submit"]').click();
     await expect(page).toHaveURL(/\/dashboard/i, { timeout: 15000 });
 
@@ -126,7 +126,7 @@ test.describe('Claim Appeals Flow', () => {
     await page.goto('/auth');
     await page.getByRole('tab', { name: /Sign In|login/i }).click();
     await page.fill('input[name="username"]', claimantUsername);
-    await page.fill('input[name="password"]', 'password123');
+    await page.fill('input[name="password"]', 'Password123!');
     await page.locator('form').first().locator('button[type="submit"]').click();
     await expect(page).toHaveURL(/\/dashboard/i, { timeout: 15000 });
     
@@ -164,7 +164,7 @@ test.describe('Claim Appeals Flow', () => {
     await page.goto('/auth');
     await page.getByRole('tab', { name: /Sign In|login/i }).click();
     await page.fill('input[name="username"]', finderUsername);
-    await page.fill('input[name="password"]', 'password123');
+    await page.fill('input[name="password"]', 'Password123!');
     await page.locator('form').first().locator('button[type="submit"]').click();
     await expect(page).toHaveURL('/dashboard');
 
@@ -190,7 +190,7 @@ test.describe('Claim Appeals Flow', () => {
     await page.goto('/auth');
     await page.getByRole('tab', { name: /Sign In|login/i }).click();
     await page.fill('input[name="username"]', claimantUsername);
-    await page.fill('input[name="password"]', 'password123');
+    await page.fill('input[name="password"]', 'Password123!');
     await page.locator('form').first().locator('button[type="submit"]').click();
     await expect(page).toHaveURL('/dashboard');
 
@@ -235,7 +235,7 @@ test.describe('Claim Appeals Flow', () => {
     await page.goto('/auth');
     await page.getByRole('tab', { name: /Sign In|login/i }).click();
     await page.fill('input[name="username"]', claimantUsername);
-    await page.fill('input[name="password"]', 'password123');
+    await page.fill('input[name="password"]', 'Password123!');
     await page.locator('form').first().locator('button[type="submit"]').click();
     await expect(page).toHaveURL('/dashboard');
 

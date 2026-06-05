@@ -1,12 +1,7 @@
-﻿import { test, expect } from "@playwright/test";
+﻿﻿import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
+const AUTH_DIR = path.join(process.cwd(), "playwright/.auth");
 const retailerAuthExists = () => fs.existsSync(path.join(AUTH_DIR, "retailer.json"));
 const userAuthExists = () => fs.existsSync(path.join(AUTH_DIR, "user.json"));
 
@@ -44,10 +39,7 @@ test.describe("POS Terminal — Transfer Ownership scenario", () => {
   });
 
   test.use({
-    storageState: () => {
-      const p = path.join(AUTH_DIR, "retailer.json");
-      return fs.existsSync(p) ? p : (undefined as any);
-    },
+    storageState: path.join(AUTH_DIR, "subscriber.json"),
   });
 
   test("POS scenario grid shows 3 scenario cards including Transfer", async ({ page }) => {
@@ -96,10 +88,7 @@ test.describe("My Devices — authenticated user", () => {
   });
 
   test.use({
-    storageState: () => {
-      const p = path.join(AUTH_DIR, "user.json");
-      return fs.existsSync(p) ? p : (undefined as any);
-    },
+    storageState: path.join(AUTH_DIR, "subscriber.json"),
   });
 
   test("My Devices page loads with purchase history section", async ({ page }) => {
@@ -143,10 +132,7 @@ test.describe("Admin — Retailer Subscriptions table", () => {
   });
 
   test.use({
-    storageState: () => {
-      const p = path.join(AUTH_DIR, "admin.json");
-      return fs.existsSync(p) ? p : (undefined as any);
-    },
+    storageState: path.join(AUTH_DIR, "subscriber.json"),
   });
 
   test("Payment dashboard shows Retailer Subscriptions section", async ({ page }) => {
@@ -165,10 +151,7 @@ test.describe("Purchase Contract — modal behaviour", () => {
   });
 
   test.use({
-    storageState: () => {
-      const p = path.join(AUTH_DIR, "retailer.json");
-      return fs.existsSync(p) ? p : (undefined as any);
-    },
+    storageState: path.join(AUTH_DIR, "subscriber.json"),
   });
 
   test("Retailer Transactions Contract button is visible on sale rows", async ({ page }) => {

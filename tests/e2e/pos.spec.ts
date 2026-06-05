@@ -1,12 +1,7 @@
-﻿import { test, expect } from "@playwright/test";
+﻿﻿import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
+const AUTH_DIR = path.join(process.cwd(), "playwright/.auth");
 const retailerAuthExists = () => fs.existsSync(path.join(AUTH_DIR, "retailer.json"));
 const adminAuthExists = () => fs.existsSync(path.join(AUTH_DIR, "admin.json"));
 
@@ -42,10 +37,7 @@ test.describe("POS Terminal — Authenticated Retailer", () => {
   });
 
   test.use({
-    storageState: () => {
-      const p = path.join(AUTH_DIR, "retailer.json");
-      return fs.existsSync(p) ? p : undefined as any;
-    },
+    storageState: path.join(AUTH_DIR, "retailer.json"),
   });
 
   test("Retailer Dashboard loads with stat cards", async ({ page }) => {
@@ -97,10 +89,7 @@ test.describe("POS Terminal — Mobile Viewport", () => {
   });
 
   test.use({
-    storageState: () => {
-      const p = path.join(AUTH_DIR, "retailer.json");
-      return fs.existsSync(p) ? p : undefined as any;
-    },
+    storageState: path.join(AUTH_DIR, "retailer.json"),
     viewport: { width: 390, height: 844 }, // iPhone 14 dimensions
   });
 
@@ -169,10 +158,7 @@ test.describe("Admin — Retailer Management", () => {
   });
 
   test.use({
-    storageState: () => {
-      const p = path.join(AUTH_DIR, "admin.json");
-      return fs.existsSync(p) ? p : undefined as any;
-    },
+    storageState: path.join(AUTH_DIR, "retailer.json"),
   });
 
   test("Admin can view retailers list", async ({ page }) => {

@@ -1,12 +1,7 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
+const AUTH_DIR = path.join(process.cwd(), "playwright/.auth");
 const retailerAuthPath = path.join(AUTH_DIR, "retailer.json");
 
 /**
@@ -24,7 +19,7 @@ const retailerAuthPath = path.join(AUTH_DIR, "retailer.json");
 
 test.describe("Retailer Hub Lifecycle", () => {
   test.use({
-    storageState: () => (fs.existsSync(retailerAuthPath) ? retailerAuthPath : (undefined as any)),
+    storageState: retailerAuthPath,
   });
 
   test.beforeEach(async ({}, testInfo) => {

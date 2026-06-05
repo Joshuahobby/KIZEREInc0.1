@@ -30,8 +30,8 @@ test.describe('Auth & Profile Lifecycle', () => {
     const registerPanel = page.getByRole('tabpanel', { name: /create account/i });
     await registerPanel.locator('input[name="fullName"]').fill(fullName);
     await registerPanel.locator('input[name="username"]').fill(username);
-    await registerPanel.locator('input[name="password"]').fill('password123');
-    await registerPanel.locator('input[name="confirmPassword"]').fill('password123');
+    await registerPanel.locator('input[name="password"]').fill('Password123!');
+    await registerPanel.locator('input[name="confirmPassword"]').fill('Password123!');
     await registerPanel.locator('input[id="terms"]').check();
 
     // Click register button - use button[type="submit"] to avoid strict mode violations with the tab itself
@@ -87,7 +87,7 @@ test.describe('Auth & Profile Lifecycle', () => {
     // Login with credentials - name matches t('auth.signIn')
     const loginPanel = page.getByRole('tabpanel', { name: /sign in|login/i });
     await loginPanel.locator('input[name="username"]').fill(username);
-    await loginPanel.locator('input[name="password"]').fill('password123');
+    await loginPanel.locator('input[name="password"]').fill('Password123!');
     // Use button[type="submit"] to avoid strict mode violations with the tab itself
     await loginPanel.locator('button[type="submit"]').click();
 

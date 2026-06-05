@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+﻿import { test, expect } from '@playwright/test';
 
 /**
  * Admin Management Lifecycle E2E Test
@@ -111,10 +111,9 @@ test.describe('Admin Management Lifecycle', () => {
       await page.goto('/auth');
     }
 
-    // Verify we're back to auth
+    // Verify we're back to auth — ProtectedRoute redirects client-side, wait for it
     await page.goto('/admin/users');
-    await page.waitForTimeout(2000);
-    // Should be redirected away from admin since we logged out
+    await page.waitForURL(url => !url.includes('/admin/users'), { timeout: 10000 }).catch(() => {});
     expect(page.url()).not.toContain('/admin/users');
     console.log('Logged out - admin routes no longer accessible');
     console.log('Admin Management Lifecycle test completed!');
