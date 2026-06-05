@@ -196,14 +196,18 @@ export class AuthCallbackController {
         // Return user data without password
         const { password, ...userData } = user;
 
+        // Serialize into script safely: escape </script> to prevent tag injection
+        const safeUser = JSON.stringify(userData).replace(/<\/script>/gi, '<\\/script>');
+        const safeToken = JSON.stringify(id_token);
+
         // Send success message to parent window and close popup
         return res.send(`
           <html>
             <script>
-              window.opener.postMessage({ 
-                type: 'google_auth_success', 
-                user: ${JSON.stringify(userData)},
-                token: '${id_token}' 
+              window.opener.postMessage({
+                type: 'google_auth_success',
+                user: ${safeUser},
+                token: ${safeToken}
               }, window.location.origin);
               window.close();
             </script>

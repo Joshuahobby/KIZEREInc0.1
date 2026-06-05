@@ -34,6 +34,7 @@ import {
   Crown,
   X,
   ArrowRight,
+  FileText,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,7 @@ interface FreeSummary {
 interface FullReport extends FreeSummary {
   name: string | null;
   registeredAt: string | null;
+  isOwner?: boolean;
   owner: {
     fullName: string;
     email: string;
@@ -618,6 +620,19 @@ function FullReportCard({ report }: { report: FullReport }) {
               </div>
             </div>
           </div>
+        )}
+
+        {report.isOwner && (
+          <Link href="/my-devices">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/10 rounded-xl mt-2"
+            >
+              <FileText className="h-4 w-4" />
+              Download Purchase Contract
+            </Button>
+          </Link>
         )}
 
         <p className="text-[10px] text-muted-foreground/60 text-center">

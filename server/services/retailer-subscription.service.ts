@@ -32,6 +32,14 @@ export class RetailerSubscriptionService {
       throw new Error(`Retailer ${retailerId} not found`);
     }
 
+    // Verify the payer is the operator of this retailer — prevents a user from
+    // paying for (and thereby extending) another retailer's subscription via metadata injection
+    if (retailer.userId !== payment.userId) {
+      throw new Error(
+        `Subscription payment ${paymentId} user ${payment.userId} does not own retailer ${retailerId}`
+      );
+    }
+
     const now = new Date();
     const baseDate =
       retailer.subscriptionExpiresAt && retailer.subscriptionExpiresAt > now

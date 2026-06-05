@@ -80,7 +80,10 @@ export class VerificationReportService {
       const item = await storage.getItemByUniqueIdentifier(identifier);
       if (item) return VerificationReportService.buildReport(item, identifier);
       const posProduct = await storage.getPosProductBySerialWithRetailer(identifier);
-      if (posProduct) return VerificationReportService.buildPosReport(posProduct, identifier);
+      if (posProduct) {
+        const report = await VerificationReportService.buildPosReport(posProduct, identifier);
+        return { ...report, isOwner: posProduct.currentOwnerId === userId };
+      }
       return VerificationReportService.buildReport(null, identifier);
     }
 
@@ -88,7 +91,10 @@ export class VerificationReportService {
     const purchase = await storage.getActiveVerificationPurchase(userId, identifier);
     if (!purchase) return null;
 
-    return purchase.reportData as Record<string, any>;
+    const reportData = purchase.reportData as Record<string, any>;
+    // Append isOwner so the client can show the contract download button
+    const posProduct = await storage.getPosProductBySerial(identifier).catch(() => null);
+    return { ...reportData, isOwner: posProduct?.currentOwnerId === userId };
   }
 
   /**

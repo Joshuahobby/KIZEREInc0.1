@@ -295,7 +295,7 @@ ${xmlUrls}
     if (req.method === 'GET' && (req.path === '/' || req.path === '/packages')) return next();
     requireAuth(req, res, next);
   }, paymentRoutes);
-  app.use('/api/payment-packages', requireAuth, paymentRoutes);
+  // /api/payment-packages was a duplicate mount of paymentRoutes — removed (use /api/payments)
   app.use('/api/claims', requireAuth, claimRoutes);
   app.use('/api/me', requireAuth, profileRoutes);
   app.use('/api/upload', requireAuth, uploadRoutes);
@@ -350,17 +350,22 @@ ${xmlUrls}
       await db.execute(sql`SELECT 1`);
       res.json({ status: "ok", database: "connected", timestamp: new Date().toISOString() });
     } catch (error: any) {
-      res.status(500).json({ status: "error", message: "Health check failed", error: error.message });
+      res.status(500).json({
+        status: "error",
+        message: "Health check failed",
+        ...(process.env.NODE_ENV !== 'production' && { error: error.message })
+      });
     }
   });
 
-  // Google Authentication Status endpoint
+  // Google Authentication Status endpoint — returns minimal safe fields only
   app.get("/api/auth/google/status", (req, res) => {
+    const u = req.isAuthenticated() ? req.user : null;
     res.json({
       status: "Available",
       message: "Google authentication is configured and ready",
-      authenticated: req.isAuthenticated(),
-      user: req.isAuthenticated() ? req.user : null
+      authenticated: !!u,
+      user: u ? { id: u.id, role: u.role, username: u.username } : null
     });
   });
 
@@ -459,12 +464,11 @@ ${xmlUrls}
           }
         } catch (tokenError: any) {
           logger.error('Token verification error', { error: tokenError.message });
-          if (process.env.NODE_ENV === 'production' && !isReplitEnvironment) {
+          if (process.env.NODE_ENV === 'production') {
             return res.status(401).json({ message: "Failed to verify authentication token" });
           }
         }
-      } else if (process.env.NODE_ENV === 'production' && !isReplitEnvironment) {
-        // In strict production (non-Replit), require a token
+      } else if (process.env.NODE_ENV === 'production') {
         return res.status(401).json({ message: "Authentication token is required" });
       }
 

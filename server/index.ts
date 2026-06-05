@@ -26,8 +26,12 @@ process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception:', { error: error.message, stack: error.stack });
 });
 
-// Basic middleware setup
-app.use(express.json());
+// Basic middleware setup — capture raw body for webhook signature verification
+app.use(express.json({
+  verify: (req: any, _res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 

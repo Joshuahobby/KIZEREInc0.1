@@ -252,6 +252,8 @@ export class DatabaseStorage implements IStorage {
   getOrCreateRetailerCustomerSettings = posOps.getOrCreateRetailerCustomerSettings;
   getRetailerCustomerDetail = posOps.getRetailerCustomerDetail;
   updateRetailerCustomerSettings = posOps.updateRetailerCustomerSettings;
+  getLedgerContractData = posOps.getLedgerContractData;
+  getBuyerPurchaseHistory = posOps.getBuyerPurchaseHistory;
 
   // Public verify audit logs
   createPublicVerifyLog = posOps.createPublicVerifyLog;

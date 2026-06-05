@@ -1,4 +1,5 @@
 import * as React from "react";
+import { PurchaseContractModal } from "@/components/pos/PurchaseContractModal";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +33,7 @@ import {
   Maximize2,
   Minimize2,
   UserPlus,
+  FileText,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useQuery } from "@tanstack/react-query";
@@ -64,8 +66,8 @@ interface RegisteredProduct {
   registrationDate: string;
 }
 
-type Step = "scenario" | "customer" | "product" | "confirm" | "receipt" | "new-customer";
-type Scenario = "sale" | "stock-in";
+type Step = "scenario" | "customer" | "product" | "confirm" | "receipt" | "new-customer" | "transfer-device" | "transfer-buyer" | "transfer-confirm" | "transfer-pending";
+type Scenario = "sale" | "stock-in" | "transfer";
 
 export default function PosTerminal() {
   const { t } = useLanguage();
@@ -114,6 +116,19 @@ export default function PosTerminal() {
   // Result State
   const [registeredProduct, setRegisteredProduct] = React.useState<RegisteredProduct | null>(null);
   const [verifyUrl, setVerifyUrl] = React.useState<string>("");
+  const [registeredLedgerId, setRegisteredLedgerId] = React.useState<number | null>(null);
+  const [contractOpen, setContractOpen] = React.useState(false);
+
+  // P2P Transfer State
+  const [transferSerial, setTransferSerial] = React.useState("");
+  const [transferProduct, setTransferProduct] = React.useState<{ id: number; name: string; serialNumber: string; category: string; currentOwner?: string } | null>(null);
+  const [transferBuyer, setTransferBuyer] = React.useState<CustomerData | null>(null);
+  const [transferBuyerNid, setTransferBuyerNid] = React.useState("");
+  const [transferBuyerName, setTransferBuyerName] = React.useState("");
+  const [transferBuyerPhone, setTransferBuyerPhone] = React.useState("");
+  const [transferMomoPhone, setTransferMomoPhone] = React.useState("");
+  const [transferPendingRef, setTransferPendingRef] = React.useState<string | null>(null);
+  const transferPollTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const receiptRef = React.useRef<HTMLDivElement>(null);
   const [useWebSerial, setUseWebSerial] = React.useState(false);
   const [isPrinterConnected, setIsPrinterConnected] = React.useState(false);
@@ -343,17 +358,22 @@ export default function PosTerminal() {
     }
     setLoading(true);
     try {
-      if (isFromInventory && inventoryProductId && customer?.id) {
-        // Direct Sales from existing inventory -> implies ownership transfer
-        const res = await apiRequest<any>("/api/pos/transfer", {
+      if (isFromInventory && serialNumber && customer?.id) {
+        // Transfer from stock to customer: re-use /register — the service detects
+        // the existing stock entry and does an internal ownership transfer without payment.
+        const res = await apiRequest<any>("/api/pos/register", {
           method: "POST",
           data: {
-            productId: inventoryProductId,
-            newOwnerId: customer.id,
+            serialNumber,
+            name: productName,
+            category,
+            sku: sku || undefined,
+            ownerId: customer.id,
           }
         });
         if (res.success) {
           setRegisteredProduct(res.product);
+          setRegisteredLedgerId(res.ledger?.id ?? null);
           setStep("receipt");
           setVerifyUrl(`${window.location.origin}/verify/${res.product.serialNumber}`);
         }
@@ -372,6 +392,7 @@ export default function PosTerminal() {
         const res = await apiRequest<any>(endpoint, { method: "POST", data });
         if (res.success) {
           setRegisteredProduct(res.product);
+          setRegisteredLedgerId(res.ledger?.id ?? null);
           setStep("receipt");
           if (scenario !== "stock-in") setVerifyUrl(`${window.location.origin}/verify/${res.product.serialNumber}`);
           else setVerifyUrl(""); // Clear QR for stock-in if not needed
@@ -391,13 +412,76 @@ export default function PosTerminal() {
     setStep("scenario");
     setScenario(null);
     setNationalId(""); setFullName(""); setPhone(""); setEmail("");
-    setCustomer(null); setSerialNumber(""); setProductName(""); setRegisteredProduct(null);
+    setCustomer(null); setSerialNumber(""); setProductName(""); setRegisteredProduct(null); setRegisteredLedgerId(null);
     setPurchasePrice(""); setSupplier(""); setSku("");
     setIsStolen(false);
     setIsStockInMode(false);
     setIsFromInventory(false);
     setInventoryProductId(null);
     setInventorySearch("");
+    setTransferSerial(""); setTransferProduct(null); setTransferBuyer(null);
+    setTransferBuyerNid(""); setTransferBuyerName(""); setTransferBuyerPhone("");
+    setTransferMomoPhone(""); setTransferPendingRef(null);
+    if (transferPollTimer.current) clearTimeout(transferPollTimer.current);
+  };
+
+  const handleTransferDeviceLookup = async () => {
+    if (transferSerial.length < 3) return;
+    setLoading(true);
+    try {
+      const res = await apiGet<any>(`/api/pos/device-lookup?serial=${encodeURIComponent(transferSerial)}`);
+      if (!res.found) {
+        toast({ title: "Device Not Found", description: "No KIZERE registration found for that serial number.", variant: "destructive" });
+        return;
+      }
+      if (res.stolen || res.archived) {
+        toast({ title: "Cannot Transfer", description: res.message, variant: "destructive" });
+        return;
+      }
+      setTransferProduct({ ...res.product, currentOwner: res.ownerName });
+      setStep("transfer-buyer");
+    } catch (err: any) {
+      toast({ title: "Lookup Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTransferBuyerLookup = async () => {
+    if (!transferBuyerNid || !transferBuyerName) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest<any>("/api/pos/check-or-create", {
+        method: "POST",
+        data: { nationalId: transferBuyerNid, fullName: transferBuyerName, phone: transferBuyerPhone || undefined },
+      });
+      if (res.success) {
+        setTransferBuyer(res.customer);
+        setStep("transfer-confirm");
+      }
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInitiateTransfer = async () => {
+    if (!transferProduct || !transferBuyer || !transferMomoPhone.trim()) return;
+    setLoading(true);
+    try {
+      const res = await apiRequest<any>("/api/pos/transfer", {
+        method: "POST",
+        data: { productId: transferProduct.id, newOwnerId: transferBuyer.id, phoneNumber: transferMomoPhone.trim() },
+      });
+      setTransferPendingRef(res.transactionRef);
+      setStep("transfer-pending");
+      toast({ title: "Transfer Initiated", description: "The buyer should approve the MoMo prompt." });
+    } catch (err: any) {
+      toast({ title: "Transfer Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ─── Rendering Helpers ───
@@ -641,7 +725,7 @@ export default function PosTerminal() {
                     <p className="text-slate-400 text-sm md:text-base">Choose the type of transaction you want to perform</p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                     <button
                       onClick={() => { setScenario("sale"); setIsStockInMode(false); setStep("customer"); }}
                       className="group p-5 md:p-8 bg-slate-900/50 border border-slate-800 rounded-[2rem] hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all text-left space-y-3 md:space-y-4"
@@ -671,6 +755,23 @@ export default function PosTerminal() {
                       </div>
                       <div className="pt-4 flex items-center gap-2 text-amber-500 font-bold text-xs uppercase tracking-widest">
                         Start Stock Flow <ArrowRight className="w-4 h-4" />
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => { setScenario("transfer"); setStep("transfer-device"); }}
+                      className="group p-5 md:p-8 bg-slate-900/50 border border-slate-800 rounded-[2rem] hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all text-left space-y-3 md:space-y-4"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
+                        <ArrowLeft className="w-5 h-5" style={{ marginRight: -8 }} />
+                        <ArrowRight className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-white">Transfer Ownership</h3>
+                        <p className="text-sm text-slate-400 mt-2 leading-relaxed">Facilitate a second-hand resale — transfer a registered device from its current owner to a new buyer. Requires transfer fee payment.</p>
+                      </div>
+                      <div className="pt-4 flex items-center gap-2 text-indigo-400 font-bold text-xs uppercase tracking-widest">
+                        Start Transfer <ArrowRight className="w-4 h-4" />
                       </div>
                     </button>
                   </div>
@@ -1234,9 +1335,169 @@ export default function PosTerminal() {
                       <Copy className="w-4 h-4" />
                       Standard Print
                     </Button>
+                    {scenario !== "stock-in" && registeredLedgerId && (
+                      <Button
+                        variant="outline"
+                        className="h-14 px-8 border-emerald-700/30 bg-emerald-900/20 text-emerald-400 rounded-xl font-bold gap-3"
+                        onClick={() => setContractOpen(true)}
+                      >
+                        <FileText className="w-4 h-4" />
+                        Purchase Contract
+                      </Button>
+                    )}
                     <Button className={cn("h-14 px-10 rounded-xl font-bold gap-3 shadow-lg shadow-emerald-600/20", scenario === "stock-in" ? "bg-amber-600 hover:bg-amber-500" : "bg-emerald-600 hover:bg-emerald-500")} onClick={resetFlow}>
                       {scenario === "stock-in" ? <ListPlus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                       {scenario === "stock-in" ? "Stock Another" : "New Registration"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* ─── P2P Transfer Steps ─── */}
+
+              {/* Step: Find Device */}
+              {step === "transfer-device" && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-black text-white">Find Device</h2>
+                    <p className="text-slate-400 text-sm mt-1">Enter the serial number of the device being transferred.</p>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                      <Input
+                        placeholder="Serial Number / IMEI"
+                        className="h-14 pl-14 text-lg font-mono bg-slate-900/40 border-slate-800/50 focus:border-indigo-500/50 rounded-2xl"
+                        value={transferSerial}
+                        onChange={e => setTransferSerial(e.target.value)}
+                        onKeyDown={e => e.key === "Enter" && handleTransferDeviceLookup()}
+                      />
+                    </div>
+                    <Button
+                      className="h-14 w-full rounded-2xl font-bold bg-indigo-600 hover:bg-indigo-500 gap-3"
+                      disabled={loading || transferSerial.length < 3}
+                      onClick={handleTransferDeviceLookup}
+                    >
+                      {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <Search className="w-5 h-5" />}
+                      Look Up Device
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Find Buyer */}
+              {step === "transfer-buyer" && transferProduct && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-black text-white">Identify Buyer</h2>
+                    <p className="text-slate-400 text-sm mt-1">Find or create the new owner's KIZERE account.</p>
+                  </div>
+
+                  <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-sm">
+                    <p className="font-bold text-white">{transferProduct.name}</p>
+                    <p className="font-mono text-indigo-400 text-xs mt-0.5">{transferProduct.serialNumber}</p>
+                    {transferProduct.currentOwner && (
+                      <p className="text-slate-400 mt-1">Current owner: <span className="text-white font-medium">{transferProduct.currentOwner}</span></p>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="Buyer's National ID"
+                      className="h-12 bg-slate-900/40 border-slate-800/50 focus:border-indigo-500/50 rounded-xl"
+                      value={transferBuyerNid}
+                      onChange={e => setTransferBuyerNid(e.target.value.replace(/\D/g, ""))}
+                    />
+                    <Input
+                      placeholder="Full Name"
+                      className="h-12 bg-slate-900/40 border-slate-800/50 focus:border-indigo-500/50 rounded-xl"
+                      value={transferBuyerName}
+                      onChange={e => setTransferBuyerName(e.target.value)}
+                    />
+                    <Input
+                      placeholder="Phone number"
+                      className="h-12 bg-slate-900/40 border-slate-800/50 focus:border-indigo-500/50 rounded-xl"
+                      value={transferBuyerPhone}
+                      onChange={e => setTransferBuyerPhone(e.target.value)}
+                    />
+                    <Button
+                      className="h-12 w-full rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 gap-2"
+                      disabled={loading || transferBuyerNid.length < 6 || !transferBuyerName}
+                      onClick={handleTransferBuyerLookup}
+                    >
+                      {loading ? <Loader2 className="animate-spin w-4 h-4" /> : <User className="w-4 h-4" />}
+                      Find / Create Buyer
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Confirm Transfer */}
+              {step === "transfer-confirm" && transferProduct && transferBuyer && (
+                <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-black text-white">Confirm Transfer</h2>
+                    <p className="text-slate-400 text-sm mt-1">Review the transfer and enter the buyer's MoMo number to initiate payment.</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl space-y-2">
+                      <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Device</p>
+                      <p className="font-bold text-white">{transferProduct.name}</p>
+                      <p className="font-mono text-xs text-indigo-400">{transferProduct.serialNumber}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl">
+                        <p className="text-xs text-slate-500 uppercase tracking-wider font-bold mb-1">From</p>
+                        <p className="text-sm font-semibold text-white">{transferProduct.currentOwner ?? "Unknown"}</p>
+                      </div>
+                      <div className="p-4 bg-indigo-900/30 border border-indigo-500/30 rounded-2xl">
+                        <p className="text-xs text-indigo-400 uppercase tracking-wider font-bold mb-1">To</p>
+                        <p className="text-sm font-semibold text-white">{transferBuyer.fullName}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-400 font-medium">Buyer's MoMo phone (transfer fee payment):</p>
+                    <Input
+                      placeholder="e.g. 0788123456"
+                      type="tel"
+                      className="h-12 bg-slate-900/40 border-slate-800/50 focus:border-indigo-500/50 rounded-xl font-mono"
+                      value={transferMomoPhone}
+                      onChange={e => setTransferMomoPhone(e.target.value)}
+                    />
+                    <Button
+                      className="h-14 w-full rounded-2xl font-bold bg-indigo-600 hover:bg-indigo-500 gap-3 shadow-lg shadow-indigo-600/20"
+                      disabled={loading || !transferMomoPhone.trim()}
+                      onClick={handleInitiateTransfer}
+                    >
+                      {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
+                      Initiate Transfer & Payment
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step: Transfer Pending */}
+              {step === "transfer-pending" && (
+                <div className="flex flex-col items-center space-y-8 animate-in slide-in-from-bottom-4 duration-500 py-10">
+                  <div className="w-24 h-24 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                    <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+                  </div>
+                  <div className="text-center">
+                    <h2 className="text-3xl font-black text-white">Awaiting Payment</h2>
+                    <p className="text-slate-400 mt-2 text-sm">
+                      The buyer should complete the MoMo payment prompt on their phone.<br />
+                      Ownership will transfer automatically once payment is confirmed.
+                    </p>
+                  </div>
+                  <div className="flex gap-4">
+                    <Button variant="outline" className="h-12 px-8 border-slate-800 rounded-xl font-bold" onClick={resetFlow}>
+                      New Transaction
+                    </Button>
+                    <Button asChild className="h-12 px-8 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500">
+                      <Link href="/retailer/transactions">View Transactions</Link>
                     </Button>
                   </div>
                 </div>
@@ -1274,6 +1535,14 @@ export default function PosTerminal() {
           <p className="text-[10px] font-bold text-slate-600 uppercase">Session Time: {sessionTime}</p>
         </div>
       </footer>
+
+      {registeredLedgerId && (
+        <PurchaseContractModal
+          ledgerId={registeredLedgerId}
+          open={contractOpen}
+          onClose={() => setContractOpen(false)}
+        />
+      )}
     </div>
   );
 }

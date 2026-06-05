@@ -90,6 +90,8 @@
     "registerItem": "Enregistrer un Objet",
     "registerItems": "Enregistrer des Objets",
     "myItems": "Mes Objets",
+    "myDevices": "Mes Appareils",
+    "myDevicesLong": "Mes Appareils Enregistrés",
     "directory": "Objets Perdus & Trouvés",
     "userManagement": "Gestion des Utilisateurs",
     "mainHeader": "PRINCIPAL",
@@ -567,6 +569,10 @@
     "lostReports": "Signalements de Perte",
     "foundReports": "Objets Trouvés",
     "totalSpent": "Total Dépensé",
+    "stats": {
+      "totalLost": "Signalements de perte",
+      "totalFound": "Signalements de trouvaille"
+    },
     "recentItems": "Objets Récents",
     "unreadNotifications": "Notifications Non Lues",
     "pendingPayments": "Paiements en Attente",
@@ -634,7 +640,9 @@
       "protectTitle": "[TODO-fr] Rinda Ikintu",
       "verifyTitle": "[TODO-fr] Complete Your Verification",
       "verifyDesc": "[TODO-fr] To fully secure your items and access all recovery features, please complete your identity verification.",
-      "verifyAction": "[TODO-fr] Verify Now"
+      "verifyAction": "Vérifier maintenant",
+      "handover": "Transmettre",
+      "tryAgain": "Réessayer"
     },
     "moderation": {
       "title": "[TODO-fr] Kugenzura",
@@ -770,7 +778,8 @@
       "pending_msg": "[TODO-fr] Our team is reviewing your documents. This usually takes 24 hours.",
       "approved_msg": "[TODO-fr] Your identity is verified. You now have full access to all features.",
       "rejected_msg": "[TODO-fr] Verification was unsuccessful. Please check the reason and try again.",
-      "unverified_msg": "[TODO-fr] Verify your identity to increase your trust score and secure your items."
+      "unverified_msg": "Vérifiez votre identité pour augmenter votre score de confiance et sécuriser vos objets.",
+      "rejected_desc": "Votre vérification a été rejetée. Veuillez réessayer ou contacter le support."
     },
     "table": {
       "reportId": "[TODO-fr] ID ya Raporo",
@@ -938,6 +947,9 @@
     "successDescription": "Votre signalement a été reçu et ajouté à notre base de données.",
     "reportLostItem": "Signaler un Objet Perdu",
     "reportFoundItem": "Signaler un Objet Trouvé",
+    "errorTitle": "Quelque chose s'est mal passé",
+    "payLater": "Payer plus tard",
+    "paymentPending": "Paiement en attente",
     "reportCreated": "Signalement créé, en attente de paiement",
     "proceedToPayment": "Procéder au paiement",
     "paymentSuccess": "Paiement réussi !",
@@ -1380,6 +1392,41 @@
     "serial": "Série",
     "status": "Statut",
     "total": "total",
+    "printed": "Imprimé",
+    "printFailed": "Impression échouée",
+    "receiptPrinted": "Reçu imprimé avec succès.",
+    "connectPrinterError": "Impossible d'imprimer. Vérifiez la connexion imprimante.",
+    "scanReady": "Scanner prêt",
+    "syncing": "Synchronisation",
+    "syncingDesc": "Synchronisation des transactions hors ligne...",
+    "printerConnected": "Imprimante connectée",
+    "printerReady": "Imprimante prête",
+    "printerError": "Erreur imprimante",
+    "blockedRegistration": "Enregistrement bloqué",
+    "blockedTransfer": "Transfert bloqué",
+    "customerNotFound": "Client introuvable",
+    "invalidPin": "PIN invalide",
+    "invalidPinDesc": "Le PIN saisi est incorrect.",
+    "securityAlertHistory": "Historique des alertes de sécurité",
+    "securityAlertHistoryDesc": "Événements de sécurité détectés dans votre magasin.",
+    "transfer": "Transfert",
+    "transferTitle": "Faciliter un transfert de propriété",
+    "transferDesc": "Transférer un appareil KIZERE existant d'un propriétaire à un nouveau acheteur.",
+    "currentOwner": "Propriétaire actuel",
+    "newOwner": "Nouvel acheteur",
+    "findDevice": "Trouver l'appareil",
+    "deviceNotFound": "Appareil introuvable dans le registre KIZERE.",
+    "deviceStolen": "Cet appareil est signalé comme volé et ne peut pas être transféré.",
+    "transferFee": "Frais de transfert",
+    "initiateTransfer": "Initier le transfert et le paiement",
+    "transferInitiated": "Transfert initié",
+    "transferInitiatedDesc": "L'acheteur recevra une demande de paiement sur son téléphone.",
+    "transferPending": "En attente du paiement",
+    "transferPendingDesc": "En attente de la confirmation MoMo...",
+    "transferComplete": "Transfert effectué",
+    "transferCompleteDesc": "La propriété a été transférée avec succès.",
+    "momoPhone": "Numéro MoMo (Acheteur)",
+    "momoPhonePlaceholder": "ex. 0788123456",
     "inventory": {
       "title": "Inventaire des Produits",
       "description": "Recherchez, gérez et suivez tous les produits enregistrés via votre terminal POS",
@@ -1444,6 +1491,17 @@
       "dragDropCsv": "Cliquez ou glissez-déposez le fichier CSV ici",
       "parsingError": "Erreur d'analyse",
       "noValidProducts": "Aucun produit valide trouvé. Assurez-vous que les colonnes 'Serial_Number' et 'Name' sont remplies.",
+      "return": "Retourner le produit",
+      "returnReason": "Motif du retour",
+      "returnNotes": "Notes de retour",
+      "returnNotesPlaceholder": "Motif du retour...",
+      "confirmReturn": "Confirmer le retour",
+      "confirmReturnDesc": "Cela renverra le produit dans votre inventaire. Confirmer?",
+      "returnSuccess": "Produit retourné en inventaire.",
+      "statusRegistered": "Enregistré",
+      "statusTransferred": "Transféré",
+      "statusStolen": "Volé",
+      "statusArchived": "Archivé",
       "productName": "[TODO-fr] Izina ry'Igicuruzwa",
       "category": "[TODO-fr] Icyiciro",
       "status": "[TODO-fr] Imiterere",
@@ -1468,7 +1526,12 @@
       "passwordLength": "Le mot de passe doit comporter au moins 8 caractères",
       "passwordMismatch": "Les mots de passe ne correspondent pas",
       "success": "Compte réclamé!",
-      "successDesc": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe"
+      "successDesc": "Vous pouvez maintenant vous connecter avec votre nouveau mot de passe",
+      "successTitle": "Compte réclamé!",
+      "successDesc2": "Votre compte est prêt. Connectez-vous pour voir vos appareils enregistrés.",
+      "successHint": "Vos appareils sont prêts et vos contrats d'achat sont disponibles au téléchargement.",
+      "viewDevices": "Voir mes appareils et contrats",
+      "goToLogin": "Se connecter à KIZERE"
     },
     "analytics": {
       "title": "Analytiques POS",
@@ -1598,7 +1661,8 @@
     "Other": "[TODO-fr] Ibindi"
   },
   "registration": {
-    "title": "[TODO-fr] Andika Ikintu Cyawe",
+    "editTitle": "Modifier l'enregistrement",
+    "title": "Enregistrer votre objet",
     "subtitle": "[TODO-fr] Kurinda ibintu byawe bifite agaciro ubyandikisha muri sisitemu yacu yizewe.",
     "item_register_title": "[TODO-fr] Andika Ikintu Cyawe",
     "item_register_subtitle": "[TODO-fr] Andikisha ikintu cyawe mu bwizerwe no kukigarura mu gihe cyabuze",
@@ -2046,7 +2110,8 @@
     "genericError": "[TODO-fr] Hari ikintu kigende nabi. Ongera ugerageze."
   },
   "report_detail": {
-    "reportNotFoundTitle": "[TODO-fr] Raporo Ntibonetse",
+    "description": "Description",
+    "reportNotFoundTitle": "Signalement introuvable",
     "reportNotFoundDesc": "[TODO-fr] Raporo ushaka ntibaho cyangwa yakuweho.",
     "backToLostFound": "[TODO-fr] Subira ku Byabuze & Byabonetse",
     "expiredTitle": "[TODO-fr] Iyi raporo yarangije igihe",
@@ -2512,5 +2577,42 @@
       "TechCompany": "Entreprise technologique",
       "Other": "Autre"
     }
+  },
+  "report_found_subtitle": "Aidez à retrouver le propriétaire de l'objet.",
+  "retailer": {
+    "pos": "Terminal POS",
+    "posDesc": "Ouvrir la caisse",
+    "products": "Inventaire",
+    "productsDesc": "Gérer le catalogue produits",
+    "addProduct": "Ajouter un produit",
+    "addProductDesc": "Enregistrer un nouveau produit dans votre inventaire."
+  },
+  "devices": {
+    "myDevices": "Mes Appareils Enregistrés",
+    "myDevicesDesc": "Tous les appareils que vous avez achetés et enregistrés sur KIZERE.",
+    "purchaseHistory": "Historique d'achats",
+    "noDevices": "Aucun appareil",
+    "noDevicesDesc": "Les appareils enregistrés à votre compte via un détaillant KIZERE apparaîtront ici."
+  },
+  "retailerSubscription": {
+    "title": "Abonnement",
+    "plan": "Plan actuel",
+    "expiry": "Expire le",
+    "daysLeft": "{{days}} jours restants",
+    "expired": "Abonnement expiré",
+    "expiringSoon": "Expire dans {{days}} jours",
+    "active": "Actif",
+    "renewBtn": "Renouveler l'abonnement annuel",
+    "renewDesc": "Votre abonnement est renouvelé pour 1 an à partir d'aujourd'hui.",
+    "momoPrompt": "Entrez votre numéro MoMo pour payer",
+    "paymentInitiated": "Paiement initié",
+    "paymentInitiatedDesc": "Vérifiez votre téléphone pour la confirmation MoMo.",
+    "paymentPending": "En attente de confirmation...",
+    "renewSuccess": "Abonnement renouvelé",
+    "renewSuccessDesc": "Votre plan a été prolongé d'un an.",
+    "basic": "Basique",
+    "standard": "Standard",
+    "premium": "Premium",
+    "enterprise": "Entreprise"
   }
 }

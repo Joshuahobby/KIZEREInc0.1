@@ -75,8 +75,11 @@ router.get("/", async (req, res) => {
  */
 router.post("/", reportSubmissionLimiter, async (req, res) => {
   try {
+    // Strip financial/status fields that must only be set by the payment webhook
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { bountyAmount: _ba, bountyStatus: _bs, paymentStatus: _ps, isFeatured: _if, featuredAt: _fa, status: _st, ...userBody } = req.body;
     const validatedData = insertReportSchema.parse({
-      ...req.body,
+      ...userBody,
       userId: req.user!.id
     });
 
@@ -392,12 +395,22 @@ router.patch("/:id", async (req, res) => {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    // Prevent changing certain fields
-    const { userId, receiptNumber, reportedAt, ...allowedUpdates } = req.body;
+    let allowedUpdates: Record<string, any>;
 
-    // Owners can't change status (only admins can)
-    if (!isAdmin && 'status' in allowedUpdates) {
-      delete allowedUpdates.status;
+    if (isAdmin) {
+      // Admins can update anything except immutable identity fields
+      const { userId, receiptNumber, reportedAt, ...rest } = req.body;
+      allowedUpdates = rest;
+    } else {
+      // Owners may only update descriptive fields — never financial or moderation fields
+      const OWNER_FIELDS = new Set([
+        'title', 'description', 'location', 'imageUrls',
+        'contactInfo', 'category', 'uniqueIdentifier', 'color',
+        'brand', 'additionalDetails',
+      ]);
+      allowedUpdates = Object.fromEntries(
+        Object.entries(req.body).filter(([k]) => OWNER_FIELDS.has(k))
+      );
     }
 
     const updatedReport = await storage.updateReport(id, allowedUpdates);

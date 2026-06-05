@@ -1,7 +1,10 @@
 
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
+import passport from "passport";
 import { createLogger } from "./utils/logger";
+import { sessionMiddleware } from "./auth";
+import { storage } from "./storage";
 
 const logger = createLogger("WebSocket");
 
@@ -9,6 +12,10 @@ let io: Server | null = null;
 
 // Map of userId -> Set of socket IDs
 const userSockets = new Map<number, Set<string>>();
+
+// Wraps Express middleware so Socket.IO can use it on the upgrade request
+const wrap = (middleware: any) => (socket: any, next: any) =>
+  middleware(socket.request, socket.request.res || {}, next);
 
 export function setupWebSocket(httpServer: HttpServer): Server | null {
     // Socket.io is not compatible with Vercel serverless functions
@@ -28,29 +35,61 @@ export function setupWebSocket(httpServer: HttpServer): Server | null {
         transports: ["websocket", "polling"],
     });
 
+    // Apply session + passport middleware so socket.request.user is populated
+    io.use(wrap(sessionMiddleware));
+    io.use(wrap(passport.initialize()));
+    io.use(wrap(passport.session()));
+
+    // Reject unauthenticated connections at the handshake level
+    io.use((socket, next) => {
+        const user = (socket.request as any).user;
+        if (!user) {
+            logger.warn("WebSocket: rejected unauthenticated connection", { socketId: socket.id });
+            return next(new Error("Authentication required"));
+        }
+        next();
+    });
+
     io.on("connection", (socket: Socket) => {
-        logger.info("Socket connected", { socketId: socket.id });
+        const sessionUser = (socket.request as any).user;
+        logger.info("Socket connected", { socketId: socket.id, userId: sessionUser.id });
 
-        // Authenticate: client sends userId after connecting
+        // Auto-join the authenticated user's notification room
+        socket.join(`user:${sessionUser.id}`);
+        if (!userSockets.has(sessionUser.id)) {
+            userSockets.set(sessionUser.id, new Set());
+        }
+        userSockets.get(sessionUser.id)!.add(socket.id);
+
+        // "auth" event is kept for backwards compatibility but now verifies against the session user
         socket.on("auth", (userId: number) => {
-            if (!userId) return;
-
-            // Join a user-specific room
-            socket.join(`user:${userId}`);
-
-            // Track the mapping
-            if (!userSockets.has(userId)) {
-                userSockets.set(userId, new Set());
+            if (!userId || userId !== sessionUser.id) {
+                logger.warn("WebSocket: auth event userId mismatch — ignoring", {
+                    claimed: userId,
+                    actual: sessionUser.id,
+                });
+                return;
             }
-            userSockets.get(userId)!.add(socket.id);
-
-            logger.info("User authenticated on socket", { userId, socketId: socket.id });
+            logger.info("User confirmed auth on socket", { userId, socketId: socket.id });
         });
 
-        // Chat: join a specific chat room
-        socket.on("chat:join", (chatId: number) => {
-            socket.join(`chat:${chatId}`);
-            logger.info("Socket joined chat room", { chatId, socketId: socket.id });
+        // Chat: join a specific chat room (verify the user is a participant)
+        socket.on("chat:join", async (chatId: number) => {
+            try {
+                const chat = await storage.getChat(chatId);
+                if (!chat) return;
+                if (chat.finderId !== sessionUser.id && chat.claimantId !== sessionUser.id) {
+                    logger.warn("WebSocket: unauthorized chat:join attempt", {
+                        userId: sessionUser.id,
+                        chatId,
+                    });
+                    return;
+                }
+                socket.join(`chat:${chatId}`);
+                logger.info("Socket joined chat room", { chatId, socketId: socket.id });
+            } catch (err) {
+                logger.error("chat:join error", { err });
+            }
         });
 
         // Chat: leave a specific chat room
@@ -58,24 +97,24 @@ export function setupWebSocket(httpServer: HttpServer): Server | null {
             socket.leave(`chat:${chatId}`);
         });
 
-        // Chat: typing indicator
-        socket.on("chat:typing", (data: { chatId: number; userId: number; isTyping: boolean }) => {
+        // Chat: typing indicator (broadcast to other participants only)
+        socket.on("chat:typing", (data: { chatId: number; isTyping: boolean }) => {
             socket.to(`chat:${data.chatId}`).emit("chat:typing", {
-                userId: data.userId,
+                userId: sessionUser.id,
                 isTyping: data.isTyping,
             });
         });
 
         // Cleanup on disconnect
         socket.on("disconnect", () => {
-            // Clean up userSockets map
-            for (const [userId, sockets] of Array.from(userSockets.entries())) {
+            const sockets = userSockets.get(sessionUser.id);
+            if (sockets) {
                 sockets.delete(socket.id);
                 if (sockets.size === 0) {
-                    userSockets.delete(userId);
+                    userSockets.delete(sessionUser.id);
                 }
             }
-            logger.info("Socket disconnected", { socketId: socket.id });
+            logger.info("Socket disconnected", { socketId: socket.id, userId: sessionUser.id });
         });
     });
 

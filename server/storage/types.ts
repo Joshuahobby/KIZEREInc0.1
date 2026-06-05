@@ -251,6 +251,8 @@ export interface IStorage {
   getOrCreateRetailerCustomerSettings(retailerId: number, customerId: number): Promise<any>;
   getRetailerCustomerDetail(retailerId: number, customerId: number): Promise<any>;
   updateRetailerCustomerSettings(retailerId: number, customerId: number, updates: { isBlocked?: boolean; internalNotes?: string }): Promise<any>;
+  getLedgerContractData(ledgerId: number): Promise<any>;
+  getBuyerPurchaseHistory(userId: number): Promise<any[]>;
 
   // Platform settings
   getPlatformSetting(key: string): Promise<PlatformSetting | undefined>;

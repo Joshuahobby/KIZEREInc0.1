@@ -3,7 +3,8 @@ import { UserPreferences } from "@shared/schema";
 import { storage } from "../storage";
 import { createLogger } from "../utils/logger";
 import { UserService } from "../services/user.service";
-import { comparePasswords } from "../utils/auth-crypto";
+import { comparePasswords, hashPassword } from "../utils/auth-crypto";
+import { pool } from "../db";
 
 const logger = createLogger('ProfileRoutes');
 const router = Router();
@@ -29,6 +30,29 @@ router.put("/", async (req, res) => {
         obj[key] = updateData[key];
         return obj;
       }, {});
+
+    // Changing email or phone requires current-password verification to prevent
+    // account takeover via a stolen session (change email → trigger password reset
+    // to attacker-controlled inbox).
+    const changingSensitive = ['email', 'phoneNumber'].some(f => filteredUpdateData[f] !== undefined);
+    if (changingSensitive) {
+      const user = await UserService.getUserById(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      if (!user.password) {
+        // OAuth-only accounts: email is managed by the linked provider
+        return res.status(403).json({ message: "Email and phone number can only be changed through your linked authentication provider" });
+      }
+
+      const { currentPassword } = req.body;
+      if (!currentPassword) {
+        return res.status(400).json({ message: "Current password is required to change email or phone number" });
+      }
+      const isValid = await comparePasswords(currentPassword, user.password);
+      if (!isValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+    }
 
     // Special handling for preferences to merge instead of overwrite
     if (filteredUpdateData.preferences && req.user?.preferences) {
@@ -71,8 +95,16 @@ router.put("/password", async (req, res) => {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
 
-    // Update with new password
-    await UserService.updateUser(userId, { password: newPassword });
+    // Hash before storing — updateUser does not hash automatically
+    await UserService.updateUser(userId, { password: await hashPassword(newPassword) });
+
+    // Invalidate all other sessions so stolen sessions cannot be replayed
+    try {
+      await pool.query(
+        `DELETE FROM "session" WHERE (sess->'passport'->'user'->>'id')::int = $1 AND sid != $2`,
+        [userId, (req.session as any).id ?? req.sessionID]
+      );
+    } catch { /* MemoryStore in dev — non-fatal */ }
 
     logger.info('User changed their password', { userId });
     res.json({ message: "Password updated successfully" });
@@ -147,7 +179,7 @@ router.put("/preferences", async (req, res) => {
       }
     };
 
-    logger.info(`Updating preferences for user ${userId}`, { old: currentPreferences, new: updatedPreferences });
+    logger.info('Updating preferences for user', { userId });
 
     const updatedUser = await UserService.updateUser(userId, {
       preferences: updatedPreferences,

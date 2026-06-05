@@ -1,4 +1,5 @@
 import { Router } from "express";
+import crypto from "crypto";
 import { storage } from "../storage";
 import { insertClaimSchema, claimStatuses } from "@shared/schema";
 import { z } from "zod";
@@ -240,7 +241,7 @@ router.patch("/:id/verify", claimVerificationLimiter, async (req, res) => {
     if (status === 'verified') {
       updateData.verifiedAt = new Date();
       // Generate 6-digit OTP for secure handover
-      updateData.handoverOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      updateData.handoverOtp = crypto.randomInt(100000, 1000000).toString();
 
       // Phase 2: Award points for verification
       ReputationService.awardVerificationPoints(report.userId).catch(err =>
@@ -540,9 +541,10 @@ router.get("/report/:reportId", async (req, res) => {
 
 /**
  * POST /api/claims/:id/handover
- * Finalize the handover using an OTP
+ * Finalize the handover using an OTP.
+ * Only the finder (report.userId) may submit the OTP.
  */
-router.post("/:id/handover", async (req, res) => {
+router.post("/:id/handover", claimVerificationLimiter, async (req, res) => {
   try {
     const claimId = parseInt(req.params.id);
     const { otp } = req.body;
@@ -563,6 +565,11 @@ router.post("/:id/handover", async (req, res) => {
     const report = await storage.getReport(claim.reportId);
     if (!report) {
       return res.status(404).json({ message: "Associated report not found" });
+    }
+
+    // Only the finder (report owner) can confirm physical handover
+    if (report.userId !== req.user!.id) {
+      return res.status(403).json({ message: "Only the finder can confirm the handover" });
     }
 
     // Verify OTP

@@ -100,7 +100,8 @@ router.get("/users/:id", requireAdmin, async (req, res) => {
     const userId = parseInt(req.params.id);
     const user = await storage.getUser(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
+    const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user;
+    res.json(safeUser);
   } catch (error) {
     logger.error(`Error getting user with ID ${req.params.id}:`, error);
     res.status(500).json({ 
@@ -213,14 +214,21 @@ router.get("/users/:id/payments", requireAdmin, async (req, res) => {
 router.patch("/users/:id", requireAdmin, async (req, res) => {
   try {
     const userId = parseInt(req.params.id);
-    const userData = req.body;
     const adminId = req.user!.id;
 
-    // Remove sensitive or read-only fields if they exist
-    delete userData.id;
-    delete userData.password;
-    delete userData.createdAt;
-    delete userData.lastLogin;
+    // Strip fields that must only be changed through their dedicated endpoints
+    const BLOCKED = new Set([
+      'id', 'password', 'createdAt', 'lastLogin',
+      'role', 'twoFactorEnabled', 'twoFactorSecret',
+      'resetPasswordToken', 'resetPasswordExpires',
+      'firebaseUid', 'customPermissions', 'verificationStatus',
+      'premiumExpiresAt', 'premiumRegistrationCount',
+      'isTrusted', 'reputationScore', 'itemsReturnedCount',
+      'warningCount',
+    ]);
+    const userData = Object.fromEntries(
+      Object.entries(req.body).filter(([key]) => !BLOCKED.has(key))
+    );
 
     const user = await storage.getUser(userId);
     if (!user) return res.status(404).json({ message: "User not found" });
@@ -616,7 +624,7 @@ router.delete("/items/:id", requireAdmin, async (req, res) => {
 // REPORT MANAGEMENT (Admin)
 // ==========================================
 
-router.get("/reports/stats", async (req, res) => {
+router.get("/reports/stats", requireAdmin, async (req, res) => {
   try {
     const stats = await storage.getReportStats();
     res.json(stats);
@@ -625,7 +633,7 @@ router.get("/reports/stats", async (req, res) => {
   }
 });
 
-router.get("/reports", async (req, res) => {
+router.get("/reports", requireAdmin, async (req, res) => {
   try {
     const result = await storage.getReportsWithFilters({
       page: parseInt(req.query.page as string) || 1,
@@ -666,7 +674,7 @@ router.patch("/reports/:id/status", requireAdmin, async (req, res) => {
   }
 });
 
-router.get("/reports/:id", async (req, res) => {
+router.get("/reports/:id", requireAdmin, async (req, res) => {
   try {
     const reportId = parseInt(req.params.id);
     const reportData = await storage.getReportWithRelatedData(reportId);
@@ -825,7 +833,7 @@ router.delete("/payment-packages/:id", requireAdmin, async (req, res) => {
 });
 
 // Update status specific
-router.patch("/payment-packages/:id/status", async (req, res) => {
+router.patch("/payment-packages/:id/status", requireAdmin, async (req, res) => {
   try {
     const pkgId = parseInt(req.params.id);
     const { status } = req.body;
@@ -838,7 +846,7 @@ router.patch("/payment-packages/:id/status", async (req, res) => {
 });
 
 // Set default
-router.patch("/payment-packages/:id/default", async (req, res) => {
+router.patch("/payment-packages/:id/default", requireAdmin, async (req, res) => {
   try {
     const pkgId = parseInt(req.params.id);
     const updated = await storage.setDefaultPaymentPackage(pkgId);
@@ -850,7 +858,7 @@ router.patch("/payment-packages/:id/default", async (req, res) => {
 });
 
 // Legacy PUT support (optional, can be removed if frontend is fully updated to PATCH)
-router.put("/payment-packages/:id", async (req, res) => {
+router.put("/payment-packages/:id", requireAdmin, async (req, res) => {
   try {
     const updated = await storage.updatePaymentPackage(parseInt(req.params.id), req.body);
     res.json(updated);
@@ -875,7 +883,7 @@ router.get("/system-status", requireAdmin, async (req, res) => {
   }
 });
 
-router.get("/activity-log", async (req, res) => {
+router.get("/activity-log", requireAdmin, async (req, res) => {
   try {
     const adminActions = await storage.getRecentAdminActions(50);
     res.json(adminActions);

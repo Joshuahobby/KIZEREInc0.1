@@ -3,10 +3,11 @@ import { storage } from "../storage";
 import {
   insertPaymentPackageSchema,
   initiatePaymentSchema,
+  payments,
   payouts
 } from "@shared/schema";
 import { db } from "../db";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { z } from "zod";
 import { createLogger } from "../utils/logger";
 import { validatePawaPayIP } from "../middleware/security.middleware";
@@ -124,14 +125,20 @@ router.post("/initiate", async (req, res) => {
       amount = await getPaymentAmount(validatedData.type as 'registration' | 'lost_report');
     }
     
-    // Add bounty if it's a lost report
-    if (validatedData.type === "lost_report" && validatedData.reportId) {
+    // Verify reportId/itemId ownership before associating with this payment
+    if (validatedData.reportId) {
       const report = await storage.getReport(validatedData.reportId);
-      if (report && report.bountyAmount) {
-        const bounty = Number(report.bountyAmount);
-        logger.info("Adding bounty to payment amount", { reportId: report.id, baseAmount: amount, bounty });
-        amount += bounty;
+      if (!report) return res.status(404).json({ message: "Report not found" });
+      if (report.userId !== req.user!.id) return res.status(403).json({ message: "Forbidden" });
+      if (validatedData.type === "lost_report" && report.bountyAmount) {
+        amount += Number(report.bountyAmount);
+        logger.info("Adding bounty to payment amount", { reportId: report.id, bounty: report.bountyAmount });
       }
+    }
+    if (validatedData.itemId) {
+      const item = await storage.getItem(validatedData.itemId);
+      if (!item) return res.status(404).json({ message: "Item not found" });
+      if (item.userId !== req.user!.id) return res.status(403).json({ message: "Forbidden" });
     }
 
     // Apply coupon if provided
@@ -238,12 +245,19 @@ router.post("/webhook", validatePawaPayIP, verifyPawaPaySignature, async (req, r
 
       if (payload.status === 'COMPLETED') {
         if (payment.currency === payload.currency && parseFloat(payment.amount) <= parseFloat(payload.amount)) {
-          if (payment.status !== 'completed') {
-            await storage.updatePayment(payment.id, {
+          // Atomic guard: only proceed if this exact update transitions pending→completed
+          // This prevents double-execution when PawaPay retries the webhook simultaneously
+          const [atomicUpdate] = await db
+            .update(payments)
+            .set({
               status: 'completed',
               transactionId: payload.depositId,
               providerRef: payload.providerTransactionId || null
-            });
+            })
+            .where(and(eq(payments.id, payment.id), ne(payments.status, 'completed')))
+            .returning({ id: payments.id });
+
+          if (atomicUpdate) {
 
             const user = await storage.getUser(payment.userId);
             if (user?.email) {
@@ -303,11 +317,11 @@ router.post("/webhook", validatePawaPayIP, verifyPawaPaySignature, async (req, r
             const metadata = payment.metadata as any;
             if (metadata && metadata.couponId) {
               logger.info("Recording coupon usage after successful webhook", { couponId: metadata.couponId });
-              await CouponService.recordUsage(metadata.couponId).catch(err => 
+              await CouponService.recordUsage(metadata.couponId).catch(err =>
                 logger.error("Failed to record coupon usage", { error: err, couponId: metadata.couponId })
               );
             }
-          }
+          } // end atomicUpdate
         }
       } else if (payload.status === 'FAILED') {
         if (payment.status !== 'completed') {
@@ -360,6 +374,10 @@ router.get("/verify/:txRef", async (req, res) => {
     const payment = await storage.getPaymentByTransactionRef(txRef);
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" });
+    }
+
+    if (payment.userId !== req.user!.id && req.user!.role !== 'Admin') {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
     // Call PawaPay to check deposit status
@@ -496,6 +514,9 @@ router.get("/status/:txRef", async (req, res) => {
     const payment = await storage.getPaymentByTransactionRef(req.params.txRef);
     if (!payment) {
       return res.status(404).json({ message: "Payment not found" });
+    }
+    if (payment.userId !== req.user!.id && req.user!.role !== 'Admin') {
+      return res.status(403).json({ message: "Forbidden" });
     }
     res.json(payment);
   } catch (error) {

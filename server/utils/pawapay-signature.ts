@@ -283,7 +283,8 @@ export async function verifyPawaPaySignature(req: Request, res: Response, next: 
 
     try {
         // Step 1: Verify Content-Digest (body integrity)
-        const rawBody = JSON.stringify(req.body);
+        // Use the original raw bytes to avoid JSON re-serialization differences
+        const rawBody = (req as any).rawBody?.toString('utf8') ?? JSON.stringify(req.body);
 
         if (!verifyContentDigest(rawBody, contentDigest)) {
             logger.error('Content-Digest verification failed — body may have been tampered with');

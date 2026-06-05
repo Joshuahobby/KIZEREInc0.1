@@ -728,7 +728,9 @@ export const insertCouponSchema = createInsertSchema(coupons).omit({
   usageCount: true
 }).extend({
   discountType: z.enum(couponTypes),
-  discountValue: z.union([z.string(), z.number()]).transform(val => val.toString()),
+  discountValue: z.union([z.string(), z.number()])
+    .transform(val => val.toString())
+    .refine(val => parseFloat(val) > 0, { message: "Discount value must be greater than 0" }),
   minPurchase: z.union([z.string(), z.number()]).optional().default("0").transform(val => val.toString()),
   maxDiscount: z.union([z.string(), z.number()]).nullable().optional().transform(val => val?.toString() || null),
   validFrom: z.date().or(z.string().transform(val => new Date(val))).default(() => new Date()),

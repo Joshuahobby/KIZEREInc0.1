@@ -26,6 +26,9 @@ declare global {
 }
 
 
+// Exported so Socket.IO can reuse the same session middleware for WS auth
+export let sessionMiddleware: ReturnType<typeof session>;
+
 export function setupSessionAccess(app: Express) {
   // SESSION_SECRET is critical for session persistence in serverless environments.
   const sessionSecret = process.env.SESSION_SECRET;
@@ -69,7 +72,8 @@ export function setupSessionAccess(app: Express) {
   });
 
   app.set("trust proxy", 1);
-  app.use(session(sessionSettings));
+  sessionMiddleware = session(sessionSettings);
+  app.use(sessionMiddleware);
   app.use(passport.initialize());
   app.use(passport.session());
 }
@@ -246,10 +250,8 @@ export function setupAuth(app: Express) {
 
           return res.status(200).json({
             requires2FA: true,
-            userId: user.id,
             methods,
             preferredMethod: user.twoFactorMethod,
-            // Mask phone/email for privacy
             maskedPhone: user.phoneNumber ? maskPhone(user.phoneNumber) : null,
             maskedEmail: user.email ? maskEmail(user.email) : null,
           });
@@ -257,19 +259,23 @@ export function setupAuth(app: Express) {
         return;
       }
 
-      // Normal login (no 2FA)
-      req.login(user as Express.User, (loginErr) => {
-        if (loginErr) return next(loginErr);
+      // Normal login (no 2FA) — rotate session ID before completing login
+      req.session.regenerate((regenErr) => {
+        if (regenErr) return next(regenErr);
 
-        req.session.save((saveErr) => {
-          if (saveErr) return next(saveErr);
-          
-          storage.updateUser(user.id, { lastLogin: new Date() }).catch(err => {
-            logger.error('Failed to update last login', { error: err, userId: user.id });
+        req.login(user as Express.User, (loginErr) => {
+          if (loginErr) return next(loginErr);
+
+          req.session.save((saveErr) => {
+            if (saveErr) return next(saveErr);
+
+            storage.updateUser(user.id, { lastLogin: new Date() }).catch(err => {
+              logger.error('Failed to update last login', { error: err, userId: user.id });
+            });
+
+            const { password, ...userWithoutPassword } = user;
+            res.status(200).json(userWithoutPassword);
           });
-
-          const { password, ...userWithoutPassword } = user;
-          res.status(200).json(userWithoutPassword);
         });
       });
     })(req, res, next);
@@ -355,21 +361,23 @@ export function setupAuth(app: Express) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Clear pending 2FA
-      delete (req.session as any).pending2FAUserId;
+      // Rotate session ID before completing login to prevent session fixation
+      req.session.regenerate((regenErr) => {
+        if (regenErr) return next(regenErr);
 
-      req.login(user as Express.User, (loginErr) => {
-        if (loginErr) return next(loginErr);
+        req.login(user as Express.User, (loginErr) => {
+          if (loginErr) return next(loginErr);
 
-        req.session.save((saveErr) => {
-          if (saveErr) return next(saveErr);
-          
-          storage.updateUser(user.id, { lastLogin: new Date() }).catch(err => {
-            logger.error('Failed to update last login', { error: err, userId: user.id });
+          req.session.save((saveErr) => {
+            if (saveErr) return next(saveErr);
+
+            storage.updateUser(user.id, { lastLogin: new Date() }).catch(err => {
+              logger.error('Failed to update last login', { error: err, userId: user.id });
+            });
+
+            const { password, ...userWithoutPassword } = user;
+            res.status(200).json(userWithoutPassword);
           });
-
-          const { password, ...userWithoutPassword } = user;
-          res.status(200).json(userWithoutPassword);
         });
       });
     } catch (error) {
@@ -391,12 +399,13 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Invalid method. Use 'sms', 'email', or 'both'." });
       }
 
-      // Verify the confirmation code if provided
-      if (code) {
-        const verifyResult = await verifyOTP(req.user.id, code, 'login_2fa');
-        if (!verifyResult.valid) {
-          return res.status(400).json({ message: verifyResult.message });
-        }
+      // Require a confirmation code — proves the user controls their device before enabling 2FA
+      if (!code) {
+        return res.status(400).json({ message: "A verification code is required. Please call /api/auth/2fa/send first." });
+      }
+      const verifyResult = await verifyOTP(req.user.id, code, 'login_2fa');
+      if (!verifyResult.valid) {
+        return res.status(400).json({ message: verifyResult.message });
       }
 
       // Enable 2FA
@@ -522,10 +531,7 @@ export function setupAuth(app: Express) {
         const message = `Your KIZERE password reset code is: ${token}. It expires in 1 hour. Do not share this code with anyone.`;
         await sendSMS(user.phoneNumber || identifier, message);
         
-        res.status(200).json({ 
-          message: "Password reset code sent to your phone",
-          phone: user.phoneNumber || identifier 
-        });
+        res.status(200).json({ message: "If an account exists with that phone number, a reset code has been sent." });
       }
     } catch (error: any) {
       // For security, don't reveal if user exists or not (except for specific errors)

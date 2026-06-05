@@ -153,10 +153,11 @@ export async function verifyOTP(
     const hashedCode = hashOTP(code);
     const now = new Date();
 
-    // Find a matching, unused, non-expired code
+    // Atomic CAS: mark the code as used in a single UPDATE WHERE usedAt IS NULL.
+    // This prevents replay attacks from concurrent requests that both pass a SELECT check.
     const [matchingCode] = await db
-      .select()
-      .from(verificationCodes)
+      .update(verificationCodes)
+      .set({ usedAt: now })
       .where(
         and(
           eq(verificationCodes.userId, userId),
@@ -166,22 +167,47 @@ export async function verifyOTP(
           gt(verificationCodes.expiresAt, now)
         )
       )
-      .orderBy(desc(verificationCodes.createdAt))
-      .limit(1);
+      .returning();
 
     if (!matchingCode) {
+      // Count recent failed attempts for this user+type to enforce lockout
+      const windowStart = new Date(now.getTime() - 15 * 60 * 1000);
+      const recentFailed = await db
+        .select()
+        .from(verificationCodes)
+        .where(
+          and(
+            eq(verificationCodes.userId, userId),
+            eq(verificationCodes.type, type),
+            gt(verificationCodes.createdAt, windowStart),
+            isNull(verificationCodes.usedAt)
+          )
+        );
+      // After 5 distinct unused codes exist (each failed attempt consumed one attempt slot),
+      // or if the code simply doesn't match, invalidate all pending codes to force re-issue
+      if (recentFailed.length >= 5) {
+        await db
+          .update(verificationCodes)
+          .set({ usedAt: now })
+          .where(
+            and(
+              eq(verificationCodes.userId, userId),
+              eq(verificationCodes.type, type),
+              isNull(verificationCodes.usedAt)
+            )
+          );
+        logger.warn('OTP lockout — all pending codes invalidated after too many failed attempts', { userId, type });
+        return {
+          valid: false,
+          message: 'Too many failed attempts. Please request a new verification code.'
+        };
+      }
       logger.warn('Invalid or expired OTP attempt', { userId, type });
       return {
         valid: false,
         message: 'Invalid or expired verification code. Please request a new one.'
       };
     }
-
-    // Mark as used
-    await db
-      .update(verificationCodes)
-      .set({ usedAt: now })
-      .where(eq(verificationCodes.id, matchingCode.id));
 
     logger.info('OTP verified successfully', { userId, type });
     return {

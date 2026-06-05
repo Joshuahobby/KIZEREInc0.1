@@ -1,8 +1,18 @@
 import { Router } from "express";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
 import { storage } from "../storage";
 import { requireAuth } from "../middleware/auth.middleware";
 import { getPaymentAmount } from "../config/payment.config";
+
+// Tight limiter for the PII-rich report endpoint
+const reportLookupLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many report lookups. Please try again later." },
+});
 import {
   generateDepositId,
   initiateDeposit,
@@ -40,7 +50,7 @@ router.get("/verify/:identifier", async (req, res) => {
  * Authenticated. Returns full report if the user has an active purchase or is premium.
  * 402 if no access — client should direct user to purchase flow.
  */
-router.get("/verify/:identifier/report", requireAuth, async (req, res) => {
+router.get("/verify/:identifier/report", requireAuth, reportLookupLimiter, async (req, res) => {
   const { identifier } = req.params;
   try {
     const report = await VerificationReportService.getReport(req.user!.id, identifier.trim());

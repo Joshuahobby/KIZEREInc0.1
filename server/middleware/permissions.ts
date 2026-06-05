@@ -9,9 +9,18 @@ const logger = createLogger('PermissionsMiddleware');
 
 // Note: User interface is augmented in server/auth.ts
 
-// In-memory cache for role permissions (TTL: 5 minutes)
+// In-memory cache for role permissions (TTL: 30 seconds — short enough to propagate revocations)
 const rolePermissionCache = new Map<string, { permissions: string[]; cachedAt: number }>();
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 30 * 1000;
+
+/** Call this after any role permission change to force immediate re-fetch. */
+export function invalidatePermissionCache(roleName?: string): void {
+  if (roleName) {
+    rolePermissionCache.delete(roleName);
+  } else {
+    rolePermissionCache.clear();
+  }
+}
 
 export function checkPermission(requiredPermission: PermissionType) {
     return async (req: Request, res: Response, next: NextFunction) => {

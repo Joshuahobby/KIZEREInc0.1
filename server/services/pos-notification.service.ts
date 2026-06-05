@@ -17,6 +17,7 @@ export interface PosNotificationData {
   serialNumber: string;
   category: string;
   retailerName: string;
+  ledgerId?: number;
 }
 
 /**
@@ -51,8 +52,8 @@ export async function notifyPosCustomer(
       event === "registration" ? "Product Registered" : "Ownership Transferred";
     const notificationMessage =
       event === "registration"
-        ? `${data.productName} has been registered to your account by ${data.retailerName}.`
-        : `${data.productName} has been transferred to your account by ${data.retailerName}.`;
+        ? `${data.productName} has been registered to your account by ${data.retailerName}. Visit My Devices to download your purchase contract.`
+        : `${data.productName} has been transferred to your account by ${data.retailerName}. Visit My Devices to download your purchase contract.`;
 
     await storage.createNotification({
       userId: user.id,

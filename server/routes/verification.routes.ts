@@ -16,7 +16,7 @@ const logger = createLogger('VerificationRoutes');
  * Generate a random code for the user to hold during verification
  */
 router.get('/liveness-code', (req: Request, res: Response) => {
-  const code = Math.floor(1000 + Math.random() * 9000).toString();
+  const code = crypto.randomInt(1000, 10000).toString();
   // Store in session for validation upon submission
   (req.session as any).livenessCode = code;
   res.json({ code });
@@ -151,9 +151,9 @@ router.post(
         stack: error.stack,
         details: error.details
       });
-      res.status(500).json({ 
-        message: 'Failed to submit verification', 
-        debug: error.message,
+      res.status(500).json({
+        message: 'Failed to submit verification',
+        ...(process.env.NODE_ENV !== 'production' && { debug: error.message }),
         errorId: crypto.randomUUID()
       });
     }
@@ -180,7 +180,10 @@ router.get('/status', async (req: Request, res: Response) => {
       error: error.message,
       stack: error.stack 
     });
-    res.status(500).json({ message: 'Failed to fetch status', debug: error.message });
+    res.status(500).json({
+      message: 'Failed to fetch status',
+      ...(process.env.NODE_ENV !== 'production' && { debug: error.message })
+    });
   }
 });
 
@@ -225,6 +228,10 @@ router.post('/verify-direct', async (req: Request, res: Response) => {
     const { userId, documentType, comment } = req.body;
     if (!userId || !documentType) {
       return res.status(400).json({ message: 'User ID and document type are required' });
+    }
+
+    if (parseInt(userId) === req.user!.id) {
+      return res.status(403).json({ message: 'Cannot verify your own identity' });
     }
 
     const targetUser = await storage.getUser(parseInt(userId));

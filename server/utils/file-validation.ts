@@ -25,10 +25,7 @@ const IMAGE_MAGIC_BYTES: Record<string, number[][]> = {
   'image/bmp': [
     [0x42, 0x4D] // BM
   ],
-  'image/svg+xml': [
-    [0x3C, 0x3F, 0x78, 0x6D, 0x6C], // <?xml
-    [0x3C, 0x73, 0x76, 0x67]         // <svg
-  ]
+  // SVG intentionally excluded — SVG can carry XSS payloads via event handlers
 };
 
 // Document magic bytes
@@ -108,12 +105,11 @@ function validateImageFile(header: number[], claimedMimeType: string): Validatio
     }
   }
 
-  // Check each allowed image type
+  // Check each allowed image type — require detected type to match claimed type exactly
   for (const [mimeType, patterns] of Object.entries(IMAGE_MAGIC_BYTES)) {
     for (const pattern of patterns) {
       if (matchesMagicBytes(header, pattern)) {
-        // Verify the detected type matches claimed type (or is a valid image)
-        if (claimedMimeType.startsWith('image/')) {
+        if (mimeType === claimedMimeType) {
           return { isValid: true, detectedMimeType: mimeType };
         }
       }
@@ -185,9 +181,9 @@ function matchesMagicBytes(header: number[], pattern: number[]): boolean {
  * @returns True if suspicious content is detected
  */
 export function hasSuspiciousContent(buffer: Buffer): boolean {
-  const content = buffer.toString('utf-8', 0, Math.min(buffer.length, 1000));
-  
-  // Check for script tags, embedded JS, or PHP
+  // Scan full file — payloads can be embedded beyond the first 1000 bytes
+  const content = buffer.toString('utf-8', 0, buffer.length);
+
   const suspiciousPatterns = [
     /<script/i,
     /javascript:/i,
@@ -196,7 +192,16 @@ export function hasSuspiciousContent(buffer: Buffer): boolean {
     /<%/,
     /eval\s*\(/i,
     /document\.(cookie|write|location)/i,
-    /window\.(location|open)/i
+    /window\.(location|open)/i,
+    // SVG-specific event handler injection
+    /\bon\w+\s*=/i,
+    /<foreignObject/i,
+    /xlink:href/i,
+    // PDF active content
+    /\/JS\s/i,
+    /\/JavaScript/i,
+    /\/OpenAction/i,
+    /\/AA\s/i,
   ];
 
   return suspiciousPatterns.some(pattern => pattern.test(content));

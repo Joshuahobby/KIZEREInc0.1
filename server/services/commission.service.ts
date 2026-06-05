@@ -46,13 +46,16 @@ export class CommissionService {
    * Mark a commission as queued for payout.
    * Validates that the retailer has a walletPhone configured.
    */
-  static async queuePayout(commissionId: number) {
+  static async queuePayout(commissionId: number, requestingRetailerId: number) {
     const [commission] = await db
       .select()
       .from(retailerCommissions)
       .where(eq(retailerCommissions.id, commissionId));
 
-    if (!commission) throw new Error(`Commission ${commissionId} not found`);
+    if (!commission) throw Object.assign(new Error(`Commission ${commissionId} not found`), { status: 404 });
+    if (commission.retailerId !== requestingRetailerId) {
+      throw Object.assign(new Error("Forbidden"), { status: 403 });
+    }
     if (commission.status !== "pending") {
       throw new Error(`Commission is already ${commission.status}`);
     }

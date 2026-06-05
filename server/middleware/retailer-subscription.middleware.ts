@@ -47,6 +47,19 @@ export const posRateLimiter = (req: Request, res: Response, next: NextFunction) 
   return _posRateLimiter(req, res, next);
 };
 
+/** Strict NID-lookup limiter applied to check-or-create regardless of auth method (prevents enumeration). */
+export const nidLookupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  keyGenerator: (req: Request) => {
+    const retailer = (req as any).retailer;
+    return retailer ? `nid-lookup-${retailer.id}` : req.ip || "unknown";
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many customer lookups. Please slow down." },
+});
+
 /**
  * Middleware factory to check if the retailer's subscription includes a specific feature.
  * Must be placed after posAuthMiddleware.

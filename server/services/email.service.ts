@@ -463,6 +463,15 @@ export async function sendPosRegistrationEmail(
           <p style="color: #4b5563; line-height: 1.6;">
             This registration serves as a digital proof of ownership. Keep this email for your records.
           </p>
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${appUrl}/my-devices"
+               style="display: inline-block; background: #10b981; color: white; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px;">
+              📄 Download Purchase Contract
+            </a>
+            <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0;">
+              Log in to KIZERE and visit <strong>My Devices</strong> to view and print your contract.
+            </p>
+          </div>
         </div>
         <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
           <p>&copy; ${new Date().getFullYear()} KIZERE. All rights reserved.</p>
@@ -507,6 +516,15 @@ export async function sendPosTransferEmail(
           <p style="color: #4b5563; line-height: 1.6;">
             You are now the registered owner of this product on KIZERE.
           </p>
+          <div style="text-align: center; margin: 24px 0;">
+            <a href="${process.env.APP_URL || 'https://kizere.rw'}/my-devices"
+               style="display: inline-block; background: #3b82f6; color: white; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px;">
+              📄 Download Purchase Contract
+            </a>
+            <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0;">
+              Log in to KIZERE and visit <strong>My Devices</strong> to view and print your contract.
+            </p>
+          </div>
         </div>
         <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
           <p>&copy; ${new Date().getFullYear()} KIZERE. All rights reserved.</p>

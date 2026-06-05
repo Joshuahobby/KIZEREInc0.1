@@ -44,7 +44,8 @@ import {
   Ticket,
   ShieldCheck,
   CheckCircle2,
-  Store
+  Store,
+  Smartphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -216,6 +217,7 @@ export function AppLayout({ children, hideSidebar = false, defaultSidebarCollaps
     if (!isRetailer) {
       const portfolioItems: NavItem[] = [
         { title: t('nav.myItems'), href: "/my-items", icon: <List className="h-5 w-5" /> },
+        { title: t('nav.myDevices') || "My Devices", href: "/my-devices", icon: <Smartphone className="h-5 w-5" /> },
         { title: t('dashboard.tabs.claims') || "Claims", href: "/my-claims", icon: <FileText className="h-5 w-5" /> },
         { title: t('nav.registerItems'), href: "/register-item", icon: <ArrowRightCircle className="h-5 w-5" /> }
       ];
@@ -715,6 +717,7 @@ function MobileBottomNav({ isAdmin, isAgent, isRetailer, location, t }: { isAdmi
       { id: 'home', icon: <Home className="h-5 w-5" />, label: t('nav.dashboard'), href: "/dashboard" },
       { id: 'search', icon: <Search className="h-5 w-5" />, label: t('nav.search'), href: "/search" },
       { id: 'items', icon: <PackageIcon className="h-5 w-5" />, label: t('nav.myItems'), href: "/my-items" },
+      { id: 'devices', icon: <Smartphone className="h-5 w-5" />, label: t('nav.myDevices') || "Devices", href: "/my-devices" },
     );
 
     if (isAgent || isAdmin) {

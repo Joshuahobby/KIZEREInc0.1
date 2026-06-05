@@ -787,3 +787,143 @@ export async function getUserVerificationPurchases(userId: number): Promise<Veri
     .where(eq(verificationPurchases.userId, userId))
     .orderBy(desc(verificationPurchases.createdAt));
 }
+
+export async function getBuyerPurchaseHistory(userId: number): Promise<{
+  ledgerId: number;
+  event: string;
+  timestamp: Date;
+  purchaseAgreement: string | null;
+  productId: number;
+  productName: string | null;
+  brand: string | null;
+  model: string | null;
+  category: string | null;
+  serialNumber: string | null;
+  kizereId: string | null;
+  status: string | null;
+  retailerName: string | null;
+}[]> {
+  const { rows } = await db.execute(sql`
+    SELECT
+      ol.id          AS ledger_id,
+      ol.event,
+      ol.timestamp,
+      ol.purchase_agreement,
+      pp.id          AS product_id,
+      pp.name        AS product_name,
+      pp.brand,
+      pp.model,
+      pp.category,
+      pp.serial_number,
+      pp.kizere_id,
+      pp.status,
+      r.name         AS retailer_name
+    FROM ownership_ledger ol
+    LEFT JOIN pos_products pp ON ol.product_id = pp.id
+    LEFT JOIN retailers r ON ol.registered_by = r.id
+    WHERE ol.to_user_id = ${userId}
+      AND ol.event IN ('sale', 'transfer')
+    ORDER BY ol.timestamp DESC
+  `);
+
+  return (rows as any[]).map(row => ({
+    ledgerId: Number(row.ledger_id),
+    event: row.event as string,
+    timestamp: row.timestamp as Date,
+    purchaseAgreement: row.purchase_agreement as string | null,
+    productId: Number(row.product_id),
+    productName: row.product_name as string | null,
+    brand: row.brand as string | null,
+    model: row.model as string | null,
+    category: row.category as string | null,
+    serialNumber: row.serial_number as string | null,
+    kizereId: row.kizere_id as string | null,
+    status: row.status as string | null,
+    retailerName: row.retailer_name as string | null,
+  }));
+}
+
+export async function getLedgerContractData(ledgerId: number) {
+  const { rows } = await db.execute(sql`
+    SELECT
+      ol.id,
+      ol.event,
+      ol.timestamp,
+      ol.notes,
+      ol.purchase_agreement,
+      ol.metadata          AS ledger_metadata,
+      ol.from_user_id,
+      ol.to_user_id,
+      ol.registered_by,
+      pp.name              AS product_name,
+      pp.brand,
+      pp.model,
+      pp.category,
+      pp.serial_number,
+      pp.metadata          AS product_metadata,
+      fu.full_name         AS seller_name,
+      fu.national_id       AS seller_nid,
+      fu.phone_number      AS seller_phone,
+      fu.address           AS seller_address,
+      fu.city              AS seller_city,
+      tu.full_name         AS buyer_name,
+      tu.national_id       AS buyer_nid,
+      tu.phone_number      AS buyer_phone,
+      tu.address           AS buyer_address,
+      tu.city              AS buyer_city,
+      r.name               AS retailer_name,
+      r.address            AS retailer_address,
+      r.phone              AS retailer_phone
+    FROM ownership_ledger ol
+    LEFT JOIN pos_products pp ON ol.product_id = pp.id
+    LEFT JOIN users fu ON ol.from_user_id = fu.id
+    LEFT JOIN users tu ON ol.to_user_id = tu.id
+    LEFT JOIN retailers r ON ol.registered_by = r.id
+    WHERE ol.id = ${ledgerId}
+    LIMIT 1
+  `);
+
+  if (!rows.length) return undefined;
+  const row = rows[0] as any;
+
+  return {
+    ledger: {
+      id: Number(row.id),
+      event: row.event as string,
+      timestamp: row.timestamp as Date,
+      notes: row.notes as string | null,
+      purchaseAgreement: row.purchase_agreement as string | null,
+      metadata: row.ledger_metadata,
+      fromUserId: row.from_user_id as number | null,
+      toUserId: row.to_user_id as number | null,
+      registeredBy: row.registered_by as number | null,
+    },
+    product: {
+      name: row.product_name as string | null,
+      brand: row.brand as string | null,
+      model: row.model as string | null,
+      category: row.category as string | null,
+      serialNumber: row.serial_number as string | null,
+      metadata: row.product_metadata,
+    },
+    seller: (row.seller_name as string | null) ? {
+      fullName: row.seller_name as string,
+      nationalId: row.seller_nid as string | null,
+      phoneNumber: row.seller_phone as string | null,
+      address: row.seller_address as string | null,
+      city: row.seller_city as string | null,
+    } : null,
+    buyer: (row.buyer_name as string | null) ? {
+      fullName: row.buyer_name as string,
+      nationalId: row.buyer_nid as string | null,
+      phoneNumber: row.buyer_phone as string | null,
+      address: row.buyer_address as string | null,
+      city: row.buyer_city as string | null,
+    } : null,
+    retailer: (row.retailer_name as string | null) ? {
+      name: row.retailer_name as string,
+      address: row.retailer_address as string | null,
+      phone: row.retailer_phone as string | null,
+    } : null,
+  };
+}

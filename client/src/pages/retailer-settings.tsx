@@ -3,19 +3,21 @@ import { useForm } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { apiGet, apiPatch } from "@/lib/api";
+import { apiGet, apiPatch, apiPost } from "@/lib/api";
 import { AppLayout } from "@/components/layout/admin-layout";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Save, Store, Shield, Bell, CreditCard, Upload, Loader2, Users, Plus, Trash2, Key } from "lucide-react";
+import { Save, Store, Shield, Bell, CreditCard, Upload, Loader2, Users, Plus, Trash2, Key, CalendarDays, RefreshCw, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { format } from "date-fns";
 
 interface ProfileFormValues {
   name: string;
@@ -30,6 +32,160 @@ interface Cashier {
   name: string;
   pin: string;
   isActive: boolean;
+}
+
+function SubscriptionTab() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [momoPhone, setMomoPhone] = React.useState("");
+  const [renewing, setRenewing] = React.useState(false);
+  const [pendingRef, setPendingRef] = React.useState<string | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["/api/pos/my-subscription"],
+    queryFn: () => apiGet<{ success: boolean; subscription: any }>("/api/pos/my-subscription"),
+  });
+
+  const sub = data?.subscription;
+
+  const PLAN_COLORS: Record<string, string> = {
+    basic: "bg-slate-500/10 text-slate-600 border-slate-300",
+    standard: "bg-blue-500/10 text-blue-600 border-blue-300",
+    premium: "bg-emerald-500/10 text-emerald-600 border-emerald-300",
+    enterprise: "bg-purple-500/10 text-purple-600 border-purple-300",
+  };
+
+  const handleRenew = async () => {
+    if (!momoPhone.trim()) return;
+    setRenewing(true);
+    try {
+      const res = await apiPost<any>("/api/pos/my-subscription/renew", { phoneNumber: momoPhone.trim() });
+      if (res.success) {
+        setPendingRef(res.transactionRef);
+        toast({ title: "Payment Initiated", description: "Check your phone for the MoMo prompt." });
+      }
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setRenewing(false);
+    }
+  };
+
+  // Poll for renewal completion
+  React.useEffect(() => {
+    if (!pendingRef) return;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiGet<any>(`/api/payments/verify/${pendingRef}`);
+        if (res.status === "COMPLETED") {
+          toast({ title: "Subscription Renewed!", description: "Your plan has been extended by 1 year." });
+          setPendingRef(null);
+          setMomoPhone("");
+          queryClient.invalidateQueries({ queryKey: ["/api/pos/my-subscription"] });
+        } else {
+          setPendingRef(prev => prev); // re-trigger effect
+        }
+      } catch {
+        setPendingRef(prev => prev);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [pendingRef, queryClient, toast]);
+
+  if (isLoading) return <Skeleton className="h-48 w-full rounded-3xl" />;
+
+  const isExpired = sub && !sub.isActive && sub.plan !== "basic";
+  const isExpiringSoon = sub && sub.isActive && sub.daysLeft !== null && sub.daysLeft <= 30 && sub.plan !== "basic";
+
+  return (
+    <Card className="border-border/50 shadow-premium bg-background/50 backdrop-blur-md rounded-3xl overflow-hidden">
+      <CardHeader className="border-b border-border/50 bg-muted/20">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarDays className="h-5 w-5 text-primary" />
+              Subscription
+            </CardTitle>
+            <CardDescription>Your KIZERE retailer plan and renewal status.</CardDescription>
+          </div>
+          <Badge className={`capitalize font-bold text-xs border ${PLAN_COLORS[sub?.plan ?? "basic"]}`}>
+            {sub?.plan ?? "basic"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6 space-y-6">
+        {/* Status Row */}
+        <div className="flex flex-wrap gap-4">
+          {sub?.plan === "basic" ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              Basic plan — always active, no expiry
+            </div>
+          ) : isExpired ? (
+            <div className="flex items-center gap-2 text-sm text-destructive font-semibold">
+              <AlertTriangle className="h-4 w-4" />
+              Subscription expired — POS features may be limited
+            </div>
+          ) : isExpiringSoon ? (
+            <div className="flex items-center gap-2 text-sm text-amber-600 font-semibold">
+              <Clock className="h-4 w-4" />
+              Expiring in {sub.daysLeft} days
+            </div>
+          ) : sub?.isActive ? (
+            <div className="flex items-center gap-2 text-sm text-emerald-600 font-semibold">
+              <CheckCircle2 className="h-4 w-4" />
+              Active — {sub.daysLeft !== null ? `${sub.daysLeft} days remaining` : "No expiry"}
+            </div>
+          ) : null}
+
+          {sub?.expiresAt && (
+            <div className="text-sm text-muted-foreground">
+              Expires: <span className="font-semibold">{format(new Date(sub.expiresAt), "MMM d, yyyy")}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Renew section — hidden for basic plan */}
+        {sub?.plan !== "basic" && (
+          <div className="border border-border/50 rounded-2xl p-5 space-y-4 bg-muted/10">
+            <div>
+              <h4 className="font-semibold text-sm">Renew Annual Subscription</h4>
+              <p className="text-xs text-muted-foreground mt-1">
+                Adds 1 year from today (or stacks on remaining time). Payment via MoMo.
+              </p>
+            </div>
+            {pendingRef ? (
+              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                Awaiting MoMo confirmation...
+                <Button variant="ghost" size="sm" onClick={() => setPendingRef(null)} className="text-xs">
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <Input
+                  placeholder="MoMo phone e.g. 0788123456"
+                  value={momoPhone}
+                  onChange={e => setMomoPhone(e.target.value)}
+                  className="rounded-xl max-w-xs"
+                  type="tel"
+                />
+                <Button
+                  onClick={handleRenew}
+                  disabled={renewing || !momoPhone.trim()}
+                  className="rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-500 text-white"
+                >
+                  {renewing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  Renew
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function RetailerSettings() {
@@ -171,6 +327,10 @@ export default function RetailerSettings() {
             <TabsTrigger value="cashiers" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Users className="h-4 w-4 mr-2" />
               Cashiers
+            </TabsTrigger>
+            <TabsTrigger value="subscription" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <CalendarDays className="h-4 w-4 mr-2" />
+              Subscription
             </TabsTrigger>
             <TabsTrigger value="security" className="rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Shield className="h-4 w-4 mr-2" />
@@ -369,8 +529,12 @@ export default function RetailerSettings() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="subscription" className="space-y-6">
+            <SubscriptionTab />
+          </TabsContent>
+
           <TabsContent value="security" className="space-y-6">
-             <Card className="border-border/50 shadow-premium bg-background/50 backdrop-blur-md rounded-3xl overflow-hidden border-destructive/20">
+            <Card className="border-border/50 shadow-premium bg-background/50 backdrop-blur-md rounded-3xl overflow-hidden border-destructive/20">
               <CardHeader className="border-b border-destructive/20 bg-destructive/5">
                 <CardTitle className="text-destructive">Critical Actions</CardTitle>
                 <CardDescription>Actions that could affect your account access.</CardDescription>

@@ -178,6 +178,7 @@ export async function registerProduct(input: any) {
       serialNumber: input.serialNumber,
       category: input.category || "Other",
       retailerName: retailer.name || "KIZERE Store",
+      ledgerId: ledgerEntry.id,
     }).catch(err => logger.error("POS notification failed", { err }));
   }
 
@@ -254,6 +255,7 @@ export async function transferOwnership(input: any) {
       serialNumber: updatedProduct.serialNumber,
       category: updatedProduct.category,
       retailerName: retailer.name,
+      ledgerId: ledgerEntry.id,
     }).catch(err => logger.error("POS notification failed", { err }));
   }
 
@@ -439,6 +441,14 @@ export async function getProductHistoryPaginated(productId: number, params: any)
 
 export async function getRetailerTransactionsPaginated(retailerId: number, params: any) {
   return storage.getRetailerTransactionsPaginated(retailerId, params);
+}
+
+export async function getLedgerContractData(ledgerId: number) {
+  return storage.getLedgerContractData(ledgerId);
+}
+
+export async function getBuyerPurchaseHistory(userId: number) {
+  return storage.getBuyerPurchaseHistory(userId);
 }
 
 export async function getRetailerCustomersPaginated(retailerId: number, params: any) {

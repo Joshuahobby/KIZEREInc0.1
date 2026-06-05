@@ -4,6 +4,17 @@ import { uploadImage, uploadImages, getUploadSignature, deleteImage } from '../s
 import { createLogger } from '../utils/logger';
 import { validateUploadedFile } from '../utils/file-validation';
 import { handleRequestError } from '../utils/error-handler';
+import { storage as dbStorage } from '../storage';
+
+const ALLOWED_UPLOAD_FOLDERS = new Set([
+  'kizere/uploads', 'kizere/items', 'kizere/documents',
+  'kizere/avatars', 'kizere/reports',
+]);
+
+function sanitizeFolder(input: string | undefined, defaultFolder: string): string {
+  if (!input) return defaultFolder;
+  return ALLOWED_UPLOAD_FOLDERS.has(input) ? input : defaultFolder;
+}
 
 const router = Router();
 const logger = createLogger('UploadRoutes');
@@ -62,7 +73,7 @@ router.post('/', upload.single('image'), async (req: Request, res: Response) => 
     // Convert buffer to base64 data URI
     const base64 = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
 
-    const folder = req.body.folder || 'kizere/uploads';
+    const folder = sanitizeFolder(req.body.folder, 'kizere/uploads');
     const result = await uploadImage(base64, folder);
 
     logger.info('Image uploaded via API', { publicId: result.publicId });
@@ -90,7 +101,16 @@ router.post('/multiple', upload.array('images', 3), async (req: Request, res: Re
       return res.status(400).json({ message: 'No image files provided' });
     }
 
-    const folder = req.body.folder || 'kizere/uploads';
+    const folder = sanitizeFolder(req.body.folder, 'kizere/uploads');
+
+    for (const file of files) {
+      if (file.mimetype.startsWith('image/')) {
+        const validation = validateUploadedFile(file.buffer, file.mimetype);
+        if (!validation.isValid) {
+          return res.status(400).json({ message: validation.error || 'Invalid file format detected' });
+        }
+      }
+    }
 
     const base64Images = files.map(file =>
       `data:${file.mimetype};base64,${file.buffer.toString('base64')}`
@@ -137,7 +157,17 @@ router.post('/images', (req: Request, res: Response, next: NextFunction) => {
       return res.status(400).json({ message: 'No image files provided' });
     }
 
-    const folder = req.body.folder || 'kizere/items';
+    const folder = sanitizeFolder(req.body.folder, 'kizere/items');
+
+    for (const file of files) {
+      if (file.mimetype.startsWith('image/')) {
+        const validation = validateUploadedFile(file.buffer, file.mimetype);
+        if (!validation.isValid) {
+          return res.status(400).json({ message: validation.error || 'Invalid file format detected' });
+        }
+      }
+    }
+
     const base64Images = files.map(file =>
       `data:${file.mimetype};base64,${file.buffer.toString('base64')}`
     );
@@ -165,7 +195,14 @@ router.post('/documents', upload.array('documents', 5), async (req: Request, res
       return res.status(400).json({ message: 'No document files provided' });
     }
 
-    const folder = req.body.folder || 'kizere/documents';
+    const folder = sanitizeFolder(req.body.folder, 'kizere/documents');
+
+    for (const file of files) {
+      const validation = validateUploadedFile(file.buffer, file.mimetype);
+      if (!validation.isValid) {
+        return res.status(400).json({ message: validation.error || 'Invalid file format detected' });
+      }
+    }
 
     const uploadPromises = files.map(async (file, index) => {
       const base64 = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
@@ -209,7 +246,7 @@ router.post('/documents', upload.array('documents', 5), async (req: Request, res
  */
 router.get('/signature', (req: Request, res: Response) => {
   try {
-    const folder = (req.query.folder as string) || 'kizere/uploads';
+    const folder = sanitizeFolder(req.query.folder as string, 'kizere/uploads');
     const signature = getUploadSignature(folder);
     res.json(signature);
   } catch (error) {
@@ -220,13 +257,31 @@ router.get('/signature', (req: Request, res: Response) => {
 
 /**
  * DELETE /api/upload/:publicId
- * Delete an image by public ID
+ * Delete an image by public ID — caller must own the image or be Admin.
  */
 router.delete('/:publicId', async (req: Request, res: Response) => {
   try {
     const { publicId } = req.params;
-    const success = await deleteImage(publicId);
+    const user = req.user!;
 
+    if (user.role !== 'Admin') {
+      // Verify the publicId appears in one of the caller's own records
+      const [items, reports] = await Promise.all([
+        dbStorage.getUserItems(user.id),
+        dbStorage.getUserReports(user.id),
+      ]);
+      const ownedUrls = [
+        ...items.flatMap(i => i.imageUrls ?? []),
+        ...reports.flatMap(r => r.imageUrls ?? []),
+        user.avatarUrl ?? '',
+      ];
+      const owns = ownedUrls.some(url => url.includes(publicId));
+      if (!owns) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+    }
+
+    const success = await deleteImage(publicId);
     if (success) {
       res.json({ success: true, message: 'Image deleted' });
     } else {

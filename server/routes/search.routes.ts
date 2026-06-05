@@ -120,7 +120,7 @@ router.get("/", async (req, res) => {
         keywords.forEach(k => {
           if (report.title.toLowerCase().includes(k)) score += 2;
           if (report.description?.toLowerCase().includes(k)) score += 1;
-          if (report.ocrText?.toLowerCase().includes(k)) score += 3;
+          // ocrText excluded from client-facing score to prevent content-oracle attacks
         });
       }
 
@@ -166,7 +166,7 @@ router.get("/", async (req, res) => {
     res.json({ results, total, page, totalPages });
   } catch (error) {
     logger.error('Search failed', { error });
-    res.status(500).json({ message: "Search failed", detail: (error as Error).message });
+    res.status(500).json({ message: "Search failed" });
   }
 });
 

@@ -102,6 +102,12 @@ router.post("/unsubscribe", async (req, res) => {
     if (!endpoint) {
       return res.status(400).json({ message: "Endpoint required" });
     }
+    // Verify the subscription belongs to the authenticated user
+    const userSubs = await storage.getUserPushSubscriptions(req.user!.id);
+    const owns = userSubs.some((s: any) => s.endpoint === endpoint);
+    if (!owns) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     await storage.deletePushSubscription(endpoint);
     res.json({ success: true });
   } catch (error) {

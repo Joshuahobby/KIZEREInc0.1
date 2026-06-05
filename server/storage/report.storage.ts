@@ -243,8 +243,9 @@ export async function getReportsWithFilters(options: {
     query = query.where(and(...conditions));
   }
 
-  // Sorting
-  const sortColumn = (sortBy && sortBy in reports) ? reports[sortBy as keyof typeof reports] : reports.reportedAt;
+  // Sorting — whitelist prevents column oracle attacks via arbitrary sortBy values
+  const ALLOWED_REPORT_SORT = new Set(['reportedAt', 'updatedAt', 'status', 'type', 'category', 'bountyAmount']);
+  const sortColumn = (sortBy && ALLOWED_REPORT_SORT.has(sortBy)) ? reports[sortBy as keyof typeof reports] : reports.reportedAt;
 
   if (search) {
     // If searching, prioritize relevance first, then the requested sort

@@ -48,6 +48,15 @@ export class CouponService {
         return { isValid: false, message: 'This coupon has reached its usage limit', discountAmount: 0, finalAmount: amount };
       }
 
+      // Enforce per-user limit: one use per coupon per user
+      const userPayments = await storage.getUserPayments(userId);
+      const alreadyUsed = userPayments.some(
+        p => (p.metadata as any)?.couponId === coupon.id
+      );
+      if (alreadyUsed) {
+        return { isValid: false, message: 'You have already used this coupon', discountAmount: 0, finalAmount: amount };
+      }
+
       if (coupon.applicableType !== 'all' && coupon.applicableType !== type) {
         return { 
           isValid: false, 

@@ -116,7 +116,8 @@ export async function getUsersWithFilters(options: {
 
   if (conditions.length > 0) query = query.where(and(...conditions));
 
-  const column = users[sortBy as keyof typeof users];
+  const ALLOWED_USER_SORT = new Set(['createdAt', 'lastLogin', 'username', 'fullName', 'email', 'role', 'status']);
+  const column = ALLOWED_USER_SORT.has(sortBy) ? users[sortBy as keyof typeof users] : null;
   if (column) {
     query = sortOrder === 'asc' ? query.orderBy(asc(column as any)) : query.orderBy(desc(column as any));
   } else {

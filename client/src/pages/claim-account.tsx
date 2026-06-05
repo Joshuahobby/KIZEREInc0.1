@@ -12,6 +12,8 @@ import {
   Phone,
   Lock,
   Mail,
+  Smartphone,
+  CheckCircle2,
 } from "lucide-react";
 
 export default function ClaimAccountPage() {
@@ -19,7 +21,7 @@ export default function ClaimAccountPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const [step, setStep] = React.useState<"request" | "verify">("request");
+  const [step, setStep] = React.useState<"request" | "verify" | "success">("request");
   const [loading, setLoading] = React.useState(false);
 
   // Request form
@@ -83,8 +85,7 @@ export default function ClaimAccountPage() {
       });
 
       if (res.success) {
-        toast({ title: t("pos.claim.success", "Account Claimed!"), description: t("pos.claim.successDesc", "You can now log in with your new password") });
-        setLocation("/auth");
+        setStep("success");
       }
     } catch (err: any) {
       toast({ title: t("common.error", "Error"), description: err.message || "Failed to verify OTP", variant: "destructive" });
@@ -104,13 +105,40 @@ export default function ClaimAccountPage() {
           </div>
           
           <h2 className="text-2xl font-bold text-center text-slate-900 dark:text-white mb-2">
-            {t("pos.claim.title", "Claim Your Account")}
+            {step === "success" ? t("pos.claim.successTitle", "Account Claimed!") : t("pos.claim.title", "Claim Your Account")}
           </h2>
           <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-8">
-            {step === "request" 
-              ? t("pos.claim.requestDesc", "Activate the account created for you during your POS purchase.") 
-              : t("pos.claim.verifyDesc", "Enter the OTP sent to your phone to set your new password.")}
+            {step === "request"
+              ? t("pos.claim.requestDesc", "Activate the account created for you during your POS purchase.")
+              : step === "verify"
+              ? t("pos.claim.verifyDesc", "Enter the OTP sent to your phone to set your new password.")
+              : t("pos.claim.successDesc2", "Your account is ready. Log in to view your registered devices.")}
           </p>
+
+          {step === "success" && (
+            <div className="space-y-4">
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                </div>
+                <p className="text-sm text-slate-600 dark:text-slate-400 text-center">
+                  {t("pos.claim.successHint", "Your devices are ready to view and your purchase contracts are available for download.")}
+                </p>
+              </div>
+              <Link href="/my-devices">
+                <button className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-emerald-600 text-white font-semibold hover:bg-emerald-500 transition-colors">
+                  <Smartphone className="w-4 h-4" />
+                  {t("pos.claim.viewDevices", "View My Devices & Contracts")}
+                </button>
+              </Link>
+              <Link href="/auth">
+                <button className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  <ArrowRight className="w-4 h-4" />
+                  {t("pos.claim.goToLogin", "Log In to KIZERE")}
+                </button>
+              </Link>
+            </div>
+          )}
 
           {step === "request" && (
             <form onSubmit={handleRequestOtp} className="space-y-4">

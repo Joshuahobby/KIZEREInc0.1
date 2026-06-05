@@ -107,6 +107,8 @@
     "registerItem": "Register Item",
     "registerItems": "Register Items",
     "myItems": "My Items",
+    "myDevices": "My Devices",
+    "myDevicesLong": "My Registered Devices",
     "lostIt": "Lost It",
     "foundIt": "Found It",
     "search": "Search",
@@ -428,7 +430,9 @@
       "protectTitle": "Protect an Item",
       "verifyTitle": "Complete Your Verification",
       "verifyDesc": "To fully secure your items and access all recovery features, please complete your identity verification.",
-      "verifyAction": "Verify Now"
+      "verifyAction": "Verify Now",
+      "handover": "Handover",
+      "tryAgain": "Try Again"
     },
     "quickActions": {
       "title": "Quick Actions",
@@ -501,6 +505,10 @@
     "lostReports": "Lost Reports",
     "foundReports": "Found Reports",
     "totalSpent": "Total Spent",
+    "stats": {
+      "totalLost": "Total Lost Reports",
+      "totalFound": "Total Found Reports"
+    },
     "recentItems": "Recent Items",
     "unreadNotifications": "Unread Notifications",
     "pendingPayments": "Pending Payments",
@@ -664,7 +672,8 @@
       "pending_msg": "Our team is reviewing your documents. This usually takes 24 hours.",
       "approved_msg": "Your identity is verified. You now have full access to all features.",
       "rejected_msg": "Verification was unsuccessful. Please check the reason and try again.",
-      "unverified_msg": "Verify your identity to increase your trust score and secure your items."
+      "unverified_msg": "Verify your identity to increase your trust score and secure your items.",
+      "rejected_desc": "Your verification was rejected. Please try again or contact support."
     },
     "table": {
       "reportId": "Report ID",
@@ -765,6 +774,7 @@
   "item_subcategory_car": "Car",
   "item_subcategory_other": "Other",
   "registration": {
+    "editTitle": "Edit Registration",
     "title": "Register Your Item",
     "subtitle": "Protect your valuable possessions by registering them in our secure digital registry.",
     "item_register_title": "Register Your Item",
@@ -1054,6 +1064,9 @@
   },
   "report_lost_subtitle": "Help us match your lost item with our database of found items",
   "reports": {
+    "errorTitle": "Something went wrong",
+    "payLater": "Pay Later",
+    "paymentPending": "Payment Pending",
     "successTitle": "Report Submitted Successfully",
     "successDescription": "Your report has been received and added to our database.",
     "reportLostItem": "Report Lost Item",
@@ -1391,7 +1404,8 @@
       "content_label": "Content",
       "content_placeholder": "What would you like to share?",
       "submit": "Post to Community",
-      "success_desc": "Your story has been shared with the community."
+      "success_desc": "Your story has been shared with the community.",
+      "success_title": "Post Created"
     },
     "activity": {
       "title": "Live Activity",
@@ -1605,6 +1619,7 @@
     "contact_required": "Contact information is required"
   },
   "report_detail": {
+    "description": "Description",
     "reportNotFoundTitle": "Report Not Found",
     "reportNotFoundDesc": "The report you're looking for doesn't exist or has been removed.",
     "backToLostFound": "Back to Lost & Found",
@@ -2113,6 +2128,41 @@
     "serial": "Serial",
     "status": "Status",
     "total": "total",
+    "printed": "Printed",
+    "printFailed": "Print Failed",
+    "receiptPrinted": "Receipt printed successfully.",
+    "connectPrinterError": "Could not print. Check printer connection.",
+    "scanReady": "Scanner Ready",
+    "syncing": "Syncing",
+    "syncingDesc": "Syncing offline transactions...",
+    "printerConnected": "Printer Connected",
+    "printerReady": "Printer Ready",
+    "printerError": "Printer Error",
+    "blockedRegistration": "Registration Blocked",
+    "blockedTransfer": "Transfer Blocked",
+    "customerNotFound": "Customer Not Found",
+    "invalidPin": "Invalid PIN",
+    "invalidPinDesc": "The PIN you entered is incorrect.",
+    "securityAlertHistory": "Security Alert History",
+    "securityAlertHistoryDesc": "Security events detected at your store.",
+    "transfer": "Transfer",
+    "transferTitle": "Facilitate Ownership Transfer",
+    "transferDesc": "Transfer an existing KIZERE device from one owner to a new buyer.",
+    "currentOwner": "Current Owner",
+    "newOwner": "New Buyer",
+    "findDevice": "Find Device",
+    "deviceNotFound": "Device not found in KIZERE registry.",
+    "deviceStolen": "This device is flagged as stolen and cannot be transferred.",
+    "transferFee": "Transfer Fee",
+    "initiateTransfer": "Initiate Transfer & Payment",
+    "transferInitiated": "Transfer Initiated",
+    "transferInitiatedDesc": "The buyer will receive a payment prompt on their phone.",
+    "transferPending": "Awaiting Payment",
+    "transferPendingDesc": "Waiting for MoMo confirmation...",
+    "transferComplete": "Transfer Complete",
+    "transferCompleteDesc": "Ownership has been transferred successfully.",
+    "momoPhone": "MoMo Phone Number (Buyer)",
+    "momoPhonePlaceholder": "e.g. 0788123456",
     "inventory": {
       "title": "Product Inventory",
       "description": "Search, manage, and track all products registered through your POS terminal",
@@ -2180,7 +2230,18 @@
       "scanBarcode": "Scan Serial / IMEI",
       "dragDropCsv": "Click or drag CSV file here",
       "parsingError": "Parsing Error",
-      "noValidProducts": "No valid products found. Ensure 'Serial_Number' and 'Name' (or 'Brand'/'Model') columns are filled."
+      "noValidProducts": "No valid products found. Ensure 'Serial_Number' and 'Name' (or 'Brand'/'Model') columns are filled.",
+      "return": "Return Product",
+      "returnReason": "Return Reason",
+      "returnNotes": "Return Notes",
+      "returnNotesPlaceholder": "Reason for return...",
+      "confirmReturn": "Confirm Return",
+      "confirmReturnDesc": "This will return the product to your inventory. Are you sure?",
+      "returnSuccess": "Product returned to inventory.",
+      "statusRegistered": "Registered",
+      "statusTransferred": "Transferred",
+      "statusStolen": "Stolen",
+      "statusArchived": "Archived"
     },
     "claim": {
       "title": "Claim Your Account",
@@ -2201,7 +2262,12 @@
       "passwordLength": "Password must be at least 8 characters",
       "passwordMismatch": "Passwords do not match",
       "success": "Account Claimed!",
-      "successDesc": "You can now log in with your new password"
+      "successDesc": "You can now log in with your new password",
+      "successTitle": "Account Claimed!",
+      "successDesc2": "Your account is ready. Log in to view your registered devices.",
+      "successHint": "Your devices are ready to view and your purchase contracts are available for download.",
+      "viewDevices": "View My Devices & Contracts",
+      "goToLogin": "Log In to KIZERE"
     },
     "analytics": {
       "title": "POS Analytics",
@@ -2448,5 +2514,42 @@
       "TechCompany": "Tech Company",
       "Other": "Other"
     }
+  },
+  "report_found_subtitle": "Help reunite someone with their belongings.",
+  "retailer": {
+    "pos": "POS Terminal",
+    "posDesc": "Open point of sale",
+    "products": "Inventory",
+    "productsDesc": "Manage product catalog",
+    "addProduct": "Add New Product",
+    "addProductDesc": "Register a new product to your inventory."
+  },
+  "devices": {
+    "myDevices": "My Registered Devices",
+    "myDevicesDesc": "All devices you have purchased and registered on KIZERE.",
+    "purchaseHistory": "Purchase History",
+    "noDevices": "No devices yet",
+    "noDevicesDesc": "Devices registered to your account through a KIZERE retailer will appear here."
+  },
+  "retailerSubscription": {
+    "title": "Subscription",
+    "plan": "Current Plan",
+    "expiry": "Expires On",
+    "daysLeft": "{{days}} days remaining",
+    "expired": "Subscription Expired",
+    "expiringSoon": "Expiring in {{days}} days",
+    "active": "Active",
+    "renewBtn": "Renew Annual Subscription",
+    "renewDesc": "Your subscription renews for 1 year from today (or stacks on top of your remaining time).",
+    "momoPrompt": "Enter your MoMo number to pay",
+    "paymentInitiated": "Payment Initiated",
+    "paymentInitiatedDesc": "Check your phone for the MoMo prompt.",
+    "paymentPending": "Awaiting confirmation...",
+    "renewSuccess": "Subscription Renewed",
+    "renewSuccessDesc": "Your plan has been extended by 1 year.",
+    "basic": "Basic",
+    "standard": "Standard",
+    "premium": "Premium",
+    "enterprise": "Enterprise"
   }
 }

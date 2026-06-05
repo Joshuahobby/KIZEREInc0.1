@@ -2,14 +2,15 @@ import { Router, Request, Response } from 'express';
 import { db } from '../db';
 import { moderationReports, insertModerationReportSchema } from '@shared/schema';
 import { createLogger } from '../utils/logger';
+import { requireAuth } from '../middleware/auth.middleware';
 import { eq, desc } from 'drizzle-orm';
 import { z } from 'zod';
 
 const router = Router();
 const logger = createLogger('ModerationRoutes');
 
-// POST /api/moderation/reports - Submit a new moderation report
-router.post('/reports', async (req: Request, res: Response) => {
+// POST /api/moderation/reports - Submit a new moderation report (auth required)
+router.post('/reports', requireAuth, async (req: Request, res: Response) => {
   try {
     const reportData = insertModerationReportSchema.parse(req.body);
     

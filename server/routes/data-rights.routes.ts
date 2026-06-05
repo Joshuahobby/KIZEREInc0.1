@@ -9,6 +9,7 @@
  */
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import rateLimit from "express-rate-limit";
 import { createLogger } from "../utils/logger";
 import { storage } from "../storage";
 import { UserService } from "../services/user.service";
@@ -25,12 +26,22 @@ import {
 const router = Router();
 const logger = createLogger("DataRightsRoutes");
 
+// GDPR data export is expensive — limit to 3 times per day per user
+const dataExportLimiter = rateLimit({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 3,
+  keyGenerator: (req: any) => `data-export-${req.user?.id ?? req.ip}`,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Data export limit reached. You may request your data up to 3 times per day." },
+});
+
 /**
  * GET /api/me/data-export
  * Right of Access + Data Portability (Art. 19, 22)
  * Exports ALL user data in JSON format
  */
-router.get("/data-export", async (req: Request, res: Response) => {
+router.get("/data-export", dataExportLimiter, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     logger.info("Data export requested", { userId });

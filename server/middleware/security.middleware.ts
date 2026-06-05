@@ -37,12 +37,7 @@ const {
   },
   size: 64,
   ignoredMethods: ["GET", "HEAD", "OPTIONS"],
-  getSessionIdentifier: (req: Request) => {
-    // We intentionally ignore the session ID in the identifier to make CSRF tokens
-    // more resilient to session rotation (e.g. after login), while still 
-    // relying on the signed secret cookie for security.
-    return 'constant';
-  },
+  getSessionIdentifier: (req: Request) => req.session.id,
   getCsrfTokenFromRequest: (req: Request) => req.headers["x-csrf-token"] as string,
 });
 
@@ -118,13 +113,23 @@ export function sanitizeContent(content: string, mode: 'strict' | 'default' = 'd
 export function setupSecurityMiddleware(app: Express) {
   // CORS configuration
   const configuredOrigin = config.FRONTEND_URL || "http://localhost:5000";
+  // VERCEL_URL is set automatically by Vercel to the current deployment URL (no protocol).
+  // Allows the specific deployment preview without opening all *.vercel.app subdomains.
+  const vercelDeploymentOrigin = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
+
   app.use(cors({
     origin: function (origin, callback) {
       // Allow all local origins during development or automated testing
       const isDevelopment = process.env.NODE_ENV !== 'production';
       const isLocalhost = !origin || origin.includes('localhost') || origin.includes('127.0.0.1');
 
-      if (isDevelopment || isLocalhost || origin === configuredOrigin || origin.endsWith('.vercel.app') || origin.endsWith('kizere.rw')) {
+      if (
+        isDevelopment ||
+        isLocalhost ||
+        origin === configuredOrigin ||
+        (vercelDeploymentOrigin && origin === vercelDeploymentOrigin) ||
+        origin.endsWith('.kizere.rw')
+      ) {
         callback(null, true);
       } else {
         logger.warn('CORS blocked origin', {
@@ -283,12 +288,11 @@ export function setupSecurityMiddleware(app: Express) {
   app.use((req, res, next) => {
     // Skip CSRF for specific routes if needed (e.g. webhooks, public endpoints)
     const ignoredPaths = [
-      "/api/payments/webhook", 
-      "/api/chat/webhook", 
-      "/api/webhooks/resend", 
-      "/api/auth/google", 
-      "/api/recruitment",
-      "/api/upload"
+      "/api/payments/webhook",
+      "/api/chat/webhook",
+      "/api/webhooks/resend",
+      "/api/auth/google",
+      "/api/recruitment"
     ];
     if (ignoredPaths.some(path => req.path.startsWith(path))) {
       return next();
@@ -321,6 +325,9 @@ export function setupSecurityMiddleware(app: Express) {
   app.use('/api/auth/login', authLimiter);
   app.use('/api/auth/register', authLimiter);
   app.use('/api/auth/google', authLimiter);
+  app.use('/api/auth/2fa', authLimiter);
+  app.use('/api/auth/forgot-password', authLimiter);
+  app.use('/api/auth/reset-password', authLimiter);
 
   // Apply general API rate limiting
   app.use('/api', apiLimiter);

@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from "express";
 import { requireRetailerApiKey } from "../middleware/retailer-auth.middleware";
-import { posRateLimiter, requireFeature } from "../middleware/retailer-subscription.middleware";
+import { posRateLimiter, requireFeature, nidLookupLimiter } from "../middleware/retailer-subscription.middleware";
 import { requireAuth, requireRole, requireAdmin } from "../middleware/auth.middleware";
 import {
   checkOrCreateCustomer,
@@ -34,6 +34,8 @@ import {
   updateCustomerSettings,
   getOrCreateRetailerCustomerSettings,
   getShiftSummary,
+  getLedgerContractData,
+  getBuyerPurchaseHistory,
 } from "../services/pos.service";
 import { generateDepositId, initiateDeposit } from "../utils/pawapay";
 import { getPaymentAmount } from "../config/payment.config";
@@ -50,9 +52,26 @@ import { CommissionService } from "../services/commission.service";
 import { RetailerSubscriptionService } from "../services/retailer-subscription.service";
 import { PlatformSettingsService } from "../services/platform-settings.service";
 import { CertificateService } from "../services/certificate.service";
+import rateLimit from "express-rate-limit";
 
 const logger = createLogger("PosRoutes");
 const router = Router();
+
+/** Strip the plaintext API key from retailer objects before sending to clients. */
+function safeRetailer(r: any) {
+  if (!r) return r;
+  const { apiKey: _k, ...rest } = r;
+  return rest;
+}
+
+// Strict rate limiter for public POS claim endpoints (prevents NID brute-force / OTP abuse)
+const posClaimLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many attempts. Please try again later." },
+});
 
 // ═══════════════════════════════════════════════════════════
 // DUAL AUTH MIDDLEWARE
@@ -108,7 +127,7 @@ async function posAuthMiddleware(req: Request, res: Response, next: NextFunction
  */
 router.post(
   "/check-or-create",
-  posAuthMiddleware, posRateLimiter,
+  posAuthMiddleware, posRateLimiter, nidLookupLimiter,
   async (req: Request, res: Response) => {
     try {
       const schema = z.object({
@@ -528,6 +547,11 @@ router.get(
         return res.status(400).json({ message: "Invalid product ID" });
       }
 
+      const product = await getProductById(productId, (req as any).retailer.id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
       const history = await getProductHistory(productId);
       res.json({ success: true, history });
     } catch (error: any) {
@@ -569,7 +593,7 @@ router.get(
       const startDate = req.query.startDate ? new Date(req.query.startDate as string) : undefined;
       const endDate = req.query.endDate ? new Date(req.query.endDate as string) : undefined;
       const stats = await getRetailerStats(retailer.id, startDate, endDate);
-      res.json({ success: true, stats, retailer });
+      res.json({ success: true, stats, retailer: safeRetailer(retailer) });
     } catch (error: any) {
       logger.error("getRetailerStats failed", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
@@ -756,7 +780,7 @@ router.patch(
         phone: z.string().optional(),
         address: z.string().optional(),
         logoUrl: z.string().url().optional(),
-        walletPhone: z.string().optional(),
+        walletPhone: z.string().optional(), // validated against verified phone below
         preferences: z.object({
           cashiers: z.array(z.object({
             id: z.string(),
@@ -764,10 +788,25 @@ router.patch(
             pin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
             isActive: z.boolean().default(true),
           })).optional(),
-        }).passthrough().optional(), // Allow other preferences like theme/language
+          theme: z.string().optional(),
+          language: z.string().optional(),
+          currency: z.string().optional(),
+        }).optional(), // strict — no passthrough to prevent privilege injection via preferences
       });
 
       const { preferences, ...rest } = schema.parse(req.body);
+
+      // Wallet phone must match the retailer user's verified phone to prevent payout redirection
+      if (rest.walletPhone) {
+        const sessionUser = (req as any).user;
+        const linkedUser = await storage.getUser(sessionUser?.id ?? (req as any).retailer.userId);
+        if (!linkedUser?.phoneNumber || linkedUser.phoneNumber !== rest.walletPhone) {
+          return res.status(400).json({
+            message: "walletPhone must match your verified account phone number."
+          });
+        }
+      }
+
       const updated = await updateRetailer(retailerId, rest);
       
       if (!updated) {
@@ -777,12 +816,22 @@ router.patch(
       // If preferences are provided, update the linked user record
       if (preferences) {
         const retailer = (req as any).retailer;
-        logger.info("Updating user preferences for retailer", { 
-          retailerId, 
+        // Hash cashier PINs before storing — never persist plaintext PINs
+        let safePreferences: any = { ...preferences };
+        if (preferences.cashiers) {
+          safePreferences.cashiers = await Promise.all(
+            preferences.cashiers.map(async (c: any) => ({
+              ...c,
+              pin: await bcrypt.hash(c.pin, 10),
+            }))
+          );
+        }
+        logger.info("Updating user preferences for retailer", {
+          retailerId,
           userId: retailer.userId,
-          cashierCount: (preferences as any).cashiers?.length 
+          cashierCount: preferences.cashiers?.length,
         });
-        await storage.updateUser(retailer.userId, { preferences: preferences as any });
+        await storage.updateUser(retailer.userId, { preferences: safePreferences });
       }
 
       res.json({ success: true, profile: updated });
@@ -831,7 +880,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const commissionId = parseInt(req.params.id, 10);
-      const commission = await CommissionService.queuePayout(commissionId);
+      const commission = await CommissionService.queuePayout(commissionId, (req as any).retailer.id);
       res.json({ success: true, commission });
     } catch (error: any) {
       logger.error("Failed to queue commission payout", { error: error.message });
@@ -1002,6 +1051,11 @@ router.get(
         return res.status(400).json({ message: "Invalid product ID" });
       }
 
+      const product = await getProductById(productId, (req as any).retailer.id);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
       const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
       const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string, 10) || 20));
 
@@ -1134,12 +1188,12 @@ router.post(
         ...coreData,
         userId: user.id,
         subscriptionPlan: "basic",
+        status: "inactive", // pending admin approval — role is not yet promoted
         metadata: { businessType },
       });
 
-      await storage.updateUserRole(user.id, "Retailer");
-
-      res.status(201).json({ success: true, retailer });
+      // Role is promoted to Retailer only after admin approves via PATCH /api/pos/admin/retailers/:id
+      res.status(201).json({ success: true, retailer: safeRetailer(retailer), pendingApproval: true });
     } catch (error: any) {
       logger.error("Retailer self-onboarding failed", { error: error.message });
       if (error instanceof z.ZodError) {
@@ -1165,9 +1219,34 @@ router.get(
   async (_req: Request, res: Response) => {
     try {
       const list = await getRetailers();
-      res.json({ success: true, retailers: list });
+      res.json({ success: true, retailers: list.map(safeRetailer) });
     } catch (error: any) {
       logger.error("getRetailers failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * PATCH /api/pos/admin/retailers/:id/approve
+ * Approve a pending retailer application — sets status to active and promotes user role.
+ * Auth: Admin only
+ */
+router.patch(
+  "/admin/retailers/:id/approve",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const id = parseInt(req.params.id, 10);
+      const retailer = await getRetailerById(id);
+      if (!retailer) {
+        return res.status(404).json({ message: "Retailer not found" });
+      }
+      const updated = await updateRetailer(id, { status: "active" });
+      await storage.updateUserRole(retailer.userId, "Retailer");
+      res.json({ success: true, retailer: updated });
+    } catch (error: any) {
+      logger.error("approveRetailer failed", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
     }
   }
@@ -1187,7 +1266,7 @@ router.get(
       if (!retailer) {
         return res.status(404).json({ message: "Retailer not found" });
       }
-      res.json({ success: true, retailer });
+      res.json({ success: true, retailer: safeRetailer(retailer) });
     } catch (error: any) {
       logger.error("getRetailerById failed", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
@@ -1240,7 +1319,17 @@ router.patch(
   async (req: Request, res: Response) => {
     try {
       const id = parseInt(req.params.id, 10);
-      const updated = await updateRetailer(id, req.body);
+      const schema = z.object({
+        name: z.string().min(2).optional(),
+        email: z.string().email().optional(),
+        phone: z.string().optional(),
+        address: z.string().optional(),
+        logoUrl: z.string().optional(),
+        subscriptionPlan: z.string().optional(),
+        metadata: z.record(z.unknown()).optional(),
+      });
+      const safeData = schema.parse(req.body);
+      const updated = await updateRetailer(id, safeData);
       if (!updated) {
         return res.status(404).json({ message: "Retailer not found" });
       }
@@ -1374,6 +1463,7 @@ router.get(
  */
 router.post(
   "/claim/request-otp",
+  posClaimLimiter,
   async (req: Request, res: Response) => {
     try {
       const schema = z.object({
@@ -1388,17 +1478,18 @@ router.post(
         .where(eq(users.nationalId, data.nationalId))
         .limit(1);
 
-      if (!user) {
-        return res.status(404).json({ message: "Account not found" });
+      // Use a generic message to prevent national ID enumeration
+      if (!user || !isPosStubAccount(user.email)) {
+        return res.status(400).json({ message: "Unable to send OTP. Check your national ID or contact support." });
       }
 
-      if (!isPosStubAccount(user.email)) {
-        return res.status(400).json({ message: "This account is already claimed or wasn't created via POS." });
+      // Always send OTP to the phone on record, never to a caller-supplied number
+      const destination = user.phoneNumber;
+      if (!destination) {
+        return res.status(400).json({ message: "No phone number on file for this account. Contact support." });
       }
 
-      // POS might have created the account with a different phone or no phone, but we must verify the provided phone
-      // Let's send the OTP to the provided phone
-      const result = await sendOTP(user.id, "sms", "phone_verify", data.phone);
+      const result = await sendOTP(user.id, "sms", "phone_verify", destination);
 
       if (!result.success) {
         return res.status(400).json({ message: result.message });
@@ -1420,6 +1511,7 @@ router.post(
  */
 router.post(
   "/claim/verify",
+  posClaimLimiter,
   async (req: Request, res: Response) => {
     try {
       const schema = z.object({
@@ -1447,20 +1539,15 @@ router.post(
       }
 
       const hashedPassword = await bcrypt.hash(data.newPassword, 10);
-      
-      const updateData: any = {
-        password: hashedPassword,
-        verificationStatus: "verified",
-        phoneNumber: data.phone,
-      };
 
-      if (data.email) {
-        updateData.email = data.email;
-      }
-
+      // Only update password and verification status — never overwrite phone/email
+      // with caller-supplied values, as that would allow account hijacking
       await db
         .update(users)
-        .set(updateData)
+        .set({
+          password: hashedPassword,
+          verificationStatus: "verified",
+        })
         .where(eq(users.id, user.id));
 
       res.json({ success: true, message: "Account successfully claimed" });
@@ -1573,6 +1660,227 @@ router.get(
       res.json({ success: true, certificate: cert, html });
     } catch (error: any) {
       logger.error("getCertificate failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/my-purchase-history
+ * All ledger entries where the current user was the buyer (sale or transfer events).
+ * Used by the buyer to view their purchased devices and access contracts.
+ */
+router.get(
+  "/my-purchase-history",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const history = await getBuyerPurchaseHistory(user.id);
+      res.json({ success: true, history });
+    } catch (error: any) {
+      logger.error("getBuyerPurchaseHistory failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/ledger/:ledgerId/contract-data
+ * Returns all parties and device data needed to render the purchase contract PDF.
+ * Accessible by: the retailer who processed the transaction, the buyer, the seller, or an Admin.
+ */
+async function contractDataAuthMiddleware(req: Request, res: Response, next: NextFunction) {
+  const apiKey = req.headers["x-api-key"] as string | undefined;
+  if (apiKey) {
+    return requireRetailerApiKey(req, res, next);
+  }
+  if (!req.isAuthenticated?.()) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  const user = (req as any).user;
+  // Retailer users: resolve their retailer record
+  if (user.role === "Retailer") {
+    try {
+      const retailer = await getRetailerByUserId(user.id);
+      if (retailer) (req as any).retailer = retailer;
+    } catch (_) {}
+  }
+  next();
+}
+
+router.get(
+  "/ledger/:ledgerId/contract-data",
+  contractDataAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const ledgerId = parseInt(req.params.ledgerId, 10);
+      if (isNaN(ledgerId)) return res.status(400).json({ message: "Invalid ledger ID" });
+
+      const data = await getLedgerContractData(ledgerId);
+      if (!data) return res.status(404).json({ message: "Ledger entry not found" });
+
+      const retailer = (req as any).retailer;
+      const user = (req as any).user;
+
+      const isRetailerOwner = retailer && data.ledger.registeredBy === retailer.id;
+      const isParty = user && (user.id === data.ledger.toUserId || user.id === data.ledger.fromUserId);
+      const isAdmin = user && user.role === "Admin";
+
+      if (!isRetailerOwner && !isParty && !isAdmin) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      res.json({ success: true, data });
+    } catch (error: any) {
+      logger.error("getLedgerContractData failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/device-lookup?serial=XYZ
+ * Retailer: look up any registered POS device by serial number to initiate a P2P transfer.
+ * Returns product details + current owner name.
+ */
+router.get(
+  "/device-lookup",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const serial = (req.query.serial as string | undefined)?.trim();
+      if (!serial || serial.length < 3) {
+        return res.status(400).json({ message: "Serial number is required (min 3 chars)" });
+      }
+
+      const product = await storage.getPosProductBySerial(serial);
+      if (!product) {
+        return res.json({ success: true, found: false });
+      }
+      if (product.status === "stolen") {
+        return res.json({ success: true, found: true, stolen: true, message: "This device is flagged as stolen and cannot be transferred." });
+      }
+      if (product.status === "archived") {
+        return res.json({ success: true, found: true, archived: true, message: "This device is archived." });
+      }
+
+      const owner = product.currentOwnerId ? await storage.getUser(product.currentOwnerId) : null;
+
+      res.json({
+        success: true,
+        found: true,
+        stolen: false,
+        product: {
+          id: product.id,
+          name: product.name,
+          serialNumber: product.serialNumber,
+          category: product.category,
+          status: product.status,
+          currentOwnerId: product.currentOwnerId,
+        },
+        ownerName: owner?.fullName ?? null,
+      });
+    } catch (error: any) {
+      logger.error("device-lookup failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
+ * POST /api/pos/my-subscription/renew
+ * Retailer self-service: initiate a PawaPay deposit for a 1-year subscription renewal.
+ * Returns paymentId + transactionRef for the client to poll.
+ */
+router.post(
+  "/my-subscription/renew",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const schema = z.object({
+        phoneNumber: z.string().min(9, "Phone number required"),
+        plan: z.enum(["basic", "standard", "premium", "enterprise"]).optional(),
+      });
+      const { phoneNumber, plan } = schema.parse(req.body);
+
+      const subscriptionFee = await getPaymentAmount("retailer_subscription");
+      if (!subscriptionFee) {
+        return res.status(400).json({ message: "Subscription pricing not configured. Contact an admin." });
+      }
+
+      const depositId = generateDepositId();
+      const payment = await storage.createPayment({
+        userId: retailer.userId,
+        type: "retailer_subscription",
+        amount: String(subscriptionFee),
+        currency: "RWF",
+        status: "pending",
+        transactionRef: depositId,
+        posRetailerId: retailer.id,
+        metadata: { retailerId: retailer.id, plan: plan ?? retailer.subscriptionPlan },
+      });
+
+      const depositResponse = await initiateDeposit({
+        depositId,
+        amount: subscriptionFee,
+        currency: "RWF",
+        phoneNumber,
+        metadata: { paymentId: payment.id, type: "retailer_subscription" },
+      });
+
+      logger.info("Retailer subscription payment initiated", {
+        retailerId: retailer.id,
+        paymentId: payment.id,
+        depositId,
+      });
+
+      res.json({
+        success: true,
+        paymentId: payment.id,
+        transactionRef: depositId,
+        amount: subscriptionFee,
+        currency: "RWF",
+        depositStatus: depositResponse.status,
+      });
+    } catch (error: any) {
+      logger.error("Subscription renewal initiation failed", { error: error.message });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: error.message || "Internal server error" });
+    }
+  }
+);
+
+/**
+ * GET /api/pos/my-subscription
+ * Returns the retailer's current subscription status.
+ */
+router.get(
+  "/my-subscription",
+  posAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const isActive = RetailerSubscriptionService.isSubscriptionActive(retailer);
+      const daysLeft = retailer.subscriptionExpiresAt
+        ? Math.max(0, Math.ceil((new Date(retailer.subscriptionExpiresAt).getTime() - Date.now()) / 86_400_000))
+        : null;
+
+      res.json({
+        success: true,
+        subscription: {
+          plan: retailer.subscriptionPlan,
+          expiresAt: retailer.subscriptionExpiresAt,
+          paidAt: retailer.subscriptionPaidAt,
+          isActive,
+          daysLeft,
+        },
+      });
+    } catch (error: any) {
+      logger.error("getSubscription failed", { error: error.message });
       res.status(500).json({ message: "Internal server error" });
     }
   }

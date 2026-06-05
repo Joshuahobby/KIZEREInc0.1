@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { storage } from "../storage";
+import { requireAdmin } from "../middleware/auth.middleware";
 import { insertItemSchema } from "@shared/schema";
 import { z } from "zod";
 import { createLogger } from "../utils/logger";
@@ -260,8 +261,8 @@ router.get("/transfer/lookup", async (req, res) => {
   }
 });
 
-// Item Ownership Transfer API
-router.post("/:id/transfer", async (req, res) => {
+// Item Ownership Transfer API — Admin only; consumers must use the paid POS transfer flow
+router.post("/:id/transfer", requireAdmin, async (req, res) => {
   try {
     const itemId = parseInt(req.params.id);
     if (isNaN(itemId)) {

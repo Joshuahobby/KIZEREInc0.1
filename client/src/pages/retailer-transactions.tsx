@@ -15,8 +15,9 @@ import { format } from "date-fns";
 import {
   ArrowLeftRight, Download, Search, Filter,
   Plus, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight,
-  Package, Archive, ShieldAlert
+  Package, Archive, ShieldAlert, FileText
 } from "lucide-react";
+import { PurchaseContractModal } from "@/components/pos/PurchaseContractModal";
 
 const PAGE_SIZE = 20;
 
@@ -72,6 +73,7 @@ export default function RetailerTransactions() {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
+  const [contractLedgerId, setContractLedgerId] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["/api/pos/my-transactions", page],
@@ -162,7 +164,8 @@ export default function RetailerTransactions() {
                       <TableHead className="font-semibold text-xs tracking-wider uppercase">Product</TableHead>
                       <TableHead className="font-semibold text-xs tracking-wider uppercase">Customer</TableHead>
                       <TableHead className="font-semibold text-xs tracking-wider uppercase">Date & Time</TableHead>
-                      <TableHead className="font-semibold text-xs tracking-wider uppercase text-right pr-6">Status</TableHead>
+                      <TableHead className="font-semibold text-xs tracking-wider uppercase text-right">Status</TableHead>
+                      <TableHead className="font-semibold text-xs tracking-wider uppercase text-right pr-6">Contract</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -232,13 +235,30 @@ export default function RetailerTransactions() {
                           </TableCell>
 
                           {/* Status */}
-                          <TableCell className="text-right pr-6">
+                          <TableCell className="text-right">
                             <Badge
                               variant={isStolen ? "destructive" : "outline"}
                               className={`font-bold uppercase tracking-widest text-[10px] ${!isStolen ? cfg.badge : ""}`}
                             >
                               {isStolen ? "Flagged" : "Completed"}
                             </Badge>
+                          </TableCell>
+
+                          {/* Contract */}
+                          <TableCell className="text-right pr-6">
+                            {(tx.event === "sale" || tx.event === "transfer") && !isStockIn ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 gap-1.5 text-xs font-semibold text-emerald-600 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg"
+                                onClick={() => setContractLedgerId(tx.id)}
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                                Contract
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </TableCell>
                         </motion.tr>
                       );
@@ -292,6 +312,14 @@ export default function RetailerTransactions() {
           )}
         </Card>
       </motion.div>
+
+      {contractLedgerId && (
+        <PurchaseContractModal
+          ledgerId={contractLedgerId}
+          open={!!contractLedgerId}
+          onClose={() => setContractLedgerId(null)}
+        />
+      )}
     </AppLayout>
   );
 }

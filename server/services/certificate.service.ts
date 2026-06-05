@@ -29,6 +29,13 @@ export class CertificateService {
     const item = await storage.getItem(Number(itemId));
     if (!item) throw new Error(`Item ${itemId} not found`);
 
+    // Verify the item still belongs to the payer — ownership may have changed since payment
+    if (item.userId !== payment.userId) {
+      throw new Error(
+        `Certificate issuance rejected: item ${itemId} is no longer owned by payment user ${payment.userId}`
+      );
+    }
+
     // Idempotency: if a certificate already exists for this payment, return the first one
     const existing = await storage.getOwnershipCertificatesByItem(item.id);
     const alreadyIssued = existing.find(c => c.paymentId === paymentId);

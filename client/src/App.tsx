@@ -107,6 +107,7 @@ const AdminCommissionsPage = lazyWithRetry(() => import("@/pages/admin/commissio
 const PublicItemVerifyPage = lazyWithRetry(() => import("@/pages/PublicItemVerifyPage"));
 const ConsumerVerifyPage = lazyWithRetry(() => import("@/pages/consumer-verify-page"));
 const PremiumPage = lazyWithRetry(() => import("@/pages/premium-page"));
+const MyDevices = lazyWithRetry(() => import("@/pages/my-devices"));
 
 function App() {
   // Handle Firebase redirect result
@@ -204,6 +205,7 @@ function App() {
                   <ProtectedRoute path="/dashboard" component={UnifiedDashboard} requiredRole="any" />
                   <ProtectedRoute path="/register-item" component={ItemRegistration} requiredRole="any" />
                   <ProtectedRoute path="/my-items" component={MyItems} requiredRole="any" />
+                  <ProtectedRoute path="/my-devices" component={MyDevices} requiredRole="any" />
                   <Route path="/items/:id">
                     <ItemDetail />
                   </Route>

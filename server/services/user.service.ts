@@ -4,10 +4,23 @@
  */
 import { User, InsertUser } from '@shared/schema';
 import { createLogger } from '../utils/logger';
-import { validatePasswordStrength } from '../utils/auth-crypto';
+import { validatePasswordStrength, hashPassword } from '../utils/auth-crypto';
 import { DatabaseError, NotFoundError, ValidationError } from '../utils/error-handler';
 import { userRepository } from '../repositories/user.repository';
+import { pool } from '../db';
 import crypto from 'crypto';
+
+/** Destroy all sessions belonging to a user so stale sessions cannot be replayed after a password change. */
+async function destroyUserSessions(userId: number): Promise<void> {
+  try {
+    await pool.query(
+      `DELETE FROM "session" WHERE (sess->'passport'->'user'->>'id')::int = $1`,
+      [userId]
+    );
+  } catch {
+    // Session table may not exist in dev (MemoryStore) — treat as non-fatal
+  }
+}
 
 const logger = createLogger('UserService');
 
@@ -243,9 +256,9 @@ export class UserService {
       }
 
       // For phone resets, generate a 6-digit code. For email, a hex token.
-      const token = isEmail 
+      const token = isEmail
         ? crypto.randomBytes(32).toString('hex')
-        : Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+        : crypto.randomInt(100000, 1000000).toString();
         
       const expires = new Date();
       expires.setHours(expires.getHours() + 1); // Token valid for 1 hour
@@ -259,7 +272,7 @@ export class UserService {
       return { token, user };
     } catch (error) {
       if (error instanceof NotFoundError) throw error;
-      logger.error('Error generating reset token', { identifier, error });
+      logger.error('Error generating reset token', { identifierType: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier) ? 'email' : 'phone', error });
       throw new DatabaseError('Failed to generate reset token');
     }
   }
@@ -281,12 +294,15 @@ export class UserService {
         throw new ValidationError('Reset token has expired');
       }
 
-      // Update password and clear token fields
+      // Hash before storing — repository does not hash automatically
       const updatedUser = await userRepository.update(user.id, {
-        password: newPassword,
+        password: await hashPassword(newPassword),
         resetPasswordToken: null,
         resetPasswordExpires: null
       } as any);
+
+      // Invalidate all existing sessions so the old session cannot be replayed
+      await destroyUserSessions(user.id);
 
       logger.info('Password reset successfully', { userId: user.id });
       return updatedUser;

@@ -143,11 +143,16 @@ router.post("/:id/messages", async (req, res) => {
 
 /**
  * PATCH /api/chats/:id/read
- * Mark messages in a chat as read
+ * Mark messages in a chat as read — caller must be a participant
  */
 router.patch("/:id/read", async (req, res) => {
     try {
         const chatId = parseInt(req.params.id);
+        const chat = await storage.getChat(chatId);
+        if (!chat) return res.status(404).json({ message: "Chat not found" });
+        if (chat.finderId !== req.user!.id && chat.claimantId !== req.user!.id) {
+            return res.status(403).json({ message: "Access denied" });
+        }
         await storage.markMessagesAsRead(chatId, req.user!.id);
         res.json({ success: true });
     } catch (error) {
