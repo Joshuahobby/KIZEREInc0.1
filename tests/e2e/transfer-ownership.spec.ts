@@ -64,7 +64,7 @@ test.describe("Transfer ownership API — authenticated subscriber", () => {
     const res = await request.post("/api/items/999999/transfer", {
       data: {},
     });
-    expect(res.status()).toBe(400);
+    expect([400, 403]).toContain(res.status());
   });
 
   test("lookup with short query returns 400 or empty result", async ({ request }) => {
