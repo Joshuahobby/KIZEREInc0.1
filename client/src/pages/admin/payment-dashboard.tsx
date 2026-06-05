@@ -117,6 +117,17 @@ export default function AdminPaymentDashboard() {
     enabled: !!isAdmin,
   });
 
+  // Retailer subscriptions query
+  const { data: retailersData } = useQuery<{ retailers: any[] }>({
+    queryKey: ["/api/pos/admin/retailers"],
+    queryFn: () => apiRequest("/api/pos/admin/retailers"),
+    enabled: !!isAdmin,
+    select: (d: any) => ({ retailers: (d.retailers ?? d) as any[] }),
+  });
+  const subscribedRetailers = (retailersData?.retailers ?? []).filter(
+    (r: any) => r.subscriptionPlan && r.subscriptionPlan !== "basic"
+  );
+
   // Payments table query with pagination and filters
   const {
     data: paymentsData,
@@ -429,6 +440,84 @@ export default function AdminPaymentDashboard() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">No successful payments recorded yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Active Retailer Subscriptions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                Retailer Subscriptions
+              </CardTitle>
+              <CardDescription>
+                Non-basic plans — expiry dates and renewal status
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              {subscribedRetailers.length === 0 ? (
+                <p className="text-sm text-muted-foreground p-6">No paid retailer subscriptions found.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-border/50 bg-muted/20">
+                        <th className="text-left font-semibold text-xs uppercase tracking-wider px-6 py-3">Retailer</th>
+                        <th className="text-left font-semibold text-xs uppercase tracking-wider px-4 py-3">Plan</th>
+                        <th className="text-left font-semibold text-xs uppercase tracking-wider px-4 py-3">Expires</th>
+                        <th className="text-left font-semibold text-xs uppercase tracking-wider px-4 py-3">Status</th>
+                        <th className="text-right font-semibold text-xs uppercase tracking-wider px-6 py-3">Days Left</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subscribedRetailers.map((r: any) => {
+                        const now = Date.now();
+                        const expiresAt = r.subscriptionExpiresAt ? new Date(r.subscriptionExpiresAt) : null;
+                        const daysLeft = expiresAt ? Math.ceil((expiresAt.getTime() - now) / 86_400_000) : null;
+                        const isActive = expiresAt ? expiresAt.getTime() > now : false;
+                        const isExpiringSoon = isActive && daysLeft !== null && daysLeft <= 30;
+
+                        const planColor: Record<string, string> = {
+                          standard: "bg-blue-500/10 text-blue-600 border-blue-300",
+                          premium: "bg-emerald-500/10 text-emerald-600 border-emerald-300",
+                          enterprise: "bg-purple-500/10 text-purple-600 border-purple-300",
+                        };
+
+                        return (
+                          <tr key={r.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                            <td className="px-6 py-3">
+                              <p className="font-semibold">{r.name}</p>
+                              <p className="text-xs text-muted-foreground">{r.email}</p>
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge className={`capitalize text-[10px] border font-bold ${planColor[r.subscriptionPlan] ?? ""}`}>
+                                {r.subscriptionPlan}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              {expiresAt ? format(expiresAt, "MMM d, yyyy") : "—"}
+                            </td>
+                            <td className="px-4 py-3">
+                              {!expiresAt ? (
+                                <Badge variant="outline" className="text-[10px]">No date</Badge>
+                              ) : !isActive ? (
+                                <Badge variant="destructive" className="text-[10px]">Expired</Badge>
+                              ) : isExpiringSoon ? (
+                                <Badge className="text-[10px] bg-amber-500/10 text-amber-600 border border-amber-300">Expiring soon</Badge>
+                              ) : (
+                                <Badge className="text-[10px] bg-emerald-500/10 text-emerald-600 border border-emerald-300">Active</Badge>
+                              )}
+                            </td>
+                            <td className="px-6 py-3 text-right font-mono text-sm">
+                              {daysLeft !== null ? (daysLeft > 0 ? `${daysLeft}d` : "0d") : "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </CardContent>
           </Card>

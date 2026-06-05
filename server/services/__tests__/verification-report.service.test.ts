@@ -7,6 +7,7 @@ vi.mock("../../storage", () => ({
     getPayment: vi.fn(),
     getItemByUniqueIdentifier: vi.fn(),
     getPosProductBySerialWithRetailer: vi.fn(),
+    getPosProductBySerial: vi.fn().mockResolvedValue(null),
     getUser: vi.fn(),
     createVerificationPurchase: vi.fn(),
     getActiveVerificationPurchase: vi.fn(),
@@ -132,9 +133,12 @@ describe("VerificationReportService", () => {
         id: 7,
         reportData: storedReport,
       });
+      // getReport appends isOwner from a POS product lookup after fetching the purchase
+      (storage.getPosProductBySerial as any).mockResolvedValueOnce(null);
 
       const result = await VerificationReportService.getReport(10, "IMEI-12345");
-      expect(result).toEqual(storedReport);
+      expect(result).toMatchObject(storedReport);
+      expect((result as any).isOwner).toBe(false);
     });
   });
 

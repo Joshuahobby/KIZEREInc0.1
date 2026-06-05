@@ -30,6 +30,7 @@ const BASE_PAYMENT = {
 
 const BASE_ITEM = {
   id: 5,
+  userId: 10, // matches BASE_PAYMENT.userId — ownership check requires these to match
   name: "Samsung Galaxy S23",
   category: "Phones",
   uniqueIdentifier: "123456789012345",
@@ -82,7 +83,7 @@ describe("CertificateService", () => {
         metadata: { itemId: 99 },
       });
       (storage.getOwnershipCertificatesByItem as any).mockResolvedValueOnce([]);
-      (storage.getItem as any).mockResolvedValueOnce({ ...BASE_ITEM, id: 99 });
+      (storage.getItem as any).mockResolvedValueOnce({ ...BASE_ITEM, id: 99, userId: 10 });
       (storage.createOwnershipCertificate as any).mockResolvedValueOnce({
         ...BASE_CERT,
         itemId: 99,

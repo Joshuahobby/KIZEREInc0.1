@@ -128,7 +128,30 @@ export default function PosTerminal() {
   const [transferBuyerPhone, setTransferBuyerPhone] = React.useState("");
   const [transferMomoPhone, setTransferMomoPhone] = React.useState("");
   const [transferPendingRef, setTransferPendingRef] = React.useState<string | null>(null);
+  const [transferComplete, setTransferComplete] = React.useState(false);
   const transferPollTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Poll for P2P transfer payment completion
+  React.useEffect(() => {
+    if (!transferPendingRef || step !== "transfer-pending" || transferComplete) return;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiGet<any>(`/api/payments/verify/${transferPendingRef}`);
+        if (res.status === "COMPLETED") {
+          setTransferComplete(true);
+          setTransferPendingRef(null);
+          toast({ title: "Transfer Complete!", description: "Ownership has been transferred successfully." });
+        } else if (res.status === "FAILED") {
+          toast({ title: "Payment Failed", description: "The MoMo payment was not completed. Please try again.", variant: "destructive" });
+          setTransferPendingRef(null);
+          setStep("transfer-confirm");
+        }
+      } catch { /* ignore transient poll errors */ }
+    }, 5000);
+    transferPollTimer.current = timer;
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transferPendingRef, step, transferComplete]);
   const receiptRef = React.useRef<HTMLDivElement>(null);
   const [useWebSerial, setUseWebSerial] = React.useState(false);
   const [isPrinterConnected, setIsPrinterConnected] = React.useState(false);
@@ -421,7 +444,7 @@ export default function PosTerminal() {
     setInventorySearch("");
     setTransferSerial(""); setTransferProduct(null); setTransferBuyer(null);
     setTransferBuyerNid(""); setTransferBuyerName(""); setTransferBuyerPhone("");
-    setTransferMomoPhone(""); setTransferPendingRef(null);
+    setTransferMomoPhone(""); setTransferPendingRef(null); setTransferComplete(false);
     if (transferPollTimer.current) clearTimeout(transferPollTimer.current);
   };
 
@@ -1479,19 +1502,41 @@ export default function PosTerminal() {
                 </div>
               )}
 
-              {/* Step: Transfer Pending */}
+              {/* Step: Transfer Pending / Complete */}
               {step === "transfer-pending" && (
                 <div className="flex flex-col items-center space-y-8 animate-in slide-in-from-bottom-4 duration-500 py-10">
-                  <div className="w-24 h-24 rounded-full bg-indigo-500/10 flex items-center justify-center">
-                    <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
-                  </div>
-                  <div className="text-center">
-                    <h2 className="text-3xl font-black text-white">Awaiting Payment</h2>
-                    <p className="text-slate-400 mt-2 text-sm">
-                      The buyer should complete the MoMo payment prompt on their phone.<br />
-                      Ownership will transfer automatically once payment is confirmed.
-                    </p>
-                  </div>
+                  {transferComplete ? (
+                    <>
+                      <div className="w-24 h-24 rounded-full bg-emerald-600 flex items-center justify-center shadow-2xl shadow-emerald-600/30">
+                        <CheckCircle2 className="w-12 h-12 text-white" />
+                      </div>
+                      <div className="text-center">
+                        <h2 className="text-3xl font-black text-white">Transfer Complete!</h2>
+                        <p className="text-slate-400 mt-2 text-sm">
+                          <span className="text-white font-semibold">{transferBuyer?.fullName}</span> is now the registered owner of{" "}
+                          <span className="text-white font-semibold">{transferProduct?.name ?? transferProduct?.serialNumber}</span>.
+                        </p>
+                      </div>
+                      <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-2xl text-sm text-center space-y-1 w-full max-w-sm">
+                        <p className="text-slate-400">Device</p>
+                        <p className="font-bold text-white">{transferProduct?.name}</p>
+                        <p className="font-mono text-indigo-400 text-xs">{transferProduct?.serialNumber}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-24 h-24 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                        <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
+                      </div>
+                      <div className="text-center">
+                        <h2 className="text-3xl font-black text-white">Awaiting Payment</h2>
+                        <p className="text-slate-400 mt-2 text-sm">
+                          The buyer should complete the MoMo payment prompt on their phone.<br />
+                          Ownership will transfer automatically once payment is confirmed.
+                        </p>
+                      </div>
+                    </>
+                  )}
                   <div className="flex gap-4">
                     <Button variant="outline" className="h-12 px-8 border-slate-800 rounded-xl font-bold" onClick={resetFlow}>
                       New Transaction

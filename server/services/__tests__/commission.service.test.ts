@@ -91,7 +91,7 @@ describe("CommissionService", () => {
   describe("queuePayout", () => {
     it("throws if commission is already processed", async () => {
       (db.where as any).mockResolvedValueOnce([{ id: 1, status: "processing", retailerId: 1, commissionAmount: "500" }]);
-      await expect(CommissionService.queuePayout(1))
+      await expect(CommissionService.queuePayout(1, 1))
         .rejects.toThrow("Commission is already processing");
     });
 
@@ -99,7 +99,7 @@ describe("CommissionService", () => {
       (db.where as any)
         .mockResolvedValueOnce([{ id: 1, status: "pending", retailerId: 1, commissionAmount: "500", payoutDestination: null }])
         .mockResolvedValueOnce([{ walletPhone: null }]);
-      await expect(CommissionService.queuePayout(1))
+      await expect(CommissionService.queuePayout(1, 1))
         .rejects.toThrow("no wallet phone");
     });
   });
