@@ -116,7 +116,7 @@ test.describe("Item Registration — category-aware identifier field", () => {
 
     const categoryTrigger = page.locator("[role='combobox']").first();
     await categoryTrigger.click();
-    await page.getByRole("option", { name: /Transportation/i }).click();
+    await page.getByRole("option", { name: /Transport/i }).click();
 
     await expect(page.getByText(/VIN|Plate Number/i)).toBeVisible({ timeout: 5000 });
   });
