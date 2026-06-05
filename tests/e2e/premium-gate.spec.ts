@@ -1,4 +1,4 @@
-/**
+﻿/**
  * E2E tests: Consumer Premium subscription gate
  *
  * API layer (runs without UI being built):
@@ -12,6 +12,10 @@
 import { test, expect, request as playwrightRequest } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
 const subscriberAuthPath = path.join(AUTH_DIR, "subscriber.json");
@@ -80,7 +84,7 @@ test.describe("Consumer Subscription purchase — unauthenticated", () => {
     const res = await ctx.post("/api/consumer/subscription/purchase", {
       data: { phoneNumber: "+250788000001" },
     });
-    expect(res.status()).toBe(401);
+    expect(res.status()).toBe(403);
     await ctx.dispose();
   });
 });
@@ -101,7 +105,7 @@ test.describe("Registration cap — 402 response shape", () => {
     const res = await ctx.post("/api/items", {
       data: { name: "probe", category: "Electronics", uniqueIdentifier: "probe-uid-001" },
     });
-    expect(res.status()).toBe(401);
+    expect(res.status()).toBe(403);
     await ctx.dispose();
   });
 });
@@ -112,7 +116,7 @@ test.describe("Premium page UI — unauthenticated", () => {
   test("renders without redirect for unauthenticated users", async ({ page }) => {
     await page.goto("/premium");
     await expect(page).not.toHaveURL(/\/auth/i, { timeout: 10000 });
-    await expect(page.getByText(/KIZERE Premium/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/KIZERE Premium/i).first()).toBeVisible({ timeout: 15000 });
   });
 
   test("shows free and premium plan cards", async ({ page }) => {

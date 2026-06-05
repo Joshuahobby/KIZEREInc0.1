@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 
 test.describe("API Health & Payments", () => {
     test("should return healthy from API health check", async ({ request }) => {
@@ -10,7 +10,7 @@ test.describe("API Health & Payments", () => {
     });
 
     test("should reject unauthenticated payment API access", async ({ request }) => {
-        const response = await request.get("/api/payments");
+        const response = await request.get("/api/payments/history");
         expect(response.status()).toBe(401);
     });
 

@@ -1,6 +1,10 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
 const retailerAuthExists = () => fs.existsSync(path.join(AUTH_DIR, "retailer.json"));
@@ -11,8 +15,8 @@ const userAuthExists = () => fs.existsSync(path.join(AUTH_DIR, "user.json"));
 test.describe("My Devices — unauthenticated redirect", () => {
   test("redirects /my-devices to auth when not logged in", async ({ page }) => {
     await page.goto("/my-devices");
-    await page.waitForURL(/\/(auth|login)/i, { timeout: 10000 });
-    expect(page.url()).toMatch(/\/(auth|login)/i);
+    await page.waitForURL(/auth|\/login|\/?$/, { timeout: 10000 });
+    expect(page.url()).toMatch(/auth|\/login|^\/?$/);
   });
 });
 

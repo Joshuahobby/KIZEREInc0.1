@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 
 test.describe("Claim Account Flow", () => {
   test("Claim Account page renders and validates inputs", async ({ page }) => {
@@ -14,6 +14,6 @@ test.describe("Claim Account Flow", () => {
     await page.getByRole("button", { name: /Send Verification Code/i }).click();
 
     // Expect an error toast or validation message
-    await expect(page.getByText(/Please enter valid National ID/i)).toBeVisible();
+    await expect(page.getByText(/Please enter valid National ID/i).first()).toBeVisible();
   });
 });

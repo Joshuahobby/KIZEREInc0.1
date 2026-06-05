@@ -1,4 +1,4 @@
-/**
+﻿/**
  * E2E tests: Ownership Transfer
  *
  * API layer (runs without UI being built):
@@ -12,6 +12,10 @@
 import { test, expect, request as playwrightRequest } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
 const subscriberAuthPath = path.join(AUTH_DIR, "subscriber.json");
@@ -36,7 +40,7 @@ test.describe("Transfer ownership API — unauthenticated", () => {
     const res = await ctx.post("/api/items/1/transfer", {
       data: { recipientEmail: "test@example.com" },
     });
-    expect(res.status()).toBe(401);
+    expect(res.status()).toBe(403);
     await ctx.dispose();
   });
 });

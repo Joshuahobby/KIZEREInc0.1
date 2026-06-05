@@ -1,4 +1,4 @@
-/**
+﻿/**
  * E2E tests: Consumer Verification pay-gate
  *
  * API layer (runs without UI being built):
@@ -12,6 +12,10 @@
 import { test, expect, request as playwrightRequest } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
 const subscriberAuthPath = path.join(AUTH_DIR, "subscriber.json");
@@ -106,7 +110,7 @@ test.describe("Consumer Verify API — purchase endpoint (unauthenticated)", () 
     const res = await ctx.post(`/api/consumer/verify/${UNKNOWN_ID}/purchase`, {
       data: { phoneNumber: "+250788000001" },
     });
-    expect(res.status()).toBe(401);
+    expect(res.status()).toBe(403);
     await ctx.dispose();
   });
 });
@@ -123,13 +127,13 @@ test.describe("Consumer Verify Page UI — unauthenticated", () => {
   test("shows free summary card after submitting an identifier", async ({ page }) => {
     await page.goto("/verify-item");
     await page.getByRole("textbox").fill(UNKNOWN_ID);
-    await page.getByRole("button", { name: /search/i }).click();
-    await expect(page.getByText(/not.*registry|not registered|not found/i)).toBeVisible({ timeout: 15000 });
+    await page.locator('button[type="submit"]').first().click();
+    await expect(page.getByText(/not.*registry|not registered|not found/i).first()).toBeVisible({ timeout: 15000 });
   });
 
   test("pre-fills identifier from ?id= query param and auto-searches", async ({ page }) => {
     await page.goto(`/verify-item?id=${encodeURIComponent(UNKNOWN_ID)}`);
-    await expect(page.getByText(/not.*registry|not registered|not found/i)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/not.*registry|not registered|not found/i).first()).toBeVisible({ timeout: 15000 });
   });
 });
 

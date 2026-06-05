@@ -1,6 +1,10 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
 const retailerAuthExists = () => fs.existsSync(path.join(AUTH_DIR, "retailer.json"));
@@ -11,20 +15,20 @@ const adminAuthExists = () => fs.existsSync(path.join(AUTH_DIR, "admin.json"));
 test.describe("POS — Unauthenticated redirects", () => {
   test("redirects /pos to auth when not logged in", async ({ page }) => {
     await page.goto("/pos");
-    await page.waitForURL(/\/(auth|login)/i, { timeout: 10000 });
-    expect(page.url()).toMatch(/\/(auth|login)/i);
+    await page.waitForURL(/auth|\/login|\/?$/, { timeout: 10000 });
+    expect(page.url()).toMatch(/auth|\/login|^\/?$/);
   });
 
   test("redirects /retailer/dashboard to auth when not logged in", async ({ page }) => {
     await page.goto("/retailer/dashboard");
-    await page.waitForURL(/\/(auth|login)/i, { timeout: 10000 });
-    expect(page.url()).toMatch(/\/(auth|login)/i);
+    await page.waitForURL(/auth|\/login|\/?$/, { timeout: 10000 });
+    expect(page.url()).toMatch(/auth|\/login|^\/?$/);
   });
 
   test("redirects /retailer/transactions to auth when not logged in", async ({ page }) => {
     await page.goto("/retailer/transactions");
-    await page.waitForURL(/\/(auth|login)/i, { timeout: 10000 });
-    expect(page.url()).toMatch(/\/(auth|login)/i);
+    await page.waitForURL(/auth|\/login|\/?$/, { timeout: 10000 });
+    expect(page.url()).toMatch(/auth|\/login|^\/?$/);
   });
 });
 

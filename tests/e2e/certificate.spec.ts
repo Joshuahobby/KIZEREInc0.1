@@ -1,4 +1,4 @@
-/**
+﻿/**
  * E2E tests: Ownership Certificate
  *
  * API layer (runs without UI being built):
@@ -12,6 +12,10 @@
 import { test, expect, request as playwrightRequest } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
 const adminAuthPath = path.join(AUTH_DIR, "admin.json");

@@ -1,12 +1,16 @@
 import { chromium, request as playwrightRequest, FullConfig } from "@playwright/test";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const BASE_URL = process.env.BASE_URL || "http://localhost:5000";
 const AUTH_DIR = path.join(__dirname, "../../playwright/.auth");
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Password123!";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin@123456";
 
 const TEST_RETAILER_USERNAME = "e2e_retailer_test";
 const TEST_RETAILER_EMAIL = "e2e-retailer@test.kizere.local";
@@ -35,7 +39,7 @@ export default async function globalSetup(_config: FullConfig) {
   // ──────────────────────────────────────────────
   // Step 1: Get CSRF token and login as admin
   // ──────────────────────────────────────────────
-  const csrfRes = await ctx.get("/api/auth/csrf");
+  const csrfRes = await ctx.get("/api/csrf-token");
   const csrfData = await csrfRes.json().catch(() => ({}));
   const csrfToken = csrfData.csrfToken || "";
 
@@ -81,7 +85,7 @@ export default async function globalSetup(_config: FullConfig) {
   // ──────────────────────────────────────────────
   // Step 2: Create test retailer user via admin API
   // ──────────────────────────────────────────────
-  const newCsrfRes = await ctx.get("/api/auth/csrf");
+  const newCsrfRes = await ctx.get("/api/csrf-token");
   const newCsrfToken = (await newCsrfRes.json().catch(() => ({}))).csrfToken || "";
 
   const createUserRes = await ctx.post("/api/admin/users", {
@@ -125,7 +129,7 @@ export default async function globalSetup(_config: FullConfig) {
 
     // Onboard as retailer if not already done
     if (!retailerPage.url().includes("/retailer")) {
-      const onboardCsrfRes = await retailerCtx.request.get(`${BASE_URL}/api/auth/csrf`);
+      const onboardCsrfRes = await retailerCtx.request.get(`${BASE_URL}/api/csrf-token`);
       const onboardCsrf = (await onboardCsrfRes.json().catch(() => ({}))).csrfToken || "";
 
       const onboardRes = await retailerCtx.request.post(`${BASE_URL}/api/pos/onboard`, {
@@ -158,7 +162,7 @@ export default async function globalSetup(_config: FullConfig) {
   // ──────────────────────────────────────────────
   // Step 4: Create test subscriber user via admin API
   // ──────────────────────────────────────────────
-  const subCsrfRes = await ctx.get("/api/auth/csrf");
+  const subCsrfRes = await ctx.get("/api/csrf-token");
   const subCsrfToken = (await subCsrfRes.json().catch(() => ({}))).csrfToken || "";
 
   const createSubscriberRes = await ctx.post("/api/admin/users", {
