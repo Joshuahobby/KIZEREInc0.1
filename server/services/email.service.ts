@@ -25,6 +25,11 @@ function getResendClient(): Resend | null {
   return _resend;
 }
 
+/** Test helper — resets the lazy Resend singleton so tests can inject a fresh mock. */
+export function __resetResendClient(): void {
+  _resend = null;
+}
+
 // Default sender email (must be verified in Resend)
 const FROM_EMAIL = process.env.FROM_EMAIL || 'KIZERE <noreply@kizere.rw>';
 

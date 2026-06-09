@@ -48,6 +48,7 @@ import { sendOTP, verifyOTP } from "../services/otp.service";
 import bcrypt from "bcrypt";
 import { isPosStubAccount } from "../services/pos.service";
 import { storage } from "../storage";
+import { sendEmail } from "../services/email.service";
 import { CommissionService } from "../services/commission.service";
 import { RetailerSubscriptionService } from "../services/retailer-subscription.service";
 import { PlatformSettingsService } from "../services/platform-settings.service";
@@ -1153,6 +1154,34 @@ router.post(
 // ═══════════════════════════════════════════════════════════
 
 /**
+ * GET /api/pos/pending-status
+ * Check approval status for a pending retailer application.
+ * Uses session auth (not API key) — accessible before the retailer is approved.
+ */
+router.get(
+  "/pending-status",
+  requireAuth,
+  async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      const retailer = await getRetailerByUserId(user.id);
+      if (!retailer) {
+        return res.status(404).json({ message: "No retailer application found." });
+      }
+      res.json({
+        success: true,
+        status: retailer.status,
+        businessName: retailer.name,
+        pendingApproval: retailer.status === "inactive",
+      });
+    } catch (error: any) {
+      logger.error("pending-status check failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
+/**
  * POST /api/pos/onboard
  * Self-registration for logged-in users to become a Retailer.
  */
@@ -1193,6 +1222,40 @@ router.post(
       });
 
       // Role is promoted to Retailer only after admin approves via PATCH /api/pos/admin/retailers/:id
+
+      // Email 1: Confirm receipt to the retailer (fire-and-forget)
+      sendEmail({
+        to: retailer.email,
+        subject: "KIZERE — Your business application has been received",
+        html: `<p>Hi ${retailer.name},</p>
+<p>Thank you for applying to join KIZERE as a registered retailer. Your application has been received and is under review.</p>
+<p><strong>What happens next:</strong></p>
+<ul>
+  <li>Our team will review your application within 24 hours.</li>
+  <li>You will receive an email when your account is approved with your API key and getting-started guide.</li>
+</ul>
+<p>Questions? Reply to this email or contact us at <a href="mailto:hello@kizere.rw">hello@kizere.rw</a>.</p>
+<p>— The KIZERE Team</p>`,
+        text: `Hi ${retailer.name},\n\nYour business application has been received and is under review. We will review it within 24 hours and email you when it is approved.\n\nQuestions? Contact hello@kizere.rw\n\n— The KIZERE Team`,
+      }).catch((err: Error) => logger.error("Failed to send retailer application receipt email", { error: err.message }));
+
+      // Email 2: Alert admin of new application (fire-and-forget)
+      const adminEmail = process.env.ADMIN_ALERT_EMAIL || "hello@kizere.rw";
+      sendEmail({
+        to: adminEmail,
+        subject: `New retailer application — ${retailer.name}`,
+        html: `<p>A new retailer has applied to join KIZERE.</p>
+<table>
+  <tr><td><strong>Business name:</strong></td><td>${retailer.name}</td></tr>
+  <tr><td><strong>Email:</strong></td><td>${retailer.email}</td></tr>
+  <tr><td><strong>Phone:</strong></td><td>${retailer.phone || "—"}</td></tr>
+  <tr><td><strong>Business type:</strong></td><td>${(retailer.metadata as any)?.businessType || "Retailer"}</td></tr>
+  <tr><td><strong>Application ID:</strong></td><td>#${retailer.id}</td></tr>
+</table>
+<p><a href="${process.env.APP_URL || "https://kizere.rw"}/admin/retailers">Review in admin panel →</a></p>`,
+        text: `New retailer application: ${retailer.name} (${retailer.email}). Review at ${process.env.APP_URL || "https://kizere.rw"}/admin/retailers`,
+      }).catch((err: Error) => logger.error("Failed to send admin retailer alert email", { error: err.message }));
+
       res.status(201).json({ success: true, retailer: safeRetailer(retailer), pendingApproval: true });
     } catch (error: any) {
       logger.error("Retailer self-onboarding failed", { error: error.message });
@@ -1244,6 +1307,28 @@ router.patch(
       }
       const updated = await updateRetailer(id, { status: "active" });
       await storage.updateUserRole(retailer.userId, "Retailer");
+
+      // Email 3: Notify retailer of approval with API key and getting-started links (fire-and-forget)
+      const appUrl = process.env.APP_URL || "https://kizere.rw";
+      sendEmail({
+        to: retailer.email,
+        subject: "KIZERE — Your business account is approved 🎉",
+        html: `<p>Hi ${retailer.name},</p>
+<p>Congratulations! Your KIZERE business account has been approved. You can now start registering product ownership at point of sale.</p>
+<p><strong>Your API key:</strong></p>
+<pre style="background:#f4f4f4;padding:12px;border-radius:4px;font-size:14px;">${updated?.apiKey || retailer.apiKey || "(see your settings page)"}</pre>
+<p>Keep this key secret — it authenticates all POS terminal requests.</p>
+<p><strong>Get started:</strong></p>
+<ul>
+  <li><a href="${appUrl}/pos-terminal">Open POS Terminal</a> — register your first product</li>
+  <li><a href="${appUrl}/retailer/products">Manage Products</a> — bulk import your catalog</li>
+  <li><a href="${appUrl}/retailer/settings">Settings</a> — view or regenerate your API key</li>
+</ul>
+<p>Welcome to the KIZERE network.</p>
+<p>— The KIZERE Team</p>`,
+        text: `Hi ${retailer.name},\n\nYour KIZERE business account has been approved!\n\nYour API key: ${updated?.apiKey || retailer.apiKey || "(see settings page)"}\n\nGet started:\n- POS Terminal: ${appUrl}/pos-terminal\n- Products: ${appUrl}/retailer/products\n- Settings: ${appUrl}/retailer/settings\n\n— The KIZERE Team`,
+      }).catch((err: Error) => logger.error("Failed to send retailer approval email", { error: err.message }));
+
       res.json({ success: true, retailer: updated });
     } catch (error: any) {
       logger.error("approveRetailer failed", { error: error.message });

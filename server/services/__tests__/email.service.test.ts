@@ -7,7 +7,7 @@
  * For a live delivery test run:
  *   TEST_EMAIL=you@example.com npx vitest run server/services/__tests__/email.service.integration.test.ts
  */
-import { describe, it, expect, vi, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, afterAll } from 'vitest';
 
 // vi.hoisted ensures these vars exist before the hoisted vi.mock factory runs
 const { resendSendMock, ResendMock } = vi.hoisted(() => {
@@ -20,18 +20,26 @@ const { resendSendMock, ResendMock } = vi.hoisted(() => {
 
 vi.mock('resend', () => ({ Resend: ResendMock }));
 
-import { sendEmail } from '../email.service';
+import { sendEmail, __resetResendClient } from '../email.service';
 
 // ---------------------------------------------------------------------------
 // Unit tests — sendEmail
 // ---------------------------------------------------------------------------
 describe('sendEmail (unit)', () => {
   const originalNodeEnv = process.env.NODE_ENV;
+  const originalResendKey = process.env.RESEND_API_KEY;
 
   beforeEach(() => {
     resendSendMock.mockReset();
     ResendMock.mockClear();
     process.env.NODE_ENV = 'production'; // disable dev-mode error suppression
+    process.env.RESEND_API_KEY = 'test_key_placeholder'; // ensure client is initialised
+    __resetResendClient(); // clear the lazy singleton so a fresh mock instance is created
+  });
+
+  afterEach(() => {
+    process.env.RESEND_API_KEY = originalResendKey;
+    __resetResendClient();
   });
 
   afterAll(() => {
@@ -106,9 +114,24 @@ describe('sendEmail (unit)', () => {
 // Unit tests — OTP email content
 // ---------------------------------------------------------------------------
 describe('OTP email content (unit)', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+  const originalResendKey = process.env.RESEND_API_KEY;
+
   beforeEach(() => {
     resendSendMock.mockReset();
+    ResendMock.mockClear();
     process.env.NODE_ENV = 'production';
+    process.env.RESEND_API_KEY = 'test_key_placeholder';
+    __resetResendClient();
+  });
+
+  afterEach(() => {
+    process.env.RESEND_API_KEY = originalResendKey;
+    __resetResendClient();
+  });
+
+  afterAll(() => {
+    process.env.NODE_ENV = originalNodeEnv;
   });
 
   it('sends an OTP email containing the 6-digit code in both subject and body', async () => {

@@ -95,6 +95,7 @@ const CreateReport = lazyWithRetry(() => import("@/pages/create-report"));
 const PosTerminal = lazyWithRetry(() => import("@/pages/pos-terminal"));
 const RetailerManagement = lazyWithRetry(() => import("@/pages/admin/retailer-management"));
 const RetailerOnboarding = lazyWithRetry(() => import("@/pages/retailer-onboarding"));
+const RetailerPendingPage = lazyWithRetry(() => import("@/pages/retailer-pending"));
 const RetailerDashboard = lazyWithRetry(() => import("@/pages/retailer-dashboard"));
 const RetailerProducts = lazyWithRetry(() => import("@/pages/retailer-products"));
 const RetailerTransactions = lazyWithRetry(() => import("@/pages/retailer-transactions"));
@@ -197,6 +198,9 @@ function App() {
                   {/* Protected routes */}
                   <Route path="/business/register">
                     <RetailerOnboarding />
+                  </Route>
+                  <Route path="/business/pending">
+                    <RetailerPendingPage />
                   </Route>
                   <Route path="/retailer/onboarding">
                     <RetailerOnboarding />
