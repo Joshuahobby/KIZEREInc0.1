@@ -67,7 +67,7 @@ export default function BusinessOnboarding() {
         title: t("business.onboard.successTitle"),
         description: t("business.onboard.successDesc"),
       });
-      window.location.href = "/retailer/dashboard";
+      navigate("/business/pending");
     },
     onError: (error: Error) => {
       toast({

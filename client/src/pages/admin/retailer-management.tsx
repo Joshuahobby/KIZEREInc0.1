@@ -29,6 +29,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Table,
@@ -59,6 +60,7 @@ import {
   User,
   Loader2,
   X,
+  Clock,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -241,6 +243,8 @@ export default function RetailerManagementPage() {
   });
 
   const retailers = retailersData?.retailers ?? [];
+  const pendingRetailers = retailers.filter((r) => r.status === "inactive");
+  const activeRetailers = retailers.filter((r) => r.status !== "inactive");
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof createForm & { userId: number }) => {
@@ -304,6 +308,26 @@ export default function RetailerManagementPage() {
     },
     onError: (err: any) => {
       toast({ title: "Failed to regenerate key", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const approveMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest<{ success: boolean; retailer: Retailer }>(
+        `/api/pos/admin/retailers/${id}/approve`,
+        { method: "PATCH" }
+      );
+      return res;
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Retailer approved",
+        description: `${data.retailer.name} is now active.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/pos/admin/retailers"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Failed to approve retailer", description: err.message, variant: "destructive" });
     },
   });
 
@@ -441,11 +465,69 @@ export default function RetailerManagementPage() {
           }
         />
 
+        {/* Pending Applications Section */}
+        {pendingRetailers.length > 0 && (
+          <Card className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-300">
+                <Clock className="w-5 h-5" />
+                Pending Applications ({pendingRetailers.length})
+              </CardTitle>
+              <CardDescription>
+                These retailers are awaiting approval. Approving promotes their account role to Retailer.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {pendingRetailers.map((retailer) => (
+                  <div
+                    key={retailer.id}
+                    className="flex items-center justify-between rounded-lg border border-amber-200 bg-white p-4 dark:border-amber-700 dark:bg-card"
+                  >
+                    <div className="space-y-0.5">
+                      <p className="font-medium">{retailer.name}</p>
+                      <p className="text-sm text-muted-foreground">{retailer.email}</p>
+                      {retailer.phone && (
+                        <p className="text-xs text-muted-foreground">{retailer.phone}</p>
+                      )}
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          className="bg-amber-600 hover:bg-amber-700 text-white"
+                          disabled={approveMutation.isPending}
+                        >
+                          Approve
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Approve {retailer.name}?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will set their account to active, promote their user role to Retailer, and send them an approval email with their API key.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => approveMutation.mutate(retailer.id)}>
+                            Approve
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Store className="w-5 h-5" />
-              Retailers ({retailers.length})
+              Active Retailers ({activeRetailers.length})
             </CardTitle>
             <CardDescription>
               All registered POS retailers and their API access status
@@ -458,11 +540,11 @@ export default function RetailerManagementPage() {
                   <Skeleton key={i} className="h-12 w-full" />
                 ))}
               </div>
-            ) : retailers.length === 0 ? (
+            ) : activeRetailers.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Store className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p>No retailers registered yet</p>
-                <p className="text-sm">Create your first retailer to enable POS access</p>
+                <p>No active retailers yet</p>
+                <p className="text-sm">Approve pending applications above or create a retailer manually</p>
               </div>
             ) : (
               <Table>
@@ -477,7 +559,7 @@ export default function RetailerManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {retailers.map((retailer) => (
+                  {activeRetailers.map((retailer) => (
                     <TableRow key={retailer.id}>
                       <TableCell className="font-medium">{retailer.name}</TableCell>
                       <TableCell>{retailer.email}</TableCell>

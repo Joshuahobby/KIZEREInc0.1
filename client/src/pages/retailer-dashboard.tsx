@@ -466,6 +466,33 @@ export default function RetailerDashboard() {
           </Card>
         )}
 
+        {/* First-product prompt — shown only when account is active and no products exist yet */}
+        {!statsLoading && stats?.totalProducts === 0 && (
+          <Card className="col-span-full border-none bg-card/40 backdrop-blur-xl shadow-xl rounded-[2rem] overflow-hidden">
+            <CardContent className="flex flex-col items-center justify-center gap-4 py-10 text-center sm:flex-row sm:text-left sm:justify-between sm:px-10">
+              <div className="flex items-start gap-4">
+                <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+                  <PackagePlus className="h-7 w-7 text-primary" />
+                </div>
+                <div>
+                  <p className="text-lg font-semibold">Register your first product</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Your POS terminal is active. Add a product to start registering ownership at point of sale.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3 flex-shrink-0">
+                <Button asChild>
+                  <a href="/pos-terminal">Add First Product</a>
+                </Button>
+                <Button variant="outline" asChild>
+                  <a href="/retailer/products">Bulk Import</a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats Grid */}
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <StatsCard

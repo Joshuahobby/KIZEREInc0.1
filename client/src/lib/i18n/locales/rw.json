@@ -2256,10 +2256,6 @@
       "confirmReturn": "Emeza Gusubiza",
       "confirmReturnDesc": "Ibi bizasubiza igicuruzwa mu bubiko bwawe. Uzi neza?",
       "returnSuccess": "Igicuruzwa cyasubijwe mu bubiko.",
-      "statusRegistered": "Byanditswe",
-      "statusTransferred": "Byoherejwe",
-      "statusStolen": "Byibwe",
-      "statusArchived": "Byabitswe",
       "addTitle": "Ongeraho mu Bubiko",
       "addDesc": "Ongeraho igicuruzwa gishya mu bubiko bwawe.",
       "productNameLabel": "Izina ry'Igicuruzwa",
@@ -2545,6 +2541,25 @@
       "GovernmentAgency": "Urwego rwa Leta",
       "TechCompany": "Isosiyete ya Tekinoloji",
       "Other": "Ikindi"
+    },
+    "pending": {
+      "badge": "Irasuzumwa",
+      "title": "Icyifuzo Cyakiriwe",
+      "desc": "Icyifuzo cy'ubucuruzi bwawe kirasuzumwa.",
+      "descWithName": "{{name}} irasuzumwa.",
+      "sla": "Akenshi durasuzuma ibyifuzo mu masaa 24. Uzabona imeyili iyo konti yawe yemejwe hamwe n'urufunguzo rwa API.",
+      "step1": "Icyifuzo cyoherejwe",
+      "step2": "Irasuzumwa (kugeza amasaa 24)",
+      "step3": "Konti yarakozwe",
+      "checkButton": "Reba Ikibazo cy'Gutanga Uburenganzira",
+      "checking": "Irasuzumwa…",
+      "approvedTitle": "Konti yawe yemejwe!",
+      "approvedDesc": "Ugiye kwegurwa ku pulezideya yawe…",
+      "stillPendingTitle": "Irasuzumwa",
+      "stillPendingDesc": "Tuzakumenyesha kuri imeyili igihe icyifuzo cyawe cyemejwe.",
+      "checkError": "Ntibishoboka kugenzura ikibazo",
+      "checkErrorDesc": "Nyamuneka gerageza nyuma.",
+      "contactNote": "Ufite ikibazo? Twandikire imeyili"
     }
   },
   "fields": {

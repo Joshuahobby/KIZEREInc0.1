@@ -2237,11 +2237,7 @@
       "returnNotesPlaceholder": "Reason for return...",
       "confirmReturn": "Confirm Return",
       "confirmReturnDesc": "This will return the product to your inventory. Are you sure?",
-      "returnSuccess": "Product returned to inventory.",
-      "statusRegistered": "Registered",
-      "statusTransferred": "Transferred",
-      "statusStolen": "Stolen",
-      "statusArchived": "Archived"
+      "returnSuccess": "Product returned to inventory."
     },
     "claim": {
       "title": "Claim Your Account",
@@ -2513,6 +2509,25 @@
       "GovernmentAgency": "Government Agency",
       "TechCompany": "Tech Company",
       "Other": "Other"
+    },
+    "pending": {
+      "badge": "Under Review",
+      "title": "Application Received",
+      "desc": "Your business application is under review.",
+      "descWithName": "{{name}} is under review.",
+      "sla": "We typically approve applications within 24 hours. You will receive an email when your account is approved with your API key and getting-started guide.",
+      "step1": "Application submitted",
+      "step2": "Under review (up to 24h)",
+      "step3": "Account activated",
+      "checkButton": "Check Approval Status",
+      "checking": "Checking…",
+      "approvedTitle": "Your account is approved!",
+      "approvedDesc": "Redirecting to your dashboard…",
+      "stillPendingTitle": "Still under review",
+      "stillPendingDesc": "We will notify you by email when it is approved.",
+      "checkError": "Unable to check status",
+      "checkErrorDesc": "Please try again later.",
+      "contactNote": "Need help? Email"
     }
   },
   "report_found_subtitle": "Help reunite someone with their belongings.",
