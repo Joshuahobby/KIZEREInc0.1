@@ -172,7 +172,7 @@ export default function LandingPage() {
                                     size="lg"
                                     className="h-14 md:h-14 px-10 text-base md:text-lg rounded-xl bg-white text-[#0B0F1A] hover:bg-gray-100/90 hover:shadow-[0_0_25px_rgba(255,255,255,0.3)] font-black w-full transition-all duration-300 shadow-md"
                                 >
-                                    Get Started
+                                    Get Started — Free
                                 </Button>
                             </motion.div>
                             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
@@ -273,7 +273,7 @@ export default function LandingPage() {
                         { step: "01", title: "Register", desc: "Add item in seconds", icon: Database },
                         { step: "02", title: "Verify", desc: "Secure digital proof", icon: Fingerprint },
                         { step: "03", title: "Tag", desc: "QR or digital ID", icon: QrCode },
-                        { step: "04", title: "Recover", desc: "Get it back if lost", icon: ArrowRight }
+                        { step: "04", title: "Recover", desc: "Recover it if lost", icon: ArrowRight }
                     ].map((item, idx) => (
                         <motion.div 
                             variants={fadeInUp}
@@ -321,8 +321,8 @@ export default function LandingPage() {
                         
                         <div className="space-y-6 md:space-y-8 w-full max-w-sm sm:max-w-md mx-auto lg:mx-0">
                             {[
-                                { text: "Prevent theft", icon: Shield, desc: "Deter theft by giving items a global digital footprint." },
-                                { text: "Prove ownership", icon: CheckCircle2, desc: "Access verified digital certificates anywhere." },
+                                { text: "Prevent theft", icon: Shield, desc: "Registration makes theft economically irrational — every item gets a verified digital identity." },
+                                { text: "Prove ownership", icon: CheckCircle2, desc: "Access verified Ownership Certificates anywhere." },
                                 { text: "Transfer safely", icon: Lock, desc: "Buy and sell securely with a tamper-proof history." }
                             ].map((item, idx) => (
                                 <motion.div variants={fadeInUp} key={idx} className="flex flex-col sm:flex-row items-center sm:items-start gap-4 md:gap-5 group cursor-default text-center sm:text-left">

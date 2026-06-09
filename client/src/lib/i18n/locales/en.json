@@ -173,7 +173,7 @@
     "loginRequired": "You need to be logged in to view this page"
   },
   "footer": {
-    "description": "KIZERE is a comprehensive digital platform for streamlined item registration, lost and found reporting, and intelligent ownership management.",
+    "description": "KIZERE is building the infrastructure for trusted global ownership — giving every physical item a verified digital identity.",
     "quickLinks": "Quick Links",
     "resources": "Resources",
     "contact": "Contact",
@@ -195,10 +195,10 @@
       "howItWorks": "How It Works",
       "testimonials": "Testimonials"
     },
-    "trustedUsers": "Trusted by thousands of users",
-    "heroTitle1": "Peace of Mind",
-    "heroTitle2": "For Your Valuables",
-    "heroSubtitle": "Protect your valuables and recover what you've lost. Rwanda's trusted digital registry.",
+    "trustedUsers": "Trusted by individuals across Rwanda",
+    "heroTitle1": "Secure What's Yours",
+    "heroTitle2": "Register. Verify. Protect.",
+    "heroSubtitle": "Register, verify, and protect what you own — instantly.",
     "registerNow": "Protect Item",
     "learnMore": "Verify Item",
     "secure": "Secure & Private",
@@ -213,14 +213,14 @@
     },
     "powerfulFeatures": "Smart Features",
     "completeSolution": "Complete Solution for",
-    "itemManagement": "Your Peace of Mind",
-    "kizereProvides": "Everything you need to keep your valuables safe and ensure they find their way home if lost.",
+    "itemManagement": "Your Registered Items",
+    "kizereProvides": "Register any item. Verify ownership. Recover what's lost. A community network dedicated to helping you find what's lost.",
     "feature1Title": "Auto-Scan Label",
     "feature1Desc": "Instantly scan barcodes or serial numbers with your camera for quick registration.",
     "feature2Title": "Proof of Ownership",
     "feature2Desc": "Upload receipts to prove this item is yours.",
     "feature3Title": "QR Tags",
-    "feature3Desc": "Generate secure QR labels for your items so finders can instantly report them.",
+    "feature3Desc": "Generate secure QR labels for your items. When someone finds one, they scan it to help return it to you.",
     "feature4Title": "Add Photos",
     "feature4Desc": "Keep clear photos of your items for quick identification.",
     "feature5Title": "Easy Tracking",
@@ -228,7 +228,7 @@
     "feature6Title": "Global Recovery",
     "feature6Desc": "A community network dedicated to helping you find what's lost.",
     "learnMoreAction": "Learn More",
-    "startToday": "Get Started",
+    "startToday": "Get Started — Free",
     "readyToSecure": "Ready to Protect Your Valuables?",
     "joinThousands": "Join thousands in Rwanda using KIZERE to keep their items safe.",
     "createFreeAccount": "Protect Your First Item",
@@ -249,12 +249,12 @@
       "step3Title": "Tag",
       "step3Desc": "Attach a unique QR tag to your item.",
       "step4Title": "Recover",
-      "step4Desc": "If lost, finders scan the tag to help return it."
+      "step4Desc": "If lost, a Good Samaritan scans the tag to help return it to you."
     },
     "testimonials": {
       "sectionTitle": "User Stories",
       "mainTitle": "What Our Community Says",
-      "subtitle": "Trusted by thousands of users worldwide to protect what matters most.",
+      "subtitle": "Trusted by individuals across Rwanda to register, protect, and recover what's theirs.",
       "testimonial1": {
         "name": "James M.",
         "location": "Kigali, Rwanda",
@@ -263,12 +263,12 @@
       "testimonial2": {
         "name": "Francine N.",
         "location": "Musanze, Rwanda",
-        "quote": "The process was so simple, and I love the peace of mind knowing all my valuables are protected with digital proof."
+        "quote": "The process was straightforward, and I know every item I've registered has a verified digital identity. That's real protection."
       },
       "testimonial3": {
         "name": "Robert K.",
         "location": "Huye, Rwanda",
-        "quote": "When my phone was lost, the finder scanned the QR code, and I was notified immediately. This service is truly a game-changer!"
+        "quote": "When my phone was lost, a Good Samaritan scanned the QR code and I was notified immediately. Recovery was fast and clear."
       },
       "viewMore": "View More Testimonials"
     },
@@ -309,16 +309,16 @@
         },
         "lostFound": {
           "question": "How does the lost and found process work?",
-          "answer": "When someone finds your item, they can scan the QR code attached to it. This notifies you immediately and provides the finder with a secure, private way to initiate the return, keeping your personal contact details hidden until you choose to share them."
+          "answer": "When a Good Samaritan finds your item, they scan the QR code attached to it. You are notified immediately and a secure, private channel is opened to facilitate the return — your contact details stay hidden until you choose to share them."
         },
         "limits": {
           "question": "Is there a limit to how many items I can register?",
-          "answer": "Basic accounts can register up to 5 items. Premium subscribers can register unlimited items and access additional features like priority support and enhanced recovery services."
+          "answer": "Free accounts can register up to 3 items. Premium subscribers get unlimited registrations, free full verification reports, and priority support."
         }
       },
       "contactUs": "Can't find your answer? Contact our support team."
     },
-    "footerDescription": "KIZERE is a comprehensive platform for item registration, lost and found reporting, and ownership management with a focus on security and efficiency.",
+    "footerDescription": "KIZERE is building the infrastructure for trusted global ownership — giving every physical item a verified digital identity.",
     "footer": {
       "quickLinks": "Quick Links",
       "home": "Home",
@@ -725,7 +725,19 @@
     "Keys": "Keys",
     "Wallets": "Wallets",
     "Transportation": "Transport",
-    "Other": "Other"
+    "Other": "Other",
+    "electronics": "Electronics",
+    "phones": "Phones",
+    "computers": "Laptop/PC",
+    "documents": "ID/Files",
+    "jewelry": "Jewelry",
+    "accessories": "Accessories",
+    "clothing": "Clothing",
+    "bags": "Bags",
+    "keys": "Keys",
+    "wallets": "Wallets",
+    "transportation": "Transport",
+    "other": "Other"
   },
   "item_category_electronics": "Electronics",
   "item_category_phones": "Phones",
@@ -1257,7 +1269,7 @@
     },
     "questions": {
       "what_is_kizere": "What is KIZERE?",
-      "what_is_kizere_ans": "KIZERE is Rwanda's first comprehensive digital platform for item registration, lost and found reporting, and ownership management. We help build a culture of trust and security.",
+      "what_is_kizere_ans": "KIZERE is building the infrastructure for trusted global ownership — giving every physical item a verified digital identity so it can be registered, verified, protected, recovered, and transferred with absolute certainty.",
       "is_it_free": "Is it free to use?",
       "is_it_free_ans": "Registering a basic account is free. Protecting an item costs just 2,000 RWF.",
       "how_to_register": "How do I register an item?",
@@ -1273,12 +1285,12 @@
   },
   "about_page": {
     "title": "Why KIZERE?",
-    "mission": "Our Promise to You",
-    "mission_text": "We're on a mission to ensure no valuable in Rwanda ever stays lost. By combining cutting-edge technology with community trust, we give your belongings a voice and you the peace of mind you deserve.",
-    "vision": "A Secure Future",
-    "vision_text": "We envision a Rwanda where theft is obsolete because every item is protected. Join thousands of users who are building a safer, more transparent society where what's yours stays yours.",
-    "story": "More Than Just a Registry",
-    "story_text": "KIZERE was born from a simple realization: losing something important isn't just about the money—it's about the connection. We built this platform to turn the anxiety of loss into the confidence of recovery."
+    "mission": "Own It. Prove It. Protect It.",
+    "mission_text": "Physical ownership has no digital truth layer — until now. KIZERE gives every item a tamper-proof digital identity so it can be registered, verified, recovered, and transferred with absolute certainty.",
+    "vision": "The Infrastructure of Ownership",
+    "vision_text": "KIZERE is built to be the definitive ownership registry for Rwanda and East Africa. Every item registered makes the platform more valuable for every buyer, insurer, and reseller who comes after. The registry is the moat — and it grows permanently with every registration.",
+    "story": "Built in Rwanda. Built for the World.",
+    "story_text": "KIZERE was built from the ground up for Rwanda's mobile-first, mobile-money economy. It works on a Nokia feature phone in a rural market as easily as it works for a tech-forward urban consumer in Kigali. That is not a startup idea. That is infrastructure."
   },
   "contact_page": {
     "title": "Contact Us",
@@ -2566,5 +2578,17 @@
     "standard": "Standard",
     "premium": "Premium",
     "enterprise": "Enterprise"
+  },
+  "status": {
+    "pending": "Pending",
+    "verified": "Verified",
+    "rejected": "Rejected",
+    "resolved": "Resolved",
+    "pending_payment": "Pending Payment",
+    "registered": "Registered",
+    "lost": "Lost",
+    "found": "Found",
+    "recovered": "Recovered",
+    "archived": "Archived"
   }
 }

@@ -94,29 +94,29 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 export async function sendWelcomeEmail(email: string, fullName: string): Promise<boolean> {
   return sendEmail({
     to: email,
-    subject: 'Welcome to KIZERE! 🎉',
+    subject: 'Welcome to KIZERE',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
           <h1 style="color: white; margin: 0;">Welcome to KIZERE</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${fullName}! 👋</h2>
+          <h2 style="color: #1f2937;">Hello ${fullName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            Thank you for joining KIZERE, Rwanda's trusted platform for lost and found items.
+            Your account is active. Every item you register gets a tamper-proof digital identity — permanently linked to you, instantly verifiable by anyone.
           </p>
           <p style="color: #4b5563; line-height: 1.6;">
-            With KIZERE, you can:
+            Get started:
           </p>
           <ul style="color: #4b5563; line-height: 1.8;">
-            <li>Register your valuable items</li>
-            <li>Report lost or found items</li>
-            <li>Get notified when your items are found</li>
-            <li>Help others reunite with their belongings</li>
+            <li>Register your first item — assign it a verified digital identity</li>
+            <li>Generate a QR tag and attach it to your item</li>
+            <li>Report a lost item and let the community network work for you</li>
+            <li>If you find something, report it — help a Good Samaritan moment happen</li>
           </ul>
-          <a href="${process.env.APP_URL || 'https://kizere.rw'}/dashboard" 
-             style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
-            Go to Dashboard
+          <a href="${process.env.APP_URL || 'https://kizere.rw'}/dashboard"
+             style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
+            Protect Your First Item
           </a>
         </div>
         <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
@@ -209,21 +209,21 @@ export async function sendReportConfirmationEmail(
     subject: `Your ${typeLabel} Item Report - ${receiptNumber}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: ${typeColor}; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">${typeLabel} Item Report Submitted</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">${typeLabel} Item Report Active</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${fullName},</h2>
+          <h2 style="color: #1f2937;">Hello ${fullName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            Your ${reportType} item report has been successfully submitted.
+            Your ${typeLabel.toLowerCase()} item report is now active. We'll notify you the moment a match is found.
           </p>
           <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
             <p style="margin: 8px 0;"><strong>Item:</strong> ${itemTitle}</p>
-            <p style="margin: 8px 0;"><strong>Receipt Number:</strong> <code style="background: #f3f4f6; padding: 2px 8px; border-radius: 4px;">${receiptNumber}</code></p>
-            <p style="margin: 8px 0;"><strong>Status:</strong> Open</p>
+            <p style="margin: 8px 0;"><strong>Report Number:</strong> <code style="background: #f3f4f6; padding: 2px 8px; border-radius: 4px;">${receiptNumber}</code></p>
+            <p style="margin: 8px 0;"><strong>Status:</strong> Active</p>
           </div>
           <p style="color: #4b5563; line-height: 1.6;">
-            We'll notify you if there are any updates or matches for your report.
+            Your item is never truly gone — it is registered. The community network is now working for you.
           </p>
           <a href="${process.env.APP_URL || 'https://kizere.rw'}/report/${receiptNumber}" 
              style="display: inline-block; background: ${typeColor}; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
@@ -253,20 +253,20 @@ export async function sendClaimNotificationEmail(
     subject: `New Claim on Your Found Item - ${itemTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #3b82f6; padding: 30px; text-align: center;">
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
           <h1 style="color: white; margin: 0;">New Ownership Claim</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${ownerName},</h2>
+          <h2 style="color: #1f2937;">Hello ${ownerName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            Someone has filed a claim on an item you found!
+            The Distressed Owner has filed a claim on the item you reported. Please review their proof of ownership.
           </p>
           <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
             <p style="margin: 8px 0;"><strong>Item:</strong> ${itemTitle}</p>
             <p style="margin: 8px 0;"><strong>Claimant:</strong> ${claimantName}</p>
           </div>
           <p style="color: #4b5563; line-height: 1.6;">
-            Please review the claim and verify if the item belongs to the claimant.
+            Review the claim and confirm whether the item belongs to this person.
           </p>
           <a href="${process.env.APP_URL || 'https://kizere.rw'}/dashboard?tab=claims" 
              style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
@@ -300,20 +300,20 @@ export async function sendClaimStatusEmail(
     subject: `Your Claim ${statusText} - ${itemTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: ${statusColor}; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">Claim ${statusText} ${emoji}</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Claim ${statusText}</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${claimantName},</h2>
+          <h2 style="color: #1f2937;">Hello ${claimantName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
             ${isApproved
-        ? `Great news! Your ownership claim for <strong>${itemTitle}</strong> has been approved.`
-        : `Unfortunately, your ownership claim for <strong>${itemTitle}</strong> has been rejected.`
+        ? `Good news — your ownership claim for <strong>${itemTitle}</strong> has been approved.`
+        : `Your ownership claim for <strong>${itemTitle}</strong> has been rejected.`
       }
           </p>
           ${isApproved ? `
             <p style="color: #4b5563; line-height: 1.6;">
-              Please contact the finder to arrange collection of your item.
+              Please contact the Good Samaritan to arrange recovery of your item.
             </p>
           ` : `
             <p style="color: #4b5563; line-height: 1.6;">
@@ -349,11 +349,11 @@ export async function sendPaymentConfirmationEmail(
     subject: `Payment Confirmed - ${transactionRef}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #22c55e; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">Payment Confirmed ✓</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Payment Confirmed</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${fullName},</h2>
+          <h2 style="color: #1f2937;">Hello ${fullName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
             Your payment has been successfully processed.
           </p>
@@ -389,13 +389,13 @@ export async function sendFoundNotificationEmail(
     subject: `Good News! Your Registered Item Was Found - ${itemName}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #10b981; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">Your Item Was Found! 🔔</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Good News — Your Item Was Found</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <h2 style="color: #1f2937;">Hello ${userName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            Your registered item <strong>${itemName}</strong> was reported as found by another user.
+            Your registered item <strong>${itemName}</strong> was reported found by a Good Samaritan in our network.
           </p>
           <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
             <p style="margin: 8px 0;"><strong>Found Report:</strong> ${reportTitle}</p>
@@ -438,13 +438,13 @@ export async function sendPosRegistrationEmail(
     subject: `Product Registered - ${data.productName} (${data.productId})`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">Product Registered</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Ownership Registered</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${data.customerName},</h2>
+          <h2 style="color: #1f2937;">Hello ${data.customerName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            Your product has been successfully registered on KIZERE by <strong>${data.retailerName}</strong>.
+            <strong>${data.retailerName}</strong> has registered <strong>${data.productName}</strong> to your name on KIZERE. Your ownership is now verified and tamper-proof.
           </p>
           <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
             <p style="margin: 8px 0;"><strong>Product:</strong> ${data.productName}</p>
@@ -466,12 +466,12 @@ export async function sendPosRegistrationEmail(
             </div>
           ` : ''}
           <p style="color: #4b5563; line-height: 1.6;">
-            This registration serves as a digital proof of ownership. Keep this email for your records.
+            This email is your record of registration. Your Ownership Certificate is available to download any time from your dashboard.
           </p>
           <div style="text-align: center; margin: 24px 0;">
             <a href="${appUrl}/my-devices"
-               style="display: inline-block; background: #10b981; color: white; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px;">
-              📄 Download Purchase Contract
+               style="display: inline-block; background: #2563eb; color: white; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px;">
+              Download Ownership Certificate
             </a>
             <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0;">
               Log in to KIZERE and visit <strong>My Devices</strong> to view and print your contract.
@@ -504,13 +504,13 @@ export async function sendPosTransferEmail(
     subject: `Ownership Transfer - ${data.productName} (${data.productId})`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); padding: 30px; text-align: center;">
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
           <h1 style="color: white; margin: 0;">Ownership Transferred</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${data.customerName},</h2>
+          <h2 style="color: #1f2937;">Hello ${data.customerName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            A product has been transferred to your ownership on KIZERE by <strong>${data.retailerName}</strong>.
+            <strong>${data.retailerName}</strong> has transferred ownership of <strong>${data.productName}</strong> to your name. The chain of title has been updated permanently.
           </p>
           <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
             <p style="margin: 8px 0;"><strong>Product:</strong> ${data.productName}</p>
@@ -523,8 +523,8 @@ export async function sendPosTransferEmail(
           </p>
           <div style="text-align: center; margin: 24px 0;">
             <a href="${process.env.APP_URL || 'https://kizere.rw'}/my-devices"
-               style="display: inline-block; background: #3b82f6; color: white; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px;">
-              📄 Download Purchase Contract
+               style="display: inline-block; background: #2563eb; color: white; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 15px;">
+              Download Ownership Certificate
             </a>
             <p style="color: #9ca3af; font-size: 12px; margin: 8px 0 0;">
               Log in to KIZERE and visit <strong>My Devices</strong> to view and print your contract.
@@ -578,11 +578,11 @@ export async function sendResetPasswordEmail(
     subject: 'Reset Your KIZERE Password',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #667eea; padding: 30px; text-align: center;">
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
           <h1 style="color: white; margin: 0;">Password Reset Request</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <h2 style="color: #1f2937;">Hello ${userName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
             We received a request to reset your password for your KIZERE account.
           </p>
@@ -590,8 +590,8 @@ export async function sendResetPasswordEmail(
             Click the button below to choose a new password. This link will expire in 1 hour.
           </p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetLink}" 
-               style="display: inline-block; background: #667eea; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+            <a href="${resetLink}"
+               style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold;">
               Reset Password
             </a>
           </div>
@@ -601,7 +601,7 @@ export async function sendResetPasswordEmail(
           <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
           <p style="color: #9ca3af; font-size: 12px;">
             If the button above doesn't work, copy and paste this link into your browser: <br>
-            <a href="${resetLink}" style="color: #667eea;">${resetLink}</a>
+            <a href="${resetLink}" style="color: #2563eb;">${resetLink}</a>
           </p>
         </div>
         <div style="padding: 20px; text-align: center; color: #9ca3af; font-size: 12px;">
@@ -627,16 +627,16 @@ export async function sendExpirationEmail(
     subject: `Action Required: Your Report is Expiring - ${reportTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #f59e0b; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">Report Expiring Soon ⏳</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Report Expiring Soon</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <h2 style="color: #1f2937;">Hello ${userName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
             Your report <strong>${reportTitle}</strong> is set to expire soon.
           </p>
           <p style="color: #4b5563; line-height: 1.6;">
-            To keep your listing active and visible to the community, please renew it now.
+            Renew now to keep your report active and visible to the community network.
           </p>
           <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
             <p style="margin: 8px 0;"><strong>Status:</strong> Expiring</p>
@@ -675,11 +675,11 @@ export async function sendSubscriptionReminderEmail(
     subject: `Action Required: Your KIZERE ${plan} subscription expires soon`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #2563eb; padding: 30px; text-align: center;">
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
           <h1 style="color: white; margin: 0;">Subscription Expiring Soon</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${retailerName},</h2>
+          <h2 style="color: #1f2937;">Hello ${retailerName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
             Your <strong>${plan}</strong> KIZERE POS subscription will expire on
             <strong>${expiryStr}</strong> — that is in 7 days.
@@ -715,19 +715,19 @@ export async function sendMatchNotificationEmail(
     subject: `Potential Match Found! - ${reportTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #8b5cf6; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">We Found a Match! 🎉</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Potential Match Found</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <h2 style="color: #1f2937;">Hello ${userName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
-            We have found an item that might match your report <strong>${reportTitle}</strong>.
+            Good news — we found a potential match for your report <strong>${reportTitle}</strong>. Review it now.
           </p>
           <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin: 20px 0;">
             <p style="margin: 8px 0;"><strong>Potential Match:</strong> ${matchTitle}</p>
           </div>
           <p style="color: #4b5563; line-height: 1.6;">
-            Please click below to view the details and contact the other party if it matches.
+            Click below to view the details. If it matches, you can file a claim directly.
           </p>
           <a href="${process.env.APP_URL || 'https://kizere.rw'}/report/${matchId}" 
              style="display: inline-block; background: #8b5cf6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 20px;">
@@ -762,11 +762,11 @@ export async function sendAppealUpdateEmail(
     subject: `Claim Appeal ${statusText} - ${itemTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: ${statusColor}; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">Appeal ${statusText} ${emoji}</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Appeal ${statusText}</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <h2 style="color: #1f2937;">Hello ${userName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
             Your appeal for the rejected claim on <strong>${itemTitle}</strong> has been <strong>${decision}</strong> by our administration team.
           </p>
@@ -777,7 +777,7 @@ export async function sendAppealUpdateEmail(
           ` : ''}
           ${isApproved ? `
             <p style="color: #4b5563; line-height: 1.6;">
-              Your claim status has been reset to <strong>Pending</strong>, and the finder has been notified to re-evaluate your claim or proceed with verification.
+              Your claim status has been reset to <strong>Pending</strong>, and the Good Samaritan has been notified to re-evaluate your claim or proceed with verification.
             </p>
           ` : `
             <p style="color: #4b5563; line-height: 1.6;">
@@ -883,11 +883,11 @@ export async function sendUserVerificationStatusEmail(
     subject: `Identity Verification ${statusText}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: ${statusColor}; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">Verification ${statusText} ${emoji}</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">Verification ${statusText}</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${userName},</h2>
+          <h2 style="color: #1f2937;">Hello ${userName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
             Your identity verification request has been <strong>${status}</strong>.
           </p>
@@ -931,20 +931,20 @@ export async function sendConsumerPremiumReminderEmail(
     subject: "Your KIZERE Premium expires in 7 days",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: linear-gradient(135deg, #6366f1, #3b82f6); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-          <h1 style="color: white; margin: 0; font-size: 24px;">⏰ Premium Expiring Soon</h1>
+        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">Premium Expiring Soon</h1>
         </div>
         <div style="padding: 30px; background: #f9fafb;">
-          <h2 style="color: #1f2937;">Hello ${fullName},</h2>
+          <h2 style="color: #1f2937;">Hello ${fullName}!</h2>
           <p style="color: #4b5563; line-height: 1.6;">
             Your <strong>KIZERE Premium</strong> subscription expires on <strong>${expiryStr}</strong>.
             After that date you'll return to the free tier (3 item registrations, no full verification reports).
           </p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${renewalLink}"
-               style="background: #6366f1; color: white; padding: 14px 32px; border-radius: 8px;
+               style="background: #2563eb; color: white; padding: 14px 32px; border-radius: 8px;
                       text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">
-              Renew Premium →
+              Renew Premium
             </a>
           </div>
           <p style="color: #6b7280; font-size: 13px; line-height: 1.6;">

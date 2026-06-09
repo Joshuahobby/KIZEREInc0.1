@@ -10,32 +10,32 @@ export default function FeaturesPage() {
     {
       icon: <ShieldCheck className="w-10 h-10 text-primary" />,
       title: "Immutable Digital Passports",
-      description: "Create a permanent digital record for your valuables. By logging IMEI, VIN, or serial numbers, your items become inherently difficult to steal and resell.",
+      description: "Register any item by its IMEI, VIN, or serial number. It receives a tamper-proof digital identity — permanently linked to its verified owner, impossible to alter or delete.",
     },
     {
       icon: <Search className="w-10 h-10 text-emerald-500" />,
       title: "Real-Time Matching Engine",
-      description: "Our advanced algorithms continuously cross-reference 'Lost' reports against 'Found' submissions, instantly notifying both parties when a match occurs.",
+      description: "Lost and Found reports are continuously cross-referenced. The moment a match is detected, both the Distressed Owner and the Good Samaritan are notified instantly.",
     },
     {
       icon: <Lock className="w-10 h-10 text-amber-500" />,
       title: "Secure Claim Verification",
-      description: "We prevent fraudulent claims through a rigorous proof-of-ownership system, including photo verification, receipt uploads, and manual agent reviews for high-value assets.",
+      description: "Fraudulent claims are blocked through a proof-of-ownership system: photo evidence, supporting documents, and moderator review for high-value items.",
     },
     {
       icon: <Fingerprint className="w-10 h-10 text-purple-500" />,
       title: "Verified Identity (KYC)",
-      description: "Users on KIZERE can choose to verify their government IDs. Dealing with verified owners and finders adds a critical layer of trust to online exchanges.",
+      description: "Users can verify their government ID and complete a biometric liveness check. A verified owner and a verified Good Samaritan resolve claims faster — and with higher confidence on both sides.",
     },
     {
       icon: <History className="w-10 h-10 text-blue-500" />,
       title: "Transferable Chains of Title",
-      description: "Selling your registered laptop? Securely transfer the digital title to the new owner within the app, proving its legitimacy and boosting its resale value.",
+      description: "Transfer an Ownership Certificate to the new buyer instantly. The full chain of title updates permanently — giving the buyer verified proof before they leave the transaction.",
     },
     {
       icon: <Zap className="w-10 h-10 text-rose-500" />,
-      title: "Instant Public Blacklisting",
-      description: "The moment you flip an item's status to 'Lost', it is broadcasted to our public search portal, making it instantly dangerous for thieves to attempt to pawn or sell it.",
+      title: "Theft Deterrence — Instant",
+      description: "Report an item lost and it is broadcast to the public registry immediately. Instantly dangerous for thieves to attempt to pawn or sell it.",
     }
   ];
 
@@ -43,7 +43,7 @@ export default function FeaturesPage() {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO 
         title="Platform Features | KIZERE Item Registry"
-        description="Discover the powerful tools underlying the KIZERE platform, from real-time matching engines to secure digital passports."
+        description="Register, verify, and protect what you own — KIZERE gives every physical item a tamper-proof Digital Passport and a permanent chain of title."
       />
       <Header />
       
@@ -52,13 +52,13 @@ export default function FeaturesPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 blur-[120px] rounded-full -z-10" />
           
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold tracking-wider uppercase mb-6">
-            Why Choose Us
+            The Infrastructure Behind Every Item
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
-            Security Meets <br/><span className="text-gradient drop-shadow-sm">Simplicity</span>
+            Register. Verify. <br/><span className="text-gradient drop-shadow-sm">Protect.</span>
           </h1>
           <p className="text-xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
-            Everything you need to secure your assets, prove ownership, and deter theft, all wrapped in a lightning-fast modern application.
+            Register any item. Verify any ownership claim. Transfer with a tamper-proof record. Built for everyone from an individual in Kigali to an insurer processing thousands of claims.
           </p>
         </section>
 

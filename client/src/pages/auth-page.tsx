@@ -161,7 +161,7 @@ export default function AuthPage() {
           <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white">
             KIZERE<span className="text-primary">.</span>
           </h1>
-          <p className="text-white/40 mt-4 text-xs md:text-sm font-bold uppercase tracking-[0.3em]">{t('dashboard.smartItemManagement') || "Smart Item Management"}</p>
+          <p className="text-white/40 mt-4 text-xs md:text-sm font-bold uppercase tracking-[0.3em]">{t('common.brandSubtitle') || "Secure What Matters Most"}</p>
         </motion.div>
 
         <motion.div
