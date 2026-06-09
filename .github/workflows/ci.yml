@@ -47,8 +47,22 @@ jobs:
           SESSION_SECRET: CI_TEST_SECRET
           NODE_ENV: test
 
+      - name: Push DB schema (local postgres for E2E)
+        run: npx drizzle-kit push --force
+        env:
+          DATABASE_URL: postgres://kizere:password@localhost:5432/kizere_test
+          SESSION_SECRET: CI_TEST_SECRET
+          NODE_ENV: test
+
+      - name: Seed DB (roles + admin user for E2E)
+        run: npx tsx scripts/seed-roles.ts && npx tsx scripts/seed.ts
+        env:
+          DATABASE_URL: postgres://kizere:password@localhost:5432/kizere_test
+          SESSION_SECRET: CI_TEST_SECRET
+          NODE_ENV: test
+
       - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install --with-deps chromium
 
       - name: Run E2E Tests
         run: npm run test:e2e
@@ -57,6 +71,9 @@ jobs:
           SESSION_SECRET: CI_TEST_SECRET
           NODE_ENV: test
           BASE_URL: http://localhost:5000
+          # seed.ts creates admin with username=admin password=Password123!
+          ADMIN_USERNAME: admin
+          ADMIN_PASSWORD: Password123!
 
       - name: Build Project
         run: npm run build
