@@ -14,7 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api";
 import { CustomerDetailsDialog } from "@/components/retailer/CustomerDetailsDialog";
 import { AddCustomerDialog } from "@/components/retailer/AddCustomerDialog";
-import { ShieldAlert, Mail, Phone, Search, MoreVertical, Filter, UserPlus } from "lucide-react";
+import { ShieldAlert, Mail, Phone, Search, MoreVertical, Filter, UserPlus, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function RetailerCustomers() {
   const { t } = useLanguage();
@@ -27,7 +27,7 @@ export default function RetailerCustomers() {
 
   const { data: customersData, isLoading } = useQuery({
     queryKey: ["/api/pos/my-customers", page],
-    queryFn: () => apiGet<{ data: any[]; total: number }>(`/api/pos/my-customers?page=${page}&limit=50`),
+    queryFn: () => apiGet<{ data: any[]; total: number; totalPages: number; page: number }>(`/api/pos/my-customers?page=${page}&limit=50`),
   });
 
   const generateStatus = (totalItems: number) => {
@@ -221,6 +221,38 @@ export default function RetailerCustomers() {
           open={isDetailsOpen}
           onOpenChange={setIsDetailsOpen}
         />
+
+        {/* Pagination */}
+        {(customersData?.totalPages ?? 1) > 1 && (
+          <div className="flex items-center justify-between px-2">
+            <p className="text-sm text-muted-foreground">
+              Showing {((page - 1) * 50) + 1}–{Math.min(page * 50, customersData?.total ?? 0)} of {customersData?.total ?? 0} customers
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-xl"
+                disabled={page <= 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium">
+                {page} / {customersData?.totalPages ?? 1}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-xl"
+                disabled={page >= (customersData?.totalPages ?? 1)}
+                onClick={() => setPage(p => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </motion.div>
     </AppLayout>
   );

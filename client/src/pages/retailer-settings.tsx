@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Save, Store, Shield, Bell, CreditCard, Upload, Loader2, Users, Plus, Trash2, Key, CalendarDays, RefreshCw, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
+import { Save, Store, Shield, Bell, CreditCard, Upload, Loader2, Users, Plus, Trash2, Key, CalendarDays, RefreshCw, CheckCircle2, AlertTriangle, Clock, ToggleLeft, ToggleRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { format } from "date-fns";
@@ -199,6 +199,46 @@ export default function RetailerSettings() {
   const [newCashierPin, setNewCashierPin] = React.useState("");
   const isInitialized = React.useRef(false);
 
+  // ── Logo upload state ──────────────────────────────────────────────────────
+  const [logoUrl, setLogoUrl] = React.useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = React.useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Invalid file", description: "Please choose an image file.", variant: "destructive" });
+      return;
+    }
+    setLogoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("folder", "kizere/retailers");
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Upload failed");
+      const json = await res.json();
+      setLogoUrl(json.url);
+      toast({ title: "Logo uploaded", description: "Save changes to apply." });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setLogoUploading(false);
+      // Clear input so the same file can be re-selected
+      if (logoInputRef.current) logoInputRef.current.value = "";
+    }
+  };
+
+  // ── POS Config switches (controlled) ───────────────────────────────────────
+  const [autoSync, setAutoSync] = React.useState(true);
+  const [requireReceipts, setRequireReceipts] = React.useState(false);
+
+  // ── Notification switches (controlled) ─────────────────────────────────────
+  const [alertStolen, setAlertStolen] = React.useState(true);
+  const [dailySummary, setDailySummary] = React.useState(true);
+  const [lowStock, setLowStock] = React.useState(false);
+
   const { data: profileData, isLoading: isProfileLoading } = useQuery({
     queryKey: ["/api/pos/my-profile"],
     queryFn: () => apiGet<{ profile: any }>("/api/pos/my-profile"),
@@ -218,11 +258,24 @@ export default function RetailerSettings() {
         address: p.address || "",
         walletPhone: p.walletPhone || "",
       });
+      if (p.logoUrl && !logoUrl) setLogoUrl(p.logoUrl);
       
       // Load cashiers from user preferences ONLY ONCE or if user changes
       if (user?.preferences?.cashiers && !isInitialized.current) {
         setCashiers(user.preferences.cashiers);
         isInitialized.current = true;
+      }
+      // Initialize controlled switches from saved preferences
+      const posConfig = (user?.preferences as any)?.posConfig;
+      if (posConfig) {
+        setAutoSync(posConfig.autoSync ?? true);
+        setRequireReceipts(posConfig.requireReceipts ?? false);
+      }
+      const notifPrefs = (user?.preferences as any)?.posNotifications;
+      if (notifPrefs) {
+        setAlertStolen(notifPrefs.stolenAlert ?? true);
+        setDailySummary(notifPrefs.dailySummary ?? true);
+        setLowStock(notifPrefs.lowStock ?? false);
       }
     }
   }, [profileData, reset, user]);
@@ -230,9 +283,12 @@ export default function RetailerSettings() {
   const updateMutation = useMutation({
     mutationFn: (values: ProfileFormValues) => apiPatch("/api/pos/my-profile", {
       ...values,
+      ...(logoUrl ? { logoUrl } : {}),
       preferences: {
         ...user?.preferences,
-        cashiers
+        cashiers,
+        posConfig: { autoSync, requireReceipts },
+        posNotifications: { stolenAlert: alertStolen, dailySummary, lowStock },
       }
     }),
     onSuccess: async () => {
@@ -278,12 +334,16 @@ export default function RetailerSettings() {
     setNewCashierPin("");
     toast({
       title: "Cashier Added",
-      description: "Remember to save your changes to permanentely store the new cashier."
+      description: "Remember to save your changes to permanently store the new cashier."
     });
   };
 
   const removeCashier = (id: string) => {
     setCashiers(cashiers.filter(c => c.id !== id));
+  };
+
+  const toggleCashierActive = (id: string) => {
+    setCashiers(cashiers.map(c => c.id === id ? { ...c, isActive: !c.isActive } : c));
   };
 
   return (
@@ -367,15 +427,50 @@ export default function RetailerSettings() {
                         <Input id="phone" type="tel" {...register("phone")} className="rounded-xl bg-background border-border/50" />
                       </div>
                     </div>
+                    {/* Logo upload */}
                     <div className="flex flex-col items-center gap-4 border border-border/50 rounded-2xl p-6 bg-muted/10 w-full sm:w-64">
-                      <div className="h-32 w-32 rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center bg-background group hover:border-primary transition-colors cursor-pointer relative overflow-hidden">
-                        <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
-                        <div className="flex flex-col items-center gap-2 text-primary">
-                          <Upload className="h-8 w-8" />
-                          <span className="text-xs font-bold uppercase">Upload Logo</span>
-                        </div>
-                      </div>
-                      <p className="text-xs text-center text-muted-foreground">Recommended: 512x512px, transparent PNG</p>
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleLogoSelect}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => logoInputRef.current?.click()}
+                        disabled={logoUploading}
+                        className="h-32 w-32 rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center bg-background group hover:border-primary transition-colors cursor-pointer relative overflow-hidden"
+                      >
+                        {logoUploading ? (
+                          <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                        ) : logoUrl ? (
+                          <img src={logoUrl} alt="Store logo" className="absolute inset-0 w-full h-full object-cover rounded-full" />
+                        ) : (
+                          <>
+                            <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
+                            <div className="flex flex-col items-center gap-2 text-primary">
+                              <Upload className="h-8 w-8" />
+                              <span className="text-xs font-bold uppercase">Upload Logo</span>
+                            </div>
+                          </>
+                        )}
+                      </button>
+                      {logoUrl && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs text-muted-foreground"
+                          onClick={() => {
+                            setLogoUrl(null);
+                            if (logoInputRef.current) logoInputRef.current.value = "";
+                          }}
+                        >
+                          Remove logo
+                        </Button>
+                      )}
+                      <p className="text-xs text-center text-muted-foreground">Recommended: 512×512px, transparent PNG</p>
                     </div>
                   </div>
                 )}
@@ -405,14 +500,22 @@ export default function RetailerSettings() {
                     <h4 className="font-bold">Auto-Sync Inventory</h4>
                     <p className="text-sm text-muted-foreground">Automatically sync sales with central inventory.</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    id="autoSync"
+                    checked={autoSync}
+                    onCheckedChange={setAutoSync}
+                  />
                 </div>
                 <div className="flex items-center justify-between border-b border-border/50 pb-4">
                   <div>
                     <h4 className="font-bold">Require Digital Receipts</h4>
                     <p className="text-sm text-muted-foreground">Force entry of customer phone/email for receipts.</p>
                   </div>
-                  <Switch />
+                  <Switch
+                    id="requireReceipts"
+                    checked={requireReceipts}
+                    onCheckedChange={setRequireReceipts}
+                  />
                 </div>
                 <div className="space-y-2 pt-2">
                   <Label htmlFor="currency">Default Currency</Label>
@@ -468,27 +571,38 @@ export default function RetailerSettings() {
                     </div>
                   ) : (
                     cashiers.map((cashier) => (
-                      <div key={cashier.id} className="flex items-center justify-between p-4 bg-muted/10 rounded-2xl border border-border/50 group">
+                      <div key={cashier.id} className={`flex items-center justify-between p-4 rounded-2xl border group transition-colors ${
+                        cashier.isActive ? "bg-muted/10 border-border/50" : "bg-muted/5 border-border/30 opacity-60"
+                      }`}>
                         <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                          <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold ${
+                            cashier.isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                          }`}>
                             {cashier.name.charAt(0)}
                           </div>
                           <div>
                             <p className="font-bold">{cashier.name}</p>
                             <div className="flex items-center text-xs text-muted-foreground gap-2">
                               <Key className="h-3 w-3" />
-                              <span>PIN Active</span>
+                              <span>{cashier.isActive ? "PIN Active" : "Disabled"}</span>
                             </div>
                           </div>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => removeCashier(cashier.id)}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={cashier.isActive}
+                            onCheckedChange={() => toggleCashierActive(cashier.id)}
+                            title={cashier.isActive ? "Disable cashier" : "Enable cashier"}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeCashier(cashier.id)}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -509,21 +623,33 @@ export default function RetailerSettings() {
                     <h4 className="font-bold">Stolen Item Alerts</h4>
                     <p className="text-sm text-muted-foreground">Get notified immediately if a scanned item is flagged as stolen.</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    id="alertStolen"
+                    checked={alertStolen}
+                    onCheckedChange={setAlertStolen}
+                  />
                 </div>
                 <div className="flex items-center justify-between border-b border-border/50 pb-4">
                   <div>
                     <h4 className="font-bold">Daily Sales Summary</h4>
                     <p className="text-sm text-muted-foreground">Receive an email summary of your daily transactions.</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    id="dailySummary"
+                    checked={dailySummary}
+                    onCheckedChange={setDailySummary}
+                  />
                 </div>
                 <div className="flex items-center justify-between border-b border-border/50 pb-4">
                   <div>
                     <h4 className="font-bold">Low Stock Alerts</h4>
                     <p className="text-sm text-muted-foreground">Warn me when a product variant is running low on inventory.</p>
                   </div>
-                  <Switch />
+                  <Switch
+                    id="lowStock"
+                    checked={lowStock}
+                    onCheckedChange={setLowStock}
+                  />
                 </div>
               </CardContent>
             </Card>

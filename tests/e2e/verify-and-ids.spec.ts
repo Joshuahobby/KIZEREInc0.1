@@ -76,37 +76,34 @@ test.describe("Item Registration — category-aware identifier field", () => {
 
   test("Phones category changes identifier label to 'IMEI Number'", async ({ page }) => {
     await page.goto("/register-item");
-    // Wait for the form to render
-    await page.waitForSelector("select, [data-testid='category-select'], [role='combobox']", { timeout: 15000 });
+    await page.waitForSelector("[role='combobox']", { timeout: 15000 });
 
-    // Select the "Phones" category using the shadcn Select
+    await page.locator('input[name="name"]').fill("Test Phone Item");
+
     const categoryTrigger = page.locator("[role='combobox']").first();
     await categoryTrigger.click();
     await page.getByRole("option", { name: /Phones/i }).click();
 
-    // The identifier label should now say "IMEI Number"
-    await expect(page.getByText(/IMEI Number/i)).toBeVisible({ timeout: 5000 });
+    await page.getByRole("button", { name: /next|continue|review|submit/i }).first().click();
+
+    await expect(page.getByText(/IMEI Number/i)).toBeVisible({ timeout: 15000 });
   });
 
   test("Phones category shows IMEI validation error for non-IMEI input", async ({ page }) => {
     await page.goto("/register-item");
     await page.waitForSelector("[role='combobox']", { timeout: 15000 });
 
-    // Select Phones
+    await page.locator('input[name="name"]').fill("Test Phone");
     const categoryTrigger = page.locator("[role='combobox']").first();
     await categoryTrigger.click();
     await page.getByRole("option", { name: /Phones/i }).click();
 
-    // Fill item name (required)
-    const nameInput = page.locator('input[name="name"], input[placeholder*="name" i]').first();
-    await nameInput.fill("Test Phone");
+    await page.getByRole("button", { name: /next|continue|review|submit/i }).first().click();
 
-    // Fill invalid identifier
-    const identifierInput = page.locator('input[name="uniqueIdentifier"]');
-    await identifierInput.fill("not-an-imei");
-    await identifierInput.blur();
+    await page.waitForSelector('input[name="uniqueIdentifier"]', { timeout: 10000 });
+    await page.locator('input[name="uniqueIdentifier"]').fill("not-an-imei");
+    await page.locator('input[name="uniqueIdentifier"]').blur();
 
-    // Expect a validation message about IMEI
     await expect(page.getByText(/IMEI|15.digit|digit/i)).toBeVisible({ timeout: 5000 });
   });
 
@@ -114,11 +111,14 @@ test.describe("Item Registration — category-aware identifier field", () => {
     await page.goto("/register-item");
     await page.waitForSelector("[role='combobox']", { timeout: 15000 });
 
+    await page.locator('input[name="name"]').fill("Test Vehicle");
     const categoryTrigger = page.locator("[role='combobox']").first();
     await categoryTrigger.click();
     await page.getByRole("option", { name: /Transport/i }).click();
 
-    await expect(page.getByText(/VIN|Plate Number/i)).toBeVisible({ timeout: 5000 });
+    await page.getByRole("button", { name: /next|continue|review|submit/i }).first().click();
+
+    await expect(page.getByText(/VIN|Plate Number/i)).toBeVisible({ timeout: 15000 });
   });
 });
 

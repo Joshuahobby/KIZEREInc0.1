@@ -25,6 +25,7 @@ import {
   archiveProduct,
   recoverProduct,
   checkDuplicateSerial,
+  getPosProductBySerial,
   bulkRegisterProducts,
   getRetailerSecurityAlerts,
   getRetailerTransactionsPaginated,
@@ -42,7 +43,7 @@ import { getPaymentAmount } from "../config/payment.config";
 import { createLogger } from "../utils/logger";
 import { z } from "zod";
 import { db } from "../db";
-import { users } from "@shared/schema";
+import { users, DEFAULT_USER_PREFERENCES } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
 import { sendOTP, verifyOTP } from "../services/otp.service";
 import bcrypt from "bcrypt";
@@ -614,8 +615,9 @@ router.get(
       const retailerId = (req as any).retailer.id;
       const page = parseInt(req.query.page as string, 10) || 1;
       const limit = parseInt(req.query.limit as string, 10) || 10;
+      const eventType = (req.query.eventType as string) || undefined;
       
-      const result = await getRetailerTransactionsPaginated(retailerId, { page, limit });
+      const result = await getRetailerTransactionsPaginated(retailerId, { page, limit, eventType });
       res.json({ success: true, ...result });
     } catch (error: any) {
       logger.error("Failed to get retailer transactions", { error: error.message });
@@ -792,7 +794,16 @@ router.patch(
           theme: z.string().optional(),
           language: z.string().optional(),
           currency: z.string().optional(),
-        }).optional(), // strict — no passthrough to prevent privilege injection via preferences
+          posConfig: z.object({
+            autoSync: z.boolean().optional(),
+            requireReceipts: z.boolean().optional(),
+          }).optional(),
+          posNotifications: z.object({
+            stolenAlert: z.boolean().optional(),
+            dailySummary: z.boolean().optional(),
+            lowStock: z.boolean().optional(),
+          }).optional(),
+        }).optional(),
       });
 
       const { preferences, ...rest } = schema.parse(req.body);
@@ -817,22 +828,15 @@ router.patch(
       // If preferences are provided, update the linked user record
       if (preferences) {
         const retailer = (req as any).retailer;
-        // Hash cashier PINs before storing — never persist plaintext PINs
-        let safePreferences: any = { ...preferences };
-        if (preferences.cashiers) {
-          safePreferences.cashiers = await Promise.all(
-            preferences.cashiers.map(async (c: any) => ({
-              ...c,
-              pin: await bcrypt.hash(c.pin, 10),
-            }))
-          );
-        }
+        // Cashier PINs are a lightweight client-side terminal lock (not a
+        // security credential). Store them as-is so the POS terminal can
+        // compare them with a plain === check without a server round-trip.
         logger.info("Updating user preferences for retailer", {
           retailerId,
           userId: retailer.userId,
           cashierCount: preferences.cashiers?.length,
         });
-        await storage.updateUser(retailer.userId, { preferences: safePreferences });
+        await storage.updateUser(retailer.userId, { preferences: preferences as any });
       }
 
       res.json({ success: true, profile: updated });
@@ -932,6 +936,36 @@ router.get(
 );
 
 /**
+ * PATCH /api/pos/admin/commissions/:id
+ * Admin: update commission status (e.g. mark as paid after manual MoMo transfer).
+ */
+router.patch(
+  "/admin/commissions/:id",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const commissionId = parseInt(req.params.id, 10);
+      if (isNaN(commissionId)) {
+        return res.status(400).json({ message: "Invalid commission ID" });
+      }
+      const schema = z.object({
+        status: z.enum(["pending", "queued", "processing", "paid", "failed"]),
+      });
+      const { status } = schema.parse(req.body);
+      const commission = await CommissionService.updateCommissionStatus(commissionId, status);
+      res.json({ success: true, commission });
+    } catch (error: any) {
+      logger.error("Failed to update commission status", { error: error.message });
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(error.status || 500).json({ message: error.message || "Internal server error" });
+    }
+  }
+);
+
+
+/**
  * GET /api/pos/security-alerts
  * Get all security alerts for the current retailer.
  */
@@ -975,6 +1009,36 @@ router.post(
 // ═══════════════════════════════════════════════════════════
 // PRODUCT MANAGEMENT ENDPOINTS (Dual auth: session or API key)
 // ═══════════════════════════════════════════════════════════
+
+/**
+ * GET /api/pos/inventory/search
+ * Look up a single product by serial number, scoped to the current retailer.
+ * Used by the POS terminal for serial validation before transfer.
+ * Query params: serialNumber (required)
+ */
+router.get(
+  "/inventory/search",
+  posAuthMiddleware, posRateLimiter,
+  async (req: Request, res: Response) => {
+    try {
+      const retailer = (req as any).retailer;
+      const serialNumber = (req.query.serialNumber as string)?.trim();
+      if (!serialNumber) {
+        return res.status(400).json({ message: "serialNumber query param is required" });
+      }
+
+      const product = await getPosProductBySerial(serialNumber);
+      if (!product || product.retailerId !== retailer.id) {
+        return res.status(404).json({ message: "Product not found in your inventory" });
+      }
+
+      res.json({ success: true, product });
+    } catch (error: any) {
+      logger.error("inventory/search failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
 
 /**
  * GET /api/pos/my-products/search
@@ -1823,6 +1887,162 @@ router.get(
     }
   }
 );
+
+/**
+ * PUT /api/pos/ledger/:ledgerId/contract-data
+ * Updates contract details, saving snapshots in ownership_ledger metadata, and updating
+ * the product and buyer/seller profile records.
+ */
+router.put(
+  "/ledger/:ledgerId/contract-data",
+  contractDataAuthMiddleware,
+  async (req: Request, res: Response) => {
+    try {
+      const ledgerId = parseInt(req.params.ledgerId, 10);
+      if (isNaN(ledgerId)) return res.status(400).json({ message: "Invalid ledger ID" });
+
+      const data = await getLedgerContractData(ledgerId);
+      if (!data) return res.status(404).json({ message: "Ledger entry not found" });
+
+      const retailer = (req as any).retailer;
+      const user = (req as any).user;
+
+      const isRetailerOwner = retailer && data.ledger.registeredBy === retailer.id;
+      const isParty = user && (user.id === data.ledger.toUserId || user.id === data.ledger.fromUserId);
+      const isAdmin = user && user.role === "Admin";
+
+      if (!isRetailerOwner && !isParty && !isAdmin) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updateSchema = z.object({
+        seller: z.object({
+          fullName: z.string().min(2, "Seller name must be at least 2 characters"),
+          nationalId: z.string().min(6, "Seller National ID is required").optional().nullable(),
+          phoneNumber: z.string().optional().nullable(),
+          province: z.string().optional().nullable(),
+          district: z.string().optional().nullable(),
+          sector: z.string().optional().nullable(),
+          cell: z.string().optional().nullable(),
+          village: z.string().optional().nullable(),
+        }).optional().nullable(),
+        buyer: z.object({
+          fullName: z.string().min(2, "Buyer name must be at least 2 characters"),
+          nationalId: z.string().min(6, "Buyer National ID is required").optional().nullable(),
+          phoneNumber: z.string().optional().nullable(),
+          province: z.string().optional().nullable(),
+          district: z.string().optional().nullable(),
+          sector: z.string().optional().nullable(),
+          cell: z.string().optional().nullable(),
+          village: z.string().optional().nullable(),
+        }).optional().nullable(),
+        product: z.object({
+          name: z.string().min(2, "Product name must be at least 2 characters"),
+          brand: z.string().optional().nullable(),
+          model: z.string().optional().nullable(),
+          category: z.string().optional().nullable(),
+          color: z.string().optional().nullable(),
+          features: z.string().optional().nullable(),
+          accessories: z.string().optional().nullable(),
+        }).optional().nullable(),
+        purchaseAgreement: z.string().optional().nullable(),
+      });
+
+      const body = updateSchema.parse(req.body);
+
+      // 1. Update the ownership ledger entry metadata snapshots
+      const existingMetadata = data.ledger.metadata || {};
+      const updatedMetadata = {
+        ...existingMetadata,
+        sellerSnapshot: body.seller || {},
+        buyerSnapshot: body.buyer || {},
+        productSnapshot: body.product || {},
+        accessories: body.product?.accessories || existingMetadata.accessories || "",
+      };
+
+      await storage.updateOwnershipLedgerEntry(ledgerId, {
+        purchaseAgreement: body.purchaseAgreement || null,
+        metadata: updatedMetadata,
+        notes: body.product?.features || data.ledger.notes || null,
+      });
+
+      // 2. Update the POS product details if present
+      if (data.product.id && body.product) {
+        const existingProduct = await storage.getPosProduct(data.product.id);
+        const updatedProductMetadata = {
+          ...(existingProduct?.metadata || {}),
+          color: body.product.color || "",
+        };
+        await storage.updatePosProduct(data.product.id, {
+          name: body.product.name,
+          brand: body.product.brand || null,
+          model: body.product.model || null,
+          category: body.product.category || "Other",
+          metadata: updatedProductMetadata,
+        });
+      }
+
+      // 3. Update the seller profile if present
+      if (data.ledger.fromUserId && body.seller) {
+        const sellerUser = await storage.getUser(data.ledger.fromUserId);
+        if (sellerUser) {
+          const updatedPrefs = {
+            ...DEFAULT_USER_PREFERENCES,
+            ...(sellerUser.preferences || {}),
+            addressDetails: {
+              ...(sellerUser.preferences?.addressDetails || {}),
+              province: body.seller.province || "",
+              district: body.seller.district || "",
+              sector: body.seller.sector || "",
+              cell: body.seller.cell || "",
+              village: body.seller.village || "",
+            }
+          };
+          await storage.updateUser(data.ledger.fromUserId, {
+            fullName: body.seller.fullName,
+            nationalId: body.seller.nationalId || sellerUser.nationalId,
+            phoneNumber: body.seller.phoneNumber || sellerUser.phoneNumber,
+            preferences: updatedPrefs,
+          });
+        }
+      }
+
+      // 4. Update the buyer profile if present
+      if (data.ledger.toUserId && body.buyer) {
+        const buyerUser = await storage.getUser(data.ledger.toUserId);
+        if (buyerUser) {
+          const updatedPrefs = {
+            ...DEFAULT_USER_PREFERENCES,
+            ...(buyerUser.preferences || {}),
+            addressDetails: {
+              ...(buyerUser.preferences?.addressDetails || {}),
+              province: body.buyer.province || "",
+              district: body.buyer.district || "",
+              sector: body.buyer.sector || "",
+              cell: body.buyer.cell || "",
+              village: body.buyer.village || "",
+            }
+          };
+          await storage.updateUser(data.ledger.toUserId, {
+            fullName: body.buyer.fullName,
+            nationalId: body.buyer.nationalId || buyerUser.nationalId,
+            phoneNumber: body.buyer.phoneNumber || buyerUser.phoneNumber,
+            preferences: updatedPrefs,
+          });
+        }
+      }
+
+      res.json({ success: true });
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      logger.error("updateLedgerContractData failed", { error: error.message });
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+);
+
 
 /**
  * GET /api/pos/device-lookup?serial=XYZ

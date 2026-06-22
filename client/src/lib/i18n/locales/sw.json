@@ -1604,7 +1604,19 @@
     "Keys": "[TODO-sw] Imfunguzo",
     "Wallets": "[TODO-sw] Ipitoto",
     "Transportation": "[TODO-sw] Ibinyabiz.",
-    "Other": "[TODO-sw] Ibindi"
+    "Other": "[TODO-sw] Ibindi",
+    "electronics": "Vifaa vya umeme",
+    "phones": "Simu",
+    "computers": "Kompyuta",
+    "documents": "Nyaraka",
+    "jewelry": "Mapambo",
+    "accessories": "Vifaa",
+    "clothing": "Nguo",
+    "bags": "Mabegi",
+    "keys": "Funguo",
+    "wallets": "Pochi",
+    "transportation": "Usafiri",
+    "other": "Nyingine"
   },
   "registration": {
     "editTitle": "Hariri Usajili",
@@ -2609,5 +2621,17 @@
     "standard": "Kawaida",
     "premium": "Premium",
     "enterprise": "Biashara"
+  },
+  "status": {
+    "pending": "Inasubiriwa",
+    "verified": "Imethibitishwa",
+    "rejected": "Imekataliwa",
+    "resolved": "Imetatuliwa",
+    "pending_payment": "Malipo yanasubiriwa",
+    "registered": "Imesajiliwa",
+    "lost": "Imepotea",
+    "found": "Imepatikana",
+    "recovered": "Imerudishwa",
+    "archived": "Imehifadhiwa"
   }
 }

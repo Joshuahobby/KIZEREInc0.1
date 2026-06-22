@@ -61,6 +61,10 @@ import {
   Loader2,
   X,
   Clock,
+  Wallet,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -750,7 +754,166 @@ export default function RetailerManagementPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        {/* Commission Management Panel */}
+        <AdminCommissionsPanel />
+
       </div>
     </PageLayout>
+  );
+}
+
+// ─── Admin Commissions Panel ─────────────────────────────────────────────────
+const COMMISSION_STATUS_BADGE: Record<string, { label: string; className: string }> = {
+  pending:    { label: "Pending",    className: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  queued:     { label: "Queued",     className: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+  processing: { label: "Processing", className: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20" },
+  paid:       { label: "Paid",       className: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" },
+  failed:     { label: "Failed",     className: "bg-destructive/10 text-destructive border-destructive/20" },
+};
+
+function AdminCommissionsPanel() {
+  const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const params = new URLSearchParams({ page: String(page), limit: "20" });
+  if (statusFilter !== "all") params.set("status", statusFilter);
+
+  const { data, isLoading } = useQuery<{ data: any[]; total: number; totalPages: number }>({
+    queryKey: ["/api/pos/admin/commissions", page, statusFilter],
+    queryFn: () => apiRequest(`/api/pos/admin/commissions?${params.toString()}`),
+  });
+
+  const commissions = data?.data || [];
+  const totalPages = data?.totalPages || 1;
+
+  const markPaidMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest(`/api/pos/admin/commissions/${id}`, { method: "PATCH", data: { status: "paid" } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pos/admin/commissions"] });
+      toast({ title: "Commission Marked Paid", description: "The payout has been recorded as paid." });
+    },
+    onError: (err: any) => {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const totalPending = commissions
+    .filter((c: any) => c.status === "pending" || c.status === "queued")
+    .reduce((sum: number, c: any) => sum + parseFloat(c.commissionAmount || "0"), 0);
+
+  return (
+    <Card className="mt-2">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <Wallet className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <CardTitle>Commission Payouts</CardTitle>
+              <CardDescription>Review and approve retailer commission payouts</CardDescription>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            {totalPending > 0 && (
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Outstanding</p>
+                <p className="text-lg font-black text-emerald-600">RWF {totalPending.toLocaleString()}</p>
+              </div>
+            )}
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="All statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="queued">Queued</SelectItem>
+                <SelectItem value="processing">Processing</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {isLoading ? (
+          <div className="p-6 space-y-3">
+            {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
+          </div>
+        ) : commissions.length === 0 ? (
+          <div className="text-center py-10 text-muted-foreground">
+            <Clock className="h-10 w-10 mx-auto mb-3 opacity-20" />
+            <p className="font-bold text-sm">No commissions found.</p>
+            <p className="text-xs mt-1">Commissions appear when retailers request payouts.</p>
+          </div>
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30">
+                  <TableHead className="pl-6 text-xs uppercase tracking-wider">Retailer</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider">Date</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider">Transaction</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider">Commission</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider">Wallet</TableHead>
+                  <TableHead className="text-xs uppercase tracking-wider">Status</TableHead>
+                  <TableHead className="text-right pr-6"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {commissions.map((c: any) => {
+                  const badge = COMMISSION_STATUS_BADGE[c.status] || COMMISSION_STATUS_BADGE.pending;
+                  return (
+                    <TableRow key={c.id} className="hover:bg-muted/20 border-b border-border/50 last:border-0">
+                      <TableCell className="pl-6 font-medium text-sm">{c.retailerName || `Retailer #${c.retailerId}`}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell className="font-mono text-sm">{c.currency} {parseFloat(c.transactionValue).toLocaleString()}</TableCell>
+                      <TableCell className="font-bold text-emerald-600">+{c.currency} {parseFloat(c.commissionAmount).toLocaleString()}</TableCell>
+                      <TableCell className="text-sm font-mono text-muted-foreground">{c.walletPhone || "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`text-[10px] font-bold uppercase tracking-widest ${badge.className}`}>
+                          {badge.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        {(c.status === "queued" || c.status === "pending") && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="rounded-lg text-xs h-7 gap-1.5 text-emerald-600 border-emerald-500/30 hover:bg-emerald-50"
+                            onClick={() => markPaidMutation.mutate(c.id)}
+                            disabled={markPaidMutation.isPending}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Mark Paid
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-3 border-t border-border/50">
+                <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="icon" className="h-7 w-7" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-7 w-7" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

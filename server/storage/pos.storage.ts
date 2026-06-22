@@ -113,6 +113,11 @@ export async function createOwnershipLedgerEntry(entryData: InsertOwnershipLedge
   return entry;
 }
 
+export async function updateOwnershipLedgerEntry(id: number, data: Partial<OwnershipLedgerEntry>): Promise<OwnershipLedgerEntry | undefined> {
+  const [updated] = await db.update(ownershipLedger).set(data).where(eq(ownershipLedger.id, id)).returning();
+  return updated;
+}
+
 export async function getProductHistory(productId: number): Promise<OwnershipLedgerEntry[]> {
   return await db.select().from(ownershipLedger).where(eq(ownershipLedger.productId, productId)).orderBy(desc(ownershipLedger.timestamp));
 }
@@ -210,15 +215,22 @@ export async function getProductHistoryPaginated(
 
 export async function getRetailerTransactionsPaginated(
   retailerId: number,
-  params: { page: number; limit: number }
+  params: { page: number; limit: number; eventType?: string }
 ): Promise<{ data: (OwnershipLedgerEntry & { productName: string | null; serialNumber: string | null; ownerName: string | null; transactionType: string })[]; total: number; page: number; limit: number; totalPages: number }> {
-  const { page, limit } = params;
+  const { page, limit, eventType } = params;
   const offset = (page - 1) * limit;
 
   const retailer = await getRetailer(retailerId);
   const retailerUserId = retailer?.userId ?? -1;
 
-  const [countResult] = await db.select({ count: count() }).from(ownershipLedger).where(eq(ownershipLedger.registeredBy, retailerId));
+  const baseConditions: any[] = [eq(ownershipLedger.registeredBy, retailerId)];
+  if (eventType && eventType !== "all") {
+    // "stock_in" is a UI alias for sale events to the retailer themselves — handle it client-side
+    baseConditions.push(eq(ownershipLedger.event, eventType));
+  }
+  const whereClause = and(...baseConditions);
+
+  const [countResult] = await db.select({ count: count() }).from(ownershipLedger).where(whereClause);
   const total = countResult?.count ?? 0;
 
   const data = await db
@@ -238,14 +250,12 @@ export async function getRetailerTransactionsPaginated(
     .from(ownershipLedger)
     .leftJoin(posProducts, eq(ownershipLedger.productId, posProducts.id))
     .leftJoin(users, eq(ownershipLedger.toUserId, users.id))
-    .where(eq(ownershipLedger.registeredBy, retailerId))
+    .where(whereClause)
     .orderBy(desc(ownershipLedger.timestamp))
     .limit(limit)
     .offset(offset);
 
   const formattedData = data.map(item => {
-    // Distinguish "stock_in" (retailer registered item into own inventory)
-    // from "sale" (product registered/transferred to a customer)
     let transactionType = item.event;
     if (item.event === "sale" && item.toUserId === retailerUserId) {
       transactionType = "stock_in";
@@ -852,9 +862,11 @@ export async function getLedgerContractData(ledgerId: number) {
       ol.notes,
       ol.purchase_agreement,
       ol.metadata          AS ledger_metadata,
+      ol.product_id,
       ol.from_user_id,
       ol.to_user_id,
       ol.registered_by,
+      pp.id                AS product_db_id,
       pp.name              AS product_name,
       pp.brand,
       pp.model,
@@ -866,11 +878,13 @@ export async function getLedgerContractData(ledgerId: number) {
       fu.phone_number      AS seller_phone,
       fu.address           AS seller_address,
       fu.city              AS seller_city,
+      fu.preferences       AS seller_preferences,
       tu.full_name         AS buyer_name,
       tu.national_id       AS buyer_nid,
       tu.phone_number      AS buyer_phone,
       tu.address           AS buyer_address,
       tu.city              AS buyer_city,
+      tu.preferences       AS buyer_preferences,
       r.name               AS retailer_name,
       r.address            AS retailer_address,
       r.phone              AS retailer_phone
@@ -886,6 +900,29 @@ export async function getLedgerContractData(ledgerId: number) {
   if (!rows.length) return undefined;
   const row = rows[0] as any;
 
+  // Parse preferences JSON (may arrive as string from some DB drivers)
+  const parsePrefs = (v: any) => {
+    if (!v) return {};
+    if (typeof v === "string") { try { return JSON.parse(v); } catch { return {}; } }
+    return v;
+  };
+  const sellerPrefs = parsePrefs(row.seller_preferences);
+  const buyerPrefs  = parsePrefs(row.buyer_preferences);
+  const ledgerMeta  = parsePrefs(row.ledger_metadata);
+
+  // Snapshot overrides from metadata (written when user explicitly edits the contract)
+  const sellerSnap = ledgerMeta?.sellerSnapshot ?? {};
+  const buyerSnap  = ledgerMeta?.buyerSnapshot  ?? {};
+  const productSnap = ledgerMeta?.productSnapshot ?? {};
+
+  const resolveAddr = (prefs: any, snap: any) => ({
+    province: snap.province ?? prefs?.addressDetails?.province ?? "",
+    district: snap.district ?? prefs?.addressDetails?.district ?? "",
+    sector:   snap.sector   ?? prefs?.addressDetails?.sector   ?? "",
+    cell:     snap.cell     ?? prefs?.addressDetails?.cell     ?? "",
+    village:  snap.village  ?? prefs?.addressDetails?.village  ?? "",
+  });
+
   return {
     ledger: {
       id: Number(row.id),
@@ -893,32 +930,38 @@ export async function getLedgerContractData(ledgerId: number) {
       timestamp: row.timestamp as Date,
       notes: row.notes as string | null,
       purchaseAgreement: row.purchase_agreement as string | null,
-      metadata: row.ledger_metadata,
+      metadata: ledgerMeta,
       fromUserId: row.from_user_id as number | null,
       toUserId: row.to_user_id as number | null,
       registeredBy: row.registered_by as number | null,
     },
     product: {
-      name: row.product_name as string | null,
-      brand: row.brand as string | null,
-      model: row.model as string | null,
-      category: row.category as string | null,
+      id: row.product_db_id as number | null,
+      name: productSnap.name ?? (row.product_name as string | null),
+      brand: productSnap.brand ?? (row.brand as string | null),
+      model: productSnap.model ?? (row.model as string | null),
+      category: productSnap.category ?? (row.category as string | null),
       serialNumber: row.serial_number as string | null,
       metadata: row.product_metadata,
+      color: productSnap.color ?? (row.product_metadata?.color as string | null) ?? "",
+      features: productSnap.features ?? (row.notes as string | null) ?? "",
+      accessories: productSnap.accessories ?? (ledgerMeta?.accessories as string | null) ?? "",
     },
     seller: (row.seller_name as string | null) ? {
-      fullName: row.seller_name as string,
-      nationalId: row.seller_nid as string | null,
-      phoneNumber: row.seller_phone as string | null,
+      fullName: sellerSnap.fullName ?? (row.seller_name as string),
+      nationalId: sellerSnap.nationalId ?? (row.seller_nid as string | null),
+      phoneNumber: sellerSnap.phoneNumber ?? (row.seller_phone as string | null),
       address: row.seller_address as string | null,
       city: row.seller_city as string | null,
+      ...resolveAddr(sellerPrefs, sellerSnap),
     } : null,
     buyer: (row.buyer_name as string | null) ? {
-      fullName: row.buyer_name as string,
-      nationalId: row.buyer_nid as string | null,
-      phoneNumber: row.buyer_phone as string | null,
+      fullName: buyerSnap.fullName ?? (row.buyer_name as string),
+      nationalId: buyerSnap.nationalId ?? (row.buyer_nid as string | null),
+      phoneNumber: buyerSnap.phoneNumber ?? (row.buyer_phone as string | null),
       address: row.buyer_address as string | null,
       city: row.buyer_city as string | null,
+      ...resolveAddr(buyerPrefs, buyerSnap),
     } : null,
     retailer: (row.retailer_name as string | null) ? {
       name: row.retailer_name as string,

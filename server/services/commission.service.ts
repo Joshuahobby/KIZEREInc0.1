@@ -210,4 +210,33 @@ export class CommissionService {
 
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
+  /**
+   * Admin: manually update commission status (e.g. mark as paid after manual transfer).
+   */
+  static async updateCommissionStatus(commissionId: number, status: string) {
+    const [existing] = await db
+      .select()
+      .from(retailerCommissions)
+      .where(eq(retailerCommissions.id, commissionId))
+      .limit(1);
+
+    if (!existing) {
+      const err: any = new Error("Commission not found");
+      err.status = 404;
+      throw err;
+    }
+
+    const updateData: any = { status };
+    if (status === "paid") {
+      updateData.paidAt = new Date();
+    }
+
+    const [updated] = await db
+      .update(retailerCommissions)
+      .set(updateData)
+      .where(eq(retailerCommissions.id, commissionId))
+      .returning();
+
+    return updated;
+  }
 }

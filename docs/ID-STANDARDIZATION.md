@@ -113,7 +113,7 @@ Auto-increment `id` columns are never exposed in public routes — only `uniqueI
 
 These are not blockers for launch but improve the system long-term:
 
-1. **Prefix KZR display labels by entity type**
+1. ✅ **Prefix KZR display labels by entity type** — SHIPPED
    - `KZR-000001` for L&F items
    - `POS-000001` for POS products
    - Avoids ambiguity in support tickets when both IDs have the same number
@@ -124,7 +124,7 @@ These are not blockers for launch but improve the system long-term:
    - Vehicles: VIN format
    - This prevents garbage identifiers and improves match quality
 
-3. **Add a `kizere_id` column to `pos_products`**
+3. ✅ **Add a `kizere_id` column to `pos_products`** — SHIPPED
    - A KIZERE-generated UUID (not retailer-supplied) that serves as an immutable internal reference
    - Keeps `serialNumber` as the merchant-facing key but adds an independent trust anchor
    - Useful if a retailer ever needs to update/correct a serial number without breaking ownership history

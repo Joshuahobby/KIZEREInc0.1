@@ -92,7 +92,7 @@ export const couponStatuses = ['active', 'inactive'] as const;
 // POS feature enums
 export const retailerStatuses = ['active', 'suspended', 'inactive'] as const;
 export const posProductStatuses = ['registered', 'transferred', 'stolen', 'archived'] as const;
-export const ownershipEventTypes = ['sale', 'transfer', 'stolen_report', 'recovery'] as const;
+export const ownershipEventTypes = ['sale', 'transfer', 'stolen_report', 'recovery', 'archived'] as const;
 export const retailerSubscriptionPlans = ['basic', 'standard', 'premium', 'enterprise'] as const;
 
 export type RetailerSubscriptionPlan = typeof retailerSubscriptionPlans[number];
@@ -149,6 +149,13 @@ export const userPreferencesSchema = z.object({
     pin: z.string(), // Lightweight PIN for terminal access
     isActive: z.boolean().default(true),
   })).optional().default([]),
+  addressDetails: z.object({
+    province: z.string().optional(),
+    district: z.string().optional(),
+    sector: z.string().optional(),
+    cell: z.string().optional(),
+    village: z.string().optional(),
+  }).optional(),
 });
 
 export type UserPreferences = z.infer<typeof userPreferencesSchema>;
@@ -165,6 +172,13 @@ export const DEFAULT_USER_PREFERENCES: UserPreferences = {
   timezone: 'UTC',
   onboardingTourSeen: false,
   cashiers: [],
+  addressDetails: {
+    province: "",
+    district: "",
+    sector: "",
+    cell: "",
+    village: "",
+  },
 };
 
 // Shared validation fragments for consistency

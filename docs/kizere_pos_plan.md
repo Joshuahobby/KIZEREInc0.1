@@ -1,5 +1,10 @@
 # KIZERE Retailer POS & Instant Account Creation – Engineering Implementation Plan
 
+> ⚠️ **SUPERSEDED — June 2026**
+> This is an early-stage planning document. The actual implementation uses:
+> Express.js + PostgreSQL (Neon) + Drizzle ORM + PawaPay + Resend + Pindo — not the stack described here.
+> See `KIZERE-TRUTH.md` Section 9 for the current technology architecture and Section 7.3 for the live POS feature set.
+
 ## Goal
 Enable businesses/retailers to instantly register products to customers at point of sale, while capturing required customer ID for compliance, with a zero-friction user experience.
 

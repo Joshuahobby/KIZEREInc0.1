@@ -226,6 +226,7 @@ export interface IStorage {
   ): Promise<{ data: PosProduct[]; total: number; page: number; limit: number; totalPages: number }>;
   
   createOwnershipLedgerEntry(entry: InsertOwnershipLedger): Promise<OwnershipLedgerEntry>;
+  updateOwnershipLedgerEntry(id: number, data: Partial<OwnershipLedgerEntry>): Promise<OwnershipLedgerEntry | undefined>;
   getProductHistory(productId: number): Promise<OwnershipLedgerEntry[]>;
   getProductHistoryPaginated(
     productId: number,

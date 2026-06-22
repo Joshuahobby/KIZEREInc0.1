@@ -758,7 +758,19 @@
     "Keys": "Imfunguzo",
     "Wallets": "Ipitoto",
     "Transportation": "Ibinyabiz.",
-    "Other": "Ibindi"
+    "Other": "Ibindi",
+    "electronics": "Iby'Ikoran.",
+    "phones": "Terefone",
+    "computers": "Mudasobwa",
+    "documents": "Inyandiko",
+    "jewelry": "Imitako",
+    "accessories": "Ibirimbane",
+    "clothing": "Imyenda",
+    "bags": "Ibikapu",
+    "keys": "Imfunguzo",
+    "wallets": "Ipitoto",
+    "transportation": "Ibinyabiz.",
+    "other": "Ibindi"
   },
   "item_category_electronics": "Ibyuma by'ikoranabuhanga",
   "item_category_phones": "Telefone",
@@ -2604,5 +2616,17 @@
     "standard": "Igiciro cya Kabiri",
     "premium": "Premium",
     "enterprise": "Isosiyete"
+  },
+  "status": {
+    "pending": "Bitegereje",
+    "verified": "Byemejwe",
+    "rejected": "Byanzwe",
+    "resolved": "Byakemutse",
+    "pending_payment": "Kwishyura bitegereje",
+    "registered": "Byanditswe",
+    "lost": "Byabuze",
+    "found": "Byabonetse",
+    "recovered": "Byasubijwe",
+    "archived": "Byashyinguwe"
   }
 }

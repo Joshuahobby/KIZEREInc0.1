@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { Download, TrendingUp, Users, Package, ShieldAlert, ArrowRightLeft } from "lucide-react";
 import { subDays, startOfMonth, startOfYear, format } from "date-fns";
+import Papa from "papaparse";
 
 const TIMEFRAMES = [
   { label: "Last 7 days",  value: "7d" },
@@ -110,6 +111,24 @@ export default function RetailerAnalytics() {
     return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
   })();
 
+  const handleExport = () => {
+    if (!stats) return;
+    const rows: any[] = [];
+    // Daily activity
+    timeline.forEach((r: { date: string; registrations: number; transfers: number }) => rows.push({ type: "daily", date: r.date, registrations: r.registrations, transfers: r.transfers, category: "", status: "", count: "" }));
+    // Category breakdown
+    categoryData.forEach((c: { name: string; value: number; color: string }) => rows.push({ type: "category", date: "", registrations: "", transfers: "", category: c.name, status: "", count: c.value }));
+    // Status breakdown
+    statusData.forEach((s: { name: string; count: number }) => rows.push({ type: "status", date: "", registrations: "", transfers: "", category: "", status: s.name, count: s.count }));
+
+    const csv = Papa.unparse(rows);
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `kizere_analytics_${timeframe}_${format(new Date(), "yyyyMMdd")}.csv`;
+    link.click();
+  };
+
   return (
     <AppLayout>
       <motion.div
@@ -134,7 +153,12 @@ export default function RetailerAnalytics() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" className="gap-2 shadow-sm border-primary/20 hover:bg-primary/5">
+              <Button
+                variant="outline"
+                className="gap-2 shadow-sm border-primary/20 hover:bg-primary/5"
+                onClick={handleExport}
+                disabled={!stats || isLoading}
+              >
                 <Download className="h-4 w-4" />
                 Export
               </Button>

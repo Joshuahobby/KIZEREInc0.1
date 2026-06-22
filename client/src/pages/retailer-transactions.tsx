@@ -10,14 +10,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import {
-  ArrowLeftRight, Download, Search, Filter,
+  ArrowLeftRight, Download, Search,
   Plus, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight,
   Package, Archive, ShieldAlert, FileText
 } from "lucide-react";
 import { PurchaseContractModal } from "@/components/pos/PurchaseContractModal";
+import Papa from "papaparse";
 
 const PAGE_SIZE = 20;
 
@@ -73,13 +75,19 @@ export default function RetailerTransactions() {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
+  const [eventTypeFilter, setEventTypeFilter] = useState("all");
   const [contractLedgerId, setContractLedgerId] = useState<number | null>(null);
 
+  const queryParams = new URLSearchParams();
+  queryParams.set("page", String(page));
+  queryParams.set("limit", String(PAGE_SIZE));
+  if (eventTypeFilter && eventTypeFilter !== "all") queryParams.set("eventType", eventTypeFilter);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["/api/pos/my-transactions", page],
+    queryKey: ["/api/pos/my-transactions", page, eventTypeFilter],
     queryFn: () =>
       apiGet<{ data: any[]; total: number; totalPages: number; page: number }>(
-        `/api/pos/my-transactions?page=${page}&limit=${PAGE_SIZE}`
+        `/api/pos/my-transactions?${queryParams.toString()}`
       ),
   });
 
@@ -98,6 +106,26 @@ export default function RetailerTransactions() {
     );
   });
 
+  const handleExportCsv = () => {
+    if (transactions.length === 0) return;
+    const csv = Papa.unparse(
+      transactions.map((tx: any) => ({
+        ID: `TXN-${String(tx.id).padStart(6, "0")}`,
+        Type: getEventConfig(tx.transactionType ?? tx.event).label,
+        Product: tx.productName || `POS-${String(tx.productId).padStart(6, "0")}`,
+        Serial: tx.serialNumber || "",
+        Customer: tx.ownerName || "",
+        Date: format(new Date(tx.timestamp), "yyyy-MM-dd HH:mm:ss"),
+        Status: tx.event === "stolen_report" ? "Flagged" : "Completed",
+      }))
+    );
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `kizere_transactions_${format(new Date(), "yyyyMMdd_HHmm")}.csv`;
+    link.click();
+  };
+
   return (
     <AppLayout>
       <motion.div
@@ -111,7 +139,12 @@ export default function RetailerTransactions() {
           title={t("pos.transactions") || "Transaction History"}
           description={t("pos.transactionsDesc") || "View all registrations and sales processed by your store."}
           actions={
-            <Button variant="outline" className="gap-2 shadow-sm border-primary/20 hover:bg-primary/5">
+            <Button
+              variant="outline"
+              className="gap-2 shadow-sm border-primary/20 hover:bg-primary/5"
+              onClick={handleExportCsv}
+              disabled={transactions.length === 0}
+            >
               <Download className="h-4 w-4" />
               {t("pos.export") || "Export CSV"}
             </Button>
@@ -140,9 +173,23 @@ export default function RetailerTransactions() {
                     className="pl-9 rounded-xl bg-background border-border/50 shadow-sm"
                   />
                 </div>
-                <Button variant="outline" size="icon" className="shrink-0 rounded-xl">
-                  <Filter className="h-4 w-4" />
-                </Button>
+                <Select
+                  value={eventTypeFilter}
+                  onValueChange={(v) => { setEventTypeFilter(v); setPage(1); }}
+                >
+                  <SelectTrigger className="w-[140px] rounded-xl border-border/50 shrink-0">
+                    <SelectValue placeholder="All types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All types</SelectItem>
+                    <SelectItem value="sale">Sale</SelectItem>
+                    <SelectItem value="transfer">Transfer</SelectItem>
+                    <SelectItem value="stock_in">Stock In</SelectItem>
+                    <SelectItem value="stolen_report">Stolen Report</SelectItem>
+                    <SelectItem value="recovery">Recovery</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardHeader>

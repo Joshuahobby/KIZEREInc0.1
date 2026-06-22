@@ -468,7 +468,7 @@ export async function archiveProduct(productId: number, retailerId: number) {
     fromUserId: product.currentOwnerId,
     toUserId: product.currentOwnerId,
     registeredBy: retailerId,
-    event: "sale",
+    event: "archived",
     notes: "Product archived by retailer",
   });
   return updated;
@@ -505,6 +505,10 @@ export async function reportProductStolen(productId: number, retailerId: number,
 export async function checkDuplicateSerial(serialNumber: string) {
   const existing = await storage.getPosProductBySerial(serialNumber);
   return !!existing;
+}
+
+export async function getPosProductBySerial(serialNumber: string) {
+  return storage.getPosProductBySerial(serialNumber);
 }
 
 export async function bulkRegisterProducts(retailerId: number, items: any[]) {

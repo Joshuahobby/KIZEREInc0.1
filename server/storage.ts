@@ -239,6 +239,7 @@ export class DatabaseStorage implements IStorage {
   searchRetailerProducts = posOps.searchRetailerProducts;
   
   createOwnershipLedgerEntry = posOps.createOwnershipLedgerEntry;
+  updateOwnershipLedgerEntry = posOps.updateOwnershipLedgerEntry;
   getProductHistory = posOps.getProductHistory;
   getProductHistoryPaginated = posOps.getProductHistoryPaginated;
 
